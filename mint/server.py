@@ -352,6 +352,12 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, args, exception = e)
 
+    def _translateProjectFQDN(self, fqdn):
+        cu = self.db.cursor()
+        cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', fqdn)
+        res = cu.fetchone()
+        return res and res[0] or fqdn
+
     def _getProjectRepo(self, project):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
@@ -378,7 +384,8 @@ class MintServer(object):
             authLabel = project.getLabel()
             authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
-            reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
+            fqdn = self._translateProjectFQDN(project.getFQDN())
+            reposPath = os.path.join(self.cfg.reposPath, fqdn)
             tmpPath = os.path.join(reposPath, "tmp")
 
             # handle non-standard ports specified on cfg.projectDomainName,
@@ -386,11 +393,10 @@ class MintServer(object):
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
 
-            name = project.getFQDN()
             cfg = netserver.ServerConfig()
-            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(name)
+            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(fqdn)
             cfg.tmpDir = tmpPath
-            cfg.serverName = project.getFQDN()
+            cfg.serverName = fqdn
             cfg.contentsDir = reposPath + '/contents/'
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
@@ -799,7 +805,8 @@ class MintServer(object):
             return False
         if self.auth.admin:
             return True
-        repositoryDB = self.projects.reposDB.getRepositoryDB(project.getFQDN())
+        repositoryDB = self.projects.reposDB.getRepositoryDB( \
+            self._translateProjectFQDN(project.getFQDN()))
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         cu = db.cursor()
         # id's guaranteed by schema definition.
