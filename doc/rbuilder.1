@@ -5,18 +5,108 @@ rbuilder \- Command-line interface to rBuilder
 .SH SYNOPSIS
 .B rbuilder \fIcommand \fR[\fI<args>\fR]
 .SH DESCRIPTION
-\fBrbuilder\fR is a command-line interface to rBuilder that allows...
-
+\fBrbuilder\fR is the command-line interface to rBuilder.  Use of
+\fBrbuilder\fR makes it possible to automate the build-creation process.
 
 .SH REFERENCE
+\fBrbuilder\fR includes commands to create a build, wait for a given build to
+complete, display the URLs associated with a given build, and display
+rBuilder's configuration.
+
+\fBNOTE:\fR Before using \fBrbuilder\fR you must configure it.  See the
+\fIFILES\fR section for configuration information.
+
+.SS COMMANDS
 
 .TP 4
-.B build-create <project name> <trove spec> <image type> 
+.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR
+
+Creates a build based on the following information:
+
+\fI<project-name>\fR is the desired project's hostname
+
+ \fI<trove-spec>\fR is a group trove specification in the format returned
+by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
+
+ \fI<image-type>\fR is one of the following:
+
+installable_iso, raw_hd_image, raw_fs_image, tarball, live_iso, vmware_image
+
+Returns a build ID in BUILD_ID
+
+.TP 4
+.B build-wait \fI<build-id>\fR
+
+Wait for build \fI<build-id>\fR to finish building
+
+.TP 4
+.B build-url <build-id>
+
+Show all urls related to a build
+
+.TP 4
+.B config
+
+Dump configuration
+
+.SS OPTIONS
+
+.TP 4
+.B --version
+
+Show program's version number and exit
+
+.TP 4
+.B -h, --help
+
+Show this help message and exit
+
+.SS COMMON OPTIONS
+
+.TP 4
+.B --config='KEY VALUE'
+
+Set config KEY to VALUE
+
+.TP 4
+.B --config-file=PATH
+
+Read PATH config file
+
+.TP 4
+.B --debug
+
+Print debugging information
+
+.TP 4
+.B --server=URL
+
+Set rBuilder server url to URL
+
+.TP 4
+.B --skip-default-config
+
+Don't read default config file (~/.rbuilderrc)
 
 .SH FILES
 .\" do not put excess space in the file list
 .PD 0
 .TP 4
+\fI$HOME/.rbuilderrc
+The configuration file for \fBrbuilder\fR.  This file must contain a
+\fBserverUrl\fR line in the following form:
+
+serverUrl http://\fI<username>\fR:\fI<password>\fR@\fI<rbuilder>\fR/xmlrpc-private/
+
+Where:
+
+\fI<username>\fR is the username with project developer or owner access to
+the desired project
+
+\fI<password>\fR is the password of the project developer/owner
+
+\fI<rbuilder>\fR is the fully-qualified domain name of the rBuilder
+instance
 
 .SH BUGS
 Please report bugs via http://issues.rpath.com/
