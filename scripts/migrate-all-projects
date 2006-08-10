@@ -28,6 +28,8 @@ maintenance mode or shut down the Apache Web Server (httpd) before
 continuing."""
     sys.exit(1)
 
+print "Migrating Conary repository databases for all projects..."
+
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
 cu = db.cursor()
 
@@ -38,14 +40,16 @@ if cfg.reposDBDriver == 'sqlite':
 else:
     dbNames = [x[0] + "_" + x[1].translate(mysqlTransTable) for x in cu.fetchall()]
 
+errors = 0
 for dbName, count in zip(dbNames, range(len(dbNames))):
-    print "completed %d of %d" % (count, len(dbNames)), chr(13),
+    print "Completed %d of %d" % (count, len(dbNames)), chr(13),
     sys.stdout.flush()
     try:
         reposDb = dbstore.connect(cfg.reposDBPath % dbName,
                                   driver = cfg.reposDBDriver)
         schema.loadSchema(reposDb)
     except:
+        errors += 1
         e = sys.exc_info()[1]
         if str(e).startswith('Unknown database'):
             continue
@@ -53,5 +57,10 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
             continue
         print "error in database: %s\n %s" % (dbName, str(e))
 
-print 79 * ' ', chr(13),
-print "Migration complete"
+
+if errors:
+    print "\nConary repository migration completed with errors."
+    sys.exit(1)
+
+print "\nConary repository migration complete."
+sys.exit(0)
