@@ -87,5 +87,8 @@ sed -e 's/visibleImageTypes/visibleBuildTypes/g' $BACKUPDIR/rbuilder.conf > ${RB
 # Send a USR1 to httpd for good measure
 killall -USR1 httpd > /dev/null 2>&1
 
+# Restart the job servers
+service multi-jobserver start
+
 echo "rBuilder 2.0.0 Migration complete."
 exit 0
