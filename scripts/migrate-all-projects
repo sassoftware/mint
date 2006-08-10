@@ -41,9 +41,7 @@ else:
     dbNames = [x[0] + "_" + x[1].translate(mysqlTransTable) for x in cu.fetchall()]
 
 errors = 0
-for dbName, count in zip(dbNames, range(len(dbNames))):
-    print "Completed %d of %d" % (count, len(dbNames)), chr(13),
-    sys.stdout.flush()
+for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
     try:
         reposDb = dbstore.connect(cfg.reposDBPath % dbName,
                                   driver = cfg.reposDBDriver)
@@ -57,6 +55,8 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
             continue
         print "error in database: %s\n %s" % (dbName, str(e))
 
+    print "Completed %d of %d" % (count, len(dbNames)), chr(13),
+    sys.stdout.flush()
 
 if errors:
     print "\nConary repository migration completed with errors."
