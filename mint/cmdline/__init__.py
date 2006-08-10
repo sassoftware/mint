@@ -75,10 +75,12 @@ class RBuilderMain(options.MainHandler):
         print 'rbuilder: command-line interface to an rBuilder Server'
         print ''
         print 'usage:'
-        print '  build-create <project name> <trove spec> <image type> - create a new build'
-        print '  build-wait <build id>                               - wait for a build to finish building'
-        print '  build-url <build id>                                - show all urls related to a build'
-        print '  config                                                  - dump configuration'
+        print '  build-create <project name> <trove spec> <image type>        - create a new build'
+        print '  build-wait <build id>                                        - wait for a build to finish building'
+        print '  build-url <build id>                                         - show all urls related to a build'
+        print '  user-create <username> <email> [--password <password>]       - create a new user'
+        print '  project-add <username> <project hostname> <owner|developer>  - add a user to a project'
+        print '  config                                                       - dump configuration'
 
     def runCommand(self, thisCommand, cfg, argSet, args):
         if not cfg.serverUrl:

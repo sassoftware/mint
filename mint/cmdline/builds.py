@@ -57,7 +57,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
         build.setBuildType(buildtypes.validBuildTypes[buildType.upper()])
 
         job = client.startImageJob(build.id)
-        log.info("BUILD_ID=%d" % (build.id))
+        print "BUILD_ID=%d" % (build.id)
         if wait:
             waitForBuild(client, build.id)
         return build.id
