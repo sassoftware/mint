@@ -35,7 +35,7 @@ by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
 \fBinstallable_iso\fR, \fBraw_hd_image\fR, \fBraw_fs_image\fR,
 \fBtarball\fR, \fBlive_iso\fR, \fBvmware_image\fR
 
-Returns a build ID in a form suitable for use with \fBeval\fR.  Using the
+Returns a build ID in a form suitable for use with \fBeval\fR (eg., BUILD_ID=100).  Using the
 \fB--wait\fR option causes \fBbuild-create\fR to block until the build
 completes.
 
@@ -52,7 +52,7 @@ Lists the URLs of each file created by build \fI<build-id>\fR.
 .TP 4
 .B user-create \fI<username>\fR \fI<email>\fR [\fB--password\fR \fI<password>\fR]
 
-Creates a new rBuilder user.
+Creates a new rBuilder user. If a password is not specified, you will be prompted to enter one.
 
 .TP 4
 .B project-add \fI<username>\\fR \fI<project-name>\fR <\fBowner\fR|\fBdeveloper\fR>
