@@ -4,7 +4,7 @@
 # to version 2.0.0
 
 # Full install label to builds repository
-INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-devel"
+INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-2"
 
 RBUILDER_ROOT="/srv/rbuilder"
 BACKUPDIR="/tmp/rBA-2.0-migration.$$"
