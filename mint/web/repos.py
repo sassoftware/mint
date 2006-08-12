@@ -68,10 +68,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def handle(self, context):
         self.__dict__.update(**context)
 
-        # set up the netclient
-        serverName = self.req.hostname
-        self.serverNameList = [serverName]
-
         path = self.req.uri[len(self.cfg.basePath):].split("/")
         if len(path) < 3:
             raise HttpNotFound
@@ -81,9 +77,12 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 self.project = self.client.getProjectByHostname(path[1])
                 serverName = self.project.getLabel().split("@")[0]
             else:
+                serverName = self.req.hostname
                 self.project = self.client.getProjectByFQDN(serverName)
         except database.ItemNotFound:
             raise HttpNotFound
+
+        self.serverNameList = [serverName]
 
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
@@ -152,7 +151,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
                                        cfg.user)
-        self.serverNameList = cfg.repositoryMap.keys()
 
         # make sure we explicitly allow this method
         if self.cmd not in allowedMethods:
