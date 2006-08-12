@@ -129,7 +129,7 @@ from mint import userlevels
                             <li><strong><tt>buildLabel ${project.getLabel()}</tt></strong></li>
                             <li><strong><tt>buildPath (full path to the builds subdirectory)</tt></strong></li>
                             <li><strong><tt>lookaside (full path to the cache subdirectory)</tt></strong></li>
-                            <li><strong><tt>user *.rpath.org username password</tt></strong></li>
+                            <li><strong><tt>user ${project.getLabel().split('@')[0]} username password</tt></strong></li>
                         </ul>
 
                         <p>Because Conary only reads the

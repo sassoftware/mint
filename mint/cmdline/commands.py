@@ -13,7 +13,6 @@ class RBuilderCommand(options.AbstractCommand):
     docs = {'config'             : ("Set config KEY to VALUE", "'KEY VALUE'"),
             'config-file'        : ("Read PATH config file", "PATH"),
             'skip-default-config': "Don't read default config file (~/.rbuilderrc)",
-            'server'             : ("Set rBuilder server url to URL", "URL"),
            }
 
     def addParameters(self, argDef):
@@ -21,7 +20,6 @@ class RBuilderCommand(options.AbstractCommand):
         d["config"] = MULT_PARAM
         d["config-file"] = MULT_PARAM
         d["skip-default-config"] = NO_PARAM
-        d["server"] = ONE_PARAM
         argDef[self.defaultGroup] = d
 
 
