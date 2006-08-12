@@ -661,7 +661,10 @@ def extractIs(flavor):
     @type flavor: L{conary.deps.deps.Flavor}
     @rtype: str
     """
-    return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+    try:
+        return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+    except KeyError:
+        return ''
 
 def upstream(version):
     """
