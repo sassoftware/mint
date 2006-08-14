@@ -48,9 +48,6 @@ class MirrorInbound(SingletonScript):
             labelStr, targetUrl, targetUser, targetPass  = client.getLabel(targetLabelId)
             reposHost = versions.Label(labelStr).getHost()
 
-            if mintCfg.SSL:
-                targetUrl = "https" + targetUrl[4:]
-
             cfg.source.repositoryMap = {reposHost: sourceUrl}
             if sourceUser:
                 cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
