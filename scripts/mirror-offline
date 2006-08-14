@@ -101,6 +101,7 @@ class MirrorOffline(SingletonScript):
             targCfg.repositoryDB = ('sqlite', os.path.join(baseDir, 'sqldb'))
             db = dbstore.connect(targCfg.repositoryDB[1],
                                  targCfg.repositoryDB[0])
+            util.mkdirChain(os.path.join(baseDir, 'tmp'))
             schema.loadSchema(db)
             netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
 
