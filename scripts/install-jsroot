@@ -75,7 +75,7 @@ mkdir -p $ROOT/srv/rbuilder/config/
 cp /etc/fstab /etc/fstab.backup
 COMMENT=\#JSROOT$upstreamVer
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
-echo "none $ROOT/dev/proc proc defaults 0 0 $COMMENT" >> /etc/fstab
+echo "none $ROOT/proc proc defaults 0 0 $COMMENT" >> /etc/fstab
 for x in '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets' '/srv/rbuilder/entitlements' '/srv/rbuilder/config'; do
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
