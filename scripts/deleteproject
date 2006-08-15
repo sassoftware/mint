@@ -123,7 +123,7 @@ def deleteProject(projectName):
     cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
     cu.execute("DELETE FROM InboundLabels WHERE projectId=?", projectId)
     cu.execute("DELETE FROM OutboundLabels WHERE projectId=?", projectId)
-    cu.execute("DELETE FROM OutboundExcludedTroves WHERE projectId=?",
+    cu.execute("DELETE FROM OutboundMatchTroves WHERE projectId=?",
                projectId)
 
     status("Deleting Membership requests")
