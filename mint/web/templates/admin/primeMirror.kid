@@ -14,8 +14,10 @@
         <div>
             <p>
                 Please follow the instructions below to pre-load your mirror.
-                Do not close this window or navigate away from this page while the operation is in progress.
             </p>
+            <h3 style="background: #FFDFD4; border-width: 1px; border-style: solid; border-color: #ff8077; padding: 5px;">
+                Do not close this window or navigate away from this page while the operation is in progress.
+            </h3>
 
             <div class="running" id="statusMessage">Insert the first mirror pre-loading disk and press the button below.</div>
 
