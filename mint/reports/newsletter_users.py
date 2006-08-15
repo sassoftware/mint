@@ -8,7 +8,7 @@ import time
 from mint.reports.mint_reports import MintReport
 
 class NewUsersReport(MintReport):
-    title = 'Users wishing to recieve the monthly Newsletter'
+    title = 'Users wishing to receive the monthly Newsletter'
     headers = ('Username', 'Full Name', 'Email')
 
     def getData(self, reportTime = time.time()):
