@@ -617,6 +617,21 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.assertRaises(DuplicateLabel, project.addLabel,
                           project.getLabel(), '')
 
+    @fixtures.fixture('Full')
+    def testLocalMirror(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        self.failIf(project.localMirror,
+                    "project is local mirror without inbound label")
+
+        cu = db.cursor()
+        cu.execute("INSERT INTO InboundLabels VALUES(?, 1000, '', '', '')",
+                   project.id)
+        db.commit()
+        project.refresh()
+        self.failIf(not project.localMirror,
+                    "project is not local mirror with inbound label")
+
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
