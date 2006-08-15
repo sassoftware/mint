@@ -252,7 +252,7 @@ class AdminHandler(WebHandler):
 
     @strFields(operation = None)
     def jobserverOperation(self, operation, *args, **kwargs):
-        if operation not in ('start', 'stop'):
+        if operation not in ('start', 'stop', 'restart'):
             raise HttpNotFound
         try:
             pipeFD = os.popen("sudo /sbin/service multi-jobserver %s" % operation)
