@@ -80,7 +80,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                 content = 'troveInfo?t=testcase:runtime',
                 server = self.getProjectServerHostname())
 
-    @testsuite.context("broken")
     def testBrowseExternalProject(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external",
