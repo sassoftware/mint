@@ -120,7 +120,7 @@ cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 /usr/sbin/tmpwatch 48 $ROOT/tmp
 
 # cleanup /var/tmp
-/usr/sbin/tmpwatch 48 $ROOT/tmp
+/usr/sbin/tmpwatch 48 $ROOT/var/tmp
 EOTMPWATCH
 chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 
