@@ -53,6 +53,11 @@ class BootableImageConfig(ConfigFile):
     #directory containing the uml init script as well as fstab and other hooks
     dataDir         = '/usr/share/rbuilder/DiskImageData/'
     umlKernel       = CfgDict(CfgString)
+    # from: http://user-mode-linux.sourceforge.net/switches.html
+    # mem=size controls how much "physical" memory the kernel allocates for
+    # the system. The size is specified as a number followed by one of
+    # 'k', 'K", 'm', 'M"
+    umlMem          = '512M'
     debug           = (CfgBool, 0)
 
     # where to look for tools needed to boot a live ISO.
@@ -533,8 +538,9 @@ title %(name)s (%(kversion)s)
     @timeMe
     def runTagScripts(self, target = 'ext3'):
         if target == 'ext3':
-            cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s' % \
-                  (self.imgcfg.umlKernel[self.arch], self.outfile)
+            cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s mem=%s' % \
+                  (self.imgcfg.umlKernel[self.arch], self.outfile,
+                   self.imgcfg.umlMem)
             if not self.imgcfg.debug:
                 cmd += " > /dev/null"
             # uml-kernel sometimes returns spurious error codes on exit
@@ -544,9 +550,10 @@ title %(name)s (%(kversion)s)
             # new filesystem format...
             tmpFile = self.createSparseFile()
             cmd = '%s root=/dev/ubda1 init=/sbin/target_inits/%s_init.sh ' \
-                  'ubd0=%s ubd1=%s ubd2=%s' % \
+                  'ubd0=%s ubd1=%s ubd2=%s mem=%s' % \
                   (self.imgcfg.umlKernel[self.arch], target,
-                   self.imgcfg.toolkitImage, self.outfile, tmpFile)
+                   self.imgcfg.toolkitImage, self.outfile, tmpFile,
+                   self.imgcfg.umlMem)
             if target == 'zisofs':
                 # some targets require a work partition. size is in MB
                 fd = os.popen('/usr/bin/du -B1048576 -s %s' % \
