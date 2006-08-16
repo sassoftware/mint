@@ -13,11 +13,19 @@
 JOBSERVER_BASEPATH='/srv/rbuilder/jobserver'
 SCRIPT_PATH='/usr/share/rbuilder/scripts'
 JOBSERVER_SCRIPT="$SCRIPT_PATH/job-server"
+LOCKFILE='/var/lock/subsys/multi-jobserver'
 
 # kill processes if necessary
 case "$1" in
     stop|restart)
+        rm -f $LOCKFILE
         killproc `basename $JOBSERVER_SCRIPT` -TERM
+    ;;
+esac
+
+case "$1" in
+    start|restart)
+        touch $LOCKFILE
     ;;
 esac
 

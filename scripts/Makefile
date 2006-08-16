@@ -20,7 +20,8 @@ extra_dist = \
 	raw2vmdk.c		\
         rootstat_wrapper.c	\
 	job-server.init.in	\
-	multi-jobserver.init.in
+	multi-jobserver.init.in \
+        cleanup-bindmounts.init.in
 
 SUBDIRS = data DiskImageData
 
@@ -45,6 +46,8 @@ install: install-subdirs
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
 	install -m 755 multi-jobserver.init.in $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
+	install -m 755 cleanup-bindmounts.init.in $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
+	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
 
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
