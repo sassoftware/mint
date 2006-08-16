@@ -17,6 +17,7 @@ from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
      DuplicateLabel
 from mint.server import ParameterError, PermissionDenied
 from mint import mint_error
+from mint import database
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -36,6 +37,12 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def _checkMembership(self, project, expectedUserId, expectedAcl):
         return [expectedUserId, expectedAcl] in \
                 [[x[0], x[2]] for x in project.getMembers()]
+
+    def _callDeleteProjectScript(self, projectName):
+        import os
+        configFile = os.path.join(self.cfg.dataPath, "rbuilder.conf")
+        ret = os.system('echo yes | ../scripts/deleteproject --xyzzy=%s %s' % (configFile, projectName))
+        return ret >> 8
 
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
@@ -616,6 +623,41 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         self.assertRaises(DuplicateLabel, project.addLabel,
                           project.getLabel(), '')
+
+    @fixtures.fixture('Full')
+    def testDeleteProjectScript(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        projectName = project.hostname
+        del project
+
+        # call the database deletion script
+        self.failUnless(self._callDeleteProjectScript(projectName) == 0,
+                "Script exited with non-zero exit code")
+
+        # check for remnants
+        self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
+        # TODO more checks here, please
+
+    @fixtures.fixture('Full')
+    def testDeleteLocalMirrorProjectScript(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        projectName = project.hostname
+        cu = db.cursor()
+        cu.execute("INSERT INTO InboundLabels VALUES(?, 1000, '', '', '')",
+                   project.id)
+        db.commit()
+        project.refresh()
+        del project
+
+        # call the database deletion script
+        self.failUnless(self._callDeleteProjectScript(projectName) == 0,
+                "Script exited with non-zero exit code")
+
+        # check for remnants
+        self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
+        # TODO more checks here, please
 
     @fixtures.fixture('Full')
     def testLocalMirror(self, db, data):

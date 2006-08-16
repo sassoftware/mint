@@ -419,6 +419,10 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
+        
+        f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
+        testCfg.display(out=f)
+        f.close()
 
         return testCfg, data
 
@@ -530,6 +534,10 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         for table in [x[0] for x in cu.fetchall()]:
             fixtureCopyReposDbName = table[2+len(name):]
             self._dupDb(table, fixtureCopyReposDbName)
+
+        f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
+        testCfg.display(out=f)
+        f.close()
 
         return testCfg, data
 
