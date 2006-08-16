@@ -2,13 +2,10 @@
 
 import os, sys
 
-if os.getuid():
-    print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
-    sys.stderr.flush()
-    sys.exit(1)
-
 from mint import config
 from mint import database
+from mint.projects import mysqlTransTable
+
 from conary import dbstore
 from conary.lib import util
 
@@ -24,15 +21,15 @@ def status(output):
     print >> sys.stdout, output, ' ' * (78-len(output)), chr(13),
     sys.stdout.flush()
 
-def deleteProject(projectName):
+def deleteProject(cfg, projectName):
     # properly delete a given project by ensuring we walk the entire schema.
     # this script is verified accurate as of schema version 12.
-    global cfg
+
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     cu = db.cursor()
-    print "Deleting Project: %s" % projectName
 
-    cu.execute("""SELECT projectId, hostname, domainname, external 
+    # get project information
+    cu.execute("""SELECT projectId, hostname, domainname, external
                   FROM Projects
                   WHERE hostname = ?""", projectName)
     res = cu.fetchone()
@@ -42,23 +39,55 @@ def deleteProject(projectName):
         return
 
     (projectId, hostname, domainname, external) = res
+    projectFQDN = "%s.%s" % (hostname, domainname)
 
-    projectFQDN = '%s.%s' % (hostname, domainname)
+    # check to see if there is a different db for mirror
+    cu.execute("""SELECT toName FROM RepNameMap WHERE
+                  fromName = ? LIMIT 1""", projectFQDN)
+    res = cu.fetchone()
+    if res:
+        actualFQDN = res[0]
+    else:
+        actualFQDN = projectFQDN
 
-    if not external:
-        # step one is to delete the repos database.
-        if cfg.reposDBDriver == 'mysql':
-            # we need to delete the database manually with a drop database command
-            dbName = projectFQDN.replace('.', '_').replace('-','_')
-            status("Dropping Database: " + dbName)
-            try:
-                cu.execute("DROP DATABASE %s" % dbName)
-            except dbstore.sqlerrors.DatabaseError, e:
-                if e.args[0][1] != 1008:
-                    raise
+    # check for local mirror
+    cu.execute("""SELECT EXISTS(
+                SELECT * From InboundLabels WHERE projectId=?)""", projectId)
+    isLocalMirror = bool(cu.fetchone()[0])
 
-        # delete the actual repos directory
-        rmtree(cfg.reposPath + projectFQDN)
+    print "Deleting Project: %s %s" % (projectName, (isLocalMirror and '[mirror]' or ''))
+
+    # remove the local repository
+    print "Deleting Conary Repository"
+
+    if (not external) or isLocalMirror:
+
+        reposToDelete = [ projectFQDN ]
+        if actualFQDN != projectFQDN:
+            reposToDelete.append(actualFQDN)
+
+        for reposName in reposToDelete:
+
+            status("Deleting Conary Repository: " + reposName)
+
+            # check for mysql
+            if cfg.reposDBDriver == 'mysql':
+                dbName = reposName.translate(mysqlTransTable)
+
+                # we need to delete the database manually with a drop database
+                try:
+                    cu.execute("DROP DATABASE %s" % dbName)
+                except dbstore.sqlerrors.DatabaseError, e:
+                    # ignore unless it's a "Can't drop database error"
+                    if e.args[0][1] != 1008:
+                        raise
+
+            # delete the actual repos directory
+            rmtree(cfg.reposPath + projectFQDN)
+
+    status('')
+
+    print "Deleting Images"
 
     # delete the images directory
     imagesPath = cfg.imagesPath.split('/')[:-1]
@@ -71,89 +100,113 @@ def deleteProject(projectName):
     # delete the finished images directory
     imagesPath = os.path.join(cfg.imagesPath, projectName)
     rmtree(imagesPath)
-
-    status("Deleting Group Troves")
-    # get all group trove Ids
-    cu.execute("SELECT groupTroveId FROM GroupTroves WHERE projectId=?",
-               projectId)
-    for groupTroveId in [x[0] for x in cu.fetchall()]:
-        # grab appropriate jobs and kill them
-        status("Deleting Jobs")
-        cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?",
-                   groupTroveId)
-        for jobId in [x[0] for x in cu.fetchall()]:
-            cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
-            cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
-        # now delete all group trove items for that group trove
-        cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?",
-                   groupTroveId)
-        cu.execute("""DELETE FROM GroupTroveRemovedComponents
-                          WHERE groupTroveId=?""",
-                   groupTroveId)
-    # then delete all group troves for this project
-    cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
-
-    status("Deleting Builds")
-    # now grab all build Ids for this project
-    cu.execute("SELECT buildId FROM Builds WHERE projectId=?",
-               projectId)
-    for buildId in [x[0] for x in cu.fetchall()]:
-        status("Deleting Jobs")
-        # grab appropriate jobs and kill them
-        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?",
-                   buildId)
-        for jobId in [x[0] for x in cu.fetchall()]:
-            cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
-            cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
-
-        status("Deleting Build Files")
-        cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
-        status("Deleting Build Data")
-        cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
-
-    # now delete all builds for this project
-    cu.execute("DELETE FROM Builds WHERE projectId=?", projectId)
-
-    status("Deleting Releases")
-    # now delete all published releases
-    cu.execute("DELETE FROM PublishedReleases WHERE projectId=?", projectId)
-
-    status("Deleting Labels")
-    # delete from all other tables that refer to projectId directly
-    cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
-    cu.execute("DELETE FROM InboundLabels WHERE projectId=?", projectId)
-    cu.execute("DELETE FROM OutboundLabels WHERE projectId=?", projectId)
-    cu.execute("DELETE FROM OutboundMatchTroves WHERE projectId=?",
-               projectId)
-
-    status("Deleting Membership requests")
-    cu.execute("DELETE FROM MembershipRequests WHERE projectId=?",
-               projectId)
-    status("Deleting Commits")
-    cu.execute("DELETE FROM Commits WHERE projectId=?", projectId)
-    status("Deleting Package Index")
-    cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
-    status("Deleting Project Users")
-    cu.execute("DELETE FROM ProjectUsers WHERE projectId=?", projectId)
-    status("Deleting Project Entry")
-    cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
-    db.commit()
     status('')
 
-global cfg
+    print "Deleting Records from rBuilder Database"
+    # remove bits from rBuilder Database
+    try:
+        # start a new transaction
+        cu = db.transaction()
+
+        status("Deleting Group Troves")
+        # get all group trove Ids
+        cu.execute("SELECT groupTroveId FROM GroupTroves WHERE projectId=?",
+                   projectId)
+        for groupTroveId in [x[0] for x in cu.fetchall()]:
+            # grab appropriate jobs and kill them
+            status("Deleting Jobs")
+            cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?",
+                       groupTroveId)
+            for jobId in [x[0] for x in cu.fetchall()]:
+                cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
+                cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
+            # now delete all group trove items for that group trove
+            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?",
+                       groupTroveId)
+            cu.execute("""DELETE FROM GroupTroveRemovedComponents
+                              WHERE groupTroveId=?""",
+                       groupTroveId)
+        # then delete all group troves for this project
+        cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
+
+        status("Deleting Builds")
+        # now grab all build Ids for this project
+        cu.execute("SELECT buildId FROM Builds WHERE projectId=?",
+                   projectId)
+        for buildId in [x[0] for x in cu.fetchall()]:
+            status("Deleting Jobs")
+            # grab appropriate jobs and kill them
+            cu.execute("SELECT jobId FROM Jobs WHERE buildId=?",
+                       buildId)
+            for jobId in [x[0] for x in cu.fetchall()]:
+                cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
+                cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
+
+            status("Deleting Build Files")
+            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
+            status("Deleting Build Data")
+            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
+
+        # now delete all builds for this project
+        cu.execute("DELETE FROM Builds WHERE projectId=?", projectId)
+
+        status("Deleting Releases")
+        # now delete all published releases
+        cu.execute("DELETE FROM PublishedReleases WHERE projectId=?", projectId)
+
+        status("Deleting Membership requests")
+        cu.execute("DELETE FROM MembershipRequests WHERE projectId=?",
+                   projectId)
+        status("Deleting Commits")
+        cu.execute("DELETE FROM Commits WHERE projectId=?", projectId)
+        status("Deleting Package Index")
+        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
+        status("Deleting Project Users")
+        cu.execute("DELETE FROM ProjectUsers WHERE projectId=?", projectId)
+        status("Deleting Project Entry")
+        status("Deleting Labels")
+        # delete from all other tables that refer to projectId directly
+        cu.execute("DELETE FROM InboundLabels WHERE projectId=?", projectId)
+        cu.execute("DELETE FROM OutboundLabels WHERE projectId=?", projectId)
+        cu.execute("DELETE FROM OutboundMatchTroves WHERE projectId=?",
+                   projectId)
+        cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
+
+        cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
+        db.commit()
+    except:
+	print "Error occurred, rolling back transaction"
+        db.rollback()
+	raise
+    status('')
+ 
+
 cfg = config.MintConfig()
-cfg.read(config.RBUILDER_CONFIG)
+cfgPath = config.RBUILDER_CONFIG
 
 if not sys.argv[1:]:
     print >> sys.stderr, "Usage: %s project [project] [project] ..." % \
           sys.argv[0]
-    print >> sys.stderr, "    each project is referred to by short name only."
-    print >> sys.stderr, '    for instance "rpath" vice "rPath Linux"'
+    print >> sys.stderr, "Each project is referred to by short name only"
+    print >> sys.stderr, '(i.e. use "rpath" instead of "rPath Linux").'
     sys.stderr.flush()
     sys.exit(1)
 
+startArg = 1
+if sys.argv[1].startswith('--xyzzy='):
+    startArg = 2
+    _, cfgPath =  sys.argv[1].split('=')
+    print "Test mode using configuration from %s" % cfgPath
+else:
+    if os.getuid():
+        print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
+        sys.stderr.flush()
+        sys.exit(1)
+
+cfg.read(cfgPath)
+
 print "Executing this script will completely eradicate the following Projects:"
-print '\n'.join(sys.argv[1:])
+print '\n'.join(sys.argv[startArg:])
 print "If you do not have backups, it will be impossible to recover from this."
 print "are you ABSOLUTELY SURE you want to do this? [yes/N]"
 answer = sys.stdin.readline()[:-1]
@@ -164,8 +217,15 @@ if answer.upper() != 'YES':
     print >> sys.stderr, "aborting."
     sys.exit(1)
 
-for projectName in sys.argv[1:]:
-    deleteProject(projectName)
-print >> sys.stdout, "done."
+wereErrors = False
+for projectName in sys.argv[startArg:]:
+    try:
+        deleteProject(cfg, projectName)
+    except:
+        print "Errors occurred when deleting project %s" % projectName
+        wereErrors = True
+
+print >> sys.stdout, "Done."
+sys.exit(wereErrors and 1 or 0)
 
 
