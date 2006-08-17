@@ -18,7 +18,7 @@
             <li py:attrs="{'class': (lastchunk in ('external', 'processExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Add Externally-Managed Project</a></li>
             <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
-            <li py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${cfg.hostName}.${cfg.siteDomainName}/rAA/" target="_blank">Enter rPath Appliance Agent</a></li>
+            <li py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${cfg.hostName}.${cfg.siteDomainName}:8003/rAA/" target="_blank">Enter rPath Appliance Agent</a></li>
         </ul>
     </div>
 
