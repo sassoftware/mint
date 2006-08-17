@@ -13,7 +13,8 @@ script_dist =			\
 	mirror-outbound		\
 	mirror-prime-server	\
 	update-package-index	\
-	update-package-index-external
+	update-package-index-external \
+        set-password
 
 extra_dist = \
 	Makefile		\
