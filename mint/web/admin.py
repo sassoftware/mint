@@ -139,6 +139,8 @@ class AdminHandler(WebHandler):
             except versions.ParseError:
                 self._addErrors("Invalid label %s" % label)
         if externalAuth:
+            if url.startswith('http:'):
+                self._addErrors("Repository URL must start with https if external authentication is required")
             if authType == 'userpass':
                 if not externalUser:
                     self._addErrors("Missing username for local mirror authentication")
@@ -228,7 +230,7 @@ class AdminHandler(WebHandler):
             firstTime = True
             kwargs.setdefault('name', 'rPath Linux')
             kwargs.setdefault('hostname', 'rpath')
-            kwargs.setdefault('url', 'http://conary.rpath.com/conary/')
+            kwargs.setdefault('url', 'https://conary.rpath.com/conary/')
             kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
         else:
             firstTime = False
