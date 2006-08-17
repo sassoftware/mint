@@ -115,6 +115,12 @@ cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 
 # dump joboutput (debug) data after two weeks
 /usr/sbin/tmpwatch 336 $ROOT/srv/rbuilder/logs/joboutput
+
+# cleanup /tmp
+/usr/sbin/tmpwatch 48 $ROOT/tmp
+
+# cleanup /var/tmp
+/usr/sbin/tmpwatch 48 $ROOT/var/tmp
 EOTMPWATCH
 chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 
