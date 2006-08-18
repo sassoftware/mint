@@ -6,7 +6,7 @@ The rBuilder appliance build failed:
 
 $(tail -n 30 /tmp/create-test-rba.log)
 EOT
-exit
+exit 1
 }
 
 RBATEST=/srv/rbuilder/code/rba/

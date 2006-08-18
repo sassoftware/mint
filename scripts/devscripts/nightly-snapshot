@@ -1,10 +1,5 @@
 #!/bin/sh
 pushd /srv/rbuilder/code/mint/scripts/devscripts/
-
 ./synchg
-./create-mint-snapshot
-./cook-mint-snapshot
-
-cvc cook group-rbuilder-dist=products.rpath.com@rpath:rba-nightly
-
+./create-mint-snapshot && ./cook-mint-snapshot && cvc cook group-rbuilder-dist=/products.rpath.com@rpath:rba-devel//rba-nightly
 popd
