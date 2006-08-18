@@ -39,6 +39,9 @@ class UpdatePackageIndex(scriptlibrary.SingletonScript):
         cu = self.db.cursor()
 
         try:
+            cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
+            if not cu.fetchone()[0]:
+                cu.execute('INSERT INTO PackageIndexMark VALUES(0)')
             cu.execute("SELECT MAX(timestamp) FROM Commits")
             newMark = cu.fetchone()[0]
 
