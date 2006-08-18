@@ -6,6 +6,11 @@
 #
 
 import sys, os
+
+if os.geteuid():
+    print "This script must be run as root"
+    sys.exit(1)
+
 import md5
 import getpass
 
