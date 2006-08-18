@@ -189,7 +189,7 @@ class rMakeBuildItemsTable(database.KeyedTable):
                               AND trvLabel=?
                               AND rMakeBuildId=?""",
                        status, statusMessage, trvName, trvLabel, res[0])
-            self.db.commit()
+        self.db.commit()
 
     def troveInBuild(self, rMakeBuildId, trvName, trvVersion):
         cu = self.db.cursor()
