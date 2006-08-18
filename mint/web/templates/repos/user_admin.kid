@@ -17,7 +17,7 @@
                 <td>Write</td>
                 <td>Capped</td>
                 <td>Admin</td>
-                <td>Remove</td>
+                <td py:if="cfg.removeTrovesVisible">Remove</td>
                 <td>X</td>
                 <td>E</td>
             </tr>
@@ -30,7 +30,7 @@
                 <td py:content="row[2] and 'yes' or 'no'"/>
                 <td py:content="row[3] and 'yes' or 'no'"/>
                 <td py:content="row[4] and 'yes' or 'no'"/>
-                <td py:content="row[5] and 'yes' or 'no'"/>
+                <td py:if="cfg.removeTrovesVisible" py:content="row[5] and 'yes' or 'no'"/>
                 <td><a href="deletePerm?group=${group};label=${row[0]}&amp;item=${row[1]}" title="Delete Permission">X</a></td>
                 <td><a href="editPermForm?group=${group};label=${row[0]};trove=${row[1]};writeperm=${row[2]};capped=${row[3]};admin=${row[4]};remove=${row[5]}" title="Edit Permission">E</a></td>
             </tr>

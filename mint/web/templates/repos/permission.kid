@@ -60,8 +60,8 @@
                     <tr>
                         <td><input type="checkbox" name="admin" py:attrs="{'checked': (admin) and 'checked' or None}" /> Admin access</td>
                     </tr>
-                    <tr>
-                        <td><input type="checkbox" name="remove" py:attrs="{'checked': (remove) and 'checked' or None}" /> Remove access</td>
+                    <tr py:attrs="{'style' :  not cfg.removeTrovesVisible and 'display : none;' or None}">
+                        <td><input type="checkbox" name="remove" py:attrs="{'checked': (remove) and 'checked' or None}"/> Remove access</td>
                     </tr>
 
                 </table>

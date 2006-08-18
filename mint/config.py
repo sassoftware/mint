@@ -113,6 +113,7 @@ class MintConfig(ConfigFile):
                                "URL for external password verification")
     authCacheTimeout        = (cfgtypes.CfgInt, None,
                                "Number of seconds to cache authentication results")
+    removeTrovesVisible     = (cfgtypes.CfgBool, False)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
