@@ -14,6 +14,7 @@ from mint import config
 from mint import pkgindex
 from mint import projects
 from mint.scriptlibrary import SingletonScript
+from mint import database
 
 from conary import sqlite3
 from conary import versions
@@ -30,9 +31,16 @@ class UpdatePackageIndexExternal(SingletonScript):
 
     db = None
 
+    cfg = config.MintConfig()
+    cfg.read(config.RBUILDER_CONFIG)
+    logPath = os.path.join(cfg.dataPath, 'logs', "package-index-external.log")
+    del cfg
+
     def action(self):
         cfg = config.MintConfig()
         cfg.read(config.RBUILDER_CONFIG)
+
+        self.log.info("Updating package index")
 
         self.db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
         self.db.connect()
@@ -43,9 +51,10 @@ class UpdatePackageIndexExternal(SingletonScript):
         self.db.commit()
 
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId, hostname || '.' || domainname
+        cu.execute("""SELECT projectId, %s
                          FROM Projects
-                         WHERE external=1 AND hidden=0 AND disabled=0""")
+                         WHERE external=1 AND hidden=0 AND disabled=0""" % \
+                   database.concat(self.db, 'hostname', "'.'", 'domainname'))
 
         labels = {}
         projectIds = {}

@@ -5,7 +5,7 @@
 # All rights reserved
 #
 from mint import config
-from mint.scriptlibrary import SingletonScript
+from mint import scriptlibrary
 from conary import dbstore
 from conary import versions
 
@@ -13,10 +13,15 @@ import os
 import os.path
 import sys
 
-class UpdatePackageIndex(SingletonScript):
+class UpdatePackageIndex(scriptlibrary.SingletonScript):
 
     cfgPath = config.RBUILDER_CONFIG
     db = None
+
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
+    logPath = os.path.join(cfg.dataPath, 'logs', "package-index.log")
+    del cfg
 
     def handle_args(self):
         if len(sys.argv) > 1:
@@ -26,6 +31,8 @@ class UpdatePackageIndex(SingletonScript):
     def action(self):
         cfg = config.MintConfig()
         cfg.read(self.cfgPath)
+
+        self.log.info("Updating package index")
 
         self.db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
         self.db.loadSchema()
@@ -49,9 +56,15 @@ class UpdatePackageIndex(SingletonScript):
                               AND timestamp >=
                                   (SELECT mark FROM PackageIndexMark)""")
 
+            res = cu.fetchall()
+            numPkgs = len(res) - 1
+            if numPkgs > 0:
+                self.log.info("Indexing %d packages" % numPkgs)
+            else:
+                self.log.info("Package index is up to date")
             packageDict = {}
             labelMap = {}
-            for projectId, troveName, verStr, timeStamp in cu.fetchall():
+            for projectId, troveName, verStr, timeStamp in res:
                 troveEntry = packageDict.setdefault(troveName, {})
                 version = versions.VersionFromString(verStr)
                 label = str(version.branch().label())
@@ -90,11 +103,13 @@ class UpdatePackageIndex(SingletonScript):
                                projectId, troveName, str(version), pkgId)
 
             cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
-        except:
+        except Exception, e:
+            self.log.error("Error occured: %s" % str(e))
             self.db.rollback()
             exitcode = 1
             raise
         else:
+            self.log.info("Completed successfully")
             exitcode = 0
             self.db.commit()
         return exitcode

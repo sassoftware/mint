@@ -18,9 +18,11 @@ class GenericScript:
     cleanup phase.
     """
 
+    logPath = None
+
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
-        setupScriptLogger()
+        setupScriptLogger(self.logPath)
         self.log = getScriptLogger()
 
     def run(self):
