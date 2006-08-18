@@ -8,7 +8,7 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
     <head>
-        <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
+        <title>${formatTitle((modify and 'Edit' or 'Add') + ' Group: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
     <body>
         <div id="layout">
