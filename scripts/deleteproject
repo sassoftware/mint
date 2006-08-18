@@ -83,7 +83,7 @@ def deleteProject(cfg, projectName):
                         raise
 
             # delete the actual repos directory
-            rmtree(cfg.reposPath + projectFQDN)
+            rmtree(cfg.reposPath + reposName)
 
     status('')
 
@@ -171,6 +171,7 @@ def deleteProject(cfg, projectName):
         cu.execute("DELETE FROM OutboundMatchTroves WHERE projectId=?",
                    projectId)
         cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
+        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", projectFQDN)
 
         cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
         db.commit()
