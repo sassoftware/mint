@@ -16,12 +16,11 @@
                 items.remove('ALL')
                 items.insert(0, 'ALL')
         ?>
-        <option py:for="value in items"
-                py:content="value" value="${value}" py:attrs="{'selected': (selected == value) and 'selected' or None}" />
+        <option py:for="value in items" py:content="value" value="${value}" py:attrs="{'selected': (selected == value) and 'selected' or None}" />
     </select>
 
     <head>
-        <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
+        <title>${formatTitle(operation + ' Permission: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
     <body>
         <div id="layout">
@@ -52,7 +51,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td id="header" rowspan="2">Options:</td>
+                        <td id="header" rowspan="3">Options:</td>
                         <td><input type="checkbox" name="writeperm" py:attrs="{'checked': (writeperm) and 'checked' or None}" /> Write access</td>
                     </tr>
                     <tr style="display: none;">
@@ -60,6 +59,9 @@
                     </tr>
                     <tr>
                         <td><input type="checkbox" name="admin" py:attrs="{'checked': (admin) and 'checked' or None}" /> Admin access</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="remove" py:attrs="{'checked': (remove) and 'checked' or None}" /> Remove access</td>
                     </tr>
 
                 </table>
