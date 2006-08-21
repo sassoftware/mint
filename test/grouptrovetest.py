@@ -1057,11 +1057,11 @@ class GroupTroveTestConary(MintRepositoryHelper):
     def waitForCommit(self, project, troveList):
         iters = 0
         while True:
-            time.sleep(0.1)
+            time.sleep(0.5)
             iters += 1
             if [x[:2] for x in project.getCommits()] == troveList:
                 break
-            if iters > 50:
+            if iters > 30:
                 self.fail("commits didn't show up")
 
     def testCookOnServer(self):
