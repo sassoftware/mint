@@ -93,5 +93,9 @@ killall -USR1 httpd > /dev/null 2>&1
 # Restart the job servers
 service multi-jobserver start
 
+# Start rAA
+service raa-lighttpd start
+service raa start
+
 echo "rBuilder 2.0.0 Migration complete."
 exit 0
