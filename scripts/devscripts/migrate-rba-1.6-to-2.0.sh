@@ -84,6 +84,9 @@ fi
 echo "Restoring /srv/rbuilder/rbuilder.conf with updates"
 sed -e 's/visibleImageTypes/visibleBuildTypes/g' $BACKUPDIR/rbuilder.conf > ${RBUILDER_ROOT}/rbuilder.conf
 
+# Rebuild /etc/sysconfig/iptables
+system-config-securitylevel-tui -q -p 22:tcp -p 80:tcp -p 443:tcp -p 8003:tcp
+
 # Send a USR1 to httpd for good measure
 killall -USR1 httpd > /dev/null 2>&1
 
