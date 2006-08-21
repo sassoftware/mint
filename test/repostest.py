@@ -86,11 +86,11 @@ class RepositoryTest(MintRepositoryHelper):
         # give some time for the commit action to run
         iters = 0
         while True:
-            sleep(0.1)
+            sleep(0.5)
             iters += 1
             if project.getCommits() != []:
                 break
-            if iters > 50:
+            if iters > 30:
                 self.fail("commits didn't show up")
 
         assert([x[:2] for x in project.getCommits()] == [('testcase:source', '1.0-1')])
