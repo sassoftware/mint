@@ -60,8 +60,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.getCreatorId() == 2)
-        import epdb
-        epdb.st()
 
     @fixtures.fixture("Full")
     def testNewProjectError(self, db, data):
