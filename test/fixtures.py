@@ -517,7 +517,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg = copy.deepcopy(cfg)
         testCfg.dataPath = testDataPath
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s')]
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
