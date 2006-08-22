@@ -542,6 +542,9 @@ class AccountTest(MintRepositoryHelper):
 
         project.addMemberById(userId2, userlevels.DEVELOPER)
 
+        # XXX: not sure why i have to reopen the database here for mysql
+        db = dbstore.connect(dbConn[1], dbConn[0])
+        rCu = db.cursor()
         rCu.execute('SELECT * FROM Permissions')
         self.failIf(acls == rCu.fetchall(),
                     "addMember didn't change internal project acl's")
