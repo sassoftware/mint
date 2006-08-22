@@ -7,7 +7,7 @@ import testsuite
 testsuite.setup()
 
 import fixtures
-from mint import mint_error
+from mint import mint_error, users
 from mint.database import ItemNotFound
 
 class UsersTest(fixtures.FixturedUnitTest):
@@ -155,12 +155,12 @@ class UsersTest(fixtures.FixturedUnitTest):
         self.assertRaises(mint_error.ParameterError, user.setDataValue,
                           'notOnTheList', 0)
 
-    @fixtures.fixture('Full')
+    @fixtures.fixture('Empty')
     def testUserDataCancelAcct(self, db, data):
         # this might more appropriately be under accounttest but that is not
         # yet fixtured.
-        client = self.getClient('user')
-        user = client.getUser(data['user'])
+        client = self.getClient('test')
+        user = client.getUser(data['test'])
 
         user.setDataValue('newsletter', True)
 
@@ -172,6 +172,14 @@ class UsersTest(fixtures.FixturedUnitTest):
         user.cancelUserAccount()
         cu.execute('SELECT * FROM UserData WHERE userId=?', user.id)
         self.failIf(cu.fetchall(), "User data not deleted when acct canceled.")
+
+    @fixtures.fixture('Full')
+    def testCancelUserAccount(self, db, data):
+        # XXX: This test fails under sqlite.
+        client = self.getClient('user')
+        user = client.getUser(data['user'])
+
+        self.assertRaises(users.LastOwner, user.cancelUserAccount)
 
     @fixtures.fixture('Full')
     def testUserDataDict(self, db, data):
