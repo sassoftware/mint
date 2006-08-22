@@ -30,12 +30,16 @@ class Image(object):
         else:
             mode = 0644
 
-        args[0] = os.path.join(self.tmpDir, args[0])
-        args[1] = os.path.join(self.templateDir, args[1])
-        output = args[1]
+        input = os.path.join(self.tmpDir, args[0])
+        output = os.path.join(self.templateDir, args[1])
+
         util.mkdirChain(os.path.dirname(output))
-        retcode = func(*args)
+        retcode = func(input, output)
         os.chmod(output, mode)
+
+        # copy the resulting file back to the source area in
+        # case it is used elsewhere in the manifest
+        util.copyfile(output, os.path.join(self.tmpDir, args[1]))
         return retcode
 
     def cpiogz(self, inputDir, output):
