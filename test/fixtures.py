@@ -571,7 +571,7 @@ class FixturedUnitTest(unittest.TestCase):
 
         self.cfg, fixtureData = fixtureCache.load(name)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        server.dbConnection = None # reset the cached db connection
+        server.dbConnection = db # reset the cached db connection
 
         return db, fixtureData
 

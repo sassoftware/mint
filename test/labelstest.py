@@ -260,7 +260,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
             adminClient.setOutboundMatchTroves(projectId, labelId, order)
 
-            cu.execute("SELECT idx, matchStr FROM OutboundMatchTroves")
+            cu.execute("SELECT idx, matchStr FROM OutboundMatchTroves ORDER BY idx")
             self.failIf([x for x in cu.fetchall()] != \
                         [x for x in enumerate(order)],
                         "order of troves was mangled")

@@ -15,7 +15,7 @@ def rejectMail(fromEmail, fromEmailName, toEmail, subject, body):
 def passMail(fromEmail, fromEmailName, toEmail, subject, body):
     return
 
-class GroupTroveTest(fixtures.FixturedUnitTest):
+class EmailTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testEmailRejection(self, db, data):
         client = self.getClient("admin")
