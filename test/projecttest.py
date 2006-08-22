@@ -41,7 +41,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def _callDeleteProjectScript(self, projectName):
         import os
         configFile = os.path.join(self.cfg.dataPath, "rbuilder.conf")
-        ret = os.system('echo yes | ../scripts/deleteproject --xyzzy=%s %s' % (configFile, projectName))
+        ret = os.system('echo yes | ../scripts/deleteproject --xyzzy=%s %s > /dev/null' % (configFile, projectName))
         return ret >> 8
 
     @fixtures.fixture("Full")
