@@ -645,8 +645,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         projectName = project.hostname
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundLabels VALUES(?, 1000, '', '', '')",
-                   project.id)
+        cu.execute("INSERT INTO InboundLabels VALUES(?, ?, '', '', '')",
+                   project.id, project.id)
         db.commit()
         project.refresh()
         del project
@@ -667,8 +667,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "project is local mirror without inbound label")
 
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundLabels VALUES(?, 1000, '', '', '')",
-                   project.id)
+        cu.execute("INSERT INTO InboundLabels VALUES(?, ?, '', '', '')",
+                   project.id, project.id)
         db.commit()
         project.refresh()
         self.failIf(not project.localMirror,
