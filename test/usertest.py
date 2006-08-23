@@ -176,8 +176,8 @@ class UsersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testCancelUserAccount(self, db, data):
         # XXX: This test fails under sqlite.
-        client = self.getClient('user')
-        user = client.getUser(data['user'])
+        client = self.getClient('owner')
+        user = client.getUser(data['owner'])
 
         self.assertRaises(users.LastOwner, user.cancelUserAccount)
 
