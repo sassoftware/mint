@@ -71,7 +71,7 @@ class GroupTroveTable(database.KeyedTable):
                                       SELECT * FROM %s_backup""" % self.name)
                 else:
                     cu.execute("""ALTER TABLE GroupTroves
-                                      MODIFY COLUMN recipeName CHAR(200)""")
+                                      MODIFY COLUMN recipeName VARCHAR(200)""")
             return dbversion >= 16
         return True
 
