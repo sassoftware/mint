@@ -246,23 +246,33 @@ def getHttpAuth(req):
         return req.headers_in['X-Session-Id']
 
     if not 'Authorization' in req.headers_in:
-        return ('anonymous', 'anonymous')
+        authToken = ['anonymous', 'anonymous']
+    else:
+        info = req.headers_in['Authorization'].split()
+        if len(info) != 2 or info[0] != "Basic":
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
-    info = req.headers_in['Authorization'].split()
-    if len(info) != 2 or info[0] != "Basic":
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+        try:
+            authString = base64.decodestring(info[1])
+        except:
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
-    try:
-        authString = base64.decodestring(info[1])
-    except:
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+        if authString.count(":") != 1:
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
-    if authString.count(":") != 1:
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+        authToken = authString.split(":")
 
-    authToken = authString.split(":")
+    entitlement = req.headers_in.get('X-Conary-Entitlement', None)
+    if entitlement is not None:
+        try:
+            entitlement = entitlement.split()
+            entitlement[1] = base64.decodestring(entitlement[1])
+        except:
+            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+    else:
+        entitlement = [ None, None ]
 
-    return authToken
+    return authToken + entitlement
 
 
 class HttpError(Exception): #pragma: no cover

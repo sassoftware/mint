@@ -85,7 +85,6 @@ def post(port, isSecure, repos, cfg, req):
         (params, method) = xmlrpclib.loads(data)
 
         wrapper = repos.callWrapper
-        authToken = (authToken[0], authToken[1], None, None)
         params = [protocol, port, method, authToken, params]
         kwargs = {'remoteIp': req.connection.remote_ip}
         try:
@@ -143,7 +142,6 @@ def get(port, isSecure, repos, cfg, req):
         if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
             return apache.HTTP_FORBIDDEN
 
-        authToken = (authToken[0], authToken[1], None, None)
         localName = repos.tmpPath + "/" + req.args + "-out"
         size = os.stat(localName).st_size
 

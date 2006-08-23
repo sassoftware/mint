@@ -305,5 +305,45 @@ class RepositoryTest(MintRepositoryHelper):
                     {'': ''})
 
 
+    def testEntitlementAccess(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        projectId = self.newProject(client)
+        self.makeSourceTrove("testcase", testRecipe)
+
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        # get rid of anonymous access
+        nc.deleteUserByName(self.cfg.buildLabel, 'anonymous')
+        entclass = 'entclass'
+        entkey = 'ENTITLEMENT'
+        nc.addEntitlementGroup(self.cfg.buildLabel, entclass, 'testuser')
+        if hasattr(nc, 'addEntitlement'):
+            nc.addEntitlement(self.cfg.buildLabel, entclass, entkey)
+        else:
+            nc.addEntitlements(self.cfg.buildLabel, entclass, [entkey])
+
+        troveNames = nc.troveNames(self.cfg.buildLabel)
+        assert(troveNames == ['testcase:source'])
+
+        entcfg = ConaryConfiguration()
+        entcfg.root = cfg.dbPath = ":memory:"
+        entcfg.repositoryMap = cfg.repositoryMap
+        entcfg.entitlementDirectory = self.workDir
+        entcfg.installLabelPath = cfg.installLabelPath
+
+        server = self.cfg.buildLabel.getHost()
+        open(self.workDir + "/%s" % server, "w").write(
+            "<server>%s</server>\n"
+            "<class>%s</class>\n"
+            "<key>%s</key>\n" % (server, entclass, entkey))
+
+        entclient = ConaryClient(entcfg)
+        entnc = entclient.getRepos()
+        troveNames = entnc.troveNames(self.cfg.buildLabel)
+        assert(troveNames == ['testcase:source'])
+
 if __name__ == "__main__":
     testsuite.main()
