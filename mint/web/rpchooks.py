@@ -39,6 +39,7 @@ def rpcHandler(req, cfg, pathInfo = None):
         return apache.HTTP_BAD_REQUEST
 
     authToken = getHttpAuth(req)
+    authToken = authToken[0:2] # throw away entitlement
 
     # instantiate a MintServer
     srvr = server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
