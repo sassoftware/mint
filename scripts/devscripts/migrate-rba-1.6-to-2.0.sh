@@ -5,6 +5,7 @@
 
 # Full install label to builds repository
 INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-2"
+NEEDED_LABELS_FOR_UPDATE="products.rpath.com@rpath:rba-1.6 products.rpath.com@rpath:rba-2 products.rpath.com@rpath:conary-1.1 products.rpath.com@rpath:raa-1"
 
 RBUILDER_ROOT="/srv/rbuilder"
 BACKUPDIR="/tmp/rBA-2.0-migration.$$"
@@ -30,7 +31,7 @@ fi
 curr_ver=`conary q group-rbuilder-dist | cut -d'=' -f2 | cut -d'-' -f1`
 case $curr_ver in
     1.6.3)
-        echo "Found version 1.6.3 of group-rbuilder-dist. Migration proceeding."
+        echo "Found version 1.6.3 of group-rbuilder-dist."
         ;;
     2.0.0)
         echo "Migration has already taken place. Exiting."
@@ -54,15 +55,59 @@ EONOTE
     fi
 fi
 
+for l in $NEEDED_LABELS_FOR_UPDATE; do
+    echo -n "Checking access to $l... "
+    conary rq --install-label="$l" >& /dev/null
+    if [ $? -ne 0 ]; then
+        echo "failed"
+        echo ""
+        echo "It appears that your appliance cannot access this product update."
+        echo "Contact a rPath sales engineer for assistance."
+        exit 1
+    else
+        echo "passed"
+    fi
+done
+
+echo "Access confirmed to product update. Migration proceeding."
+echo ""
+
 # start the migration here ####################################################
 
 # update conary (the old school way)
-echo "Updating Conary to 1.0.27"
-conary update {conary,conary-repository,conary-build}=1.0.27 conary-policy --resolve
-if [ $? -ne 0 ]; then
-    echo "WARNING: Conary not updated, you'll have to do this again manually."
-    echo "Current version of conary is $(conary --version)"
-    exit 1
+echo -n "Checking Conary..."
+cversion=`conary --version`
+
+case $cversion in
+    1.0.*)
+        cversion_minor=`echo $cversion | cut -d. -f3`
+        if [ $cversion_minor -lt 27 ]; then
+            update_conary=0
+        else
+            update_conary=1
+        fi
+        ;;
+    1.1.*)
+        update_conary=1
+        ;;
+    *)
+        echo "Unknown conary version; something's wrong. Bailing."
+        exit 1
+        ;;
+esac
+
+echo "found version $cversion"
+
+if [ $update_conary -eq 0 ]; then
+    echo "Updating Conary to 1.0.27"
+    conary update {conary,conary-repository,conary-build}=1.0.27 conary-policy --resolve
+    if [ $? -ne 0 ]; then
+        echo "WARNING: Conary not updated, you'll have to do this again manually."
+        echo "Current version of conary is $(conary --version)"
+        exit 1
+    fi
+else
+    echo "Conary is sufficiently up-to-date for this migration; continuing."
 fi
 
 # backup the configuration files, as Conary may not keep them around
