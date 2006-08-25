@@ -75,12 +75,39 @@ echo ""
 # start the migration here ####################################################
 
 # update conary (the old school way)
-echo "Updating Conary to 1.0.27"
-conary update {conary,conary-repository,conary-build}=1.0.27 conary-policy --resolve
-if [ $? -ne 0 ]; then
-    echo "WARNING: Conary not updated, you'll have to do this again manually."
-    echo "Current version of conary is $(conary --version)"
-    exit 1
+echo -n "Checking Conary..."
+cversion=`conary --version`
+
+case $cversion in
+    1.0.*)
+        cversion_minor=`echo $cversion | cut -d. -f3`
+        if [ $cversion_minor -lt 27 ]; then
+            update_conary=0
+        else
+            update_conary=1
+        fi
+        ;;
+    1.1.*)
+        update_conary=1
+        ;;
+    *)
+        echo "Unknown conary version; something's wrong. Bailing."
+        exit 1
+        ;;
+esac
+
+echo "found version $cversion"
+
+if [ $update_conary -eq 0 ]; then
+    echo "Updating Conary to 1.0.27"
+    conary update {conary,conary-repository,conary-build}=1.0.27 conary-policy --resolve
+    if [ $? -ne 0 ]; then
+        echo "WARNING: Conary not updated, you'll have to do this again manually."
+        echo "Current version of conary is $(conary --version)"
+        exit 1
+    fi
+else
+    echo "Conary is sufficiently up-to-date for this migration; continuing."
 fi
 
 # backup the configuration files, as Conary may not keep them around
