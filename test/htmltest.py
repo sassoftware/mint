@@ -21,23 +21,15 @@ bad2 = "I'm broken.<hr"
 bad3 = "<iframe>Hello world!</iframe>"
 
 class HtmlTest(unittest.TestCase):
-    def excepts(self, call, args, exception, errStr):
-        try:
-            call(*args)
-        except exception:
-            pass
-        else:
-            self.fail(errStr)
-
     def testGoodHtml(self):
         assert checkHTML(xml + (wrap % good1)), good1
         assert checkHTML(xml + (wrap % good2)), good2
         assert checkHTML(xml + (wrap % good3)), good3
 
     def testBadHtml(self):
-        self.excepts(checkHTML, [xml + (wrap % bad1)], HtmlTagNotAllowed, "html checker allowed tag <script> to pass")
-        self.excepts(checkHTML, [xml + (wrap % bad2)], HtmlParseError, "failed to trap parse error")
-        self.excepts(checkHTML, [xml + (wrap % bad3)], HtmlTagNotAllowed, "html checker allowed tag <iframe> to pass")
+        self.assertRaises(HtmlTagNotAllowed, checkHTML, xml + (wrap % bad1))
+        self.assertRaises(HtmlParseError, checkHTML, xml + (wrap % bad2))
+        self.assertRaises(HtmlTagNotAllowed, checkHTML, xml + (wrap % bad3))
 
 if __name__ == "__main__":
     testsuite.main()
