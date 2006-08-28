@@ -5,7 +5,7 @@
 
 # Full install label to builds repository
 INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-2"
-NEEDED_TROVES_AND_LABELS="group-rbuilder-dist=products.rpath.com@rpath:rba-1.6 group-rbuilder-dist=products.rpath.com@rpath:rba-2 conary=products.rpath.com@rpath:conary-1.1 raaplugins=products.rpath.com@rpath:raa-1"
+NEEDED_TROVES_AND_LABELS="group-rbuilder-dist=products.rpath.com@rpath:rba-1.6 group-rbuilder-dist=products.rpath.com@rpath:rba-2 conary=products.rpath.com@rpath:conary-1.1 raaplugins=products.rpath.com@rpath:raa-1-beta raaplugins=products.rpath.com@rpath:raa-1"
 
 RBUILDER_ROOT="/srv/rbuilder"
 BACKUPDIR="/tmp/rBA-2.0-migration.$$"
