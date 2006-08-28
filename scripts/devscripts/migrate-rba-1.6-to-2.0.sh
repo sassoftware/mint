@@ -5,7 +5,7 @@
 
 # Full install label to builds repository
 INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-2"
-NEEDED_LABELS_FOR_UPDATE="products.rpath.com@rpath:rba-1.6 products.rpath.com@rpath:rba-2 products.rpath.com@rpath:conary-1.1 products.rpath.com@rpath:raa-1"
+NEEDED_TROVES_AND_LABELS="group-rbuilder-dist|products.rpath.com@rpath:rba-1.6 group-rbuilder-dist|products.rpath.com@rpath:rba-2 conary|products.rpath.com@rpath:conary-1.1 raaplugins|products.rpath.com@rpath:raa-1"
 
 RBUILDER_ROOT="/srv/rbuilder"
 BACKUPDIR="/tmp/rBA-2.0-migration.$$"
@@ -55,22 +55,31 @@ EONOTE
     fi
 fi
 
-for l in $NEEDED_LABELS_FOR_UPDATE; do
+access_fail=1
+for tl in $NEEDED_TROVES_AND_LABELS; do
+    t=`echo $tl | cut -d\| -f1`
+    l=`echo $tl | cut -d\| -f2`
     echo -n "Checking access to $l... "
-    conary rq --install-label="$l" >& /dev/null
+    conary rq $t --install-label="$l" >& /dev/null
     if [ $? -ne 0 ]; then
         echo "failed"
-        echo ""
-        echo "It appears that your appliance cannot access this product update."
-        echo "Contact a rPath sales engineer for assistance."
-        exit 1
+        access_fail=0
     else
         echo "passed"
     fi
 done
 
-echo "Access confirmed to product update. Migration proceeding."
-echo ""
+if [ $access_fail -eq 0 ]; then
+    echo ""
+    echo "It appears that your appliance cannot access this product update."
+    echo "Contact a rPath sales engineer for assistance."
+    exit 1
+else
+    echo "Access confirmed to product update. Migration proceeding."
+    echo ""
+fi
+
+exit 0
 
 # start the migration here ####################################################
 
