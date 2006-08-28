@@ -1,12 +1,54 @@
 #!/bin/sh
-pushd /srv/rbuilder/code/mint/scripts/devscripts/
-./synchg
+#
+# Copyright (C) 2006 rPath, Inc.
+# All Rights Reserved
+#
+# This script generates an rBuilder appliance image from the ground up.
+#
+# Requirements:
+#  * A directory ($RECIPES_PATH) that is set with "cvc context" to
+#    point to your nightly branch.
+#  * A ~/.rbuilderrc pointing to an rBuilder installation that has
+#    your $NIGHTLY_PROJECT specified below.
+#  * rBuilder scripts and command line paths specified correctly.
+#
 
-./create-mint-snapshot 
+RECIPES_PATH=/srv/rbuilder/code/nightly/
+NIGHTLY_PROJECT=rbuilder
+
+SCRIPTS_PATH=/srv/rbuilder/code/mint/scripts/
+CMDLINE_PATH=/srv/rbuilder/code/mint/bin/
+
+# source functions library
+. $SCRIPTS_PATH/devscripts/nightly-library.sh
+
+# build the image maker image into toolkit-image
+merge_and_cook toolkit_inits
+merge_and_cook group-image_maker
+create_build rbuilder group-image_maker raw_hd_image --wait
+merge toolkit-image
+fetch_build toolkit-image image_maker.img
+commit toolkit-image
+cook toolkit-image
+
+# build a new rbuilder snapshot
+$SCRIPTS_PATH/devscripts/synchg
+$SCRIPTS_PATH/devscripts/create-mint-snapshot
+if [ $? -ne 0 ]; then exit 1; fi
+$SCRIPTS_PATH/devscripts/cook-mint-snapshot
 if [ $? -ne 0 ]; then exit 1; fi
 
-./cook-mint-snapshot 
-if [ $? -ne 0 ]; then exit 1; fi
+# build the jobserver root into jobserver-root
+merge_and_cook group-jobserver-root
+create_build rbuilder group-jobserver-root tarball --wait
+merge jobserver-root
+fetch_build jobserver-root jobserver.tgz
+commit jobserver-root
+cook jobserver-root
 
-cvc cook group-rbuilder-dist=/products.rpath.com@rpath:rba-devel//rba-nightly
-popd
+# build a new group-rbuilder-dist
+merge_and_cook group-rbuilder-dist
+
+# trigger ISO and VMware builds from resulting group-rbuilder-dist cook
+create_build rbuilder group-rbuilder-dist installable_iso
+create_build rbuilder group-rbuilder-dist vmware_image
