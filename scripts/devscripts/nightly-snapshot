@@ -15,6 +15,9 @@
 
 RECIPES_PATH=/srv/rbuilder/code/nightly/
 NIGHTLY_PROJECT=rbuilder
+NIGHTLY_CONTEXT=rba-nightly
+NIGHTLY_LABEL=products.rpath.com@rpath:rba-nightly
+NIGHTLY_BRANCH=/products.rpath.com@rpath:rba-devel//rba-nightly/
 
 SCRIPTS_PATH=/srv/rbuilder/code/mint/scripts/
 CMDLINE_PATH=/srv/rbuilder/code/mint/bin/
@@ -47,8 +50,11 @@ commit jobserver-root
 cook jobserver-root
 
 # build a new group-rbuilder-dist
-merge_and_cook group-rbuilder-dist
+merge group-rbuilder-dist
+commit group-rbuilder-dist
+# hack to get around our label multiplicity problems
+cook group-rbuilder-dist=$NIGHTLY_BRANCH
 
 # trigger ISO and VMware builds from resulting group-rbuilder-dist cook
-create_build rbuilder group-rbuilder-dist installable_iso
-create_build rbuilder group-rbuilder-dist vmware_image
+create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH installable_iso
+create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH vmware_image

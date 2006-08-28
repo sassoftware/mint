@@ -54,7 +54,7 @@ function create_build() {
     type=$3
     options=$4
 
-    TROVESPEC=$(conary rq $trove --full-versions --flavors)
+    TROVESPEC=$(conary rq --install-label $NIGHTLY_LABEL $trove --full-versions --flavors)
     eval $($CMDLINE_PATH/rbuilder build-create $project "$TROVESPEC" $type $options)
 }
 
