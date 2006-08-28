@@ -53,9 +53,9 @@ mysqlTransTable = string.maketrans("-.:", "___")
 class Project(database.TableObject):
     # XXX: disabled is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
-                 'description', 'hostname', 'domainname', 'projecturl',
+                 'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
-                 'timeCreated', 'timeModified', 'localMirror')
+                 'timeCreated', 'timeModified')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -534,12 +534,6 @@ class ProjectsTable(database.KeyedTable):
     def get(self, *args, **kwargs):
         ret = database.KeyedTable.get(self, *args, **kwargs)
         ret['external'] = bool(ret['external'])
-        cu = self.db.cursor()
-        cu.execute("""SELECT EXISTS(SELECT *
-                                        FROM InboundLabels
-                                        WHERE projectId=?)""",
-                   ret['projectId'])
-        ret['localMirror'] = bool(cu.fetchone()[0])
         return ret
 
 

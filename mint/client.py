@@ -521,6 +521,9 @@ class MintClient:
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
 
+    def isLocalMirror(self, projectId):
+        return self.server.isLocalMirror(projectId)
+
     def addRemappedRepository(self, fromName, toName):
         return self.server.addRemappedRepository(fromName, toName)
 

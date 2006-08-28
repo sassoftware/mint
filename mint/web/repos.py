@@ -104,7 +104,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def _handle(self, *args, **kwargs):
         """Handle either an HTTP POST or GET command."""
 
-        if self.project.external and not self.project.localMirror:
+        localMirror = self.client.isLocalMirror(self.project.id)
+        if self.project.external and not localMirror:
             overrideAuth = False
         else:
             # try as a specified user, if fails, fall back to anonymous

@@ -3445,6 +3445,15 @@ class MintServer(object):
         return [list(x[:5]) + [bool(x[5]), bool(x[6])] for x in cu.fetchall()]
 
     @private
+    @typeCheck(int)
+    def isLocalMirror(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT EXISTS(SELECT *
+            FROM InboundLabels
+            WHERE projectId=?)""", projectId)
+        return bool(cu.fetchone()[0])
+
+    @private
     @typeCheck(str, str)
     @requiresAdmin
     def addRemappedRepository(self, fromName, toName):

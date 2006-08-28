@@ -663,7 +663,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def testLocalMirror(self, db, data):
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
-        self.failIf(project.localMirror,
+        self.failIf(client.isLocalMirror(project.id),
                     "project is local mirror without inbound label")
 
         cu = db.cursor()
@@ -671,7 +671,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                    project.id, project.id)
         db.commit()
         project.refresh()
-        self.failIf(not project.localMirror,
+        self.failIf(not client.isLocalMirror(project.id),
                     "project is not local mirror with inbound label")
 
 
