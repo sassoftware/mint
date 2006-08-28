@@ -79,8 +79,6 @@ else
     echo ""
 fi
 
-exit 0
-
 # start the migration here ####################################################
 
 # update conary (the old school way)
