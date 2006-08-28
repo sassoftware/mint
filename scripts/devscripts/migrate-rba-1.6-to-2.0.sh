@@ -5,7 +5,7 @@
 
 # Full install label to builds repository
 INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-2"
-NEEDED_TROVES_AND_LABELS="group-rbuilder-dist|products.rpath.com@rpath:rba-1.6 group-rbuilder-dist|products.rpath.com@rpath:rba-2 conary|products.rpath.com@rpath:conary-1.1 raaplugins|products.rpath.com@rpath:raa-1"
+NEEDED_TROVES_AND_LABELS="group-rbuilder-dist=products.rpath.com@rpath:rba-1.6 group-rbuilder-dist=products.rpath.com@rpath:rba-2 conary=products.rpath.com@rpath:conary-1.1 raaplugins=products.rpath.com@rpath:raa-1"
 
 RBUILDER_ROOT="/srv/rbuilder"
 BACKUPDIR="/tmp/rBA-2.0-migration.$$"
@@ -57,10 +57,8 @@ fi
 
 access_fail=1
 for tl in $NEEDED_TROVES_AND_LABELS; do
-    t=`echo $tl | cut -d\| -f1`
-    l=`echo $tl | cut -d\| -f2`
-    echo -n "Checking access to $l... "
-    conary rq $t --install-label="$l" >& /dev/null
+    echo -n "Checking access to $tl... "
+    conary rq $tl >& /dev/null
     if [ $? -ne 0 ]; then
         echo "failed"
         access_fail=0
