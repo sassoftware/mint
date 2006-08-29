@@ -387,6 +387,17 @@ class ProjectHandler(WebHandler):
             else:
                 self._predirect("builds")
 
+        # check to make sure that we didn't lose buildtype at some point
+        # this condition isn't perfect because it loses state and forces
+        # the user to redo their build setup, so we should figure out why
+        # we are actually losing the buildtype (maybe if javascript is turned
+        # off), and fix that, too.
+        if 'buildtype' not in kwargs:
+            self._addErrors("You cannot save this build because a build type has "
+                "not been chosen. Please fix this error and try again.")
+            self._predirect("newBuild")
+            return
+
         if not buildId:
             build = self.client.newBuild(self.project.id, name)
             buildId = build.id
@@ -410,7 +421,6 @@ class ProjectHandler(WebHandler):
 
         # handle buildType check box state changes
         buildType = int(kwargs['buildtype'])
-
         build.setBuildType(buildType)
 
         # convert any python variable-name-safe trove spec parameters to the
