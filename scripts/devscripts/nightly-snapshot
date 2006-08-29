@@ -18,6 +18,7 @@ NIGHTLY_PROJECT=rbuilder
 NIGHTLY_CONTEXT=rba-nightly
 NIGHTLY_LABEL=products.rpath.com@rpath:rba-nightly
 NIGHTLY_BRANCH=/products.rpath.com@rpath:rba-devel//rba-nightly/
+ERROR_MAIL=tgerla@rpath.com
 
 SCRIPTS_PATH=/srv/rbuilder/code/mint/scripts/
 CMDLINE_PATH=/srv/rbuilder/code/mint/bin/
@@ -36,10 +37,9 @@ cook toolkit-image
 
 # build a new rbuilder snapshot
 $SCRIPTS_PATH/devscripts/synchg
-$SCRIPTS_PATH/devscripts/create-mint-snapshot
-if [ $? -ne 0 ]; then exit 1; fi
-$SCRIPTS_PATH/devscripts/cook-mint-snapshot
-if [ $? -ne 0 ]; then exit 1; fi
+create_mint_snapshot
+$SCRIPTS_PATH/devscripts/rmake-helper --trove rbuilder=$NIGHTLY_BRANCH --context=$NIGHTLY_CONTEXT --commit
+[ $? -ne 0 ] && carp_rmake $?
 
 # build the jobserver root into jobserver-root
 merge_and_cook group-jobserver-root
