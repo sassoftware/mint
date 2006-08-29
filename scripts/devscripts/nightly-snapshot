@@ -18,7 +18,7 @@ NIGHTLY_PROJECT=rbuilder
 NIGHTLY_CONTEXT=rba-nightly
 NIGHTLY_LABEL=products.rpath.com@rpath:rba-nightly
 NIGHTLY_BRANCH=/products.rpath.com@rpath:rba-devel//rba-nightly/
-ERROR_MAIL=tgerla@rpath.com
+ERROR_MAIL=rbuilder-list@rpath.com
 
 SCRIPTS_PATH=/srv/rbuilder/code/mint/scripts/
 CMDLINE_PATH=/srv/rbuilder/code/mint/bin/

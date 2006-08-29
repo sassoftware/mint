@@ -22,6 +22,13 @@ EOT
 exit 1
 }
 
+function rewrite_version {
+    file=$1
+    newver=$2
+
+    sed -ri "s/(\s+)version \= '.+'/\1version \= \'$newver\'/" $file
+}
+
 function merge() {
     pushd $RECIPES_PATH
     [ -d $RECIPES_PATH/$1/ ] || cvc co $1
@@ -29,6 +36,7 @@ function merge() {
 #    cvc merge
 #    [ $? != 0 ] && carp
     echo "currently a no-op until merge is fixed"
+    rewrite_version $1.recipe $DATE
     popd
     popd
 }
@@ -71,13 +79,6 @@ function fetch_build() {
     URL=$($CMDLINE_PATH/rbuilder build-url $BUILD_ID)
     curl -L -o $target_file $URL
     popd
-}
-
-function rewrite_version {
-    file=$1
-    newver=$2
-
-    sed -ri "s/(\s+)version \= '.+'/\1version \= \'$newver\'/" $file
 }
 
 function create_mint_snapshot {
