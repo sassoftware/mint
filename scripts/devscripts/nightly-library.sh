@@ -12,6 +12,16 @@ function carp {
     exit 1
 }
 
+function carp_rmake {
+    jobid=$1
+    nail -s 'rBuilder Snapshot Build Failed' $ERROR_MAIL << EOT
+The rBuilder appliance build failed:
+
+$(rmake q $jobid --logs)
+EOT
+exit 1
+}
+
 function merge() {
     pushd $RECIPES_PATH
     [ -d $RECIPES_PATH/$1/ ] || cvc co $1
@@ -23,7 +33,6 @@ function merge() {
     popd
 }
 
-
 function commit() {
     pushd $RECIPES_PATH/$1
     cvc commit --message "automated commit for $DATE"
@@ -31,22 +40,18 @@ function commit() {
     popd
 }
 
-
 function cook() {
     # make sure we're in the contexted directory
     pushd $RECIPES_PATH
-    cvc cook $1
-    [ $? != 0 ] && carp
+    cvc cook $1 || carp
     popd
 }
-
 
 function merge_and_cook() {
     merge $1
     commit $1
     cook $1
 }
-
 
 function create_build() {
     project=$1
@@ -58,7 +63,6 @@ function create_build() {
     eval $($CMDLINE_PATH/rbuilder build-create $project "$TROVESPEC" $type $options)
 }
 
-
 function fetch_build() {
     target_recipe=$1
     target_file=$2
@@ -66,5 +70,28 @@ function fetch_build() {
     pushd $RECIPES_PATH/$target_recipe
     URL=$($CMDLINE_PATH/rbuilder build-url $BUILD_ID)
     curl -L -o $target_file $URL
+    popd
+}
+
+function rewrite_version {
+    file=$1
+    newver=$2
+
+    sed -ri "s/(\s+)version \= '.+'/\1version \= \'$newver\'/" $file
+}
+
+function create_mint_snapshot {
+    CHECKOUT_PATH=/srv/rbuilder/code/mint/
+    MINT_VERSION=$(python -c "import sys; sys.path.append(\"$CHECKOUT_PATH\"); from mint import constants; print constants.mintVersion")
+
+    pushd $CHECKOUT_PATH
+    make product || carp
+    rewrite_version $RECIPES_PATH/rbuilder/rbuilder.recipe $DATE
+    popd
+    pushd $RECIPES_PATH/rbuilder/
+    cvc remove rbuilder-*.tar.bz2
+    mv $CHECKOUT_PATH/rbuilder-$MINT_VERSION.tar.bz2 rbuilder-$DATE.tar.bz2
+    cvc add rbuilder-$DATE.tar.bz2
+    commit rbuilder
     popd
 }

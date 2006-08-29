@@ -1,6 +1,6 @@
 #!/bin/sh
 set -x
-function carp {
+function carp_rmake {
     jobid=$1
     nail -s 'Mint Snapshot Build Failed' rbuilder-list@rpath.com << EOT
 The rBuilder appliance build failed:
