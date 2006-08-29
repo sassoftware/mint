@@ -57,4 +57,13 @@ cook group-rbuilder-dist=$NIGHTLY_BRANCH
 
 # trigger ISO and VMware builds from resulting group-rbuilder-dist cook
 create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH installable_iso
-create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH vmware_image
+ISO_ID=$BUILD_ID
+create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH vmware_image --wait
+VMWARE_ID=$BUILD_ID
+
+nail -s 'rBuilder Snapshot Build Succeeded' $ERROR_MAIL << EOT
+The rBuilder appliance build has finished. New images are available:
+
+$($CMDLINE_PATH/rbuilder build-url $ISO_ID)
+$($CMDLINE_PATH/rbuilder build-url $VMWARE_ID)
+EOT
