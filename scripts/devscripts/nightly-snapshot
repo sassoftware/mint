@@ -45,9 +45,16 @@ $SCRIPTS_PATH/devscripts/rmake-helper --trove rbuilder=$NIGHTLY_BRANCH --context
 merge_and_cook group-jobserver-root
 create_build rbuilder group-jobserver-root tarball --wait
 merge jobserver-root
-fetch_build jobserver-root jobserver.tgz
+
+get_mint_version
+pushd $RECIPES_PATH/jobserver-root
+cvc rm *.tgz
+fetch_build jobserver-root jobserver-$MINT_VERSION.tgz
+cvc add jobserver-$MINT_VERSION.tgz
+rewrite_version jobserver-root.recipe $MINT_VERSION
 commit jobserver-root
 cook jobserver-root
+popd
 
 # build a new group-rbuilder-dist
 merge group-rbuilder-dist

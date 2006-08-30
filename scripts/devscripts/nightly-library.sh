@@ -81,9 +81,13 @@ function fetch_build() {
     popd
 }
 
-function create_mint_snapshot {
+function get_mint_version {
     CHECKOUT_PATH=/srv/rbuilder/code/mint/
     MINT_VERSION=$(python -c "import sys; sys.path.append(\"$CHECKOUT_PATH\"); from mint import constants; print constants.mintVersion")
+}
+
+function create_mint_snapshot {
+    get_mint_version
 
     pushd $CHECKOUT_PATH
     make product || carp
