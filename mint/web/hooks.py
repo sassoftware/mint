@@ -224,6 +224,9 @@ def conaryHandler(req, cfg, pathInfo):
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
+    # minor test suite hook--chop off any port in the repository name
+    repName = repName.split(":")[0]
+
     repNameMap = getRepNameMap(db)
     projectName = repName.split(".")[0]
     if repName in repNameMap:
