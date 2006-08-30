@@ -515,17 +515,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                   server = self.getProjectServerHostname())
         page.fetchWithRedirect("/logout")
 
-    def testRepoBrowserPage(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertContent('/repos/foo/browse',
-                                  code = [200],
-                                  content = 'Repository Browser')
-
     def testGroupBuilderInResources(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
