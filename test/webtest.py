@@ -681,7 +681,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'foo')
 
         project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         cu = self.db.cursor()
         cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0,

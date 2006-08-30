@@ -63,7 +63,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'test')
         project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         adminClient.hideProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
