@@ -18,6 +18,8 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all
 
+install: default-install
+
 dist: default-dist dist-subdirs
 
 clean: default-clean clean-subdirs
