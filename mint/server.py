@@ -70,6 +70,7 @@ from conary import errors as conary_errors
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
      as supportedrMakeApiVersions
+from mint import urltypes
 
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
@@ -200,6 +201,8 @@ def getTables(db, cfg):
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
     d['buildFiles'] = jobs.BuildFilesTable(db)
+    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
+    d['filesUrls'] = jobs.FilesUrlsTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
@@ -2553,7 +2556,8 @@ class MintServer(object):
     def getBuildFilenames(self, buildId):
         self._filterBuildAccess(buildId)
         cu = self.db.cursor()
-        cu.execute("SELECT fileId, filename, title FROM BuildFiles WHERE buildId=? ORDER BY idx", buildId)
+        cu.execute("""SELECT fileId, filename, title FROM BuildFiles WHERE 
+                      buildId=? ORDER BY idx""", buildId)
 
         results = cu.fetchall()
         if len(results) < 1:
@@ -2561,16 +2565,34 @@ class MintServer(object):
         else:
             l = []
             for x in results:
-                try:
-                    size = os.stat(x[1])[6]
-                except OSError:
-                    size = 0
-                d = {'fileId':      x[0],
-                     'filename':    os.path.basename(x[1]),
-                     'title':       x[2],
-                     'size':        size,
-                    }
-                l.append(d)
+                if x[1]:
+                    try:
+                        size = os.stat(x[1])[6]
+                    except OSError:
+                        size = 0
+                    d = {'fileId':      x[0],
+                         'filename':    os.path.basename(x[1]),
+                         'title':       x[2],
+                         'size':        size,
+                         'type':        urltypes.LOCAL
+                        }
+                    l.append(d)
+                else:
+                    cu.execute("""SELECT urlType, url, size FROM FilesUrls 
+                      LEFT JOIN BuildFilesUrlsMap ON 
+                      FilesUrls.urlId=BuildFilesUrlsMap.urlId
+                      WHERE BuildFilesUrlsMap.fileId=? ORDER
+                      BY urlType""",  x[0])
+                    remoteResults = cu.fetchall_dict()
+                    for y in remoteResults:
+                        d = {'fileId':      x[0],
+                             'filename':    y['url'],
+                             'title':       x[2],
+                             'size':        y['size'],
+                             'type':        y['urlType']
+                            }
+                        l.append(d)
+            #l.sort(lambda x, y: cmp(x['type'], y['type']))
             return l
 
     @typeCheck(int)
