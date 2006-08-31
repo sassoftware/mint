@@ -213,6 +213,11 @@ class BootableImageTest(MintRepositoryHelper):
         bi = self.setupBootableImage(subclass = live_iso.LiveIso)
         assert(not bi.makeBootable)
 
+    def testUmlKernelCheck(self):
+        bi = self.setupBootableImage()
+        bi.outfile = '/dev/null'
+        bi.imgcfg.umlKernel = {'x86': '/does_not_exist'}
+        self.assertRaises(RuntimeError, bi.runTagScripts)
 
 
 if __name__ == "__main__":
