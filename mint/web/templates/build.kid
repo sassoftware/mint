@@ -8,6 +8,7 @@ from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import downloadTracker
+from mint import urltypes
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -96,7 +97,8 @@ from mint.web.templatesupport import downloadTracker
                         <ul>
                             <li py:for="i, file in enumerate(files)">
                                 <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
-                                <a py:attrs="downloadTracker(cfg, fileUrl)" href="http://${cfg.siteHost}${fileUrl}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)</li>
+                            <a py:attrs="downloadTracker(cfg, fileUrl)" href="${file['type'] == urltypes.LOCAL and 'http://%s%s' % (cfg.siteHost, fileUrl) or file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB) <i py:if="urltypes.displayNames[file['type']]">(${urltypes.displayNames[file['type']]})</i>
+                            </li>
                         </ul>
                         <div py:strip="True" py:if="buildtypes.INSTALLABLE_ISO == build.buildType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
