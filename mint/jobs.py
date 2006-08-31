@@ -150,3 +150,25 @@ class BuildFilesTable(database.KeyedTable):
                 cu.execute(sql)
             return dbversion >= 1
         return True
+
+class BuildFilesUrlsMapTable(database.KeyedTable):
+    name = 'BuildFilesUrlsMap'
+    key = 'fileId'
+    createSQL = """
+                CREATE TABLE BuildFilesUrlsMap (
+                    fileId  INT,
+                    urlId   %(PRIMARYKEY)s
+                );"""
+    fields = ['fileId', 'urlId']
+    
+class FilesUrlsTable(database.KeyedTable):
+    name = 'FilesUrls'
+    key = 'urlId'
+    createSQL = """
+                CREATE TABLE FilesUrls (
+                    urlId       %(PRIMARYKEY)s,
+                    urlType     INT,
+                    url         CHAR(255),
+                    size        INT
+                );"""
+    fields = ['urlId', 'urlType', 'url', 'size']
