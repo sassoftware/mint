@@ -493,16 +493,26 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client.newProject('Baz', 'baz', 'rpath.local')
         assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\n'))
 
+        # one regular project, one hidden project, one external project
         reposUrl = 'http://bar.rpath.local/conary/'
         exProjectId = adminClient.newExternalProject('Bar', 'bar',
                                                    'rpath.local',
                                                    'bar.rpath.local@rpl:devel',
                                                     reposUrl)
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
+        # only the regular project will show up
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\n'))
 
+        # two regular projects, one external project, not mirrored
         adminClient.unhideProject(hideProjId)
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
+        # both regular projects will show up
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\n'))
 
+        # two regular projects, one external project, mirrored
+        adminClient.addInboundLabel(exProjectId, exProjectId,
+            "http://www.example.com/conary/",
+            "mirror", "mirrorpass")
+        # all projects will show up
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
 
     @fixtures.fixture('Full')
     def testGenConaryRc(self, db, data):

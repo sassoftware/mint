@@ -1670,8 +1670,9 @@ class MintServer(object):
         if not self.cfg.createConaryRcFile:
             return False
         cu = self.db.cursor()
-        res = cu.execute("""SELECT ProjectId from Projects 
-                            WHERE hidden=0 AND disabled=0""")
+        res = cu.execute("""SELECT projectId from Projects
+                            WHERE hidden=0 AND disabled=0 AND
+                                (external=0 OR projectId IN (SELECT projectId FROM InboundLabels))""")
         projs = cu.fetchall()
         repoMaps = {}
         for x in projs:
@@ -3386,9 +3387,11 @@ class MintServer(object):
     @typeCheck(int, int, str, str, str)
     @requiresAdmin
     def addInboundLabel(self, projectId, labelId, url, username, password):
-        return self.inboundLabels.new(projectId = projectId, labelId = labelId,
+        x = self.inboundLabels.new(projectId = projectId, labelId = labelId,
                                       url = url, username = username,
                                       password = password)
+        self._generateConaryRcFile()
+        return x
 
     @private
     @typeCheck()
