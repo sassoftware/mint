@@ -9,6 +9,7 @@ import urlparse
 
 from mint import buildtypes
 from mint import jobstatus
+from mint import urltypes
 from mint.cmdline import commands
 
 from conary import versions
@@ -96,5 +97,8 @@ class BuildUrlCommand(commands.RBuilderCommand):
             (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
 
         for file in build.getFiles():
-            print urlBase % (file['fileId'], file['filename'])
+            if file['type'] == urltypes.LOCAL:
+                print urlBase % (file['fileId'], file['filename'])
+            else: 
+                print file['filename']
 commands.register(BuildUrlCommand)
