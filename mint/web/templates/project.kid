@@ -4,6 +4,7 @@
     from mint.client import timeDelta
     from mint.client import upstream
     from mint.helperfuncs import truncateForDisplay
+    from mint import urltypes
 
     def condUpstream(upstreams, version):
         up = upstream(version)
@@ -199,7 +200,8 @@
                 <ul class="downloadList">
                     <li py:for="i, file in enumerate(buildFiles)">
                         <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
-                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="http://${cfg.siteHost}${fileUrl}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
+                        
+                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${file['type'] == urltypes.LOCAL and 'http://%s%s' % (cfg.siteHost, fileUrl) or file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB) <i py:if="urltypes.displayNames[file['type']]">(${urltypes.displayNames[file['type']]})</i>
                     </li>
                     <li py:if="not buildFiles">Build contains no downloadable files.</li>
                 </ul>
