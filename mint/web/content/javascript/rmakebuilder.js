@@ -54,7 +54,7 @@ function processgetrMakeBuild(aReq) {
     var stop = 0;
     if (rMakeBuild['jobId'] != savedrMakeBuild['jobId']) {
         if ((rMakeBuilderJobId != null) && (rMakeBuild['jobId'] != 0)) {
-            swapDOM(rMakeBuilderJobId, H3({id : "rmakebuilder-jobid"}, "rMake Job ID: " + rMakeBuild['jobId']));
+            swapDOM(rMakeBuilderJobId, H3({'id' : 'rmakebuilder-jobid'}, "rMake Job ID: " + rMakeBuild['jobId']));
         }
     }
     if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) || (rMakeBuild['status'] != savedrMakeBuild['status']) || (commitFailed)) {
@@ -68,7 +68,7 @@ function processgetrMakeBuild(aReq) {
             statusClass = jobStatusCodes[buildjob['JOB_STATE_FAILED']];
         }
         if (rMakeBuilderStatus != null) {
-            swapDOM(rMakeBuilderStatus, DIV({id : 'rMakeStatusArea', class : statusClass}, rMakeBuild['statusMessage']));
+            swapDOM(rMakeBuilderStatus, DIV({'id': 'rMakeStatusArea', 'class': statusClass}, rMakeBuild['statusMessage']));
         }
     }
     for (var stopIndex in stopStatusList) {
@@ -78,10 +78,10 @@ function processgetrMakeBuild(aReq) {
     }
     if (rMakeBuildAction != null) {
         if (rMakeBuild['status'] == buildjob['JOB_STATE_BUILT']) {
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
+            swapDOM(rMakeBuildAction, A({'id': 'rMakeBuildNextAction', 'class' : 'option', 'style' : 'display: inline;', 'href' : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
         }
         if ((rMakeBuild['status'] == buildjob['JOB_STATE_COMMITTED']) || (rMakeBuild['status'] == buildjob['JOB_STATE_FAILED'])){
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : 'javascript:resetrMakeStatus()'}, 'Reset'));
+            swapDOM(rMakeBuildAction, A({'id': 'rMakeBuildNextAction', 'class': 'option', 'style': 'display: inline;', 'href': 'javascript:resetrMakeStatus()'}, 'Reset'));
         }
     }
     if (!stop) {
@@ -113,7 +113,7 @@ function processListrMakeBuildTroves(aReq) {
         if (trvStatus != savedTroveList[trvIndex]['status']) {
             var statusIcon = document.getElementById("rmakebuilder-statusicon-" + itemId);
             if(statusIcon != null) {
-                swapDOM(statusIcon, IMG({src: statusIcons[trvStatus], id : 'rmakebuilder-statusicon-' + itemId}));
+                swapDOM(statusIcon, IMG({'src': statusIcons[trvStatus], 'id': 'rmakebuilder-statusicon-' + itemId}));
             }
         }
         if ((trvDict['statusMessage'] != savedTroveList[trvIndex]['statusMessage']) || (trvStatus != savedTroveList[trvIndex]['status']) || commitFailed) {
@@ -128,7 +128,7 @@ function processListrMakeBuildTroves(aReq) {
                 if (commitFailed) {
                     classCode = trvStatusCodes[buildtrove['TROVE_STATE_FAILED']];
                 }
-                swapDOM(statusBox, TD({id: "rmakebuilder-item-status-" + itemId, "class" : classCode, width : "100%"}, trvDict['statusMessage']));
+                swapDOM(statusBox, TD({'id': "rmakebuilder-item-status-" + itemId, "class" : classCode, 'width' : "100%"}, trvDict['statusMessage']));
             }
         }
     }
@@ -176,7 +176,7 @@ function rMakeTroveAdded (aReq) {
         numTroves = numTroves + 1;
         var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
         if(rMakeBuildAction) {
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=build'}, 'Build'));
+            swapDOM(rMakeBuildAction, A({'id': 'rMakeBuildNextAction', 'class' : 'option', 'style' : 'display: inline;', 'href' : BaseUrl + 'commandrMake?command=build'}, 'Build'));
         }
     }
 }
@@ -189,7 +189,7 @@ function rMakeTroveDeleted(aReq) {
         numTroves = numTroves - 1;
         var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
         if((!numTroves) && rMakeBuildAction) {
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'editrMake?id=' + rMakeBuildId}, 'Edit'));
+            swapDOM(rMakeBuildAction, A({'id': 'rMakeBuildNextAction', 'class': 'option', 'style': 'display: inline;', 'href': BaseUrl + 'editrMake?id=' + rMakeBuildId}, 'Edit'));
         }
     }
 }
