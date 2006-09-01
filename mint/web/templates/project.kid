@@ -199,9 +199,9 @@
             <td colspan="3">
                 <ul class="downloadList">
                     <li py:for="i, file in enumerate(buildFiles)">
-                        <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
+                        <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
                         
-                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${file['type'] == urltypes.LOCAL and 'http://%s%s' % (cfg.siteHost, fileUrl) or file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB) <i py:if="urltypes.displayNames[file['type']]">(${urltypes.displayNames[file['type']]})</i>
+                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${'http://%s%s' % (cfg.siteHost, fileUrl)}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB) <i py:if="urltypes.displayNames[file['type']]">(${urltypes.displayNames[file['type']]})</i>
                     </li>
                     <li py:if="not buildFiles">Build contains no downloadable files.</li>
                 </ul>
