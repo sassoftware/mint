@@ -2578,9 +2578,11 @@ class MintServer(object):
                         }
                     l.append(d)
                 else:
-                    cu.execute("""SELECT urlType, url, size FROM FilesUrls 
-                      LEFT JOIN BuildFilesUrlsMap ON 
+                    cu.execute("""SELECT urlType, url, BuildFiles.size 
+                      FROM FilesUrls LEFT JOIN BuildFilesUrlsMap ON 
                       FilesUrls.urlId=BuildFilesUrlsMap.urlId
+                      LEFT JOIN BuildFiles ON
+                      BuildFiles.fileId=BuildFilesUrlsMap.fileId
                       WHERE BuildFilesUrlsMap.fileId=? ORDER
                       BY urlType""",  x[0])
                     remoteResults = cu.fetchall_dict()
