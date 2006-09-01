@@ -134,9 +134,11 @@ class BuildFilesTable(database.KeyedTable):
                     buildId   INT,
                     idx         INT,
                     filename    CHAR(255),
-                    title       CHAR(255) DEFAULT ''
+                    title       CHAR(255) DEFAULT '',
+                    size        INT,
+                    sha1        CHAR(255)
                 );"""
-    fields = ['fileId', 'buildId', 'idx', 'filename', 'title']
+    fields = ['fileId', 'buildId', 'idx', 'filename', 'title', 'size', 'sha1']
 
     indexes = {"BuildFilesBuildIdx": """CREATE INDEX BuildFilesBuildIdx
                                               ON BuildFiles(buildId)"""}
@@ -148,7 +150,14 @@ class BuildFilesTable(database.KeyedTable):
                 sql = """ALTER TABLE BuildFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
-            return dbversion >= 1
+            
+            if dbversion == 21 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE BuildFiles ADD COLUMN size INT")
+                cu.execute("ALTER TABLE BuildFiles ADD COLUMN sha1 CHAR(255)")
+
+            return dbversion >= 21
+
         return True
 
 class BuildFilesUrlsMapTable(database.KeyedTable):
@@ -169,6 +178,5 @@ class FilesUrlsTable(database.KeyedTable):
                     urlId       %(PRIMARYKEY)s,
                     urlType     INT,
                     url         CHAR(255),
-                    size        INT
                 );"""
-    fields = ['urlId', 'urlType', 'url', 'size']
+    fields = ['urlId', 'urlType', 'url']
