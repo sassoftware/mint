@@ -306,6 +306,12 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
+    def getBuildFilenames(self, buildId):
+        """
+        Returns a list of files and related data associated with a buildId
+        """
+        return self.server.getBuildFilenames(buildId)
+
     def getPublishedReleaseList(self, limit=10, offset=0):
         """
         Get a list of the most recent published releases as ordered
