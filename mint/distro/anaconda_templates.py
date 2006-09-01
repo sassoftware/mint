@@ -80,6 +80,7 @@ class Image(object):
         files = [os.path.join(inputDir, x) for x in os.listdir(inputDir)]
         cmds = ['mcopy', '-i', output] + files + ['::']
         call(cmds)
+        call(['syslinux', output])
 
     def __init__(self, isocfg, templateDir, tmpDir):
         self.isocfg = isocfg
