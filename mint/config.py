@@ -8,6 +8,7 @@ import sys
 
 from mint import client
 from mint import buildtypes 
+from mint import urltypes
 
 from conary import conarycfg
 from conary.conarycfg import ConfigFile
@@ -107,6 +108,8 @@ class MintConfig(ConfigFile):
     xmlrpcLogFile           = ''
     spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
+    redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
+    torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
 
     # mimic exactly the conary server cfg items
     externalPasswordURL     = (cfgtypes.CfgString, None,
