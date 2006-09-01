@@ -177,6 +177,6 @@ class FilesUrlsTable(database.KeyedTable):
                 CREATE TABLE FilesUrls (
                     urlId       %(PRIMARYKEY)s,
                     urlType     INT,
-                    url         CHAR(255),
+                    url         CHAR(255)
                 );"""
     fields = ['urlId', 'urlType', 'url']

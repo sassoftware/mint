@@ -93,12 +93,13 @@ class BuildUrlCommand(commands.RBuilderCommand):
 
         # extract the downloadImage url from the serverUrl configuration
         parts = urlparse.urlparse(cfg.serverUrl)
-        urlBase = "http://%s/%s/downloadImage/%%d/%%s" % \
-            (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
 
         for file in build.getFiles():
-            if file['type'] == urltypes.LOCAL:
-                print urlBase % (file['fileId'], file['filename'])
+            if file['type'] == urltypes.AMAZONS3TORRENT:
+                urlBase = "http://%s/%s/downloadTorrent?%%d" % \
+                    (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
             else: 
-                print file['filename']
+                urlBase = "http://%s/%s/downloadImage?%%d" % \
+                    (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
+            print urlBase % (file['fileId'])
 commands.register(BuildUrlCommand)

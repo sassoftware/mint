@@ -131,8 +131,8 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cmd = builds.BuildUrlCommand()
         rc, res = self.captureOutput(cmd.runCommand, client, cfg, {}, ['build-url', b.id])
 
-        assert(res == "http://mint.rpath.local//downloadImage/1/file1\n"
-                      "http://mint.rpath.local//downloadImage/2/file2\n")
+        assert(res == "http://mint.rpath.local//downloadImage?1\n"
+                      "http://mint.rpath.local//downloadImage?2\n")
 
 
 if __name__ == "__main__":

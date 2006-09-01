@@ -2533,7 +2533,7 @@ class MintServer(object):
             cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
             for idx, file in enumerate(filenames):
                 fileName, title = file
-                cu.execute("INSERT INTO BuildFiles VALUES (NULL, ?, ?, ?, ?)",
+                cu.execute("INSERT INTO BuildFiles VALUES (NULL, ?, ?, ?, ?, NULL, NULL)",
                            buildId, idx, fileName, title)
         except:
             self.db.rollback()
