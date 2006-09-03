@@ -528,7 +528,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testGetUniqueBuilds(self, db, data):
         client = self.getClient('owner')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
-        assert(pubRel.getUniqueBuildTypes() == [(2, 'x86-64')])
+        assert(pubRel.getUniqueBuildTypes() == [(2, 'x86_64')])
 
 
 if __name__ == "__main__":

@@ -270,6 +270,7 @@ class JobDaemon:
                     if job.buildId:
                         build = client.getBuild(job.buildId)
                         if build.getArch() not in cfg.supportedArch:
+                            slog.info("Got an unsupported architecture: %s", build.getArch())
                             continue
 
                     job.setStatus(jobstatus.RUNNING, 'Starting')

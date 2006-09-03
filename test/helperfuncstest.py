@@ -400,7 +400,7 @@ Much like Powdermilk Biscuits[tm]."""
         f_no_arch = "#5:!tk"
 
         self.failUnlessEqual(getArchFromFlavor(f_x86), 'x86')
-        self.failUnlessEqual(getArchFromFlavor(f_x86_64), 'x86-64')
+        self.failUnlessEqual(getArchFromFlavor(f_x86_64), 'x86_64')
         self.failUnlessEqual(getArchFromFlavor(f_blank), '')
         self.failUnlessEqual(getArchFromFlavor(f_no_arch), '')
 

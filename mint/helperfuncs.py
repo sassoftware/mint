@@ -104,6 +104,5 @@ def getArchFromFlavor(flavor):
             fs = f.members[deps.DEP_CLASS_IS].members.keys()[0]
         except:
             pass
-        fs = fs.replace('_','-')
 
     return fs
