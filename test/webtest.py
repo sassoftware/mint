@@ -774,7 +774,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setBuildType(0)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO BuildFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
+        cu.execute("INSERT INTO BuildFiles VALUES (1, ?, 0, 'test.iso', 'Test Image', NULL, NULL)",
                    build.id)
         self.db.commit()
 

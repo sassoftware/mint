@@ -14,6 +14,7 @@ from urllib import quote, unquote, quote_plus, urlencode
 from mod_python import apache
 
 from mint import buildtypes
+from mint import urltypes
 from mint import database
 from mint import data
 from mint import mint_error
@@ -571,6 +572,21 @@ class SiteHandler(WebHandler):
                                             count = count, limit = limit, offset = offset, modified = modified)
 
     @intFields(fileId = 0)
+    def downloadTorrent(self, auth, fileId):
+        buildId, idx, filename, title = self.client.getFileInfo(fileId)
+        files = self.client.getBuildFilenames(buildId)
+        remoteUrl = None
+        for x in files:
+            if x['type'] == self.cfg.torrentUrlType and x['fileId'] == fileId:
+                remoteUrl = x['filename']
+                break
+        try:
+            self._redirect(remoteUrl)
+        except OSError, e:
+            return self._write("error", shortError = "File error",
+                error = "An error has occurred opening the image file: %s" % e)
+
+    @intFields(fileId = 0)
     def downloadImage(self, auth, fileId):
         reqFilename = None
         try:
@@ -582,15 +598,27 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         buildId, idx, filename, title = self.client.getFileInfo(fileId)
-        if reqFilename and os.path.basename(filename) != reqFilename:
-            raise HttpNotFound
+
+        if reqFilename and filename:
+            if reqFilename and os.path.basename(filename) != reqFilename:
+                raise HttpNotFound
+
+        if not filename:
+            files = self.client.getBuildFilenames(buildId)
+            remoteUrl = None
+            for x in files:
+                if x['type'] == self.cfg.redirectUrlType and x['fileId'] == fileId:
+                    remoteUrl = x['filename']
+                    break
 
         build = self.client.getBuild(buildId)
         try:
-            project = self.client.getProject(build.projectId)
-
-            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, reqFilename)
-            self._redirect(fileUrl)
+            if filename:
+                project = self.client.getProject(build.projectId)
+                fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
+                self._redirect(fileUrl)
+            else:
+                self._redirect(remoteUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)
