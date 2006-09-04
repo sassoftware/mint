@@ -7,7 +7,7 @@
 
 import time
 from mint import userlevels
-from mint.client import extractIs
+from mint.helperfuncs import getArchFromFlavor
 
 import conary
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -44,4 +44,4 @@ def shortTroveSpec(spec):
         v = versions.VersionFromString(v)
     except conary.errors.ParseError: # we got a frozen version string
         v = versions.ThawVersion(v)
-    return "%s=%s (%s)" % (n, str(v.trailingRevision()), extractIs(f))
+    return "%s=%s (%s)" % (n, str(v.trailingRevision()), getArchFromFlavor(f))

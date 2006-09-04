@@ -411,8 +411,7 @@ class InstallableIso(ImageGenerator):
         tmpDir = tempfile.mkdtemp()
         try:
             print >> sys.stderr, "finding anaconda-templates for " + self.build.getArch()
-            cclient = self.getConaryClient(tmpDir,
-                '1#' + self.build.getArch())
+            cclient = self.getConaryClient(tmpDir, self.build.getArchFlavor().freeze())
 
             cclient.cfg.installLabelPath.append(versions.Label(self.isocfg.templatesLabel))
 
@@ -454,10 +453,6 @@ class InstallableIso(ImageGenerator):
                 pass
 
     def prepareTemplates(self, topdir):
-        # hardlink template files to topdir
-        # templateDir = os.path.join(self.isocfg.templatePath, self.build.getArch())
-
-        # XXX enable the dynamic templates here
         templateDir = self._getTemplatePath() + "/unified"
 
         self.status("Preparing ISO template")
@@ -480,7 +475,7 @@ class InstallableIso(ImageGenerator):
     def extractMediaTemplate(self, topdir):
         tmpRoot = tempfile.mkdtemp()
         try:
-            client = self.getConaryClient(tmpRoot, "1#" + self.build.getArch())
+            client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
 
             print >> sys.stderr, "extracting ad-hoc content from " \
                   "media-template=%s" % client.cfg.installLabelPath[0].asString()
@@ -508,7 +503,7 @@ class InstallableIso(ImageGenerator):
             existingChangesets.add(path)
 
         tmpRoot = tempfile.mkdtemp()
-        client = self.getConaryClient(tmpRoot, "1#" + self.build.getArch())
+        client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
         trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
                                  (self.troveName, str(self.troveVersion), self.troveFlavor),
                                  defaultFlavor = client.cfg.flavor)
@@ -592,7 +587,7 @@ class InstallableIso(ImageGenerator):
 
         self.extractMediaTemplate(topdir)
         self.setupKickstart(topdir)
-        self.writeProductImage(topdir, '1#' + arch)
+        self.writeProductImage(topdir, self.build.getArchFlavor().freeze())
 
         self.status("Building ISOs")
         splitdistro.splitDistro(topdir, self.troveName, maxIsoSize)

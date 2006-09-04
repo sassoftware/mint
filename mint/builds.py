@@ -322,7 +322,20 @@ class Build(database.TableObject):
         return self.server.setBuildFilenames(self.buildId, filenames)
 
     def getArch(self):
+        """Return a printable representation of the build's architecture."""
         return helperfuncs.getArchFromFlavor(self.getTrove()[2])
+
+    def getArchFlavor(self):
+        """Return a conary.deps.Flavor object representing the build's architecture."""
+        f = deps.ThawFlavor(self.getTrove()[2])
+        if f.members and deps.DEP_CLASS_IS in f.members:
+            flavor = deps.Flavor()
+            # XXX: this depends on dictionary ordering for x86_64 to work properly, since
+            # an x86_64 flavor also includes an x86 dep.
+            flavor.addDep(deps.InstructionSetDependency, f.members[deps.DEP_CLASS_IS].members.values()[0])
+            return flavor
+        else:
+            return deps.ThawFlavor("")
 
     def setPublished(self, pubReleaseId, published):
         return self.server.setBuildPublished(self.buildId,

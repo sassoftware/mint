@@ -663,18 +663,6 @@ class MethodNotSupported(MintError):
     def __str__(self):
         return "method not supported by XMLRPC server: %s" % self.method
 
-def extractIs(flavor):
-    """
-    Returns just the instruction set of a given flavor.
-    @param flavor: the full flavor
-    @type flavor: L{conary.deps.deps.Flavor}
-    @rtype: str
-    """
-    try:
-        return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-    except KeyError:
-        return ''
-
 def upstream(version):
     """
     Returns the upstream portion of a given version, stripping off the source and build counts.

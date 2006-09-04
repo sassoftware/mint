@@ -553,6 +553,13 @@ class BuildTest(fixtures.FixturedUnitTest):
         db.commit()
         assert build.getFiles() == []
 
+    @fixtures.fixture('Full')
+    def testBuildArchFlavor(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        assert(str(build.getArchFlavor()) == "is: x86_64")
+
 
 class OldBuildTest(MintRepositoryHelper):
     def makeInstallableIsoCfg(self):

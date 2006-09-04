@@ -8,7 +8,7 @@ import sys
 import tempfile
 import time
 
-from mint import client
+from mint import helperfuncs
 from mint import projects
 from mint.flavors import stockFlavors
 import mint.distro.gencslist
@@ -37,7 +37,11 @@ class GroupTroveCook(Generator):
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
             flavor = deps.ThawFlavor(self.job.getDataValue("arch"))
-            arch = deps.ThawFlavor("1#" + client.extractIs(flavor))
+
+            # XXX: this depends on dictionary ordering for x86_64 to work properly, since
+            # an x86_64 flavor also includes an x86 dep.
+            arch = deps.Flavor()
+            arch.addDep(deps.InstructionSetDependency, flavor.members[deps.DEP_CLASS_IS].members.values()[0])
 
             project = self.client.getProject(projectId)
 

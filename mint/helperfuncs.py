@@ -98,11 +98,12 @@ def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
 
 def getArchFromFlavor(flavor):
     fs = ""
-    f = deps.ThawFlavor(flavor)
-    if f.members:
+    if type(flavor) == str:
+        flavor = deps.ThawFlavor(flavor)
+    if flavor.members:
         try:
-            fs = f.members[deps.DEP_CLASS_IS].members.keys()[0]
-        except:
+            fs = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        except KeyError:
             pass
 
     return fs
