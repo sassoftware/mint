@@ -551,8 +551,8 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute("SELECT * FROM BuildFiles")
         self.failIf(cu.fetchall() != \
-                    [(1, 3, 1, 'foo', 'Test File')],
-                    "Schema upgrade 20 didn't migrate build files")
+                    [(1, 3, 1, 'foo', 'Test File', None, None)],
+                    "Schema upgrade 20 didn't migrate build files correctly")
 
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
