@@ -14,7 +14,7 @@ class StubImage(ImageGenerator):
         buildId = self.job.getBuildId()
         build = self.client.getBuild(buildId)
         stubContent = build.getDataValue('stringArg')
-        
+
         stub = file(f, "w")
         print >> stub, stubContent
 

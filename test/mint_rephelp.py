@@ -479,7 +479,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cfg = jobserver.IsoGenConfig()
 
         cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
-        cfg.supportedArch   = ['x86']
+        cfg.supportedArch   = ['x86', 'x86_64']
         cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
         cfg.buildTypes    = [buildtypes.STUB_IMAGE]
         cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
