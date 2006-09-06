@@ -26,7 +26,7 @@ from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 from conary import callbacks
 from conary import conaryclient
 from conary import conarycfg
-from conary import deps
+from conary.deps import deps
 from conary import versions
 from conary.repository import errors
 from conary.build import use
@@ -150,6 +150,7 @@ class InstallableIso(ImageGenerator):
                                   dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
+        arch = deps.ThawFlavor(arch)
         cfg = self.project.getConaryConfig()
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
@@ -529,7 +530,7 @@ class InstallableIso(ImageGenerator):
         troveName, versionStr, flavorStr = self.build.getTrove()
         self.troveName = troveName
         self.troveVersion = versions.ThawVersion(versionStr)
-        self.troveFlavor = deps.deps.ThawFlavor(flavorStr)
+        self.troveFlavor = deps.ThawFlavor(flavorStr)
 
     def write(self):
         self.isocfg = self.getConfig()

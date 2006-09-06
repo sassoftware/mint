@@ -2,6 +2,7 @@
 # Copyright (c) 2006 rPath, Inc.
 # All Rights Reserved
 #
+from conary.deps import deps
 
 stockFlavors = {
     "1#x86":
