@@ -18,6 +18,9 @@ RBUILDER_CONFIG = "/srv/rbuilder/rbuilder.conf"
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
+class CfgDownloadEnum(cfgtypes.CfgEnum):
+    validValues = urltypes.urlTypes
+
 class CfgBuildEnum(cfgtypes.CfgEnum):
     validValues = buildtypes.validBuildTypes
     deprecatedValues = buildtypes.deprecatedBuildTypes
@@ -110,6 +113,8 @@ class MintConfig(ConfigFile):
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
+    displaySha1             = (cfgtypes.CfgBool, False)
+    visibleUrlTypes         = (cfgtypes.CfgList(CfgDownloadEnum))
 
     # mimic exactly the conary server cfg items
     externalPasswordURL     = (cfgtypes.CfgString, None,
