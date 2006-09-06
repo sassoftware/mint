@@ -50,9 +50,9 @@ class BuildTest(fixtures.FixturedUnitTest):
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
             [{'fileId': 4, 'filename': 'file1',
-              'title': 'File Title 1', 'size': 0, 'type': 0},
+              'title': 'File Title 1', 'size': 0, 'type': 0, 'sha1': 0},
              {'fileId': 5, 'filename': 'file2',
-              'title': 'File Title 2', 'size': 0, 'type': 0}]
+              'title': 'File Title 2', 'size': 0, 'type': 0, 'sha1': 0}]
         )
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
