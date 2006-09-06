@@ -19,6 +19,7 @@ import time
 from mint import constants
 from mint import templates
 from mint import server
+from mint import flavors
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
         hostPortParse, rewriteUrlProtocolPort, getArchFromFlavor
 from mint.client import timeDelta
@@ -439,6 +440,17 @@ Much like Powdermilk Biscuits[tm]."""
                 print >> sys.stderr, "%s is not executable" % modl
                 nonExec = True
         assert not nonExec
+
+    def getGetStockFlavors(self):
+        x86 = deps.ThawFlavor('1#x86:cmov:i486:i586:i686:~!mmx:~!sse2')
+        x86_64 = deps.ThawFlavor('1#x86:i486:i586:i686:~!sse2|1#x86_64')
+
+        assert(flavors.getStockFlavor(x86) == flavors.stockFlavors['1#x86'])
+        assert(flavors.getStockFlavor(x86_64) == flavors.stockFlavors['1#x86_64'])
+
+        x86_64 = deps.ThawFlavor('1#x86_64|1#x86:i486:i586:i686:~!sse2')
+        assert(flavors.getStockFlavor(x86_64) == flavors.stockFlavors['1#x86_64'])
+
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')

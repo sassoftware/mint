@@ -55,4 +55,12 @@ stockFlavorPaths = {
          "x86_64(~nx)"],
 }
 
+def getStockFlavor(inFlavor):
+    for x in stockFlavors:
+        if inFlavor.satisfies(deps.ThawFlavor(x)):
+            return deps.parseFlavor(stockFlavors[x])
 
+def getStockFlavorPath(inFlavor):
+    for x in stockFlavorPaths:
+        if inFlavor.satisfies(deps.ThawFlavor(x)):
+            return [deps.parseFlavor(y) for y in stockFlavorPaths[x]]

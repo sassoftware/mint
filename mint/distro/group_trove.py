@@ -10,7 +10,7 @@ import time
 
 from mint import helperfuncs
 from mint import projects
-from mint.flavors import stockFlavors
+from mint.flavors import getStockFlavor
 import mint.distro.gencslist
 from mint.distro.imagegen import Generator
 
@@ -50,7 +50,7 @@ class GroupTroveCook(Generator):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
-            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
+            cfg.buildFlavor = getStockFlavor(arch)
             cfg.initializeFlavors()
             self.readConaryRc(cfg)
 

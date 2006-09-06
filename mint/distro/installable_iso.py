@@ -153,8 +153,8 @@ class InstallableIso(ImageGenerator):
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
         cfg.installLabelPath = [self.troveVersion.branch().label()]
-        cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
-        cfg.flavor = [deps.deps.parseFlavor(x) for x in stockFlavorPaths[arch]]
+        cfg.buildFlavor = getStockFlavor(arch)
+        cfg.flavor = getStockFlavorPath(arch)
         cfg.initializeFlavors()
         self.readConaryRc(cfg)
 
