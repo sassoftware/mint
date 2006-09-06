@@ -99,7 +99,7 @@ from mint import urltypes
                                 <?python 
                                     title = [x['title'] for x in files if x['fileId'] == fileId][0] or "Disc " + str(i+1)
                                     size = [x['size'] for x in files if x['fileId'] == fileId][0] or 0
-                                    sha1 = [x['sha1'] for x in files if x['fileId'] == fileId][0] or 'asdfasdfasqwsdf' 
+                                    sha1 = [x['sha1'] for x in files if x['fileId'] == fileId][0] or None 
                                 ?>
                                 <b>${title}</b> <span py:if="size">(${size/1048576}&nbsp;MB)</span>
                                 <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
