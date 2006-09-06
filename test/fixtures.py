@@ -247,7 +247,7 @@ class FixtureCache(object):
                 MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
         anotherBuild.setBuildType(buildtypes.STUB_IMAGE)
         anotherBuild.setFiles([["file", "file title 1"]])
-        stockBuildFlavor(db, anotherBuild.id)
+        stockBuildFlavor(db, anotherBuild.id, "x86")
 
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',

@@ -556,9 +556,12 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testBuildArchFlavor(self, db, data):
         client = self.getClient('owner')
-        build = client.getBuild(data['buildId'])
 
+        build = client.getBuild(data['buildId'])
         assert(str(build.getArchFlavor()) == "is: x86_64")
+
+        build = client.getBuild(data['anotherBuildId'])
+        assert(str(build.getArchFlavor()) == "is: x86")
 
 
 class OldBuildTest(MintRepositoryHelper):

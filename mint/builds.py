@@ -11,6 +11,7 @@ import urlparse
 from mint import buildtemplates
 from mint import buildtypes
 from mint import database
+from mint import flavors
 from mint import helperfuncs
 from mint import jobs
 
@@ -330,14 +331,14 @@ class Build(database.TableObject):
     def getArchFlavor(self):
         """Return a conary.deps.Flavor object representing the build's architecture."""
         f = deps.ThawFlavor(self.getTrove()[2])
+
         if f.members and deps.DEP_CLASS_IS in f.members:
-            flavor = deps.Flavor()
-            # XXX: this depends on dictionary ordering for x86_64 to work properly, since
-            # an x86_64 flavor also includes an x86 dep.
-            flavor.addDep(deps.InstructionSetDependency, f.members[deps.DEP_CLASS_IS].members.values()[0])
-            return flavor
-        else:
-            return deps.ThawFlavor("")
+            # search through our pathSearchOrder and find the
+            # best single architecture flavor for this build
+            for x in [deps.ThawFlavor(y) for y in flavors.pathSearchOrder]:
+                if f.satisfies(x):
+                    return x
+        return deps.Flavor()
 
     def setPublished(self, pubReleaseId, published):
         return self.server.setBuildPublished(self.buildId,

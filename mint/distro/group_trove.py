@@ -38,11 +38,6 @@ class GroupTroveCook(Generator):
             sourceName = groupTrove.recipeName + ":source"
             flavor = deps.ThawFlavor(self.job.getDataValue("arch"))
 
-            # XXX: this depends on dictionary ordering for x86_64 to work properly, since
-            # an x86_64 flavor also includes an x86 dep.
-            arch = deps.Flavor()
-            arch.addDep(deps.InstructionSetDependency, flavor.members[deps.DEP_CLASS_IS].members.values()[0])
-
             project = self.client.getProject(projectId)
 
             cfg = project.getConaryConfig()
@@ -50,7 +45,7 @@ class GroupTroveCook(Generator):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
-            cfg.buildFlavor = getStockFlavor(arch)
+            cfg.buildFlavor = getStockFlavor(flavor)
             cfg.initializeFlavors()
             self.readConaryRc(cfg)
 
@@ -82,7 +77,7 @@ class GroupTroveCook(Generator):
                           (cfg.name, groupTrove.description)
                 checkin.commit(repos, cfg, message.encode('ascii', 'replace'))
 
-                troveSpec = "%s[%s]" % (groupTrove.recipeName, str(arch))
+                troveSpec = "%s[%s]" % (groupTrove.recipeName, str(flavor))
                 removeTroves = []
                 try:
                     ret = cook.cookItem(repos, cfg, troveSpec)
