@@ -2556,46 +2556,51 @@ class MintServer(object):
     def getBuildFilenames(self, buildId):
         self._filterBuildAccess(buildId)
         cu = self.db.cursor()
-        cu.execute("""SELECT fileId, filename, title FROM BuildFiles WHERE 
+        cu.execute("""SELECT fileId, filename, title, size, 
+                      sha1 FROM BuildFiles WHERE 
                       buildId=? ORDER BY idx""", buildId)
 
-        results = cu.fetchall()
-        if len(results) < 1:
-            return []
-        else:
-            l = []
-            for x in results:
-                if x[1]:
-                    try:
-                        size = os.stat(x[1])[6]
-                    except OSError:
-                        size = 0
-                    d = {'fileId':      x[0],
-                         'filename':    os.path.basename(x[1]),
-                         'title':       x[2],
+        results = cu.fetchall_dict()
+
+        l = []
+        for x in results:
+            if x['sha1']:
+                sha1 = x['sha1']
+            else:
+                sha1 = 0
+            if x['size']:
+                size = x['size']
+            else:
+                try:
+                    size = os.stat(x['filename'])[6]
+                except OSError:
+                    size = 0
+            if x['filename']:
+                d = {'fileId':      x['fileId'],
+                     'filename':    os.path.basename(x['filename']),
+                     'title':       x['title'],
+                     'size':        size,
+                     'type':        urltypes.LOCAL,
+                     'sha1':        sha1
+                    }
+                l.append(d)
+            else:
+                cu.execute("""SELECT urlType, url FROM FilesUrls
+                  LEFT JOIN BuildFilesUrlsMap ON 
+                  FilesUrls.urlId=BuildFilesUrlsMap.urlId
+                  WHERE BuildFilesUrlsMap.fileId=? ORDER
+                  BY urlType""",  x['fileId'])
+                remoteResults = cu.fetchall_dict()
+                for y in remoteResults:
+                    d = {'fileId':      x['fileId'],
+                         'filename':    y['url'],
+                         'title':       x['title'],
                          'size':        size,
-                         'type':        urltypes.LOCAL
+                         'type':        y['urlType'],
+                         'sha1':        sha1
                         }
                     l.append(d)
-                else:
-                    cu.execute("""SELECT urlType, url, BuildFiles.size 
-                      FROM FilesUrls LEFT JOIN BuildFilesUrlsMap ON 
-                      FilesUrls.urlId=BuildFilesUrlsMap.urlId
-                      LEFT JOIN BuildFiles ON
-                      BuildFiles.fileId=BuildFilesUrlsMap.fileId
-                      WHERE BuildFilesUrlsMap.fileId=? ORDER
-                      BY urlType""",  x[0])
-                    remoteResults = cu.fetchall_dict()
-                    for y in remoteResults:
-                        d = {'fileId':      x[0],
-                             'filename':    y['url'],
-                             'title':       x[2],
-                             'size':        y['size'],
-                             'type':        y['urlType']
-                            }
-                        l.append(d)
-            #l.sort(lambda x, y: cmp(x['type'], y['type']))
-            return l
+        return l
 
     @typeCheck(int)
     @private
