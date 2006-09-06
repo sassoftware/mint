@@ -95,10 +95,19 @@ from mint import urltypes
 
                     <div py:if="files" py:strip="True">
                         <ul>
-                            <li py:for="i, file in enumerate(files)">
+                            <li py:for="i, fileId in enumerate(fileIds)">
+                                <?python 
+                                    title = [x['title'] for x in files if x['fileId'] == fileId][0] or "Disc " + str(i+1)
+                                    size = [x['size'] for x in files if x['fileId'] == fileId][0] or 0
+                                    sha1 = [x['sha1'] for x in files if x['fileId'] == fileId][0] or 'asdfasdfasqwsdf' 
+                                ?>
+                                <b>${title}</b> <span py:if="size">(${size/1048576}&nbsp;MB)</span>
+                                <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
+                                <div py:for="file in files" py:if="file['fileId'] == fileId">
                                 <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
+                                <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes">${urltypes.displayNames[file['type']]}</a>
+                                </div>
                         
-                                <a py:attrs="downloadTracker(cfg, fileUrl)" href="${'http://%s%s' % (cfg.siteHost, fileUrl)}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB) <i py:if="urltypes.displayNames[file['type']]">(${urltypes.displayNames[file['type']]})</i>
                             </li>
                         </ul>
                         <div py:strip="True" py:if="buildtypes.INSTALLABLE_ISO == build.buildType">
