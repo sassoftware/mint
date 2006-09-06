@@ -1414,5 +1414,57 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.assertRaises(database.ItemNotFound,
                           client.server._server._getJobQueueLength, 99)
 
+    @fixtures.fixture('Empty')
+    def testRemoteStorage(self, db, data):
+        client = self.getClient('admin')
+        cu = db.cursor()
+        cu.execute("""INSERT INTO BuildFiles VALUES (7, 25, 0, 
+                      '/foo/bar/baz.iso', 'Test ISO', 224934801, 
+                      '7e8826d7f00d2b8e3c9113951a40492a736f8464')""")
+        cu.execute("""INSERT INTO BuildFiles VALUES (8, 25, 1, 
+                      '/foo/bar/boot.iso', 'Boot ISO', NULL, 
+                      'bae562553891af080f5ae4f72365d1d3e760b36e')""")
+        cu.execute("""INSERT INTO BuildFiles VALUES (9, 25, 2, 
+                      '/foo/bar/disk.img', 'Disk Img', 421022405, 
+                      NULL)""")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (7,1)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (7,2)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (8,3)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (8,4)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (9,5)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (9,6)")
+        cu.execute("INSERT INTO FilesUrls VALUES (1, 1, 'http://remote.iso')")
+        cu.execute("INSERT INTO FilesUrls VALUES (2, 2, 'http://iso.torrent')")
+        cu.execute("INSERT INTO FilesUrls VALUES (3, 1, 'http://boot.iso')")
+        cu.execute("INSERT INTO FilesUrls VALUES (4, 2, 'http://boot.torrent')")
+        cu.execute("INSERT INTO FilesUrls VALUES (5, 1, 'http://disk.img')")
+        cu.execute("INSERT INTO FilesUrls VALUES (6, 2, 'http://torrent.img')")
+
+        cu.execute("""INSERT INTO BuildFiles VALUES (10, 100, 3, 
+                      '/test/bar/vmware', 'VMWare', 345224934801, 
+                      '748ffb28cc0de876f9dbab7c13e7dfff3b3396e4')""")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (10,7)")
+        cu.execute("INSERT INTO BuildFilesUrlsMap VALUES (10,8)")
+        cu.execute("INSERT INTO FilesUrls VALUES (7, 1, 'http://vmware')")
+        cu.execute("""INSERT INTO FilesUrls VALUES (8, 2, 
+                     'http://vmware.torrent')""")
+        db.commit()
+
+        results = client.getBuildFilenames(25)
+        assert (results == [{'sha1': '7e8826d7f00d2b8e3c9113951a40492a736f8464', 'title': 'Test ISO', 'filename': 'baz.iso', 'fileId': 7, 'type': 0, 'size': 224934801}, {'sha1': 'bae562553891af080f5ae4f72365d1d3e760b36e', 'title': 'Boot ISO', 'filename': 'boot.iso', 'fileId': 8, 'type': 0, 'size': 0}, {'sha1': 0, 'title': 'Disk Img', 'filename': 'disk.img', 'fileId': 9, 'type': 0, 'size': 421022405}])
+
+        results = client.getBuildFilenames(100)
+        assert (results == [{'sha1': '748ffb28cc0de876f9dbab7c13e7dfff3b3396e4', 'title': 'VMWare', 'filename': 'vmware', 'fileId': 10, 'type': 0, 'size': 345224934801L}])
+
+        cu.execute("""UPDATE BuildFiles SET filename=NULL 
+                      WHERE fileID=7 OR fileID=9 OR fileID=10""")
+        db.commit()
+
+        results = client.getBuildFilenames(25)
+        assert(results == [{'sha1': '7e8826d7f00d2b8e3c9113951a40492a736f8464', 'title': 'Test ISO', 'filename': 'http://remote.iso', 'fileId': 7, 'type': 1, 'size': 224934801}, {'sha1': '7e8826d7f00d2b8e3c9113951a40492a736f8464', 'title': 'Test ISO', 'filename': 'http://iso.torrent', 'fileId': 7, 'type': 2, 'size': 224934801}, {'sha1': 'bae562553891af080f5ae4f72365d1d3e760b36e', 'title': 'Boot ISO', 'filename': 'boot.iso', 'fileId': 8, 'type': 0, 'size': 0}, {'sha1': 0, 'title': 'Disk Img', 'filename': 'http://disk.img', 'fileId': 9, 'type': 1, 'size': 421022405}, {'sha1': 0, 'title': 'Disk Img', 'filename': 'http://torrent.img', 'fileId': 9, 'type': 2, 'size': 421022405}])
+
+        results = client.getBuildFilenames(100)
+        assert(results == [{'sha1': '748ffb28cc0de876f9dbab7c13e7dfff3b3396e4', 'title': 'VMWare', 'filename': 'http://vmware', 'fileId': 10, 'type': 1, 'size': 345224934801L}, {'sha1': '748ffb28cc0de876f9dbab7c13e7dfff3b3396e4', 'title': 'VMWare', 'filename': 'http://vmware.torrent', 'fileId': 10, 'type': 2, 'size': 345224934801L}])
+        
 if __name__ == "__main__":
     testsuite.main()
