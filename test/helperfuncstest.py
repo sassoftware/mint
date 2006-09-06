@@ -29,6 +29,7 @@ from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
 
 from conary.lib import util
+from conary.deps import deps
 
 testTemplate = \
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -441,15 +442,25 @@ Much like Powdermilk Biscuits[tm]."""
                 nonExec = True
         assert not nonExec
 
-    def getGetStockFlavors(self):
+    def testGetStockFlavors(self):
         x86 = deps.ThawFlavor('1#x86:cmov:i486:i586:i686:~!mmx:~!sse2')
         x86_64 = deps.ThawFlavor('1#x86:i486:i586:i686:~!sse2|1#x86_64')
 
-        assert(flavors.getStockFlavor(x86) == flavors.stockFlavors['1#x86'])
-        assert(flavors.getStockFlavor(x86_64) == flavors.stockFlavors['1#x86_64'])
+        assert(flavors.getStockFlavor(x86) == deps.parseFlavor(flavors.stockFlavors['1#x86']))
+        assert(flavors.getStockFlavor(x86_64) == deps.parseFlavor(flavors.stockFlavors['1#x86_64']))
 
         x86_64 = deps.ThawFlavor('1#x86_64|1#x86:i486:i586:i686:~!sse2')
-        assert(flavors.getStockFlavor(x86_64) == flavors.stockFlavors['1#x86_64'])
+        assert(flavors.getStockFlavor(x86_64) == deps.parseFlavor(flavors.stockFlavors['1#x86_64']))
+
+    def testGetStockFlavorPaths(self):
+        x86 = deps.ThawFlavor('1#x86:cmov:i486:i586:i686:~!mmx:~!sse2')
+        x86_64 = deps.ThawFlavor('1#x86:i486:i586:i686:~!sse2|1#x86_64')
+
+        x86Path = [deps.parseFlavor(x) for x in flavors.stockFlavorPaths['1#x86']]
+        x86_64Path = [deps.parseFlavor(x) for x in flavors.stockFlavorPaths['1#x86_64']]
+
+        assert([x.freeze() for x in flavors.getStockFlavorPath(x86)] == [x.freeze() for x in x86Path])
+        assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
