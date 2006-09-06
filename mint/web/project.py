@@ -512,6 +512,7 @@ class ProjectHandler(WebHandler):
         try:
             trove, version, flavor = build.getTrove()
             files = build.getFiles()
+            fileIds = list(set([x['fileId'] for x in files]))
         except builds.TroveNotSet:
             self._predirect("editBuild?buildId=%d" % build.id)
         else:
@@ -519,6 +520,7 @@ class ProjectHandler(WebHandler):
                 name = build.getName(),
                 files = files,
                 trove = trove,
+                fileIds = fileIds,
                 version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
                 buildId = id,
