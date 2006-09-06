@@ -25,7 +25,7 @@ typeNames = {
     }
 
 displayNames = {
-    LOCAL           : '',
-    AMAZONS3        : '',
+    LOCAL           : 'Download',
+    AMAZONS3        : 'Download',
     AMAZONS3TORRENT : 'BitTorrent'
 }
