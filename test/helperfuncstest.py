@@ -443,6 +443,9 @@ Much like Powdermilk Biscuits[tm]."""
         assert not nonExec
 
     def testGetStockFlavors(self):
+        # make sure that pathSearchOrder contains all of the flavors in stockFlavors
+        assert(set(flavors.pathSearchOrder) == set(flavors.stockFlavors.keys()))
+
         x86 = deps.ThawFlavor('1#x86:cmov:i486:i586:i686:~!mmx:~!sse2')
         x86_64 = deps.ThawFlavor('1#x86:i486:i586:i686:~!sse2|1#x86_64')
 
@@ -453,6 +456,9 @@ Much like Powdermilk Biscuits[tm]."""
         assert(flavors.getStockFlavor(x86_64) == deps.parseFlavor(flavors.stockFlavors['1#x86_64']))
 
     def testGetStockFlavorPaths(self):
+        # make sure that pathSearchOrder contains all of the flavors in stockFlavorPaths
+        assert(set(flavors.pathSearchOrder) == set(flavors.stockFlavorPaths.keys()))
+
         x86 = deps.ThawFlavor('1#x86:cmov:i486:i586:i686:~!mmx:~!sse2')
         x86_64 = deps.ThawFlavor('1#x86:i486:i586:i686:~!sse2|1#x86_64')
 
