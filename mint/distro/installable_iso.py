@@ -19,7 +19,7 @@ from mint.distro import gencslist
 from mint.distro import splitdistro
 from mint.distro import anaconda_templates
 from mint.distro.anaconda_images import AnacondaImages
-from mint.flavors import stockFlavors, stockFlavorPaths \
+from mint.flavors import stockFlavors, stockFlavorPaths, \
     getStockFlavor, getStockFlavorPath
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 
