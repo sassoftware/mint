@@ -16,6 +16,7 @@ from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
 
+from conary import versions
 from conary.server import http
 from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
@@ -89,13 +90,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
         self.isRemoteRepository = self.project.external
 
-        # go ahead and fetch the release / commits data, too
-        self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
-        self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
-        self.projectUnpublishedReleases = [x for x in self.projectReleases if not x.isPublished()]
-        self.projectCommits =  self.project.getCommits()
-        self.projectMemberList = self.project.getMembers()
-
         self.basePath += "repos/%s" % self.project.getHostname()
         self.basePath = normPath(self.basePath)
 
@@ -133,17 +127,20 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         needsExternal = False
         extURIs = ('/files', '/troveInfo', '/getFile')
         if True in [self.req.uri.endswith(x) for x in extURIs]:
-            versionStr = ''
-            if self.req.uri.endswith('files'):
-                versionStr = str(kwargs['v'])
-            elif self.req.uri.endswith('getFile'):
-                versionStr = str(kwargs['fileV'])
+            versionStr = None
+            for k in ['v', 'fileV']:
+                if k in kwargs:
+                    versionStr = str(kwargs[k])
+                    break
 
             if versionStr:
-                needsExternal = self.client.versionIsExternal(versionStr)
+                try:
+                    version = versions.ThawVersion(versionStr)
+                except ValueError:
+                    version = versions.VersionFromString(versionStr)
+                needsExternal = version.branch().label().getHost() != self.project.getFQDN()
             else:
                 needsExternal = True
-
         ### end hack. ###
 
         if self.project.external or needsExternal:

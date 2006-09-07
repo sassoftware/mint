@@ -14,8 +14,6 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(projectPublishedReleases, isOwner)}
-                ${commitsMenu(projectCommits)}
             </div>
             <div id="spanright">
             <h2 py:content="modify and 'Edit Group' or 'Add Group'"></h2>

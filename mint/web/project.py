@@ -82,7 +82,6 @@ class ProjectHandler(WebHandler):
         self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
         self.projectUnpublishedReleases = [x for x in self.projectReleases if not x.isPublished()]
         self.projectCommits =  self.project.getCommits()
-        self.projectMemberList = self.project.getMembers()
 
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
@@ -807,6 +806,7 @@ class ProjectHandler(WebHandler):
             self._predirect()
 
     def members(self, auth):
+        self.projectMemberList = self.project.getMembers()
         if (self.userLevel == userlevels.OWNER or auth.admin):
             reqList = self.client.listJoinRequests(self.project.getId())
         else:

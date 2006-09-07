@@ -47,8 +47,6 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(projectPublishedReleases, isOwner)}
-                ${commitsMenu(projectCommits)}
             </div>
             <div id="spanright">
             <h2>Groups</h2>
