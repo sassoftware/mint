@@ -171,16 +171,9 @@
 
     <div py:strip="True" py:def="buildTable(builds)">
         <table>
-            <tr>
-                <th>Build Name</th>
-                <th>Arch</th>
-                <th>Image Type</th>
-            </tr>
             <div py:strip="True" py:for="build in builds">
                 ${buildTableRow(build)}
             </div>
-        </table>
-    </div>
 
     <div py:strip="True" py:def="buildTableRow(build)">
         <?python
@@ -191,31 +184,33 @@
             buildFiles = build.getFiles()
             fileIds = list(set([x['fileId'] for x in buildFiles]))
         ?>
-        <tr class="buildHeader">
+        <tr style="background: #f0f0f0; font-weight: bold;" class="buildHeader">
             <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
-            <td>${build.getArch()}</td>
-            <td>${buildtypes.typeNamesShort[build.buildType]}</td>
+            <td style="text-align: center;">${build.getArch()}
+            &nbsp;${buildtypes.typeNamesShort[build.buildType]}</td>
         </tr>
-        <tr>
-            <td colspan="3">
-                <ul class="downloadList">
-                    <li py:for="i, fileId in enumerate(fileIds)">
-                        <?python 
-                            title = [x['title'] for x in buildFiles if x['fileId'] == fileId][0] or "Disc " + str(i+1)
-                            size = [x['size'] for x in buildFiles if x['fileId'] == fileId][0] or 0
-                            sha1 = [x['sha1'] for x in buildFiles if x['fileId'] == fileId][0] or None 
-                        ?>
-                        <b>${title}</b> <span py:if="size">(${size/1048576}&nbsp;MB)</span>
-                        <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
-                        <div py:for="file in buildFiles" py:if="file['fileId'] == fileId">
-                        <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
-                            <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes">${urltypes.displayNames[file['type']]}</a>
-                        </div>
+        <tr py:for="i, fileId in enumerate(fileIds)">
+            <td>
+                <?python 
+                    title = [x['title'] for x in buildFiles if x['fileId'] == fileId][0] or "Disc " + str(i+1)
+                    size = [x['size'] for x in buildFiles if x['fileId'] == fileId][0] or 0
+                    sha1 = [x['sha1'] for x in buildFiles if x['fileId'] == fileId][0] or None 
+                ?>
+                <span style="font-weight: bold;">${title}</span>
+                <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
+                <div style="font-size: smaller;" py:if="size">Size: ${size/1048576}&nbsp;MB</div>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+                <span py:for="file in buildFiles" py:if="file['fileId'] == fileId">
+                <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
+                &nbsp;<a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes">${urltypes.displayNames[file['type']]}</a>&nbsp;
+                </span>
                         
-                    </li>
-                    <li py:if="not buildFiles">Build contains no downloadable files.</li>
-                </ul>
+                <div py:if="not buildFiles">Build contains no downloadable files.</div>
             </td>
         </tr>
+        <tr><td>&nbsp;</td></tr>
+    </div>
+        </table>
     </div>
 </html>
