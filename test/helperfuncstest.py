@@ -468,6 +468,12 @@ Much like Powdermilk Biscuits[tm]."""
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86)] == [x.freeze() for x in x86Path])
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
+    def testProductUserTemplates(self):
+        import imp
+        f = file("../product/datatemplates/usertemplates.py", "r")
+        usertemplates = imp.load_module("usertemplates", f, "usertemplates.py", ('.py', 'r', imp.PY_SOURCE))
+        self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
+
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
