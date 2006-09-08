@@ -46,7 +46,7 @@ def GetLists(projectName, lists):
     return returner
 
 def DefaultLists(projectName):
-    return  GetLists(defaultlists)
+    return GetLists(projectName, defaultlists)
 
 class MailingListException(MintError):
     def __init__(self, mesg):
@@ -61,14 +61,6 @@ class MailingListClient:
         @param server: URL to the mailing list server's XMLRPC interface
         """
         self.server = xmlrpclib.ServerProxy(server)
-
-    def list_all_lists(self):
-        try:
-            lists = self.server.Mailman.listAdvertisedLists()
-        except:
-            raise MailingListException("Mailing List Error")
-        lists.remove('mailman')
-        return lists
 
     def list_lists(self, projectName):
         """
