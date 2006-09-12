@@ -96,7 +96,7 @@ from mint import urltypes
                     <div py:if="files" py:strip="True">
                         <table>
                             <tr py:for="i, fileId in enumerate(fileIds)">
-                                <td>
+                                <td style="border-bottom: 1px solid #e6e6e6;">
                                     <?python 
                                       title = [x['title'] for x in files if x['fileId'] == fileId][0] or "Disc " + str(i+1)
                                       size = [x['size'] for x in files if x['fileId'] == fileId][0] or 0
@@ -106,16 +106,17 @@ from mint import urltypes
                                     <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
                                     <div style="font-size: smaller;" py:if="size">Size: ${size/1048576}&nbsp;MB</div>
                                 </td>
-                                <td style="text-align: center; vertical-align: middle;">
-                                    <span py:for="file in files" py:if="file['fileId'] == fileId">
+                                <td style="text-align: right; vertical-align: top; border-bottom: 1px solid #e6e6e6;">
+                                    <span py:for="file in files" py:if="file['fileId'] == fileId" style="vertical-align: top;">
                                         <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
-                                        &nbsp;<a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">${urltypes.displayNames[file['type']]}</a><img valign="middle" src="/conary-static/apps/mint/images/download-icon.png" />
+                                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}"
+                                           py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">
+                                            ${urltypes.displayNames[file['type']]}</a>
                                     </span>
-                        
-                <div py:if="not files">Build contains no downloadable files.</div>
-            </td>
-        </tr>
-        </table>
+                                    <img src="/conary-static/apps/mint/images/download-icon.png" />
+                                </td>
+                            </tr>
+                        </table>
 
                         <div py:strip="True" py:if="buildtypes.INSTALLABLE_ISO == build.buildType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
