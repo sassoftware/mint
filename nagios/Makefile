@@ -6,11 +6,13 @@
 
 SUBDIRS = 
 
-python_files =			\
-		checkjs.py		\
-		checkjsrb.py	\
-		check_js		\
-		check_js_rb
+python_files =				\
+		checkjobs.py		\
+		checkjobserver.py	\
+		check_jobs			\
+		__init__.py		    \
+		config.py		    \
+		check_jobserver
 
 extra_dist = Makefile
 

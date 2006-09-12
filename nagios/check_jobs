@@ -1,0 +1,17 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+
+import sys
+import time
+from mint_nagpy.checkjobs import CheckJobs
+
+obj = CheckJobs()
+jobs, timeStamp = obj.check()
+    
+if len(jobs):
+    print 'Problems detected with the following jobs: %s' % str(jobs).lstrip('[').rstrip(']')
+else:
+    print 'No errant jobs detected since %s.' % time.ctime(timeStamp)
+sys.exit(len(jobs) and obj.nagios_critical or obj.nagios_ok)

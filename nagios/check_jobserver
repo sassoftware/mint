@@ -1,0 +1,18 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+
+import sys
+import os
+from mint_nagpy.checkjobserver import CheckJS
+
+obj = CheckJS()
+d = obj.check()
+if d == obj.nagios_critical:
+    print 'Jobserver(s) malfunctioning on host %s' % os.uname()[1]
+elif d == obj.nagios_warning:
+    print 'Jobserver(s) not running on host %s' % os.uname()[1]
+elif d == obj.nagios_ok:
+    print 'Jobserver(s) running on host %s' % os.uname()[1]
+sys.exit(d)
