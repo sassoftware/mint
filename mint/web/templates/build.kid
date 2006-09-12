@@ -109,7 +109,7 @@ from mint import urltypes
                                 <td style="text-align: center; vertical-align: middle;">
                                     <span py:for="file in files" py:if="file['fileId'] == fileId">
                                         <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
-                                        &nbsp;<a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">${urltypes.displayNames[file['type']]}</a>&nbsp;
+                                        &nbsp;<a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">${urltypes.displayNames[file['type']]}</a><img valign="middle" src="/conary-static/apps/mint/images/download-icon.png" />
                                     </span>
                         
                 <div py:if="not files">Build contains no downloadable files.</div>
