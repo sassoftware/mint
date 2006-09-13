@@ -20,13 +20,13 @@ extra_dist = Makefile
 
 dist_files = $(python_files) $(extra_dist)
 
-all: default-all
+all: 
 
-install: default-install
+install:
 
-dist: default-dist dist-subdirs
+dist: 
 
-clean: default-clean clean-subdirs
+clean:
 
 include ../Make.rules
 
