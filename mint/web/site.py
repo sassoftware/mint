@@ -599,6 +599,7 @@ class SiteHandler(WebHandler):
         # then use it.
         redirectUrl = None
         overrideRedirect = None
+        filename = None
         for t, u in fileUrls:
             if t == urltypes.LOCAL:
                 filename = u
