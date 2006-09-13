@@ -24,7 +24,7 @@ all:
 
 install:
 
-dist: 
+dist: default-dist
 
 clean:
 
