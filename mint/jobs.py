@@ -4,6 +4,7 @@
 # All rights reserved
 #
 from mint import database
+from mint import urltypes
 from mint.mint_error import MintError
 
 class JobMissing(MintError):
