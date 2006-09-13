@@ -27,6 +27,18 @@ class BuildMissing(MintError):
     def __str__(self):
         return "The referenced build does not exist."
 
+class BuildFileMissing(MintError):
+    def __str__(self):
+        return "The referenced build file doesn't exist."
+
+class BuildFileUrlMissing(MintError):
+    def __str__(self):
+        return "The referenced build file location (URL) doesn't exist."
+
+class DeleteLocalUrlError(MintError):
+    def __str__(self):
+        return "Deleting a local Build File URL is not supported via this interface."
+
 class BuildPublished(MintError):
     def __str__(self):
         return "The referenced build is already part of a published release."

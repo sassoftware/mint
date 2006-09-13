@@ -41,12 +41,14 @@ from mint import users
 from mint import usertemplates
 from mint import spotlight
 from mint import selections
+from mint import urltypes
 from mint import useit
 from mint import rmakebuild
 from mint import jsversion
 from mint.flavors import stockFlavors
 from mint.mint_error import PermissionDenied, BuildPublished, \
-     BuildMissing, MintError, BuildEmpty, UserAlreadyAdmin, \
+     BuildMissing, BuildFileMissing, BuildFileUrlMissing, \
+     DeleteLocalUrlError, MintError, BuildEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
      rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
@@ -60,6 +62,7 @@ from conary import conaryclient
 from conary import sqlite3
 from conary import versions
 from conary.deps import deps
+from conary.lib import sha1helper
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
@@ -201,8 +204,8 @@ def getTables(db, cfg):
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
     d['buildFiles'] = jobs.BuildFilesTable(db)
-    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
     d['filesUrls'] = jobs.FilesUrlsTable(db)
+    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
@@ -1774,24 +1777,29 @@ class MintServer(object):
         if self.builds.getPublished(buildId):
             raise BuildPublished()
         cu = self.db.cursor()
-        cu.execute("SELECT filename FROM BuildFiles WHERE buildId=?",
-                   buildId)
-        for fileName in [x[0] for x in cu.fetchall()]:
-            try:
-                os.unlink(fileName)
-            except OSError, e:
-                    # ignore permission denied, no such file/dir
-                    if e.errno not in (2, 13):
-                        raise
-            for dirName in (\
-                os.path.sep.join(fileName.split(os.path.sep)[:-1]),
-                os.path.sep.join(fileName.split(os.path.sep)[:-2])):
-                try:
-                    os.rmdir(dirName)
-                except OSError, e:
-                    # ignore permission denied, dir not empty, no such file/dir
-                    if e.errno not in (2, 13, 39):
-                        raise
+        for filelist in self.getBuildFilenames(buildId):
+            fileId = filelist['fileId']
+            fileUrlList = filelist['fileUrls']
+            for urlId, urlType, url in fileUrlList:
+                self.removeFileUrl(buildId, fileId, urlId)
+                # if this location is local, delete the file
+                if urlType == urltypes.LOCAL:
+                    fileName = url
+                    try:
+                        os.unlink(fileName)
+                    except OSError, e:
+                            # ignore permission denied, no such file/dir
+                            if e.errno not in (2, 13):
+                                raise
+                    for dirName in (\
+                        os.path.sep.join(fileName.split(os.path.sep)[:-1]),
+                        os.path.sep.join(fileName.split(os.path.sep)[:-2])):
+                        try:
+                            os.rmdir(dirName)
+                        except OSError, e:
+                            # ignore permission denied, dir not empty, no such file/dir
+                            if e.errno not in (2, 13, 39):
+                                raise
         self.builds.deleteBuild(buildId)
         return True
 
@@ -2518,10 +2526,20 @@ class MintServer(object):
         pipeFD.close()
         return res
 
-    @typeCheck(int, (list, (list, str)))
+    @typeCheck(int, list, (list, str, int))
     @requiresAuth
     @private
     def setBuildFilenames(self, buildId, filenames):
+        """
+        This call expects a buildId and a 2- or 4-tuple of filename
+        objects. The 2-tuple form is deprecated and is only here for 
+        backwards compatibility.
+
+        4-tuple form: (filename, title, size, sha1)
+        2-tuple form: (filename, title)
+
+        Returns True if it worked, False otherwise.
+        """
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
@@ -2530,11 +2548,86 @@ class MintServer(object):
 
         cu = self.db.transaction()
         try:
+            # sqlite doesn't do delete cascade
+            if self.db.driver == 'sqlite':
+                cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
+                    (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
+                        buildId)
             cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
             for idx, file in enumerate(filenames):
-                fileName, title = file
-                cu.execute("INSERT INTO BuildFiles VALUES (NULL, ?, ?, ?, ?, NULL, NULL)",
-                           buildId, idx, fileName, title)
+                if len(file) == 2:
+                    fileName, title = file
+                    sha1 = ''
+                    size = 0
+                elif len(file) == 4:
+                    fileName, title, size, sha1 = file
+                else:
+                    self.db.rollback()
+                    raise ValueError
+                cu.execute("INSERT INTO BuildFiles VALUES(NULL, ?, ?, NULL, ?, ?, ?)", buildId, idx, title, size, sha1)
+                fileId = cu.lastrowid
+                cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
+                    urltypes.LOCAL, fileName)
+                urlId = cu.lastrowid
+                cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
+                        fileId, urlId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+        return True
+
+    @typeCheck(int, int, int, str)
+    @requiresAuth
+    @private
+    def addFileUrl(self, buildId, fileId, urlType, url):
+        self._filterBuildFileAccess(fileId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        # Note bene: this can be done after a build has been published,
+        # thus we don't have to check to see if the build is published.
+
+        cu = self.db.transaction()
+        try:
+            # sanity check to make sure the fileId referenced exists
+            cu.execute("SELECT fileId FROM BuildFiles where fileId = ?",
+                    fileId)
+            if not len(cu.fetchall()):
+                raise BuildFileMissing()
+
+            cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
+                    urlType, url)
+            urlId = cu.lastrowid
+            cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
+                    fileId, urlId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+        return True
+
+    @typeCheck(int, int, int)
+    @requiresAuth
+    @private
+    def removeFileUrl(self, buildId, fileId, urlId):
+        self._filterBuildFileAccess(fileId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        cu = self.db.transaction()
+        try:
+            cu.execute("SELECT urlId FROM FilesUrls WHERE urlId = ?",
+                    urlId)
+            r = cu.fetchall()
+            if not len(r):
+                raise BuildFileUrlMissing()
+
+            # sqlite doesn't support cascading delete
+            if self.db.driver == 'sqlite':
+                cu.execute("DELETE FROM BuildFilesUrlsMap WHERE urlId = ?",
+                        urlId)
+            cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", urlId)
         except:
             self.db.rollback()
             raise
@@ -2556,62 +2649,56 @@ class MintServer(object):
     def getBuildFilenames(self, buildId):
         self._filterBuildAccess(buildId)
         cu = self.db.cursor()
-        cu.execute("""SELECT fileId, filename, title, size, 
-                      sha1 FROM BuildFiles WHERE 
-                      buildId=? ORDER BY idx""", buildId)
+        cu.execute("""SELECT bf.fileId, bf.title, bf.idx, bf.size, bf.sha1,
+                             u.urlId, u.urlType, u.url
+                      FROM buildfiles bf
+                           JOIN buildfilesurlsmap bffu
+                             USING (fileId)
+                           JOIN filesurls u
+                             USING (urlId)
+                      WHERE bf.buildId = ? ORDER BY bf.fileId""", buildId)
 
         results = cu.fetchall_dict()
 
-        l = []
+        buildFilesList = []
+        lastFileId = -1
+        lastDict   = {}
         for x in results:
-            if x['sha1']:
-                sha1 = x['sha1']
-            else:
-                sha1 = 0
-            if x['size']:
-                size = x['size']
-            else:
-                try:
-                    size = os.stat(x['filename'])[6]
-                except OSError:
-                    size = 0
-            if x['filename']:
-                d = {'fileId':      x['fileId'],
-                     'filename':    os.path.basename(x['filename']),
-                     'title':       x['title'],
-                     'size':        size,
-                     'type':        urltypes.LOCAL,
-                     'sha1':        sha1
-                    }
-                l.append(d)
-            else:
-                cu.execute("""SELECT urlType, url FROM FilesUrls
-                  LEFT JOIN BuildFilesUrlsMap ON 
-                  FilesUrls.urlId=BuildFilesUrlsMap.urlId
-                  WHERE BuildFilesUrlsMap.fileId=? ORDER
-                  BY urlType""",  x['fileId'])
-                remoteResults = cu.fetchall_dict()
-                for y in remoteResults:
-                    d = {'fileId':      x['fileId'],
-                         'filename':    y['url'],
-                         'title':       x['title'],
-                         'size':        size,
-                         'type':        y['urlType'],
-                         'sha1':        sha1
-                        }
-                    l.append(d)
-        return l
+            if x['fileId'] != lastFileId:
+                if lastDict:
+                    buildFilesList.append(lastDict)
+
+                lastFileId = x['fileId']
+                lastDict = { 'fileId': x['fileId'],
+                             'title': x['title'],
+                             'idx': x['idx'],
+                             'size': x['size'] or 0,
+                             'sha1': x['sha1'] or '',
+                             'fileUrls': [] }
+
+            lastDict['fileUrls'].append((x['urlId'], x['urlType'], x['url']))
+
+        if lastDict:
+            buildFilesList.append(lastDict)
+
+        return buildFilesList
 
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
         self._filterBuildFileAccess(fileId)
         cu = self.db.cursor()
-        cu.execute("SELECT buildId, idx, filename, title FROM BuildFiles WHERE fileId=?", fileId)
+        cu.execute("""SELECT bf.buildId, bf.idx, bf.title, fu.urlType, fu.url
+                      FROM BuildFiles bf
+                         JOIN BuildFilesUrlsMap USING (fileId)
+                         JOIN FilesUrls fu USING (urlId)
+                      WHERE fileId=?""", fileId)
 
-        r = cu.fetchone()
+        r = cu.fetchall()
         if r:
-            return r[0], r[1], r[2], r[3]
+            info = r[0]
+            filenames = [ (x[3], x[4]) for x in r ]
+            return info[0], info[1], info[2], filenames
         else:
             raise jobs.FileMissing
 

@@ -225,10 +225,14 @@ class BuildsTable(database.KeyedTable):
     def deleteBuild(self, buildId):
         cu = self.db.transaction()
         try:
-            r = cu.execute("DELETE FROM Builds WHERE buildId=?", buildId)
-            r = cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
-            r = cu.execute("DELETE FROM Jobs WHERE buildId=?", buildId)
-            r = cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
+            cu.execute("DELETE FROM Builds WHERE buildId=?", buildId)
+            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
+            cu.execute("DELETE FROM Jobs WHERE buildId=?", buildId)
+            # normally, ON DELETE CASCADE takes care of this
+            if self.db.driver == 'sqlite':
+                cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
+                        (SELECT fileId FROM builds WHERE buildId=?)""", buildId)
+            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
         except:
             self.db.rollback()
         else:
@@ -377,14 +381,21 @@ class Build(database.TableObject):
                 dataDict[name] = template[name][1]
         return dataDict
 
+    def addFileUrl(self, fileId, urlType, url):
+        return self.server.addFileUrl(self.getId(), fileId, urlType, url)
+
+    def removeFileUrl(self, fileId, urlId):
+        return self.server.removeFileUrl(self.getId(), fileId, urlId)
+
     def deleteBuild(self):
         return self.server.deleteBuild(self.getId())
 
     def hasVMwareImage(self):
         """ Returns True if build has a VMware player image. """
-        filelist = self.getFiles()
-        for file in filelist:
-            if file["filename"].endswith(".vmware.zip"):
-                return True
+        for filelist in self.getFiles():
+            fileUrlList = filelist['fileUrls']
+            for fileUrl in fileUrlList:
+                if fileUrl[2].endswith(".vmware.zip"):
+                    return True
         return False
 
