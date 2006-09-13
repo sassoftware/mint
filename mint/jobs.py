@@ -168,12 +168,12 @@ class BuildFilesTable(database.KeyedTable):
                     fileId = row[0]
                     if not row[1]:
                         continue
-                    relativePath = '/'.join(row[1].split('/')[-3:])
                     cu.execute("INSERT INTO FilesUrls VALUES(NULL,?,?)",
-                            urltypes.LOCAL, relativePath)
+                            urltypes.LOCAL, row[1])
                     urlId = cu.lastrowid
                     cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?,?)",
                             fileId, urlId)
+                    cu.execute("UPDATE BuildFiles SET filename = NULL WHERE fileId = ?", fileId)
 
             return dbversion >= 21
 
