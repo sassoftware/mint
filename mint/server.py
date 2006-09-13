@@ -10,6 +10,7 @@ import os
 import re
 import random
 import simplejson
+import stat
 import string
 import sys
 import time
