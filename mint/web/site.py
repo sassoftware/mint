@@ -18,6 +18,7 @@ from mint import urltypes
 from mint import database
 from mint import data
 from mint import mint_error
+from mint import jobs
 from mint import maintenance
 from mint import mailinglists
 from mint import projects
@@ -571,23 +572,8 @@ class SiteHandler(WebHandler):
         return self._write("searchResults", searchType = "Projects", terms = terms, results = results,
                                             count = count, limit = limit, offset = offset, modified = modified)
 
-    @intFields(fileId = 0)
-    def downloadTorrent(self, auth, fileId):
-        buildId, idx, filename, title = self.client.getFileInfo(fileId)
-        files = self.client.getBuildFilenames(buildId)
-        remoteUrl = None
-        for x in files:
-            if x['type'] == self.cfg.torrentUrlType and x['fileId'] == fileId:
-                remoteUrl = x['filename']
-                break
-        try:
-            self._redirect(remoteUrl)
-        except OSError, e:
-            return self._write("error", shortError = "File error",
-                error = "An error has occurred opening the image file: %s" % e)
-
-    @intFields(fileId = 0)
-    def downloadImage(self, auth, fileId):
+    @intFields(fileId = 0, urlType = urltypes.LOCAL)
+    def downloadImage(self, auth, fileId, urlType):
         reqFilename = None
         try:
             if not fileId:
@@ -597,31 +583,50 @@ class SiteHandler(WebHandler):
         except ValueError:
             raise HttpNotFound
 
-        buildId, idx, filename, title = self.client.getFileInfo(fileId)
+        # Screen out UrlTypes that are not visible, except for urltypes.LOCAL,
+        # which is ALWAYS visible.
+        if not (urlType == urltypes.LOCAL \
+                or urlType in self.cfg.visibleUrlTypes):
+            raise HttpNotFound
 
-        if reqFilename and filename:
-            if reqFilename and os.path.basename(filename) != reqFilename:
-                raise HttpNotFound
-
-        if not filename:
-            files = self.client.getBuildFilenames(buildId)
-            remoteUrl = None
-            for x in files:
-                if x['type'] == self.cfg.redirectUrlType and x['fileId'] == fileId:
-                    remoteUrl = x['filename']
-                    break
-
-        build = self.client.getBuild(buildId)
         try:
-            if filename:
-                project = self.client.getProject(build.projectId)
-                fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
-                self._redirect(fileUrl)
+            buildId, idx, title, fileUrls = self.client.getFileInfo(fileId)
+        except jobs.FileMissing:
+            raise HttpNotFound
+
+        # Special rules for handling the default case (urltypes.LOCAL):
+        # If self.cfg.redirectUrlType is set AND that FileUrl exists,
+        # then use it.
+        redirectUrl = None
+        overrideRedirect = None
+        for t, u in fileUrls:
+            if t == urltypes.LOCAL:
+                filename = u
+            elif t == urlType:
+                redirectUrl = u
+
+            if t == self.cfg.redirectUrlType:
+                overrideRedirect = u
+
+        # For urltype.LOCAL, construct the redirect URL
+        # Use override redirect if it's set (e.g. redirecting to Amazon S3).
+        if urlType == urltypes.LOCAL and filename:
+            if overrideRedirect:
+                redirectUrl = overrideRedirect
             else:
-                self._redirect(remoteUrl)
-        except OSError, e:
-            return self._write("error", shortError = "File error",
-                error = "An error has occurred opening the image file: %s" % e)
+                # Don't pass through bad filenames if they are specified in
+                # the request.
+                if reqFilename and os.path.basename(filename) != reqFilename:
+                    raise HttpNotFound
+                build = self.client.getBuild(buildId)
+                project = self.client.getProject(build.projectId) 
+                redirectUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
+
+        if redirectUrl:
+            self._redirect(redirectUrl)
+        else:
+            raise HttpNotFound
+
 
     @requiresAuth
     @dictFields(yesArgs = {})
