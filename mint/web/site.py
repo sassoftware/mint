@@ -611,10 +611,10 @@ class SiteHandler(WebHandler):
 
         # For urltype.LOCAL, construct the redirect URL
         # Use override redirect if it's set (e.g. redirecting to Amazon S3).
-        if urlType == urltypes.LOCAL and filename:
+        if urlType == urltypes.LOCAL:
             if overrideRedirect:
                 redirectUrl = overrideRedirect
-            else:
+            elif filename:
                 # Don't pass through bad filenames if they are specified in
                 # the request.
                 if reqFilename and os.path.basename(filename) != reqFilename:
