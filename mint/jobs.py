@@ -166,6 +166,8 @@ class BuildFilesTable(database.KeyedTable):
 
                 for row in results:
                     fileId = row[0]
+                    if not row[1]:
+                        continue
                     relativePath = '/'.join(row[1].split('/'))[-3:]
                     cu.execute("INSERT INTO FilesUrls VALUES(NULL,?,?)",
                             urltypes.LOCAL, relativePath)
