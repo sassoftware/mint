@@ -9,9 +9,11 @@ SUBDIRS =
 python_files =				\
 		checkjobs.py		\
 		checkjobserver.py	\
-		check_jobs			\
-		__init__.py		    \
-		config.py		    \
+		checkjs.py		\
+		checkjsrb.py		\
+		check_jobs		\
+		__init__.py		\
+		config.py		\
 		check_jobserver
 
 extra_dist = Makefile
