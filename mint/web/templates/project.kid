@@ -174,43 +174,57 @@
             <div py:strip="True" py:for="build in builds">
                 ${buildTableRow(build)}
             </div>
+        </table>
+    </div>
 
     <div py:strip="True" py:def="buildTableRow(build)">
         <?python
             from mint import buildtypes
             from mint.helperfuncs import truncateForDisplay
-            from mint.web.templatesupport import downloadTracker
             shorterName = truncateForDisplay(build.name)
-            buildFiles = build.getFiles()
-            fileIds = list(set([x['fileId'] for x in buildFiles]))
+            files = build.getFiles()
         ?>
         <tr style="background: #f0f0f0; font-weight: bold;" class="buildHeader">
             <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
             <td style="text-align: center;">${build.getArch()}
-            &nbsp;${buildtypes.typeNamesShort[build.buildType]}</td>
+            &nbsp;${buildtypes.typeNames[build.buildType]}</td>
         </tr>
-        <tr py:for="i, fileId in enumerate(fileIds)">
-            <td>
-                <?python 
-                    title = [x['title'] for x in buildFiles if x['fileId'] == fileId][0] or "Disc " + str(i+1)
-                    size = [x['size'] for x in buildFiles if x['fileId'] == fileId][0] or 0
-                    sha1 = [x['sha1'] for x in buildFiles if x['fileId'] == fileId][0] or None 
-                ?>
-                <span style="font-weight: bold;">${title}</span>
-                <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
-                <div style="font-size: smaller;" py:if="size">Size: ${size/1048576}&nbsp;MB</div>
-            </td>
-            <td style="text-align: center; vertical-align: middle;">
-                <span py:for="file in buildFiles" py:if="file['fileId'] == fileId">
-                <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
-                &nbsp;<a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}" py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">${urltypes.displayNames[file['type']]}</a>&nbsp;
-                </span>
-                        
-                <div py:if="not buildFiles">Build contains no downloadable files.</div>
-            </td>
-        </tr>
+        ${buildFiles(files)}
         <tr><td>&nbsp;</td></tr>
     </div>
-        </table>
+
+    <div py:strip="True" py:def="buildFiles(files)">
+        <?python
+            from mint.web.templatesupport import downloadTracker
+        ?>
+        <tr py:for="f in files">
+            <td style="border-bottom: 1px solid #e6e6e6;">
+                <?python
+                    title = f['title'] or ("Disc %d" % (f['idx'], ))
+                    size = f['size'] or 0
+                    sha1 = f['sha1'] or ''
+                ?>
+                <span style="font-weight: bold;">${title}</span>
+                <div style="font-size: smaller;" py:if="size">${size/1048576} MB<span py:if="self.cfg.displaySha1 and sha1">, SHA1: ${sha1}</span></div>
+            </td>
+            <td style="text-align: right; vertical-align: top; border-bottom: 1px solid #e6e6e6;">
+                <?python
+                    filteredFileUrls = [ x for x in f['fileUrls'] if x[1] in self.cfg.visibleUrlTypes or x[1] == urltypes.LOCAL ]
+                    urlTypeList = [ x[1] for x in filteredFileUrls ]
+                ?>
+                <div py:strip="True" py:for="urlId, urlType, url in filteredFileUrls">
+                    <span py:if="not (urlType == urltypes.LOCAL and self.cfg.redirectUrlType in urlTypeList)" style="vertical-align: top; font-size: smaller;">
+                        <?python
+                        fileUrl = cfg.basePath + 'downloadImage?fileId=%d%s' % (f['fileId'], (urlType not in (urltypes.LOCAL, self.cfg.redirectUrlType)) and ('&urlType=%d' % urlType) or '')
+                        ?>
+                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}">
+                            ${urltypes.displayNames[urlType]}
+                        </a>
+                    </span>
+                </div>
+                <img src="/conary-static/apps/mint/images/download-icon.png" />
+            </td>
+        </tr>
     </div>
+
 </html>

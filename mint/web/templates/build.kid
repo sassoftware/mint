@@ -95,27 +95,7 @@ from mint import urltypes
 
                     <div py:if="files" py:strip="True">
                         <table>
-                            <tr py:for="i, fileId in enumerate(fileIds)">
-                                <td style="border-bottom: 1px solid #e6e6e6;">
-                                    <?python 
-                                      title = [x['title'] for x in files if x['fileId'] == fileId][0] or "Disc " + str(i+1)
-                                      size = [x['size'] for x in files if x['fileId'] == fileId][0] or 0
-                                      sha1 = [x['sha1'] for x in files if x['fileId'] == fileId][0] or None 
-                                    ?>
-                                    <span style="font-weight: bold;">${title}</span>
-                                    <div py:if="self.cfg.displaySha1 and sha1" style="font-size: smaller;">SHA1: ${sha1}</div>
-                                    <div style="font-size: smaller;" py:if="size">Size: ${size/1048576}&nbsp;MB</div>
-                                </td>
-                                <td style="text-align: right; vertical-align: top; border-bottom: 1px solid #e6e6e6;">
-                                    <span py:for="file in files" py:if="file['fileId'] == fileId" style="vertical-align: top;">
-                                        <?py fileUrl = cfg.basePath + '%s?fileId=' % (file['type'] == self.cfg.torrentUrlType and 'downloadTorrent' or 'downloadImage') + str(file['fileId']) ?>
-                                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}"
-                                           py:if="file['type'] in self.cfg.visibleUrlTypes or file['type'] == urltypes.LOCAL">
-                                            ${urltypes.displayNames[file['type']]}</a>
-                                    </span>
-                                    <img src="/conary-static/apps/mint/images/download-icon.png" />
-                                </td>
-                            </tr>
+                            ${buildFiles(files)}
                         </table>
 
                         <div py:strip="True" py:if="buildtypes.INSTALLABLE_ISO == build.buildType">
