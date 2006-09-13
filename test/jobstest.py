@@ -729,7 +729,8 @@ class JobsTest(fixtures.FixturedUnitTest):
         build.refresh()
         files = build.getFiles()
         assert(files == \
-                [{'size': 0, 'sha1': '', 'title': 'Stub',
+                [{'size': os.stat(imageFileName)[6],
+                  'sha1': '', 'title': 'Stub',
                   'fileUrls': [(4, 0, imageFileName)],
                   'fileId': 4, 'idx': 0}])
 
