@@ -128,17 +128,20 @@ class Job(database.TableObject):
 class BuildFilesTable(database.KeyedTable):
     name = 'BuildFiles'
     key = 'fileId'
+    # Nota Bummer: the filename column is deprecated, so don't use it.
+    # We need to get rid of it once we adopt a migration scheme that 
+    # doesn't produce different results from InitialCreation vs. Migration.
     createSQL = """
                 CREATE TABLE BuildFiles (
-                    fileId      %(PRIMARYKEY)s,
-                    buildId   INT,
-                    idx         INT,
-                    filename    CHAR(255),
-                    title       CHAR(255) DEFAULT '',
-                    size        INT,
-                    sha1        CHAR(255)
+                    fileId       %(PRIMARYKEY)s,
+                    buildId      INT,
+                    idx          INT,
+                    filename     VARCHAR(255),
+                    title        CHAR(255) DEFAULT '',
+                    size         BIGINT,
+                    sha1         CHAR(40)
                 );"""
-    fields = ['fileId', 'buildId', 'idx', 'filename', 'title', 'size', 'sha1']
+    fields = ['fileId', 'buildId', 'idx', 'title', 'size', 'sha1' ]
 
     indexes = {"BuildFilesBuildIdx": """CREATE INDEX BuildFilesBuildIdx
                                               ON BuildFiles(buildId)"""}
@@ -150,11 +153,24 @@ class BuildFilesTable(database.KeyedTable):
                 sql = """ALTER TABLE BuildFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
-            
+
             if dbversion == 21 and not self.initialCreation:
                 cu = self.db.cursor()
-                cu.execute("ALTER TABLE BuildFiles ADD COLUMN size INT")
-                cu.execute("ALTER TABLE BuildFiles ADD COLUMN sha1 CHAR(255)")
+                cu.execute("ALTER TABLE BuildFiles ADD COLUMN size BIGINT")
+                cu.execute("ALTER TABLE BuildFiles ADD COLUMN sha1 CHAR(40)")
+
+                # migrate data over to FilesUrls
+                cu.execute("SELECT fileId, filename FROM BuildFiles ORDER BY fileId")
+                results = cu.fetchall()
+
+                for row in results:
+                    fileId = row[0]
+                    relativePath = '/'.join(row[1].split('/'))[-3:]
+                    cu.execute("INSERT INTO FilesUrls VALUES(?,?,?)",
+                            urlId, urltypes.LOCAL, relativePath)
+                    urlId = cu.lastrowid
+                    cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?,?)",
+                            fileId, urlId)
 
             return dbversion >= 21
 
@@ -166,17 +182,21 @@ class BuildFilesUrlsMapTable(database.KeyedTable):
     createSQL = """
                 CREATE TABLE BuildFilesUrlsMap (
                     fileId  INT,
-                    urlId   %(PRIMARYKEY)s
+                    urlId   INT,
+                CONSTRAINT bfum_f_fk FOREIGN KEY(fileId)
+                    REFERENCES BuildFiles (fileId) ON DELETE CASCADE,
+                CONSTRAINT bfum_u_fk FOREIGN KEY(urlId)
+                    REFERENCES FilesUrls(urlId) ON DELETE CASCADE
                 );"""
     fields = ['fileId', 'urlId']
-    
+
 class FilesUrlsTable(database.KeyedTable):
     name = 'FilesUrls'
     key = 'urlId'
     createSQL = """
                 CREATE TABLE FilesUrls (
                     urlId       %(PRIMARYKEY)s,
-                    urlType     INT,
-                    url         CHAR(255)
+                    urlType     SMALLINT,
+                    url         VARCHAR(255)
                 );"""
     fields = ['urlId', 'urlType', 'url']
