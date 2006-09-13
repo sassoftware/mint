@@ -23,6 +23,7 @@ from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
      JobserverVersionMismatch
 from mint.builds import BuildDataNameError
 from mint.server import deriveBaseFunc, ParameterError
+from mint import urltypes
 
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
@@ -49,10 +50,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setFiles([["file1", "File Title 1"],
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
-            [{'fileId': 4, 'filename': 'file1',
-              'title': 'File Title 1', 'size': 0, 'type': 0, 'sha1': 0},
-             {'fileId': 5, 'filename': 'file2',
-              'title': 'File Title 2', 'size': 0, 'type': 0, 'sha1': 0}]
+            [{'size': 0, 'sha1': '', 'title': 'File Title 1',
+                'fileUrls': [(4, 0, 'file1')], 'idx': 0, 'fileId': 4},
+             {'size': 0, 'sha1': '', 'title': 'File Title 2',
+                 'fileUrls': [(5, 0, 'file2')], 'idx': 1, 'fileId': 5}]
         )
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
@@ -316,8 +317,17 @@ class BuildTest(fixtures.FixturedUnitTest):
             newfile = os.path.join(subdir, 'file')
             f = open(newfile, 'w')
             f.close()
-            cu.execute('UPDATE BuildFiles SET filename=? WHERE buildId=?',
-                       newfile, build.id)
+            results = cu.execute("""SELECT urlId 
+                                    FROM buildFiles bf
+                                       JOIN buildFilesUrlsMap USING (fileId)
+                                       JOIN FilesUrls fu USING (urlId)
+                                    WHERE buildId = ? AND urlType = ?""",
+                                    build.id, urltypes.LOCAL)
+            results = cu.fetchall()
+            assert(len(results) > 0)
+            urlId = results[0][0]
+            cu.execute("""UPDATE FilesUrls SET url=? WHERE urlId=?""",
+                    newfile, urlId)
             db.commit()
             build.deleteBuild()
             for targ in (newfile, subdir, tmpdir):
@@ -348,8 +358,17 @@ class BuildTest(fixtures.FixturedUnitTest):
             newfile = os.path.join(subdir, 'file')
             f = open(newfile, 'w')
             f.close()
-            cu.execute('UPDATE BuildFiles SET filename=? WHERE buildId=?',
-                       newfile, build.id)
+            results = cu.execute("""SELECT urlId 
+                                    FROM buildFiles bf
+                                       JOIN buildFilesUrlsMap USING (fileId)
+                                       JOIN FilesUrls fu USING (urlId)
+                                    WHERE buildId = ? AND urlType = ?""",
+                                    build.id, urltypes.LOCAL)
+            results = cu.fetchall()
+            assert(len(results) > 0)
+            urlId = results[0][0]
+            cu.execute("""UPDATE FilesUrls SET url=? WHERE urlId=?""",
+                    newfile, urlId)
             db.commit()
             util.rmtree(tmpdir)
             for targ in (newfile, subdir, tmpdir):
@@ -562,6 +581,55 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         build = client.getBuild(data['anotherBuildId'])
         assert(str(build.getArchFlavor()) == "is: x86")
+
+    @fixtures.fixture('Full')
+    def testAddS3URLs(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+        buildfiles = build.getFiles()
+        assert(len(buildfiles) == 1)
+
+        fileId = buildfiles[0]['fileId']
+        build.addFileUrl(fileId, urltypes.AMAZONS3, 'http://a.test.url/')
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')
+
+        newbuildfiles = build.getFiles()
+        assert(len(newbuildfiles) == 1)
+        fileUrls = newbuildfiles[0]['fileUrls']
+        self.failUnlessEqual(len(fileUrls), 3)
+        self.failUnlessEqual(fileUrls,
+                [(2, urltypes.LOCAL, 'file'),
+                 (4, urltypes.AMAZONS3, 'http://a.test.url/'),
+                 (5, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
+
+
+    @fixtures.fixture('Full')
+    def testRemoveS3URLs(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+        buildfiles = build.getFiles()
+        assert(len(buildfiles) == 1)
+
+        fileId = buildfiles[0]['fileId']
+        build.addFileUrl(fileId, urltypes.AMAZONS3, 'http://a.test.url/')
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')
+
+        newbuildfiles = build.getFiles()
+        assert(len(newbuildfiles) == 1)
+
+        fileUrls = newbuildfiles[0]['fileUrls']
+        assert(len(fileUrls) == 3)
+        urlIdsToRemove = [ x[0] for x in fileUrls if x[1] != urltypes.LOCAL ]
+        for urlId in urlIdsToRemove:
+            build.removeFileUrl(fileId, urlId)
+
+        newbuildfiles = build.getFiles()
+        fileUrls = newbuildfiles[0]['fileUrls']
+        self.failUnlessEqual(len(fileUrls), 1)
+        self.failUnlessEqual(fileUrls, [(2, urltypes.LOCAL, 'file')])
+
 
 
 class OldBuildTest(MintRepositoryHelper):

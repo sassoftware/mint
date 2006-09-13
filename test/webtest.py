@@ -21,6 +21,7 @@ from mint import database
 from mint import buildtypes
 from mint import jobstatus
 from mint import jsversion
+from mint import urltypes
 
 from repostest import testRecipe
 
@@ -432,7 +433,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'level' : 0})
 
 
-    def testBuildsPage(self):
+    def testEmptyBuildsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
@@ -444,6 +445,178 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/foo/builds/',
                                   content = 'contains no builds',
                                   code = [200])
+
+    def testBuildsPage(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+
+        self.webLogin('foouser', 'foopass')
+
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/builds',
+                content = "Kung Foo Fighting", code = [200])
+
+        page = self.assertContent('/project/foo/build?id=%d' % build.id,
+                content = "", code = [200])
+
+        self.failUnless('300 MB' in page.body,
+                "Missing build size information")
+        self.failUnless(buildSha1 in page.body,
+                "Missing build sha1 information")
+
+        page = self.assertContent('/project/foo/editBuild?buildId=%d' % build.id,
+                content = "Kung Foo Fighting", code = [200])
+
+    def testBuildsPageMultipleFileUrls(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        fileId = build.getFiles()[0]['fileId']
+        localUrlId = build.getFiles()[0]['fileUrls'][0][0]
+        build.addFileUrl(fileId, urltypes.AMAZONS3,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+
+        self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/build?id=%d' % build.id,
+                                  content = 'Kung Foo Fighting',
+                                  code = [200])
+
+        self.failUnless('urlType=%d' % urltypes.AMAZONS3TORRENT in page.body,
+                "Missing S3 Torrent download link")
+        self.failIf('urlType=%d' % urltypes.AMAZONS3 in page.body,
+                "Amazon S3 link should override LOCAL type")
+        self.failIf('urlType=%d' % urltypes.LOCAL in page.body,
+                "LOCAL type shouldn't show up in URL")
+
+        build.removeFileUrl(fileId, localUrlId)
+        newpage = self.assertContent('/project/foo/build?id=%d' % build.id,
+                                  content = 'Kung Foo Fighting',
+                                  code = [200])
+
+        self.failIf('urlType=%d' % urltypes.AMAZONS3 in newpage.body,
+                "Removing LOCAL type with S3 in place should not change the page")
+
+    def testEmptyReleasesPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/releases/',
+                                  content = 'has no releases',
+                                  code = [200])
+
+    def testReleasesPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+
+        release = client.newPublishedRelease(projectId)
+        release.name = "Foo Fighters"
+        release.version = "0.1"
+        release.addBuild(build.id)
+        release.save()
+
+        self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/releases/',
+                                  content = 'Foo Fighters',
+                                  code = [200])
+
+        page = self.assertContent('/project/foo/release?id=%d' % release.id,
+                content = 'Foo Fighters', code = [200])
+
+        self.failUnless('300 MB' in page.body,
+                "Missing build size information")
+        self.failUnless(buildSha1 in page.body,
+                "Missing build sha1 information")
+
+    def testReleasesPageMultipleFileUrls(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        fileId = build.getFiles()[0]['fileId']
+        localUrlId = build.getFiles()[0]['fileUrls'][0][0]
+        build.addFileUrl(fileId, urltypes.AMAZONS3,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+
+        release = client.newPublishedRelease(projectId)
+        release.name = "Foo Fighters"
+        release.version = "0.1"
+        release.addBuild(build.id)
+        release.save()
+
+        self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/release?id=%d' % release.id,
+                                  content = 'Foo Fighters',
+                                  code = [200])
+
+        self.failUnless('urlType=%d' % urltypes.AMAZONS3TORRENT in page.body,
+                "Missing S3 Torrent download link")
+        self.failIf('urlType=%d' % urltypes.AMAZONS3 in page.body,
+                "Amazon S3 link should override LOCAL type")
+        self.failIf('urlType=%d' % urltypes.LOCAL in page.body,
+                "LOCAL type shouldn't show up in URL")
+
+        build.removeFileUrl(fileId, localUrlId)
+        newpage = self.assertContent('/project/foo/release?id=%d' % release.id,
+                                  content = 'Foo Fighters',
+                                  code = [200])
+
+        self.failIf('urlType=%d' % urltypes.AMAZONS3 in newpage.body,
+                "Removing LOCAL type with S3 in place should not change the page")
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -772,14 +945,55 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
+        build.setFiles([['test.iso', 'Test Image']])
 
-        cu = self.db.cursor()
-        cu.execute("INSERT INTO BuildFiles VALUES (1, ?, 0, 'test.iso', 'Test Image', NULL, NULL)",
-                   build.id)
-        self.db.commit()
-
-        # check for the meta refresh tag
+        # the following should all be equivalent
+        page = self.assertCode('/downloadImage/1', code = 301)
         page = self.assertCode('/downloadImage/1/test.iso', code = 301)
+        page = self.assertCode('/downloadImage/test.iso?fileId=1', code = 301)
+        page = self.assertCode('/downloadImage?fileId=1', code = 301)
+
+        # this should return 404
+        page = self.assertCode('/downloadImage/1/not_really.iso', code = 404)
+
+        # so should this
+        page = self.assertCode('/downloadImage/1337', code = 404)
+
+    def testDownloadISOWithUrlType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(0)
+        build.setFiles([['test.iso', 'Test Image']])
+        files = build.getFiles()
+        assert(len(files) == 1)
+        fileId = files[0]['fileId']
+        build.addFileUrl(fileId, urltypes.GENERICMIRROR,
+            'http://foo.elsewhere.org/')
+
+        # sanity checks
+        page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
+                urltypes.LOCAL, code = 301)
+
+        page = self.assertCode('/downloadImage/1?urlType=%d' % \
+                urltypes.LOCAL, code = 301)
+
+        page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
+                urltypes.GENERICMIRROR, code = 301)
+
+        page = self.assertCode('/downloadImage/1?urlType=%d' % \
+                urltypes.GENERICMIRROR, code = 301)
+
+        # these should return 404
+        page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
+                urltypes.AMAZONS3, code = 404)
+
+        page = self.assertCode('/downloadImage/1?urlType=%d' % \
+                urltypes.AMAZONS3, code = 404)
+
+        # and so should these
+        page = self.assertCode('/downloadImage/1/test.iso?urlType=1337', code = 404)
+        page = self.assertCode('/downloadImage/1?urlType=1337', code = 404)
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')

@@ -20,6 +20,7 @@ from mint import server
 from mint import shimclient
 from mint import buildtypes
 from mint import data
+from mint import urltypes
 
 from mint.distro import jobserver
 from mint.flavors import stockFlavors
@@ -254,6 +255,8 @@ class MintApacheServer(rephelp.ApacheServer):
                                    buildtypes.LIVE_ISO,
                                    buildtypes.VMWARE_IMAGE,
                                    buildtypes.STUB_IMAGE]
+        cfg.visibleUrlTypes   = [ x for x in urltypes.TYPES ]
+        cfg.displaySha1 = True
         cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                                 'maintenance.lock')
 
