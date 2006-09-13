@@ -456,7 +456,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         buildSize = 1024 * 1024 * 300
-        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
 
         self.webLogin('foouser', 'foopass')
@@ -579,7 +579,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         buildSize = 1024 * 1024 * 300
-        buildSha1 = '0123456789ABCDEF01234567890ABCDEF01234567'
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
         fileId = build.getFiles()[0]['fileId']
         localUrlId = build.getFiles()[0]['fileUrls'][0][0]
