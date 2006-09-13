@@ -2677,6 +2677,11 @@ class MintServer(object):
                              'fileUrls': [] }
 
             lastDict['fileUrls'].append((x['urlId'], x['urlType'], x['url']))
+            if x['urlType'] == urltypes.LOCAL and not lastDict['size']:
+                try:
+                    lastDict['size'] = os.stat(x['url'])[stat.ST_SIZE]
+                except (OSError, IOError):
+                    lastDict['size'] = 0
 
         if lastDict:
             buildFilesList.append(lastDict)
