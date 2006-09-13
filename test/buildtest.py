@@ -630,6 +630,48 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(fileUrls), 1)
         self.failUnlessEqual(fileUrls, [(2, urltypes.LOCAL, 'file')])
 
+    @fixtures.fixture('Empty')
+    def testSetBuildFilenames(self, db, data):
+        client = self.getClient('admin')
+        client = self.getClient('admin')
+        
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+
+        build = client.newBuild(projectId, "Test Build")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+
+        build.setFiles([["file", "file title 1"]])
+        files = build.getFiles()
+        self.failUnlessEqual(len(files), 1)
+        self.failUnlessEqual(files[0]['title'], "file title 1")
+        self.failUnlessEqual(files[0]['sha1'], "")
+        self.failUnlessEqual(files[0]['size'], 0)
+        self.failUnlessEqual(files[0]['fileUrls'][0][1], urltypes.LOCAL)
+        self.failUnlessEqual(files[0]['fileUrls'][0][2], "file")
+
+        build.setFiles([["file", "file title 1", 100000, ''],
+                        ["hyoogefile", "big!", 1024*1024*5000,
+                            '0123456789012345678901234567890123456789']])
+        files = build.getFiles()
+        self.failUnlessEqual(files[0]['title'], "file title 1")
+        self.failUnlessEqual(files[0]['sha1'], '')
+        self.failUnlessEqual(files[0]['size'], 100000)
+        self.failUnlessEqual(files[0]['fileUrls'][0][1], urltypes.LOCAL)
+        self.failUnlessEqual(files[0]['fileUrls'][0][2], "file")
+
+        self.failUnlessEqual(files[1]['title'], "big!")
+        self.failUnlessEqual(files[1]['sha1'], '0123456789012345678901234567890123456789')
+        self.failUnlessEqual(files[1]['size'], 1024*1024*5000)
+        self.failUnlessEqual(files[1]['fileUrls'][0][1], urltypes.LOCAL)
+        self.failUnlessEqual(files[1]['fileUrls'][0][2], "hyoogefile")
+        self.failUnlessEqual(len(files), 2)
+
+        build.setFiles([])
+        files = build.getFiles()
+        self.failUnlessEqual(len(files), 0)
 
 
 class OldBuildTest(MintRepositoryHelper):

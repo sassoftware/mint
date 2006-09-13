@@ -13,7 +13,7 @@ import os
 import urlparse
 
 import mint_rephelp
-from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 import rephelp
 
 from mint import mint_error
@@ -29,6 +29,13 @@ from conary import versions
 from conary.repository import errors
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
+    def _checkRedirect(self, url, expectedRedirect, code=301):
+        page = self.assertCode(url, code)
+        redirectUrl = page.headers.getheader('location')
+        self.failUnlessEqual(redirectUrl, expectedRedirect,
+                "Expected redirect to %s, got %s" % \
+                        (expectedRedirect, redirectUrl))
+
     def sessionData(self):
         sid = self.cookies['%s.%s' % (self.mintCfg.hostName,
                 MINT_PROJECT_DOMAIN)]['/']['pysid'].value
@@ -947,11 +954,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setBuildType(0)
         build.setFiles([['test.iso', 'Test Image']])
 
+        expectedLocalRedirect = 'http://%s.%s:%d/images/foo/%d/test.iso' % \
+                (MINT_HOST, MINT_DOMAIN, self.port, build.id)
+
         # the following should all be equivalent
-        page = self.assertCode('/downloadImage/1', code = 301)
-        page = self.assertCode('/downloadImage/1/test.iso', code = 301)
-        page = self.assertCode('/downloadImage/test.iso?fileId=1', code = 301)
-        page = self.assertCode('/downloadImage?fileId=1', code = 301)
+        self._checkRedirect('/downloadImage/1', expectedLocalRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso', expectedLocalRedirect)
+        self._checkRedirect('/downloadImage?fileId=1', expectedLocalRedirect)
+        self._checkRedirect('/downloadImage/test.iso?fileId=1', expectedLocalRedirect)
 
         # this should return 404
         page = self.assertCode('/downloadImage/1/not_really.iso', code = 404)
@@ -968,32 +978,93 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         files = build.getFiles()
         assert(len(files) == 1)
         fileId = files[0]['fileId']
-        build.addFileUrl(fileId, urltypes.GENERICMIRROR,
-            'http://foo.elsewhere.org/')
+        expectedLocalRedirect = 'http://%s.%s:%d/images/foo/%d/test.iso' % \
+                (MINT_HOST, MINT_DOMAIN, self.port, build.id)
+        expectedRemoteRedirect = 'http://foo.elsewhere.org/'
+        build.addFileUrl(fileId, urltypes.GENERICMIRROR, expectedRemoteRedirect)
 
         # sanity checks
-        page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
-                urltypes.LOCAL, code = 301)
+        self._checkRedirect('/downloadImage/1', expectedLocalRedirect)
 
-        page = self.assertCode('/downloadImage/1?urlType=%d' % \
-                urltypes.LOCAL, code = 301)
+        self._checkRedirect('/downloadImage/1?urlType=%d' % urltypes.LOCAL,
+                expectedLocalRedirect)
 
-        page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
-                urltypes.GENERICMIRROR, code = 301)
+        self._checkRedirect('/downloadImage/1?urlType=%d' % urltypes.GENERICMIRROR,
+                expectedRemoteRedirect)
 
-        page = self.assertCode('/downloadImage/1?urlType=%d' % \
-                urltypes.GENERICMIRROR, code = 301)
+        self._checkRedirect('/downloadImage/1/test.iso?urlType=%d' % urltypes.LOCAL,
+                expectedLocalRedirect)
+        
+        self._checkRedirect('/downloadImage/1/test.iso?urlType=%d' % urltypes.GENERICMIRROR,
+                expectedRemoteRedirect)
+
+        self._checkRedirect('/downloadImage/1/test.iso?fileId=1&urlType=%d' % urltypes.LOCAL,
+                expectedLocalRedirect)
+        
+        self._checkRedirect('/downloadImage/1/test.iso?fileId=1&urlType=%d' % urltypes.GENERICMIRROR,
+                expectedRemoteRedirect)
 
         # these should return 404
+        page = self.assertCode('/downloadImage/1?urlType=%d' % \
+                urltypes.AMAZONS3, code = 404)
+
         page = self.assertCode('/downloadImage/1/test.iso?urlType=%d' % \
                 urltypes.AMAZONS3, code = 404)
 
-        page = self.assertCode('/downloadImage/1?urlType=%d' % \
+        page = self.assertCode('/downloadImage/test.iso?fileId=1&urlType=%d' % \
                 urltypes.AMAZONS3, code = 404)
 
         # and so should these
-        page = self.assertCode('/downloadImage/1/test.iso?urlType=1337', code = 404)
         page = self.assertCode('/downloadImage/1?urlType=1337', code = 404)
+
+        page = self.assertCode('/downloadImage/1/test.iso?urlType=1337',
+                code = 404)
+
+        page = self.assertCode('/downloadImage/test.iso?fileId=1&urlType=1337',
+                code = 404)
+
+    def testDownloadISOWithAmazonOverride(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(0)
+        build.setFiles([['test.iso', 'Test Image']])
+        files = build.getFiles()
+        assert(len(files) == 1)
+        localUrlId = build.getFiles()[0]['fileUrls'][0][0]
+        fileId = files[0]['fileId']
+        expectedRemoteRedirect = 'http://s3.amazonaws.com/ExtraCrispyChicken/test.iso'
+        build.addFileUrl(fileId, urltypes.AMAZONS3, expectedRemoteRedirect)
+
+        # these all should forward to amazon
+        self._checkRedirect('/downloadImage/1', expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso', expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/test.iso?fileId=1',
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/?urlType=%d' % urltypes.AMAZONS3,
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/?urlType=%d' % urltypes.LOCAL,
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso?urlType=%d' %\
+                urltypes.LOCAL, expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso?fileId=1&urlType=%d' %\
+                urltypes.LOCAL, expectedRemoteRedirect)
+
+        build.removeFileUrl(fileId, localUrlId)
+
+        # these should still work
+        self._checkRedirect('/downloadImage/1', expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso', expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/test.iso?fileId=1',
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/?urlType=%d' % urltypes.AMAZONS3,
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/?urlType=%d' % urltypes.LOCAL,
+                expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso?urlType=%d' %\
+                urltypes.LOCAL, expectedRemoteRedirect)
+        self._checkRedirect('/downloadImage/1/test.iso?fileId=1&urlType=%d' %\
+                urltypes.LOCAL, expectedRemoteRedirect)
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
