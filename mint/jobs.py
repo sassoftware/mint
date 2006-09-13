@@ -166,8 +166,8 @@ class BuildFilesTable(database.KeyedTable):
                 for row in results:
                     fileId = row[0]
                     relativePath = '/'.join(row[1].split('/'))[-3:]
-                    cu.execute("INSERT INTO FilesUrls VALUES(?,?,?)",
-                            urlId, urltypes.LOCAL, relativePath)
+                    cu.execute("INSERT INTO FilesUrls VALUES(NULL,?,?)",
+                            urltypes.LOCAL, relativePath)
                     urlId = cu.lastrowid
                     cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?,?)",
                             fileId, urlId)
