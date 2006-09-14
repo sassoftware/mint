@@ -6,7 +6,7 @@ import time
 import re
 
 from mint import jobstatus
-from mint.config import MintConfig
+from mint.config import MintConfig, RBUILDER_CONFIG
 
 from nagpy.plugin import NagiosPlugin
 from nagpy.util.exceptionHooks import stdout_hook
@@ -24,7 +24,7 @@ class CheckJobs(NagiosPlugin):
             self.cfg.read(self.cfgPath)
         except cfgtypes.CfgEnvironmentError:
             pass
-        self.mintConfigPath = MintConfig.RBUILDER_CONFIG
+        self.mintConfigPath = RBUILDER_CONFIG
 
     def getTimeStamp(self):
         try:
