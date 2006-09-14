@@ -24,8 +24,6 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all default-subdirs
 
-install: default-install
-
 dist: default-dist
 
 mint-nagpy:
