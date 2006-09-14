@@ -16,14 +16,15 @@ from conary.lib import cfgtypes
 from conary import dbstore
 
 class CheckJobs(NagiosPlugin):
+    cfgPath = '/srv/rbuilder/nagios/check.cfg'
     def __init__(self):
         NagiosPlugin.__init__(self)
         self.cfg = CheckJobsConfig()
         try:
-            self.cfg.read('/srv/rbuilder/nagios/check.cfg')
+            self.cfg.read(self.cfgPath)
         except cfgtypes.CfgEnvironmentError:
             pass
-        self.mintConfigPath = '/srv/rbuilder/rbuilder.conf'
+        self.mintConfigPath = MintConfig.RBUILDER_CONFIG
 
     def getTimeStamp(self):
         try:
@@ -35,7 +36,7 @@ class CheckJobs(NagiosPlugin):
             f.close()
         return stamp
 
-    def itterate(self, reset=False):
+    def iterate(self, reset=False):
         try:
             f = open(self.cfg.iterationFile)
         except IOError:
@@ -84,8 +85,8 @@ class CheckJobs(NagiosPlugin):
                     if not self.filterJobErrors(x['statusMessage']):
                         badJobs.append(x['jobId'])
         if badJobs:
-            if self.itterate():
+            if self.iterate():
                 self.setTimeStamp(newTimeStamp)
         else:
-            self.itterate(reset=True)
+            self.iterate(reset=True)
         return badJobs, timeStamp
