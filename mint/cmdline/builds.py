@@ -30,7 +30,7 @@ def waitForBuild(client, buildId, interval = 5):
     log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
 
 def genHelp():
-    h = "<project name> <troveSpec> <image type>\n\n"
+    h = "<project name> <troveSpec> <build type>\n\n"
 
     h += "Available build types:\n\n"
 
@@ -56,7 +56,7 @@ def genHelp():
 
     h += "Settings for --option='KEY VALUE':\n\n"
     h += "  Common settings for %s" % ", ".join(revMap[x].lower() for x in bootableTypes)
-    h += "\n"
+    h += ":\n"
 
     for setting, info in buildtemplates.dataTemplates[buildtypes.RAW_HD_IMAGE].items():
         if setting in commonOpts:
