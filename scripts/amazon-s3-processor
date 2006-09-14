@@ -79,34 +79,36 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         adds = []
         earlierThan = time.time() - (self.s3cfg.unpublishedThresholdDays * 86400)
         cu.execute("""SELECT b.buildId, bf.fileId, bf.sha1, fu.url
-                      FROM projects p
-                      LEFT OUTER JOIN builds b USING (projectId)
-                      LEFT OUTER JOIN buildFiles bf USING (buildId)
-                      LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
-                      LEFT OUTER JOIN FilesUrls fu USING (urlId)
-                      WHERE (b.pubReleaseId IS NOT NULL OR b.timeCreated < ?)
-                          AND fu.urltype = ? AND p.hidden = 0""",
-                      earlierThan, urltypes.LOCAL)
+                        FROM projects p LEFT OUTER JOIN builds b USING (projectId)
+                                        LEFT OUTER JOIN publishedReleases pr USING (pubreleaseId)
+                                        LEFT OUTER JOIN buildFiles bf USING (buildId)
+                                        LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
+                                        LEFT OUTER JOIN filesUrls fu USING (urlId)
+                        WHERE (pr.timePublished IS NOT NULL OR (b.timeUpdated < ? OR b.timeCreated IS NULL))
+                            AND fu.urltype = ?
+                            AND p.hidden = 0""", earlierThan, urltypes.LOCAL)
         rs = cu.fetchall()
 
-        self.log.info("%d file images are candidates for uploading" % len(rs))
+        candidateCount = len(rs)
+        self.log.info("%d file images are candidates for uploading" % candidateCount)
         self.log.info("restricting to %d images (max %d bytes, min age for unpublished images = %d days)" % (self.s3cfg.maxFilesToAdd, self.s3cfg.maxImageSize, self.s3cfg.unpublishedThresholdDays))
 
-        for r in rs:
+        for currCount, r in enumerate(rs):
             buildId, buildFileId, buildFileSha1, buildFileName = r
 
+            self.log.info("Processing candidate %d..." % (currCount+1, ))
             # screen images that are too big
             try:
                 fileSize = os.stat(buildFileName)[6]
                 if fileSize == 0:
-                    self.log.warning("File %s is 0 bytes long; skipping" % buildFileName)
+                    self.log.warning("File %s (buildId=%d) is 0 bytes long; skipping" % (buildFileName, buildId))
                     continue
                 elif fileSize > self.s3cfg.maxImageSize:
-                    self.log.info("File %s exceeds maximum image size; skipping" % buildFileName)
+                    self.log.info("File %s (buildId=%d) exceeds maximum image size; skipping" % (buildFileName, buildId))
                     continue
 
             except Exception, e:
-                self.log.warning("File %s cannot be read; skipping" % buildFileName)
+                self.log.warning("File %s (buildId=%d) cannot be read; skipping" % (buildFileName, buildId))
                 continue
 
             self.log.info("Hashing file...")
@@ -144,22 +146,29 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
     def _mangleFileName(self, origPath):
         return '/'.join(origPath.split('/')[-3:])
 
-    def _processAdds(self, db, s3conn, adds):
-        for addedFileInfo in adds:
-            self._addImage(db, s3conn, addedFileInfo)
+    def _processAdds(self, db, adds):
+        uploadCount = len(adds)
+        for currCount, addedFileInfo in enumerate(adds):
+            self.log.info("Uploading file %s (%d of %d)..." % (addedFileInfo[2], (currCount+1), uploadCount))
+            self._addImage(db, addedFileInfo)
 
-    def _processRemoves(self, db, s3conn, removes):
+    def _processRemoves(self, db, removes):
         for removedFileInfo in removes:
-            self._removeImage(db, s3conn, removedFileInfo)
+            self._removeImage(db, removedFileInfo)
 
-    def _addImage(self, db, s3conn, addedFileInfo):
+    def _addImage(self, db, addedFileInfo):
 
         buildId, fileId, filePath, fileSize, fileMd5, fileSha1 = addedFileInfo
-        self.log.info("Uploading file %s to Amazon S3" % filePath)
 
         try:
             actualFileName = os.path.basename(filePath)
             s3KeyName = self._mangleFileName(filePath)
+
+            # connect to Amazon S3
+            s3auth = transport.S3Auth(self.s3cfg.publicKey,
+                    self.s3cfg.privateKey)
+            s3conn = transport.S3Connection(s3auth,
+                    isSecure=self.s3cfg.isSecure)
 
             so = s3obj.S3Object(s3conn, self.s3cfg.bucket, s3KeyName)
 
@@ -210,15 +219,17 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                         self.log.info("Deleted %s" % filePath)
                 else:
                     self.log.error("File transferred, but failed to verify (%d %s, etag=%s, MD5=%s)" % (headResponse.http_response.status, headResponse.http_response.reason, headResponse.etag, fileMd5))
+                    self.log.error("[HTTP response]: %s" % headResponse.body)
                     db.rollback()
             else:
-                self.log.error("Upload failed (bucket=%s, key=%s, reason=%s" % (self.s3cfg.bucket, s3KeyName, resp.http_response.reason))
+                self.log.error("Upload failed (bucket=%s, key=%s, reason=%s)" % (self.s3cfg.bucket, s3KeyName, resp.http_response.reason))
+                self.log.error("[HTTP response]: %s" % resp.body)
                 db.rollback()
         except:
             raise
 
 
-    def _removeImage(self, db, s3conn, removedFileInfo):
+    def _removeImage(self, db, removedFileInfo):
 
         def __removeFromDb(db, removedFileInfo):
             cu = db.transaction()
@@ -233,6 +244,12 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
             db.commit()
             self.log.info("Removed %s from our database" % url)
 
+
+        # connect to Amazon S3
+        s3auth = transport.S3Auth(self.s3cfg.publicKey,
+                self.s3cfg.privateKey)
+        s3conn = transport.S3Connection(s3auth,
+                isSecure=self.s3cfg.isSecure)
 
         urlId, urlType, url = removedFileInfo
         if urlType == urltypes.AMAZONS3TORRENT:
@@ -288,15 +305,9 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
             db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
             db.loadSchema()
 
-            # connect to Amazon S3
-            s3auth = transport.S3Auth(self.s3cfg.publicKey,
-                    self.s3cfg.privateKey)
-            s3conn = transport.S3Connection(s3auth,
-                    isSecure=self.s3cfg.isSecure)
-
             adds, removes = self._getWorkToDo(db)
-            self._processRemoves(db, s3conn, removes)
-            self._processAdds(db, s3conn, adds)
+            self._processRemoves(db, removes)
+            self._processAdds(db, adds)
 
         except Exception, e:
             self.log.error('Exception occurred in script: %s' % str(e))
