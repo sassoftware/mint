@@ -160,6 +160,9 @@ class BuildFilesTable(database.KeyedTable):
                 cu.execute("ALTER TABLE BuildFiles ADD COLUMN size BIGINT")
                 cu.execute("ALTER TABLE BuildFiles ADD COLUMN sha1 CHAR(40)")
 
+            if dbversion == 22 and not self.initialCreation:
+                cu = self.db.cursor()
+
                 # migrate data over to FilesUrls
                 cu.execute("SELECT fileId, filename FROM BuildFiles ORDER BY fileId")
                 results = cu.fetchall()
@@ -175,7 +178,7 @@ class BuildFilesTable(database.KeyedTable):
                             fileId, urlId)
                     cu.execute("UPDATE BuildFiles SET filename = NULL WHERE fileId = ?", fileId)
 
-            return dbversion >= 21
+            return dbversion >= 22
 
         return True
 

@@ -5,24 +5,25 @@
 import time
 import re
 
-from mint import client
 from mint import jobstatus
+from mint.config import MintConfig
 
 from nagpy.plugin import NagiosPlugin
 from nagpy.util.exceptionHooks import stdout_hook
 
 from mint_nagpy.config import CheckJobsConfig
 from conary.lib import cfgtypes
+from conary import dbstore
 
 class CheckJobs(NagiosPlugin):
     def __init__(self):
         NagiosPlugin.__init__(self)
-        self.mc = client.MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private/" % (self.host, self.port))
         self.cfg = CheckJobsConfig()
         try:
             self.cfg.read('/srv/rbuilder/nagios/check.cfg')
         except cfgtypes.CfgEnvironmentError:
             pass
+        self.mintConfigPath = '/srv/rbuilder/rbuilder.conf'
 
     def getTimeStamp(self):
         try:
@@ -61,41 +62,27 @@ class CheckJobs(NagiosPlugin):
                 return True
         return False
 
-    def setupParser(self):
-        p = NagiosPlugin.setupParser(self)
-        p.add_option('-p', '--port', dest='port',
-                     help='rBuilder port')
-        return p
-
-    def parseArgs(self):
-        opts, args = NagiosPlugin.parseArgs(self)
-        if not opts.host:
-            print "hostname not defined"
-            self.usage()
-        elif not opts.port:
-            print "port not defined"
-            self.usage()
-        self.host = opts.host
-        self.port = opts.port
-        return opts, args
-
     @stdout_hook
     def check(self):
         newTimeStamp = time.time()
         timeStamp = self.getTimeStamp()
-        jobs = self.mc.getJobs()
+        cfg = MintConfig()
+        cfg.read(self.mintConfigPath)
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        cu = db.cursor()
+        cu.execute("""SELECT jobId, status, statusMessage, timeStarted
+                      FROM jobs""")
+        jobs = cu.fetchall_dict()
         badJobs = []
         for x in jobs:
-            status = x.getStatus()
-            if status == jobstatus.RUNNING:
-                startTime = x.getTimeStarted()
+            if x['status'] == jobstatus.RUNNING:
                 currentTime = time.time()
-                if currentTime - startTime > self.cfg.maxJobTime:
-                    badJobs.append(x.getId())
-            elif status == jobstatus.ERROR:
-                if x.getTimeStarted() > timeStamp:
-                    if not self.filterJobErrors(x.getStatusMessage()):
-                        badJobs.append(x.getId())
+                if currentTime - x['timeStarted'] > self.cfg.maxJobTime:
+                    badJobs.append(x['jobId'])
+            elif x['status'] == jobstatus.ERROR:
+                if x['timeStarted'] > timeStamp:
+                    if not self.filterJobErrors(x['statusMessage']):
+                        badJobs.append(x['jobId'])
         if badJobs:
             if self.itterate():
                 self.setTimeStamp(newTimeStamp)

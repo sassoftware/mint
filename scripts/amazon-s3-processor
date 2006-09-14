@@ -78,18 +78,22 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         # determine adds
         adds = []
         earlierThan = time.time() - (self.s3cfg.unpublishedThresholdDays * 86400)
-        cu.execute("""SELECT b.buildId, bf.fileId, bf.fileName, bf.sha1
-                      FROM builds b LEFT JOIN buildFiles bf USING (buildId)
+        cu.execute("""SELECT b.buildId, bf.fileId, bf.sha1, fu.url
+                      FROM projects p
+                      LEFT OUTER JOIN builds b USING (projectId)
+                      LEFT OUTER JOIN buildFiles bf USING (buildId)
+                      LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
+                      LEFT OUTER JOIN FilesUrls fu USING (urlId)
                       WHERE (b.pubReleaseId IS NOT NULL OR b.timeCreated < ?)
-                          AND bf.fileName IS NOT NULL""",
-                      earlierThan)
+                          AND fu.urltype = ? AND p.hidden = 0""",
+                      earlierThan, urltypes.LOCAL)
         rs = cu.fetchall()
 
-        self.log.info("%d file images are candidates for uploading", len(rs))
+        self.log.info("%d file images are candidates for uploading" % len(rs))
         self.log.info("restricting to %d images (max %d bytes, min age for unpublished images = %d days)" % (self.s3cfg.maxFilesToAdd, self.s3cfg.maxImageSize, self.s3cfg.unpublishedThresholdDays))
 
         for r in rs:
-            buildId, buildFileId, buildFileName, buildFileSha1 = r
+            buildId, buildFileId, buildFileSha1, buildFileName = r
 
             # screen images that are too big
             try:
@@ -107,7 +111,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
             self.log.info("Hashing file...")
             (md5sum, sha1sum) = self._hashIt(buildFileName)
-            self.log.info("MD5=%s, SHA1=%s", md5sum, sha1sum)
+            self.log.info("MD5=%s, SHA1=%s" % (md5sum, sha1sum))
             if buildFileSha1 and buildFileSha1 != sha1sum:
                 self.log.warning("Calculated SHA1 does not match DB value; something is wrong. Skipping file!")
                 continue
@@ -116,8 +120,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                 buildFileSha1 = sha1sum
 
             adds.append((buildId, buildFileId, buildFileName, fileSize, md5sum, buildFileSha1))
-            self.log.info("Candidate %s added (%d bytes, SHA-1 %s)",
-                    buildFileName, fileSize, buildFileSha1)
+            self.log.info("Candidate %s added (%d bytes, SHA-1 %s)" % (buildFileName, fileSize, buildFileSha1))
 
             if len(adds) >= self.s3cfg.maxFilesToAdd:
                 self.log.info("Maximum candidate images to add reached")
@@ -125,7 +128,16 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
         # determine removes
         removes = []
-        # TODO implement me
+        cu.execute("""SELECT fu.urlId, fu.urlType, fu.url
+                      FROM FilesUrls fu LEFT OUTER JOIN BuildFilesUrlsMap bfum
+                         USING (urlId)
+                      WHERE (bfum.fileId IS NULL AND fu.urlType in (?, ?))""",
+                      urltypes.AMAZONS3, urltypes.AMAZONS3TORRENT)
+        rs = cu.fetchall()
+        self.log.info("%d file urls are candidates for removal" % len(rs))
+        for urlId, urlType, url in rs:
+            removes.append((urlId, urlType, url))
+            self.log.info("S3 URL is a candidate for deletion: %s" % url)
 
         return adds, removes
 
@@ -137,8 +149,8 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
             self._addImage(db, s3conn, addedFileInfo)
 
     def _processRemoves(self, db, s3conn, removes):
-        for url in removes:
-            self._removeImage(db, s3conn, s3qryGenerator, url)
+        for removedFileInfo in removes:
+            self._removeImage(db, s3conn, removedFileInfo)
 
     def _addImage(self, db, s3conn, addedFileInfo):
 
@@ -179,9 +191,17 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                     self.log.info("File verified; updating database...")
                     cu.execute("UPDATE BuildFiles SET filename = NULL, size = ?, sha1 = ? WHERE fileId = ?", fileSize, fileSha1, fileId)
                     cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3, so.getURL())
-                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = (SELECT MAX(urlId) FROM FilesUrls)", fileId)
+                    urlId = cu.lastrowid
+                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
                     cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3TORRENT, so.getTorrentURL())
-                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = (SELECT MAX(urlId) FROM FilesUrls)", fileId)
+                    urlId = cu.lastrowid
+                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
+                    cu.execute("SELECT fu.urlId FROM BuildFilesUrlsMap bfum JOIN FilesUrls fu USING (urlId) WHERE bfum.fileId = ? AND fu.urltype = ?",
+                            fileId, urltypes.LOCAL)
+                    r = cu.fetchall()
+                    if len(r):
+                        localUrlId = r[0][0]
+                        cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", localUrlId)
                     db.commit()
                     self.log.info("Database updated")
 
@@ -198,9 +218,46 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
             raise
 
 
-    def _removeImage(self, db, url):
-        self.log.info("Removing file %s from Amazon S3" % filePath)
-        # TODO remove image using S3 here
+    def _removeImage(self, db, s3conn, removedFileInfo):
+
+        def __removeFromDb(db, removedFileInfo):
+            cu = db.transaction()
+            urlId, urlType, url = removedFileInfo
+            try:
+                cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", urlId)
+            except:
+                db.rollback()
+                self.log.info("Failed to remove %s from our database" % url)
+                raise
+
+            db.commit()
+            self.log.info("Removed %s from our database" % url)
+
+
+        urlId, urlType, url = removedFileInfo
+        if urlType == urltypes.AMAZONS3TORRENT:
+            __removeFromDb(db, removedFileInfo)
+        elif urlType == urltypes.AMAZONS3:
+            bucket = url.split('/')[-2]
+            keyname = url.split('/')[-1]
+            self.log.info("Removing %s from Amazon S3 (bucket=%s, key=%s)" % (url, bucket, keyname) )
+            try:
+                so = s3obj.S3Object(s3conn, bucket, keyname)
+                headResponse = so.head()
+                if headResponse.OK():
+                    deleteResponse = so.delete()
+                    if deleteResponse.OK():
+                        self.log.info("%s has been removed from Amazon S3" % url)
+                        __removeFromDb(db, removedFileInfo)
+                    else:
+                        self.log.error("%s was not removed from Amazon S3" % url)
+                else:
+                    self.log.error("%s was in our database, but not on Amazon S3, cleaning up" % url)
+                    __removeFromDb(db, removedFileInfo)
+            except:
+                raise
+        else:
+            self.log.error("Bad urltype given (%d) for %s" % (urlType, url))
 
     def __init__(self, aLockpath = scriptlibrary.DEFAULT_LOCKPATH):
         scriptlibrary.SingletonScript.__init__(self, aLockpath)

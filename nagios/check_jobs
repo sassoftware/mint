@@ -11,7 +11,7 @@ obj = CheckJobs()
 jobs, timeStamp = obj.check()
     
 if len(jobs):
-    print 'Problems detected with the following jobs: %s' % str(jobs).lstrip('[').rstrip(']')
+    print 'Problems detected with the following jobs: %s' % str(jobs).lstrip('[').rstrip(']').replace('L', '')
 else:
     print 'No errant jobs detected since %s.' % time.ctime(timeStamp)
 sys.exit(len(jobs) and obj.nagios_critical or obj.nagios_ok)
