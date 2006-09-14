@@ -93,6 +93,9 @@ class RBuilderMain(options.MainHandler):
         except MintError, e:
             log.error("response from rBuilder server: %s" % str(e))
             sys.exit(0)
+        except RuntimeError, e:
+            log.error(str(e))
+            sys.exit(0)
 
 def main():
     log.setVerbosity(log.INFO)

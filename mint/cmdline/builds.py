@@ -104,10 +104,19 @@ class BuildCreateCommand(commands.RBuilderCommand):
         if len(args) < 3:
             return self.usage()
 
+        projectName, troveSpec, buildType = args
+
         # parse --option parameters
+        if buildType.upper() not in buildtypes.validBuildTypes:
+            raise RuntimeError, "%s is not a valid build type. See --help." % buildType.upper()
+
+        buildTypeId = buildtypes.validBuildTypes[buildType.upper()]
         buildOptions = dict(tuple(x.split(" ")) for x in argSet['option'])
 
-        projectName, troveSpec, buildType = args
+        for x in buildOptions:
+            if x not in buildtemplates.dataTemplates[buildTypeId]:
+                raise RuntimeError, "%s is not a valid option for %s. See --help." % (x, buildType.upper())
+
         project = client.getProjectByHostname(projectName)
         build = client.newBuild(project.id, project.name)
 
@@ -117,8 +126,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
         v.resetTimeStamps([0.0])
         build.setTrove(n, v.freeze(), f.freeze())
 
-        assert(buildType.upper() in buildtypes.validBuildTypes)
-        build.setBuildType(buildtypes.validBuildTypes[buildType.upper()])
+        build.setBuildType(buildTypeId)
 
         for name, val in buildOptions.iteritems():
             build.setDataValue(name, val)

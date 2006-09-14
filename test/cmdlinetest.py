@@ -102,6 +102,17 @@ class CmdLineFuncTest(MintRepositoryHelper):
         assert(build.getJob())
         assert(build.getDataValue('bugsUrl') == 'thisisatest')
 
+    def testBuildCreateCmdErrors(self):
+        client, userId = self.quickMintUser("test", "testpass")
+
+        cmd = builds.BuildCreateCommand()
+        self.assertRaises(RuntimeError, cmd.runCommand, client, None, {},
+            ['build-create', 'testproject', 'troveSpec', 'doesnotexist'])
+
+        self.assertRaises(RuntimeError, cmd.runCommand, client, None,
+            {'option': ['doesnotexist setting']},
+            ['build-create', 'testproject', 'troveSpec', 'installable_iso'])
+
     def testUserCreateCMD(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
 
