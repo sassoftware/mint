@@ -21,7 +21,7 @@ configuration.
 .SS COMMANDS
 
 .TP 4
-.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR [\fB--wait\fR]
+.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR [\fB--wait\fR] [\fB--option 'KEY VALUE'\fR ...]
 
 Creates a build based on the following information:
 
@@ -38,6 +38,12 @@ by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
 Returns a build ID in a form suitable for use with \fBeval\fR (eg., BUILD_ID=100).  Using the
 \fB--wait\fR option causes \fBbuild-create\fR to block until the build
 completes.
+
+You can set specific build options using the \fB--option\fR keyword.  A full listing of possible
+options for each build type can be seen using: \fBrbuilder build-create --help\fR. Options
+are specified using a \fI'KEY VALUE'\fR syntax, where KEY is the name of the option you are setting,
+and VALUE is the specific value you want to use. Multiple options may be specified by using
+\fB--option\fR multiple times.
 
 .TP 4
 .B build-wait \fI<build-id>\fR

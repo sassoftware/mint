@@ -58,6 +58,12 @@ class CmdLineTest(unittest.TestCase):
             'mint.cmdline.builds.BuildCreateCommand.runCommand',
             [None, None, None, {'wait': True}, ['build-create', 'testproject', troveSpec, 'installable_iso']])
 
+        self.checkRBuilder('build-create testproject %s installable_iso '
+                           '--option "key val" --option "anotherkey anotherval"' % troveSpec,
+            'mint.cmdline.builds.BuildCreateCommand.runCommand',
+            [None, None, None, {'option': ['key val', 'anotherkey anotherval']},
+            ['build-create', 'testproject', troveSpec, 'installable_iso']])
+
     def testBuildWait(self):
         self.checkRBuilder('build-wait 111',
             'mint.cmdline.builds.BuildWaitCommand.runCommand',
@@ -87,12 +93,14 @@ class CmdLineFuncTest(MintRepositoryHelper):
 
         cmd = builds.BuildCreateCommand()
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
-        cmd.runCommand(client, None, {}, ['build-create', 'testproject', troveSpec, 'installable_iso'])
+        cmd.runCommand(client, None, {'option': ['bugsUrl thisisatest']},
+            ['build-create', 'testproject', troveSpec, 'installable_iso'])
 
         project = client.getProject(projectId)
         build = client.getBuild(project.getBuilds()[0])
         assert(build.getTrove()[0] == 'group-test')
         assert(build.getJob())
+        assert(build.getDataValue('bugsUrl') == 'thisisatest')
 
     def testUserCreateCMD(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
