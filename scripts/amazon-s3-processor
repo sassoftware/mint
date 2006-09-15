@@ -29,15 +29,16 @@ class AmazonS3Config(ConfigFile):
     # this file, obviously
     filename                    = 'amazon-s3.conf'
 
-    # how many file to upload per run
-    maxFilesToAdd               = (CfgInt, 10)
+    # how many bytes to upload in one run (default is 10 GB)
+    # this better be larger than maxImageSize
+    maxMBytesToTx                = (CfgInt, 10240)
 
     # unpublished builds have to be a week old before consideration for S3
     unpublishedThresholdDays    = (CfgInt, 7)
 
-    # max size for images in bytes
+    # max size for images in bytes in megabytes
     # this is 2 GB until S3 fixes their load balancer bug
-    maxImageSize                = (CfgInt, 1024 * 1024 * 2000)
+    maxImageSize                = (CfgInt, 2048)
 
     # delete local files after transferring
     deleteAfterTx               = (CfgBool, True)
@@ -51,6 +52,9 @@ class AmazonS3Config(ConfigFile):
 
     # use SSL for S3 operations?
     isSecure                    = (CfgBool, True)
+
+    # how many times should we try to verify the file before moving on?
+    maxVerifyAttempts           = (CfgInt, 10)
 
 class AmazonS3Processor(scriptlibrary.SingletonScript):
 
@@ -91,8 +95,9 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
         candidateCount = len(rs)
         self.log.info("%d file images are candidates for uploading" % candidateCount)
-        self.log.info("restricting to %d images (max %d bytes, min age for unpublished images = %d days)" % (self.s3cfg.maxFilesToAdd, self.s3cfg.maxImageSize, self.s3cfg.unpublishedThresholdDays))
+        self.log.info("restricting to %d MB total (max %d MB per image, min age for unpublished images = %d days)" % (self.s3cfg.maxMBytesToTx, self.s3cfg.maxImageSize, self.s3cfg.unpublishedThresholdDays))
 
+        totalBytesToTx = long(0)
         for currCount, r in enumerate(rs):
             buildId, buildFileId, buildFileSha1, buildFileName = r
 
@@ -103,29 +108,20 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                 if fileSize == 0:
                     self.log.warning("File %s (buildId=%d) is 0 bytes long; skipping" % (buildFileName, buildId))
                     continue
-                elif fileSize > self.s3cfg.maxImageSize:
+                elif fileSize > long(self.s3cfg.maxImageSize * 1024 * 1024):
                     self.log.info("File %s (buildId=%d) exceeds maximum image size; skipping" % (buildFileName, buildId))
                     continue
 
-            except Exception, e:
+            except (OSError, IOError):
                 self.log.warning("File %s (buildId=%d) cannot be read; skipping" % (buildFileName, buildId))
                 continue
 
-            self.log.info("Hashing file...")
-            (md5sum, sha1sum) = self._hashIt(buildFileName)
-            self.log.info("MD5=%s, SHA1=%s" % (md5sum, sha1sum))
-            if buildFileSha1 and buildFileSha1 != sha1sum:
-                self.log.warning("Calculated SHA1 does not match DB value; something is wrong. Skipping file!")
-                continue
+            adds.append((buildId, buildFileId, buildFileName, fileSize, buildFileSha1))
+            self.log.info("Candidate %s added (%d bytes)" % (buildFileName, fileSize))
 
-            if not buildFileSha1:
-                buildFileSha1 = sha1sum
-
-            adds.append((buildId, buildFileId, buildFileName, fileSize, md5sum, buildFileSha1))
-            self.log.info("Candidate %s added (%d bytes, SHA-1 %s)" % (buildFileName, fileSize, buildFileSha1))
-
-            if len(adds) >= self.s3cfg.maxFilesToAdd:
-                self.log.info("Maximum candidate images to add reached")
+            totalBytesToTx += fileSize
+            if totalBytesToTx > long(self.s3cfg.maxMBytesToTx * 1024 * 1024):
+                self.log.info("Maximum bytes to send reached (%d bytes to send)" % totalBytesToTx)
                 break
 
         # determine removes
@@ -158,11 +154,18 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
     def _addImage(self, db, addedFileInfo):
 
-        buildId, fileId, filePath, fileSize, fileMd5, fileSha1 = addedFileInfo
+        buildId, fileId, filePath, fileSize, expectedSha1 = addedFileInfo
 
         try:
             actualFileName = os.path.basename(filePath)
             s3KeyName = self._mangleFileName(filePath)
+
+            self.log.info("Hashing file...")
+            (fileMd5, fileSha1) = self._hashIt(filePath)
+            self.log.info("MD5=%s, SHA1=%s" % (fileMd5, fileSha1))
+            if expectedSha1 and expectedSha1 != fileSha1:
+                self.log.warning("Calculated SHA1 does not match DB value; something is wrong. Skipping file!")
+                return
 
             # connect to Amazon S3
             s3auth = transport.S3Auth(self.s3cfg.publicKey,
@@ -187,40 +190,33 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
             # transfer the file to Amazon S3
             starttime = time.time()
+            self.log.info("Sending...")
             resp = so.putFile(filePath, headers)
             endtime = time.time()
             txrate = float((fileSize / (endtime - starttime)) / 1024.0)
 
             cu = db.transaction()
-            if resp.OK():
+            if resp.OK() and resp.http_response.status == 200:
                 self.log.info("Upload complete (bucket=%s, key=%s, %.1f Kbytes/sec)" % (self.s3cfg.bucket, s3KeyName, txrate))
-                self.log.info("Verifying file...")
-                headResponse = so.head()
-                if headResponse.OK() and headResponse.etag == fileMd5:
-                    self.log.info("File verified; updating database...")
-                    cu.execute("UPDATE BuildFiles SET filename = NULL, size = ?, sha1 = ? WHERE fileId = ?", fileSize, fileSha1, fileId)
-                    cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3, so.getURL())
-                    urlId = cu.lastrowid
-                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
-                    cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3TORRENT, so.getTorrentURL())
-                    urlId = cu.lastrowid
-                    cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
-                    cu.execute("SELECT fu.urlId FROM BuildFilesUrlsMap bfum JOIN FilesUrls fu USING (urlId) WHERE bfum.fileId = ? AND fu.urltype = ?",
-                            fileId, urltypes.LOCAL)
-                    r = cu.fetchall()
-                    if len(r):
-                        localUrlId = r[0][0]
-                        cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", localUrlId)
-                    db.commit()
-                    self.log.info("Database updated")
+                cu.execute("UPDATE BuildFiles SET filename = NULL, size = ?, sha1 = ? WHERE fileId = ?", fileSize, fileSha1, fileId)
+                cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3, so.getURL())
+                urlId = cu.lastrowid
+                cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
+                cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3TORRENT, so.getTorrentURL())
+                urlId = cu.lastrowid
+                cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
+                cu.execute("SELECT fu.urlId FROM BuildFilesUrlsMap bfum JOIN FilesUrls fu USING (urlId) WHERE bfum.fileId = ? AND fu.urltype = ?",
+                        fileId, urltypes.LOCAL)
+                r = cu.fetchall()
+                if len(r):
+                    localUrlId = r[0][0]
+                    cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", localUrlId)
+                db.commit()
+                self.log.info("Database updated")
 
-                    if self.s3cfg.deleteAfterTx:
-                        os.unlink(filePath)
-                        self.log.info("Deleted %s" % filePath)
-                else:
-                    self.log.error("File transferred, but failed to verify (%d %s, etag=%s, MD5=%s)" % (headResponse.http_response.status, headResponse.http_response.reason, headResponse.etag, fileMd5))
-                    self.log.error("[HTTP response]: %s" % headResponse.body)
-                    db.rollback()
+                if self.s3cfg.deleteAfterTx:
+                    os.unlink(filePath)
+                    self.log.info("Deleted local file %s" % filePath)
             else:
                 self.log.error("Upload failed (bucket=%s, key=%s, reason=%s)" % (self.s3cfg.bucket, s3KeyName, resp.http_response.reason))
                 self.log.error("[HTTP response]: %s" % resp.body)
@@ -281,6 +277,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
 
         self.cfg = config.MintConfig()
         self.cfg.read(config.RBUILDER_CONFIG)
+        self.timeStarted = time.time()
 
         # load local config
         self.s3cfg = AmazonS3Config()
@@ -318,7 +315,8 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         return exitcode
 
     def cleanup(self):
-        self.log.info('Amazon S3 Processing Script Completed')
+        timeTaken = time.time() - self.timeStarted
+        self.log.info('Amazon S3 Processing Script Completed (%d seconds)' % timeTaken)
 
 
 if __name__ == "__main__":
