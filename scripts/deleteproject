@@ -4,6 +4,7 @@ import os, sys
 
 from mint import config
 from mint import database
+from mint import urltypes
 from mint.projects import mysqlTransTable
 
 from conary import dbstore
@@ -143,6 +144,21 @@ def deleteProject(cfg, projectName):
                 cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
 
             status("Deleting Build Files")
+            cu.execute("""SELECT bf.fileId, fu.urlId, fu.urlType
+                            FROM buildFiles bf
+                                LEFT OUTER JOIN BuildFilesUrlsMap bfum USING (fileId)
+                                LEFT OUTER JOIN FilesUrls fu USING (urlId)
+                            WHERE bf.buildId = ?""", buildId)
+
+            for fileId, urlId, urlType in [x for x in cu.fetchall()]:
+                # delete the local file
+                if urlType == urltypes.LOCAL:
+                    cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", urlId)
+
+                # sqlite doesn't do cascading deletes, so we'll do it for them
+                if db.driver == 'sqlite':
+                    cu.execute("DELETE FROM BuildFilesUrlsMap WHERE fileId = ? AND urlId = ?", fileId, urlId)
+
             cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
             status("Deleting Build Data")
             cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
