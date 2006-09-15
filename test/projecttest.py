@@ -18,6 +18,7 @@ from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
 from mint.server import ParameterError, PermissionDenied
 from mint import mint_error
 from mint import database
+from mint import urltypes
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -647,7 +648,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         # check for remnants
         self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
-        # TODO more checks here, please
 
     @fixtures.fixture('Full')
     def testDeleteLocalMirrorProjectScript(self, db, data):
@@ -667,7 +667,42 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         # check for remnants
         self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
-        # TODO more checks here, please
+
+    @fixtures.fixture('Full')
+    def testDeleteExtraUrlsProjectScript(self, db, data):
+        # extra mirror URLs (e.g. Amazon S3) should be left behind; only
+        # urltypes.LOCAL should be deleted
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        projectName = project.hostname
+        build = client.getBuild(data['anotherBuildId'])
+        buildFiles = build.getFiles()
+        assert(len(buildFiles) == 1)
+        fileId = buildFiles[0]['fileId']
+
+        build.addFileUrl(fileId, urltypes.AMAZONS3, "http://s3.amazonaws.com/rbuilder/foo.iso")
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT, "http://s3.amazonaws.com/rbuilder/foo.iso?torrent")
+
+        cu = db.cursor()
+        cu.execute("""SELECT fu.urlId
+                      FROM BuildFilesUrlsMap bfum
+                           LEFT OUTER JOIN FilesUrls fu USING (urlId)
+                           WHERE bfum.fileId = ?
+                              AND fu.urlType IN (?, ?)""", fileId,
+                              urltypes.AMAZONS3, urltypes.AMAZONS3TORRENT)
+
+        expectedUrlIds = [ x[0] for x in cu.fetchall() ]
+
+        # call the database deletion script
+        self.failUnless(self._callDeleteProjectScript(projectName) == 0,
+                "Script exited with non-zero exit code")
+
+        # make sure some things are left behind!
+        self.assertRaises(database.ItemNotFound, client.getProject, data['anotherBuildId'])
+        cu.execute("""SELECT COUNT(*) FROM BuildFilesUrlsMap WHERE fileId = ?""", fileId)
+        self.failUnlessEqual(cu.fetchall()[0][0], 0, "BuildFilesUrlsMap query should be empty")
+        cu.execute("""SELECT COUNT(*) FROM FilesUrls WHERE urlId IN ( %s )""" % ','.join([str(x) for x in expectedUrlIds]))
+        self.failUnlessEqual(cu.fetchall()[0][0], len(expectedUrlIds), "FilesUrls query should contain two URL types that are non local")
 
     @fixtures.fixture('Full')
     def testLocalMirror(self, db, data):
