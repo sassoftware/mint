@@ -479,6 +479,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         f = open(self.cfg.conaryRcFile)
         x = f.read()
         f.close()
+
+        contents = contents.replace("rpath.local2", MINT_PROJECT_DOMAIN)
         return x == contents
 
     @fixtures.fixture("Empty")
@@ -627,7 +629,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.refresh()
         labelData = client.server._server.getLabelsForProject(project.id,
                                                               False, '', '')
-        assert labelData[1].values()[0] == 'http://foo.rpath.local2/conary/'
+        assert labelData[1].values()[0] == 'http://foo.%s/conary/' % MINT_PROJECT_DOMAIN
 
     @fixtures.fixture('Full')
     def testDuplicateLabel(self, db, data):

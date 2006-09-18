@@ -1401,7 +1401,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         build = client.getBuild(buildId)
         assert(build.getDataValue('anaconda-templates') == 
-            'group-test=/testproject.rpath.local2@rpl:devel/1.0-1-1[is: x86]')
+            'group-test=/testproject.%s@rpl:devel/1.0-1-1[is: x86]' % MINT_PROJECT_DOMAIN)
 
     def testForPhantomBuildRows(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
