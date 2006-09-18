@@ -1,6 +1,7 @@
 Changes in 2.0.2:
 * S3 support.
-* User search results length setting now applies to browse pages.
+* The "search/browse entries per page" setting now properly applies to browse
+  pages.
 
 Changes in 2.0.0:
 * Rearchitected the releases system, and replaced it with releases and builds.
