@@ -33,7 +33,7 @@ case $curr_ver in
     1.6.3)
         echo "Found version 1.6.3 of group-rbuilder-dist."
         ;;
-    2.0.0)
+    2.0.*)
         echo "Migration has already taken place. Exiting."
         exit 1
         ;;
@@ -130,9 +130,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # Move the old saved config, updating visibleImageTypes -> visibleBuildTypes
-# along the way
+# along the way. Also, add LIVE_ISO build type.
 echo "Restoring /srv/rbuilder/rbuilder.conf with updates"
-sed -e 's/visibleImageTypes/visibleBuildTypes/g' $BACKUPDIR/rbuilder.conf > ${RBUILDER_ROOT}/rbuilder.conf
+sed -e 's/visibleImageTypes/visibleBuildTypes/g' \
+    -e '$avisibleBuildTypes         LIVE_ISO' \
+    $BACKUPDIR/rbuilder.conf > ${RBUILDER_ROOT}/rbuilder.conf
 
 # Rebuild /etc/sysconfig/iptables
 system-config-securitylevel-tui -q -p 22:tcp -p 80:tcp -p 443:tcp -p 8003:tcp
@@ -147,5 +149,5 @@ service multi-jobserver start
 service raa-lighttpd start
 service raa start
 
-echo "rBuilder 2.0.0 Migration complete."
+echo "rBuilder 2.0.x Migration complete."
 exit 0
