@@ -45,9 +45,9 @@ refCompRecipe = """class GroupTest(GroupRecipe):
     autoResolve = False
 
     def setup(r):
-        r.setLabelPath('foo.rpath.local2@rpl:devel')
+        r.setLabelPath('foo.%s@rpl:devel')
         r.removeComponents(('devel', 'doc'))
-"""
+""" % (MINT_PROJECT_DOMAIN)
 
 groupsRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
@@ -663,7 +663,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
     def testLabelPath(self, db, data):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
-        assert groupTrove.getLabelPath() == ['foo.rpath.local2@rpl:devel']
+        assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
 
         client = self.getClient('user')
         # bogus call to prime client
