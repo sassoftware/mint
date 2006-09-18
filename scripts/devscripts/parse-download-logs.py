@@ -47,12 +47,19 @@ for x in f.readlines():
             last = g[1]
 
 # match file ids to full filenames
-db = dbstore.connect("rbuilder@db1.cogent-dca.rpath.com/mint", driver = "mysql")
+db = dbstore.connect("rbuilder@db2.cogent-dca.rpath.com/mint", driver = "mysql")
 cu = db.cursor()
 
 counts = []
 for fileId, count in downloads.items():
-    cu.execute("SELECT filename FROM ImageFiles WHERE fileId=?", fileId)
+    cu.execute("""SELECT u.url 
+                      FROM buildfiles bf
+                           JOIN buildfilesurlsmap bffu
+                             USING (fileId)
+                           JOIN filesurls u
+                             USING (urlId)
+                      WHERE bf.fileId = ? ORDER BY bf.fileId""", fileId)
+
     r = cu.fetchone()
     if r:
         counts.append((count, os.path.basename(r[0])))
@@ -89,4 +96,4 @@ print 'TOP DOWNLOADS BY FILE'
 print '---------------------'
 for count, file in sorted(counts, reverse = True):
     if int(count) > 0:
-        print "%-50s %4d" % (file, count)
+        print "%-50s %4d" % (file.split("%2F")[-1], count)
