@@ -33,6 +33,17 @@ print "Migrating Conary repository databases for all projects..."
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
 cu = db.cursor()
 
+# get repname map used to help find the local Conary repository
+# for external locally-mirrored projects
+repnamemap = {}
+cu.execute("SELECT fromname, toname FROM RepNameMap")
+for fromName, toName in cu.fetchall():
+    if cfg.reposDBDriver == 'mysql':
+        fromName = fromName.translate(mysqlTransTable)
+        toName = toName.translate(mysqlTransTable)
+    repnamemap[fromName] = toName
+
+# get all projects
 cu.execute("SELECT hostname, domainname FROM Projects")
 
 if cfg.reposDBDriver == 'sqlite':
@@ -42,8 +53,11 @@ else:
 
 errors = 0
 for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
+    # lookup things in the repnamemap to resolve external local
+    # mirrors
+    actualDbName = repnamemap.get(dbName, dbName)
     try:
-        reposDb = dbstore.connect(cfg.reposDBPath % dbName,
+        reposDb = dbstore.connect(cfg.reposDBPath % actualDbName,
                                   driver = cfg.reposDBDriver)
         schema.loadSchema(reposDb)
     except:
