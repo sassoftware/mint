@@ -31,6 +31,7 @@ from conary.repository.errors import TroveNotFound
 import fixtures
 
 class BuildTest(fixtures.FixturedUnitTest):
+    @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
         client = self.getClient("owner")

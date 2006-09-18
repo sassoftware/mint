@@ -1051,6 +1051,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         assert(job.getDataValue("mystring") == "testing")
         assert(int(job.getDataValue("myint")) == 123)
 
+    @testsuite.context("quick")
     @fixtures.fixture('Full')
     def testStartCookJob(self, db, data):
         client = self.getClient('admin')

@@ -45,6 +45,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         ret = os.system('echo yes | ../scripts/deleteproject --xyzzy=%s %s > /dev/null' % (configFile, projectName))
         return ret >> 8
 
+    @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
         client = self.getClient("owner")

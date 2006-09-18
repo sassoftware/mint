@@ -15,6 +15,7 @@ from mint import shimclient
 import fixtures
 
 class AuthTest(fixtures.FixturedUnitTest):
+    @testsuite.context("quick")
     @fixtures.fixture("Empty")
     def testNewUser(self, db, data):
         client = self.getClient("test")

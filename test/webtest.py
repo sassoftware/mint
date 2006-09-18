@@ -384,6 +384,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProject(projectId)
         assert(project.getLabel() == 'bar.rpath.com@foo:bar')
 
+    @testsuite.context("quick")
     def testBrowseProjects(self):
         self.registerErrorContent("Error")
         client, userId = self.quickMintUser('foouser','foopass')

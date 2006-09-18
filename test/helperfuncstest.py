@@ -86,6 +86,7 @@ class HelperFunctionsTest(unittest.TestCase):
             missing = True
         return missing
 
+    @testsuite.context("quick")
     def testMakefiles(self):
         missing = False
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',

@@ -39,6 +39,7 @@ class AccountTest(MintRepositoryHelper):
         cu.execute("SELECT active FROM Users WHERE userId=?", userId)
         return cu.fetchone()[0]
 
+    @testsuite.context("quick")
     def testBasicAttributes(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         user = client.getUser(userId)

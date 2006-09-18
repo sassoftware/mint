@@ -118,6 +118,7 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
             self.assertRaises(ParameterError, foo, self,
                               'This is not an int')
 
+    @testsuite.context("quick")
     @fixtures.fixture("Empty")
     def testPrivate(self, db, data):
         client = self.getClient("test")

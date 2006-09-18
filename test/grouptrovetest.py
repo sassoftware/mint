@@ -135,6 +135,7 @@ def addTestTrove(groupTrove, trvName,
 
 
 class GroupTroveTest(fixtures.FixturedUnitTest):
+    @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
         client = self.getClient("owner")

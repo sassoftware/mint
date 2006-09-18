@@ -19,7 +19,7 @@ from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, \
 from mint.database import ItemNotFound
 
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
-
+    @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testPublishedReleaseCreation(self, db, data):
 

@@ -18,6 +18,7 @@ from mint import mint_error
 import fixtures
 
 class LabelsTest(fixtures.FixturedUnitTest):
+    @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
         adminClient = self.getClient("admin")
