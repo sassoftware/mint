@@ -330,8 +330,12 @@ class SiteHandler(WebHandler):
             else:
                 return self._write("register_active")
 
-    @intFields(sortOrder = -1, limit = 10, offset = 0)
+    @intFields(sortOrder = -1, limit = 0, offset = 0)
     def projects(self, auth, sortOrder, limit, offset, submit = 0):
+        if not limit:
+            limit =  self.user and \
+                self.user.getDataValue('searchResultsPerPage') or 10
+
         if sortOrder < 0:
             sortOrder = self.session.get('projectsSortOrder', 0)
         self.session['projectsSortOrder'] = sortOrder
@@ -343,8 +347,12 @@ class SiteHandler(WebHandler):
         return self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAdmin
-    @intFields(sortOrder = -1, limit = 10, offset = 0)
+    @intFields(sortOrder = -1, limit = 0, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
+        if not limit:
+            limit =  self.user and \
+                self.user.getDataValue('searchResultsPerPage') or 10
+
         if sortOrder < 0:
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
