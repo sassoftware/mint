@@ -103,6 +103,8 @@ class BuildCreateCommand(commands.RBuilderCommand):
         args = args[1:]
         if len(args) < 3:
             return self.usage()
+        if 'option' not in argSet:
+            argSet['option'] = []
 
         projectName, troveSpec, buildType = args
 
