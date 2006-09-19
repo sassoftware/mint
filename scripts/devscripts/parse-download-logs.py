@@ -24,6 +24,11 @@ startDate = time.mktime(time.strptime(sys.argv[2], "%Y-%m-%d"))
 endDate = time.mktime(time.strptime(sys.argv[3], "%Y-%m-%d"))
 
 logRx = re.compile("(.+) \- \- \[(.+)\] \"GET \/.*downloadImage/(\d+)/([\w\-]+)\-(\d*.*) HTTP.+\" (\d+) (\d+) \"(.*)\" \"(.*)\"")
+logRxS3 = re.compile("(.+) \- \- \[(.+)\] \"GET \/.*downloadImage\?fileId\=(\d+) HTTP.+\" (\d+) (\d+) \"(.*)\" \"(.*)\"")
+
+# match file ids to full filenames
+db = dbstore.connect("rbuilder@db2.cogent-dca.rpath.com/mint", driver = "mysql")
+cu = db.cursor()
 
 downloads = {} # individual image downloads
 projDls = {} # project downloads
@@ -32,23 +37,34 @@ first = last = None # first date parsed, last date parsed
 
 for x in f.readlines():
     m = logRx.match(x)
-    if m:
-        g = m.groups()
-        date = time.mktime(time.strptime(g[1].split(":")[0], "%d/%b/%Y"))
+    m2 = logRxS3.match(x)
+    if m or m2:
+        if m:
+	    g = m.groups()
+            fileId = g[2]
+        elif m2:
+	    g = m2.groups()
+	    fileId = g[2]
 
+        date = time.mktime(time.strptime(g[1].split(":")[0], "%d/%b/%Y"))
         if date >= startDate and date <= endDate:
+
+	    cu.execute("""select hostname from projects, builds, buildfiles 
+		where projects.projectid=builds.projectid 
+		and builds.buildid=buildfiles.buildid and buildfiles.fileid=?""", fileId)
+    
+	    r = cu.fetchone()
+	    if not r: # skip deleted images
+		continue
+	    hostname = r[0]
+
             if not first:
                 first = g[1]
-
-            downloads.setdefault(g[2], 0)
-            projDls.setdefault(g[3], 0)
-            projDls[g[3]] += 1
-            downloads[g[2]] += 1
+            downloads.setdefault(fileId, 0)
+            projDls.setdefault(hostname, 0)
+            downloads[fileId] += 1
+            projDls[hostname] += 1
             last = g[1]
-
-# match file ids to full filenames
-db = dbstore.connect("rbuilder@db2.cogent-dca.rpath.com/mint", driver = "mysql")
-cu = db.cursor()
 
 counts = []
 for fileId, count in downloads.items():
@@ -62,7 +78,7 @@ for fileId, count in downloads.items():
 
     r = cu.fetchone()
     if r:
-        counts.append((count, os.path.basename(r[0])))
+        counts.append((count, os.path.basename(r[0]), int(fileId)))
         if ".iso" in r[0]:
             isoDownloads += count
         elif "vmware" in r[0]:
@@ -94,6 +110,6 @@ print '-------------------------------------------------------\n'
 
 print 'TOP DOWNLOADS BY FILE'
 print '---------------------'
-for count, file in sorted(counts, reverse = True):
+for count, file, fileId in sorted(counts, reverse = True):
     if int(count) > 0:
-        print "%-50s %4d" % (file.split("%2F")[-1], count)
+        print "%-50s %4d (fileId: %d) " % (file.split("%2F")[-1], count, fileId )
