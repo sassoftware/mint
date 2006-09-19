@@ -7,11 +7,17 @@ import re
 from nagpy.plugin import NagiosPlugin
 from nagpy.util.exceptionHooks import stdout_hook
 from mint_nagpy.config import CheckJobsConfig
+from conary.lib import cfgtypes
 
 class CheckJS(NagiosPlugin):
+    cfgPath = '/srv/rbuilder/nagios/check.cfg'
     def __init__(self):
         NagiosPlugin.__init__(self)
         self.cfg = CheckJobsConfig()
+        try:
+            self.cfg.read(self.cfgPath)
+        except cfgtypes.CfgEnvironmentError:
+            pass
 
     @stdout_hook
     def check(self):
