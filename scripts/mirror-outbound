@@ -24,6 +24,12 @@ log.setVerbosity(log.DEBUG)
 sys.excepthook = util.genExcepthook(debug=True)
 
 class MirrorOutbound(SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
+    logPath = os.path.join(cfg.dataPath, 'logs', "mirror-outbound.log")
+    del cfg
 
     def handle_args(self):
         if len(sys.argv) < 2:

@@ -20,6 +20,12 @@ from mint.scriptlibrary import SingletonScript
 log.setVerbosity(log.DEBUG)
 
 class MirrorInbound(SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
+    logPath = os.path.join(cfg.dataPath, 'logs', "mirror-inbound.log")
+    del cfg
 
     def handle_args(self):
         if len(sys.argv) < 2:
