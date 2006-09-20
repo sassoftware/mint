@@ -1,0 +1,89 @@
+#!/usr/bin/python
+
+import os
+import sys
+from conary import conaryclient
+from conary.conaryclient import cmdline
+from conary import versions
+from conary.lib import util
+from conary import trove
+from conary.repository import changeset
+import tempfile
+
+cc = conaryclient.ConaryClient()
+nc = cc.getRepos()
+
+
+def captureOutput(func, *args, **kwargs):
+    fd = os.open(os.devnull, os.W_OK)
+    oldStdErr = os.dup(sys.stderr.fileno())
+    oldStdOut = os.dup(sys.stdout.fileno())
+    os.dup2(fd, sys.stdout.fileno())
+    os.dup2(fd, sys.stderr.fileno())
+    os.close(fd)
+    try:
+        return func(*args, **kwargs)
+    finally:
+        os.dup2(oldStdOut, sys.stdout.fileno())
+        os.dup2(oldStdErr, sys.stderr.fileno())
+
+def newerSource(troveSpec):
+    n, v, f = cmdline.parseTroveSpec(troveSpec)
+
+    NVF = nc.findTrove(None, (n, v, f))[0]
+    trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
+
+    sNVF = nc.findTrove(None, (trv.getSourceName(),
+                            str(trv.getVersion().getSourceVersion()), None))[0]
+    srcTrv = nc.getTrove(sNVF[0], sNVF[1], sNVF[2], withFiles = False)
+
+    return srcTrv.version() > trv.version()
+
+def staleGroup(troveSpec):
+    if not troveSpec.startswith('group-'):
+        return False
+
+    n, v, f = cmdline.parseTroveSpec(troveSpec)
+
+    NVF = nc.findTrove(None, (n, v, f))[0]
+    trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
+
+    sn = trv.getSourceName().replace(':source', '')
+    sv = trv.getVersion().getSourceVersion()
+
+    srcTroveSpec = (str(sn) + '=' + str(sv))
+
+    tmpDir = tempfile.mkdtemp()
+    try:
+        curDir = os.getcwd()
+        os.chdir(tmpDir)
+        captureOutput(util.execute, 'cvc co %s' % srcTroveSpec)
+        os.chdir(os.path.join(tmpDir, sn))
+
+        try:
+            captureOutput(util.execute, 'cvc cook %s.recipe' % sn)
+        except RuntimeError, e:
+            if 'exited with exit code 1' in str(e):
+                return True
+        ccsfn = [x for x in os.listdir('.') if x.endswith('.ccs')][0]
+        cs = changeset.ChangeSetFromFile(ccsfn)
+        newTrv = trove.Trove([x for x in cs.iterNewTroveList()][0])
+        return sorted([x for x in trv.iterTroveList(strongRefs = True,
+                                                    weakRefs=True)]) != \
+               sorted([x for x in newTrv.iterTroveList(strongRefs = True,
+                                                       weakRefs=True)])
+    finally:
+        os.chdir(curDir)
+        util.rmtree(tmpDir)
+
+def stale(troveSpec):
+    return newerSource(troveSpec) or staleGroup(troveSpec)
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        r = stale(sys.argv[1])
+        print r
+        sys.exit(int(not r))
+    else:
+        print "Usage: %s <trovespec>" % os.path.basename(sys.argv[0])
+        sys.exit(-1)
