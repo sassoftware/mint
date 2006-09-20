@@ -30,7 +30,7 @@ def captureOutput(func, *args, **kwargs):
 def newerSource(troveSpec):
     n, v, f = cmdline.parseTroveSpec(troveSpec)
 
-    NVF = nc.findTrove(None, (n, v, f))[0]
+    NVF = nc.findTrove(None, (n, v, f), cc.cfg.flavor)[0]
     trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
 
     sNVF = nc.findTrove(None, (trv.getSourceName(),
@@ -45,7 +45,7 @@ def staleGroup(troveSpec):
 
     n, v, f = cmdline.parseTroveSpec(troveSpec)
 
-    NVF = nc.findTrove(None, (n, v, f))[0]
+    NVF = nc.findTrove(None, (n, v, f), cc.cfg.flavor)[0]
     trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
 
     sn = trv.getSourceName().replace(':source', '')
