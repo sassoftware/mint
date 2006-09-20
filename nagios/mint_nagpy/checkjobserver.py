@@ -24,8 +24,18 @@ class CheckJS(NagiosPlugin):
         status = self.nagios_ok
         jsdirs = [x for x in os.listdir(self.cfg.jsPath) if os.path.isdir(os.path.join(self.cfg.jsPath, x))]
         for x in jsdirs:
-            f = open(os.path.join(self.cfg.jsPath, x, self.cfg.jsConfig))
-            conf = f.read()
+            for y in self.cfg.jsConfig:
+                try:
+                    f = open(os.path.join(self.cfg.jsPath, x, y))
+                except IOError:
+                    pass
+                else:
+                    break
+            # if f is undefined or closed, no config file could be opened
+            try:
+                conf = f.read()
+            except (ValueError, NameError):
+                continue
             f.close()
             match = re.search('lockFile\s+(.+)\s*\n', conf)
             lockFile = match.groups()[0].lstrip('/')
