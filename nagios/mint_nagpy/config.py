@@ -14,6 +14,6 @@ class CheckJobsConfig(ConfigFile):
     # Maximum time a job is allowed to run, in seconds
     maxJobTime                = (cfgtypes.CfgInt, 21600)
     jsPath                    = (cfgtypes.CfgString, '/srv/rbuilder/jobserver/')
-    jsConfig                  = (cfgtypes.CfgString, 'srv/rbuilder/iso_gen.conf')
+    jsConfig                  = (cfgtypes.CfgList(cfgtypes.CfgString))
     filterExp                 = (cfgtypes.CfgList(cfgtypes.CfgString))
     retries                   = (cfgtypes.CfgInt, 5)
