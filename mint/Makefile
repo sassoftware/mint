@@ -24,6 +24,7 @@ python_files =			\
 	jobs.py			\
 	jobstatus.py		\
 	jsversion.py		\
+	loadmirror.py		\
 	maintenance.py		\
 	mailinglists.py		\
 	mint_error.py		\
@@ -51,11 +52,11 @@ python_files =			\
 	shimclient.py		\
 	rbuilderaction.py	\
 	stats.py		\
-	urltypes.py			\
+	urltypes.py		\
 	userlevels.py		\
 	userlisting.py		\
-	users.py                \
-    usertemplates.py	\
+	users.py		\
+	usertemplates.py	\
 	useit.py
 
 extra_dist = Makefile constants.py.in rmakeconstants.py.in
