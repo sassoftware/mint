@@ -48,7 +48,6 @@ python_files =			\
 	server.py		\
 	session.py		\
 	sessiondb.py		\
-	setpassword.py		\
 	shimclient.py		\
 	rbuilderaction.py	\
 	stats.py		\
