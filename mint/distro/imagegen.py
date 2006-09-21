@@ -6,6 +6,7 @@
 
 import os
 import sys
+import urllib
 from threading import currentThread
 
 from mint import jobstatus
@@ -74,8 +75,21 @@ class ImageGenerator(Generator):
         if not ilp: # fall back to a reasonable default if group trove was
                     # cooked before conary0.90 and builddata is blank
             ilp = self.project.getLabel() + " conary.rpath.com@rpl:1 contrib.rpath.com@rpl:devel"
+        mu = self.build.getDataValue('mirrorUrl')
+        if mu:
+            type, url = urllib.splittype(mu)
+            relativeLink = ''
+            if not type:
+                type = 'http'
+            if not url.startswith('//'):
+                url = '//' + url
+            if not urllib.splithost(url)[1]:
+                relativeLink = '/conaryrc/'
+            mirrorUrl = type + ':' + url + relativeLink
 
         print >> conaryrcFile, "installLabelPath " + ilp
+        if mu:
+            print >> conaryrcFile, 'includeConfigFile ' + mirrorUrl
         print >> conaryrcFile, "pinTroves kernel.*"
         print >> conaryrcFile, "includeConfigFile /etc/conary/config.d/*"
         if self.build.getDataValue("autoResolve"):
