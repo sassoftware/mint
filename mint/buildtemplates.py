@@ -58,6 +58,10 @@ class installLabelPath(StringOption):
     default = ''
     prompt = 'Custom Conary installLabelPath setting (leave blank for default)'
 
+class mirrorUrl(StringOption):
+    default = ''
+    prompt = 'rPath Mirror URL'
+
 class autoResolve(BooleanOption):
     default = False
     prompt = 'Automatically install required dependencies during updates'
@@ -134,41 +138,41 @@ class anacondaTemplatesTrove(TroveOption):
 ###
 
 class StubImageTemplate(Template):
-    __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
+    __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg', 'mirrorUrl']
     id = buildtypes.STUB_IMAGE
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize']
+                 'installLabelPath', 'swapSize', 'mirrorUrl']
     id = buildtypes.RAW_HD_IMAGE
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize']
+                 'installLabelPath', 'swapSize', 'mirrorUrl']
     id = buildtypes.RAW_FS_IMAGE
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize']
+                 'installLabelPath', 'swapSize', 'mirrorUrl']
     id = buildtypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
-                 'mediaTemplateTrove', 'anacondaCustomTrove', 'anacondaTemplatesTrove']
+                 'mediaTemplateTrove', 'anacondaCustomTrove', 'anacondaTemplatesTrove', 'mirrorUrl']
     id = buildtypes.INSTALLABLE_ISO
 
 class NetbootTemplate(Template):
-    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'mirrorUrl']
     id = buildtypes.NETBOOT_IMAGE
 
 class LiveIsoTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'zisofs',
-                 'unionfs']
+                 'unionfs', 'mirrorUrl']
     id = buildtypes.LIVE_ISO
 
 class TarballTemplate(Template):
-    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize', 'mirrorUrl']
     id = buildtypes.TARBALL
 
 ########################
