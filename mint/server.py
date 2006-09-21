@@ -81,6 +81,7 @@ validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 dbConnection = None
+callLog = None
 
 def deriveBaseFunc(func):
     r = func
@@ -3590,11 +3591,14 @@ class MintServer(object):
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
-        self.callLog = None
         schemaLock = None
 
+        global callLog
         if self.cfg.xmlrpcLogFile:
-            self.callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
+            if not callLog:
+                callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
+        self.callLog = callLog
+
         if self.req:
             self.remoteIp = self.req.connection.remote_ip
         else:
