@@ -285,7 +285,12 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
     def cleanupDirs(self):
         for cDir in (self.fakeroot, self.outfile, self.liveDir):
             if cDir:
-                util.rmtree(cDir)
+                try:
+                    util.rmtree(cDir)
+                except Exception, e:
+                     print >> sys.stderr, "Warning: encountered error while " \
+                         "cleaning up tree: %s" % cDir
+                     print >> sys.stderr, e
 
     def write(self):
         try:
