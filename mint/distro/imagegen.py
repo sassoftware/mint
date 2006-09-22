@@ -84,7 +84,7 @@ class ImageGenerator(Generator):
             if not url.startswith('//'):
                 url = '//' + url
             if not urllib.splithost(url)[1]:
-                relativeLink = '/conaryrc/'
+                relativeLink = '/conaryrc'
             mirrorUrl = type + ':' + url + relativeLink
 
         print >> conaryrcFile, "installLabelPath " + ilp
