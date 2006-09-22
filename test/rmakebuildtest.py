@@ -1057,7 +1057,8 @@ class rMakeBuildTest(MintRepositoryHelper):
                           FROM rMakeBuildItems
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf([list(x) for x in cu.fetchall()] != \
-                    [['testcase', 'testproject.rpath.local2@rpl:devel']],
+                    [['testcase', 'testproject.' + MINT_PROJECT_DOMAIN + 
+                      '@rpl:devel']],
                     "rMake build trove not stored correctly")
 
     def testAddItemByProjectUnicode(self):
@@ -1079,7 +1080,8 @@ class rMakeBuildTest(MintRepositoryHelper):
                           FROM rMakeBuildItems
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf([list(x) for x in cu.fetchall()] != \
-                    [['testcase', 'testproject.rpath.local2@rpl:devel']],
+                    [['testcase', 'testproject.' + MINT_PROJECT_DOMAIN + 
+                      '@rpl:devel']],
                     "rMake build trove not stored correctly")
 
     def testDoubleAddByProject(self):
@@ -1119,7 +1121,7 @@ class rMakeBuildTest(MintRepositoryHelper):
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf([list(x) for x in cu.fetchall()] != \
                     [['testcase:source',
-                      'testproject.rpath.local2@rpl:devel']],
+                      'testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel']],
                     "rMake build source component not stored correctly")
 
     def testDoubleAddSourceByProject(self):

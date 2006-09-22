@@ -500,7 +500,7 @@ class DistroTest(MintRepositoryHelper):
 
         # check the returned conary client cfg for sanity
         cc = ii.getConaryClient('/', '1#x86')
-        assert(cc.cfg.installLabelPath == [versions.Label('testproject.rpath.local2@rpl:devel')])
+        assert(cc.cfg.installLabelPath == [versions.Label('testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel')])
 
     def testGetTemplatePath(self):
         ii = self.getInstallableIso()
