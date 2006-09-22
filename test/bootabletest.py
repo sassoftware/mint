@@ -54,6 +54,8 @@ class BootableImageTest(MintRepositoryHelper):
             validate = False)
         build.setDataValue('baseFileName', '', dataType = data.RDT_STRING,
                            validate = False)
+        build.setDataValue('mirrorUrl', 'http://test.rpath.mirror/conaryrc/', 
+                            dataType = data.RDT_STRING, validate = False)
 
         job = client.startImageJob(build.id)
         isocfg = self.writeIsoGenCfg()
