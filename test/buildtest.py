@@ -305,6 +305,39 @@ class BuildTest(fixtures.FixturedUnitTest):
                     "freespace is not an integer")
 
     @fixtures.fixture("Full")
+    def testImageGenerator(self, db, data):
+        client = self.getClient('admin')
+        build = client.getBuild(data['buildId'])
+        project = client.getProject(data['projectId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        build.setDataValue('installLabelPath', 'test.rpath.org@rpl:devel')
+
+        job = client.startImageJob(build.getId())
+
+        from mint.distro import jobserver
+        from mint.distro.imagegen import ImageGenerator
+        import os
+        isocfg = jobserver.IsoGenConfig()
+        isocfg.finishedPath = self.cfg.imagesPath
+        ig = ImageGenerator(client, isocfg, job, build, project)
+        from conary import conaryclient
+        cclient = conaryclient.ConaryClient(project.getConaryConfig())
+        tmpdir = tempfile.mkdtemp()
+        mirrorUrls = {'mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/conaryrc/\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
+        'https://mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/conaryrc/\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
+        'https://mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
+        'mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n', 
+        '':'installLabelPath test.rpath.org@rpl:devel\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n'}
+
+        for k, v in mirrorUrls.items():
+            build.setDataValue('mirrorUrl', k)
+            ig.writeConaryRc(tmpdir, cclient)
+            fd = open(os.path.join(tmpdir,  'conaryrc'))
+            rcData = fd.read()
+            fd.close()
+            self.failIf(rcData != v)
+
+    @fixtures.fixture("Full")
     def testDeleteBuildFiles(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
