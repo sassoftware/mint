@@ -323,8 +323,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         from conary import conaryclient
         cclient = conaryclient.ConaryClient(project.getConaryConfig())
         tmpdir = tempfile.mkdtemp()
-        mirrorUrls = {'mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/conaryrc/\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
-        'https://mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/conaryrc/\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
+        mirrorUrls = {'mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/conaryrc\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
+        'https://mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/conaryrc\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
         'https://mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
         'mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n', 
         '':'installLabelPath test.rpath.org@rpl:devel\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n'}
