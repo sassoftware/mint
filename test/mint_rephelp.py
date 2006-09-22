@@ -431,6 +431,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         fd = os.open(os.devnull, os.W_OK)
         os.dup2(fd, sys.stderr.fileno())
         os.dup2(fd, sys.stdout.fileno())
+        os.close(fd)
         try:
             return func(*args, **kwargs)
         finally:
