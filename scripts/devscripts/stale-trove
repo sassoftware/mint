@@ -49,7 +49,7 @@ def newerSource(troveSpec):
     trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
 
     sNVF = nc.findTrove(None, (trv.getSourceName(),
-                            str(trv.getVersion().getSourceVersion()), None))[0]
+                            str(trv.getVersion().getSourceVersion().branch()), None))[0]
     srcTrv = nc.getTrove(sNVF[0], sNVF[1], sNVF[2], withFiles = False)
 
     return srcTrv.version() > trv.version()
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     if len(args) == 1:
         r = stale(args[0])
         print r
-        sys.exit(int(not r))
+        sys.exit(int(r))
     else:
         print "Usage: %s <trovespec>" % os.path.basename(sys.argv[0])
         sys.exit(-1)
