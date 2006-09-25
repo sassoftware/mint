@@ -5,6 +5,7 @@ import md5
 import os
 import sha
 import time
+import urllib
 
 from conary import dbstore
 from conary.conarycfg import ConfigFile
@@ -252,7 +253,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
             __removeFromDb(db, removedFileInfo)
         elif urlType == urltypes.AMAZONS3:
             bucket = url.split('/')[-2]
-            keyname = url.split('/')[-1]
+            keyname = urllib.unquote_plus(url.split('/')[-1])
             self.log.info("Removing %s from Amazon S3 (bucket=%s, key=%s)" % (url, bucket, keyname) )
             try:
                 so = s3obj.S3Object(s3conn, bucket, keyname)
