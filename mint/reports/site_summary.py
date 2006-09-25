@@ -91,7 +91,7 @@ class SiteSummary(MintReport):
         # count projects with builds this week
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId FROM Builds
-                              WHERE timeCreated > ?)
+                              WHERE timeModified > ?)
                           AS ProjectBuilds""",
                    reportTime - 604800)
         data.append(('Projects with new builds this week', cu.fetchone()[0]))
@@ -197,14 +197,14 @@ class SiteSummary(MintReport):
         data.append(('',''))
         # count the total builds this week
         cu.execute("""SELECT COUNT(*) FROM Builds
-                          WHERE buildType IN %s AND timeCreated > ?""" % \
+                          WHERE buildType IN %s AND timeModified > ?""" % \
                    str(countedBuilds), reportTime - 604800)
         data.append(('Images Built This Week', cu.fetchone()[0]))
 
         # count builds for each image type per this week
         for buildType in countedBuilds:
             cu.execute("""SELECT COUNT(*) FROM Builds
-                              WHERE buildType=? AND timeCreated > ?""",
+                              WHERE buildType=? AND timeModified > ?""",
                        buildType, reportTime - 604800)
             data.append((buildtypes.typeNames[buildType] + " This Week",
                          cu.fetchone()[0]))
