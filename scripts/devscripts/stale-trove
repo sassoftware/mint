@@ -9,10 +9,25 @@ from conary.lib import util
 from conary import trove
 from conary.repository import changeset
 import tempfile
+import optparse
 
 cc = conaryclient.ConaryClient()
 nc = cc.getRepos()
 
+cc.cfg.readFiles()
+
+def setContext(cfg, argSet):
+    context = cfg.context
+    if os.access('CONARY', os.R_OK):
+        conaryState = state.ConaryStateFromFile('CONARY')
+        if conaryState.hasContext():
+            context = conaryState.getContext()
+
+    context = os.environ.get('CONARY_CONTEXT', context)
+    context = argSet.pop('context', context)
+
+    if context:
+        cfg.setContext(context)
 
 def captureOutput(func, *args, **kwargs):
     fd = os.open(os.devnull, os.W_OK)
@@ -55,16 +70,27 @@ def staleGroup(troveSpec):
 
     tmpDir = tempfile.mkdtemp()
     try:
+        for fn in [x for x in os.listdir('.') if x in ('.conaryrc', 'CONARY')]:
+            util.copyfile(fn, os.path.join(tmpDir, fn))
         curDir = os.getcwd()
         os.chdir(tmpDir)
-        captureOutput(util.execute, 'cvc co %s' % srcTroveSpec)
+
+        cmd = 'cvc co %s' % srcTroveSpec
+        if cc.cfg.context:
+            cmd += ' --context %s' % cc.cfg.context
+        captureOutput(util.execute, cmd)
         os.chdir(os.path.join(tmpDir, sn))
 
+        cmd = 'cvc cook %s.recipe' % sn
+        if cc.cfg.context:
+            cmd += ' --context %s' % cc.cfg.context
+
         try:
-            captureOutput(util.execute, 'cvc cook %s.recipe' % sn)
+            captureOutput(util.execute, cmd)
         except RuntimeError, e:
             if 'exited with exit code 1' in str(e):
-                return True
+                print >> sys.stderr, "%s could not be cooked" % srcTroveSpec
+                sys.exit(-1)
         ccsfn = [x for x in os.listdir('.') if x.endswith('.ccs')][0]
         cs = changeset.ChangeSetFromFile(ccsfn)
         newTrv = trove.Trove([x for x in cs.iterNewTroveList()][0])
@@ -80,8 +106,17 @@ def stale(troveSpec):
     return newerSource(troveSpec) or staleGroup(troveSpec)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        r = stale(sys.argv[1])
+    parser = optparse.OptionParser()
+    parser.add_option("-c", "--context", dest = "context",
+                      action = "store",
+                      help = "Set a conary context.")
+    (options, args) = parser.parse_args()
+
+    options = options.__dict__
+    setContext(cc.cfg, options)
+
+    if len(args) == 1:
+        r = stale(args[0])
         print r
         sys.exit(int(not r))
     else:
