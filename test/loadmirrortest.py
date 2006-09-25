@@ -14,6 +14,8 @@ from mint import loadmirror
 import fixtures
 from conary.lib import util
 
+import os
+
 class LoadMirrorTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testErrors(self, db, data):
@@ -47,11 +49,12 @@ class LoadMirrorTest(fixtures.FixturedUnitTest):
 
         loader.sourceDir = tempfile.mkdtemp()
         try:
-            f = open(loader.sourceDir + "/MIRROR-INFO", "w")
+            os.mkdir(loader.sourceDir + "/test.example.com")
+            f = open(loader.sourceDir + "/test.example.com/MIRROR-INFO", "w")
             f.write("test.example.com\n0/0\n42\n")
             f.close()
 
-            self.failUnlessEqual(loader.parseMirrorInfo(), ('test.example.com', 42))
+            self.failUnlessEqual(loader.parseMirrorInfo('test.example.com'), 42)
         finally:
             util.rmtree(loader.sourceDir)
 

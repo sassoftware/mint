@@ -4,24 +4,24 @@
 # All Rights Reserved
 #
 
-script_dist =			\
-	deleteproject		\
-	install-jsroot		\
-	job-server		\
-	migrate-all-projects	\
-	mirror-inbound		\
-	mirror-outbound		\
-	mirror-prime-server	\
-	update-package-index	\
-	update-package-index-external \
-        set-password
+script_dist =				\
+	deleteproject			\
+	install-jsroot			\
+	job-server			\
+	migrate-all-projects		\
+	mirror-inbound			\
+	mirror-outbound			\
+	mirror-prime-server		\
+	update-package-index		\
+	update-package-index-external	\
+	set-password
 
 extra_dist = \
 	Makefile		\
 	raw2vmdk.c		\
-        rootstat_wrapper.c	\
+	rootstat_wrapper.c	\
 	job-server.init.in	\
-	multi-jobserver.init.in \
+	multi-jobserver.init.in	\
         cleanup-bindmounts.init.in
 
 SUBDIRS = data DiskImageData
