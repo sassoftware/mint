@@ -70,7 +70,7 @@ def staleGroup(troveSpec):
 
     tmpDir = tempfile.mkdtemp()
     try:
-        for fn in [x for x in os.listdir('.') if x in ('.conaryrc', 'CONARY')]:
+        for fn in [x for x in os.listdir('.') if x in ('conaryrc', 'CONARY')]:
             util.copyfile(fn, os.path.join(tmpDir, fn))
         curDir = os.getcwd()
         os.chdir(tmpDir)
