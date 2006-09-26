@@ -39,16 +39,7 @@ class WebHandler(object):
         path = os.path.join(templatePath, templateName + ".kid")
         prof.startKid(templateName)
 
-        if not self.cfg.debugMode:
-            global kidCache
-            #TODO Refresh if it's changed
-            if templateName not in kidCache:
-                kidCache[path] = kid.load_template(path)
-            else:
-                wasCacheHit = True
-            template = kidCache[path]
-        else:
-            template = kid.load_template(path)
+        template = kid.load_template(path)
 
         # pass along the context (overridden by values passed in as
         # kwargs to _write)
