@@ -95,6 +95,10 @@ class vmMemory(IntegerOption):
     default = 256
     prompt = 'How much memory should VMware use when running this image?'
 
+class natNetworking(BooleanOption):
+    default = False
+    prompt = 'Use NAT instead of bridged networking.'
+
 class unionfs(BooleanOption):
     default = False
     prompt = "Enable UnionFS for the entire filesystem. (For this option, the UnionFS kernel module is required in the group. See rBuilder documentation for more information on this option.)"
@@ -153,7 +157,7 @@ class RawFsTemplate(Template):
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize', 'mirrorUrl']
+                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking']
     id = buildtypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):

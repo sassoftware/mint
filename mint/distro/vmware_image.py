@@ -54,6 +54,9 @@ class VMwareImage(bootable_image.BootableImage):
         filecontents = filecontents.replace('@NAME@', displayName)
         filecontents = filecontents.replace('@MEM@', str(memsize))
         filecontents = filecontents.replace('@FILENAME@', self.basefilename)
+        filecontents = filecontents.replace('@NETWORK_CONNECTION@', \
+            self.build.getDataValue('natNetworking') and 'nat' or 'bridged')
+
         #write the file to the proper location
         ofile = open(outfile, 'wb')
         ofile.write(filecontents)

@@ -1762,7 +1762,8 @@ class MintServer(object):
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName)
+                                      name = productName,
+                                      timeCreated = time.time())
 
         self.buildData.setDataValue(buildId, 'jsversion',
                                       jsversion.getDefaultVersion(),

@@ -62,6 +62,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         desc = 'Just some random words'
         build.setDesc(desc)
         build.refresh()
+        assert(build.timeCreated)
+        assert(build.timeUpdated)
         assert desc == build.getDesc()
 
     @fixtures.fixture("Full")

@@ -51,7 +51,7 @@ ide1:0.autodetect = "TRUE"
 #####
 
 ethernet0.present = "TRUE"
-ethernet0.connectionType = "bridged"
+ethernet0.connectionType = "@NETWORK_CONNECTION@"
 ethernet0.addressType = "generated"
 ethernet0.generatedAddress = ""
 ethernet0.generatedAddressOffset = "0"

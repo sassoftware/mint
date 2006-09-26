@@ -2,6 +2,7 @@
 
 import os
 import sys
+from conary import conarycfg
 from conary import conaryclient
 from conary.conaryclient import cmdline
 from conary import versions
@@ -11,10 +12,10 @@ from conary.repository import changeset
 import tempfile
 import optparse
 
-cc = conaryclient.ConaryClient()
-nc = cc.getRepos()
+cfg = conarycfg.ConaryConfiguration(True)
 
-cc.cfg.readFiles()
+cc = conaryclient.ConaryClient(cfg)
+nc = cc.getRepos()
 
 def setContext(cfg, argSet):
     context = cfg.context
