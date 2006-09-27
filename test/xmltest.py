@@ -8,8 +8,9 @@ testsuite.setup()
 
 import fixtures
 
-from mint import userlevels
-from mint.server import deriveBaseFunc, checkParam, typeCheck, ParameterError
+from mint import userlevels, mint_error
+from mint.server import deriveBaseFunc, checkParam, \
+    typeCheck, ParameterError, SERVER_VERSIONS
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 
@@ -138,6 +139,23 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
         funcName = '_' + funcName
         if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
             self.fail("xml rpc server responded to hidden method call")
+
+    @fixtures.fixture("Empty")
+    def testCheckVersion(self, db, data):
+        client = self.getClient("test")
+        server = client.server
+
+        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:1',))
+        self.failUnlessEqual(r[1], SERVER_VERSIONS)
+
+        # fake an old unversioned client
+        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ())
+        self.failUnlessEqual(r[1], SERVER_VERSIONS)
+
+        # fake an old client
+        self.assertRaises(mint_error.InvalidClientVersion, 
+            server._server.callWrapper ,'checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:0',))
+
 
 if __name__ == "__main__":
     testsuite.main()
