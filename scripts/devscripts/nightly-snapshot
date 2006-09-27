@@ -38,7 +38,7 @@ cook toolkit-image
 # build a new rbuilder snapshot
 $SCRIPTS_PATH/devscripts/synchg
 create_mint_snapshot
-$SCRIPTS_PATH/devscripts/rmake-helper --trove rbuilder=$NIGHTLY_BRANCH --context=$NIGHTLY_CONTEXT --commit
+$SCRIPTS_PATH/devscripts/rmake-helper --context=$NIGHTLY_CONTEXT --commit rbuilder=$NIGHTLY_BRANCH
 [ $? -ne 0 ] && carp_rmake $?
 
 # build the jobserver root into jobserver-root
