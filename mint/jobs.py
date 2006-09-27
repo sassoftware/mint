@@ -7,10 +7,6 @@ from mint import database
 from mint import urltypes
 from mint.mint_error import MintError
 
-class JobMissing(MintError):
-    def __str__(self):
-        return "the requested job does not exist"
-
 class FileMissing(MintError):
     def __str__(self):
         return "the requested file does not exist"

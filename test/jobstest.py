@@ -1372,14 +1372,14 @@ class JobsTest(fixtures.FixturedUnitTest):
     def testMissingGetJobCompat(self, db, data):
         client = self.getClient('admin')
         job = client.startImageJob(data['buildId'])
-        self.assertRaises(jobs.JobMissing, client.server._server.getJob, 99)
+        self.assertRaises(database.ItemNotFound, client.server._server.getJob, 99)
 
     @fixtures.fixture('Full')
     def testMissingGetJob(self, db, data):
         client = self.getClient('admin')
         job = client.startImageJob(data['buildId'])
 
-        self.assertRaises(jobs.JobMissing, client.server._server.getJob2, 99)
+        self.assertRaises(database.ItemNotFound, client.server._server.getJob2, 99)
 
 
     @fixtures.fixture('Full')

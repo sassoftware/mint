@@ -47,14 +47,7 @@ from mint import useit
 from mint import rmakebuild
 from mint import jsversion
 from mint.flavors import stockFlavors
-from mint.mint_error import PermissionDenied, BuildPublished, \
-     BuildMissing, BuildFileMissing, BuildFileUrlMissing, \
-     DeleteLocalUrlError, MintError, BuildEmpty, UserAlreadyAdmin, \
-     AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
-     MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
-     rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
-     PublishedReleaseEmpty, PublishedReleasePublished, \
-     PublishedReleaseNotPublished, InvalidReport
+from mint.mint_error import *
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
 
@@ -2241,7 +2234,7 @@ class MintServer(object):
 
         p = cu.fetchone()
         if not p:
-            raise jobs.JobMissing
+            raise database.ItemNotFound("job")
 
         dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
                     'statusMessage', 'timeSubmitted', 'timeStarted',
@@ -2272,7 +2265,7 @@ class MintServer(object):
 
         p = cu.fetchone()
         if not p:
-            raise jobs.JobMissing
+            raise database.ItemNotFound("job")
 
         dataKeys = ['userId', 'buildId', 'groupTroveId', 'status',
                     'statusMessage', 'timeSubmitted', 'timeStarted',
