@@ -299,7 +299,7 @@ class MintServer(object):
                 # let inner private-only calls pass
                 self._allowPrivate = True
 
-                if args[0].startswith("RBUILDER_CLIENT:"):
+                if type(args[0]) == str and args[0].startswith("RBUILDER_CLIENT:"):
                     clientVer = int(args[0].split(":")[1])
                     args = args[1:]
                 else:
