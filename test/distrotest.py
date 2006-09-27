@@ -473,7 +473,8 @@ class DistroTest(MintRepositoryHelper):
         try:
             ii.writeBuildStamp(d)
             self.verifyContentsInFile(os.path.join(d, ".buildstamp"),
-                "group-dist /testproject.rpath.local2@rpl:devel/1.0-1-1 1#x86")
+                "group-dist /testproject." + MINT_PROJECT_DOMAIN + 
+                "@rpl:devel/1.0-1-1 1#x86")
         finally:
             util.rmtree(d)
 
