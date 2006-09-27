@@ -23,6 +23,12 @@ class UnknownException(Exception):
         self.eName = eName
         self.eArgs = eArgs
 
+class MessageException(MintError):
+    def __init__(self, msg = "Unknown exception"):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
 class BuildMissing(MintError):
     def __str__(self):
         return "The referenced build does not exist."
@@ -125,8 +131,11 @@ class rMakeBuildOrder(MintError):
     def __init__(self, reason = "rMake build commands submitted out of order"):
         self.reason = reason
 
-class InvalidReport(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "Not a valid report name"):
-        self.reason = reason
+class InvalidReport(MessageException):
+    pass
+
+class InvalidClientVersion(MessageException):
+    pass
+
+class InvalidServerVersion(MessageException):
+    pass

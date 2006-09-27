@@ -17,15 +17,15 @@ from mint import builds
 from mint import pubreleases
 from mint import users
 from mint import rmakebuild
-from mint.mint_error import MintError, UnknownException, PermissionDenied, \
-    BuildPublished, BuildMissing, BuildEmpty, UserAlreadyAdmin, \
-    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
-    ParameterError, GroupTroveEmpty
+from mint.mint_error import *
 from mint.searcher import SearchTermsError
 
 from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
+
+CLIENT_VERSIONS = [1]
+VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
     def __init__(self, server):
@@ -33,6 +33,17 @@ class MintClient:
         @param server: URL to the L{mint.server.MintServer} XMLRPC interface.
         """
         self.server = ServerProxy(server)
+
+        serverVersions = self.server.checkVersion()
+
+        intersection = set(serverVersions) & set(CLIENT_VERSIONS)
+        if not intersection:
+            raise InvalidServerVersion("Invalid server version. Server accepts client "
+                "versions %s, but this client only supports versions %s." % \
+                (", ".join(str(x) for x in serverVersions),
+                 ", ".join(str(x) for x in CLIENT_VERSIONS)))
+
+        self.server._protocolVersion = max(intersection)
 
     def newProject(self, name, hostname, domainname, projecturl = "", desc = ""):
         """
@@ -572,6 +583,7 @@ class MintClient:
     def getFrontPageSelection(self):
         return self.server.getFrontPageSelection()
 
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
@@ -585,7 +597,8 @@ class _Method(xmlrpclib._Method):
         return self.__repr__()
 
     def __call__(self, *args):
-        isException, result = self.__send(self.__name, args)
+        args = [VERSION_STRING] + list(args)
+        isException, result = self.__send(self.__name, tuple(args))
         if not isException:
             return result
         else:

@@ -6,6 +6,7 @@
 import weakref
 
 from mint import client
+from mint.client import VERSION_STRING
 from mint.server import MintServer
 
 class ShimMintClient(client.MintClient):
@@ -28,8 +29,9 @@ class _ShimMethod(client._Method, object):
         return "<client._ShimMethod(%r)>" % (self._name)
 
     def __call__(self, *args):
+        args = [VERSION_STRING] + list(args)
         isException, result = self._server.callWrapper(self._name,
-                                                       self._authToken, args)
+                                                       self._authToken, tuple(args))
 
         if not isException:
             return result

@@ -69,6 +69,10 @@ from mint.rmakeconstants import supportedApiVersions \
      as supportedrMakeApiVersions
 from mint import urltypes
 
+SERVER_VERSIONS = [1]
+# first argument needs to be fairly unique so that we can detect
+# detect old (unversioned) clients.
+VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -295,6 +299,13 @@ class MintServer(object):
                 # let inner private-only calls pass
                 self._allowPrivate = True
 
+                if args[0].startswith("RBUILDER_CLIENT:"):
+                    clientVer = int(args[0].split(":")[1])
+                    args = args[1:]
+                else:
+                    clientVer = 0
+
+                self.clientVer = clientVer
                 r = method(*args)
                 if self.callLog:
                     self.callLog.log(self.remoteIp, list(authToken) + [None, None], methodName, args)
@@ -525,6 +536,13 @@ class MintServer(object):
         except database.ItemNotFound:
             pass
         return False
+
+    def checkVersion(self):
+        if self.clientVer < SERVER_VERSIONS[0]:
+            raise InvalidClientVersion(
+                'Invalid client version %s.  Server accepts client versions %s ' \
+                    % (clientVer, ', '.join(str(x) for x in SERVER_VERSIONS)))
+        return SERVER_VERSIONS
 
     # project methods
     @typeCheck(str, str, str, str, str)

@@ -21,8 +21,8 @@ from conary import versions
 from conary.lib import coveragehook
 from conary.deps import deps
 
-def makeXMLCall(srvr, method, XMLParams):
-    return srvr.callWrapper(method, ('anonymous', 'anonymous'), XMLParams)
+def makeXMLCall(srvr, method, args):
+    return srvr.callWrapper(method, ('anonymous', 'anonymous'), args)
 
 def rMakeHandler(req, cfg, pathInfo = None):
     maintenance.enforceMaintenanceMode(cfg)

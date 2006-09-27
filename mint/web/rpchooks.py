@@ -47,12 +47,12 @@ def rpcHandler(req, cfg, pathInfo = None):
 
     # switch on XML/JSON here
     if isXMLrpc:
-        (paramList, method) = xmlrpclib.loads(req.read())
+        (args, method) = xmlrpclib.loads(req.read())
     if isJSONrpc:
-        (method, paramList) = simplejson.loads(req.read())
+        (method, args) = simplejson.loads(req.read())
 
     # coax parameters into something MintServer likes
-    params = [method, authToken, paramList]
+    params = [method, authToken, args]
 
     # go for it; return 403 if permission is denied
     try:
