@@ -10,7 +10,7 @@ EOT
 exit 1
 }
 
-/srv/rbuilder/code/mint/scripts/devscripts/rmake-helper --trove rbuilder=/products.rpath.com@rpath:rba-devel//rba-nightly --context rba-nightly --commit >& /tmp/rmake.log
+/srv/rbuilder/code/mint/scripts/devscripts/rmake-helper --context rba-nightly --commit rbuilder=/products.rpath.com@rpath:rba-devel//rba-nightly >& /tmp/rmake.log
 jobid=$?
 if [ $jobid != 0 ]; then carp $jobid; fi
 

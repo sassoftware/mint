@@ -89,7 +89,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                                         LEFT OUTER JOIN buildFiles bf USING (buildId)
                                         LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
                                         LEFT OUTER JOIN filesUrls fu USING (urlId)
-                        WHERE (pr.timePublished IS NOT NULL OR (b.timeUpdated < ? OR b.timeCreated IS NULL))
+                        WHERE (pr.timePublished IS NOT NULL OR (b.timeCreated < ? OR b.timeCreated IS NULL))
                             AND fu.urltype = ?
                             AND p.hidden = 0""", earlierThan, urltypes.LOCAL)
         rs = cu.fetchall()
