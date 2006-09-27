@@ -1,16 +1,19 @@
 #!/usr/bin/python
 
+import optparse
 import os
 import sys
+import tempfile
+
 from conary import conarycfg
 from conary import conaryclient
-from conary.conaryclient import cmdline
-from conary import versions
-from conary.lib import util
 from conary import trove
+from conary import versions
+from conary.conaryclient import cmdline
+from conary.errors import TroveNotFound
+from conary.lib import util
 from conary.repository import changeset
-import tempfile
-import optparse
+
 
 cfg = conarycfg.ConaryConfiguration(True)
 
@@ -44,9 +47,21 @@ def captureOutput(func, *args, **kwargs):
         os.dup2(oldStdErr, sys.stderr.fileno())
 
 def newerSource(troveSpec):
+    sourceTroveFound = False
     n, v, f = cmdline.parseTroveSpec(troveSpec)
 
-    NVF = nc.findTrove(None, (n, v, f), cc.cfg.flavor)[0]
+    try:
+        NVF = nc.findTrove(None, (n, v, f), cc.cfg.flavor)[0]
+    except TroveNotFound:
+        # Check to see if there's a source trove with the same name
+        # (we have to make this assumption about the name in the absence of
+        # a binary trove). If there is, then the trove is stale
+        # (i.e. source committed, but binary never cooked).
+        # If this throws a TroveNotFound exception, the caller will
+        # have to handle it.
+        NVF = nc.findTrove(None, (('%s:source' % n), v ,f), cc.cfg.flavor)[0]
+        return True
+
     trv = nc.getTrove(NVF[0], NVF[1], NVF[2], withFiles = False)
 
     sNVF = nc.findTrove(None, (trv.getSourceName(),
@@ -90,7 +105,7 @@ def staleGroup(troveSpec):
             captureOutput(util.execute, cmd)
         except RuntimeError, e:
             if 'exited with exit code 1' in str(e):
-                print >> sys.stderr, "%s could not be cooked" % srcTroveSpec
+                print >> sys.stderr, "\nerror: %s could not be cooked" % srcTroveSpec
                 sys.exit(-1)
         ccsfn = [x for x in os.listdir('.') if x.endswith('.ccs')][0]
         cs = changeset.ChangeSetFromFile(ccsfn)
@@ -104,7 +119,12 @@ def staleGroup(troveSpec):
         util.rmtree(tmpDir)
 
 def stale(troveSpec):
-    return newerSource(troveSpec) or staleGroup(troveSpec)
+    try:
+        ret = newerSource(troveSpec) or staleGroup(troveSpec)
+    except TroveNotFound:
+        print >> sys.stderr, "\nerror: trove %s not found" % troveSpec
+        sys.exit(-1)
+    return ret
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
@@ -117,8 +137,12 @@ if __name__ == '__main__':
     setContext(cc.cfg, options)
 
     if len(args) == 1:
+        sys.stdout.write("Checking %s... " % args[0])
+        sys.stdout.flush()
         r = stale(args[0])
-        print r
+        sys.stdout.write(r and "STALE" or "FRESH")
+        sys.stdout.write('\n')
+        sys.stdout.flush()
         sys.exit(int(r))
     else:
         print "Usage: %s <trovespec>" % os.path.basename(sys.argv[0])
