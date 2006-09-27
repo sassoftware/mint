@@ -13,8 +13,6 @@ import time
 sys.excepthook = util.genExcepthook()
 
 parser = optparse.OptionParser()
-parser.add_option("-t", "--trove",
-    action="store", type="string", dest="trove")
 parser.add_option("-c", "--context",
     action="store", type="string", dest="context")
 parser.add_option("--commit", action = "store_true",
@@ -22,9 +20,13 @@ parser.add_option("--commit", action = "store_true",
 
 (options, args) = parser.parse_args()
 
+if len(args) == 0:
+    print "No troves specified"
+    sys.exit(-1)
+
 rm = helper.rMakeHelper(context = options.context)
 
-jobId = rm.buildTroves([options.trove])
+jobId = rm.buildTroves(args)
 job = rm.client.getJob(jobId)
 while not job.isFinished():
     time.sleep(2)
@@ -37,4 +39,4 @@ if job.isBuilt():
     sys.exit(0)
 else:
     print "Trove cook failed!"
-    sys.exit(jobId)
+    sys.exit(-1)
