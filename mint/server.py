@@ -299,11 +299,11 @@ class MintServer(object):
                 # let inner private-only calls pass
                 self._allowPrivate = True
 
-                if type(args[0]) == str and args[0].startswith("RBUILDER_CLIENT:"):
+                if args and type(args[0]) == str and args[0].startswith("RBUILDER_CLIENT:"):
                     clientVer = int(args[0].split(":")[1])
                     args = args[1:]
                 else:
-                    clientVer = 0
+                    clientVer = 1
 
                 self.clientVer = clientVer
                 r = method(*args)
@@ -541,7 +541,7 @@ class MintServer(object):
         if self.clientVer < SERVER_VERSIONS[0]:
             raise InvalidClientVersion(
                 'Invalid client version %s.  Server accepts client versions %s ' \
-                    % (clientVer, ', '.join(str(x) for x in SERVER_VERSIONS)))
+                    % (self.clientVer, ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
     # project methods
