@@ -10,6 +10,7 @@ import os
 import stat
 import sys
 import tempfile
+import md5
 
 import rephelp
 from mint_rephelp import MintRepositoryHelper
@@ -512,11 +513,14 @@ class DistroTest(MintRepositoryHelper):
             ii.isocfg.templatesLabel = "localhost@rpl:linux"
 
             self.addComponent("anaconda-templates:runtime", "1.0")
-            self.addCollection("anaconda-templates", "1.0",
-                [("anaconda-templates:runtime", True)])
+            tr = self.addCollection("anaconda-templates", "1.0",
+                 [("anaconda-templates:runtime", True)])
 
-            # this is the sha1 of the n/v/f combo for the anaconda-template trove
-            sha1 = "e4384dad64b952baeecb81d44894a1a7"
+            troveSpec = tr.getName() + '=' + str(tr.getVersion()) + '[' + \
+                        str(tr.getFlavor()) + ']'
+            # md5, actually
+            sha1 = md5.md5(troveSpec).hexdigest()
+
             util.mkdirChain(os.path.join(d, sha1))
 
             path = ii._getTemplatePath()
