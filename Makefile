@@ -56,9 +56,9 @@ main-dist: $(dist_files)
 	done;
 
 dist: productqualifier=-online
-dist: main-dist strip-raa tarball cvc-commit-message
+dist: main-dist strip-raa tarball version-file
 
-product: main-dist product-dist tarball cvc-commit-message
+product: main-dist product-dist tarball version-file
 
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/rbuilder/
@@ -73,10 +73,10 @@ install: all install-subdirs
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
 
-cvc-commit-message:
-	if [ -f rbuilder-cvc-ci.msg ]; then rm -f rbuilder-cvc-ci.msg; fi
-	echo "This is rBuilder $(VERSION)" > rbuilder-cvc-ci.msg
-	hg tip | egrep "^changeset" >> rbuilder-cvc-ci.msg
+version-file:
+	if [ -f VERSION ]; then rm -f VERSION; fi
+	echo "This is rBuilder $(VERSION)" > VERSION
+	hg tip | egrep "^changeset" >> VERSION
 
 BASEPATH=mintdoc
 REMOTEPATH=public_html/
