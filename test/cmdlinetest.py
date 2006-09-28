@@ -28,7 +28,7 @@ class CmdLineTest(MintRepositoryHelper):
         cfgFd, cfgFn = tempfile.mkstemp()
         try:
             cfgF = os.fdopen(cfgFd, "w")
-            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local:%d/xmlrpc-private/" % self.port)
+            cfgF.write("serverUrl http://testuser:testpass@test.rpath.local:%d/xmlrpc-private/" % self.port)
             cfgF.close()
 
             cmd += " --config-file=%s" % cfgFn
