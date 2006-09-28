@@ -19,7 +19,7 @@ from mint import buildtypes
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
-class CmdLineTest(unittest.TestCase):
+class CmdLineTest(MintRepositoryHelper):
     def checkRBuilder(self, cmd, fn, expectedArgs, cfgValues={},
                   returnVal=None, ignoreKeywords=False, **expectedKw):
         main = RBuilderMain()
@@ -28,8 +28,7 @@ class CmdLineTest(unittest.TestCase):
         cfgFd, cfgFn = tempfile.mkstemp()
         try:
             cfgF = os.fdopen(cfgFd, "w")
-            # this value doesn't really matter--just needs to be a parseable url
-            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local/xmlrpc-private/")
+            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local:%d/xmlrpc-private/" % self.port)
             cfgF.close()
 
             cmd += " --config-file=%s" % cfgFn
