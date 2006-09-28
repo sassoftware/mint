@@ -187,6 +187,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.fetchWithRedirect('/logout')
 
+        self.clearCookies()
+
         page = page.fetchWithRedirect('/')
 
         page = page.postForm(1, self.fetchWithRedirect,

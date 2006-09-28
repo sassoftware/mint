@@ -34,9 +34,9 @@
                             <td>
                                 <input type="text" name="branch" value="${kwargs['branch']}" />
                                 <p class="help">The default Conary branch name for your project.
-                                    A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. See
-                                    <a href="http://www.rpath.com/technology/techoverview/distributedversions.html#labels">
-                                        Labels and Branches</a> from the Conary technology whitepaper for more information.
+                                    A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. Refer to
+                                    <a href="http://wiki.rpath.com/wiki/Conary:Concepts">Conary Concepts</a>
+                                        for more information about branch names.
                                 </p>
                             </td>
                         </tr>
