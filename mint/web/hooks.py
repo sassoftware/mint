@@ -45,19 +45,6 @@ from conary.repository.transport import Transport
 
 BUFFER=1024 * 256
 
-def checkAuth(req, repos):
-    if not req.headers_in.has_key('Authorization'):
-        return None
-    else:
-        authToken = getHttpAuth(req)
-        if type(authToken) != tuple:
-            return authToken
-
-        if not repos.auth.checkUserPass(authToken):
-            return None
-
-    return authToken
-
 def post(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
@@ -243,7 +230,8 @@ def conaryHandler(req, cfg, pathInfo):
         dbName = repName.translate(mysqlTransTable)
         try:
             db.rollback() # roll back any hanging transactions
-            db.use(dbName)
+            if db.dbName != dbName:
+                db.use(dbName)
         except sqlerrors.DatabaseError:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
@@ -318,8 +306,10 @@ def conaryHandler(req, cfg, pathInfo):
     repo = repositories[repHash]
     shimRepo = shim_repositories[repHash]
 
+
     if method == "POST":
-        return post(port, secure, (repo, shimRepo), cfg, req)
+        rt = post(port, secure, (repo, shimRepo), cfg, req)
+        return rt
     elif method == "GET":
         return get(port, secure, (repo, shimRepo), cfg, req)
     elif method == "PUT":
@@ -393,22 +383,24 @@ cfg = None
 cfgMTime = 0
 db = None
 
+repNameCache = {}
 def getRepNameMap(db):
-    d = {}
+    global repNameCache
 
-    # wrap this in a try/except to avoid first-hit problems
-    # before RepNameMap even exists.
-    try:
-        if cfg.dbDriver != "sqlite":
-            db.use(cfg.dbPath.split("/")[-1])
-        cu = db.cursor()
-        cu.execute("SELECT fromName, toName FROM RepNameMap")
-        for r in cu.fetchall():
-            d.update({r[0]: r[1]})
-    except Exception, e:
-        apache.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
+    if not repNameCache:
+        # wrap this in a try/except to avoid first-hit problems
+        # before RepNameMap even exists.
+        try:
+            if cfg.dbDriver != "sqlite":
+                db.use(cfg.dbPath.split("/")[-1])
+            cu = db.cursor()
+            cu.execute("SELECT fromName, toName FROM RepNameMap")
+            for r in cu.fetchall():
+                repNameCache.update({r[0]: r[1]})
+        except Exception, e:
+            apache.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
 
-    return d
+    return repNameCache
 
 
 domainNameCache = {}
