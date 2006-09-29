@@ -396,6 +396,10 @@ class FixtureCache(object):
         db.commit()
         return cfg, { 'test': testId }
 
+    def __del__(self):
+        for f in self._fixtures.values():
+            util.rmtree(f[0].dataPath)
+
 
 class SqliteFixtureCache(FixtureCache):
     def newMintCfg(self, name):
@@ -428,10 +432,6 @@ class SqliteFixtureCache(FixtureCache):
 
     def delRepos(self):
         pass # this space left intentionally blank
-
-    def __del__(self):
-        for f in self._fixtures.values():
-            util.rmtree(f[0].dataPath)
 
 
 class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
@@ -551,6 +551,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
 
     def __del__(self):
         self.stop()
+        FixtureCache.__del__(self)
 
 
 class FixturedUnitTest(unittest.TestCase):
