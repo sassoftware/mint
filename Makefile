@@ -76,7 +76,7 @@ doc:
 version-file:
 	if [ -f VERSION ]; then rm -f VERSION; fi
 	echo "This is rBuilder $(VERSION)" > VERSION
-	hg tip | egrep "^changeset" >> VERSION
+	echo "(Changeset $(shell hg parents -v | grep changeset | cut -c14-))" >> VERSION
 
 BASEPATH=mintdoc
 REMOTEPATH=public_html/
