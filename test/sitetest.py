@@ -142,5 +142,11 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                       userId=?""", projectId, userId2)
         self.failUnless(cu.fetchone()[0], "Unable to add a new project member.")
         
+    def testInvalidSearch(self):
+        page = self.fetch('/search?type=Faketype&search=foobar',
+                          ok_codes = [200])
+
+        assert('Invalid search type specified.') in page.body
+
 if __name__ == "__main__":
     testsuite.main()
