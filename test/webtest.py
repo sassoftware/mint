@@ -770,6 +770,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testUploadKeyPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        page = self.assertContent('/uploadKey', code = [200],
+                               content = "you are not a member of any projects")
+        page = page.fetchWithRedirect('/logout')
+
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.assertContent('/uploadKey', code = [200],
@@ -779,6 +784,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertNotContent('/uploadKey', code = [200],
                                  content = "Permission Denied")
+
 
     def testUploadKey(self):
         keyFile = open(testsuite.archivePath + '/key.asc')

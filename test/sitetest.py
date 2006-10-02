@@ -85,6 +85,46 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                            content='apps/mint/images/next.gif',
                            code = [200])
 
+    def testEditUserSettings(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        page = page.fetch('/userSettings')
+        page = page.postForm(2, page.fetch, 
+                              {'password1': 'newpassword',
+                              'password2': 'newpasswordasdf'})
+        self.failIf('Passwords do not match.' not in page.body,
+                    'Nonmatching passwords accepted.')
+        page = page.fetch('/userSettings')
+        page = page.postForm(2, page.fetch, 
+                              {'password1': 'new',
+                              'password2': 'new'})
+        self.failIf('Password must be 6 characters or longer.' not in page.body,
+                    'Nonmatching passwords accepted.')
+        page = page.fetch('/userSettings')
+        page = page.postForm(2, page.post,
+                              {'displayEmail': 'display@newemail.com',
+                              'fullName': 'Foo B. Bar',
+                              'blurb': 'blah blah blah'})
+        cu = self.db.cursor()
+        cu.execute("""SELECT displayEmail, fullName, blurb FROM users WHERE
+                      userId=?""", userId)
+        res = cu.fetchall()
+        self.failUnless(res == [('display@newemail.com', 'Foo B. Bar', 
+                                'blah blah blah')],
+                        "User setting did not update properly.")
+        page = page.fetch('/userSettings')
+        page = page.postForm(2, page.fetch, 
+                              {'password1': 'newpassword',
+                              'password2': 'newpassword'})
+        page = self.webLogin('foouser', 'newpassword')
+        self.failIf('logout' not in page.body,
+                    'Failed to change user password.')
+
+        page = page.fetchWithRedirect('/userSettings')
+        page = page.postForm(2, page.fetch, 
+                             {'email': 'foo@newemail.com'})
+        self.failIf('Please follow the directions in your confirmation email to complete the update process.' not in page.body,
+                    'Unable to update user e-mail.')
 
 if __name__ == "__main__":
     testsuite.main()
