@@ -470,10 +470,10 @@ Much like Powdermilk Biscuits[tm]."""
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
     def testProductUserTemplates(self):
-        import sys
         sys.path.insert(0, "../product/datatemplates/")
         import usertemplates
         self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
+        sys.path.pop(0)
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
