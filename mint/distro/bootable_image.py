@@ -165,6 +165,7 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
             self.timeStamp = curTime
 
     def __init__(self, status):
+        self.exceptions = []
         self.abortEvent = None
         self.status = status
         self.restored = 0
