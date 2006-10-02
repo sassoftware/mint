@@ -405,12 +405,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
 
-    def tearDown(self):
-        self.db.close()
-
         # reset some caches
         hooks.repNameCache = {}
         hooks.domainNameCache = {}
+
+    def tearDown(self):
+        self.db.close()
 
         rephelp.RepositoryHelper.tearDown(self)
 
