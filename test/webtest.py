@@ -1524,6 +1524,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                         'Visible project was hidden.')
         self.failIf('testproject' in page.body,
                         'Hidden project was visible.')
+        self.assertContent('/userInfo?id=1000', 'Please go back and try again')
 
     def testBrokenDownloadUrl(self):
         # for some reason lots of people do this and used to trigger a traceback:
