@@ -148,5 +148,15 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
 
         assert('Invalid search type specified.') in page.body
 
+    def testCancelAccount(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        self.assertContent('/cancelAccount', 
+                           content='Are you sure you want to close your account?',
+                           code=[200])
+        self.assertNotContent('/cancelAccount?confirmed=1', 
+                           content='Are you sure you want to close your account?',
+                           code=[301])
+
 if __name__ == "__main__":
     testsuite.main()
