@@ -6,8 +6,8 @@
 #
 
 import testsuite
-import unittest
 testsuite.setup()
+import unittest
 
 from mint.web import webhandler
 

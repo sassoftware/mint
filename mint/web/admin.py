@@ -238,9 +238,6 @@ class AdminHandler(WebHandler):
         return self._write('admin/external', firstTime = firstTime,
                 kwargs = kwargs)
 
-    def removeExternal(self, *args, **kwargs):
-        return self._write('admin/removeExternal')
-
     def jobs(self, *args, **kwargs):
         try:
             enableToggle = True
