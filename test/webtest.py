@@ -308,6 +308,54 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf("Your account has now been confirmed." not in page.body,
                     "Confirmation Failed")
 
+        page = self.fetchWithRedirect('/register')
+        page = page.postForm(1, page.post,
+                {'newUsername':  '',
+                 'password':  '',
+                 'password2': '',
+                 'email':     '',
+                 'email2':    '',
+                 'tos':       '',
+                 'privacy':   ''})
+        self.failIf('You must supply a username.' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('You must supply a valid e-mail address.' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('Password field left blank.' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('Password must be 6 characters or longer.' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('You must accept the Terms of Service' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('You must accept the Privacy Policy' not in page.body,
+                    'Registration error not detected.')
+
+        page = self.fetchWithRedirect('/register')
+        page = page.postForm(1, page.post,
+                {'newUsername':  'foo',
+                 'password':  'pass1',
+                 'password2': 'pass2',
+                 'email':     'email1',
+                 'email2':    'email2',
+                 'tos':       'True',
+                 'privacy':   'True'})
+        self.failIf('Email fields do not match.' not in page.body,
+                    'Registration error not detected.')
+        self.failIf('Passwords do not match.' not in page.body,
+                    'Registration error not detected.')
+
+        page = self.fetchWithRedirect('/register')
+        page = page.postForm(1, page.post,
+                {'newUsername':  'foouser',
+                 'password':  'passwd1',
+                 'password2': 'passwd1',
+                 'email':     'email1',
+                 'email2':    'email1',
+                 'tos':       'True',
+                 'privacy':   'True'})
+        self.failIf('An account with that username already exists.' not in page.body,
+                    'Registration error not detected.')
+
     def testLoginRedirect(self):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
