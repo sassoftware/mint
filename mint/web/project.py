@@ -34,6 +34,7 @@ from conary.deps import deps
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
+from conary.errors import TroveNotFound
 
 def getUserDict(members):
     users = { userlevels.USER: [],
@@ -124,6 +125,7 @@ class ProjectHandler(WebHandler):
         return self._write("builds", builds = builds,
                 buildsInProgress = buildsInProgress)
 
+    @writersOnly
     def groups(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedBuilds = [x for x in builds if x.getPublished()]
@@ -170,10 +172,10 @@ class ProjectHandler(WebHandler):
                     'group-gnome':          'The GNOME desktop environment.',
                     'group-kde':            'The KDE desktop environment.',
                     'group-netserver':      'Network servers, tools, and support.',
-                    'group-xorg':           'The X.org windowing system.',
-                    'group-compat32':       '32 bit compatibility packages. (for 64 bit systems)'}
+                    'group-xorg':           'The X.org windowing system.'}
         return troveNames, troveDict, metadata
 
+    @writersOnly
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
 
@@ -183,6 +185,7 @@ class ProjectHandler(WebHandler):
 
     @strFields(groupName = "", version = "", description = "")
     @listFields(str, initialTrove = [])
+    @writersOnly
     def createGroup(self, auth, groupName, version, description, initialTrove):
         fullGroupName = "group-" + groupName
 
@@ -214,6 +217,7 @@ class ProjectHandler(WebHandler):
                 troves = troves, troveDict = troveDict, metadata = metadata)
 
     @intFields(id = None)
+    @writersOnly
     def editGroup(self, auth, id):
         curGroupTrove = self.client.getGroupTrove(id)
         self.session['groupTroveId'] = id
@@ -229,6 +233,7 @@ class ProjectHandler(WebHandler):
     @intFields(id = None)
     @strFields(version = None, description = '')
     @listFields(str, components = [])
+    @writersOnly
     def editGroup2(self, auth, id, version, description, components, **kwargs):
         curGroupTrove = self.client.getGroupTrove(id)
 
@@ -250,6 +255,7 @@ class ProjectHandler(WebHandler):
         self._predirect("editGroup?id=%d" % id)
 
     @strFields(referer = None)
+    @writersOnly
     def closeCurrentGroup(self, auth, referer):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
@@ -258,6 +264,7 @@ class ProjectHandler(WebHandler):
 
     @dictFields(yesArgs = {})
     @boolFields(confirmed=False)
+    @writersOnly
     def deleteGroup(self, auth, confirmed, **yesArgs):
         if 'id' not in yesArgs:
             raise HttpForbidden
@@ -274,34 +281,41 @@ class ProjectHandler(WebHandler):
     @intFields(id=None)
     @strFields(trove=None, version='', flavor='', referer='', projectName = '')
     @boolFields(versionLock=False)
+    @writersOnly
     def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock, projectName):
         curGroupTrove = self.client.getGroupTrove(id)
         if version != '':
             curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
         else:
-            curGroupTrove.addTroveByProject(trove, projectName, '', '', versionLock, False, False)
+            try:
+                curGroupTrove.addTroveByProject(trove, projectName, '', '', versionLock, False, False)
+            except TroveNotFound, e:
+                self._addErrors("Trove not found: %s" % trove)
         if not referer:
-            referer = project.getUrl()
+            referer = self.project.getUrl()
             self._redirect(referer)
         self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id=None, troveId=None)
     @strFields(referer='')
+    @writersOnly
     def deleteGroupTrove(self, auth, id, troveId, referer):
         """Remove a trove from a group trove."""
         curGroupTrove = self.client.getGroupTrove(id)
         curGroupTrove.delTrove(troveId)
         if not referer:
-            referer = project.getUrl()
+            referer = self.project.getUrl()
             self._redirect(referer)
         self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id = None)
+    @writersOnly
     def pickArch(self, auth, id):
         return self._write("pickArch", groupTroveId = id)
 
     @intFields(id = None)
     @listFields(str, flavor = ['1#x86'])
+    @writersOnly
     def cookGroup(self, auth, flavor, id):
         curGroupTrove = self.client.getGroupTrove(id)
 
@@ -375,7 +389,7 @@ class ProjectHandler(WebHandler):
             self._predirect("build?id=%d" % buildId)
 
 
-    @requiresAuth
+    @writersOnly
     @intFields(buildId = None)
     @strFields(distTroveSpec = "", name = "", desc = "", action = "save")
     def saveBuild(self, auth, buildId, distTroveSpec, name, desc, action, **kwargs):
