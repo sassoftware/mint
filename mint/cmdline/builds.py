@@ -3,7 +3,7 @@
 #
 # All rights reserved
 #
-import os
+import os, sys
 import time
 import textwrap
 import urlparse
@@ -135,6 +135,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
         job = client.startImageJob(build.id)
         print "BUILD_ID=%d" % (build.id)
+        sys.stdout.flush()
         if wait:
             waitForBuild(client, build.id)
         return build.id
@@ -179,4 +180,5 @@ class BuildUrlCommand(commands.RBuilderCommand):
                     urlBase = "http://%s/%s/downloadImage?fileId=%%d" % \
                         (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
                 print urlBase % (file['fileId'])
+                sys.stdout.flush()
 commands.register(BuildUrlCommand)
