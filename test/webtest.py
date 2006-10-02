@@ -473,6 +473,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         assert('Search Results:') in page.body
 
+    def testSearchUsers(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.fetch('/search?type=Users&search=foouser',
+                          ok_codes = [200])
+
+        assert('Search Results:') in page.body
+
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
