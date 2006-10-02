@@ -11,7 +11,7 @@ import os
 import stat
 import subprocess
 
-from conary.lib import util
+from conary.lib import util, coveragehook
 from conary.lib import sha1helper
 from conary.repository.netrepos import netserver
 
@@ -67,6 +67,11 @@ class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
 
         resp = simplejson.dumps(method(*args[1]))
         self.wfile.write(resp)
+
+    def handle_one_request(self):
+        coveragehook.install()
+        BaseHTTPServer.BaseHTTPRequestHandler.handle_one_request(self)
+        coveragehook.save()
 
 
 class CopyThread(threading.Thread):

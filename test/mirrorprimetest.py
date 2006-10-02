@@ -17,7 +17,7 @@ import time
 import BaseHTTPServer
 testsuite.setup()
 
-from conary.lib import util
+from conary.lib import util, coveragehook
 
 from mint_rephelp import MintRepositoryHelper
 from mint import server
@@ -43,6 +43,7 @@ class MirrorPrimeTest(unittest.TestCase):
 
         self.primePid = os.fork()
         if not self.primePid:
+            coveragehook.install()
             fd = os.open(os.devnull, os.W_OK)
             os.dup2(fd, sys.stdout.fileno())
             os.dup2(fd, sys.stderr.fileno())
@@ -54,7 +55,10 @@ class MirrorPrimeTest(unittest.TestCase):
             mirrorprime.targetPath = self.tmpPath
 
             httpd = BaseHTTPServer.HTTPServer(('', self.primePort), mirrorprime.TarHandler)
-            httpd.serve_forever()
+
+            while 1:
+                httpd.handle_request()
+                coveragehook.save()
 
         ready = False
         tries = 0
