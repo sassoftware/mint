@@ -126,5 +126,21 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('Please follow the directions in your confirmation email to complete the update process.' not in page.body,
                     'Unable to update user e-mail.')
 
+    def testAddMemberById(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        client2, userId2 = self.quickMintUser('baruser','barpass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        projectId2 = client2.newProject('Bar', 'bar', MINT_PROJECT_DOMAIN)
+        page = self.webLogin('foouser', 'foopass')
+        self.assertContent('/addMemberById?userId=%s&projectId=%s&level=0'\
+                          % (userId2, projectId2),
+                          content="Permission Denied",
+                          code=[200])
+        self.fetch('/addMemberById?userId=%s&projectId=%s&level=0' % (userId2, projectId))
+        cu = self.db.cursor()
+        cu.execute("""SELECT COUNT(*) FROM projectusers WHERE projectId=? AND
+                      userId=?""", projectId, userId2)
+        self.failUnless(cu.fetchone()[0], "Unable to add a new project member.")
+        
 if __name__ == "__main__":
     testsuite.main()
