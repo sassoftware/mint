@@ -13,6 +13,7 @@ import urlparse
 
 from webunit import webunittest
 
+from mint.web import hooks
 from mint import config
 from mint import cooktypes, buildtypes
 from mint import dbversion
@@ -406,7 +407,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def tearDown(self):
         self.db.close()
-        #self.servers.getServer().stop()
+
+        # reset some caches
+        hooks.repNameCache = {}
+        hooks.domainNameCache = {}
+
         rephelp.RepositoryHelper.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
