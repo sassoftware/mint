@@ -24,7 +24,7 @@ extra_dist = \
 	multi-jobserver.init.in	\
         cleanup-bindmounts.init.in
 
-SUBDIRS = data DiskImageData
+SUBDIRS = data DiskImageData mailman
 
 CFLAGS=-Wall -s -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 LDFLAGS=
