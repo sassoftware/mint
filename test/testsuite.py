@@ -3,7 +3,6 @@
 #
 # Copyright (c) 2004-2006 rPath, Inc.
 #
-syntax error here
 
 import bdb
 import cPickle
