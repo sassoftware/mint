@@ -470,9 +470,9 @@ Much like Powdermilk Biscuits[tm]."""
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
     def testProductUserTemplates(self):
-        import imp
-        f = file("../product/datatemplates/usertemplates.py", "r")
-        usertemplates = imp.load_module("usertemplates", f, "usertemplates.py", ('.py', 'r', imp.PY_SOURCE))
+        import sys
+        sys.path.insert(0, "../product/datatemplates/")
+        import usertemplates
         self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
 
 
