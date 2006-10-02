@@ -312,6 +312,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.failIf("Your account has now been confirmed." not in page.body,
                     "Confirmation Failed")
+        page = self.assertCode("/confirm?id=%s" % conf, code = 200)
+        self.failIf("Your account has already been confirmed." not in page.body,
+                    "Multiple confirmations allowed.")
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
