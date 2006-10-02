@@ -86,6 +86,7 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.prefix = prefix
 
     def __init__(self, status):
+        self.exceptions = []
         self.abortEvent = None
         self.status = status
         self.restored = 0
