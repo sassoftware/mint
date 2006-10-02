@@ -301,11 +301,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client = self.openMintClient()
 
         # Test the registerComplete page
-        import re
-        completeUrl = re.search('href="(.+)"', page.body)
-        url = completeUrl.groups()[0]
-        url = url.replace('http', 'https')
-        self.assertContent(url, 'Thank you for registering', [200])
+        page = self.fetchWithRedirect('/registerComplete')
+        self.failIf('Thank you for registering' not in page.body,
+                    'registerComplete failed')
 
         conf = client.server._server.getConfirmation('foouser')
         self.failIf(not conf, "Registration didn't add confirmation entry")
