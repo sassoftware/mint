@@ -1507,10 +1507,23 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testUserInfo(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
+        client2, userId2 = self.quickMintUser('foouser', 'foopass')
         self.webLogin('testuser', 'testpass')
 
         page = self.assertContent("/userInfo?id=%d" % userId, code = [200],
             content = 'test at example.com')
+
+        projectId1 = client2.newProject("Foo", "testproject",
+                                        MINT_PROJECT_DOMAIN)
+        projectId2 = client2.newProject("Bar", "Barproject", 
+                                        MINT_PROJECT_DOMAIN)
+        adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
+        adminClient.hideProject(projectId1)
+        page = self.fetch('/userInfo?id=%d' % userId2)
+        self.failUnless('Barproject' in page.body,
+                        'Visible project was hidden.')
+        self.failIf('testproject' in page.body,
+                        'Hidden project was visible.')
 
     def testBrokenDownloadUrl(self):
         # for some reason lots of people do this and used to trigger a traceback:
