@@ -10,19 +10,18 @@ import testsuite
 import unittest
 testsuite.setup()
 
-import fixtures
-import mint_rephelp
-
-from conary import versions
-from repostest import testRecipe
-
-# define this BEFORE importing mint.web.setup (or else!)
+# define this BEFORE ANYTHING ELSE rbuilder/conary related
 from mint import config
 config.RBUILDER_CONFIG = '/dev/null'
 
 from mint.web import setup
 from mint.web.webhandler import HttpForbidden, HttpNotFound, HttpMoved
 
+from conary import versions
+from repostest import testRecipe
+
+import fixtures
+import mint_rephelp
 
 class FakeRequest(object):
     __slots__ = [ 'err_headers_out', 'hostname', 'headers_in',
