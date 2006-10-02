@@ -1584,6 +1584,36 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.assertCode("/rss?feed=newProjects", code = 200)
 
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Bar', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        fileId = build.getFiles()[0]['fileId']
+        localUrlId = build.getFiles()[0]['fileUrls'][0][0]
+        build.addFileUrl(fileId, urltypes.AMAZONS3,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
+        build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
+                'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+
+        release = client.newPublishedRelease(projectId)
+        release.name = "Foo Fighters"
+        release.version = "0.1"
+        release.addBuild(build.id)
+        release.save()
+        release.publish()
+        
+        self.assertContent('/rss?feed=newReleases', 
+                           content='Kung Foo Fighting (x86 Stub)&lt',
+                           code=[200])
+        self.assertCode('/rss?feed=fakeFeed', code=404)
+
 
 if __name__ == "__main__":
     testsuite.main()
