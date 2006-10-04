@@ -128,7 +128,6 @@ class BuildCreateCommand(commands.RBuilderCommand):
                 "All parts must be fully specified. Use conary rq --full-versions --flavors <trove name>\n" \
                 "to find a valid trove spec."
 
-        assert(n and v and f is not None)
         v = versions.VersionFromString(v, timeStamps = [0.0])
         v.resetTimeStamps([0.0])
         build.setTrove(n, v.freeze(), f.freeze())
