@@ -523,7 +523,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
 
         # restore the mint db into a unique copy
         fixtureMintDbName = "mf%s" % name
-        fixtureCopyMintDbName = "cmf%s%s" % (name, randomDbName)
+        fixtureCopyMintDbName = "cmf_%s%s" % (name, randomDbName)
         self._dupDb(fixtureMintDbName, fixtureCopyMintDbName)
         testCfg.dbPath = self._getConnectStringForDb(fixtureCopyMintDbName)
 
