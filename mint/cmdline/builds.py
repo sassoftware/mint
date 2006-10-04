@@ -123,6 +123,11 @@ class BuildCreateCommand(commands.RBuilderCommand):
         build = client.newBuild(project.id, project.name)
 
         n, v, f = parseTroveSpec(troveSpec)
+        if not (n and v and f is not None):
+            raise RuntimeError, "Please specify a full trove spec in the form: <trove name>=<version>[<flavor>]\n" \
+                "All parts must be fully specified. Use conary rq --full-versions --flavors <trove name>\n" \
+                "to find a valid trove spec."
+
         assert(n and v and f is not None)
         v = versions.VersionFromString(v, timeStamps = [0.0])
         v.resetTimeStamps([0.0])
