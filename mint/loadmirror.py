@@ -6,7 +6,50 @@
 from mint import config, client, database
 from conary.lib import util
 from conary.repository.netrepos import netserver
+
+import re
 import os
+
+def getFsLabel(dev):
+    f = os.popen("/sbin/dumpe2fs -h %s" % dev, "r")
+    label = None
+    for x in f.readlines():
+        if x.startswith("Filesystem volume name:"):
+            label = x.split(":")[1].strip()
+
+    f.close()
+    return label
+
+def getMountPoints(filter = "sd"):
+    f = open("/proc/partitions", "r")
+
+    partitions = []
+    partLine = re.compile(".*(%s\w+\d+)" % filter)
+
+    for x in f.readlines():
+        match = partLine.match(x.strip())
+        if match:
+            partitions.append(match.groups()[0])
+
+    f.close()
+    return ['/dev/' + x for x in partitions]
+
+class NoMirrorLoadDiskFound(Exception):
+    def __str__(self):
+        return "No mirror-load disk was found attached to your appliance."
+
+def mountMirrorLoadDrive():
+    dev = None
+    for x in getMountPoints():
+        if getFsLabel(x) == "MIRRORLOAD":
+            dev = x
+            break
+
+    if dev:
+        util.mkdirChain("/mnt/mirror")
+        os.system("mount %s /mnt/mirror" % dev)
+    else:
+        raise NoMirrorLoadDiskFound
 
 class LoadMirror:
     client = None
