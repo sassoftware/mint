@@ -42,6 +42,7 @@ python_files =			\
 	requests.py		\
 	rmakebuild.py		\
 	rmakeconstants.py	\
+	schema.py		\
 	scriptlibrary.py	\
 	searcher.py		\
 	selections.py		\
