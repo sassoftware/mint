@@ -1,0 +1,39 @@
+Filesystem volume name:   MIRRORLOAD
+Last mounted on:          <not available>
+Filesystem UUID:          5b624343-4bfa-48f9-8f98-597a085217f2
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal filetype needs_recovery sparse_super
+Default mount options:    (none)
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              30539776
+Block count:              61049000
+Reserved block count:     3052450
+Free blocks:              60082003
+Free inodes:              30539602
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         16384
+Inode blocks per group:   512
+Filesystem created:       Thu Aug 17 22:49:32 2006
+Last mount time:          Thu Oct  5 15:22:44 2006
+Last write time:          Thu Oct  5 15:22:44 2006
+Mount count:              6
+Maximum mount count:      30
+Last checked:             Thu Aug 17 22:49:32 2006
+Check interval:           15552000 (6 months)
+Next check after:         Tue Feb 13 21:49:32 2007
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:		  128
+Journal inode:            8
+Default directory hash:   tea
+Directory Hash Seed:      2d7011c5-36d2-4462-98f3-767e7ee155eb
+Journal backup:           inode blocks
+
