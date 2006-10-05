@@ -20,8 +20,8 @@ def getFsLabel(dev):
     f.close()
     return label
 
-def getMountPoints(filter = "sd"):
-    f = open("/proc/partitions", "r")
+def getMountPoints(filter = "sd", source = "/proc/partitions"):
+    f = open(source, "r")
 
     partitions = []
     partLine = re.compile(".*(%s\w+\d+)" % filter)

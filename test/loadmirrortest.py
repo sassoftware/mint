@@ -14,9 +14,10 @@ from mint import loadmirror
 import fixtures
 from conary.lib import util
 
+import sys
 import os
 
-class LoadMirrorTest(fixtures.FixturedUnitTest):
+class LoadMirrorFixturedTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testErrors(self, db, data):
         loader = loadmirror.LoadMirror(None, None)
@@ -57,6 +58,29 @@ class LoadMirrorTest(fixtures.FixturedUnitTest):
             self.failUnlessEqual(loader.parseMirrorInfo('test.example.com'), 42)
         finally:
             util.rmtree(loader.sourceDir)
+
+
+class LoadMirrorUnitTest(unittest.TestCase):
+    def setUp(self):
+        # find archiveDir
+        for dir in sys.path:
+            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
+            if os.path.isdir(thisdir):
+                self.archiveDir = thisdir
+                break
+
+    def testGetMountPoints(self):
+        points = loadmirror.getMountPoints(source = self.archiveDir + "/partitions")
+        self.failUnlessEqual(['/dev/sda1'], points)
+
+    def testGetFsLabel(self):
+        def mockPopen(path, mode):
+            return open(self.archiveDir + "/dumpe2fs", "r")
+
+        oldPopen = os.popen
+        os.popen = mockPopen
+        self.failUnlessEqual('MIRRORLOAD', loadmirror.getFsLabel(None))
+        os.popen = oldPopen
 
 
 if __name__ == "__main__":
