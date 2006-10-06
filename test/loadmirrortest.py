@@ -116,6 +116,10 @@ class LoadMirrorUnitTest(unittest.TestCase):
         loadmirror.mountMirrorLoadDrive(source = self.archiveDir + "/partitions")
         self.failUnlessEqual(callLog, ['umount /dev/sda1', 'mount /dev/sda1 /mnt/mirror/'])
 
+        self.assertRaises(loadmirror.NoMirrorLoadDiskFound,
+            loadmirror.mountMirrorLoadDrive, source = self.archiveDir + "/partitions-missing")
+
+
 
 if __name__ == "__main__":
     testsuite.main()
