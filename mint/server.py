@@ -802,11 +802,11 @@ class MintServer(object):
             except TypeError:
                 raise database.ItemNotFound("username")
             repos = self._getProjectRepo(project)
-            repos.addUserByMD5(project.getFQDN(), username, salt, password)
-            repos.addAcl(project.getFQDN(), username, None, None,
+            repos.addUserByMD5(project.getLabel(), username, salt, password)
+            repos.addAcl(project.getLabel(), username, None, None,
                          level in userlevels.WRITERS, False,
                          self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(project.getFQDN(), username,
+            repos.setUserGroupCanMirror(project.getLabel(), username,
                                         int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
