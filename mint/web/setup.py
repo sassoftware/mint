@@ -15,7 +15,7 @@ from mod_python import apache
 
 from mint import mint_error
 from mint import shimclient
-from mint.config import RBUILDER_CONFIG
+from mint.config import RBUILDER_GENERATED_CONFIG
 from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 
@@ -35,8 +35,29 @@ configGroups = {
         ('externalPasswordURL', 'authCacheTimeout'),
 }
 
+# these are keys that are generated for the "generated" configuration file
+keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
+                           'companyName', 'corpSite', 'defaultBranch',
+                           'projectDomainName', 'externalDomainName', 'SSL',
+                           'secureHost', 'bugsEmail', 'adminMail',
+                           'externalPasswordURL', 'authCacheTimeout' ]
+
 
 class SetupHandler(WebHandler):
+
+    def _generateConfig(self, cfg):
+        """ Write the generated configuration file using only the keys
+            listed in keysForGeneratedConfig. """
+
+        assert(self.req)
+        genCfgPath = self.req.get_options().get('generatedConfigFile',
+                RBUILDER_GENERATED_CONFIG)
+        self.req.log_error("writing new configuration to %s" % genCfgPath)
+        f = file(genCfgPath, 'w')
+        for k in keysForGeneratedConfig:
+            cfg.displayKey(k, out = f)
+        f.close()
+
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -156,11 +177,10 @@ class SetupHandler(WebHandler):
             mintClient.promoteUserToAdmin(userId)
             self.req.log_error("promoted %d to admin" % userId)
 
-        cfg = file(RBUILDER_CONFIG, 'w')
-        newCfg.display(out = cfg)
-        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
-        self.req.log_error("+ sudo killall -USR1 httpd")
+
+        self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
+
         return self._write("setup/saved")
 
     def config(self, auth):
@@ -171,14 +191,10 @@ class SetupHandler(WebHandler):
         return buf.getvalue()
 
     def restart(self, auth):
-        self.cfg.configured = True
 
-        cfg = file(RBUILDER_CONFIG, 'w')
-        self.cfg.display(out = cfg)
-        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
-        self.req.log_error("+ sudo killall -USR1 httpd")
-        self.req.log_error("+ sudo /sbin/service multi-jobserver restart")
-
+        newCfg = self._copyCfg()
+        newCfg.configured = True
+        self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
         os.system("sudo /sbin/service multi-jobserver restart")
         time.sleep(5)

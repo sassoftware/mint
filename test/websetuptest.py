@@ -5,17 +5,23 @@
 # All Rights Reserved
 #
 
-import os
 import testsuite
 import unittest
 testsuite.setup()
 
+import copy
+import os
+import time
+
 from mint import config
 
+from mint import shimclient
 from mint.web import setup
 from mint.web.webhandler import HttpForbidden, HttpNotFound, HttpMoved
 
 from conary import versions
+from conary.lib import util
+
 from repostest import testRecipe
 
 import fixtures
@@ -23,7 +29,8 @@ import mint_rephelp
 
 class FakeRequest(object):
     __slots__ = [ 'err_headers_out', 'hostname', 'headers_in',
-            'headers_out', 'method', 'error_logged', 'content_type']
+            'headers_out', 'method', 'error_logged', 'content_type',
+            'options']
 
     def __init__(self, hostname, methodname, filename):
         self.method = methodname
@@ -33,9 +40,13 @@ class FakeRequest(object):
         self.err_headers_out = {}
         self.error_logged = False
         self.content_type = 'text/xhtml'
+        self.options = {}
 
     def log_error(self, msg):
         self.error_logged = True
+
+    def get_options(self):
+        return self.options
 
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testFirstTimeSetupRedirect(self):
@@ -67,6 +78,12 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
     def __system(*args):
         return 0
 
+    def __sleep(*args):
+        return 0
+
+    def __ShimMintClient(*args):
+        return FakeMintClient(*args)
+
     def setUp(self):
         self.sh = setup.SetupHandler()
         self.sh.cfg = config.MintConfig()
@@ -74,11 +91,16 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.sh.cfg.externalDomainName = 'test.local'
         self.sh.cfg.siteDomainName = 'test.local'
         self.sh.cfg.configured = False
+
         self.oldsystem = os.system
         os.system = self.__system
 
+        self.oldsleep = time.sleep
+        time.sleep = self.__sleep
+
     def tearDown(self):
         os.system = self.oldsystem
+        time.sleep = self.oldsleep
 
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Full")
@@ -130,7 +152,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testSetupConfig(self, db, data):
         """ Test configuration generation """
-        self.sh.req = FakeRequest('foo.testl.local', 'GET', '/config')
+        self.sh.req = FakeRequest('foo.test.local', 'GET', '/config')
         client = self.getClient('admin')
         auth = client.checkAuth()
         context = {'auth': auth, 'cmd': 'config', 'client': client}
@@ -141,17 +163,20 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")
     def testProcessSetupAndRestart(self, db, data):
-        raise testsuite.SkipTestException("need to make this not clobber /srv/rbuilder/rbuilder.conf")
         """ Test process setup"""
         fields = { 'hostName': 'foo',
                    'siteDomainName': 'rpath.local',
+                   'corpSite': 'http://foo.bar.baz',
+                   'defaultBranch': 'foo:bar',
                    'new_username': 'fooadmin',
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
                    'new_password2': 'foopass' }
 
+        generatedConfigFilePath = os.path.join(self.cfg.dataPath, 'rbuilder-generated.conf')
         self.sh.req = FakeRequest('foo.rpath.local', 'GET', '/processSetup')
-        self.sh.cfg = self.cfg
+        self.sh.req.options = { 'generatedConfigFile': generatedConfigFilePath }
+        self.sh.cfg = copy.deepcopy(self.cfg)
         self.sh.cfg.configured = False
         client = self.getClient('admin')
         auth = client.checkAuth()
@@ -160,9 +185,27 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         ret = func(auth = auth, **fields)
         self.failUnless('<h1>rBuilder Configuration Complete</h1>' in ret)
 
+        # fake the include file here
+        newCfg = copy.deepcopy(self.cfg)
+        newCfg.includeConfigFile(generatedConfigFilePath)
+        self.sh.cfg = newCfg
         context = {'auth': auth, 'cmd': 'restart', 'client': client}
         func = self.sh.handle(context)
         self.assertRaises(HttpMoved, func, auth)
+
+        del newCfg
+
+        self.failUnless(os.path.exists(generatedConfigFilePath))
+        newCfg = config.MintConfig()
+        newCfg.read(generatedConfigFilePath)
+
+        # check stuff
+        self.assertEqual(newCfg.configured, True)
+        self.assertEqual(newCfg.hostName, 'foo')
+        self.assertEqual(newCfg.siteDomainName, 'rpath.local')
+        self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
+        self.assertEqual(newCfg.defaultBranch, 'foo:bar')
+
 
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")

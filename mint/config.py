@@ -15,6 +15,7 @@ from conary.conarycfg import ConfigFile
 from conary.lib import cfgtypes
 
 RBUILDER_CONFIG = "/srv/rbuilder/rbuilder.conf"
+RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
