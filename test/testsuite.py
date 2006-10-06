@@ -21,6 +21,8 @@ import unittest
 archivePath = None
 testPath = None
 
+EXCLUDED_PATTERNS = [ 'test', 'scripts', 'schema.py' ]
+
 #from pychecker import checker
 
 portstart = 60000
@@ -93,7 +95,7 @@ class LogFilter:
         """
 	if self.records == None or self.records == []:
 	    if records:
-		raise AssertionError, "unexpected log messages"
+		raise AssertionError, "expected log messages, none found"
 	    return
         if type(records) is str:
             records = (records,)
@@ -107,7 +109,8 @@ class LogFilter:
                 raise AssertionError, "expected log messages do not match: '%s' != '%s'" %(self.records[num], record)
         self.records = []
 
-    def _compare(self, desiredList, cmpFn, allowMissing = False):
+    def _compare(self, desiredList, cmpFn, allowMissing = False,
+                 originalRecords = None):
         """
         compares stored log messages against a sequence of messages and
         resets the filter.  order does not matter.
@@ -116,11 +119,15 @@ class LogFilter:
 	    if desiredList:
 		raise AssertionError, "unexpected log messages"
 	    return
+
+        if originalRecords is None:
+            originalRecords = desiredList
+
         if not allowMissing and len(desiredList) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
 
         matched = [ False ] * len(self.records)
-        for desired in desiredList:
+        for j, desired in enumerate(desiredList):
             match = False
             for i, record in enumerate(self.records):
                 if cmpFn(record, desired):
@@ -129,7 +136,7 @@ class LogFilter:
 
             if not match:
                 raise AssertionError, \
-                        "expected log message not found: '%s'" % record
+                        "expected log message not found: '%s'" % originalRecords[j]
 
         if not allowMissing and False in matched:
             record = self.records[matched.index(False)]
@@ -150,7 +157,8 @@ class LogFilter:
 
         regexps = [ re.compile(x) for x in records ]
         return self._compare(regexps,
-                 lambda actual, regexp: regexp.match(actual) is not None)
+                 lambda actual, regexp: regexp.match(actual) is not None,
+                 originalRecords = records)
 
 conaryDir = None
 _setupPath = None
@@ -161,6 +169,9 @@ def setup():
     global testPath
     global archivePath
 
+    if not os.environ.has_key('CONARY_PATH'):
+	print "please set CONARY_PATH"
+	sys.exit(1)
     # set default CONARY_POLICY_PATH is it was not set.
     conaryPolicy = os.getenv('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
     os.environ['CONARY_POLICY_PATH'] = conaryPolicy
@@ -174,9 +185,6 @@ def setup():
         sys.path.insert(0, mintPath)
     # end setting default MINT_PATH/CONARY_POLICY_PATH
 
-    if not os.environ.has_key('CONARY_PATH'):
-	print "please set CONARY_PATH"
-	sys.exit(1)
     paths = (os.environ['MINT_PATH'], os.environ['MINT_PATH'] + '/test',
              os.environ['CONARY_PATH'],
              os.path.normpath(os.environ['CONARY_PATH'] + "/../rmake"),
@@ -700,8 +708,11 @@ def main(*args, **keywords):
 
     global _individual
     _individual = True
-    if '--coverage' in sys.argv:
-        runCoverage()
+    if '--coverage' in sys.argv or '--patch-coverage' in sys.argv:
+        resume = '--resume' in sys.argv
+        if resume:
+            sys.argv.remove('--resume')
+        runCoverage(resume=resume)
         return
 
     statFile = None
@@ -760,40 +771,53 @@ failed:    %s
       (results.erroredTests + results.failedTests)))
 
 
-def runCoverage():
+def runCoverage(resume=False):
     import coveragewrapper
     environ = coveragewrapper.getEnviron()
-    idx = sys.argv.index('--coverage')
 
     if '--stat-file' in sys.argv:
         argLoc = sys.argv.index('--stat-file')
         statFile = sys.argv[argLoc + 1]
     else:
         statFile = None
+
+    if '--patch-coverage' in sys.argv:
+        patchCoverage = True
+        sys.argv.remove('--patch-coverage')
+        filesToCover = []
+    else:
+        patchCoverage = False
+        idx = sys.argv.index('--coverage')
+        if len(sys.argv) > idx+1 and not sys.argv[idx+1].startswith('--'):
+            filesToCover = sys.argv[idx+1].split(',')
+            del sys.argv[idx + 1]
+            if filesToCover == ['']:
+                filesToCover = []
+        else:
+            filesToCover = []
+        del sys.argv[idx]
+
+    baseDirs = [environ['mint']]
     doAnnotate = '--no-annotate' not in sys.argv
     if not doAnnotate: sys.argv.remove('--no-annotate')
     doReport = '--no-report' not in sys.argv
     if not doReport: sys.argv.remove('--no-report')
 
-    baseDirs = [environ['mint']]
-    if len(sys.argv) > idx+1 and not sys.argv[idx+1].startswith('--'):
-        filesToCover = sys.argv[idx+1].split(',')
-        del sys.argv[idx + 1]
-        if filesToCover == ['']:
-            filesToCover = []
+    if patchCoverage:
+        files, notExists = coveragewrapper.getFilesToAnnotateByPatch(baseDirs, patchLevel=2)
     else:
-        filesToCover = []
-    del sys.argv[idx]
+        files, notExists = coveragewrapper.getFilesToAnnotate(baseDirs,
+                                                              filesToCover,
+                                                              exclude = EXCLUDED_PATTERNS)
 
-    files, notExists = coveragewrapper.getFilesToAnnotate(baseDirs,
-                                                          filesToCover)
     if notExists:
         raise RuntimeError, 'no such file(s): %s' % ' '.join(notExists)
 
     cw = coveragewrapper.CoverageWrapper(environ['coverage'],
                                          os.getcwd() + '/.coverage',
                                          os.getcwd() + '/annotate')
-    cw.reset()
+    if not resume:
+        cw.reset()
     cw.execute(' '.join(sys.argv))
     if doReport:
         cw.displayReport(files)
@@ -825,10 +849,14 @@ if __name__ == '__main__':
 
     from conary.lib import util
     from conary.lib import debugger
+    from conary.lib import coveragehook
     sys.excepthook = util.genExcepthook(True)
 
-    if '--coverage' in sys.argv:
-        runCoverage()
+    if '--coverage' in sys.argv or '--patch-coverage' in sys.argv:
+        resume = '--resume' in sys.argv
+        if resume:
+            sys.argv.remove('--resume')
+        runCoverage(resume=resume)
         sys.exit(0)
 
     statFile = None

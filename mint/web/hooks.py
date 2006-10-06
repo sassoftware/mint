@@ -386,7 +386,6 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
 
 cfg = None
-cfgMTime = 0
 db = None
 
 repNameCache = {}
@@ -446,12 +445,9 @@ def handler(req):
     # since our last read
     cfgPath = req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
 
-    global cfg, cfgMTime
-    mtime = os.stat(cfgPath)[stat.ST_MTIME]
-    if mtime > cfgMTime:
-        cfg = config.MintConfig()
-        cfg.read(cfgPath)
-        cfgMTime = mtime
+    global cfg
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
