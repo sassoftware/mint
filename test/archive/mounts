@@ -1,0 +1,11 @@
+rootfs / rootfs rw 0 0
+/dev /dev tmpfs rw 0 0
+/dev/root / ext3 rw,data=ordered 0 0
+/proc /proc proc rw 0 0
+/sys /sys sysfs rw 0 0
+/proc/bus/usb /proc/bus/usb usbfs rw 0 0
+/dev/devpts /dev/pts devpts rw 0 0
+/dev/shm /dev/shm tmpfs rw 0 0
+/dev/hda3 /home ext3 rw,data=ordered 0 0
+none /proc/sys/fs/binfmt_misc binfmt_misc rw 0 0
+/dev/sda1 /mnt/mirror ext3 rw,data=ordered 0 0
