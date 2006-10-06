@@ -54,9 +54,9 @@ def getMountPoints(filter = "sd", source = "/proc/partitions"):
     f.close()
     return ['/dev/' + x for x in partitions]
 
-def mountMirrorLoadDrive(source = "/proc/partitions"):
+def mountMirrorLoadDrive(partitions = "/proc/partitions", mounts = "/proc/mounts"):
     dev = None
-    for x in getMountPoints(source = source):
+    for x in getMountPoints(source = partitions):
         logger.info("checking %s for MIRRORLOAD partition label" % x)
         if getFsLabel(x) == "MIRRORLOAD":
             logger.info("found matching partition label on %s" % x)
@@ -64,7 +64,7 @@ def mountMirrorLoadDrive(source = "/proc/partitions"):
             break
 
     if dev:
-        unmountIfMounted(dev)
+        unmountIfMounted(dev, source = mounts)
         mountTarget(dev)
     else:
         raise NoMirrorLoadDiskFound

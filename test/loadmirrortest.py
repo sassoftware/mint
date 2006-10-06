@@ -113,11 +113,15 @@ class LoadMirrorUnitTest(unittest.TestCase):
         loadmirror.call = makeMockCall(callLog, 0)
         os.popen = makeMockPopen(self.archiveDir + "/dumpe2fs")
 
-        loadmirror.mountMirrorLoadDrive(source = self.archiveDir + "/partitions")
+        loadmirror.mountMirrorLoadDrive(
+            partitions = self.archiveDir + "/partitions",
+            mounts = self.archiveDir + "/mounts")
         self.failUnlessEqual(callLog, ['umount /dev/sda1', 'mount /dev/sda1 /mnt/mirror/'])
 
         self.assertRaises(loadmirror.NoMirrorLoadDiskFound,
-            loadmirror.mountMirrorLoadDrive, source = self.archiveDir + "/partitions-missing")
+            loadmirror.mountMirrorLoadDrive,
+            partitions = self.archiveDir + "/partitions-missing",
+            mounts = self.archiveDir + "/mounts")
 
 
 
