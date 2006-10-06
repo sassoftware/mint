@@ -4,11 +4,31 @@
 #
 
 from mint import config, client, database
+from mint import scriptlibrary
 from conary.lib import util
 from conary.repository.netrepos import netserver
 
 import re
 import os
+
+import logging
+logger = scriptlibrary.getScriptLogger()
+target = "/mnt/mirror/"
+
+class NoMirrorLoadDiskFound(Exception):
+    def __str__(self):
+        return "No mirror-load disk was found attached to your appliance."
+
+class UnmountFailed(Exception):
+    def __init__(self, dev):
+        self.dev = dev
+    def __str__(self):
+        return "Unable to automatically unmount %s; please manually unmount" % self.dev
+
+def call(cmd):
+    logger.info("+ %s" % cmd)
+    return os.system(cmd)
+
 
 def getFsLabel(dev):
     f = os.popen("/sbin/dumpe2fs -h %s" % dev, "r")
@@ -34,29 +54,47 @@ def getMountPoints(filter = "sd", source = "/proc/partitions"):
     f.close()
     return ['/dev/' + x for x in partitions]
 
-class NoMirrorLoadDiskFound(Exception):
-    def __str__(self):
-        return "No mirror-load disk was found attached to your appliance."
-
-def mountMirrorLoadDrive():
+def mountMirrorLoadDrive(source = "/proc/partitions"):
     dev = None
-    for x in getMountPoints():
+    for x in getMountPoints(source = source):
+        logger.info("checking %s for MIRRORLOAD partition label" % x)
         if getFsLabel(x) == "MIRRORLOAD":
+            logger.info("found matching partition label on %s" % x)
             dev = x
             break
 
     if dev:
-        util.mkdirChain("/mnt/mirror")
-        os.system("mount %s /mnt/mirror" % dev)
+        unmountIfMounted(dev)
+        mountTarget(dev)
     else:
         raise NoMirrorLoadDiskFound
+
+def mountTarget(dev):
+    logger.info("attempting to mount %s %s" % (dev, target))
+    call("mount %s %s" % (dev, target))
+
+def unmountIfMounted(dev, source = "/proc/mounts"):
+    f = open(source, "r")
+
+    for x in f.readlines():
+        if x.startswith(dev):
+            logger.info("%s already mounted, attempting to unmount" % dev)
+            rc = call("umount %s" % dev)
+            if rc:
+                raise UnmountFailed(dev)
+            break
+
 
 class LoadMirror:
     client = None
 
-    def __init__(self, sourceDir, serverUrl):
+    def __init__(self, sourceDir, serverUrl, logger = None):
         self.sourceDir = sourceDir
         self.serverUrl = serverUrl
+        if not logger:
+            self.log = scriptlibrary.getScriptLogger()
+        else:
+            self.log = logger
 
     def parseMirrorInfo(self, serverName):
         """Parse a mirror info file: <sourceDir>/<serverName>/MIRROR-INFO"""
@@ -120,7 +158,7 @@ class LoadMirror:
 
         util.copytree(sourcePath, targetPath)
         os.unlink(os.path.join(targetPath, serverName, "MIRROR-INFO"))
-        os.system("chown -R apache.apache %s" % targetPath)
+        call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, cfg)
         self.client.addInboundLabel(project.id, labelId, "http://%s/conary/" % serverName, "", "")

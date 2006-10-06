@@ -60,6 +60,18 @@ class LoadMirrorFixturedTest(fixtures.FixturedUnitTest):
             util.rmtree(loader.sourceDir)
 
 
+def makeMockCall(callLog, retCode):
+    def r(cmd):
+        callLog.append(cmd)
+        return retCode
+    return r
+
+def makeMockPopen(source):
+    def r(x, y):
+        return open(source, "r")
+
+    return r
+
 class LoadMirrorUnitTest(unittest.TestCase):
     def setUp(self):
         # find archiveDir
@@ -69,18 +81,40 @@ class LoadMirrorUnitTest(unittest.TestCase):
                 self.archiveDir = thisdir
                 break
 
+        # save stuff we're going to blow away
+        self.oldPopen = os.popen
+        self.oldCall = loadmirror.call
+
+    def tearDown(self):
+        os.popen = self.oldPopen
+        loadmirror.call = self.oldCall
+
     def testGetMountPoints(self):
         points = loadmirror.getMountPoints(source = self.archiveDir + "/partitions")
         self.failUnlessEqual(['/dev/sda1'], points)
 
     def testGetFsLabel(self):
-        def mockPopen(path, mode):
-            return open(self.archiveDir + "/dumpe2fs", "r")
-
-        oldPopen = os.popen
-        os.popen = mockPopen
+        os.popen = makeMockPopen(self.archiveDir + "/dumpe2fs")
         self.failUnlessEqual('MIRRORLOAD', loadmirror.getFsLabel(None))
-        os.popen = oldPopen
+
+    def testMounting(self):
+        callLog = []
+        loadmirror.call = makeMockCall(callLog, 0)
+
+        loadmirror.unmountIfMounted("/dev/sda1", self.archiveDir + "/mounts")
+        self.failUnlessEqual(callLog, ['umount /dev/sda1'])
+        callLog.pop()
+
+        loadmirror.mountTarget("/dev/sda1")
+        self.failUnlessEqual(callLog, ['mount /dev/sda1 /mnt/mirror/'])
+
+    def testMountMirrorLoadDrive(self):
+        callLog = []
+        loadmirror.call = makeMockCall(callLog, 0)
+        os.popen = makeMockPopen(self.archiveDir + "/dumpe2fs")
+
+        loadmirror.mountMirrorLoadDrive(source = self.archiveDir + "/partitions")
+        self.failUnlessEqual(callLog, ['umount /dev/sda1', 'mount /dev/sda1 /mnt/mirror/'])
 
 
 if __name__ == "__main__":
