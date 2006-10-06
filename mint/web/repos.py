@@ -143,7 +143,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 needsExternal = True
         ### end hack. ###
 
-        if self.project.external or needsExternal:
+        if self.project.external or needsExternal and False:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,

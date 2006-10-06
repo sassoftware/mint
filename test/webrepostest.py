@@ -143,23 +143,18 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'testproject')
         project = client.getProject(projectId)
 
-        self.openRepository(1)
-        l = versions.Label("testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
-        self.makeSourceTrove("testcase", testDirRecipe, l)
-        self.cookFromRepository("testcase", l,
-            ignoreDeps = True)
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
 
-        self.moveToServer(project, 1)
-
-        # using the project server for this test
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.fetch('/repos/testproject/troveInfo?t=testcase:runtime')
+        page = self.fetch('/repos/testproject/troveInfo?t=test:runtime')
         fileLink = [x for x in page.getDOM().getByName('a') if x[0] == "Show Troves"][0]
 
         page = self.assertContent('/repos/testproject/' + \
                 fileLink.getattr('href'), code = [200],
-                content = '<span title="/temp/directory">/temp/directory</span>')
+                content = 'getFile?path=contents0')
 
     def testDisallowedMethod(self):
         client, userId = self.quickMintUser('foouser','foopass')
