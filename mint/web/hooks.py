@@ -446,8 +446,9 @@ def handler(req):
     cfgPath = req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
 
     global cfg
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
+    if not cfg:
+        cfg = config.MintConfig()
+        cfg.read(cfgPath)
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
