@@ -1,3 +1,13 @@
+Changes in 2.0.3:
+* rBuilder's configuration file now supports overrides via two files:
+  rbuilder-generated.conf and rbuilder-custom.conf. rbuilder-generated.conf
+  is updated via the "first-time setup" mode of rBuilder and should not
+  be edited by hand. rbuilder-custom.conf is to be used for "site-local"
+  configuration. Both of these files are in /srv/rbuilder/config.
+  It is important to note that /srv/rbuilder/rbuilder.conf will be 
+  overwritten upon any future update to rBuilder and therefore should not 
+  be edited by a customer or SE under any circumstances. (RBL-1047)
+
 Changes in 2.0.2:
 * S3 support.
 * The "search/browse entries per page" setting now properly applies to
