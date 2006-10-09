@@ -3,16 +3,23 @@ from mint import config
 from mint import loadmirror
 from mint import scriptlibrary
 
-import os
+import os, sys
 import logging
-
-scriptlibrary.setupScriptLogger(consoleLevel = logging.INFO)
-
-log = scriptlibrary.getScriptLogger()
-source = "/mnt/mirror/"
 
 cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
+
+log = scriptlibrary.getScriptLogger()
+
+if os.getuid():
+    log.error("You must run this script as root.")
+    sys.exit(1)
+
+scriptlibrary.setupScriptLogger(consoleLevel = logging.INFO,
+    logfile = os.path.join(cfg.dataPath, 'logs', 'load-offline-mirror.log'))
+
+source = "/mnt/mirror/"
+
 loader = loadmirror.LoadMirror(source,
     'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
 
@@ -29,6 +36,9 @@ for serverName in os.listdir(source):
         project = loader.findTargetProject(serverName)
     except RuntimeError, e:
         log.warning(e)
+    except Exception, e:
+        log.error(e)
+        raise
     else:
         log.info("Found project eligible to load: %s", serverName)
         loader.copyFiles(serverName, project)
