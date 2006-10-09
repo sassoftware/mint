@@ -31,7 +31,7 @@ def call(cmd):
 
 
 def getFsLabel(dev):
-    f = os.popen("/sbin/dumpe2fs -h %s" % dev, "r")
+    f = os.popen("/sbin/dumpe2fs -h %s 2> /dev/null" % dev, "r")
     label = None
     for x in f.readlines():
         if x.startswith("Filesystem volume name:"):

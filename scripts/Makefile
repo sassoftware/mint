@@ -8,6 +8,7 @@ script_dist =				\
 	deleteproject			\
 	install-jsroot			\
 	job-server			\
+	load-offline-mirror		\
 	migrate-all-projects		\
 	mirror-inbound			\
 	mirror-outbound			\
