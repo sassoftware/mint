@@ -14,6 +14,7 @@ from mint import userlevels, server
 from mint import jsversion
 from conary import dbstore
 from conary import sqlite3
+from conary import versions
 from conary.lib import util
 
 # NOTE: ReleaseImageTypes was created much later than schema 8,
