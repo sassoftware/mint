@@ -1184,8 +1184,6 @@ class GroupTroveTestConary(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
-
         groupTrove = self.createTestGroupTrove(client, projectId)
 
         # do a full fledged cook. test suite shortcuts will break.

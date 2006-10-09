@@ -62,7 +62,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -87,7 +86,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -113,7 +111,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -139,7 +136,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -166,7 +162,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -192,7 +187,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -219,7 +213,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -243,7 +236,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -269,7 +261,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -296,7 +287,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -322,7 +312,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -350,7 +339,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -377,7 +365,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -404,7 +391,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -431,7 +417,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'
@@ -458,7 +443,6 @@ class rMakeStatusApiOneTest(WebRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         trvName = 'foo'

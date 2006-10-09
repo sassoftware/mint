@@ -321,7 +321,6 @@ class DistroTest(MintRepositoryHelper):
             client, userId = self.quickMintUser('foouser', 'foopass')
             projectId = self.newProject(client)
             project = client.getProject(projectId)
-            self.moveToServer(project, 1)
             name = 'sidebyside:runtime'
             verStr = "/testproject.%s@rpl:devel/1.0.0-1-1" % \
                      MINT_PROJECT_DOMAIN

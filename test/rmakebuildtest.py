@@ -1032,11 +1032,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
 
 class rMakeBuildTest(MintRepositoryHelper):
-    def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
-        l = versions.Label("%s.%s@%s" % (hostname,
-                                         MINT_PROJECT_DOMAIN, branch))
-        self.makeSourceTrove("testcase", testRecipe, l)
-        self.cookFromRepository("testcase", l, ignoreDeps = True)
+    def makeCookedTrove(self):
+        self.addComponent("testcase:runtime", "1.0")
+        self.addCollection("testcase", "1.0", [ ":runtime" ])
 
     def testAddItemByProject(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -1044,11 +1042,9 @@ class rMakeBuildTest(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
-
         rMakeBuild = client.createrMakeBuild('foo')
 
-        self.makeCookedTrove('rpl:devel')
+        self.makeCookedTrove()
 
         rMakeBuild.addTroveByProject('testcase', 'testproject')
 
@@ -1067,11 +1063,9 @@ class rMakeBuildTest(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
-
         rMakeBuild = client.createrMakeBuild('foo')
 
-        self.makeCookedTrove('rpl:devel')
+        self.makeCookedTrove()
 
         rMakeBuild.addTroveByProject('testcase', u'testproject')
 
@@ -1090,10 +1084,9 @@ class rMakeBuildTest(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
-        self.makeCookedTrove('rpl:devel')
+        self.makeCookedTrove()
 
         rMakeBuild.addTroveByProject('testcase', 'testproject')
         self.assertRaises(database.DuplicateItem,
@@ -1106,7 +1099,6 @@ class rMakeBuildTest(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         l = versions.Label("%s.%s@%s" % ('testproject',
@@ -1130,7 +1122,6 @@ class rMakeBuildTest(MintRepositoryHelper):
 
         project = client.getProject(projectId)
 
-        self.moveToServer(project, 1)
         rMakeBuild = client.createrMakeBuild('foo')
 
         l = versions.Label("%s.%s@%s" % ('testproject',
