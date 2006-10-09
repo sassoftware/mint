@@ -17,6 +17,7 @@ import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
 from mint import buildtypes
+from mint import pkgindex
 
 from conary.lib import util
 
@@ -129,7 +130,6 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         # add needed components
         self.addComponent('testcase:source', '1.0.0')
@@ -138,19 +138,12 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         self.addComponent('group-test:source', '1.0.0')
         trv = self.addCollection('group-test', '1.0.0', ['testcase'])
 
-        # set up package index
-        fd, fn = tempfile.mkstemp()
-        os.close(fd)
+        # update package index
+        upi = pkgindex.UpdatePackageIndex()
+        upi.logPath = None
+        upi.cfg = self.mintCfg
 
-        f= open(fn ,'w')
-        self.mintCfg.display(f)
-        f.close()
-
-        upi = os.path.join(scriptPath, 'update-package-index')
-        try:
-            self.captureOutput(os.system, "%s %s" % (upi, fn))
-        finally:
-            os.unlink(fn)
+        upi.run()
 
         # make builds
         for i in range(2):
