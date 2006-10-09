@@ -575,10 +575,10 @@ class UpgradePathTest(MintRepositoryHelper):
                                           self.mintCfg.authPass))
 
         repos = project2.server._server._getProjectRepo(project2)
-        repos.setUserGroupCanMirror(project2.getLabel(), self.mintCfg.authUser, 0)
+        repos.setUserGroupCanMirror(versions.Label(project2.getLabel()), self.mintCfg.authUser, 0)
 
         repos = project3.server._server._getProjectRepo(project3)
-        repos.setUserGroupCanMirror(project3.getLabel(), 'testuser', 0)
+        repos.setUserGroupCanMirror(versions.Label(project3.getLabel()), 'testuser', 0)
 
         assert(self.getMirrorAcl(project, self.mintCfg.authUser) == 1)
         assert(self.getMirrorAcl(project2, self.mintCfg.authUser) == 0)

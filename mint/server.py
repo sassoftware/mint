@@ -751,6 +751,7 @@ class MintServer(object):
         assert(level in userlevels.LEVELS)
 
         project = projects.Project(self, projectId)
+        label = versions.Label(project.getLabel())
 
         cu = self.db.cursor()
         if username and not userId:
@@ -784,15 +785,16 @@ class MintServer(object):
                 repos = self._getProjectRepo(project)
                 # edit vice/drop+add is intentional to honor acl tweaks by
                 # admins.
-                repos.editAcl(project.getLabel(), username, None, None, None,
+                repos.editAcl(label, username, None, None, None,
                               None, level in userlevels.WRITERS, False,
                               self.cfg.projectAdmin and \
                               level == userlevels.OWNER)
-                repos.setUserGroupCanMirror(project.getLabel(), username,
+                repos.setUserGroupCanMirror(label, username,
                                             int(level == userlevels.OWNER))
             return True
 
         if not project.external:
+
             password = ''
             salt = ''
             query = "SELECT salt, passwd FROM Users WHERE username=?"
@@ -802,11 +804,11 @@ class MintServer(object):
             except TypeError:
                 raise database.ItemNotFound("username")
             repos = self._getProjectRepo(project)
-            repos.addUserByMD5(project.getLabel(), username, salt, password)
-            repos.addAcl(project.getLabel(), username, None, None,
+            repos.addUserByMD5(label, username, salt, password)
+            repos.addAcl(label, username, None, None,
                          level in userlevels.WRITERS, False,
                          self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(project.getLabel(), username,
+            repos.setUserGroupCanMirror(label, username,
                                         int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
@@ -874,7 +876,7 @@ class MintServer(object):
         user = self.getUser(userId)
 
         if not project.external:
-            repos.deleteUserByName(project.getLabel(), user['username'])
+            repos.deleteUserByName(versions.Label(project.getLabel()), user['username'])
         if notify:
             self._notifyUser('Removed', user, project)
         return True
@@ -1010,7 +1012,7 @@ class MintServer(object):
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
-        repos.deleteUserByName(project.getLabel(), 'anonymous')
+        repos.deleteUserByName(versions.Label(project.getLabel()), 'anonymous')
 
         self.projects.hide(projectId)
         self._generateConaryRcFile()
@@ -1022,8 +1024,8 @@ class MintServer(object):
     def unhideProject(self, projectId):
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
-        userId = repos.addUser(project.getLabel(), 'anonymous', 'anonymous')
-        repos.addAcl(project.getLabel(), 'anonymous', None, None, False, False, False)
+        userId = repos.addUser(versions.Label(project.getLabel()), 'anonymous', 'anonymous')
+        repos.addAcl(versions.Label(project.getLabel()), 'anonymous', None, None, False, False, False)
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
@@ -1072,7 +1074,7 @@ class MintServer(object):
         user = self.getUser(userId)
         if not project.external:
             repos = self._getProjectRepo(project)
-            repos.editAcl(project.getLabel(), user['username'], "ALL", None,
+            repos.editAcl(versions.Label(project.getLabel()), user['username'], "ALL", None,
                           None, None, level in userlevels.WRITERS, False,
                           level == userlevels.OWNER)
 
@@ -1168,7 +1170,7 @@ class MintServer(object):
         repos = self._getProjectRepo(project)
 
         #Call the repository's addKey function
-        repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
+        repos.addNewAsciiPGPKey(versions.Label(project.getLabel()), username, keydata)
         return True
 
     @typeCheck(int, str)
@@ -1372,7 +1374,7 @@ class MintServer(object):
 
                 if not project.external:
                     authRepo = self._getProjectRepo(project)
-                    authRepo.changePassword(project.getLabel(), username, newPassword)
+                    authRepo.changePassword(versions.Label(project.getLabel()), username, newPassword)
 
             self.users.changePassword(username, newPassword)
 
