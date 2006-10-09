@@ -22,6 +22,15 @@ class GenericScript:
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
+        self.resetLogging()
+
+    def resetLogging(self):
+        """
+        You can override the logPath after __init__ by calling this method.
+        """
+        if not os.access(self.logPath, os.W_OK):
+            self.logPath = None
+
         setupScriptLogger(self.logPath)
         self.log = getScriptLogger()
 
