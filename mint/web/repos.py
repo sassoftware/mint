@@ -116,39 +116,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        # FIXME: hack
-        # if we are looking at a trove, and the trove points to an external
-        # repository, we need to instantiate a netclient vice shimclient
-
-        # for now the troveInfo page itself must be loaded with netClient
-        # because we do not have a version available.
-
-        repos = None
-        needsExternal = False
-        extURIs = ('/files', '/troveInfo', '/getFile')
-        if True in [self.req.uri.endswith(x) for x in extURIs]:
-            versionStr = None
-            for k in ['v', 'fileV']:
-                if k in kwargs:
-                    versionStr = str(kwargs[k])
-                    break
-
-            if versionStr:
-                try:
-                    version = versions.ThawVersion(versionStr)
-                except ValueError:
-                    version = versions.VersionFromString(versionStr)
-                needsExternal = version.branch().label().getHost() != self.project.getFQDN()
-            else:
-                needsExternal = True
-        ### end hack. ###
-
-        if self.project.external or needsExternal:
-            self.repos = conaryclient.ConaryClient(cfg).getRepos()
-        else:
-            self.repos = ShimNetClient(self.repServer, 'http', 80,
-                                       self.authToken, cfg.repositoryMap,
-                                       cfg.user)
+        self.repos = ShimNetClient(self.repServer, 'http', 80,
+                                   self.authToken, cfg.repositoryMap,
+                                   cfg.user)
 
         # make sure we explicitly allow this method
         if self.cmd not in allowedMethods:

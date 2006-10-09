@@ -1185,10 +1185,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
-        # XXX: workaround to solve nesting XML-RPC call in cookGroup
-        project = client.getProject(projectId)
-        self.moveToServer(project, 1)
-
         groupTrove = self.createTestGroupTrove(client, projectId)
 
         self.addComponent("test:runtime", "1.0")
@@ -1221,10 +1217,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # prove that the group builder box actually closes after cook
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
-
-        # XXX: workaround to solve nesting XML-RPC call in cookGroup
-        project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         groupTrove = self.createTestGroupTrove(client, projectId)
 
@@ -1320,7 +1312,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         self.addQuickTestComponent('foo:data',
             '/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1')
@@ -1410,10 +1401,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                    '/testproject.' + MINT_PROJECT_DOMAIN + \
                                    '@rpl:devel/1.0-1', repos = repos)
 
-
-        # XXX: workaround to solve nesting XML-RPC call in cookGroup
-        project = client.getProject(projectId)
-        self.moveToServer(project, 1)
 
         # check troveinfo page for proper source component rules
         page = self.assertNotContent( \

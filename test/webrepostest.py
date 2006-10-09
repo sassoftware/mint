@@ -32,21 +32,18 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
 
-        l = versions.Label("testproject." + MINT_PROJECT_DOMAIN + \
-                "@rpl:devel")
-        self.makeSourceTrove("testcase", testRecipe, l)
-        self.cookFromRepository("testcase", l,
-            ignoreDeps = True)
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime" ])
 
         # first try anonymous browsing
         page = self.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=testcase:runtime',
+            content = 'troveInfo?t=test:runtime',
             server = self.getProjectServerHostname())
 
         # now try logged-in
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=testcase:runtime',
+            content = 'troveInfo?t=test:runtime',
             server = self.getProjectServerHostname())
 
         # now try logged-in, as another user user
@@ -54,7 +51,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('test2', 'test2pass')
         page = self.webLogin('test2', 'test2pass')
         page = page.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=testcase:runtime',
+            content = 'troveInfo?t=test:runtime',
             server = self.getProjectServerHostname())
 
     def testBrowseHiddenProject(self):
@@ -67,9 +64,8 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         adminClient.hideProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
 
-        self.cookFromRepository("testcase",
-            versions.Label("test." + MINT_PROJECT_DOMAIN + "@rpl:devel"),
-            ignoreDeps = True)
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime" ])
 
         # anonymous user should see a 404
         page = self.assertCode('/repos/test/browse', code = 404,
@@ -78,7 +74,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # logged-in user should see the browser
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/test/browse', code = [200],
-                content = 'troveInfo?t=testcase:runtime',
+                content = 'troveInfo?t=test:runtime',
                 server = self.getProjectServerHostname())
 
     def testBrowseExternalProject(self):
@@ -116,17 +112,12 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetchWithRedirect('/repos/foo/troveInfo?t=group-foo',
                                       code = [404])
 
-        self.openRepository(1)
-        self.addQuickTestComponent('foo:source',
-                                   '/testproject.' + MINT_PROJECT_DOMAIN + \
-                                           '@rpl:devel/1.0-1')
-
-        # shuffle the label around to talk to server #2
-        self.moveToServer(project, 1)
+        self.addQuickTestComponent('test:runtime', '3.0-1-1', filePrimer = 3)
 
         # test that trove info page renders without error
-        page = self.assertContent('/repos/testproject/troveInfo?t=foo:source',
-                                  content = "Trove information for")
+        page = self.assertContent('/repos/testproject/troveInfo?t=test:runtime',
+                                  content = "Trove information for",
+                                  server = self.getProjectServerHostname())
 
     def testReposRSS(self):
         client, userId = self.quickMintUser('foouser','foopass')
