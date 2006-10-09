@@ -324,6 +324,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert('link_name_0' not in page.body)
 
     def testJobs(self):
+        raise testsuite.SkipTestException("apache tries to run sudo to fetch job server status")
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
