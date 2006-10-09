@@ -162,3 +162,4 @@ class LoadMirror:
 
         self._addUsers(serverName, cfg)
         self.client.addInboundLabel(project.id, labelId, "http://%s/conary/" % serverName, "", "")
+        self.client.addRemappedRepository(".".join((serverName.split(".")[0], cfg.projectDomainName)), serverName)
