@@ -45,9 +45,7 @@ class MintConfig(ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
 
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
-        "<p>The Conary branch that all rBuilder projects will use by default:</p>"\
-        "<p>(Used as the default branch label when projects are created and in Conary "\
-        "configuration help text)</p>")
+        "The default namespace and tag used by rBuilder projects")
 
     supportContactHTML      = 'Contact information in HTML.'
     supportContactTXT       = 'Contact information in text.'
