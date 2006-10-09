@@ -1,0 +1,34 @@
+#!/usr/bin/python
+from mint import config
+from mint import loadmirror
+from mint import scriptlibrary
+
+import os
+import logging
+
+scriptlibrary.setupScriptLogger(consoleLevel = logging.INFO)
+
+log = scriptlibrary.getScriptLogger()
+source = "/mnt/mirror/"
+
+cfg = config.MintConfig()
+cfg.read(config.RBUILDER_CONFIG)
+loader = loadmirror.LoadMirror(source,
+    'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
+
+loadmirror.mountMirrorLoadDrive()
+
+for serverName in os.listdir(source):
+    if not os.path.exists(os.path.join(source, serverName, "MIRROR-INFO")):
+        continue
+    log.info("processing %s", serverName)
+
+    numFiles = loader.parseMirrorInfo(serverName)
+
+    try:
+        project = loader.findTargetProject(serverName)
+    except RuntimeError, e:
+        log.warning(e)
+    else:
+        log.info("Found project eligible to load: %s", serverName)
+        loader.copyFiles(serverName, project)
