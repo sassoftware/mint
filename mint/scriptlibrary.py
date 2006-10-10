@@ -28,8 +28,9 @@ class GenericScript:
         """
         You can override the logPath after __init__ by calling this method.
         """
-        if not os.access(self.logPath, os.W_OK):
-            self.logPath = None
+        if self.logPath:
+            if not os.access(self.logPath, os.W_OK):
+                self.logPath = None
 
         setupScriptLogger(self.logPath)
         self.log = getScriptLogger()
