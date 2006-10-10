@@ -412,7 +412,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testPublishedReleasesList(self, db, data):
         #client, userId = self.quickMintUser("testuser", "testpass")
         #adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
-        raise testsuite.SkipTestException
+        raise testsuite.SkipTestException("rework me completely")
 
         client = self.getClient("owner")
         adminClient = self.getClient("admin")

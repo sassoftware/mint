@@ -830,7 +830,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateGroup2(self):
         # this test fails due to a logical error in web unit.
         # the basic issue is a mixing of hidden and checkbox fields on the page
-        raise testsuite.SkipTestException
+        raise testsuite.SkipTestException("webunit bug: mixing of hidden and checkbox fields on the page")
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
@@ -1526,20 +1526,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testBrokenDownloadUrl(self):
         # for some reason lots of people do this and used to trigger a traceback:
         self.assertCode("/downloadImage/", code = 404)
-
-    def testBrokenDNS(self):
-        raise testsuite.SkipTestException
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        self.webLogin('testuser', 'testpass')
-
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
-        self.assertContent("/project/testproject/", code = [200],
-            content = "A DNS entry for this project's hostname", server = self.getProjectServerHostname())
-
-        # a bit of a hack to create a project fqdn that will resolve
-        projectId = client.newProject("Resolves", "test", "rpath.org")
-        self.assertNotContent("/project/test/", code = [200],
-            content = "A DNS entry for this project's hostname", server = self.getProjectServerHostname())
 
     def testForgotPassword(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

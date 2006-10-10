@@ -50,8 +50,7 @@ class FakeRequest(object):
 
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testFirstTimeSetupRedirect(self):
-        # this test needs to be re-done
-        raise testsuite.SkipTestException
+        raise testsuite.SkipTestException("this test needs to be re-done")
         self.mintCfg.configured = False
         self.resetRepository()
 

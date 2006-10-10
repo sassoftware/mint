@@ -18,6 +18,7 @@ from conary import versions
 from conary.repository import netclient
 from conary.lib import util, log
 
+from mint import config
 from mint.client import MintClient
 from mint.scriptlibrary import SingletonScript
 

@@ -731,59 +731,6 @@ class OldBuildTest(MintRepositoryHelper):
 
         return cfg
 
-    def testHiddenIsoGen(self):
-        raise testsuite.SkipTestException("needs to be reworked or abandoned")
-        # set up a dummy isogen cfg to avoid importing from
-        # job-server (the job-server code should be put elsewhere someday...)
-        from conary.conarycfg import ConfigFile
-        class IsoGenCfg(ConfigFile):
-            imagesPath = self.tmpDir
-            configPath = self.tmpDir
-            SSL = False
-
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = self.newProject(client)
-        project = client.getProject(projectId)
-
-        adminClient, adminId = self.quickMintAdmin("adminuser", "adminpass")
-        adminClient.hideProject(projectId)
-
-        build = client.newBuild(projectId, 'build 1')
-        build.setBuildType(buildtypes.INSTALLABLE_ISO)
-        build.setTrove("group-core",
-                         "/testproject." + MINT_PROJECT_DOMAIN + \
-                                 "@rpl:devel/0.0:1.0-1-1",
-                         "1#x86")
-
-        self.stockBuildFlavor(build.getId())
-
-        job = client.startImageJob(build.id)
-
-        cfg = self.makeInstallableIsoCfg()
-        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(), job,
-                                                  build, project)
-        imageJob.isocfg = cfg
-
-        # getting a trove not found from a trove that's really not there isn't
-        # terribly exciting. historically this call generated a Permission
-        # Denied exception for hidden projects, triggered by the great
-        # repoMap/user split.
-        cwd = os.getcwd()
-        os.chdir(self.tmpDir + "/images")
-
-        # unforutanately imageJob.write call can be noisy on stderr
-        oldFd = os.dup(sys.stderr.fileno())
-        fd = os.open(os.devnull, os.W_OK)
-        os.dup2(fd, sys.stderr.fileno())
-        os.close(fd)
-
-        try:
-            self.assertRaises(TroveNotFound, imageJob.write)
-        finally:
-            os.dup2(oldFd, sys.stderr.fileno())
-            os.close(oldFd)
-            os.chdir(cwd)
-
 
 if __name__ == "__main__":
     testsuite.main()

@@ -246,7 +246,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                     ['mirror', 'mirror-localhost.rpath.local2000.iso']), \
                     "mirror-offline script failed to run"
             assert (sorted(os.listdir(os.path.join(workDir, 'mirror'))) == \
-                    ['contents', 'sqldb'])
+                    ['contents', 'sqldb', 'tmp'])
             f = open(os.path.join(workDir, 'mirror-localhost.rpath.local2000.iso'))
             f.seek(51200)
             assert(f.read(30) == 'localhost.rpath.local2\n1/1\n1\n\x00')
