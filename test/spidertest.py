@@ -111,12 +111,30 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
     def spiderLink(self, link, page = None):
         self.checked.append(link)
         #print "link:", link
+
+        # skipped links:
         if link.endswith('logout'):
             # we don't want to log out. just short circuit this link
             return False
+        if link.endswith('jobs'):
+            # jobs link calls sudo
+            return False
+        if 'getFile' in link:
+            # getFile breaks spider
+            return False
+        if 'deleteGroup' in link or 'deletePerm' in link:
+            # conary web code deletes using a GET: CNY-963
+            return False
+
         if page is None:
             try:
-                page = self.fetch(link)
+                # rewrite project-based links properly, to avoid breaking SSL
+                if "/project/testproject/" in link:
+                    if link.startswith('http'):
+                        link = link[link.find('/', 7):] # 7 is the index after http://
+                    page = self.fetch(link, server = self.getProjectServerHostname())
+                else:
+                    page = self.fetch(link)
             except:
                 raise BrokenLink("Broken Link: %s" % link)
         # find all html anchors
