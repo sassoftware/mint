@@ -32,7 +32,7 @@ Flavor = deps.parseFlavor
 class BootableImageTest(MintRepositoryHelper):
     def setupBootableImage(self, trove = None, subclass = bootable_image.BootableImage):
         if not trove:
-            self.addComponent("test:runtime", "1.0")
+            self.addComponent("test:runtime", "1.0", "is: x86")
             trove = self.addCollection("group-dist", "1.0",
                  [("test:runtime", True)], defaultFlavor = "is: x86")
 
@@ -76,7 +76,7 @@ class BootableImageTest(MintRepositoryHelper):
     def testStrongKernel(self):
         """Test that the bootable image code pulls in the correct strongly-included kernel"""
         self.addComponent("kernel:runtime", "1.0", flavor = "is: x86")
-        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:runtime", "1.0", "is: x86", filePrimer = 1)
 
         trove = self.addCollection("group-dist", "1.0",
             [("kernel:runtime", True),
@@ -111,7 +111,7 @@ class BootableImageTest(MintRepositoryHelper):
             ], defaultFlavor = "is:x86",
         )
 
-        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:runtime", "1.0", "is: x86", filePrimer = 1)
         trove = self.addCollection("group-dist", "1.0",
             [("group-core", "1.0", trove.getFlavor(), True),
              ("test:runtime", True)], defaultFlavor = "is:x86")
