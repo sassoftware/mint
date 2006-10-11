@@ -859,13 +859,12 @@ class ProjectHandler(WebHandler):
             self._setInfo("You have are no longer watching %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
-    @strFields(comments = '')
-    @intFields(keepReq = None)
+    @strFields(comments = '', keepReq = None)
     @requiresAuth
     def processJoinRequest(self, auth, comments, keepReq):
         projectId = self.project.getId()
         userId = auth.userId
-        if(keepReq):
+        if keepReq == "Submit":
             self.client.setJoinReqComments(projectId, comments)
             self._setInfo("Join request for %s has been submitted" % self.project.getNameForDisplay())
         else:

@@ -21,12 +21,8 @@ from mint import userlevels
                     <tr><td><textarea name="comments" rows="10" cols="40">$comments</textarea></td></tr>
                     <tr>
                         <td>
-                            <button class="img" name="keepReq" value="1" type="submit">
-                                <img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" />
-                            </button>
-                            <button class="img" name="keepReq" value="0" type="submit">
-                                <img src="${cfg.staticPath}apps/mint/images/retract_button.png" alt="Retract Request" />
-                            </button>
+                            <input type="submit" name="keepReq" value="Submit" />
+                            <input type="submit" name="keepReq" value="Retract Request" />
                         </td>
                     </tr>
                 </table>
