@@ -135,14 +135,14 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # perform the join
         commentStr = "It's Brian's shoe!"
         page.postForm(1, self.post, {'comments': commentStr,
-                                     'keepReq' : '1'})
+                                     'keepReq' : 'Submit'})
 
         page = self.assertContent('/project/testproject/joinRequest',
                                   commentStr)
 
         # now retract request
         page.postForm(1, self.post, {'comments': commentStr,
-                                     'keepReq' : '0'})
+                                     'keepReq' : 'Retract Request'})
 
         page = self.assertNotContent('/project/testproject/joinRequest',
                                      commentStr)
@@ -161,7 +161,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # perform the join
         commentStr = "What do you mean? African or European?"
         page = page.postForm(1, page.post, {'comments': commentStr,
-                                            'keepReq' : '1'})
+                                            'keepReq' : 'Submit'})
 
         page.fetchWithRedirect('/logout')
         self.webLogin('user1', 'user1')
