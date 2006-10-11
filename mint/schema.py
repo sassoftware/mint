@@ -356,7 +356,7 @@ def _createBuilds(db):
         cu.execute("""
         CREATE TABLE FilesUrls (
             urlId           %(PRIMARYKEY)s,
-            urlType         SMALLINT NOT NULL,
+            urlType         INTEGER NOT NULL,
             url             VARCHAR(254) NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
@@ -377,6 +377,8 @@ def _createBuilds(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
         commit = True
+    db.createIndex("BuildFilesUrlsMap", "BuildFilesUrlsMap_f_u_idx",
+                   "fileId, urlId", unique = True)
 
     if commit:
         db.commit()
@@ -394,7 +396,7 @@ def _createCommits(db):
             timestamp       INTEGER,
             troveName       VARCHAR(767),
             version         TEXT,
-            userId          INT,
+            userId          INTEGER,
             CONSTRAINT Commits_projectId_fk
                 FOREIGN KEY (projectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE,
@@ -427,10 +429,10 @@ def _createGroupTroves(db):
             recipeName      VARCHAR(200),
             upstreamVersion VARCHAR(128),
             description     TEXT,
-            autoResolve     INT,
-            timeCreated     INT,
+            autoResolve     INTEGER,
+            timeCreated     INTEGER,
             createdBy       INTEGER,
-            timeModified    INT,
+            timeModified    INTEGER,
             CONSTRAINT GroupTroves_projectId_fk
                 FOREIGN KEY (projectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE,
@@ -439,6 +441,10 @@ def _createGroupTroves(db):
                 ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroves'] = []
+        commit = True
+    if db.createTrigger('GroupTroves', 'timeCreated', 'INSERT'):
+        commit = True
+    if _createTrigger(db, 'GroupTroves', 'timeModified'):
         commit = True
 
     # groupTroves
@@ -512,7 +518,7 @@ def _createJobs(db):
             groupTroveId    INTEGER,
             owner           BIGINT,
             userId          INTEGER,
-            status          SMALLINT NOT NULL DEFAULT 0,
+            status          INTEGER NOT NULL DEFAULT 0,
             statusMessage   TEXT,
             timeSubmitted   NUMERIC(14,0) NOT NULL DEFAULT 0,
             timeStarted     NUMERIC(14,0) NOT NULL DEFAULT 0,
@@ -567,6 +573,7 @@ def _createPackageIndex(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
         commit = True
+    db.createIndex("PackageIndex", "PackageIndexNameIdx", "name, projectId")
 
     # packageIndexMark
     if 'PackageIndexMark' not in db.tables:
@@ -628,7 +635,7 @@ def _createRMakeBuilds(db):
             title           VARCHAR(128),
             UUID            CHAR(32),
             jobId           INTEGER,
-            status          SMALLINT NOT NULL DEFAULT 0,
+            status          INTEGER NOT NULL DEFAULT 0,
             statusMessage   TEXT,
             CONSTRAINT rMakeBuilds_userId_fk
                 FOREIGN KEY (userId) REFERENCES Users(userId)
@@ -642,10 +649,10 @@ def _createRMakeBuilds(db):
         cu.execute("""
         CREATE TABLE rMakeBuildItems(
             rMakeBuildItemId    %(PRIMARYKEY)s,
-            rMakeBuildId        INT,
+            rMakeBuildId        INTEGER,
             troveName           VARCHAR(767),
             troveLabel          VARCHAR(767),
-            status              SMALLINT NOT NULL DEFAULT 0,
+            status              INTEGER NOT NULL DEFAULT 0,
             statusMessage       TEXT,
             CONSTRAINT rMakeBuildItems_rMakeBuildId_fk
                 FOREIGN KEY (rMakeBuildId) REFERENCES rMakeBuild(rMakeBuildId)
@@ -704,7 +711,7 @@ def _createMirrorInfo(db):
         CREATE TABLE OutboundMatchTroves (
             outboundLabelId INTEGER NOT NULL,
             idx             INTEGER NOT NULL,
-            matchStr        VARCHAR(254),
+            matchStr        VARCHAR(767),
             CONSTRAINT OutboundMatchTroves_outboundLabelId_fk
                 FOREIGN KEY (outboundLabelId)
                     REFERENCES OutboundLabels(outboundLabelId)
