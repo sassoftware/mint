@@ -577,7 +577,7 @@ class InstallableIso(ImageGenerator):
 
         # write the group.ccs
         groupCsPath = os.path.join(baseDir, 'group.ccs')
-        groupcs.write(groupCsPath)
+        groupcs.writeToFile(groupCsPath)
 
         # write .discinfo
         discInfoPath = os.path.join(topdir, ".discinfo")
