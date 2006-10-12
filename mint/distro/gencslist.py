@@ -697,3 +697,7 @@ if __name__ == '__main__':
 
     if sqldbpath:
         writeSqldb(groupcs, sqldbpath)
+
+        # write the group.ccs
+        groupCsPath = os.path.join(sqldbpath, 'group.ccs')
+        groupcs.writeToFile(groupCsPath)
