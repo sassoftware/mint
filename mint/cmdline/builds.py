@@ -29,6 +29,13 @@ def waitForBuild(client, buildId, interval = 5):
 
     log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
 
+bootableTypes = [buildtypes.RAW_FS_IMAGE,
+                 buildtypes.TARBALL,
+                 buildtypes.RAW_HD_IMAGE,
+                 buildtypes.VMWARE_IMAGE]
+deprecatedTypes = [buildtypes.STUB_IMAGE,
+                   buildtypes.NETBOOT_IMAGE]
+
 def genHelp():
     h = "<project name> <troveSpec> <build type>\n\n"
 
@@ -38,16 +45,13 @@ def genHelp():
     revMap = dict((x[1], x[0]) for x in buildtypes.validBuildTypes.iteritems())
 
     for buildType, name in buildtypes.typeNames.iteritems():
+        if buildType in deprecatedTypes:
+            continue
         h += "%20s\t%s\n" % (revMap[buildType].lower(), name.decode("ascii", "ignore"))
     h += "\n"
 
-    # pull out all of the common bootable image settings
-    bootableTypes = [buildtypes.RAW_FS_IMAGE,
-                     buildtypes.TARBALL,
-                     buildtypes.RAW_HD_IMAGE,
-                     buildtypes.VMWARE_IMAGE]
     settingSet = []
-    for buildType in bootableTypes: 
+    for buildType in bootableTypes:
         settingSet.append(set(buildtemplates.dataTemplates[buildType].keys()))
 
     commonOpts = settingSet[0]
@@ -67,7 +71,7 @@ def genHelp():
     h += "\n"
 
     for buildType, name, settings in buildtemplates.getDisplayTemplates():
-        if buildType in [buildtypes.STUB_IMAGE, buildtypes.NETBOOT_IMAGE]:
+        if buildType in deprecatedTypes:
             continue
         if not set(settings.keys()) - commonOpts:
             continue
