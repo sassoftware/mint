@@ -4,7 +4,7 @@
 #
 
 from mint import config, client, database
-from mint import scriptlibrary
+from mint import scriptlibrary, copyutils
 from conary.lib import util
 from conary.repository.netrepos import netserver
 
@@ -104,7 +104,7 @@ class LoadMirror:
         numFiles = int(f.readline().strip())
 
         assert(serverName == readServerName)
-        return numFiles
+        return numFiles + 1 # pad for containing dir
 
     def _openMintClient(self):
         self.client = client.MintClient(self.serverUrl)
@@ -145,7 +145,7 @@ class LoadMirror:
         repos.auth.addAcl(mintCfg.authUser, None, None, True, False, True)
         repos.auth.setMirror(mintCfg.authUser, True)
 
-    def copyFiles(self, serverName, project):
+    def copyFiles(self, serverName, project, callback = None):
         labelIdMap, _, _ = self.client.getLabelsForProject(project.id)
         label, labelId = labelIdMap.items()[0]
 
@@ -156,7 +156,7 @@ class LoadMirror:
 
         sourcePath = os.path.join(self.sourceDir, serverName)
 
-        util.copytree(sourcePath, targetPath)
+        copyutils.copytree(sourcePath, targetPath, callback = callback)
         os.unlink(os.path.join(targetPath, serverName, "MIRROR-INFO"))
         call("chown -R apache.apache %s" % targetPath)
 

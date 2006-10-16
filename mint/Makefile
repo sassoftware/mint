@@ -15,6 +15,7 @@ python_files =			\
 	config.py		\
 	constants.py		\
 	cooktypes.py		\
+	copyutils.py		\
 	data.py			\
 	database.py		\
 	dbversion.py		\

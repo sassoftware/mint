@@ -55,7 +55,7 @@ class LoadMirrorFixturedTest(fixtures.FixturedUnitTest):
             f.write("test.example.com\n0/0\n42\n")
             f.close()
 
-            self.failUnlessEqual(loader.parseMirrorInfo('test.example.com'), 42)
+            self.failUnlessEqual(loader.parseMirrorInfo('test.example.com'), 43)
         finally:
             util.rmtree(loader.sourceDir)
 

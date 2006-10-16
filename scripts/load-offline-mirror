@@ -19,11 +19,37 @@ scriptlibrary.setupScriptLogger(consoleLevel = logging.INFO,
     logfile = os.path.join(cfg.dataPath, 'logs', 'load-mirror.log'))
 
 source = "/mnt/mirror/"
+statusFile = os.path.join(cfg.dataPath, 'run', 'load-status.txt')
 
 loader = loadmirror.LoadMirror(source,
     'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
 
 loadmirror.mountMirrorLoadDrive()
+
+
+class Callback:
+    def __init__(self, serverName, totalFiles, statusFile = None):
+        self.serverName = serverName
+        self.totalFiles = totalFiles
+        self.filesCopied = 0
+        self.lastCopied = 0
+
+        if statusFile:
+            self.f = open(statusFile, "w")
+        else:
+            self.f = sys.stdout
+
+    def callback(self, files):
+        self.filesCopied += files
+
+        if self.f != sys.stdout:
+            self.f.truncate()
+        if self.filesCopied > (self.lastCopied + 10):
+            print >> self.f, "Copying files for %s: %2.0f%%" % \
+                (self.serverName,
+                 (float(self.filesCopied)/float(self.totalFiles)) * 100.0)
+            self.lastCopied = self.filesCopied
+
 
 for serverName in os.listdir(source):
     if not os.path.exists(os.path.join(source, serverName, "MIRROR-INFO")):
@@ -31,6 +57,7 @@ for serverName in os.listdir(source):
     log.info("processing %s", serverName)
 
     numFiles = loader.parseMirrorInfo(serverName)
+    cb = Callback(serverName, numFiles, statusFile = statusFile)
 
     try:
         project = loader.findTargetProject(serverName)
@@ -41,4 +68,4 @@ for serverName in os.listdir(source):
         raise
     else:
         log.info("Found project eligible to load: %s", serverName)
-        loader.copyFiles(serverName, project)
+        loader.copyFiles(serverName, project, callback = cb.callback)
