@@ -116,9 +116,12 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        self.repos = ShimNetClient(self.repServer, 'http', 80,
-                                   self.authToken, cfg.repositoryMap,
-                                   cfg.user)
+        if 'repServer' not in self.__dict__:
+            self.repos = conaryclient.ConaryClient(cfg).getRepos()
+        else:
+            self.repos = ShimNetClient(self.repServer, 'http', 80,
+                                       self.authToken, cfg.repositoryMap,
+                                       cfg.user)
 
         # make sure we explicitly allow this method
         if self.cmd not in allowedMethods:
