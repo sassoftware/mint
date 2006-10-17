@@ -207,6 +207,10 @@ class ScriptLogger(object):
         "Log a debugging message"
         self.slogger.debug(*args)
 
+    def flush(self):
+        for handler in self.slogger.handlers:
+            handler.flush()
+
 _scriptLogger = ScriptLogger()
 
 def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
