@@ -4,12 +4,62 @@
 #
 
 from raa.modules.raasrvplugin import rAASrvPlugin
-from mint import loadmirror
+from mint import loadmirror, config
+
+import os
+
+class Callback(loadmirror.Callback):
+    def __init__(self, serverName, totalFiles, statusFile = None, logger = None):
+        loadmirror.Callback.__init__(self, serverName, totalFiles)
+        self.logger = logger
+
+    def _write(self, msg):
+        self.logger.info(msg)
+
 
 class LoadMirror(rAASrvPlugin):
     def doTask(self, schedId, execId):
-        cmd = self.server.getCommand(schedId)
+        cmd, _ = self.server.getCommand(schedId)
 
+        error = ''
         if cmd == "mount":
-            loadmirror.mountMirrorLoadDrive()
+            try:
+                loadmirror.mountMirrorLoadDrive()
+            except loadmirror.NoMirrorLoadDiskFound, e:
+                error = str(e)
+        elif cmd == "preload":
+            self._startPreload()
+
+        loadmirror.logger.flush()
+        self.server.setError(schedId, cmd, True, error)
         return True
+
+    def _startPreload(self):
+        cfg = config.MintConfig()
+        cfg.read(config.RBUILDER_CONFIG)
+
+        log = loadmirror.logger
+        loader = loadmirror.LoadMirror(loadmirror.target,
+            'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
+        loadmirror.mountMirrorLoadDrive()
+
+        mirrored = 0
+        for serverName in os.listdir(loadmirror.target):
+            if not os.path.exists(os.path.join(loadmirror.target, serverName, "MIRROR-INFO")):
+                continue
+            log.info("Processing %s", serverName)
+
+            numFiles = loader.parseMirrorInfo(serverName)
+            cb = Callback(serverName, numFiles, logger = log)
+
+            try:
+                project = loader.findTargetProject(serverName)
+                log.info("Found project eligible to load: %s", serverName)
+                loader.copyFiles(serverName, project, callback = cb.callback)
+                mirrored += 1
+            except RuntimeError, e:
+                log.warning(e)
+            except Exception, e:
+                log.error(e)
+                raise
+        log.info("DONE. Pre-loaded %d repositories." % mirrored)

@@ -10,10 +10,49 @@ from conary.repository.netrepos import netserver
 
 import re
 import os
+import sys
 
-import logging
+# set up logging
+cfg = config.MintConfig()
+cfg.read(config.RBUILDER_CONFIG)
+logFile = os.path.join(cfg.dataPath, 'logs', 'load-mirror.log')
+try:
+    scriptlibrary.setupScriptLogger(logfile = logFile)
+except (OSError, IOError):
+    pass
 logger = scriptlibrary.getScriptLogger()
+
 target = "/mnt/mirror/"
+
+
+class Callback:
+    def __init__(self, serverName, totalFiles, statusFile = None):
+        self.serverName = serverName
+        self.totalFiles = totalFiles
+        self.filesCopied = 0
+        self.lastCopied = 0
+
+        if statusFile:
+            self.f = open(statusFile, "w")
+        else:
+            self.f = sys.stdout
+
+    def callback(self, files):
+        self.filesCopied += files
+
+        msg = "Copying files for %s: %2.0f%%" % \
+            (self.serverName,
+             (float(self.filesCopied)/float(self.totalFiles)) * 100.0)
+
+        if self.filesCopied > (self.lastCopied + 50):
+            self._write(msg)
+            self.lastCopied = self.filesCopied
+
+    def _write(self, msg):
+        if self.f != sys.stdout:
+            self.f.truncate()
+        print >> self.f, msg
+
 
 class NoMirrorLoadDiskFound(Exception):
     def __str__(self):
@@ -57,7 +96,7 @@ def getMountPoints(filter = "sd", source = "/proc/partitions"):
 def mountMirrorLoadDrive(partitions = "/proc/partitions", mounts = "/proc/mounts"):
     dev = None
     for x in getMountPoints(source = partitions):
-        logger.info("checking %s for MIRRORLOAD partition label" % x)
+        logger.debug("checking %s for MIRRORLOAD partition label" % x)
         if getFsLabel(x) == "MIRRORLOAD":
             logger.info("found matching partition label on %s" % x)
             dev = x
@@ -68,6 +107,7 @@ def mountMirrorLoadDrive(partitions = "/proc/partitions", mounts = "/proc/mounts
         mountTarget(dev)
     else:
         raise NoMirrorLoadDiskFound
+    logger.flush()
 
 def mountTarget(dev):
     logger.info("attempting to mount %s %s" % (dev, target))
@@ -116,8 +156,8 @@ class LoadMirror:
         try:
             proj = self.client.getProjectByHostname(serverName.split(".")[0])
         except database.ItemNotFound:
-            raise RuntimeError, "Can't find external project %s on rBuilder: " \
-                "please add the project through the web interface first." % serverName
+            raise RuntimeError, "Can't find external project %s on rBuilder. " \
+                "Please add the project through the web interface first." % serverName
 
         if not proj.external:
             raise RuntimeError, "Project %s is not external: " \
@@ -161,5 +201,11 @@ class LoadMirror:
         call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, cfg)
+        localUrl = "http%s://%s%srepos/%s/" % (cfg.SSL and 's' or\
+                   '', cfg.projectSiteHost, cfg.basePath,
+                   serverName.split(".")[0])
+
+        # set the internal label to our authUser and authPass
+        project.editLabel(labelId, label, localUrl, cfg.authUser, cfg.authPass)
         self.client.addInboundLabel(project.id, labelId, "http://%s/conary/" % serverName, "", "")
         self.client.addRemappedRepository(".".join((serverName.split(".")[0], cfg.projectDomainName)), serverName)

@@ -26,38 +26,13 @@ loader = loadmirror.LoadMirror(source,
 
 loadmirror.mountMirrorLoadDrive()
 
-
-class Callback:
-    def __init__(self, serverName, totalFiles, statusFile = None):
-        self.serverName = serverName
-        self.totalFiles = totalFiles
-        self.filesCopied = 0
-        self.lastCopied = 0
-
-        if statusFile:
-            self.f = open(statusFile, "w")
-        else:
-            self.f = sys.stdout
-
-    def callback(self, files):
-        self.filesCopied += files
-
-        if self.f != sys.stdout:
-            self.f.truncate()
-        if self.filesCopied > (self.lastCopied + 10):
-            print >> self.f, "Copying files for %s: %2.0f%%" % \
-                (self.serverName,
-                 (float(self.filesCopied)/float(self.totalFiles)) * 100.0)
-            self.lastCopied = self.filesCopied
-
-
 for serverName in os.listdir(source):
     if not os.path.exists(os.path.join(source, serverName, "MIRROR-INFO")):
         continue
     log.info("processing %s", serverName)
 
     numFiles = loader.parseMirrorInfo(serverName)
-    cb = Callback(serverName, numFiles, statusFile = statusFile)
+    cb = loadmirror.Callback(serverName, numFiles, statusFile = statusFile)
 
     try:
         project = loader.findTargetProject(serverName)

@@ -6,6 +6,7 @@ import turbogears
 
 import os
 import re
+import time
 
 from mint import loadmirror
 
@@ -19,21 +20,33 @@ class LoadMirrorTable(DatabaseTable):
     createSQL = """CREATE TABLE %s
                    (
                         schedId INT UNIQUE NOT NULL,
-                        command VARCHAR(255)
+                        command VARCHAR(255),
+                        error VARCHAR(255),
+                        done INT
                    )""" % (name)
-    fields = ['schedId', 'command']
+    fields = ['schedId', 'command', 'error', 'done']
     tableVersion = 1
 
     @writeOp
-    def setCommand(self, cu, schedId, command):
+    def setCommand(self, cu, schedId, command, done = False, error = ''):
         self.db.transaction()
         cu.execute("DELETE FROM %s" % self.name)
-        cu.execute("INSERT INTO %s (schedId, command) VALUES (?, ?)" % self.name, schedId, command)
+        cu.execute("INSERT INTO %s (schedId, command, error, done) VALUES (?, ?, ?, ?)" % \
+            self.name, schedId, command, error, str(int(done)))
         return True
 
     @readOp
     def getCommand(self, cu, schedId):
-        cu.execute("""SELECT command FROM %s WHERE schedId=?""" % (self.name), schedId)
+        cu.execute("""SELECT command, done FROM %s WHERE schedId=?""" % (self.name), schedId)
+        command = cu.fetchone()
+        if not command:
+            return '', False
+        else:
+            return command[0], command[1]
+
+    @readOp
+    def getError(self, cu, schedId):
+        cu.execute("""SELECT error FROM %s WHERE schedId=?""" % (self.name), schedId)
         command = cu.fetchone()
         if not command:
             return ''
@@ -46,45 +59,58 @@ class LoadMirror(rAAWebPlugin):
     '''
     displayName = _("Pre-load Mirrored Repositories")
 
-    sourceDir = '/mnt/mirror/'
     tableClass = LoadMirrorTable
 
     @turbogears.expose(html="rPath.loadmirror.index")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def index(self):
-        if os.path.exists(os.path.join(self.sourceDir, 'lost+found')):
-            mounted = True
-            projects, errors = self._getProjects()
-        else:
-            mounted = False
-            projects = []
-            errors = {}
-
-
-        return dict(projects = projects, errors = errors, mounted = mounted)
+        schedId = self._setCommand("mount")
+        return dict(schedId = schedId['schedId'])
 
     @immedTask
-    def _mountPreloadDisk(self):
+    def _setCommand(self, command, done = False, error = ''):
         def callback(schedId):
-            self.table.setCommand(schedId, "mount")
+            self.table.setCommand(schedId, command, done, error)
 
         return dict(callback = callback)
 
     @turbogears.expose(allow_json=True)
     @turbogears.identity.require(turbogears.identity.not_anonymous())
-    def callGetPreloads(self):
-        self._mountPreloadDisk()
+    def callGetPreloads(self, schedId):
+        _, done = self.table.getCommand(schedId)
+        errors = self.table.getError(schedId)
 
-        projects, errors = self._getProjects()
-        return dict(projects = projects, preloadErrors = errors)
+        if done:
+            projects, preloadErrors = self._getProjects()
+        else:
+            projects = []
+            preloadErrors = {}
+            done = False
+        return dict(done = done, projects = projects, preloadErrors = preloadErrors, errors = errors)
+
+    @turbogears.expose(allow_json=True)
+    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    def callStartPreload(self):
+        self._setCommand("preload")
+
+        return dict()
+
+    @turbogears.expose(allow_json=True)
+    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    def callGetLog(self):
+        # XXX fix hardcode
+        f = file("/srv/rbuilder/logs/load-mirror.log")
+        log = f.readlines()
+
+        return dict(log = log)
 
     def _getProjects(self):
-        lm = loadmirror.LoadMirror(self.sourceDir, 'http://mintauth:mintpass@mint.rpath.local/xmlrpc-private/')
+        # XXX fix hardcode
+        lm = loadmirror.LoadMirror(loadmirror.target, 'http://mintauth:mintpass@mint.rpath.local/xmlrpc-private/')
         projects = []
         errors = {}
-        for serverName in os.listdir(self.sourceDir):
-            print serverName
-            if not os.path.exists(os.path.join(self.sourceDir, serverName, "MIRROR-INFO")):
+        for serverName in os.listdir(loadmirror.target):
+            if not os.path.exists(os.path.join(loadmirror.target, serverName, "MIRROR-INFO")):
                 continue
             try:
                 proj = lm.findTargetProject(serverName)
@@ -99,3 +125,8 @@ class LoadMirror(rAAWebPlugin):
     @localhostOnly()
     def getCommand(self, schedId):
         return self.table.getCommand(schedId)
+
+    @cherrypy.expose()
+    @localhostOnly()
+    def setError(self, schedId, command, done = False, error = ''):
+        return self.table.setCommand(schedId, command, done, error)
