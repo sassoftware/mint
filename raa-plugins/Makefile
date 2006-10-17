@@ -6,10 +6,9 @@
 
 all: subdirs
 
-SUBDIRS=rbalog
+SUBDIRS=rbalog loadmirror
 
-extra_files = \
-	Makefile		\
+extra_files = Makefile
 
 dist_files = $(extra_files)
 
