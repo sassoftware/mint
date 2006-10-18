@@ -50,7 +50,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'name' : 'rPath Linux',
                               'label' : 'conary.rpath.com@rpl:1',
                               'url' : '',
-                              'useMirror': '1',
+                              'useMirror': 'network',
                               'externalAuth': '1',
                               'externalUser': 'mirror',
                               'externalPass': 'mirrorpass',

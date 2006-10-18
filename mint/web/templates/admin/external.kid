@@ -8,8 +8,10 @@
 -->
 
 <?python
-<<<<<<< /home/tgerla/hg/mint/mint/web/templates/admin/external.kid
-    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'externalAuth', 'authType', 'additionalLabelsToMirror']:
+    for var in ['name', 'hostname', 'label', 'url',
+        'externalUser', 'externalPass', 'externalEntKey',
+        'externalEntClass', 'authType', 'useMirror',
+        'externalAuth', 'authType', 'additionalLabelsToMirror']:
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
