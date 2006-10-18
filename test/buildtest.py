@@ -168,6 +168,13 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         assert(build.getDataValue("bugsUrl") == "http://issues.rpath.com/")
 
+        build.setBuildType(buildtypes.VMWARE_IMAGE)
+        assert(build.getDataTemplate()['diskAdapter'])
+        # now test new vmware data types
+        build.setBuildType(buildtypes.VMWARE_IMAGE)
+        assert build.getDataValue('diskAdapter') == 'lsilogic'
+
+
     @fixtures.fixture("Full")
     def testPublished(self, db, data):
         client = self.getClient("owner")

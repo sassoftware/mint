@@ -12,6 +12,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, server
 from mint import jsversion
+from mint import buildtypes
 from conary import dbstore
 from conary import sqlite3
 from conary import versions
@@ -327,6 +328,13 @@ schema8_indexes = ["""CREATE INDEX DatabaseVersionIdx
 
 
 class UpgradePathTest(MintRepositoryHelper):
+    def forceSchemaVersion(self, version):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM DatabaseVersion WHERE version > ?", version - 1)
+        cu.execute("INSERT INTO DatabaseVersion VALUES(?, ?)", version,
+                   time.time())
+        self.db.commit()
+
     def testSchemaVerEight(self):
         # Create a database matching schema 8 paradigm.
         # Instantiate table objects on this version and attempt an upgrade.
@@ -589,23 +597,10 @@ class UpgradePathTest(MintRepositoryHelper):
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
                    projectId3)
 
-        # force schema 15
-        cu.execute("DELETE FROM DatabaseVersion WHERE version > 14")
-        cu.execute("INSERT INTO DatabaseVersion VALUES(?, ?)", 15, time.time())
-        self.db.commit()
+        self.forceSchemaVersion(15)
 
-        # do only one iteration of version check
-        try:
-            fd = os.open(os.devnull, os.W_OK)
-            oldStdOut = os.dup(sys.stdout.fileno())
-            oldStdErr = os.dup(sys.stderr.fileno())
-            os.dup2(fd, sys.stdout.fileno())
-            os.dup2(fd, sys.stderr.fileno())
-            os.close(fd)
-            client.server._server.projects.versionCheck()
-        finally:
-            os.dup2(oldStdOut, sys.stdout.fileno())
-            os.dup2(oldStdErr, sys.stderr.fileno())
+        self.captureAllOutput(client.server._server.projects.versionCheck)
+        self.db.commit()
 
         assert(self.getMirrorAcl(project, self.mintCfg.authUser) == 1)
         self.failIf(self.getMirrorAcl(project2, self.mintCfg.authUser) != 1,
@@ -619,6 +614,41 @@ class UpgradePathTest(MintRepositoryHelper):
 
         self.failIf(self.getMirrorAcl(project3, 'testuser') == 1,
                     "schema upgrade tried to update external project.")
+
+    def testSchemaVer23(self):
+        # tests the upgrade path for VMware image's disk adapter only
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        build = client.newBuild(projectId, 'Control Build')
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        build.setFiles([["file1", "Test Title"]])
+
+        build = client.newBuild(projectId, 'VMware Build')
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        build.setFiles([["file1", "Test Title"]])
+        build.setBuildType(buildtypes.VMWARE_IMAGE)
+
+        cu = self.db.cursor()
+        cu.execute('SELECT * FROM BuildData')
+        self.failIf (cu.fetchall() != \
+                         [(1, 'jsversion', '2.0.3', 0),
+                          (2, 'jsversion', '2.0.3', 0)],
+                     "diskAdapter upgrade baseline needs tweaking. check test.")
+
+        self.forceSchemaVersion(23)
+        client.server._server.buildData.versionCheck()
+        client.server._server.buildData.db.commit()
+
+        cu = self.db.cursor()
+        cu.execute('SELECT * FROM BuildData')
+        self.failIf (cu.fetchall() != \
+                         [(1, 'jsversion', '2.0.3', 0),
+                          (2, 'jsversion', '2.0.3', 0),
+                          (2, 'diskAdapter', 'ide', 0)],
+                     "diskAdapter upgrade failed")
 
     def testDbBumpVersion(self):
         client, userId = self.quickMintAdmin('admin', 'passwd')
