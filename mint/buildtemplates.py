@@ -34,6 +34,10 @@ optionNameMap = {
     'mediaTemplateTrove': 'media-template',
 }
 
+diskAdapters = {
+    'IDE' : 'ide',
+    'SCSI (LSILogic)' : 'lsilogic',
+}
 
 class Template(dict):
     def __init__(self):
@@ -94,6 +98,11 @@ class swapSize(IntegerOption):
 class vmMemory(IntegerOption):
     default = 256
     prompt = 'How much memory should VMware use when running this image?'
+
+class diskAdapter(EnumOption):
+    default = 'lsilogic'
+    prompt = 'Which hard disk adapter should this image be built for?'
+    options = diskAdapters
 
 class natNetworking(BooleanOption):
     default = False
@@ -157,13 +166,15 @@ class RawFsTemplate(Template):
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking']
+                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking',
+                 'diskAdapter']
     id = buildtypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
-                 'mediaTemplateTrove', 'anacondaCustomTrove', 'anacondaTemplatesTrove', 'mirrorUrl']
+                 'mediaTemplateTrove', 'anacondaCustomTrove',
+                 'anacondaTemplatesTrove', 'mirrorUrl']
     id = buildtypes.INSTALLABLE_ISO
 
 class NetbootTemplate(Template):
@@ -176,7 +187,8 @@ class LiveIsoTemplate(Template):
     id = buildtypes.LIVE_ISO
 
 class TarballTemplate(Template):
-    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize', 'mirrorUrl']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize',
+                 'mirrorUrl']
     id = buildtypes.TARBALL
 
 ########################
