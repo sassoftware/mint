@@ -8,6 +8,7 @@ from mint import scriptlibrary, copyutils
 from conary.lib import util
 from conary.repository.netrepos import netserver
 
+import logging
 import re
 import os
 import sys
@@ -17,7 +18,8 @@ cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
 logFile = os.path.join(cfg.dataPath, 'logs', 'load-mirror.log')
 try:
-    scriptlibrary.setupScriptLogger(logfile = logFile)
+    scriptlibrary.setupScriptLogger(logfile = logFile,
+        logfileLevel = logging.DEBUG)
 except (OSError, IOError):
     pass
 logger = scriptlibrary.getScriptLogger()
@@ -65,7 +67,7 @@ class UnmountFailed(Exception):
         return "Unable to automatically unmount %s; please manually unmount" % self.dev
 
 def call(cmd):
-    logger.info("+ %s" % cmd)
+    logger.debug("+ %s" % cmd)
     return os.system(cmd)
 
 
@@ -98,7 +100,7 @@ def mountMirrorLoadDrive(partitions = "/proc/partitions", mounts = "/proc/mounts
     for x in getMountPoints(source = partitions):
         logger.debug("checking %s for MIRRORLOAD partition label" % x)
         if getFsLabel(x) == "MIRRORLOAD":
-            logger.info("found matching partition label on %s" % x)
+            logger.debug("found matching partition label on %s" % x)
             dev = x
             break
 
@@ -110,7 +112,7 @@ def mountMirrorLoadDrive(partitions = "/proc/partitions", mounts = "/proc/mounts
     logger.flush()
 
 def mountTarget(dev):
-    logger.info("attempting to mount %s %s" % (dev, target))
+    logger.debug("attempting to mount %s %s" % (dev, target))
     call("mount %s %s" % (dev, target))
 
 def unmountIfMounted(dev, source = "/proc/mounts"):
@@ -118,7 +120,7 @@ def unmountIfMounted(dev, source = "/proc/mounts"):
 
     for x in f.readlines():
         if x.startswith(dev):
-            logger.info("%s already mounted, attempting to unmount" % dev)
+            logger.debug("%s already mounted, attempting to unmount" % dev)
             rc = call("umount %s" % dev)
             if rc:
                 raise UnmountFailed(dev)
