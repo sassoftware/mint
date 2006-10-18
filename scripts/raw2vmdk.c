@@ -102,7 +102,8 @@ int writeDescriptorFile(FILE * of, const off_t outsize,
                         const char * outfile,
                         const u_int32_t cylinders,
                         const u_int8_t heads,
-                        const u_int8_t sectors) {
+                        const u_int8_t sectors,
+                        const char * adapter) {
     size_t len = strlen(outfile);
     char * cpoutfile = (char*)malloc(sizeof(char)*(len + 1));
     strncpy(cpoutfile, outfile, strlen(outfile));
@@ -120,11 +121,11 @@ int writeDescriptorFile(FILE * of, const off_t outsize,
     returner += fprintf(of, "\n"
         "# The Disk Data Base \n"
         "#DDB\n\n"
-        "ddb.adapterType = \"ide\"\n"
+        "ddb.adapterType = \"%s\"\n"
         "ddb.geometry.sectors = \"%d\"\n"
         "ddb.geometry.heads = \"%d\"\n"
         "ddb.geometry.cylinders = \"%d\"\n"
-        "ddb.virtualHWVersion = \"4\"\n", sectors, heads, cylinders);
+        "ddb.virtualHWVersion = \"4\"\n", adapter, sectors, heads, cylinders);
 
     free(cpoutfile);
     return returner;
@@ -231,10 +232,12 @@ off_t copyData(const char* infile, const off_t outsize,
 static void usage(char * name)
 {
     printf("%s - Version %s\n", name, VER);
-    printf("%s -C cylinders [-H heads] [-S sectors] infile.img outfile.vmdk\n\n"
+    printf("%s -C cylinders [-H heads] [-S sectors] [-A adapter] "
+	    "infile.img outfile.vmdk\n\n"
             "-C  Number of cylinders in infile.img\n"
             "-H  Number of heads in infile.img\n"
             "-S  Number of sectors in infile.img\n"
+            "-A  Adapter: legal values are ide, lsilogic or buslogic\n"
             "infile.img    RAW disk image\n"
             "outfile.vmdk  VMware virtual disk\n\n",
             name);
@@ -255,19 +258,29 @@ int main(int argc, char ** argv) {
     int c;
     u_int8_t heads = 0x10, sectors = 0x3f;
     u_int32_t cylinders = 0x0;
+    char adapter[256];
+    memset(adapter, 0, 256);
+    strncpy(adapter, "ide", 3);
 
     // Parse command line options
     do {
-        c = getopt(argc, argv, "C:H:S:v");
+        c = getopt(argc, argv, "C:H:S:A:v");
         switch (c) {
             case 'C': cylinders = atoi(optarg); break;
             case 'H': heads = atoi(optarg); break;
             case 'S': sectors = atoi(optarg); break;
             case 'v': verbose = 1; break;
+            case 'A': strncpy(adapter, optarg, 255); break;
         }
     } while (c >= 0);
 
     if (cylinders == 0 || (argc - optind != 2)) {
+        usage(argv[0]);
+        return -1;
+    }
+    if (strcmp(adapter, "ide") && \
+          strcmp(adapter, "lsilogic") && \
+          strcmp(adapter, "buslogic")) {
         usage(argv[0]);
         return -1;
     }
@@ -295,7 +308,7 @@ int main(int argc, char ** argv) {
         fwrite((void*)&header, sizeof(SparseExtentHeader), 1, of);
         // Write the descriptor
         VPRINT("Padding to the first sector\n");
-        zeropad(BYTES(header.descriptorSize) - writeDescriptorFile(of, outsize, outfile, cylinders, heads, sectors), of);
+        zeropad(BYTES(header.descriptorSize) - writeDescriptorFile(of, outsize, outfile, cylinders, heads, sectors, adapter), of);
         // Write the rGDE
         VPRINT("Writing the redundant Grain Directory\n");
         size_t sizeofGDE = GT0Offset(numGTs(outsize));
