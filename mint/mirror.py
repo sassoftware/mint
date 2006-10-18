@@ -5,112 +5,97 @@
 #
 from mint import database
 
-class InboundLabelsTable(database.KeyedTable):
-    name = 'InboundLabels'
-    key = 'labelId'
-    createSQL= """CREATE TABLE InboundLabels (
-        projectId       INT NOT NULL,
-        labelId         INT NOT NULL,
-        url             VARCHAR(255),
-        username        VARCHAR(255),
-        password        VARCHAR(255),
-        CONSTRAINT InboundLabels_projectId_fk
-            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-            ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT InboundLabels_labelId_fk
-            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-            ON DELETE RESTRICT ON UPDATE CASCADE
+class InboundMirrorsTable(database.KeyedTable):
+    name = 'InboundMirrors'
+    key = 'inboundMirrorId'
+    createSQL= """CREATE TABLE InboundMirrors (
+        inboundMirrorId %(PRIMARYKEY)s,
+        targetProjectId INT NOT NULL,
+        sourceLabels    VARCHAR(767) NOT NULL,
+        sourceUrl       VARCHAR(767) NOT NULL,
+        sourceUsername  VARCHAR(254),
+        sourcePassword  VARCHAR(254),
+        CONSTRAINT InboundMirrors_targetProjectId_fk
+            FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
+            ON DELETE CASCADE ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
-    fields = ['projectId', 'labelId', 'url', 'username', 'password']
+    fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
+              'sourceUrls', 'sourceUsername', 'sourcePassword']
 
-
-class OutboundLabelsTable(database.KeyedTable):
-    name = 'OutboundLabels'
-    key = 'labelId'
-    createSQL= """CREATE TABLE OutboundLabels (
-        projectId       INT NOT NULL,
-        labelId         INT NOT NULL,
-        url             VARCHAR(255),
-        username        VARCHAR(255),
-        password        VARCHAR(255),
-        allLabels       INT DEFAULT 0,
-        recurse         INT DEFAULT 0,
-        CONSTRAINT OutboundLabels_projectId_fk
-            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-            ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT OutboundLabels_labelId_fk
-            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-            ON DELETE RESTRICT ON UPDATE CASCADE
-    ) %(TABLEOPTS)s"""
-
-    fields = ['projectId', 'labelId', 'url', 'username', 'password',
-              'allLabels', 'recurse']
+    indexes = {'InboundMirrorsProjectIdIdx': """CREATE INDEX InboundMirrorsProjectIdIdx ON InboundMirrors(targetProjectId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             cu = self.db.cursor()
-            if dbversion == 17 and not self.initialCreation:
+            if dbversion == 24:
+                cu.execute("""INSERT INTO InboundMirrors (targetProjectId,
+                    sourceLabels, sourceUrl, sourceUsername, sourcePassword)
+                   SELECT il.projectId AS targetProjectId,
+                          l.label AS sourceLabels,
+                          il.url AS sourceUrl,
+                          il.username AS sourceUsername,
+                          il.password AS sourcePassword
+                   FROM InboundLabels il JOIN labels l USING (labelId)""")
+                cu.execute("""DROP TABLE InboundLabels""")
+            return dbversion >= 25
+        return True
+
+class OutboundMirrorsTable(database.KeyedTable):
+    name = 'OutboundMirrors'
+    key = 'outboundMirrorId'
+    createSQL= """CREATE TABLE OutboundMirrors (
+        outboundMirrorId %(PRIMARYKEY)s,
+        sourceProjectId  INT NOT NULL,
+        targetLabels     VARCHAR(767) NOT NULL,
+        targetUrl        VARCHAR(767) NOT NULL,
+        targetUsername   VARCHAR(254),
+        targetPassword   VARCHAR(254),
+        allLabels        INT NOT NULL DEFAULT 0,
+        recurse          INT NOT NULL DEFAULT 0,
+        matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
+        CONSTRAINT OutboundMirrors_sourceProjectId_fk
+            FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
+            ON DELETE CASCADE ON UPDATE CASCADE
+    ) %(TABLEOPTS)s"""
+
+    fields = ['outboundMirrorId', 'sourceProjectId', 'targetLabels',
+              'targetUrl', 'targetUsername', 'targetPassword', 'allLabels',
+              'recurse', 'matchStrings']
+
+    indexes = {'OutboundMirrorsProjectIdIdx': """CREATE INDEX OutboundMirrorsProjectIdIdx ON OutboundMirrors(sourceProjectId)"""}
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            cu = self.db.cursor()
+            if dbversion == 17:
                 cu.execute("ALTER TABLE OutboundLabels ADD COLUMN allLabels INT DEFAULT 0")
-            if dbversion == 18 and not self.initialCreation:
+            if dbversion == 18:
                 cu.execute("ALTER TABLE OutboundLabels ADD COLUMN recurse INT DEFAULT 0")
-            return dbversion >= 18
+            if dbversion == 24:
+                cu.execute("""SELECT ol.labelId, ol.projectId, l.label, ol.url, ol.username, ol.password, ol.allLabels, ol.recurse FROM OutboundLabels ol JOIN Labels l USING (labelId)""")
+                outboundLabels = cu.fetchall()
+                cu.execute("""DROP TABLE OutboundLabels""")
+                for ol in outboundLabels:
+                    cu.execute("""INSERT INTO OutboundMirrors (sourceProjectId, targetLabels, targetUrl, targetUsername, targetPassword, allLabels, recurse) VALUES(?,?,?,?,?,?,?)""", *ol[1:])
+                    outboundMirrorId = cu.lastrowid
+                    cu.execute("""SELECT matchStr FROM OutboundMatchTroves WHERE projectId = ? AND labelId = ? ORDER BY idx ASC""", ol[1], ol[0])
+                    matchStrings = ' '.join([x[0] for x in cu.fetchall()])
+                    cu.execute("""UPDATE OutboundMirrors SET matchStrings = ? WHERE outboundMirrorId = ?""", matchStrings, outboundMirrorId)
+
+                cu.execute("""DROP TABLE OutboundMatchTroves""")
+            return dbversion >= 25
         return True
 
     def get(self, *args, **kwargs):
         res = database.KeyedTable.get(self, *args, **kwargs)
-        res['allLabels'] = bool(res['allLabels'])
-        res['recurse'] = bool(res['recurse'])
+        if 'allLabels' in res:
+            res['allLabels'] = bool(res['allLabels'])
+        if 'recurse' in res:
+            res['recurse'] = bool(res['recurse'])
         return res
-
-    def delete(self, labelId, url):
-        cu = self.db.cursor()
-
-        cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?",
-                   labelId, url)
-        cu.execute("DELETE FROM OutboundMatchTroves WHERE labelId=?", labelId)
-        self.db.commit()
-
-
-class OutboundMatchTrovesTable(database.KeyedTable):
-    name = 'OutboundMatchTroves'
-    key = 'labelId'
-    createSQL= """CREATE TABLE OutboundMatchTroves (
-        projectId       INT NOT NULL,
-        labelId         INT NOT NULL,
-        idx             INT NOT NULL,
-        matchStr         VARCHAR(255),
-        CONSTRAINT OutboundMatchTroves_projectId_fk
-            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-            ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT OutboundMatchTroves_labelId_fk
-            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-            ON DELETE RESTRICT ON UPDATE CASCADE
-    ) %(TABLEOPTS)s"""
-
-    fields = ['projectId', 'labelId', 'matchStr']
-
-    def set(self, projectId, labelId, matchList):
-        cu = self.db.cursor()
-        cu.execute("""DELETE FROM OutboundMatchTroves
-                          WHERE projectId=? AND labelId=?""",
-                   projectId, labelId)
-        for idx, matchStr in enumerate(matchList):
-            cu.execute("""INSERT INTO OutboundMatchTroves
-                              (projectId, labelId, idx, matchStr)
-                              VALUES(?, ?, ?, ?)""",
-                       projectId, labelId, idx, matchStr)
-        self.db.commit()
-
-    def listMatches(self, labelId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT matchStr
-                          FROM OutboundMatchTroves
-                          WHERE labelId=?
-                          ORDER BY idx""",
-                   labelId)
-        return [x[0] for x in cu.fetchall()]
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"

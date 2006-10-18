@@ -511,8 +511,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # both regular projects will show up
         assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\n'))
 
+        exProject = client.getProject(exProjectId)
         # two regular projects, one external project, mirrored
-        adminClient.addInboundLabel(exProjectId, exProjectId,
+        adminClient.addInboundMirror(exProjectId, [ exProject.getLabel() ],
             "http://www.example.com/conary/",
             "mirror", "mirrorpass")
         # all projects will show up
@@ -658,8 +659,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         projectName = project.hostname
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundLabels VALUES(?, ?, '', '', '')",
-                   project.id, project.id)
+        cu.execute("INSERT INTO InboundMirrors (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword) VALUES(?, '', '', '', '')", project.id)
         db.commit()
         project.refresh()
         del project
@@ -715,8 +715,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "project is local mirror without inbound label")
 
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundLabels VALUES(?, ?, '', '', '')",
-                   project.id, project.id)
+        cu.execute("INSERT INTO InboundMirrors (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword) VALUES(?, '', '', '', '')", project.id)
         db.commit()
         project.refresh()
         self.failIf(not client.isLocalMirror(project.id),

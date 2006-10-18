@@ -37,7 +37,8 @@ class LoadMirrorFixturedTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(proj.id, data['projectId'])
 
         # mirror it
-        loader.client.addInboundLabel(proj.id, proj.id,
+        label = proj.getLabel()
+        loader.client.addInboundMirror(proj.id, [label],
             "http://www.example.com/conary/",
             "mirror", "mirrorpass")
 

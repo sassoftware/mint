@@ -46,14 +46,16 @@ class MirrorInbound(SingletonScript):
         cfg = mirror.MirrorConfiguration()
         cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
 
-        mirroredLabels = client.getInboundLabels()
+        mirroredLabels = client.getInboundMirrors()
 
         for label in mirroredLabels:
-            projectId, targetLabelId, sourceUrl, sourceUser, sourcePass = label
-            project = client.getProject(projectId)
+            inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
+                    sourceUser, sourcePass = label
+            targetProject = client.getProject(targetProjectId)
 
-            labelStr, targetUrl, targetUser, targetPass  = client.getLabel(targetLabelId)
-            reposHost = versions.Label(labelStr).getHost()
+            targetLabelId = targetProject.getLabelIdMap().values()[0]
+            targetLabelStr, targetUrl, targetUser, targetPass = client.getLabel(targetLabelId)
+            reposHost = versions.Label(targetLabelStr).getHost()
 
             if mintCfg.SSL and targetUrl.startswith('http:'):
                 targetUrl = "https" + targetUrl[4:]
@@ -66,7 +68,7 @@ class MirrorInbound(SingletonScript):
             cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
             cfg.host = reposHost
-            cfg.labels = [versions.Label(project.getLabel())]
+            cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
             sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                       cfg.source.user,

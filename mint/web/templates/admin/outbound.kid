@@ -29,11 +29,11 @@
                         <td>Target Repository</td>
                         <td>Remove</td>
                     </tr>
-                    <tr py:for="project, label, labelId, url, user, passwd in outboundLabels">
+                    <tr py:for="outboundMirrorId, project, label, url, user, passwd, _, _, _ in outboundLabels">
                         <td><a href="${project.getUrl()}">${project.name}</a></td>
-                        <td>${label[0]}</td>
+                        <td>${label}</td>
                         <td>${url}</td>
-                        <td><input type="checkbox" name="remove" value="${labelId} $url" /></td>
+                        <td><input type="checkbox" name="remove" value="${outboundMirrorId}" /></td>
                     </tr>
                 </table>
                 <div py:if="not outboundLabels">

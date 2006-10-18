@@ -516,24 +516,31 @@ class MintClient:
     def versionIsExternal(self, versionStr):
         return self.server.versionIsExternal(versionStr)
 
-    def addInboundLabel(self, projectId, labelId, url, username, password):
-        return self.server.addInboundLabel(projectId, labelId, url,
-                                           username, password)
+    def addInboundMirror(self, targetProjectId, sourceLabels,
+            sourceUrl, sourceUsername, sourcePassword):
+        return self.server.addInboundMirror(targetProjectId, sourceLabels,
+                sourceUrl, sourceUsername, sourcePassword)
 
-    def addOutboundLabel(self, projectId, labelId,
-            url, username, password, allLabels = False, recurse = False):
-        return self.server.addOutboundLabel(projectId, labelId, url,
-                                            username, password, allLabels,
-                                            recurse)
+    def addOutboundMirror(self, sourceProjectId, targetLabels,
+            targetUrl, targetUsername, targetPassword,
+            allLabels = False, recurse = False):
+        return self.server.addOutboundMirror(sourceProjectId, targetLabels,
+                targetUrl, targetUsername, targetPassword, allLabels, recurse)
 
-    def delOutboundLabel(self, labelId, url):
-        return self.server.delOutboundLabel(labelId, url)
+    def delOutboundMirror(self, outboundMirrorId):
+        return self.server.delOutboundMirror(outboundMirrorId)
 
-    def getInboundLabels(self):
-        return self.server.getInboundLabels()
+    def getInboundMirrors(self):
+        return self.server.getInboundMirrors()
 
-    def getOutboundLabels(self):
-        return self.server.getOutboundLabels()
+    def getOutboundMirrors(self):
+        return self.server.getOutboundMirrors()
+
+    def getOutboundMirrorMatchTroves(self, outboundMirrorId):
+        return self.server.getOutboundMirrorMatchTroves(outboundMirrorId)
+
+    def setOutboundMirrorMatchTroves(self, outboundMirrorId, matchStringList):
+        return self.server.setOutboundMirrorMatchTroves(outboundMirrorId, matchStringList)
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
@@ -543,13 +550,6 @@ class MintClient:
 
     def addRemappedRepository(self, fromName, toName):
         return self.server.addRemappedRepository(fromName, toName)
-
-    def setOutboundMatchTroves(self, projectId, labelId, matchList):
-        return self.server.setOutboundMatchTroves(projectId, labelId,
-                                                  matchList)
-
-    def getOutboundMatchTroves(self, labelId):
-        return self.server.getOutboundMatchTroves(labelId)
 
     def getUseItIcons(self):
         return self.server.getUseItIcons()

@@ -53,7 +53,7 @@ def deleteProject(cfg, projectName):
 
     # check for local mirror
     cu.execute("""SELECT EXISTS(
-                SELECT * From InboundLabels WHERE projectId=?)""", projectId)
+                SELECT * From InboundMirrors WHERE targetProjectId=?)""", projectId)
     isLocalMirror = bool(cu.fetchone()[0])
 
     print "Deleting Project: %s %s" % (projectName, (isLocalMirror and '[mirror]' or ''))
@@ -182,10 +182,8 @@ def deleteProject(cfg, projectName):
         status("Deleting Project Entry")
         status("Deleting Labels")
         # delete from all other tables that refer to projectId directly
-        cu.execute("DELETE FROM InboundLabels WHERE projectId=?", projectId)
-        cu.execute("DELETE FROM OutboundLabels WHERE projectId=?", projectId)
-        cu.execute("DELETE FROM OutboundMatchTroves WHERE projectId=?",
-                   projectId)
+        cu.execute("DELETE FROM InboundMirrors WHERE targetProjectId=?", projectId)
+        cu.execute("DELETE FROM OutboundMirrors WHERE sourceProjectId=?", projectId)
         cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
         cu.execute("DELETE FROM RepNameMap WHERE fromName=?", projectFQDN)
 

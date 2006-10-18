@@ -48,7 +48,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.post,
                              {'hostname' : 'rpath',
                               'name' : 'rPath Linux',
-                              'label' : 'conary.rpath.com@rpl:devel',
+                              'label' : 'conary.rpath.com@rpl:1',
                               'url' : '',
                               'useMirror': '1',
                               'externalAuth': '1',
@@ -61,7 +61,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
-        assert(client.getInboundLabels() == [[1, 1, 'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
+        assert(client.getInboundMirrors() == [[1, 1, 'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat', 'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
@@ -143,20 +143,20 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'mirrorPass':      'mirrorpass',
              'mirrorSources':   0})
 
-        self.assertContent("/admin/outbound",
-            content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
-        assert(client.getOutboundLabels() == \
-            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False]])
-        assert(client.getOutboundMatchTroves(projectId) == \
+        label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
+        self.assertContent("/admin/outbound", content = label)
+        assert(client.getOutboundMirrors() == \
+            [[1, 1, label, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False, ['-.*:source', '-.*:debuginfo', '+.*']]])
+
+        assert(client.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
 
         page = self.fetch("/admin/outbound")
         page = page.postForm(1, self.post,
-            {'remove':      '1 http://www.example.com/conary/',
+            {'remove':      '1',
              'operation':   'remove_outbound'})
 
-        assert(client.getOutboundLabels() == [])
-        assert(client.getOutboundMatchTroves(projectId) == [])
+        assert(client.getOutboundMirrors() == [])
 
     def testCreateOutboundMirrorSources(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -171,12 +171,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'mirrorUser':      'mirror',
              'mirrorPass':      'mirrorpass',
              'mirrorSources':   '1'})
-
-        self.assertContent("/admin/outbound",
-            content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
-        assert(client.getOutboundLabels() == \
-            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False]])
-        assert(client.getOutboundMatchTroves(projectId) == [])
+        label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
+        self.assertContent("/admin/outbound", content = label)
+        assert(client.getOutboundMirrors() == \
+            [[1, 1, label, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False, []]])
+        assert(client.getOutboundMirrorMatchTroves(1) == [])
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
