@@ -15,7 +15,6 @@ from mint import mint_error
 from mint import maintenance
 from mint import projectlisting
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
-from mint.mirrorprime import TarHandler
 
 from conary import conarycfg, versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
@@ -120,12 +119,12 @@ class AdminHandler(WebHandler):
     @strFields(name = '', hostname = '', label = '', url = '',\
         externalUser = '', externalPass = '', externalEntKey = '',\
         externalEntClass = '', authType = 'username',\
-        additionalLabelsToMirror = '')
-    @boolFields(useMirror = False, primeMirror = False, externalAuth = False)
+        additionalLabelsToMirror = '', useMirror = 'none')
+    @boolFields(externalAuth = False)
     def processExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
-                        useMirror, primeMirror, externalAuth, authType,
+                        useMirror, externalAuth, authType,
                         additionalLabelsToMirror, *args, **kwargs):
 
         additionalLabels = []
@@ -164,19 +163,8 @@ class AdminHandler(WebHandler):
                     self._addErrors('Missing entitlement key for local mirror authentication')
 
         if not self._getErrors():
-            if primeMirror and useMirror:
-                startPrimeServer()
-                # return the prime mirror page loaded with enough information to create the
-                # project once the priming was successful
-                serverName = extLabel.getHost()
-                return self._write("admin/primeMirror", name = name, hostname = hostname,
-                    label = label, url = url, externalUser = externalUser, serverName = serverName,
-                    externalPass = externalPass, externalEntKey = externalEntKey,
-                    externalEntClass = externalEntClass, authType = authType,
-                    useMirror = True, primeMirror = False, externalAuth = externalAuth)
-
             projectId = self.client.newExternalProject(name, hostname,
-                self.cfg.projectDomainName, label, url, useMirror)
+                self.cfg.projectDomainName, label, url, useMirror == 'network')
             project = self.client.getProject(projectId)
 
             labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
@@ -201,7 +189,7 @@ class AdminHandler(WebHandler):
                             self.cfg.authUser, self.cfg.authPass)
 
             # set up the mirror, if requested
-            if useMirror:
+            if useMirror == 'network':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
                            '', self.cfg.projectSiteHost, self.cfg.basePath, 
                            hostname)
@@ -222,14 +210,14 @@ class AdminHandler(WebHandler):
                 'externalPass': externalPass,
                 'externalEntKey': externalEntKey,
                 'externalEntClass': externalEntClass,
-                'useMirror': useMirror, 'primeMirror': primeMirror,
+                'useMirror': useMirror,
                 'additionalLabelsToMirror': additionalLabelsToMirror}
             return self.external(name = name, hostname = hostname,
                     label = label, url = url, externalAuth = externalAuth,
                     externalUser = externalUser, externalPass = externalPass,
                     externalEntKey = externalEntKey,
                     externalEntClass = externalEntClass,
-                    useMirror = useMirror, primeMirror = primeMirror,
+                    useMirror = useMirror,
                     authType = authType,
                     additionalLabelsToMirror = additionalLabelsToMirror)
 
@@ -464,9 +452,3 @@ class AdminHandler(WebHandler):
         mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
-
-def startPrimeServer():
-    pid = os.fork()
-    if not pid:
-        os.system("/usr/share/rbuilder/scripts/mirror-prime-server")
-        os._exit(0)

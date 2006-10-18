@@ -8,13 +8,26 @@
 -->
 
 <?python
-    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'primeMirror', 'externalAuth', 'authType', 'additionalLabelsToMirror']:
+<<<<<<< /home/tgerla/hg/mint/mint/web/templates/admin/external.kid
+    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'externalAuth', 'authType', 'additionalLabelsToMirror']:
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
         <title>${formatTitle('Add External Project')}</title>
+        <script>
+            function requireAuth() {
+                externalAuth = $('externalAuth');
+                externalAuth.checked = true;
+                externalAuth.disabled = true;
+                showElement('authSettings');
+            }
+            function unRequireAuth() {
+                externalAuth = $('externalAuth');
+                externalAuth.disabled = false;
+            }
+        </script>
     </head>
-    <body onload="javascript:hideElement('mirrorSettings'); hideElement('authSettings')">
+    <body onload="javascript:hideElement('authSettings')">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
@@ -131,26 +144,33 @@
 
 
             <h2>Mirror Settings</h2>
-            <p><b>
-                <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');"
-                    type="checkbox" class="check" name="useMirror" value="1" id="useMirror" py:attrs="{'checked': kwargs['useMirror'] and 'checked' or None}" />
-                <label for="useMirror">Mirror this repository locally</label>
-            </b></p>
+            <p>
+                <div>
+                    <input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
+                           py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}"
+                           onclick="unRequireAuth();" />
+                    <label for="useMirror_none">Do not mirror this repository.</label>
+                </div>
+                <div>
+                    <input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
+                            py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}"
+                            onclick="requireAuth();" />
+                    <label for="useMirror_net">Mirror this repository over a network connection only. (requires authentication)</label>
+                </div>
+                <div>
+                    <input type="radio" class="radio" name="useMirror" value="preload" id="useMirror_preload"
+                           py:attrs="{'checked': kwargs['useMirror'] == 'preload' and 'checked' or None}"
+                           onclick="requireAuth();" />
+                    <label for="useMirror_preload">Mirror this repository with a pre-load disk drive and update via network. (requires authentication)</label>
+                </div>
+            </p>
             <table class="mainformhorizontal" id="mirrorSettings">
-
                 <tr>
                    <th><em class="required">Additional labels to mirror:</em></th>
                    <td>
                        <input type="text" autocomplete="off" name="additionalLabelsToMirror" value="${kwargs['additionalLabelsToMirror']}" />
                        <p class="help">This should be a space-separated list of additional repository labels to mirror.</p>
                    </td>
-                </tr>
-                <tr>
-                    <th>Preload this mirror:</th>
-                    <td>
-                        <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" py:attrs="{'checked': kwargs['primeMirror'] and 'checked' or None}" />
-                        <label for="primeMirror">Preload this mirror with a set of CDs or DVDs</label>
-                    </td>
                 </tr>
             </table>
             <button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" /></button>
