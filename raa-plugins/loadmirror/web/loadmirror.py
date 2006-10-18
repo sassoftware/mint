@@ -60,6 +60,7 @@ class LoadMirror(rAAWebPlugin):
     displayName = _("Pre-load Mirrored Repositories")
 
     tableClass = LoadMirrorTable
+    preloadLogPath = '/srv/rbuilder/logs/load-mirror.log'
 
     @turbogears.expose(html="rPath.loadmirror.index")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
@@ -92,17 +93,24 @@ class LoadMirror(rAAWebPlugin):
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def callStartPreload(self):
         self._setCommand("preload")
-
         return dict()
+
+    def _getLog(self):
+        f = file(self.preloadLogPath)
+        data = f.read()
+        f.close()
+        return data
 
     @turbogears.expose(allow_json=True)
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def callGetLog(self):
-        # XXX fix hardcode
-        f = file("/srv/rbuilder/logs/load-mirror.log")
-        log = f.readlines()
+        return dict(log = self._getLog())
 
-        return dict(log = log)
+    @turbogears.expose()
+    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    def downloadLog(self):
+        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        return self._getLog()
 
     def _getProjects(self):
         # XXX fix hardcode
