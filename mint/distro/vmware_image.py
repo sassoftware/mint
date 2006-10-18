@@ -22,6 +22,13 @@ class VMwareImage(bootable_image.BootableImage):
         vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
         try:
             filebase = os.path.join(vmbasedir, self.basefilename)
+
+            if self.adapter == 'lsilogic':
+                self.cylinders = self.cylinders * self.imgcfg.heads * \
+                    self.imgcfg.sectors / (128 * 32)
+                self.imgcfg.sectors = 32
+                self.imgcfg.heads = 128
+
             #run qemu-img to convert to vmdk
             self.createVMDK(filebase + '.vmdk')
             #Populate the vmx file
@@ -37,8 +44,9 @@ class VMwareImage(bootable_image.BootableImage):
         flags = ''
         if self.imgcfg.debug:
             flags += ' -v'
-        cmd = 'raw2vmdk -C %d %s %s %s' % (self.cylinders, self.outfile,
-                    outfile, flags)
+        cmd = 'raw2vmdk -C %d -H %d -S %d -A %s %s %s %s' % \
+            (self.cylinders, self.imgcfg.heads, self.imgcfg.sectors,
+             self.adapter, self.outfile, outfile, flags)
         log.debug("Running", cmd)
         util.execute(cmd)
 
@@ -56,6 +64,10 @@ class VMwareImage(bootable_image.BootableImage):
         filecontents = filecontents.replace('@FILENAME@', self.basefilename)
         filecontents = filecontents.replace('@NETWORK_CONNECTION@', \
             self.build.getDataValue('natNetworking') and 'nat' or 'bridged')
+        filecontents = filecontents.replace('@ADAPTER@', self.adapter)
+        filecontents = filecontents.replace('@ADAPTERDEV@',
+                                            (self.adapter == 'lsilogic') \
+                                                and 'scsi' or 'ide')
 
         #write the file to the proper location
         ofile = open(outfile, 'wb')
@@ -66,6 +78,16 @@ class VMwareImage(bootable_image.BootableImage):
         try:
             # instantiate the contents that need to go into the image
             self.createFileTree()
+
+            if self.adapter == 'lsilogic':
+                filePath = os.path.join(self.fakeroot, 'etc', 'modprobe.conf')
+                f = open(filePath, 'a')
+                if os.stat(filePath)[6]:
+                    f.write('\n')
+                f.write('\n'.join(('alias scsi_hostadapter mptbase',
+                                   'alias scsi_hostadapter1 mptspi')))
+                f.close()
+
             # and instantiate the image itself
             self.createImage()
 
@@ -97,4 +119,5 @@ class VMwareImage(bootable_image.BootableImage):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
         self.freespace = self.build.getDataValue("freespace") * 1048576
         self.swapSize = self.build.getDataValue("swapSize") * 1048576
+        self.adapter = self.build.getDataValue('diskAdapter')
         return res
