@@ -160,7 +160,42 @@ sqlite_schema8_tables = \
                        """CREATE TABLE ReleaseImageTypes (
                               releaseId   INT,
                               imageType   INT,
-                              PRIMARY KEY (releaseId, imageType))"""]
+                              PRIMARY KEY (releaseId, imageType))""",
+                        """CREATE TABLE InboundLabels (
+                                projectId       INT NOT NULL,
+                                labelId         INT NOT NULL,
+                                url             VARCHAR(255),
+                                username        VARCHAR(255),
+                                password        VARCHAR(255),
+                                CONSTRAINT InboundLabels_projectId_fk
+                                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE,
+                                CONSTRAINT InboundLabels_labelId_fk
+                                    FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE)""",
+                        """CREATE TABLE OutboundLabels (
+                                projectId       INT NOT NULL,
+                                labelId         INT NOT NULL,
+                                url             VARCHAR(255),
+                                username        VARCHAR(255),
+                                password        VARCHAR(255),
+                                CONSTRAINT OutboundLabels_projectId_fk
+                                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE,
+                                CONSTRAINT OutboundLabels_labelId_fk
+                                    FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE)""",
+                       """CREATE TABLE OutboundMatchTroves (
+                            projectId       INT NOT NULL,
+                            labelId         INT NOT NULL,
+                            idx             INT NOT NULL,
+                            matchStr         VARCHAR(255),
+                            CONSTRAINT OutboundMatchTroves_projectId_fk
+                                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                ON DELETE RESTRICT ON UPDATE CASCADE,
+                            CONSTRAINT OutboundMatchTroves_labelId_fk
+                                FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                ON DELETE RESTRICT ON UPDATE CASCADE) """ ]
 
 mysql_schema8_tables = ["""CREATE TABLE GroupTroveItems(
                               groupTroveItemId INTEGER,
@@ -301,7 +336,42 @@ mysql_schema8_tables = ["""CREATE TABLE GroupTroveItems(
                         """CREATE TABLE ReleaseImageTypes (
                               releaseId   INT,
                               imageType   INT,
-                              PRIMARY KEY (releaseId, imageType))"""]
+                              PRIMARY KEY (releaseId, imageType))""",
+                        """CREATE TABLE InboundLabels (
+                                projectId       INT NOT NULL,
+                                labelId         INT NOT NULL,
+                                url             VARCHAR(255),
+                                username        VARCHAR(255),
+                                password        VARCHAR(255),
+                                CONSTRAINT InboundLabels_projectId_fk
+                                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE,
+                                CONSTRAINT InboundLabels_labelId_fk
+                                    FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE)""",
+                        """CREATE TABLE OutboundLabels (
+                                projectId       INT NOT NULL,
+                                labelId         INT NOT NULL,
+                                url             VARCHAR(255),
+                                username        VARCHAR(255),
+                                password        VARCHAR(255),
+                                CONSTRAINT OutboundLabels_projectId_fk
+                                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE,
+                                CONSTRAINT OutboundLabels_labelId_fk
+                                    FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                    ON DELETE RESTRICT ON UPDATE CASCADE)""",
+                       """CREATE TABLE OutboundMatchTroves (
+                            projectId       INT NOT NULL,
+                            labelId         INT NOT NULL,
+                            idx             INT NOT NULL,
+                            matchStr         VARCHAR(255),
+                            CONSTRAINT OutboundMatchTroves_projectId_fk
+                                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                                ON DELETE RESTRICT ON UPDATE CASCADE,
+                            CONSTRAINT OutboundMatchTroves_labelId_fk
+                                FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+                                ON DELETE RESTRICT ON UPDATE CASCADE) """ ]
 
 schema8_indexes = ["""CREATE INDEX DatabaseVersionIdx
                           ON DatabaseVersion(version)""",
@@ -414,14 +484,46 @@ class UpgradePathTest(MintRepositoryHelper):
         # create projects
         cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                    1, 1, 'Foo', 'foo', 'rpath.local', '', '', 0, 0, 0, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   1, 1, 'foo.rpath.local@rpl:devel',
+                   'http://foo.rpath.local/conary', 'mintauth', 'mintpass')
         cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                    2, 2, 'Bar', 'bar', 'rpath.local', '', '', 0, 0, 0, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   2, 2, 'bar.rpath.local@rpl:devel',
+                   'http://bar.rpath.local/conary', 'mintauth', 'mintpass')
         cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                    3, 1, 'Baz', 'baz', 'rpath.local', '', '', 0, 0, 0, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   3, 3, 'baz.rpath.local@rpl:devel',
+                   'http://baz.rpath.local/conary', 'mintauth', 'mintpass')
+
+        # external project (for inbound mirroring)
+        cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                   4, 1, 'quux', 'quux', 'rpath.local', '', '', 0, 0, 1, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   4, 4, 'quux.rpath.local@rpl:devel',
+                   'http://quux.rpath.local/conary', 'mintauth', 'mintpass')
+
+        # internal project (for outbound mirroring)
+        cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                   5, 1, 'fooz', 'fooz', 'rpath.local', '', '', 0, 0, 0, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   5, 5, 'fooz.rpath.local@rpl:devel',
+                   'http://fooz.rpath.local/conary', 'mintauth', 'mintpass')
+
+        cu.execute("INSERT INTO Projects VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                   6, 1, 'blarch', 'blarch', 'rpath.local', '', '', 0, 0, 0, 0, 0)
+        cu.execute("INSERT INTO Labels VALUES(?,?,?,?,?,?)",
+                   6, 6, 'blarch.rpath.local@rpl:devel',
+                   'http://blarch.rpath.local/conary', 'mintauth', 'mintpass')
 
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 1, 1, 0)
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 2, 1, 1)
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 2, 2, 0)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 4, 1, 0)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 5, 1, 0)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", 6, 1, 0)
 
         # create sessions
         cu.execute("INSERT INTO Sessions VALUES(?, ?, ?)", 1, 32*'A', '')
@@ -454,6 +556,23 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute("INSERT INTO GroupTroves VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
                    1, 1, 1, 'group-test', '0.0.1', '', 0, 0, 1)
+
+
+        # insert mirroring information
+        cu.execute("INSERT INTO InboundLabels VALUES(?,?,?,?,?)",
+                4, 4, 'http://www.elsewhere.com/conary', 'somebody', 'somepass')
+        cu.execute("INSERT INTO OutboundLabels VALUES(?,?,?,?,?)",
+                5, 5, 'http://www.inbound.com/conary', 'dontguess', 'meplease')
+
+        cu.execute("INSERT INTO OutboundLabels VALUES(?,?,?,?,?)",
+                6, 6, 'http://www.mooz.com/conary', 'egghead', 'beaniebot')
+
+        cu.execute("INSERT INTO OutboundMatchTroves VALUES(?,?,?,?)",
+                5, 5, 0, '-.*:source$')
+        cu.execute("INSERT INTO OutboundMatchTroves VALUES(?,?,?,?)",
+                5, 5, 1, '-.*:debuginfo$')
+        cu.execute("INSERT INTO OutboundMatchTroves VALUES(?,?,?,?)",
+                5, 5, 2, '+.*')
 
         # set version
         cu.execute("INSERT INTO DatabaseVersion VALUES(8, 0)")
@@ -563,6 +682,18 @@ class UpgradePathTest(MintRepositoryHelper):
                     [(1, 3, 1, 'foo', 'Test File', None, None)],
                     "Schema upgrade 20 didn't migrate build files correctly")
 
+        cu.execute("SELECT * FROM InboundMirrors")
+        self.failUnlessEqual(cu.fetchall(),
+                [(1, 4, 'quux.rpath.local@rpl:devel', 'http://www.elsewhere.com/conary', 'somebody', 'somepass')],
+                "Schema 25 upgrade didn't migrate InboundLabels")
+
+        cu.execute("SELECT * FROM OutboundMirrors")
+        self.failUnlessEqual(cu.fetchall(),
+                [(1, 5, 'fooz.rpath.local@rpl:devel', 'http://www.inbound.com/conary', 'dontguess', 'meplease', 0, 0, '-.*:source$ -.*:debuginfo$ +.*'),
+                 (2, 6, 'blarch.rpath.local@rpl:devel', 'http://www.mooz.com/conary', 'egghead', 'beaniebot', 0, 0, '')],
+                "Schema 25 upgrade didn't migrate OutboundLabels")
+
+
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
         # repos for rBuilder Schema 15. only tests one schema bump.
@@ -632,10 +763,8 @@ class UpgradePathTest(MintRepositoryHelper):
         build.setBuildType(buildtypes.VMWARE_IMAGE)
 
         cu = self.db.cursor()
-        cu.execute('SELECT * FROM BuildData')
-        self.failIf (cu.fetchall() != \
-                         [(1, 'jsversion', '2.0.3', 0),
-                          (2, 'jsversion', '2.0.3', 0)],
+        cu.execute("SELECT * FROM BuildData WHERE name = 'diskAdapter'")
+        self.failIf(cu.fetchall(),
                      "diskAdapter upgrade baseline needs tweaking. check test.")
 
         self.forceSchemaVersion(23)
@@ -643,11 +772,8 @@ class UpgradePathTest(MintRepositoryHelper):
         client.server._server.buildData.db.commit()
 
         cu = self.db.cursor()
-        cu.execute('SELECT * FROM BuildData')
-        self.failIf (cu.fetchall() != \
-                         [(1, 'jsversion', '2.0.3', 0),
-                          (2, 'jsversion', '2.0.3', 0),
-                          (2, 'diskAdapter', 'ide', 0)],
+        cu.execute("SELECT * FROM BuildData WHERE name = 'diskAdapter'")
+        self.failUnlessEqual(cu.fetchall(), [(2, 'diskAdapter', 'ide', 0)],
                      "diskAdapter upgrade failed")
 
     def testDbBumpVersion(self):

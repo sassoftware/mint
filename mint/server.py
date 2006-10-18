@@ -222,9 +222,8 @@ def getTables(db, cfg):
     d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
-    d['inboundLabels'] = mirror.InboundLabelsTable(db)
-    d['outboundLabels'] = mirror.OutboundLabelsTable(db)
-    d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
+    d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
+    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
     d['useit'] = useit.UseItTable(db, cfg)
@@ -1693,7 +1692,7 @@ class MintServer(object):
         cu = self.db.cursor()
         res = cu.execute("""SELECT projectId from Projects
                             WHERE hidden=0 AND disabled=0 AND
-                                (external=0 OR projectId IN (SELECT projectId FROM InboundLabels))""")
+                                (external=0 OR projectId IN (SELECT projectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         repoMaps = {}
         for x in projs:
@@ -3521,76 +3520,80 @@ class MintServer(object):
 
     # mirrored labels
     @private
-    @typeCheck(int, int, str, str, str)
+    @typeCheck(int, (list, str), str, str, str)
     @requiresAdmin
-    def addInboundLabel(self, projectId, labelId, url, username, password):
-        x = self.inboundLabels.new(projectId = projectId, labelId = labelId,
-                                      url = url, username = username,
-                                      password = password)
+    def addInboundMirror(self, targetProjectId, sourceLabels,
+            sourceUrl, sourceUsername, sourcePassword):
+        x = self.inboundMirrors.new(targetProjectId=targetProjectId,
+                sourceLabels = ' '.join(sourceLabels),
+                sourceUrl = sourceUrl, sourceUsername = sourceUsername,
+                sourcePassword = sourcePassword)
         self._generateConaryRcFile()
         return x
 
     @private
     @typeCheck()
     @requiresAdmin
-    def getInboundLabels(self):
+    def getInboundMirrors(self):
         cu = self.db.cursor()
-
-        cu.execute("""SELECT projectId, labelId, url, username, password
-                          FROM InboundLabels""")
+        cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
+            sourceUsername, sourcePassword FROM InboundMirrors""")
         return [list(x) for x in cu.fetchall()]
 
     @private
-    @typeCheck(int, int, str, str, str, bool, bool)
+    @typeCheck(int, (list, str), str, str, str, bool, bool)
     @requiresAdmin
-    def addOutboundLabel(self, projectId, labelId, url, username, password, allLabels, recurse):
-        return self.outboundLabels.new(projectId = projectId,
-                                       labelId = labelId, url = url,
-                                       username = username,
-                                       password = password,
+    def addOutboundMirror(self, sourceProjectId, targetLabels, targetUrl,
+            targetUsername, targetPassword, allLabels, recurse):
+        return self.outboundMirrors.new(sourceProjectId = sourceProjectId,
+                                       targetLabels = ' '.join(targetLabels),
+                                       targetUrl = targetUrl,
+                                       targetUsername = targetUsername,
+                                       targetPassword = targetPassword,
                                        allLabels = allLabels,
                                        recurse = recurse)
 
     @private
-    @typeCheck(int, str)
+    @typeCheck(int)
     @requiresAdmin
-    def delOutboundLabel(self, labelId, url):
-        self.outboundLabels.delete(labelId, url)
+    def delOutboundMirror(self, outboundMirrorId):
+        self.outboundMirrors.delete(outboundMirrorId)
         return True
 
     @private
-    @typeCheck(int, int, (list, str))
+    @typeCheck(int, (list, str))
     @requiresAdmin
-    def setOutboundMatchTroves(self, projectId, labelId, matchList):
-        if [x for x in matchList if x[0] not in ('-', '+')]:
-            raise ParameterError("First character of matchStr must be + or -")
-        self.outboundMatchTroves.set(projectId, labelId, matchList)
+    def setOutboundMirrorMatchTroves(self, outboundMirrorId, matchStringList):
+        if isinstance(matchStringList, str):
+            matchStringList = [ str ]
+        if [x for x in matchStringList if x[0] not in ('-', '+')]:
+            raise ParameterError("First character of each matchString must be + or -")
+        self.outboundMirrors.update(outboundMirrorId, matchStrings = ' '.join(matchStringList))
         return True
 
     @private
     @typeCheck(int)
     @requiresAdmin
-    def getOutboundMatchTroves(self, labelId):
-        return self.outboundMatchTroves.listMatches(labelId)
+    def getOutboundMirrorMatchTroves(self, outboundMirrorId):
+        r = self.outboundMirrors.get(outboundMirrorId, fields=['matchStrings'])
+        matchStrings = r.get('matchStrings', '')
+        return matchStrings.split()
 
     @private
     @typeCheck()
     @requiresAdmin
-    def getOutboundLabels(self):
+    def getOutboundMirrors(self):
         cu = self.db.cursor()
-
-        cu.execute("""SELECT projectId, labelId, url, username, password,
-                             allLabels, recurse
-                          FROM OutboundLabels""")
-        return [list(x[:5]) + [bool(x[5]), bool(x[6])] for x in cu.fetchall()]
+        cu.execute("""SELECT outboundMirrorId, sourceProjectId, targetLabels, targetUrl, targetUsername, targetPassword, allLabels, recurse, matchStrings FROM OutboundMirrors""")
+        return [list(x[:6]) + [bool(x[6]), bool(x[7]), x[8].split()] for x in cu.fetchall()]
 
     @private
     @typeCheck(int)
     def isLocalMirror(self, projectId):
         cu = self.db.cursor()
         cu.execute("""SELECT EXISTS(SELECT *
-            FROM InboundLabels
-            WHERE projectId=?)""", projectId)
+            FROM InboundMirrors
+            WHERE targetProjectId=?)""", projectId)
         return bool(cu.fetchone()[0])
 
     @private

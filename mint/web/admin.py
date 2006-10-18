@@ -119,14 +119,16 @@ class AdminHandler(WebHandler):
 
     @strFields(name = '', hostname = '', label = '', url = '',\
         externalUser = '', externalPass = '', externalEntKey = '',\
-        externalEntClass = '', authType = 'username')
+        externalEntClass = '', authType = 'username',\
+        additionalLabelsToMirror = '')
     @boolFields(useMirror = False, primeMirror = False, externalAuth = False)
     def processExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
                         useMirror, primeMirror, externalAuth, authType,
-                        *args, **kwargs):
+                        additionalLabelsToMirror, *args, **kwargs):
 
+        additionalLabels = []
         if not name:
             self._addErrors("Missing project title")
         if not hostname:
@@ -138,6 +140,15 @@ class AdminHandler(WebHandler):
                 extLabel = versions.Label(label)
             except versions.ParseError:
                 self._addErrors("Invalid label %s" % label)
+        if useMirror and additionalLabelsToMirror:
+            for l in additionalLabelsToMirror.split():
+                # skip a redundant label specification
+                if l != label:
+                    try:
+                        extLabel = versions.Label(l)
+                        additionalLabels.append(l)
+                    except versions.ParseError:
+                        self._addErrors("Invalid additional label %s" % l)
         if externalAuth:
             if url.startswith('http:'):
                 self._addErrors("Repository URL must start with https if external authentication is required")
@@ -197,7 +208,7 @@ class AdminHandler(WebHandler):
 
                 # set the internal label to our authUser and authPass
                 project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
-                self.client.addInboundLabel(projectId, labelId, url, externalUser, externalPass)
+                self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
                 self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
             self._setInfo("Added external project %s" % name)
@@ -211,14 +222,16 @@ class AdminHandler(WebHandler):
                 'externalPass': externalPass,
                 'externalEntKey': externalEntKey,
                 'externalEntClass': externalEntClass,
-                'useMirror': useMirror, 'primeMirror': primeMirror}
+                'useMirror': useMirror, 'primeMirror': primeMirror,
+                'additionalLabelsToMirror': additionalLabelsToMirror}
             return self.external(name = name, hostname = hostname,
                     label = label, url = url, externalAuth = externalAuth,
                     externalUser = externalUser, externalPass = externalPass,
                     externalEntKey = externalEntKey,
                     externalEntClass = externalEntClass,
                     useMirror = useMirror, primeMirror = primeMirror,
-                    authType = authType)
+                    authType = authType,
+                    additionalLabelsToMirror = additionalLabelsToMirror)
 
     @strFields(authType = 'userpass')
     def external(self, *args, **kwargs):
@@ -232,6 +245,7 @@ class AdminHandler(WebHandler):
             kwargs.setdefault('hostname', 'rpath')
             kwargs.setdefault('url', 'https://conary.rpath.com/conary/')
             kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
+            kwargs.setdefault('additionalLabelsToMirror', 'conary.rpath.com@rpl:1-compat')
         else:
             firstTime = False
 
@@ -262,7 +276,7 @@ class AdminHandler(WebHandler):
         return self.jobs(*args, **kwargs)
 
     def outbound(self, *args, **kwargs):
-        outboundLabels = [(self.client.getProject(x[0]), self.client.getLabel(x[1]), x[1], x[2], x[3], x[4]) for x in self.client.getOutboundLabels()]
+        outboundLabels = [ [x[0], self.client.getProject(x[1])] + x[2:] for x in self.client.getOutboundMirrors()]
         return self._write('admin/outbound', outboundLabels = outboundLabels)
 
     def addOutbound(self, *args, **kwargs):
@@ -426,11 +440,11 @@ class AdminHandler(WebHandler):
             mirrorSources, allLabels,
             *args, **kwargs):
         project = self.client.getProject(projectId)
-        labelId = project.getLabelIdMap().values()[0]
+        label = project.getLabel()
 
-        self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass, allLabels)
+        outboundMirrorId = self.client.addOutboundMirror(projectId, [label], targetUrl, mirrorUser, mirrorPass, allLabels)
         if not mirrorSources:
-            self.client.setOutboundMatchTroves(projectId, labelId,
+            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
                                                ["-.*:source", "-.*:debuginfo",
                                                 "+.*"])
 
@@ -438,9 +452,8 @@ class AdminHandler(WebHandler):
 
     @listFields(str, remove = [])
     def removeOutbound(self, remove, *args, **kwargs):
-        for x in remove:
-            labelId, url = x.split(" ")
-            self.client.delOutboundLabel(int(labelId), url)
+        for ids in remove:
+            self.client.delOutboundMirror(int(ids))
         self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
     def maintenance(self, *args, **kwargs):

@@ -31,7 +31,7 @@ from conary.lib.tracelog import logMe
 # 3. Port migration code from mint/*.py (DatabaseTable objects)
 
 # database schema version
-VERSION = 24 # this needs to be +1 from the CURRENT version in mint/database.py
+VERSION = 26 # this needs to be +1 from the CURRENT version in mint/database.py
 
 def _createTrigger(db, table, column = "changed", pinned = False):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -670,54 +670,39 @@ def _createMirrorInfo(db):
     cu = db.cursor()
     commit = False
 
-    # inboundLabels
-    if 'InboundLabels' not in db.tables:
-        cu.execute("""
-        CREATE TABLE InboundLabels (
-            projectId       INTEGER NOT NULL,
-            labelId         INTEGER NOT NULL,
-            CONSTRAINT InboundLabels_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT InboundLabels_labelId_fk
-                FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-                ON DELETE RESTRICT ON UPDATE CASCADE
+    # inboundMirrors
+    if 'InboundMirrors' not in db.tables:
+        cu.execute("""CREATE TABLE InboundMirrors (
+            inboundMirrorId %(PRIMARYKEY)s,
+            targetProjectId INT NOT NULL,
+            sourceLabels    VARCHAR(767) NOT NULL,
+            sourceUrl       VARCHAR(767) NOT NULL,
+            sourceUsername  VARCHAR(254),
+            sourcePassword  VARCHAR(254),
+            CONSTRAINT InboundMirrors_targetProjectId_fk
+                FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
+                ON DELETE CASCADE ON UPDATE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['InboundLabels'] = []
+        db.tables['InboundMirrors'] = []
         commit = True
 
-    # outboundLabels
-    if 'OutboundLabels' not in db.tables:
-        cu.execute("""
-        CREATE TABLE OutboundLabels (
-            outboundLabelId %(PRIMARYKEY)s,
-            projectId       INTEGER NOT NULL,
-            labelId         INTEGER NOT NULL,
-            allLabels       INTEGER DEFAULT 0,
-            recurse         INTEGER DEFAULT 0,
-        CONSTRAINT OutboundLabels_projectId_fk
-            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-            ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT OutboundLabels_labelId_fk
-            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-            ON DELETE RESTRICT ON UPDATE CASCADE
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['OutboundLabels'] = []
-        commit = True
-
-   # outboundMatchTroves
-    if 'OutboundMatchTroves' not in db.tables:
-        cu.execute("""
-        CREATE TABLE OutboundMatchTroves (
-            outboundLabelId INTEGER NOT NULL,
-            idx             INTEGER NOT NULL,
-            matchStr        VARCHAR(767),
-            CONSTRAINT OutboundMatchTroves_outboundLabelId_fk
-                FOREIGN KEY (outboundLabelId)
-                    REFERENCES OutboundLabels(outboundLabelId)
-                ON DELETE CASCADE
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['OutboundMatchTroves'] = []
+    # outboundMirrors
+    if 'OutboundMirrors' not in db.tables:
+        cu.execute("""CREATE TABLE OutboundMirrors (
+        outboundMirrorId %(PRIMARYKEY)s,
+        sourceProjectId  INT NOT NULL,
+        targetLabels     VARCHAR(767) NOT NULL,
+        targetUrl        VARCHAR(767) NOT NULL,
+        targetUsername   VARCHAR(254),
+        targetPassword   VARCHAR(254),
+        allLabels        INT NOT NULL DEFAULT 0,
+        recurse          INT NOT NULL DEFAULT 0,
+        matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
+        CONSTRAINT OutboundMirrors_sourceProjectId_fk
+            FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
+            ON DELETE CASCADE ON UPDATE CASCADE
+        ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['OutboundMirrors'] = []
         commit = True
 
     if commit:

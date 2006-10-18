@@ -129,156 +129,173 @@ class LabelsTest(fixtures.FixturedUnitTest):
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
     @fixtures.fixture("Full")
-    def testInboundLabel(self, db, data):
+    def testInboundMirrors(self, db, data):
         projectId = data['projectId']
         adminClient = self.getClient("admin")
-        adminClient.addInboundLabel(projectId, projectId,
+        project = adminClient.getProject(projectId)
+        targetLabel = project.getLabel()
+        adminClient.addInboundMirror(projectId, [targetLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
-        labels = adminClient.getInboundLabels()
+        labels = adminClient.getInboundMirrors()
         assert(labels ==
-                [[projectId, projectId, 'http://www.example.com/conary/',
+                [[1, projectId, targetLabel, 'http://www.example.com/conary/',
                   'mirror', 'mirrorpass']])
 
     @fixtures.fixture("Full")
-    def testOutboundLabel(self, db, data):
+    def testOutboundMirror(self, db, data):
         projectId = data['projectId']
         adminClient = self.getClient("admin")
-        adminClient.addOutboundLabel(projectId, projectId, 
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
-        labels = adminClient.getOutboundLabels()
+        labels = adminClient.getOutboundMirrors()
         assert(labels ==
-                [[projectId, projectId, 'http://www.example.com/conary/',
-                  'mirror', 'mirrorpass', False, False]])
+                [[1, projectId, sourceLabel, 'http://www.example.com/conary/',
+                  'mirror', 'mirrorpass', False, False, []]])
 
-        adminClient.delOutboundLabel(projectId,
-                'http://www.example.com/conary/')
-        labels = adminClient.getOutboundLabels()
+        adminClient.delOutboundMirror(1)
+        labels = adminClient.getOutboundMirrors()
         assert(labels == [])
 
     @fixtures.fixture("Full")
-    def testOutboundLabelAllLabels(self, db, data):
+    def testOutboundMirrorAllLabels(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
-        adminClient.addOutboundLabel(projectId, labelId,
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-        assert(adminClient.getOutboundLabels()[0][5] is False)
+
+        assert(adminClient.getOutboundMirrors()[0][6] is False)
         cu = db.cursor()
-        cu.execute("UPDATE OutboundLabels SET allLabels = 1")
+        cu.execute("UPDATE OutboundMirrors SET allLabels = 1")
         db.commit()
-        assert(adminClient.getOutboundLabels()[0][5] is True)
+        assert(adminClient.getOutboundMirrors()[0][6] is True)
 
-        cu.execute("DELETE FROM OutboundLabels")
+        cu.execute("DELETE FROM OutboundMirrors")
         db.commit()
 
-        adminClient.addOutboundLabel(projectId, labelId,
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass", allLabels = True)
-        assert(adminClient.getOutboundLabels()[0][5] is True)
+        assert(adminClient.getOutboundMirrors()[0][6] is True)
 
     @fixtures.fixture("Full")
-    def testOutboundLabelRecurse(self, db, data):
+    def testOutboundMirrorRecurse(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
-        adminClient.addOutboundLabel(projectId, labelId,
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-        assert(adminClient.getOutboundLabels()[0][6] is False)
+        assert(adminClient.getOutboundMirrors()[0][7] is False)
         cu = db.cursor()
-        cu.execute("UPDATE OutboundLabels SET recurse = 1")
+        cu.execute("UPDATE OutboundMirrors SET recurse = 1")
         db.commit()
-        assert(adminClient.getOutboundLabels()[0][6] is True)
+        assert(adminClient.getOutboundMirrors()[0][7] is True)
 
-        cu.execute("DELETE FROM OutboundLabels")
+        cu.execute("DELETE FROM OutboundMirrors")
         db.commit()
 
-        adminClient.addOutboundLabel(projectId, labelId,
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass", recurse = True)
-        assert(adminClient.getOutboundLabels()[0][6] is True)
+        assert(adminClient.getOutboundMirrors()[0][7] is True)
 
     @fixtures.fixture("Full")
     def testOutboundMatchInitial(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
         # ensure this doesn't raise ItemNotFound
-        self.failIf(adminClient.getOutboundMatchTroves(labelId) != [],
+        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1), [],
                     "Listing empty matchTroves failed")
+
+        # however, this should raise
+        self.assertRaises(database.ItemNotFound, adminClient.getOutboundMirrorMatchTroves, 2)
 
     @fixtures.fixture("Full")
     def testOutboundMatchBasic(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
-        adminClient.setOutboundMatchTroves(projectId, labelId, ["-.*:source$"])
-        assert(adminClient.getOutboundMatchTroves(labelId) == ["-.*:source$"])
+        adminClient.setOutboundMirrorMatchTroves(1, ["-.*:source$"])
+        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1),
+                ["-.*:source$"])
 
     @fixtures.fixture("Full")
     def testOutboundMatchComposite(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
-        adminClient.setOutboundMatchTroves(projectId, labelId,
-                                           ['-.*:source$', '-.*:debuginfo$'])
-        assert(adminClient.getOutboundMatchTroves(labelId) == \
+        adminClient.setOutboundMirrorMatchTroves(1, ['-.*:source$', '-.*:debuginfo$'])
+        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1),
                ['-.*:source$', '-.*:debuginfo$'])
 
     @fixtures.fixture("Full")
     def testOutboundMatchReordered(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
-        adminClient.setOutboundMatchTroves(projectId, labelId,
+        adminClient.setOutboundMirrorMatchTroves(1,
                                            ['-.*:source$', '-.*:debuginfo$'])
-        assert(adminClient.getOutboundMatchTroves(labelId) == \
+        assert(adminClient.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source$', '-.*:debuginfo$'])
 
-        adminClient.setOutboundMatchTroves(projectId, labelId,
-                                           ['-.*:source$', '-.*:debuginfo$'])
-        assert(adminClient.getOutboundMatchTroves(labelId) == \
-               ['-.*:source$', '-.*:debuginfo$'])
+        adminClient.setOutboundMirrorMatchTroves(1,
+                                           ['-.*:debuginfo$', '-.*:source$' ])
+        assert(adminClient.getOutboundMirrorMatchTroves(1) == \
+               ['-.*:debuginfo$', '-.*:source$'])
 
-
-    @fixtures.fixture("Full")
-    def testOutboundMatchEnumerate(self, db, data):
-        projectId = data['projectId']
-        labelId = projectId
-        adminClient = self.getClient("admin")
-
-        cu = db.cursor()
-        for order in ['-a', '-b', '+c', '-d'], ['+d', '-a'], ['+c']:
-
-            adminClient.setOutboundMatchTroves(projectId, labelId, order)
-
-            cu.execute("SELECT idx, matchStr FROM OutboundMatchTroves ORDER BY idx")
-            self.failIf([x for x in cu.fetchall()] != \
-                        [x for x in enumerate(order)],
-                        "order of troves was mangled")
 
     @fixtures.fixture("Full")
     def testOutboundMatchParams(self, db, data):
         projectId = data['projectId']
-        labelId = projectId
         adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        adminClient.addOutboundMirror(projectId, [sourceLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
         self.assertRaises(mint_error.ParameterError,
-                          adminClient.setOutboundMatchTroves,
-                          projectId, labelId, 'wrong')
+                          adminClient.setOutboundMirrorMatchTroves,
+                          1, 'wrong')
+
+        self.assertRaises(mint_error.ParameterError,
+                          adminClient.setOutboundMirrorMatchTroves,
+                          1, ['also_wrong'])
 
         for matchStr in ('+right', '-right'):
             # ensure no error is raised for properly formed params
-            adminClient.setOutboundMatchTroves(projectId, labelId, [matchStr])
+            adminClient.setOutboundMirrorMatchTroves(1, [matchStr])
 
 
 if __name__ == "__main__":

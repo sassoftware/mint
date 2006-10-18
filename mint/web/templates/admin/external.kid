@@ -8,7 +8,7 @@
 -->
 
 <?python
-    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'primeMirror', 'externalAuth', 'authType']:
+    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'primeMirror', 'externalAuth', 'authType', 'additionalLabelsToMirror']:
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
@@ -137,6 +137,14 @@
                 <label for="useMirror">Mirror this repository locally</label>
             </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
+
+                <tr>
+                   <th><em class="required">Additional labels to mirror:</em></th>
+                   <td>
+                       <input type="text" autocomplete="off" name="additionalLabelsToMirror" value="${kwargs['additionalLabelsToMirror']}" />
+                       <p class="help">This should be a space-separated list of additional repository labels to mirror.</p>
+                   </td>
+                </tr>
                 <tr>
                     <th>Preload this mirror:</th>
                     <td>
