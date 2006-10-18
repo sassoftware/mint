@@ -58,7 +58,7 @@
                 ta = TEXTAREA({'id': 'preloadLog', 'rows': '15', 'cols': '90'}, logText);
                 swapDOM($('preloadLog'), ta);
                 scrollToBottom('preloadLog');
-                setTimeout("refreshLog()", 2000);
+                setTimeout("refreshLog()", 2500);
             }
 
             function refreshLog() {
@@ -70,6 +70,7 @@
 
             function startPreload() {
                 d = postRequest("callStartPreload");
+                hideElement($('startButton'));
             }
 
             // scroll to the bottom of a textarea
