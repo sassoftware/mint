@@ -35,10 +35,11 @@ floppy0.present = "FALSE"
 # IDE Storage
 #####
 
-ide0:0.present = "TRUE"
-ide0:0.fileName = "@FILENAME@.vmdk"
-ide0:0.redo = ""
-ide0:0.writeThrough = "TRUE"
+@ADAPTERDEV@0:0.present = "TRUE"
+@ADAPTERDEV@0:0.fileName = "@FILENAME@.vmdk"
+@ADAPTERDEV@0:0.redo = ""
+@ADAPTERDEV@0:0.writeThrough = "TRUE"
+@ADAPTERDEV@0.virtualDev = "@ADAPTER@"
 
 ide1:0.present = "TRUE"
 ide1:0.fileName = "auto detect"
