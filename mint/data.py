@@ -126,3 +126,17 @@ class ReleaseDataTable(GenericDataTable):
 class BuildDataTable(GenericDataTable):
     name = "BuildData"
 
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 23:
+                from mint import buildtypes
+                cu = self.db.cursor()
+                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
+                           buildtypes.VMWARE_IMAGE)
+                for (buildId,) in cu.fetchall():
+                    cu.execute("""INSERT INTO BuildData
+                                      VALUES(?, 'diskAdapter', 'ide', ?)""",
+                               buildId, RDT_STRING)
+            return dbversion >= 23
+        return True
