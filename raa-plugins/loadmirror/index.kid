@@ -12,7 +12,6 @@
 
         <script type="text/javascript">
             var schedId = ${schedId};
-            var logShown = false;
 
             function onWritePreloads(req) {
                 if(req.done) {
@@ -73,19 +72,6 @@
                 d = postRequest("callStartPreload");
             }
 
-            function toggleShowLog() {
-                if(logShown) {
-                    hideElement($('logArea'));
-                    replaceChildNodes($('showLogButton'), "Show Log");
-                    logShown = false;
-                } else {
-                    showElement($('logArea'));
-                    replaceChildNodes($('showLogButton'), "Hide Log");
-                    logShown = true;
-                }
-                scrollToBottom('preloadLog');
-            }
-
             // scroll to the bottom of a textarea
             function scrollToBottom(elName) {
                 el = $(elName);
@@ -104,8 +90,7 @@
             <p id="preloadCount"></p>
             <button onclick="javascript:startPreload();" style="display: none;" id="startButton">Start Preloading</button>
             <hr />
-            <button onclick="javascript:toggleShowLog();" id="showLogButton">Show Log</button>
-            <div id="logArea" style="display: none;">
+            <div id="logArea">
                 <h4>Pre-load activity log:</h4>
                 <textarea rows="15" cols="90" id="preloadLog"></textarea>
                 <p><a href="downloadLog"><img src="${tg.url('/static/images/download_button.png')}" alt="Download" /></a></p>
