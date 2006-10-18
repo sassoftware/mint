@@ -115,7 +115,7 @@ allowNone = ['anaconda-custom', 'media-template']
                                         <select name="${name}" id="${name}" py:attrs="{'disabled' : key != buildType and 'disabled' or None}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())"
                                                 py:content="prompt" value="${val}"
-                                                py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
+                                                py:attrs="{'selected' : val == dataValue and 'selected' or None}"/>
                                         </select>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
