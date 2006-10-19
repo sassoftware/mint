@@ -8,6 +8,19 @@
 -->
     <head>
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
+        <script>
+            function allowXen() {
+                buildArch = $('buildArch');
+                if(buildArch.selectedIndex != 0) {
+                    $('domU').disabled = true;
+                    $('domU').checked = false;
+                    setOpacity($('domULabel'), 0.5);
+                } else {
+                    $('domU').disabled = false;
+                    setOpacity($('domULabel'), 1);
+                }
+            }
+        </script>
     </head>
 
     <body>
@@ -26,24 +39,19 @@
 
                 <form method="post" action="cookGroup">
                     <p>
-                        <select name="flavor">
+                        <select name="flavor" id="buildArch" onchange="allowXen();">
                             <option value="1#x86">x86 (32-bit)</option>
                             <option value="1#x86_64">x86_64 (64-bit)</option>
                         </select>
 
                     </p>
-                    <p py:if="False">
-                        You can optionally add Xen privileged management domain
-                        (dom0) or guest domain (domU) support to this group.
+                    <p>
+                        You can optionally add Xen guest domain (domU) support to this group.
                     </p>
-                    <p py:if="False">
-                        <div>
-                            <input name="flavor" type="checkbox" value="5#use:~dom0" id="dom0" />
-                            <label for="dom0">Xen dom0 (privileged host) support</label>
-                        </div>
+                    <p>
                         <div>
                             <input name="flavor" type="checkbox" value="5#use:~domU" id="domU" />
-                            <label for="domU">Xen domU (unprivileged guest) support</label>
+                            <label id="domULabel" for="domU">Xen domU (unprivileged guest) support</label>
                         </div>
                     </p>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
