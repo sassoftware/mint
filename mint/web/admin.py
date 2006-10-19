@@ -116,17 +116,11 @@ class AdminHandler(WebHandler):
         self.req.content_type = "application/x-pdf"
         return pdfData
 
-    @strFields(name = '', hostname = '', label = '', url = '',\
-        externalUser = '', externalPass = '', externalEntKey = '',\
-        externalEntClass = '', authType = 'username',\
-        additionalLabelsToMirror = '', useMirror = 'none')
-    @boolFields(externalAuth = False)
-    def processExternal(self, name, hostname, label, url,
+    def _validateExternalProject(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
                         useMirror, externalAuth, authType,
-                        additionalLabelsToMirror, *args, **kwargs):
-
+                        additionalLabelsToMirror):
         additionalLabels = []
         if not name:
             self._addErrors("Missing project title")
@@ -139,7 +133,7 @@ class AdminHandler(WebHandler):
                 extLabel = versions.Label(label)
             except versions.ParseError:
                 self._addErrors("Invalid label %s" % label)
-        if useMirror and additionalLabelsToMirror:
+        if useMirror == 'net' and additionalLabelsToMirror:
             for l in additionalLabelsToMirror.split():
                 # skip a redundant label specification
                 if l != label:
@@ -148,6 +142,8 @@ class AdminHandler(WebHandler):
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
+        if useMirror == 'net' and not externalAuth:
+            self._addErrors("A mirrored repository must use authentication")
         if externalAuth:
             if url.startswith('http:'):
                 self._addErrors("Repository URL must start with https if external authentication is required")
@@ -161,11 +157,40 @@ class AdminHandler(WebHandler):
                     self._addErrors('Missing entitlement class for local mirror authentication')
                 if not externalEntClass:
                     self._addErrors('Missing entitlement key for local mirror authentication')
+        return additionalLabels, extLabel
 
+    @strFields(name = '', hostname = '', label = '', url = '',\
+        externalUser = '', externalPass = '', externalEntKey = '',\
+        externalEntClass = '', authType = 'username',\
+        additionalLabelsToMirror = '', useMirror = 'none')
+    @boolFields(externalAuth = False)
+    @intFields(projectId = -1)
+    def processAddExternal(self, name, hostname, label, url,
+                        externalUser, externalPass,
+                        externalEntClass, externalEntKey,
+                        useMirror, externalAuth, authType,
+                        additionalLabelsToMirror, projectId, *args, **kwargs):
+
+        kwargs = {'name': name, 'hostname': hostname, 'label': label,
+            'url': url, 'externalAuth': externalAuth,
+            'authType': authType, 'externalUser': externalUser,
+            'externalPass': externalPass,
+            'externalEntKey': externalEntKey,
+            'externalEntClass': externalEntClass,
+            'useMirror': useMirror,
+            'additionalLabelsToMirror': additionalLabelsToMirror}
+
+        editing = (projectId != -1)
+
+        additionalLabels, extLabel = self._validateExternalProject(**kwargs)
         if not self._getErrors():
-            projectId = self.client.newExternalProject(name, hostname,
-                self.cfg.projectDomainName, label, url, useMirror == 'network')
+            if not editing:
+                projectId = self.client.newExternalProject(name, hostname,
+                    self.cfg.projectDomainName, label, url, useMirror == 'net')
+
             project = self.client.getProject(projectId)
+            if editing:
+                project.editProject(project.projecturl, project.description, name)
 
             labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
             label, labelId = labelIdMap.items()[0]
@@ -187,9 +212,14 @@ class AdminHandler(WebHandler):
                     entF.close()
                     project.editLabel(labelId, label, url,
                             self.cfg.authUser, self.cfg.authPass)
+            else:
+                project.editLabel(labelId, label, url,
+                    'anonymous', 'anonymous')
 
+            print >> sys.stderr, "USEMIRROR:", repr(useMirror)
+            sys.stderr.flush()
             # set up the mirror, if requested
-            if useMirror == 'network':
+            if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
                            '', self.cfg.projectSiteHost, self.cfg.basePath, 
                            hostname)
@@ -199,30 +229,19 @@ class AdminHandler(WebHandler):
                 self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
                 self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
-            self._setInfo("Added external project %s" % name)
+            verb = editing and "Edited" or "Added"
+            self._setInfo("%s external project %s" % (verb, name))
             self._redirect("http://%s%sproject/%s/" % \
                 (self.cfg.projectSiteHost,
                  self.cfg.basePath, hostname))
         else:
-            kwargs = {'name': name, 'hostname': hostname, 'label': label,
-                'url': url, 'externalAuth': externalAuth,
-                'authType': authType, 'externalUser': externalUser,
-                'externalPass': externalPass,
-                'externalEntKey': externalEntKey,
-                'externalEntClass': externalEntClass,
-                'useMirror': useMirror,
-                'additionalLabelsToMirror': additionalLabelsToMirror}
-            return self.external(name = name, hostname = hostname,
-                    label = label, url = url, externalAuth = externalAuth,
-                    externalUser = externalUser, externalPass = externalPass,
-                    externalEntKey = externalEntKey,
-                    externalEntClass = externalEntClass,
-                    useMirror = useMirror,
-                    authType = authType,
-                    additionalLabelsToMirror = additionalLabelsToMirror)
+            if editing:
+                return self.editExternal(projectId = projectId, **kwargs)
+            else:
+                return self.addExternal(**kwargs)
 
     @strFields(authType = 'userpass')
-    def external(self, *args, **kwargs):
+    def addExternal(self, *args, **kwargs):
         from mint import database
         kwargs.setdefault('authtype', 'userpass')
         try:
@@ -237,8 +256,55 @@ class AdminHandler(WebHandler):
         else:
             firstTime = False
 
-        return self._write('admin/external', firstTime = firstTime,
-                kwargs = kwargs)
+        return self._write('admin/addExternal', firstTime = firstTime,
+                editing = False, mirrored = False, projectId = -1,
+                kwargs = kwargs, initialKwargs = {})
+
+    @strFields(authType = 'userpass')
+    @intFields(projectId = None)
+    def editExternal(self, projectId, *args, **kwargs):
+        project = self.client.getProject(projectId)
+        label = project.getLabel()
+        conaryCfg = project.getConaryConfig()
+
+        initialKwargs = {}
+        initialKwargs['name'] = project.name
+        initialKwargs['hostname'] = project.hostname
+        initialKwargs['label'] = label
+
+        fqdn = versions.Label(label).getHost()
+        initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
+        userMap = conaryCfg.user.find(fqdn)
+
+        initialKwargs['externalAuth'] = True
+        if userMap[0]:
+            initialKwargs['externalUser'] = userMap[0]
+            initialKwargs['externalPass'] = userMap[1]
+            initialKwargs['authType'] = 'userpass'
+            if userMap[0] == 'anonymous':
+                initialKwargs['externalAuth'] = False
+        else:
+            initialKwargs['authType'] = 'entitlement'
+            # XXX find entitlement details here
+
+        initialKwargs['useMirror'] = 'none'
+        mirrored = False
+        if self.client.isLocalMirror(projectId):
+            mirrored = True
+
+        return self._write('admin/addExternal', firstTime = False,
+            editing = True, mirrored = mirrored, kwargs = kwargs,
+            initialKwargs = initialKwargs, projectId = projectId)
+
+
+    def external(self, auth):
+        projects = []
+        for p in self.client.getProjectsList():
+            project = self.client.getProject(p[0])
+            if project.external:
+                projects.append(project)
+
+        return self._write('admin/external', projects = projects)
 
     def jobs(self, *args, **kwargs):
         try:

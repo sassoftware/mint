@@ -22,19 +22,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/admin/external",
+        page = self.assertContent("/admin/addExternal",
                                   'name="hostname" value="rpath"')
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rpath',
                               'name' : 'rPath Linux',
                               'label' : 'conary.rpath.com@rpl:devel',
-                              'url' : '',
-                              'operation' : 'process_external'})
+                              'url' : ''})
 
-        # ensure "first time" content does not appear on page
-        page = self.assertNotContent("/admin/external",
+        page = self.assertNotContent("/admin/addExternal",
                                      'name="hostname" value="rpath"')
+
+        page = self.assertContent("/admin/external", "rPath Linux")
+        project = client.getProjectByHostname("rpath")
+
+        # test editing
+        page = self.fetch("/admin/editExternal?projectId=%d" % project.id)
+        page = page.postForm(1, self.post,
+                             {'name' : 'rPath LINUX',
+                              'label' : 'conary.rpath.com@rpl:devel',
+                              'url' : ''})
+        project.refresh()
+        self.failUnlessEqual(project.name, 'rPath LINUX')
 
     def testCreateMirroredProject(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -42,7 +52,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/admin/external",
+        page = self.assertContent("/admin/addExternal",
                                   'name="hostname" value="rpath"')
 
         page = page.postForm(1, self.post,
@@ -50,14 +60,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'name' : 'rPath Linux',
                               'label' : 'conary.rpath.com@rpl:1',
                               'url' : '',
-                              'useMirror': 'network',
+                              'useMirror': 'net',
                               'externalAuth': '1',
                               'externalUser': 'mirror',
-                              'externalPass': 'mirrorpass',
-                              'operation' : 'process_external'})
+                              'externalPass': 'mirrorpass'})
 
         # ensure "first time" content does not appear on page
-        page = self.assertNotContent("/admin/external",
+        page = self.assertNotContent("/admin/addExternal",
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
@@ -72,14 +81,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
         # ensure "first time" content appears on page
-        page = self.fetch("/admin/external")
+        page = self.fetch("/admin/addExternal")
         page = page.postForm(1, self.post,
             {'hostname':        'rpath',
              'name':            'rPath Linux',
              'label':           'conary.rpath.com@rpl:devel',
              'url':             '',
              'externalAuth':    '1',
-             'operation':       'process_external',
              'authType':        'entitlement',
              'externalEntKey':  'entitlementkey',
              'externalEntClass':'entitlementclass',
@@ -93,11 +101,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/admin/external",
+        page = self.assertContent("/admin/addExternal",
                                   'name="hostname" value="rpath"')
 
         # check errors
-        page = self.fetch("/admin/external")
+        page = self.fetch("/admin/addExternal")
         page = page.postForm(1, self.post,
              {'hostname':       'rpath',
               'name':           '',
@@ -115,7 +123,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'operation' : 'process_external'})
 
         # ensure "first time" content does not appear on page
-        page = self.assertNotContent("/admin/external",
+        page = self.assertNotContent("/admin/addExternal",
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
