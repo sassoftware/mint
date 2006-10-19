@@ -3532,6 +3532,18 @@ class MintServer(object):
         return x
 
     @private
+    @typeCheck(int, (list, str), str, str, str)
+    @requiresAdmin
+    def editInboundMirror(self, targetProjectId, sourceLabels,
+            sourceUrl, sourceUsername, sourcePassword):
+        x = self.inboundMirrors.update(targetProjectId,
+                sourceLabels = ' '.join(sourceLabels),
+                sourceUrl = sourceUrl, sourceUsername = sourceUsername,
+                sourcePassword = sourcePassword)
+        self._generateConaryRcFile()
+        return x
+
+    @private
     @typeCheck()
     @requiresAdmin
     def getInboundMirrors(self):
@@ -3539,6 +3551,18 @@ class MintServer(object):
         cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
             sourceUsername, sourcePassword FROM InboundMirrors""")
         return [list(x) for x in cu.fetchall()]
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getInboundMirror(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
+        x = cu.fetchone_dict()
+        if x:
+            return x
+        else:
+            return {}
 
     @private
     @typeCheck(int, (list, str), str, str, str, bool, bool)

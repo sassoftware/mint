@@ -20,6 +20,17 @@
     # These are permanent redirects
     RedirectMatch ^/project(.*) /rbuilder/project$1  [R=301]
 
+    # allow arbitrary marketing content on /<any url not taken by rbuilder>/
+    RewriteEngine On
+    RewriteLog /tmp/mod_rewrite.log
+    RewriteLogLevel 3
+    RewriteCond %{REQUEST_URI} !^/conary.*
+    RewriteCond %{REQUEST_URI} !^/rbuilder.*
+    RewriteCond %{REQUEST_URI} !^/repos.*
+    RewriteCond %{REQUEST_URI} !^/xmlrpc.*
+    RewriteCond %{REQUEST_URI} !^/corp.*
+    RewriteRule ^/(.*)  /corp/$1 [R]
+
     # Make sure that our apache hooks work for /rbuilder/, /conary/
     # and /repos/.
     <Location /rbuilder/>

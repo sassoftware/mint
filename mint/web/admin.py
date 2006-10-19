@@ -216,8 +216,6 @@ class AdminHandler(WebHandler):
                 project.editLabel(labelId, label, url,
                     'anonymous', 'anonymous')
 
-            print >> sys.stderr, "USEMIRROR:", repr(useMirror)
-            sys.stderr.flush()
             # set up the mirror, if requested
             if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
@@ -226,8 +224,14 @@ class AdminHandler(WebHandler):
 
                 # set the internal label to our authUser and authPass
                 project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
-                self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
-                self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
+
+                if editing:
+                    mirror = self.client.getInboundMirror(projectId)
+                    mirrorId = mirror['inboundMirrorId']
+                    self.client.editInboundMirror(mirrorId, [label] + additionalLabels, url, externalUser, externalPass)
+                else:
+                    self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
+                    self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external project %s" % (verb, name))
@@ -260,7 +264,6 @@ class AdminHandler(WebHandler):
                 editing = False, mirrored = False, projectId = -1,
                 kwargs = kwargs, initialKwargs = {})
 
-    @strFields(authType = 'userpass')
     @intFields(projectId = None)
     def editExternal(self, projectId, *args, **kwargs):
         project = self.client.getProject(projectId)
@@ -277,19 +280,27 @@ class AdminHandler(WebHandler):
         userMap = conaryCfg.user.find(fqdn)
 
         initialKwargs['externalAuth'] = True
-        if userMap[0]:
+        ent = conarycfg.loadEntitlement(os.path.join(self.cfg.dataPath, "entitlements"), fqdn)
+        if ent:
+            initialKwargs['authType'] = 'entitlement'
+            initialKwargs['externalEntClass'] = ent[0]
+            initialKwargs['externalEntKey'] = ent[1]
+        else:
             initialKwargs['externalUser'] = userMap[0]
             initialKwargs['externalPass'] = userMap[1]
             initialKwargs['authType'] = 'userpass'
             if userMap[0] == 'anonymous':
                 initialKwargs['externalAuth'] = False
-        else:
-            initialKwargs['authType'] = 'entitlement'
-            # XXX find entitlement details here
 
         initialKwargs['useMirror'] = 'none'
         mirrored = False
-        if self.client.isLocalMirror(projectId):
+        mirror = self.client.getInboundMirror(projectId)
+        if mirror:
+            labels = mirror['sourceLabels'].split()
+            if label in labels:
+                labels.remove(label)
+
+            initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
             mirrored = True
 
         return self._write('admin/addExternal', firstTime = False,
