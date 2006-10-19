@@ -8,7 +8,6 @@ SUBDIRS = repos admin docs setup
 
 kid_files = \
 	applianceSpotlight.kid	\
-	addExternal.kid		\
 	build.kid		\
 	builds.kid		\
 	conaryDevelCfg.kid	\

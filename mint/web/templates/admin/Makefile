@@ -6,6 +6,7 @@
 
 kid_files =			\
 	add_outbound.kid	\
+	addExternal.kid		\
 	frontPage.kid		\
 	external.kid		\
 	maintenance.kid		\
@@ -14,7 +15,6 @@ kid_files =			\
 	outbound.kid		\
 	newUser.kid		\
 	jobs.kid		\
-	external.kid		\
 	primeMirror.kid		\
 	admin.kid	\
 	spotlight.kid		\
