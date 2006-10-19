@@ -21,6 +21,7 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
+debug = False
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
@@ -44,8 +45,11 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
         assert(os.access(mirrorScript, os.X_OK))
-        os.system("%s %s" % (mirrorScript, url))
-        #self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+
+        if debug:
+            os.system("%s %s" % (mirrorScript, url))
+        else:
+            self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 
     def outboundMirror(self):
         url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
@@ -53,8 +57,10 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
         assert(os.access(mirrorScript, os.X_OK))
-        os.system("%s %s" % (mirrorScript, url))
-        #self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+        if debug:
+            os.system("%s %s" % (mirrorScript, url))
+        else:
+            self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 
     def mirrorOffline(self):
         if self.mintCfg.SSL:
@@ -69,14 +75,16 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         curDir = os.getcwd()
         try:
             os.chdir(mirrorWorkDir)
-            os.system("%s %s %s %s %s %s" % \
-                                  (mirrorScript, url, branchName, 'mirror',
-                                   self.mintCfg.authUser,
-                                   self.mintCfg.authPass))
-            #self.captureAllOutput(os.system, "%s %s %s %s %s %s" % \
-            #               (mirrorScript, url, branchName, 'mirror',
-            #               self.mintCfg.authUser,
-            #               self.mintCfg.authPass))
+            if debug:
+                os.system("%s %s %s %s %s %s" % \
+                                      (mirrorScript, url, branchName, 'mirror',
+                                       self.mintCfg.authUser,
+                                       self.mintCfg.authPass))
+            else:
+                self.captureAllOutput(os.system, "%s %s %s %s %s %s" % \
+                               (mirrorScript, url, branchName, 'mirror',
+                               self.mintCfg.authUser,
+                               self.mintCfg.authPass))
         finally:
             os.chdir(curDir)
         return mirrorWorkDir
