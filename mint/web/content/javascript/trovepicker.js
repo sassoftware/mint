@@ -367,7 +367,7 @@ function handleBuildTypes(flavor) {
         selectiveDisable(flavor, "x86_64", x86_64Types);
 
         // only allow a few build types to be built from a xen flavor:
-        selectiveDisable(flavor, "xen", xenTypes);
+        selectiveDisable(flavor, ",xen", xenTypes);
     }
 }
 
