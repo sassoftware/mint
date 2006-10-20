@@ -102,8 +102,10 @@ def codegen():
         i.append("    '%d':  '%s'" % (k, v,))
     s += ", ".join(i)
     s += "};"
-    return s
 
+    for k, v in validBuildTypes.items():
+        s += "%s = %d;\n" % (k, v)
+    return s
 
 if __name__ == "__main__": #pragma: no cover
     if len(sys.argv) > 1 and sys.argv[1] == "--genjs":

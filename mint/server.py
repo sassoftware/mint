@@ -2355,12 +2355,20 @@ class MintServer(object):
         """
         from mint import cooktypes
         from mint import buildtypes
+
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
         for arch in archTypes:
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
+
+        # XXX: extend the archTypes to include the xen-capable flavors
+        # this idea should be cleaned up using real conary deps parsing
+        # when we have a chance.
+        for arch in archTypes[:]:
+            archTypes.append(arch + '|5#use:~domU:~xen')
+            archTypes.append(arch + '|5#use:~dom0:~xen')
 
         buildTypes = []
         try:

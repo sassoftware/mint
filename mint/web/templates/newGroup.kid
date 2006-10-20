@@ -63,13 +63,13 @@
                                 <p class="help">These troves come from rPath Linux on the conary.rpath.com@rpl:1 label</p>
 
                                 <ul>
-                                    <li py:for="t in troves" py:if="metadata[t]">
+                                    <li py:for="t in troves" py:if="t in metadata">
                                         <input type="hidden" name="initialTrove" value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" py:if="t == 'group-core'"/>
                                         <input type="checkbox" class="check" py:if="t != 'group-core'"
                                                name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None,
                                                                               'disabled': 'disabled' and t == 'group-core' or None}"
                                                value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" />
-                                            <b>${t}</b> - ${metadata[t]}
+                                            <b>${t}</b> - ${metadata.get(t, 'No Description')}
                                     </li>
                                 </ul>
                             </td>

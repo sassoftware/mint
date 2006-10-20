@@ -342,19 +342,54 @@ TrovePicker.prototype.handleError = function() {
     swapDOM(oldList, ul);
 }
 
+var allTypes = map(parseInt, keys(buildTypeNames));
+
+var defaultType = INSTALLABLE_ISO;
+var x86_64Types = [INSTALLABLE_ISO];
+var xenTypes = [RAW_HD_IMAGE, RAW_FS_IMAGE, TARBALL];
+
 function handleBuildTypes(flavor) {
-
-    // see layout.kid for definitions of VisibleBootableBuildTypes, etc.
-    var one = iter(VisibleBootableBuildTypes);
-
-    // VisibleBootableBuildTypes are not currently compatible with x86_64
-    // so, if that arch was selected, disable it
-    forEach(one, function (x) {
-        var el = $('buildtype_'+x);
-        if (flavor.match("x86_64")) {
-            el.disabled = true;
-        } else {
+    forEach(allTypes, function(x) {
+        var el = $('buildtype_' + x);
+        var elLabel = $('buildtype_' + x + '_label');
+        if(el) {
             el.disabled = false;
+            setOpacity(elLabel, 1.0);
+        }
+        if(x == defaultType) {
+            el.checked = true;
         }
     });
+
+    if(flavor) {
+        // bootableTypes are not currently compatible with x86_64
+        // so, if that arch was selected, disable it:
+        selectiveDisable(flavor, "x86_64", x86_64Types);
+
+        // only allow a few build types to be built from a xen flavor:
+        selectiveDisable(flavor, "xen", xenTypes);
+    }
+}
+
+function selectiveDisable(flavor, flavorMatch, allowed) {
+    if(flavor.match(flavorMatch)) {
+        one = iter(allTypes);
+        forEach(one, function (x) {
+            var el = $('buildtype_'+x);
+            var elLabel = $('buildtype_' + x + '_label');
+            if(el) {
+                if (findValue(allowed, x) == -1) {
+                    el.disabled = true;
+                    setOpacity(elLabel, 0.5);
+                }
+                else {
+                    el.disabled = false;
+                    setOpacity(elLabel, 1.0);
+                    if(x == allowed[0]) {
+                        el.checked = true;
+                    }
+                }
+            }
+        });
+    }
 }

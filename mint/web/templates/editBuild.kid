@@ -25,7 +25,13 @@ allowNone = ['anaconda-custom', 'media-template']
 
     <div py:def="trovePicker(projectId, serverName, troveName, pickerId)" py:omit="True">
         <script type="text/javascript">
-            addLoadEvent(function() { picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}'); });
+            addLoadEvent(function() {
+                picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}');
+                if(${buildId or 0})
+                    handleBuildTypes("${arch}");
+                else
+                    handleBuildTypes(null);
+            });
         </script>
     </div>
 
@@ -33,12 +39,7 @@ allowNone = ['anaconda-custom', 'media-template']
         <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js"/>
     </head>
-    <?python
-        jsonload = None
-        if buildId:
-            jsonload = "javascript:handleBuildTypes(\""+ arch +"\");"
-    ?>
-    <body py:attrs="{'onload': jsonload }">
+    <body>
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
@@ -80,7 +81,7 @@ allowNone = ['anaconda-custom', 'media-template']
                                 name="buildtype" value="${key}" 
                                 onclick="javascript:onBuildTypeChange('formgroup_${key}');"
                                 type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
-                            <label class="reversed" for="buildtype_${key}">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
+                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
 
