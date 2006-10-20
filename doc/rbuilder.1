@@ -1,13 +1,12 @@
 .\" Copyright (c) 2006 rPath, Inc.
-.TH RBUILDER 1 "08 Aug 2006" "rPath, Inc."
+.TH RBUILDER 1 "20 Oct 2006" "rPath, Inc."
 .SH NAME
 rbuilder \- Command-line interface to rBuilder
 .SH SYNOPSIS
 .B rbuilder \fIcommand \fR[\fI<args>\fR]
 .SH DESCRIPTION
-\fBrbuilder\fR is the command-line interface to rBuilder.  Use of
-\fBrbuilder\fR makes it possible to automate various aspects of rBuilder's
-operation.
+\fBrbuilder\fR is the command-line interface to rBuilder.  Use \fBrbuilder\fR 
+to automate various aspects of rBuilder's operation.
 
 .SH REFERENCE
 \fBrbuilder\fR includes commands to create a build, wait for a given build
@@ -21,34 +20,39 @@ configuration.
 .SS COMMANDS
 
 .TP 4
-.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR [\fB--wait\fR] [\fB--option 'KEY VALUE'\fR ...]
+.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR [\fB--wait\fR] [\fB--option '\fI<key>\fR \fI<value>\fR'\fR ...]
 
 Creates a build based on the following information:
 
 \fI<project-name>\fR -- the desired project's hostname
 
- \fI<trove-spec>\fR -- a group trove specification in the format returned
+\fI<trove-spec>\fR -- a group trove specification in the format returned
 by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
 
- \fI<image-type>\fR -- one of the following:
+\fI<image-type>\fR -- one of the following:
 
 \fBinstallable_iso\fR, \fBraw_hd_image\fR, \fBraw_fs_image\fR,
 \fBtarball\fR, \fBlive_iso\fR, \fBvmware_image\fR
 
-Returns a build ID in a form suitable for use with \fBeval\fR (eg., BUILD_ID=100).  Using the
-\fB--wait\fR option causes \fBbuild-create\fR to block until the build
-completes.
+Returns a build ID in a form suitable for use with \fBeval\fR 
+(such as BUILD_ID=100).  Use the \fB--wait\fR option with 
+\fBbuild-create\fR to block until the build completes.
 
-You can set specific build options using the \fB--option\fR keyword.  A full listing of possible
-options for each build type can be seen using: \fBrbuilder build-create --help\fR. Options
-are specified using a \fI'KEY VALUE'\fR syntax, where KEY is the name of the option you are setting,
-and VALUE is the specific value you want to use. Multiple options may be specified by using
-\fB--option\fR multiple times.
+Set specific build options using the \fB--option\fR keyword.  A full 
+listing of possible options for each build type can be seen using: 
+\fBrbuilder build-create --help\fR. Options are specified using a 
+\fI'<key> <value>'\fR syntax, where <key> is the name of the option 
+you are setting, and <value> is the specific value you want to use. 
+Specify multiple options using \fB--option\fR multiple times.
 
 .TP 4
 .B build-wait \fI<build-id>\fR
 
-Blocks until build \fI<build-id>\fR has finished building.
+Blocks commands to \fI<build-id>\fR until it has finished building.  
+
+Use \fBbuild-wait\fR to start blocking after the \fBbuild-create\fR and any
+subsequent commands to the build, and use \fB--wait\fR with \fBbuild-create\fR
+to start blocking when the build starts.
 
 .TP 4
 .B build-url \fI<build-id>\fR
@@ -63,47 +67,43 @@ Creates a new rBuilder user. If a password is not specified, you will be prompte
 .TP 4
 .B project-add \fI<username>\\fR \fI<project-name>\fR <\fBowner\fR|\fBdeveloper\fR>
 
-Adds a user to an existing rBuilder project, giving them either \fBowner\fR
+Adds a user to an existing rBuilder project with either \fBowner\fR
 or \fBdeveloper\fR status.
 
 .TP 4
 .B config
 
-Dumps the currently-used \fBrbuilder\fR configuration settings.
+Displays the current \fBrbuilder\fR configuration settings.
 
 .SS OPTIONS
 
 .TP 4
 .B --version
 
-Displays \fBrbuilder\fR's version number.
+Displays the \fBrbuilder\fR version number.
 
 .TP 4
 .B -h, --help
 
-Displays usage information.
+Displays usage information for the rbuilder command.
 
 .SS COMMON OPTIONS
 
 .TP 4
 .B --config=\fI<key>\fR \fI<value>\fR
 
-Sets the configuration setting \fI<key>\fR to \fI<value>\fR.
+Sets the configuration of  \fI<key>\fR to \fI<value>\fR.  This will overwrite
+settings in the rbuilder configuration file.
 
 .TP 4
 .B --config-file=\fI<path>\fR
 
-Reads the configuration file \fI<path>\fR.
+Uses the configuration file \fI<path>\fR for the single command execution.
 
 .TP 4
 .B --debug
 
-Prints debugging information (currently unimplemented).
-
-.TP 4
-.B --skip-default-config
-
-Do not read the default configuration file (~/.rbuilderrc)
+Displays debugging information (currently unimplemented).
 
 .SH FILES
 .\" do not put excess space in the file list
@@ -117,10 +117,10 @@ serverUrl http://\fI<username>\fR:\fI<password>\fR@\fI<rbuilder>\fR/xmlrpc-priva
 
 Where:
 
-\fI<username>\fR is the username with project developer or owner access to
-the desired project
+\fI<username>\fR is the rBuilder username with project developer or owner 
+access to the desired project
 
-\fI<password>\fR is the password of the project developer/owner
+\fI<password>\fR is the rBuilder password corresponding with the username
 
 \fI<rbuilder>\fR is the fully-qualified domain name of the rBuilder
 instance
