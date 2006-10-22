@@ -336,7 +336,11 @@ title %(name)s (%(kversion)s)
         #Install the Kernel
         try:
             # since sync = True, this will sync up to the kernel requested by the group.
-            kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
+            if self.baseflavor.satisfies(deps.parseFlavor('use: xen')):
+                kernel, version, flavor = parseTroveSpec('kernel:runtime')
+            else:
+                kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
+
             itemList = [(kernel, (None, None), (version, flavor), True)]
             uJob, suggMap = self.cclient.updateChangeSet(itemList, sync = True,
                                 callback = callback, split = True,
