@@ -394,7 +394,7 @@ class ProjectHandler(WebHandler):
     @strFields(distTroveSpec = "", name = "", desc = "", action = "save")
     def saveBuild(self, auth, buildId, distTroveSpec, name, desc, action, **kwargs):
 
-        if action == "cancel":
+        if action == "Cancel":
             if buildId:
                 self._predirect("build?id=%d" % buildId)
             else:
