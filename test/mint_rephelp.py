@@ -301,8 +301,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def __init__(self, methodName):
         rephelp.RepositoryHelper.__init__(self, methodName)
-        self.imagePath = os.path.join(self.tmpDir, "images")
-        os.mkdir(self.imagePath)
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
@@ -398,6 +396,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
+        self.imagePath = os.path.join(self.tmpDir, "images")
+        if not os.path.exists(self.imagePath):
+            os.mkdir(self.imagePath)
         self.openRepository()
 
         util.mkdirChain(os.path.join(self.reposDir, "tmp"))
