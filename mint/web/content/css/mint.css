@@ -877,7 +877,7 @@ div#groupBuilder table tr:first-child {
 table.groupTroveItems {
 }
 
-table.groupTroveItems > tr:first-child {
+tr.editGroupHeader {
     font-size: 110%;
     font-weight: bold;
     color: white;
@@ -889,7 +889,7 @@ table.groupTroveItems > tr:first-child td {
 }
 
 table.groupTroveItems textarea {
-    width: 100%;
+    width: 95%;
 }
 
 /* rMake */

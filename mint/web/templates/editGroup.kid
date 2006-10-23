@@ -31,7 +31,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
             <h1>Edit Group</h1>
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
-                    <tr><td colspan="4">
+                    <tr class="editGroupHeader"><td style="padding: 0.5em;" colspan="4">
                         <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
                         <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit
                             <img  id="editGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
