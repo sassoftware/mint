@@ -36,7 +36,7 @@ def FixOwners(cfg, mlist, minturl):
             # 1 = Hold
             # 2 = Reject
             # 3 = Discard
-            mlist.generic_nonmember_action = 2
+            mlist.generic_nonmember_action = 3
 
             mlist.member_moderation_notice = ""
         else:
