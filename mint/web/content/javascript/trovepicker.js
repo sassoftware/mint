@@ -358,6 +358,7 @@ function handleBuildTypes(flavor) {
         }
         if(x == defaultType) {
             el.checked = true;
+            onBuildTypeChange("formgroup_" + x);
         }
     });
 
@@ -387,6 +388,7 @@ function selectiveDisable(flavor, flavorMatch, allowed) {
                     setOpacity(elLabel, 1.0);
                     if(x == allowed[0]) {
                         el.checked = true;
+                        onBuildTypeChange("formgroup_" + x);
                     }
                 }
             }
