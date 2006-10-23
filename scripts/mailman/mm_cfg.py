@@ -175,6 +175,7 @@ DEFAULT_PASS_MIME_TYPES = ['multipart/mixed',
 # lists with no archives).
 ALLOW_RFC2369_OVERRIDES = Yes
 
+DEFAULT_GENERIC_NONMEMBER_ACTION = 2
 
 # Note - if you're looking for something that is imported from mm_cfg, but you
 # didn't find it above, it's probably in Defaults.py.

@@ -29,7 +29,15 @@ def FixOwners(cfg, mlist, minturl):
             mlist.owner = [x[1] for x in owners]
             mlist.emergency = 0
             mlist.member_moderation_action = 0
-            mlist.generic_nonmember_action = 1
+
+            # What shold happen to non-member posts which are do not match explicit
+            # non-member actions?
+            # 0 = Accept
+            # 1 = Hold
+            # 2 = Reject
+            # 3 = Discard
+            mlist.generic_nonmember_action = 2
+
             mlist.member_moderation_notice = ""
         else:
             #set the list read only.  See mint/mailinglists.py for the
