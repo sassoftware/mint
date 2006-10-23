@@ -138,8 +138,8 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
 
                     <p>
-                        <button id="submitButton" type="submit" name="action" value="save" py:attrs="{'disabled': not buildId and 'disabled' or None}"> ${buildId and "Recreate" or "Create"} Build</button>
-                        <button type="submit" name="action" value="cancel">Cancel</button>
+                        <input type="submit" id="submitButton" name="action" value="${buildId and 'Recreate' or 'Create'} Build" py:attrs="{'disabled': not buildId and 'disabled' or None}" />
+                        <input type="submit" name="action" value="Cancel" />
                     </p>
                     <input type="hidden" name="buildId" value="${buildId and buildId or 0}" />
                 </form>
