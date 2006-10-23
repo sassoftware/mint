@@ -110,10 +110,11 @@ def setup():
     from conary.lib import coveragehook
 
     # import tools normally expected in findTrove.
-    from testhelp import context, TestCase, findPorts
+    from testhelp import context, TestCase, findPorts, SkipTestException
     sys.modules[__name__].context = context
     sys.modules[__name__].TestCase = TestCase
     sys.modules[__name__].findPorts = findPorts
+    sys.modules[__name__].SkipTestException = SkipTestException
 
     # ensure shim client errors on types that can't be sent over xml-rpc
     from mint import shimclient
@@ -144,8 +145,7 @@ def main(argv=None, individual=True):
     _individual = individual
     if argv is None:
         argv = list(sys.argv)
-    topdir = os.path.join(os.getcwd(), os.path.dirname(sys.argv[0]))
-    topdir = os.path.normpath(topdir)
+    topdir = testhelp.getTestPath()
     cwd = os.getcwd()
     if topdir not in sys.path:
         sys.path.insert(0, topdir)
