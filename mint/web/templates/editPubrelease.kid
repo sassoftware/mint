@@ -35,19 +35,24 @@ from mint import pubreleases
 
                     <div class="formgroupTitle">Release Information</div>
                     <div class="formgroup">
+			<div style="height: 1%;">
                         <label for="relname"><em class="required">Name</em></label>
                         <input id="relname" name="name" type="text" value="${name}" onkeyup="buttonStatus();"/>
                         <label for="namehelp">&nbsp;</label><span id="namehelp" style="width: 50%;" class="help">Enter a name for this release.</span>
-                        <div class="clearleft">&nbsp;</div>
-
+			</div>
+                        <div style="line-height: 20px;" class="clearleft">&nbsp;</div>
+			<div style="height: 1%;">
                         <label for="relver"><em class="required">Version</em></label>
                         <input id="relver" name="version" type="text" value="${version}" onkeyup="buttonStatus();"/>
                         <label for="verhelp">&nbsp;</label><span id="verhelp" class="help">Enter a version for this release. (Example: 1.1.1)</span><div class="clearleft">&nbsp;</div>
+			</div>
 
+			<div style="height: 1%;">
                         <label for="reldesc">Description (optional)</label>
                         <textarea id="reldesc" name="desc" type="text" py:content="desc" />
                         <label for="deschelp">&nbsp;</label><span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span>
-                        <div class="clearleft">&nbsp;</div>
+			</div>
+                        <div style="line-height: 0;" class="clearleft">&nbsp;</div>
 
                     </div>
 
