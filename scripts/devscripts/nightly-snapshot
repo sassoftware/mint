@@ -22,6 +22,7 @@ ERROR_MAIL=rbuilder-list@rpath.com
 
 SCRIPTS_PATH=/srv/rbuilder/code/mint/scripts/
 CMDLINE_PATH=/srv/rbuilder/code/mint/bin/
+KICKSTART_FILE=/home/tgerla/public_html/rba-kickstart.cfg
 
 # source functions library
 . $SCRIPTS_PATH/devscripts/nightly-library.sh
@@ -67,6 +68,12 @@ create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH installable_iso
 ISO_ID=$BUILD_ID
 create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH vmware_image --wait
 VMWARE_ID=$BUILD_ID
+
+# rewrite the kickstart file with the new build id
+sed s/@BUILD_ID/$ISO_ID/ $KICKSTART_FILE.in > $KICKSTART_FILE
+
+# somehow trigger a reboot of the kickstarted machine to get a reinstall
+# ???
 
 nail -s 'rBuilder Snapshot Build Succeeded' $ERROR_MAIL << EOT
 The rBuilder appliance build has finished. New images are available:
