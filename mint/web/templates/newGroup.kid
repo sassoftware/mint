@@ -75,7 +75,7 @@
                             </td>
                         </tr>
                     </table>
-                    <p><button class="img" type="submit">
+                    <p><button id="newGroupSubmit" class="img" type="submit">
                         <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                     </button></p>
                 </form>
