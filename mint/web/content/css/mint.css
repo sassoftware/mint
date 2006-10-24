@@ -260,6 +260,11 @@ button#newGroupSubmit {
     height: 31px;
 }
 
+button#uploadKeySubmit {
+    width: 101px;
+    height: 31px;
+}
+
 button#searchSubmit {
     width: 108px;
     height: 31px;

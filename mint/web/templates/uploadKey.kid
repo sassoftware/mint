@@ -64,7 +64,7 @@ from mint import userlevels
                     </tr>
                 </table>
                 <p>
-                    <button class="img" type="submit">
+                    <button id="uploadKeySubmit" class="img" type="submit">
                         <img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" />
                     </button>
                 </p>
