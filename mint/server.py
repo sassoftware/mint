@@ -2367,8 +2367,8 @@ class MintServer(object):
         # this idea should be cleaned up using real conary deps parsing
         # when we have a chance.
         for arch in archTypes[:]:
-            archTypes.append(arch + '|5#use:~domU:~xen')
-            archTypes.append(arch + '|5#use:~dom0:~xen')
+            archTypes.append(arch + '|5#use:domU:xen')
+            archTypes.append(arch + '|5#use:dom0:xen')
 
         buildTypes = []
         try:

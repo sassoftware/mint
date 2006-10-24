@@ -50,7 +50,7 @@
                     </p>
                     <p>
                         <div>
-                            <input name="flavor" type="checkbox" value="5#use:~domU:~xen" id="domU" />
+                            <input name="flavor" type="checkbox" value="5#use:domU:xen" id="domU" />
                             <label id="domULabel" for="domU">Xen domU (unprivileged guest) support</label>
                         </div>
                     </p>
