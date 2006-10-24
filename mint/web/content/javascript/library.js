@@ -230,9 +230,9 @@ function updateStatusArea(jobStatus) {
     logDebug(jobStatus);
 
     if(!jobStatus) {
-        status = STATUS_NOJOB;
+        var status = STATUS_NOJOB;
     } else {
-        status = jobStatus.status;
+        var status = jobStatus.status;
         if(status == STATUS_RUNNING)
             setElementClass(statusAreaEl, "running");
         if(status == STATUS_FINISHED)
