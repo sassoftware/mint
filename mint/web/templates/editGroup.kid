@@ -105,16 +105,16 @@ from mint.grouptrove import KNOWN_COMPONENTS
                     </tr>
                 </table>
                 <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
-                <p><button class="img" type="submit">
+                <p><button id="editGroupApply" class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/apply_changes_button.png" alt="Apply Changes" />
                 </button></p>
             </form>
 
             <p>
-                <button class="img" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';" type="button">
+                <button id="editGroupCook" class="img" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';" type="button">
                     <img src="${cfg.staticPath}/apps/mint/images/cook_this_group_button.png" alt="Cook This Group" />
                 </button>
-                <button class="img" onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';" type="button">
+                <button id="editGroupDelete" class="img" onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';" type="button">
                     <img src="${cfg.staticPath}/apps/mint/images/delete_this_group_button.png" alt="Delete This Group" />
                 </button>
             </p>

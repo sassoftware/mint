@@ -254,8 +254,27 @@ form#searchForm br {
         clear: left;
 }
 
+button#createAccountSubmit,
+button#newGroupSubmit {
+    width: 98px;
+    height: 31px;
+}
+
+button#uploadKeySubmit {
+    width: 101px;
+    height: 31px;
+}
+
 button#searchSubmit {
     width: 108px;
+    height: 31px;
+}
+
+button#addMemberSubmit,
+button#editGroupApply,
+button#editGroupCook,
+button#editGroupDelete {
+    width: 164px;
     height: 31px;
 }
 
@@ -551,7 +570,9 @@ th#spotTh {
 
 
 button#signInSubmit {
-    padding: 10px 0px 10px 0px;
+    margin: 10px 0px;
+    width: 101px;
+    height: 31px;
 }
 
 div#noAccount {
@@ -801,7 +822,8 @@ div#projectsPane div.boxBody {
 
 div#projectsPane div.boxBody p,
 div#projectsPane div.boxBody h3,
-div#projectsPane div.boxBody h4 {
+div#projectsPane div.boxBody h4,
+div#projectsPane div.boxBody div#login {
 
     padding: 0px 6px 0px 12px;
 }
@@ -1140,6 +1162,11 @@ div.devTutorial p img {
 button#userSubmit {
     width: 108px;
     height: 37px;
+}
+
+button#userCancel {
+    width: 164px;
+    height: 31px;
 }
 
 /* VMware image button for release pages */

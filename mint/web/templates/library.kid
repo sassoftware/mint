@@ -260,28 +260,23 @@ from mint.web.templatesupport import injectVersion, dictToJS
           </div>
         </div>
         <div class="boxBody">
-            <p>
             <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
-                <input type="hidden" name="to" value="${quote(toUrl)}" />
-
-                <div>Username:</div>
-                <div><input type="text" name="username" /></div>
-                <div style="padding-top: 4px;">Password:</div>
-                <div><input type="password" name="password" /></div>
-                <div style="padding-top: 4px;">
-                    <input type="checkbox" name="rememberMe" value="1" />
+                <p>Username:<br /><input type="text" name="username" /></p>
+                <p>Password:<br /><input type="password" name="password" /></p>
+                <p>
+                    <input style="float: left; margin: 0 1em 1em 0;" type="checkbox" name="rememberMe" value="1" />
                     <span style="text-decoration: underline;">Remember me</span> on this computer
-                </div>
-                <button id="signInSubmit" type="submit" class="img">
+                    <br style="clear: both;" />
+                </p>
+                <p><button id="signInSubmit" type="submit" class="img">
                     <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
-                </button>
-
-                <div id="noAccount">
-                    <p py:if="not cfg.adminNewUsers"><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
-                    <p><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></p>
-                </div>
+                </button></p>
             </form>
-            </p>
+
+            <div id="noAccount">
+                <p py:if="not cfg.adminNewUsers"><strong>Don't have an account?</strong><br /><a href="${cfg.basePath}register">Set one up.</a></p>
+                <p><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></p>
+            </div>
         </div>
     </div>
 

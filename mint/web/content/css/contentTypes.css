@@ -252,7 +252,7 @@ table.memberstable {
 }
 a.option {
 	border:1px #ccc solid; background-image:none;
-	display:block; padding:0.1em 0.25em; margin:-2px 0px 0px 0px;
+	display:block; padding:0.1em 0.25em; margin:0;
 	font-size:0.9091em; text-transform:uppercase; font-weight:bold;
         text-decoration:none;
 }
