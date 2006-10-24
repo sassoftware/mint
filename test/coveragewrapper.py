@@ -14,6 +14,8 @@ if conaryPath not in sys.path:
 
 from conary.lib import util
 
+EXCLUDED_PATHS = ['test', 'scripts', 'raaplugins', 'schema.py']
+
 class CoverageWrapper(object):
     def __init__(self, coveragePath, dataPath, annotatePath):
         self._coveragePath = coveragePath
@@ -125,6 +127,7 @@ def _isPythonFile(fullPath, posFilters=[r'\.py$'], negFilters=['sqlite']):
     return True
 
 def getFilesToAnnotate(baseDirs=[], filesToFind=[], exclude=[]):
+    exclude += EXCLUDED_PATHS
 
     notExists = set(filesToFind)
     addAll = not filesToFind
