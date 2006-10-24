@@ -271,6 +271,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 <p><button id="signInSubmit" type="submit" class="img">
                     <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
                 </button></p>
+                <input type="hidden" name="to" value="${quote(toUrl)}" />
             </form>
 
             <div id="noAccount">
