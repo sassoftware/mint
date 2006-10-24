@@ -26,7 +26,7 @@ export raapluginsdir = $(libdir)/raa/rPath/
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts raa-plugins commands etc doc 
+SUBDIRS = mint test scripts raaplugins commands etc doc 
 
 extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 
@@ -42,9 +42,9 @@ product-dist:
 	make -C product DIR=mint/web dist || exit 1;
 
 strip-raa:
-	rm -rf $(DISTDIR)/raa-plugins/*
-	echo "all: " > $(DISTDIR)/raa-plugins/Makefile
-	echo "install: " >> $(DISTDIR)/raa-plugins/Makefile
+	rm -rf $(DISTDIR)/raaplugins/*
+	echo "all: " > $(DISTDIR)/raaplugins/Makefile
+	echo "install: " >> $(DISTDIR)/raaplugins/Makefile
 
 main-dist: $(dist_files)
 	rm -rf $(DISTDIR)

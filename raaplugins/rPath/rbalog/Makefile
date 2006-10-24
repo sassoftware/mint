@@ -6,11 +6,11 @@
 
 all: default-all default-subdirs
 
-SUBDIRS = web srv
+SUBDIRS = web
 
 python_files = __init__.py
 
-kid_files = index.kid
+kid_files = log.kid
 
 extra_files = Makefile
 
@@ -28,13 +28,13 @@ install: all install-subdirs raaplugins-install kidfiles-install
 
 kidfiles-install:
 	kidc --strip-dest-dir $$(pwd) $(kid_files)
-	mkdir -p $(DESTDIR)$(raapluginsdir)`echo $(DIR) | sed "s|/raa-plugins||"`
+	mkdir -p $(DESTDIR)$(raapluginsdir)$(DIR)/../../
 	for f in $(kid_files) *.pyc; do \
-		cp -a $$f $(DESTDIR)$(raapluginsdir)`echo $(DIR) | sed "s|/raa-plugins||"`/$$f; \
+		cp -a $$f $(DESTDIR)$(raapluginsdir)`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"` ;\
 	done
 
-dist: default-dist dist-subdirs
+dist: default-dist
 
 clean: clean-subdirs default-clean
 
-include ../../Make.rules
+include ../../../Make.rules

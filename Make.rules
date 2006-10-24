@@ -11,8 +11,8 @@ PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix,
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(raapluginsdir)
 	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raa-plugins||"\`/$$f"`; \
-		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raa-plugins||"`/$$f; \
+		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"\`/$$f"`; \
+		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`/$$f; \
 	done
 
 pyfiles-install:

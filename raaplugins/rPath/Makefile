@@ -8,9 +8,11 @@ all: subdirs
 
 SUBDIRS=rbalog loadmirror
 
+python_files = __init__.py
+
 extra_files = Makefile
 
-dist_files = $(extra_files)
+dist_files = $(extra_files) $(python_files)
 
 .PHONY: clean dist install subdirs
 
@@ -22,4 +24,4 @@ subdirs: default-subdirs
 
 install: install-subdirs
 
-include ../Make.rules
+include ../../Make.rules
