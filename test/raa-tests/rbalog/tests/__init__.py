@@ -30,9 +30,11 @@ class RBALogTest(raatest.rAATest):
 
     def test_downloadLog(self):
         self.requestWithIdent("/rbalog/RBALog/rBuilderLog")
+        print cherrypy.response.body
         assert [""] == cherrypy.response.body
 
     def test_downloadError(self):
         RBALog.logPath = "/file/does/not/exist"
         self.requestWithIdent("/rbalog/RBALog/rBuilderLog")
+        print cherrypy.response.body
         assert ["Error:  Log file not found"] == cherrypy.response.body
