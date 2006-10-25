@@ -340,7 +340,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('testuser', 'testpass')
         page = self.fetch('/project/testproject/pickArch?id=%d' % groupTrove.id,
                           server=self.getProjectServerHostname())
-        assert 'choose an architecture' in page.body
+        assert 'Choose an architecture' in page.body
 
     def testNewBuild(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
