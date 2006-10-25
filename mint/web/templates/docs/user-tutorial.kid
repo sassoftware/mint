@@ -29,94 +29,110 @@
         <div class="layout">
             <h1>rBuilder Online for Users</h1>
 
-            <p>If you are already using a Conary-based system, then you have come to the
-                right place to look for software.</p>
+            <h2>Download and Install Complete Distributions</h2>
+            <p>
+                You can download and install a complete Conary-based system from
+                the published releases of an rBuilder project.  These releases may be referred
+                to as <i>distributions</i> or <i>software appliances</i> depending on the
+                nature of the project.  Conary-based Linux distributions, such as <a
+                href="http://www.rpath.com/rbuilder/project/rpath/">rPath
+                Linux</a>, are available for free from rBuilder Online.
+            </p>
 
-            <h2>Step 1. Find the right package or distribution</h2>
-            <div id="step1">
-                <p>Browse the repository or search for the right package.</p>
-                <div class="helpBlock">
-                    <p>Use the Browse and Search boxes on the left hand side to find the projects 
-                    or packages that suits your needs. If you are looking for a complete distribution, 
-                    look for the Recent Builds box on the left side of a project's home page.</p>
-                </div>
-            </div>
+            <p>
+                Use the Search text box at the top of the rBuilder web interface to find a
+                project that has the release you want.  Click the <b>View Releases</b> link in
+                the <i>Project Resources</i> menu to see a list of the project's published
+                releases, which are each fully installable Conary-based systems representing
+                distributions or software appliances.
+            </p>
 
-            <h2>Step 2. Download and Install</h2>
-            <div id="step2">
-                <p>It is quick and easy, whether a installing package or a whole distribution.</p>
+            <p>
+                The release information displays the type of downloads
+                available, such as raw hard disk images or installable CD/DVDs.  Click the
+                linked name of the release, and click <b>Download</b> to download for the
+                image.  For installable CD/DVD images, copy the images onto the appropriate
+                media and use it to install your system.
+            </p>
 
-                <div class="helpBlock">
-                    <p>If you just want to install a package, then you should type, as root:</p>
+            <h3>Download and Install Individual Packages</h3>
+            <p>
+                If you are currently using a Conary-based system, and you are looking for
+                software already packaged for Conary, find available packages in rBuilder and
+                install them from their original project repositories.
+            </p>
 
-                    <pre>[user@host ~]# <b>conary update &lt;package&gt;=&lt;project label&gt;</b>
+            <p>
+                Use the Search text box at the top of the rBuilder web interface to find a
+                package that has the software you want.  Click <b>Browse Repository</b> to
+                navigate the list of individual packages in the project, each of which can be
+                installed on an existing Conary-based system.
+            </p>
 
-</pre>
+            <p>
+                Click the linked package name in the <i>Repository Browser</i> to view
+                package information, and locate the project <a
+                href="http://wiki.rpath.com/wiki/Glossary#label">label</a> as
+                part of the <i>Version</i> string listed in this information.  The project
+                label for a package with a version of
+                <i>/projectname.rpath.org@rpl:devel/1.1-1-1</i> is
+                <b>projectname.rpath.org@rpl:devel</b>.  As the root user of your Conary-based
+                system, use the following command to install the package from rBuilder,
+                replacing &lt;package&gt; with the package name and &lt;project_label&gt; with
+                the project label:
+            </p>
 
-                    <p>You can get the <tt>&lt;project label&gt;</tt> from the "Install packages 
-                        from this project" link on the project's home page.</p>
+            <pre class="cmd">[user@host ~]# conary update &lt;package&gt;=&lt;project_label&gt;</pre>
 
-                    <p>If you want to install a complete distribution, then select one of the Recent 
-                    Builds on the left hand side of the home page.  Download the ISO image, 
-                    burn it to a CD, and use it to install your system.</p>
-                </div>
-            </div>
+            <h3>Keep Software Updated</h3>
 
-            <h2>Step 3. Stay Up To Date</h2>
-            <div id="step3">
-                <p>Of course you can keep the software updated, but you can also keep track of
-                    what is going on with the project.</p>
+            <p>Keep your distributions and installed software packages updated using
+            <b>conary update</b>.  This command used with an installed package name will
+            tell Conary to update the system to the latest version of that package in the
+            rBuilder project's repository.  As the root user on the Conary-based system,
+            run the following command to update a package by name: </p>
 
-                <div class="helpBlock"> 
-                    
-                    <p>To keep the software updated, you only need to run, as root:</p>
-                    <pre>[user@host ~]# <b>conary update &lt;package&gt;</b>
+            <pre class="cmd">[user@host ~]# conary update &lt;package_name&gt;</pre>
 
-</pre>
-                    <p>or</p>
-                    <pre>[user@host ~]# <b>conary updateall</b>
+            <p>Use this command to update your entire system at one time:</p>
+            <pre class="cmd">[user@host ~]# conary updateall</pre>
+            <p>Use the <a href="http://wiki.rpath.com/wiki/Conary:QuickReference">Conary
+            QuickReference</a> to reference this and other tasks used to maintain your
+            Conary-based system.  </p>
 
-</pre>
-                    
-                    <p>to get the newest version&#x2014;no need to go looking.  Even if you have 
-                        installed software from several different projects, conary keeps track of
-                        packages and where they came from and gets you the updates.</p>
+            <h3>Follow or Join a Project</h3>
+            <p>While a Conary update for installed packages is automated, eliminating the
+            need to visit a project in rBuilder, you may choose to watch the project in
+            rBuilder or follow discussions in a project's mailing lists.  rBuilder users
+            can create a watch list available on the right side of each rBuilder page, and
+            registered and unregistered users alike can subscribe to mailing lists and RSS
+            feeds for the project.  </p>
 
-                    <p>Interested in a particular project?  There are several ways you can follow a
-                        project:</p>
+            <ul>
+                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists">Subscribe to a project mailing list</a> from a projects <i>Mailing Lists</i> page</li>
+                <li> Subscribe to an RSS feed for project release news using the RSS link on a project's main page</li>
+                <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project">Watch a project</a> to bookmark it in your rBuilder watch list</li>
+            </ul>
 
-                    <ul>
-                        <li>Click "Watch this project" on the project's home page and you will get 
-                            a quick link to the project's home page in your "My Projects" area.</li>
-                        <li>Subscribe to the project's RSS feed for build news.</li>
-                        <li>Follow the developer discussions and code commits using the project's 
-                            mailing lists.</li>
-                    </ul>
-                </div>
-            </div>
+            <p>As an rBuilder user, you may also wish to <a
+            href="http://wiki.rpath.com/wiki/rBuilder:Join_a_Project">join
+            a project</a> to help out with testing, documentation, design, or to
+            participate as a developer.</p>
 
+            <h3>Create Your Own Project</h3>
+            <p>rBuilder gives you the opportunity to create a new rBuilder project.  Use
+            your project to develop your own distributions using existing rBuilder packages
+            or for incorporating new packaged software.  Instructions for joining,
+            participating in, and creating an rBuilder project is available in <a
+            href="http://wiki.rpath.com/wiki/rBuilder">rBuilder's online documentation</a>,
+            and an introduction to packaging your own software for a project is available
+            in the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial">New
+            Package Tutorial</a>.</p>
 
-            
-            <h2>Step 4. Participate in a project or create your own project</h2>
+            <p>For detailed instructions on these rBuilder operations and more, see the <a
+            href="http://wiki.rpath.com/wiki/rBuilder">rBuilder documentation at
+            wiki.rpath.com</a>.</p>
 
-            <div id="step4">
-                <p>Join up with others or strike out on your own.</p>
-
-                <div class="helpBlock">
-
-                    <p>If you want to help in the development of a project, simply request to join a 
-                    project from the project's home page.  But you do not have to be a coder to 
-                    participate.  All projects need people to help out with testing, 
-                    documentation, design, etc.  If there is an interesting project, feel free to 
-                    create an rBuilder Online account, and offer your services.</p>
-
-                    <p>If you would like to start your own project, then get started here: 
-                        <a href="${cfg.basePath}help?page=dev-tutorial">rBuilder Online for Developers</a></p>
-
-                </div>
-            </div>
-
-            <p />
         </div>
     </body>
 </html>

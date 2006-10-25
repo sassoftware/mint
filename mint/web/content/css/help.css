@@ -8,8 +8,11 @@ div.helpBlock {
     padding: 0.5em;
 }
 
-div.helpBlock pre, div.helpBlock.tt {
-    color: #000055;
+pre.cmd {
+    background: #efefef;
+    border: 1px dashed #000066;
+    padding: 6px;
+    margin-left: 2em;
 }
 
 div.helpBlock pre {
