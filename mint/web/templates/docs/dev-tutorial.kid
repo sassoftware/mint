@@ -65,7 +65,7 @@
                 <p>
                     Create a build to make your cooked group into a distributable software appliance. 
                     Click Manage Builds, choose a cooked group and a build type (such as installable 
-                    CD/DVD or VMware® Player image), and create the new build. Then, click Manage 
+                    CD/DVD or VMware&reg; Player image), and create the new build. Then, click Manage 
                     Releases to publish one or more builds in a release, making them available for download.
                 </p>
 
