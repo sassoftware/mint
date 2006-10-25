@@ -34,8 +34,9 @@
             <div id="middle">
                 <h1 id="pleaseWait">Cooking Group: Choose An Architecture</h1>
 
-                <p>You can choose an architecture to cook this group for. If you want your application image to support
-                more than one architecture, cook the group once for each you wish to support.</p>
+                <p>Choose an architecture for which to cook this group. If you
+                want your application image to support multiple architectures, cook the group
+                for each architecture you wish to support.</p>
 
                 <form method="post" action="cookGroup">
                     <p>
@@ -46,7 +47,9 @@
 
                     </p>
                     <p>
-                        You can optionally add Xen guest domain (domU) support to this group.
+                        Check the box below to add Xen guest domain (domU)
+                        support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
+                        information about Xen and rBuilder.
                     </p>
                     <p>
                         <div>
