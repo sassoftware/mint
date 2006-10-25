@@ -32,7 +32,8 @@ merge_and_cook toolkit_inits
 merge_and_cook group-image_maker
 create_build rbuilder group-image_maker raw_hd_image --wait
 merge toolkit-image
-fetch_build toolkit-image image_maker.img
+fetch_build toolkit-image image_maker.img.gz
+gunzip image_maker.img.gz
 commit toolkit-image
 cook toolkit-image
 
