@@ -291,12 +291,7 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             nscfg.commitAction = None
 
-        # XXX hack to override commitAction for foresight until foresight
-        # switches to our mailing lists.
-        if req.hostname == "foresight.rpath.org":
-            nscfg.commitAction = '''/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'''
-        elif req.hostname == "conary.digium.com":
-            # another hack that needs to be generalized
+        if req.hostname == "conary.digium.com":
             nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --config-file /srv/rbuilder/conaryrc --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
 
         if os.access(repositoryDir, os.F_OK):
