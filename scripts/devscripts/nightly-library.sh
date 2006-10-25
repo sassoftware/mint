@@ -34,7 +34,6 @@ function merge() {
     [ -d $RECIPES_PATH/$1/ ] || cvc co $1
     pushd $1
     cvc merge
-    [ $? != 0 ] && carp
     rewrite_version $1.recipe $DATE
     popd
     popd
