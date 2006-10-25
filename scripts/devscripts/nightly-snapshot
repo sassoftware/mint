@@ -30,10 +30,11 @@ KICKSTART_FILE=/home/tgerla/public_html/rba-kickstart.cfg
 # build the image maker image into toolkit-image
 merge_and_cook toolkit_inits
 merge_and_cook group-image_maker
-create_build rbuilder group-image_maker raw_hd_image --wait --option "freespace 50" --option "swapSize 0"
+create_build rbuilder group-image_maker raw_hd_image '--wait --option "freespace 50" --option "swapSize 0"'
 merge toolkit-image
 fetch_build toolkit-image image_maker.img.gz
-gunzip image_maker.img.gz
+rm -f RECIPES_PATH/tookit-image/image_maker.img
+gunzip $RECIPES_PATH/tookit-image/image_maker.img.gz
 commit toolkit-image
 cook toolkit-image
 
@@ -45,7 +46,7 @@ $SCRIPTS_PATH/devscripts/rmake-helper --context=$NIGHTLY_CONTEXT --commit rbuild
 
 # build the jobserver root into jobserver-root
 merge_and_cook group-jobserver-root
-create_build rbuilder group-jobserver-root tarball --wait --option "swapSize 0"
+create_build rbuilder group-jobserver-root tarball '--wait --option "swapSize 0"'
 merge jobserver-root
 
 get_mint_version
