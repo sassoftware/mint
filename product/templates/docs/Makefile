@@ -5,12 +5,10 @@
 #
 
 kid_files =			\
-	dev-tutorial.kid	\
         feedback.kid            \
         overview.kid            \
         privacy.kid             \
         tos.kid                 \
-	user-tutorial.kid	\
 	legal.kid
 
 python_files =
