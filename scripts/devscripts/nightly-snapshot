@@ -70,7 +70,7 @@ create_build rbuilder group-rbuilder-dist=$NIGHTLY_BRANCH vmware_image --wait
 VMWARE_ID=$BUILD_ID
 
 # rewrite the kickstart file with the new build id
-sed s/@BUILD_ID/$ISO_ID/ $KICKSTART_FILE.in > $KICKSTART_FILE
+sed s/@BUILD_ID@/$ISO_ID/ $KICKSTART_FILE.in > $KICKSTART_FILE
 
 # somehow trigger a reboot of the kickstarted machine to get a reinstall
 # ???
