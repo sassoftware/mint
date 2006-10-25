@@ -135,8 +135,13 @@ th .required {
 
 /* SEARCH RESULTS TABLE LAYOUT */
 .results {
-	padding:0px 0px 4px 0px; margin:8px 0px 8px 0px;
+        width: 100%;
+	padding:0px 0px 4px 0px; margin:8px 0px;
 	border-bottom:1px #ccc solid; border-top:1px #ccc solid;
+        margin-left: 0 !important;
+        margin-left: -3px;
+        margin-right: 0 !important;
+        margin-right: -3px;
 }
 
 .results th {

@@ -96,9 +96,6 @@ div#layout #help {
 
 table {
     width: 100%;
-}
-
-.iemargins {
     margin-left: 0 !important;
     margin-left: -3px;
     margin-right: 0 !important;

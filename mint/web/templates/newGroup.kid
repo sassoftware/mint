@@ -25,7 +25,7 @@
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="createGroup">
 
-                    <table class="iemargins">
+                    <table>
                         <tr>
                             <th>
                                 <em class="required">Group Name:</em>
