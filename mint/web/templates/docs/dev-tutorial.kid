@@ -24,62 +24,63 @@
         <div class="layout" id="helpPage">
             <div id="right" class="side">
                 ${resourcePane()}
-		${builderPane()}
+                ${builderPane()}
             </div>
 
             <div id="spanleft" class="devTutorial">
                 <h1>Create Your Own Software Appliance</h1>
-                <p py:if="not auth.authorized">
-                    If you already have an ${cfg.productName} account, please log in now. If
-                    you don't already have an ${cfg.productName} account, you will need to
-                    <strong><a href="http://${SITE}register">create one</a></strong>.
+                <p>
+                    rBuilder provides its users the tools necessary to build
+                    and distribute their own Conary-based software appliances.
+                    Use the following steps to create your own software appliance 
+                    using existing packages in rBuilder.
                 </p>
 
-                <p py:if="auth.authorized and not ownsProjects">
-                    You will need your own project in order to build a software appliance.
-                    Get started by <strong><a href="http://${SITE}newProject">creating a new
-                    project</a></strong>.
+                <h2>1) Create a new group for your project</h2>
+                <p>
+                    Your new group will represent the recipe for your software
+                    appliance. From your project's home page, click Group Builder
+                    and complete the form with the new group's details.
                 </p>
 
+                <h2>2) Add packages to your group</h2>
+                <p>
+                    Adding packages to a group is like adding ingredients for your recipe. 
+                    Use the Search text box at the top of the rBuilder web interface to find 
+                    packages you want to include, and click Add to group beside a package to 
+                    choose it for your appliance. The Group Builder on the right side of the 
+                    page will show the packages you have selected and provide links to use 
+                    while you build your group recipe.
+                </p>
 
-                <div py:if="ownsProjects" py:omit="True">
-                    <p>
-                        This tutorial steps you through the process of creating your own
-                        software appliance from packages that already exist on rBuilder
-                        Online.  If you would like to build and contribute your own packages,
-                        you should follow the <strong><a href="http://wiki.rpath.com/wiki/images/5/54/RBuilderOnlineTutorial.pdf">steps to
-                        building packages with rBuilder Online</a></strong>.
-                    </p>
+                <h2>3) Cook your group</h2>
+                <p>
+                    After you have chosen the packages for your group, you are ready to cook. 
+                    Click Cook this Group in the Group Builder and watch as rBuilder assembles 
+                    the chosen packages in the group recipe. When the group is finished cooking, 
+                    you can create and manage builds to distribute as your new software appliance.
+                </p>
 
-                    <h2>Step 1. First, create a new group</h2>
+                <h2>4) Build the software appliance</h2>
+                <p>
+                    Create a build to make your cooked group into a distributable software appliance. 
+                    Click Manage Builds, choose a cooked group and a build type (such as installable 
+                    CD/DVD or VMware® Player image), and create the new build. Then, click Manage 
+                    Releases to publish one or more builds in a release, making them available for download.
+                </p>
 
-                    <p>
-                        <img src="${cfg.staticPath}apps/mint/images/mag_glass.png" alt="Magnifying Glass" />
-                        Your new group will hold the recipe for your software appliance.  From
-                        your project's home page, click on "Group Builder" and fill in your
-                        group's details.
-                    </p>
+                <p>
+                    For detailed instructions on these rBuilder operations and more, see the 
+                    <a href="http://wiki.rpath.com/wiki/rBuilder">rBuilder documentation at wiki.rpath.com</a>.
+                </p>
 
-                    <h2 style="clear: left;">Step 2. Next, add the packages you want</h2>
-
-                    <p>
-                        <img src="${cfg.staticPath}apps/mint/images/ingredients.png" alt="ingredients" />
-                        Now it's time to add in the ingredients for your software appliance.
-                        Using the Search box, find the packages you want to include and click
-                        "Add to group." Each time, you will see the package you selected
-                        appear in the Group Builder sidebar.
-                    </p>
-
-                    <h2 style="clear: left;">Step 3. Finally, build your software appliance</h2>
-
-                    <p>
-                        <img src="${cfg.staticPath}apps/mint/images/pot.png" alt="Cooking Pot" />
-                        The last step is to "cook" your software appliance.  Click "Cook this
-                        Group" and watch as rBuilder Online assembles the packages you chose
-                        into a complete system.  When the group is "Finished" cooking, you can
-                        go to the builds page to publish and share your work.
-                    </p>
-                </div>
+                <p>
+                    To extend rBuilder functions, you might also choose to 
+                    <a href="http://wiki.rpath.com/wiki/Conary:Packager">create your own packages</a>. 
+                    An introduction to packaging for Conary-based systems is available in the 
+                    <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial">New Package Tutorial</a>,
+                    including the steps to package your own software for rBuilder Online. 
+                </p>
             </div>
         </div>
     </body>
