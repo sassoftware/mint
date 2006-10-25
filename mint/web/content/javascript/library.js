@@ -283,13 +283,13 @@ function processListActiveJobs(aReq) {
             " (" +
             queuedJobsList.length + " queued, " +
             runningJobsList.length + " running, " +
-            finishedJobsList.length + " finished)"));
+            finishedJobsList.length + " finished within the last 24 hours)"));
 
         var tableBody = TBODY(null, null);
 
         if (queuedJobsList.length > 0) {
             appendChildNodes(tableBody,
-                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
+                TR(null, TH({ 'colspan': '5', 'colSpan': '5', 'class': 'tablesubhead' },
                     "Queued jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
                     "Description", "Last Status Message Received", "Job Server IP"]),
@@ -297,7 +297,7 @@ function processListActiveJobs(aReq) {
         }
         if (runningJobsList.length > 0) {
             appendChildNodes(tableBody,
-                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
+                TR(null, TH({ 'colspan': '5', 'colSpan': '5', 'class': 'tablesubhead' },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
                     "Description", "Last Status Message Received", "Job Server IP"]),
@@ -305,7 +305,7 @@ function processListActiveJobs(aReq) {
         }
         if (finishedJobsList.length > 0) {
             appendChildNodes(tableBody,
-                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
+                TR(null, TH({ 'colspan': '5', 'colSpan': '5', 'class': 'tablesubhead' },
                     "Jobs finished within the last 24 hours")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Finished",
                         "Description", "Last Status Message Received", "Job Server IP"]),
