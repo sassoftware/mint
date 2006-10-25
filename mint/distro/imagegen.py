@@ -50,7 +50,10 @@ class Generator:
         raise NotImplementedError
 
     def status(self, msg):
-        self.job.setStatus(jobstatus.RUNNING, msg)
+        try:
+            self.job.setStatus(jobstatus.RUNNING, msg)
+        except Exception, e:
+            print >> sys.stderr, "Error logging status to rBuilder server:", e
 
 
 class ImageGenerator(Generator):
