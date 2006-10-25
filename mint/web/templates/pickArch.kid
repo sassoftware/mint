@@ -47,14 +47,14 @@
 
                     </p>
                     <p>
-                        Check the box below to add Xen guest domain (domU)
+                        Check the box below to add Xen guest domain (DomU)
                         support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
                         information about Xen and rBuilder.
                     </p>
                     <p>
                         <div>
                             <input name="flavor" type="checkbox" value="5#use:domU:xen" id="domU" />
-                            <label id="domULabel" for="domU">Xen domU (unprivileged guest) support</label>
+                            <label id="domULabel" for="domU">Xen DomU (unprivileged guest) support</label>
                         </div>
                     </p>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
