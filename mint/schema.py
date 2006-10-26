@@ -385,7 +385,7 @@ def _createBuilds(db):
             CREATE TABLE UrlDownloads (
                 urlId               INTEGER NOT NULL,
                 url                 VARCHAR(255),
-                timeDownloaded      INT(14),
+                timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
                 ip                  CHAR(15)
             )""" % db.keywords)
         db.tables['UrlDownloads'] = []
