@@ -1141,6 +1141,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self._checkRedirect('/downloadImage/1/test.iso?fileId=1&urlType=%d' %\
                 urltypes.LOCAL, expectedRemoteRedirect)
 
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM UrlDownloads")
+        x = cu.fetchall()
+        self.failUnlessEqual(14, len(x))
+
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)

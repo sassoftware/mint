@@ -608,7 +608,10 @@ class SiteHandler(WebHandler):
         redirectUrl = None
         overrideRedirect = None
         filename = None
-        for t, u in fileUrls:
+
+        urlIdMap = {}
+        for urlId, t, u in fileUrls:
+            urlIdMap[u] = urlId
             if t == urltypes.LOCAL:
                 filename = u
             elif t == urlType:
@@ -630,6 +633,12 @@ class SiteHandler(WebHandler):
                 build = self.client.getBuild(buildId)
                 project = self.client.getProject(build.projectId) 
                 redirectUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
+
+        # record the hit
+        urlId = urlIdMap.get(redirectUrl, urlIdMap.get(filename, None))
+        if urlId:
+            ip = self.req.connection.remote_ip
+            self.client.addDownloadHit(urlId, ip)
 
         if redirectUrl:
             self._redirect(redirectUrl)

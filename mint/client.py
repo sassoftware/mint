@@ -406,6 +406,9 @@ class MintClient:
         """
         return [self.getJob(x) for x in self.server.getJobIds()]
 
+    def addDownloadHit(self, urlId, ip):
+        return self.server.addDownloadHit(urlId, ip)
+
     def getFileInfo(self, fileId):
         return self.server.getFileInfo(fileId)
 

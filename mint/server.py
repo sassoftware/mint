@@ -205,6 +205,7 @@ def getTables(db, cfg):
     d['buildFiles'] = jobs.BuildFilesTable(db)
     d['filesUrls'] = jobs.FilesUrlsTable(db)
     d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
+    d['urlDownloads'] = builds.UrlDownloadsTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
@@ -2711,12 +2712,18 @@ class MintServer(object):
 
         return buildFilesList
 
+    @typeCheck(int, str)
+    @private
+    def addDownloadHit(self, urlId, ip):
+        self.urlDownloads.add(urlId, ip)
+        return True
+
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
         self._filterBuildFileAccess(fileId)
         cu = self.db.cursor()
-        cu.execute("""SELECT bf.buildId, bf.idx, bf.title, fu.urlType, fu.url
+        cu.execute("""SELECT bf.buildId, bf.idx, bf.title, fu.urlId, fu.urlType, fu.url
                       FROM BuildFiles bf
                          JOIN BuildFilesUrlsMap USING (fileId)
                          JOIN FilesUrls fu USING (urlId)
@@ -2725,7 +2732,7 @@ class MintServer(object):
         r = cu.fetchall()
         if r:
             info = r[0]
-            filenames = [ (x[3], x[4]) for x in r ]
+            filenames = [ (x[3], x[4], x[5]) for x in r ]
             return info[0], info[1], info[2], filenames
         else:
             raise jobs.FileMissing

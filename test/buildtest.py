@@ -673,11 +673,25 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(fileUrls), 1)
         self.failUnlessEqual(fileUrls, [(2, urltypes.LOCAL, 'file')])
 
+    @fixtures.fixture('Full')
+    def testDownloadTracking(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+        buildFiles = build.getFiles()
+
+        urlId = buildFiles[0]['fileUrls'][0][0]
+        client.server._server.addDownloadHit(urlId, '1.2.3.4')
+
+        cu = db.cursor()
+        cu.execute("SELECT url FROM UrlDownloads WHERE urlId=?", urlId)
+        self.failUnlessEqual(cu.fetchone()[0], 'file')
+
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):
         client = self.getClient('admin')
         client = self.getClient('admin')
-        
+
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         project = client.getProject(projectId)
 

@@ -736,7 +736,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         fileInfo = client.getFileInfo(files[0]['fileId'])
         assert(fileInfo == \
-                (1, 0, 'Stub', [(0, imageFileName)]))
+                (1, 0, 'Stub', [(4, 0, imageFileName)]))
 
         try:
             fileInfo = client.getFileInfo(99999)

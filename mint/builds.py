@@ -20,6 +20,7 @@ from mint.mint_error import MintError, ParameterError
 
 from conary import versions
 from conary.deps import deps
+from conary.dbstore import sqllib
 
 class TroveNotSet(MintError):
     def __str__(self):
@@ -38,6 +39,28 @@ class BuildDataNameError(MintError):
             self.str = "Named value is not in data template."
         else:
             self.str = reason
+
+class UrlDownloadsTable(database.DatabaseTable):
+    name = "UrlDownloads"
+
+    createSQL = """
+        CREATE TABLE UrlDownloads (
+            urlId               INTEGER NOT NULL,
+            url                 VARCHAR(255),
+            timeDownloaded      INT(14),
+            ip                  CHAR(15)
+        )"""
+
+    fields = ['urlId', 'url', 'timeDownloaded', 'ip']
+
+    def add(self, urlId, ip):
+        t = sqllib.toDatabaseTimestamp()
+        cu = self.db.cursor()
+        cu.execute("""INSERT INTO UrlDownloads (urlId, url, timeDownloaded, ip)
+            VALUES (?, (SELECT url FROM FilesUrls WHERE urlId=?), ?, ?)""",
+            urlId, urlId, t, ip)
+        self.db.commit()
+
 
 class BuildsTable(database.KeyedTable):
     name = "Builds"

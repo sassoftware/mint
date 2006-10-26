@@ -380,6 +380,17 @@ def _createBuilds(db):
     db.createIndex("BuildFilesUrlsMap", "BuildFilesUrlsMap_f_u_idx",
                    "fileId, urlId", unique = True)
 
+    if 'UrlDownloads' not in db.tables:
+        cu.execute("""
+            CREATE TABLE UrlDownloads (
+                urlId               INTEGER NOT NULL,
+                url                 VARCHAR(255),
+                timeDownloaded      INT(14),
+                ip                  CHAR(15)
+            )""" % db.keywords)
+        db.tables['UrlDownloads'] = []
+        commit = True
+
     if commit:
         db.commit()
         db.loadSchema()
