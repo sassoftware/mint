@@ -21,6 +21,8 @@ class CheckJS(NagiosPlugin):
 
     @stdout_hook
     def check(self):
+        if self.cfg.disabled:
+            return self.nagios_unknown
         status = self.nagios_ok
         jsdirs = [x for x in os.listdir(self.cfg.jsPath) if os.path.isdir(os.path.join(self.cfg.jsPath, x))]
         for x in jsdirs:

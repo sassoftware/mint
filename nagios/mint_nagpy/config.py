@@ -17,3 +17,4 @@ class CheckJobsConfig(ConfigFile):
     jsConfig                  = (cfgtypes.CfgList(cfgtypes.CfgString))
     filterExp                 = (cfgtypes.CfgList(cfgtypes.CfgString))
     retries                   = (cfgtypes.CfgInt, 5)
+    disabled                  = (cfgtypes.CfgBool, False)
