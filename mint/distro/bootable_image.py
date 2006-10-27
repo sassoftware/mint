@@ -336,7 +336,7 @@ title %(name)s (%(kversion)s)
         #Install the Kernel
         try:
             # since sync = True, this will sync up to the kernel requested by the group.
-            if self.baseflavor.satisfies(deps.parseFlavor('use: xen')):
+            if self.baseflavor.stronglySatisfies(deps.parseFlavor('use: xen')):
                 kernel, version, flavor = parseTroveSpec('kernel:runtime')
             else:
                 kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
