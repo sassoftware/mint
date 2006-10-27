@@ -8,6 +8,7 @@ from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import downloadTracker
+from mint.builds import getExtraFlags
 from mint import urltypes
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -73,7 +74,8 @@ from mint import urltypes
                     </tr>
                     <tr>
                         <th>Type</th>
-                        <td>${buildtypes.typeNames[build.getBuildType()]}</td>
+                        <?python extraFlags = getExtraFlags(build.troveFlavor) ?>
+                        <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
                     </tr>
                     <tr>
                         <th>Built By</th>

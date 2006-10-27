@@ -6,6 +6,7 @@
 
 from mint import database
 from mint import helperfuncs
+from conary.deps import deps
 
 class PublishedReleasesTable(database.KeyedTable):
 
@@ -94,8 +95,10 @@ class PublishedReleasesTable(database.KeyedTable):
         uniqueBuildTypes = []
         for row in cu.fetchall():
             buildType, arch = row[0], helperfuncs.getArchFromFlavor(row[1])
+            extraFlags = builds.getExtraFlags(row[1])
+
             if (buildType, arch) not in uniqueBuildTypes:
-                uniqueBuildTypes.append((buildType, arch))
+                uniqueBuildTypes.append((buildType, arch, extraFlags))
 
         return uniqueBuildTypes
 

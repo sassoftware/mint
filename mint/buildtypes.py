@@ -63,7 +63,7 @@ typeNamesMarketing = {
     RAW_FS_IMAGE:       "Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Parallels, QEMU (Raw Hard Disk)",
-    VMWARE_IMAGE:       "VMware\xae",
+    VMWARE_IMAGE:       "VMware\xae Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File"
 }

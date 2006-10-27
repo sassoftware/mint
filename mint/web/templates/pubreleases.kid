@@ -22,8 +22,12 @@ from mint import buildtypes
             <?python rowNumber = 0?>
             <div py:for="release in releases" py:strip="True">
                 <?python
-                    uniqueBuildTypes = release.getUniqueBuildTypes()
-                    uniqueBuildTypeNames = [ "%s %s" % (x[1], buildtypes.typeNamesMarketing[x[0]]) for x in uniqueBuildTypes ]
+                    uniqueBuildTypeNames = []
+                    for buildType, arch, extraFlags in release.getUniqueBuildTypes():
+                        x = "%s %s" % (arch, buildtypes.typeNamesMarketing[buildType])
+                        if extraFlags:
+                            x += " (%s)" % (", ".join(extraFlags))
+                        uniqueBuildTypeNames.append(x)
                 ?>
                 <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
                     <td class="releaseName" colspan="2"><a href="${basePath}release?id=${release.id}">${release.name}</a></td>
@@ -31,10 +35,10 @@ from mint import buildtypes
                 <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
                     <td class="releaseInfo">Version ${release.version}</td>
                     <td class="releaseInfoRight">
-                        <div py:if="uniqueBuildTypes">
+                        <div py:if="uniqueBuildTypeNames">
                             <span py:for="buildTypeName in uniqueBuildTypeNames">${buildTypeName}<br /></span>
                         </div>
-                        <div py:if="not uniqueBuildTypes">
+                        <div py:if="not uniqueBuildTypeNames">
                             This release is empty.
                         </div>
                     </td>
@@ -44,7 +48,7 @@ from mint import buildtypes
                 </tr>
                 <tr py:if="isOwner" py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
                     <td colspan="2" class="releaseInfo">
-                        <span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;<span py:if="uniqueBuildTypes">(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;</span>(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span>
+                        <span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;<span py:if="uniqueBuildTypeNames">(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;</span>(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span>
                         <span py:if="release.isPublished()">(<a href="${basePath}unpublishRelease?id=${release.id}">unpublish</a>)</span></td>
                 </tr>
                 <?python rowNumber += 1 ?>

@@ -5,6 +5,7 @@
     from mint.client import upstream
     from mint.helperfuncs import truncateForDisplay
     from mint import urltypes
+    from mint.builds import getExtraFlags
 
     def condUpstream(upstreams, version):
         up = upstream(version)
@@ -169,9 +170,9 @@
         </div>
     </div>
 
-    <div py:strip="True" py:def="buildTable(builds)">
+    <div py:strip="True" py:def="buildTable(buildList)">
         <table>
-            <div py:strip="True" py:for="build in builds">
+            <div py:strip="True" py:for="build in buildList">
                 ${buildTableRow(build)}
             </div>
         </table>
@@ -182,22 +183,22 @@
             from mint import buildtypes
             from mint.helperfuncs import truncateForDisplay
             shorterName = truncateForDisplay(build.name)
-            files = build.getFiles()
         ?>
         <tr style="background: #f0f0f0; font-weight: bold;" class="buildHeader">
             <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
             <td style="text-align: center;">${build.getArch()}
             &nbsp;${buildtypes.typeNames[build.buildType]}</td>
         </tr>
-        ${buildFiles(files)}
+        ${buildFiles(build)}
         <tr><td>&nbsp;</td></tr>
     </div>
 
-    <div py:strip="True" py:def="buildFiles(files)">
+    <div py:strip="True" py:def="buildFiles(build)">
         <?python
             from mint.web.templatesupport import downloadTracker
+            extraFlags = getExtraFlags(build.troveFlavor)
         ?>
-        <tr py:for="f in files">
+        <tr py:for="f in build.getFiles()">
             <td style="border-bottom: 1px solid #e6e6e6;">
                 <?python
                     title = f['title'] or ("Disc %d" % (f['idx'], ))
@@ -222,6 +223,7 @@
                         </a>
                     </span>
                 </div>
+                <span py:if="extraFlags" style="vertical-align: top;">(${', '.join(extraFlags)})</span>
                 <img src="/conary-static/apps/mint/images/download-icon.png" />
             </td>
         </tr>

@@ -267,6 +267,17 @@ class BuildsTable(database.KeyedTable):
         cu.execute("SELECT count(*) FROM Builds WHERE buildId=?", buildId)
         return cu.fetchone()[0]
 
+
+def getExtraFlags(flavor):
+    if type(flavor) == str:
+        flavor = deps.ThawFlavor(flavor)
+
+    extraFlags = []
+    if flavor.stronglySatisfies(deps.parseFlavor('use: xen, domU')):
+        extraFlags.append("Xen Virtual Appliance")
+
+    return extraFlags
+
 class Build(database.TableObject):
     __slots__ = BuildsTable.fields
 
