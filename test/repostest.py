@@ -12,6 +12,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
+from mint import pkgindex
 import recipes
 
 from conary import repository
@@ -345,6 +346,46 @@ class RepositoryTest(MintRepositoryHelper):
         entnc = entclient.getRepos()
         troveNames = entnc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
+
+    def testUPIExternal(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        extProjectId = self.newProject(client, "External Project", "external",
+                MINT_PROJECT_DOMAIN)
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE projects SET external = 1 WHERE projectId=?",
+                extProjectId)
+        self.db.commit()
+
+        # two versions, different branches
+        for x in "tag1", "tag2":
+            v = "/external.%s@rpl:%s/1.0.0" % (MINT_PROJECT_DOMAIN, x)
+            self.addComponent('testcase:runtime', v)
+            self.addCollection('testcase', v, ['testcase:runtime'])
+
+        # add a newer version on tag2
+        v = "/external.%s@rpl:tag2/1.0.1" % MINT_PROJECT_DOMAIN
+        self.addComponent('testcase:runtime', v)
+        self.addCollection('testcase', v, ['testcase:runtime'])
+
+        # make it really "external"
+        port = self.mintCfg.SSL and self.securePort or self.port
+        extProject = client.getProject(extProjectId)
+        labelId = extProject.getLabelIdMap()['external.'+MINT_PROJECT_DOMAIN+'@rpl:devel']
+        extProject.editLabel(labelId, "external.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
+            'https://test.%s:%d/repos/external/' % (MINT_PROJECT_DOMAIN, port), 'testuser', 'testpass')
+
+        upi = pkgindex.UpdatePackageIndexExternal()
+        upi.logPath = None
+        upi.cfg = self.mintCfg
+        self.captureOutput(upi.run)
+
+        cu.execute("SELECT version FROM PackageIndex")
+        x = [x[0] for x in cu.fetchall()]
+
+        assert('/external.rpath.local2@rpl:tag2/1.0.1-1-1' in x)
+        assert('/external.rpath.local2@rpl:tag1/1.0.0-1-1' in x)
+
 
 if __name__ == "__main__":
     testsuite.main()

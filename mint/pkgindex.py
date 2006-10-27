@@ -5,16 +5,26 @@
 #
 from mint import database
 from mint import searcher
-
+from mint import projects
 from mint import config
 from mint import scriptlibrary
+
 from conary import dbstore
 from conary import versions
+from conary import sqlite3
+from conary import conaryclient
+from conary import conarycfg
+from conary import dbstore
+from conary.repository import repository
 
 import os
 import os.path
 import sys
 
+hiddenLabels = [
+    versions.Label('conary.rpath.com@rpl:rpl1'),
+    versions.Label('conary.rpath.com@ravenous:bugblatterbeast')
+]
 
 class PackageIndexTable(database.KeyedTable):
     name = 'PackageIndex'
@@ -62,15 +72,23 @@ class PackageIndexTable(database.KeyedTable):
             self.db.commit()
 
 
-class UpdatePackageIndex(scriptlibrary.SingletonScript):
+class PackageIndexer(scriptlibrary.SingletonScript):
     db = None
     cfgPath = config.RBUILDER_CONFIG
 
     def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
         self.cfg = config.MintConfig()
         self.cfg.read(self.cfgPath)
-        self.logPath = os.path.join(self.cfg.dataPath, 'logs', 'package-index.log')
+        self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
+
+    def cleanup(self):
+        if self.db:
+            self.db.close()
+
+
+class UpdatePackageIndex(PackageIndexer):
+    logFileName = 'package-index.log'
 
     def action(self):
         self.log.info("Updating package index")
@@ -158,11 +176,91 @@ class UpdatePackageIndex(scriptlibrary.SingletonScript):
             self.db.commit()
         return exitcode
 
-    def cleanup(self):
-        if self.db:
-            self.db.close()
 
-if __name__ == "__main__":
-    upi = UpdatePackageIndex()
-    os._exit(upi.run())
+class UpdatePackageIndexExternal(PackageIndexer):
+    logFileName = 'package-index-external.log'
 
+    def action(self):
+        self.log.info("Updating package index")
+
+        self.db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
+        self.db.connect()
+        self.db.loadSchema()
+        cu = self.db.cursor()
+        pkgIdx = PackageIndexTable(self.db)
+        labelsTable = projects.LabelsTable(self.db, self.cfg)
+        self.db.commit()
+
+        cu = self.db.cursor()
+        cu.execute("""SELECT projectId, %s
+                         FROM Projects
+                         WHERE external=1 AND hidden=0 AND disabled=0""" % \
+                   database.concat(self.db, 'hostname', "'.'", 'domainname'))
+
+        labels = {}
+        projectIds = {}
+        netclients = {}
+
+        for r in cu.fetchall():
+            projectId, hostname = r
+
+            self.log.info("Retrieving labels from %s...", hostname)
+            l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
+                overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
+
+            hostname = repMap.keys()[0]
+            labels[hostname] = versions.Label(l.keys()[0])
+            projectIds[hostname] = projectId
+
+            ccfg = conarycfg.ConaryConfiguration()
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'conaryrc')
+            if os.path.exists(conarycfgFile):
+                ccfg.read(conarycfgFile)
+            ccfg.root = ccfg.dbPath = ':memory:'
+            ccfg.repositoryMap = repMap
+            repos = conaryclient.ConaryClient(ccfg).getRepos()
+            netclients[hostname] = repos
+
+        rows = []
+        for host in netclients.keys():
+            self.log.info("Retrieving trove list from %s...", host)
+            try:
+                names = netclients[host].troveNamesOnServer(host)
+                troves = netclients[host].getAllTroveLeaves(host, dict((x, None) for x in names if ':' not in x))
+            except repository.errors.OpenError, e:
+                self.log.warning("unable to access %s", host)
+                continue
+
+            packageDict = {}
+            labelMap = {}
+            for pkg in troves:
+                troveEntry = packageDict.setdefault(pkg, {})
+                verList = troves[pkg].keys()
+                for ver in verList:
+                    label = ver.branch().label()
+                    if label in hiddenLabels:
+                        continue
+
+                    versionList = troveEntry.setdefault(label, [])
+                    versionList.append(ver)
+
+            for troveName in packageDict:
+                for label in packageDict[troveName]:
+                    row = (projectIds[host], troveName, str(max(packageDict[troveName][label])))
+                    rows.append(row)
+
+            self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
+
+        self.log.info("Updating database...")
+        for row in rows:
+            cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
+            r = cu.fetchone()
+            if r:
+                pkgId = r[0]
+                cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
+            else:
+                cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
+
+        self.db.commit()
+        print "Update complete."
+        return 0
