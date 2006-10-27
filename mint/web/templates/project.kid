@@ -206,6 +206,7 @@
                     sha1 = f['sha1'] or ''
                 ?>
                 <span style="font-weight: bold;">${title}</span>
+                <div style="font-size: smaller;" py:if="extraFlags">${extraFlags}</div>
                 <div style="font-size: smaller;" py:if="size">${size/1048576} MB<span py:if="self.cfg.displaySha1 and sha1">, SHA1: ${sha1}</span></div>
             </td>
             <td style="text-align: right; vertical-align: top; border-bottom: 1px solid #e6e6e6;">
@@ -222,7 +223,6 @@
                             ${urltypes.displayNames[urlType]}
                         </a>
                     </span>
-                    <br /><span py:if="extraFlags" style="font-size: smaller; vertical-align: top;">(${', '.join(extraFlags)})</span>
                 </div>
                 <img src="/conary-static/apps/mint/images/download-icon.png" />
             </td>
