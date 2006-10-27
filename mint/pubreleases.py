@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+from mint import builds
 from mint import database
 from mint import helperfuncs
 from conary.deps import deps
