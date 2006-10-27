@@ -94,10 +94,10 @@ from mint import urltypes
 
                 <div py:strip="True" py:if="not buildInProgress">
                     <h3>Downloads</h3>
-
+                    <?python files = build.getFiles() ?>
                     <div py:if="files" py:strip="True">
                         <table>
-                            ${buildFiles(files)}
+                            ${buildFiles(build)}
                         </table>
 
                         <div py:strip="True" py:if="buildtypes.INSTALLABLE_ISO == build.buildType">
