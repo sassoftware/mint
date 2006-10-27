@@ -69,6 +69,7 @@ install: all install-subdirs
 	install httpd.conf $(DESTDIR)$(httpddir)/rbuilder.conf.dist
 	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
+	python -c "from mint import database; print database.DatabaseTable.schemaVersion" > $(DESTDIR)$(datadir)/rbuilder/schema
 
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
