@@ -32,8 +32,8 @@ onload = "javascript:;"
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
 
-        <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
-        <link rel="icon" href="http://www.rpath.com/favicon.ico" />
+        <link rel="shortcut icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
+        <link rel="icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
 
