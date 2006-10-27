@@ -222,8 +222,8 @@
                             ${urltypes.displayNames[urlType]}
                         </a>
                     </span>
+                    <br /><span py:if="extraFlags" style="font-size: smaller; vertical-align: top;">(${', '.join(extraFlags)})</span>
                 </div>
-                <span py:if="extraFlags" style="vertical-align: top;">(${', '.join(extraFlags)})</span>
                 <img src="/conary-static/apps/mint/images/download-icon.png" />
             </td>
         </tr>
