@@ -29,10 +29,10 @@ from mint import userlevels
                     <h4>Comments:</h4>
                     <blockquote>${comments}</blockquote>
                     <p>
-                        <button class="img" id="makeOwner" type="submit" name="makeOwner" value="1"><img src="${cfg.staticPath}/apps/mint/images/make_owner_button.png" alt="Make Owner" /></button>
-                        <button class="img" id="makeDevel" type="submit" name="makeDevel" value="1"><img src="${cfg.staticPath}/apps/mint/images/make_devel_button.png" alt="Make Developer" /></button>
+                        <input type="submit" name="action" value="Make Owner" />
+                        <input type="submit" name="action" value="Make Developer" />
+                        <input type="submit" name="action" value="Reject Request" />
                         <input type="hidden" name="userId" value="${userId}"/>
-                        <button class="img" id="rejectRequest" type="submit" name="reject" value="1"><img src="${cfg.staticPath}/apps/mint/images/reject_request_button.png" alt="Reject Request" /></button>
                     </p>
                 </form>
             </div>
