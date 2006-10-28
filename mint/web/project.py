@@ -883,22 +883,30 @@ class ProjectHandler(WebHandler):
                    userId))
 
     @requiresAuth
-    @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
-    def acceptJoinRequest(self, auth, userId, makeOwner, makeDevel, reject):
+    @strFields(action = '')
+    @intFields(userId = None)
+    def acceptJoinRequest(self, auth, userId, action):
         projectId = self.project.getId()
         user = self.client.getUser(userId)
         username = user.getUsername()
-        if reject:
+        # XXX This is fragile, and probably will not work so well with
+        #     i18n efforts in the future. I'm hoping that the webpage
+        #     redesign will come up with a better way to manage this
+        #     than having three buttons on a separate page. --sgp
+        if action == 'Reject Request':
             return self._write('rejectJoinRequest', userId = userId,
                     username = user.getUsername())
-        if (makeOwner):
+        elif action == 'Make Owner':
             self.project.addMemberByName(username, userlevels.OWNER)
             self._setInfo("User %s has been added as an owner to %s" % \
                     (username, self.project.getNameForDisplay()))
-        elif (makeDevel):
+        elif action == 'Make Developer':
             self.project.addMemberByName(username, userlevels.DEVELOPER)
             self._setInfo("User %s has been added as a developer to %s" % \
                     (username, self.project.getNameForDisplay()))
+        else:
+            # do nothing (should never happen)
+            pass
         self._predirect("members")
 
     @requiresAuth

@@ -188,7 +188,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                           userId2)
 
         # reject it
-        page = page.postForm(1, self.post, {"reject" : "1"})
+        page = page.postForm(1, self.post, {"action" : "Reject Request"})
         page.postForm(1, self.post, {})
 
         cu = self.db.cursor()
@@ -215,7 +215,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                           userId2)
 
         # accept as owner
-        page = page.postForm(1, self.post, {"makeOwner" : "1"})
+        page = page.postForm(1, self.post, {"action" : "Make Owner"})
 
         project = client.getProject(projectId)
         self.failIf(project.listJoinRequests() != [],
@@ -244,7 +244,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                           userId2)
 
         # accept as developer
-        page = page.postForm(1, self.post, {"makeDevel" : "1"})
+        page = page.postForm(1, self.post, {"action" : "Make Developer"})
 
         project = client.getProject(projectId)
         self.failIf(project.listJoinRequests() != [],
