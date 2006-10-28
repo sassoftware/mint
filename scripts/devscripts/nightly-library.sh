@@ -60,13 +60,12 @@ function merge_and_cook() {
 }
 
 function create_build() {
-    project=$1
-    trove=$2
-    type=$3
-    options=$4
+    project=$1; shift
+    trove=$1; shift
+    type=$1; shift
 
     TROVESPEC=$(conary rq --install-label $NIGHTLY_LABEL $trove --full-versions --flavors)
-    eval $($CMDLINE_PATH/rbuilder build-create $project "$TROVESPEC" $type $options)
+    eval $($CMDLINE_PATH/rbuilder build-create $project "$TROVESPEC" $type "$@")
 }
 
 function fetch_build() {
