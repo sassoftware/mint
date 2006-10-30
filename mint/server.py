@@ -2780,8 +2780,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        cfg = project.getConaryConfig()
-        nc = conaryclient.ConaryClient(cfg).getRepos()
+        nc = self._getProjectRepo(project)
 
         troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
         if troveName in troves:
@@ -2795,8 +2794,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        cfg = project.getConaryConfig()
-        nc = conaryclient.ConaryClient(cfg).getRepos()
+        nc = self._getProjectRepo(project)
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
         versionDict = dict((x.freeze(), [y for y in troves[x]]) for x in troves)
