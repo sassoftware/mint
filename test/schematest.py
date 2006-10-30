@@ -776,6 +776,43 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failUnlessEqual(cu.fetchall(), [(2, 'diskAdapter', 'ide', 0)],
                      "diskAdapter upgrade failed")
 
+    def testSchemaVer25(self):
+        # tests the upgrade path for VMware image's snapshotting settings only
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        build = client.newBuild(projectId, 'Control Build')
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        build.setFiles([["file1", "Test Title"]])
+
+        build = client.newBuild(projectId, 'VMware Build')
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        build.setFiles([["file1", "Test Title"]])
+        build.setBuildType(buildtypes.VMWARE_IMAGE)
+
+        self.failIf(build.getDataValue('vmSnapshots'),
+                    "vmSnapshots baseline incorrect")
+
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM BuildData WHERE name = 'vmSnapshots'")
+        self.failIf(cu.fetchall(),
+                     "vmSnapshots upgrade baseline needs tweaking. check test.")
+
+        self.forceSchemaVersion(25)
+        client.server._server.buildData.versionCheck()
+        client.server._server.buildData.db.commit()
+
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM BuildData WHERE name = 'vmSnapshots'")
+        self.failUnlessEqual(cu.fetchall(), [(2, 'vmSnapshots', '1', 1)],
+                     "vmSnapshots upgrade failed")
+
+        build.refresh()
+        self.failIf(not build.getDataValue('vmSnapshots'),
+                    "vmSnapshots data value behaves incorrectly")
+
     def testDbBumpVersion(self):
         client, userId = self.quickMintAdmin('admin', 'passwd')
         cu = self.db.cursor()
