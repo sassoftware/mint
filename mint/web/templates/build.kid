@@ -39,6 +39,8 @@ from mint import urltypes
                 ${builderPane()}
             </div>
             <div id="middle">
+                <?python extraFlags = getExtraFlags(build.troveFlavor) ?>
+
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
                 <h2>Build: ${name}</h2>
 
@@ -74,7 +76,6 @@ from mint import urltypes
                     </tr>
                     <tr>
                         <th>Type</th>
-                        <?python extraFlags = getExtraFlags(build.troveFlavor) ?>
                         <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
                     </tr>
                     <tr>
