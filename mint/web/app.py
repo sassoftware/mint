@@ -169,7 +169,8 @@ class MintApp(WebHandler):
         protocol='https'
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
             protocol='http'
-        self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.unparsed_uri
+
+        self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri
         dots = fullHost.split('.')
         hostname = dots[0]
 
