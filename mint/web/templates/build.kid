@@ -92,6 +92,14 @@ from mint import urltypes
                 <div py:if="notes" py:content="notes" />
                 <div py:if="not notes">This build has no notes.</div>
 
+                <div py:def="xenHelp">
+                    <p py:if="'Xen Virtual Appliance' in extraFlags">
+                        This file can be installed as a Xen&trade; DomU. See rPath's
+                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide" target="_blank">Xen DomU Guide</a>
+                        for information and instructions.
+                    </p>
+                </div>
+
                 <div py:strip="True" py:if="not buildInProgress">
                     <h3>Downloads</h3>
                     <?python files = build.getFiles() ?>
@@ -135,6 +143,7 @@ from mint import urltypes
                                     must support booting from USB to use this
                                     file with any USB device.</li>
                                 </ul>
+                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -175,6 +184,8 @@ from mint import urltypes
                                 GNU zip.  Before using this image, you must
                                 first uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
+
+                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -192,6 +203,8 @@ from mint import urltypes
                                 GNU zip.  Before using this image, you must
                                 first uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
+
+                                ${xenHelp()}
                             </div>
                         </div>
 
