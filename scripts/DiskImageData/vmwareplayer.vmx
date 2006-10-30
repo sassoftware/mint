@@ -24,15 +24,18 @@ MemAllowAutoScaleDown = "FALSE"
 #####
 
 usb.present = "TRUE"
+usb.autodetect = "TRUE"
 
 #####
 # Floppy
 #####
 
-floppy0.present = "FALSE"
+floppy0.present = "TRUE"
+floppy0.startConnected = "FALSE"
+floppy0.autodetect = "TRUE"
 
 #####
-# IDE Storage
+# Mass Storage
 #####
 
 @ADAPTERDEV@0:0.present = "TRUE"
@@ -40,6 +43,7 @@ floppy0.present = "FALSE"
 @ADAPTERDEV@0:0.redo = ""
 @ADAPTERDEV@0:0.writeThrough = "TRUE"
 @ADAPTERDEV@0.virtualDev = "@ADAPTER@"
+@ADAPTERDEV@0.autodetect = "TRUE"
 
 ide1:0.present = "TRUE"
 ide1:0.fileName = "auto detect"
@@ -56,6 +60,7 @@ ethernet0.connectionType = "@NETWORK_CONNECTION@"
 ethernet0.addressType = "generated"
 ethernet0.generatedAddress = ""
 ethernet0.generatedAddressOffset = "0"
+ethernet0.autodetect = "TRUE"
 
 #####
 # Sound
@@ -63,6 +68,7 @@ ethernet0.generatedAddressOffset = "0"
 
 sound.present = "TRUE"
 sound.virtualDev = "es1371"
+sound.autodetect = "TRUE"
 
 #####
 # Misc.
@@ -70,3 +76,4 @@ sound.virtualDev = "es1371"
 
 checkpoint.vmState = ""
 checkpoint.vmState.readOnly = "FALSE"
+snapshot.disabled = "@SNAPSHOT@"
