@@ -164,7 +164,8 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
 
     for(var i in this.flavorCache[this.version]) {
         flavor = this.flavorCache[this.version][i];
-        link = forwardLink(null, flavor[0]);
+        var myId = "flavorId" + i;
+        link = forwardLink({'id': myId}, flavor[0]);
         link.name = this.troveName;
         link.version = this.version;
         link.flavor = flavor[1];
