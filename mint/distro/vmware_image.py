@@ -68,6 +68,9 @@ class VMwareImage(bootable_image.BootableImage):
         filecontents = filecontents.replace('@ADAPTERDEV@',
                                             (self.adapter == 'lsilogic') \
                                                 and 'scsi' or 'ide')
+        filecontents = filecontents.replace( \
+            '@SNAPSHOT@',
+            str(not self.build.getDataValue('vmSnapshots')).upper())
 
         #write the file to the proper location
         ofile = open(outfile, 'wb')
