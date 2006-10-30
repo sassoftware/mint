@@ -66,11 +66,13 @@ DocumentRoot "@DOCROOT@"
 
 Alias /conary/ "@DOCROOT@/test.cnr/"
 
-Alias /jsonrpc/             "@DOCROOT@/rbuilder.conf/"
-Alias /xmlrpc/              "@DOCROOT@/rbuilder.conf/"
-Alias /xmlrpc-private/      "@DOCROOT@/rbuilder.conf/"
-Alias /images/              "@IMAGESPATH/"
-Alias /                      "@DOCROOT@/rbuilder.conf/"
+Alias /conary-static/apps/MochiKit/ "/srv/www/html/MochiKit/"
+Alias /conary-static/apps/mint/     "@CONTENTPATH@/"
+Alias /jsonrpc/                     "@DOCROOT@/rbuilder.conf/"
+Alias /xmlrpc/                      "@DOCROOT@/rbuilder.conf/"
+Alias /xmlrpc-private/              "@DOCROOT@/rbuilder.conf/"
+Alias /images/                      "@IMAGESPATH/"
+Alias /                             "@DOCROOT@/rbuilder.conf/"
 
 <Location />
     AddHandler python-program .conf
