@@ -138,5 +138,14 @@ class BuildDataTable(GenericDataTable):
                     cu.execute("""INSERT INTO BuildData
                                       VALUES(?, 'diskAdapter', 'ide', ?)""",
                                buildId, RDT_STRING)
-            return dbversion >= 23
+            if dbversion == 25:
+                from mint import buildtypes
+                cu = self.db.cursor()
+                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
+                           buildtypes.VMWARE_IMAGE)
+                for (buildId,) in cu.fetchall():
+                    cu.execute("""INSERT INTO BuildData
+                                      VALUES(?, 'vmSnapshots', '1', ?)""",
+                               buildId, RDT_BOOL)
+            return dbversion >= 25
         return True
