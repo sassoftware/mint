@@ -127,6 +127,9 @@ class MintApacheServer(rephelp.ApacheServer):
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
                        self.serverRoot, self.serverRoot))
+            os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
+                (os.path.join(self.mintPath, "mint", "web", "content"),
+                 self.serverRoot))
         f.close()
 
         if not self.sslDisabled:
@@ -362,11 +365,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         return client, userId
 
-    def newProject(self, client, name = "Test Project",
-                   hostname = "testproject",
-                   domainname = MINT_PROJECT_DOMAIN):
-        """Create a new mint project and return that project ID."""
-        projectId = client.newProject(name, hostname, domainname)
+    def setupProject(self, client, hostname, domainname):
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         if self.mintCfg.SSL:
@@ -380,11 +379,15 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                     MINT_PROJECT_DOMAIN, port, self.mintCfg.basePath, hostname)}
 
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
-                              client.server._server.authToken[0],
-                              client.server._server.authToken[1]))
+                              client.server._authToken[0],
+                              client.server._authToken[1]))
 
-        # re-open the repos to make changes to repositoryMap have any effect
-        self.openRepository()
+    def newProject(self, client, name = "Test Project",
+                   hostname = "testproject",
+                   domainname = MINT_PROJECT_DOMAIN):
+        """Create a new mint project and return that project ID."""
+        projectId = client.newProject(name, hostname, domainname)
+        self.setupProject(client, hostname, domainname)
 
         return projectId
 
@@ -522,10 +525,76 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         assert(contents in f.read())
 
 
-class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
+class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
+    def getServerData(self):
+        server = self.getServerHostname()
+        # spawn a server if needed, then point our code at it...
+        if self.servers.servers[0] is None:
+            self.openRepository()
+        return server, self.servers.servers[0].port
+
+    def getServerHostname(self):
+        return '%s.%s' % (MINT_HOST, MINT_DOMAIN)
+
+    def getProjectServerHostname(self):
+        return '%s.%s' % (MINT_HOST, MINT_PROJECT_DOMAIN)
+
+    def getMintUrl(self):
+        return 'http://%s:%d/' % (self.getServerData())
+
+    def setUp(self):
+        MintRepositoryHelper.setUp(self)
+        self.setAcceptCookies(True)
+        self.server, self.port = self.getServerData()
+        self.URL = self.getMintUrl()
+
+    def tearDown(self):
+        MintRepositoryHelper.tearDown(self)
+
+    def setOptIns(self, username, newsletter = False, insider = False):
+        cu = self.db.cursor()
+        cu.execute("SELECT userId FROM Users WHERE username=?", username)
+        userId = cu.fetchone()[0]
+        for optIn in ('newsletter', 'insider'):
+            cu.execute("SELECT value FROM UserData WHERE name=? AND userId=?",
+                       optIn, userId)
+            if cu.fetchone():
+                cu.execute("""UPDATE UserData SET VALUE=?
+                                  WHERE userId=? AND name=?""",
+                           int(optIn == 'newsletter' \
+                               and newsletter or insider),
+                          userId, optIn)
+            else:
+                cu.execute("""INSERT INTO UserData
+                                  (userId, name, value, dataType)
+                                  VALUES (?, ?, ?, ?)""",
+                           userId, optIn,
+                           int(optIn == 'newsletter' \
+                               and newsletter or insider),
+                           data.RDT_BOOL)
+        self.db.commit()
+
+
+class WebRepositoryHelper(BaseWebHelper):
     def __init__(self, methodName):
         webunittest.WebTestCase.__init__(self, methodName)
         MintRepositoryHelper.__init__(self, methodName)
+
+    def setUp(self):
+        BaseWebHelper.setUp(self)
+        # add our redirect method into HTTPResponse
+        webunittest.HTTPResponse.fetchWithRedirect = self.fetchWithRedirect
+        webunittest.WebTestCase.setUp(self)
+        # this is tortured, but webunit won't run without it.
+        webunittest.HTTPResponse._TestCase__testMethodName = \
+                                          self._TestCase__testMethodName
+
+    def tearDown(self):
+        BaseWebHelper.tearDown(self)
+        self.clearCookies()
+        webunittest.WebTestCase.tearDown(self)
+        webunittest.HTTPResponse.fetchWithRedirect = None
+        webunittest.HTTPResponse._TestCase__testMethodName = None
 
     # XXX: Override broken version of assertContent / assertNotContent
     # which doesn't pass along kwargs. This can be removed if webunittest
@@ -561,64 +630,6 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
                 raise self.failureException, str(error)
 
         return response
-
-    def getServerData(self):
-        server = self.getServerHostname()
-        # spawn a server if needed, then point our code at it...
-        if self.servers.servers[0] is None:
-            self.openRepository()
-        return server, self.servers.servers[0].port
-
-    def getServerHostname(self):
-        return '%s.%s' % (MINT_HOST, MINT_DOMAIN)
-
-    def getProjectServerHostname(self):
-        return '%s.%s' % (MINT_HOST, MINT_PROJECT_DOMAIN)
-
-    def getMintUrl(self):
-        return 'http://%s:%d/' % (self.getServerData())
-
-    def setUp(self):
-        # add our redirect method into HTTPResponse
-        webunittest.HTTPResponse.fetchWithRedirect = self.fetchWithRedirect
-        webunittest.WebTestCase.setUp(self)
-        MintRepositoryHelper.setUp(self)
-        self.setAcceptCookies(True)
-        self.server, self.port = self.getServerData()
-        self.URL = self.getMintUrl()
-        # this is tortured, but webunit won't run without it.
-        webunittest.HTTPResponse._TestCase__testMethodName = \
-                                          self._TestCase__testMethodName
-
-    def tearDown(self):
-        self.clearCookies()
-        MintRepositoryHelper.tearDown(self)
-        webunittest.WebTestCase.tearDown(self)
-        webunittest.HTTPResponse.fetchWithRedirect = None
-        webunittest.HTTPResponse._TestCase__testMethodName = None
-
-    def setOptIns(self, username, newsletter = False, insider = False):
-        cu = self.db.cursor()
-        cu.execute("SELECT userId FROM Users WHERE username=?", username)
-        userId = cu.fetchone()[0]
-        for optIn in ('newsletter', 'insider'):
-            cu.execute("SELECT value FROM UserData WHERE name=? AND userId=?",
-                       optIn, userId)
-            if cu.fetchone():
-                cu.execute("""UPDATE UserData SET VALUE=?
-                                  WHERE userId=? AND name=?""",
-                           int(optIn == 'newsletter' \
-                               and newsletter or insider),
-                          userId, optIn)
-            else:
-                cu.execute("""INSERT INTO UserData
-                                  (userId, name, value, dataType)
-                                  VALUES (?, ?, ?, ?)""",
-                           userId, optIn,
-                           int(optIn == 'newsletter' \
-                               and newsletter or insider),
-                           data.RDT_BOOL)
-        self.db.commit()
 
     def webLogin(self, username, password):
         page = self.fetch(self.mintCfg.basePath)
