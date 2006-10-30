@@ -99,6 +99,10 @@ class vmMemory(IntegerOption):
     default = 256
     prompt = 'How much memory should VMware use when running this image?'
 
+class vmSnapshots(BooleanOption):
+    default = False
+    prompt = 'Allow snapshots to be created'
+
 class diskAdapter(EnumOption):
     default = 'lsilogic'
     prompt = 'Which hard disk adapter should this image be built for?'
@@ -167,7 +171,7 @@ class RawFsTemplate(Template):
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking',
-                 'diskAdapter']
+                 'diskAdapter', 'vmSnapshots']
     id = buildtypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):
