@@ -506,6 +506,7 @@ class ProjectHandler(WebHandler):
     @intFields(id = None)
     def build(self, auth, id):
         build = self.client.getBuild(id)
+        extraFlags = builds.getExtraFlags(build.troveFlavor)
         buildInProgress = False
         builtBy = None
         builtAt = None
@@ -539,6 +540,7 @@ class ProjectHandler(WebHandler):
                 buildId = id,
                 projectId = self.project.getId(),
                 buildInProgress = buildInProgress,
+                extraFlags = extraFlags,
                 builtBy = builtBy,
                 builtAt = builtAt)
 

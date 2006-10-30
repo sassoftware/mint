@@ -29,7 +29,6 @@ from mint import urltypes
     </head>
     <body>
         <div id="layout">
-        <?python extraFlags = getExtraFlags(build.troveFlavor) ?>
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(projectPublishedReleases, isOwner)}
