@@ -421,7 +421,7 @@ function setDisabledByElem(elem, disable) {
 
 function onBuildTypeChange(img) {
     // beware of these boundary conditions, when we add more build targets...
-    for (t = 1; t < 9; t++) {
+    for (t = 1; t <= maxBuildType; t++) {
         var targImg = "formgroup_" + t;
         // ensure we only tinker with elements that exist on the page
         if (document.getElementById(targImg)) {
