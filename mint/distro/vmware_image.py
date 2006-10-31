@@ -11,8 +11,8 @@ class VMwareImage(bootable_image.BootableImage):
     @bootable_image.timeMe
     def zipVMwarePlayerFiles(self, dir, outfile):
         zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
-        for f in ('.vmdk', '.vmx'):
-            zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
+        for f in os.listdir(dir):
+            zip.write(os.path.join(dir, f), os.path.join(self.basefilename, f))
         zip.close()
         os.chmod(outfile, 0644)
 
@@ -68,9 +68,8 @@ class VMwareImage(bootable_image.BootableImage):
         filecontents = filecontents.replace('@ADAPTERDEV@',
                                             (self.adapter == 'lsilogic') \
                                                 and 'scsi' or 'ide')
-        filecontents = filecontents.replace( \
-            '@SNAPSHOT@',
-            str(not self.build.getDataValue('vmSnapshots')).upper())
+        filecontents = filecontents.replace('@SNAPSHOT@',
+                                            str(not self.vmSnapshots).upper())
 
         #write the file to the proper location
         ofile = open(outfile, 'wb')
@@ -111,7 +110,8 @@ class VMwareImage(bootable_image.BootableImage):
         finally:
             if self.fakeroot:
                 util.rmtree(self.fakeroot)
-            os.unlink(self.outfile)
+            if os.path.exists(self.outfile):
+                os.unlink(self.outfile)
 
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
@@ -123,4 +123,37 @@ class VMwareImage(bootable_image.BootableImage):
         self.freespace = self.build.getDataValue("freespace") * 1048576
         self.swapSize = self.build.getDataValue("swapSize") * 1048576
         self.adapter = self.build.getDataValue('diskAdapter')
+        self.vmSnapshots = self.build.getDataValue('vmSnapshots')
         return res
+
+class VMwareESXImage(VMwareImage):
+    def __init__(self, *args, **kwargs):
+        res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
+        self.freespace = self.build.getDataValue("freespace") * 1048576
+        self.swapSize = self.build.getDataValue("swapSize") * 1048576
+        self.adapter = 'lsilogic'
+        self.vmSnapshots = False
+        self.createType = 'vmfs'
+        return res
+
+    @bootable_image.timeMe
+    def createVMDK(self, outfile):
+        infile = open(os.path.join(self.imgcfg.dataDir, 'vmdisk.vmdk'), 'rb')
+        #Replace the @DELIMITED@ text with the appropriate values
+        filecontents = infile.read()
+        infile.close()
+
+        filecontents = filecontents.replace('@CREATE_TYPE@', self.createType)
+        filecontents = filecontents.replace('@FILENAME@', self.basefilename)
+        filecontents = filecontents.replace('@ADAPTER@', self.adapter)
+        filecontents = filecontents.replace('@EXTENTS@',
+                                            str(self.imagesize / 512))
+        filecontents = filecontents.replace('@CYLINDERS@', str(self.cylinders))
+        filecontents = filecontents.replace( \
+            '@EXT_TYPE@', self.createType == 'vmfs' and 'VMFS' or 'FLAT')
+
+        ofile = open(outfile, 'wb')
+        ofile.write(filecontents)
+        ofile.close()
+
+        os.rename(self.outfile, outfile.replace('.vmdk', '-flat.vmdk'))
