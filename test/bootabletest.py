@@ -59,6 +59,9 @@ class BootableImageTest(MintRepositoryHelper):
         build.setDataValue('diskAdapter', 'lsilogic',
                            dataType = data.RDT_STRING, validate = False)
 
+        build.setDataValue('vmSnapshots', False, dataType = data.RDT_BOOL,
+                           validate = False)
+
         job = client.startImageJob(build.id)
         isocfg = self.writeIsoGenCfg()
 
@@ -211,6 +214,10 @@ class BootableImageTest(MintRepositoryHelper):
 
     def testVMwareImageClass(self):
         bi = self.setupBootableImage(subclass = vmware_image.VMwareImage)
+        assert(bi.makeBootable)
+
+    def testVMwareESXImageClass(self):
+        bi = self.setupBootableImage(subclass = vmware_image.VMwareESXImage)
         assert(bi.makeBootable)
 
     def testLiveIsoClass(self):
