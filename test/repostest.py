@@ -383,8 +383,8 @@ class RepositoryTest(MintRepositoryHelper):
         cu.execute("SELECT version FROM PackageIndex")
         x = [x[0] for x in cu.fetchall()]
 
-        assert('/external.rpath.local2@rpl:tag2/1.0.1-1-1' in x)
-        assert('/external.rpath.local2@rpl:tag1/1.0.0-1-1' in x)
+        assert('/external.%s@rpl:tag2/1.0.1-1-1' % MINT_PROJECT_DOMAIN in x)
+        assert('/external.%s@rpl:tag1/1.0.0-1-1' % MINT_PROJECT_DOMAIN in x)
 
 
 if __name__ == "__main__":
