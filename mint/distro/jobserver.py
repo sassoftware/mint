@@ -33,7 +33,7 @@ from mint.constants import mintVersion
 from mint.distro.installable_iso import InstallableIso
 from mint.distro.live_iso import LiveIso
 from mint.distro.raw_hd_image import RawHdImage
-from mint.distro.vmware_image import VMwareImage
+from mint.distro.vmware_image import VMwareImage, VMwareESXImage
 from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
@@ -47,6 +47,7 @@ generators = {
     buildtypes.LIVE_ISO:          LiveIso,
     buildtypes.RAW_HD_IMAGE:      RawHdImage,
     buildtypes.VMWARE_IMAGE:      VMwareImage,
+    buildtypes.VMWARE_ESX_IMAGE:  VMwareESXImage,
     buildtypes.RAW_FS_IMAGE:      RawFsImage,
     buildtypes.TARBALL:           Tarball,
     buildtypes.NETBOOT_IMAGE:     NetbootImage,
