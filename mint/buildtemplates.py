@@ -174,6 +174,11 @@ class VmwareImageTemplate(Template):
                  'diskAdapter', 'vmSnapshots']
     id = buildtypes.VMWARE_IMAGE
 
+class VmwareESXImageTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking']
+    id = buildtypes.VMWARE_ESX_IMAGE
+
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
