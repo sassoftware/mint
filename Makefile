@@ -63,8 +63,6 @@ product: main-dist product-dist tarball version-file
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/rbuilder/
 	mkdir -p $(DESTDIR)$(confdir)
-	install -m 644 rbuilder.conf $(DESTDIR)$(confdir)/rbuilder.conf.dist
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(confdir)/rbuilder.conf.dist
 	mkdir -p $(DESTDIR)$(httpddir)
 	install httpd.conf $(DESTDIR)$(httpddir)/rbuilder.conf.dist
 	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
