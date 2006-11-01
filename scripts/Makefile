@@ -10,6 +10,7 @@ script_dist =				\
 	job-server			\
 	load-offline-mirror		\
 	migrate-all-projects		\
+	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
 	mirror-prime-server		\
