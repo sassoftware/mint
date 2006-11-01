@@ -217,6 +217,8 @@ from mint import urltypes
                                 Before using this image, you must first
                                 uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
+
+                                ${xenHelp()}
                             </div>
                         </div>
 
