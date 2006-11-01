@@ -32,7 +32,7 @@ cu = db.cursor()
 
 downloads = {} # individual image downloads
 projDls = {} # project downloads
-isoDownloads = vmDownloads = rawhdDownloads = 0 # file type counts
+isoDownloads = vmDownloads = rawhdDownloads = xenDownloads = 0 # file type counts
 first = last = None # first date parsed, last date parsed
 
 for x in f.readlines():
@@ -68,12 +68,14 @@ for x in f.readlines():
 
 counts = []
 for fileId, count in downloads.items():
-    cu.execute("""SELECT u.url 
+    cu.execute("""SELECT u.url, b.troveFlavor
                       FROM buildfiles bf
                            JOIN buildfilesurlsmap bffu
                              USING (fileId)
                            JOIN filesurls u
                              USING (urlId)
+                           JOIN builds b
+                             USING (buildId)
                       WHERE bf.fileId = ? ORDER BY bf.fileId""", fileId)
 
     r = cu.fetchone()
@@ -85,18 +87,20 @@ for fileId, count in downloads.items():
             vmDownloads += count
         elif ".gz" in r[0]:
             rawhdDownloads += count
+            if ":domU" in r[1]:
+                xenDownloads += 1
         else:
             print >> sys.stderr, "unmatched file type:", r[0]
 
 
 print "SUMMARY:"
 print "--------"
-print "Report starts:     ", first[:11]
-print "Report ends:       ", last[:11]
-print "ISO downloads:     ", int(isoDownloads)
-print "VMware downloads:  ", int(vmDownloads)
-print "Raw HDD downloads: ", int(rawhdDownloads)
-print "Total Downloads:   ", int((isoDownloads + vmDownloads + rawhdDownloads))
+print "Report starts:        ", first[:11]
+print "Report ends:          ", last[:11]
+print "ISO downloads:        ", int(isoDownloads)
+print "VMware downloads:     ", int(vmDownloads)
+print "Raw HDD/FS downloads: ", int(rawhdDownloads), "(%d Xen DomU downloads)" % xenDownloads
+print "Total Downloads:      ", int((isoDownloads + vmDownloads + rawhdDownloads))
 print '-------------------------------------------------------\n'
 
 print 'TOP PROJECTS BY DOWNLOADS'
