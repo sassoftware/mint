@@ -45,11 +45,11 @@ floppy0.autodetect = "TRUE"
 @ADAPTERDEV@0.virtualDev = "@ADAPTER@"
 @ADAPTERDEV@0.autodetect = "TRUE"
 
-ide1:0.present = "TRUE"
-ide1:0.fileName = "auto detect"
-ide1:0.deviceType = "cdrom-raw"
-ide1:0.startConnected = "FALSE"
-ide1:0.autodetect = "TRUE"
+@ADAPTERDEV@1:0.present = "TRUE"
+@ADAPTERDEV@1:0.fileName = "auto detect"
+@ADAPTERDEV@1:0.deviceType = "cdrom-raw"
+@ADAPTERDEV@1:0.startConnected = "FALSE"
+@ADAPTERDEV@1:0.autodetect = "TRUE"
 
 #####
 # Network
