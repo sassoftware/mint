@@ -14,8 +14,15 @@ from conary import conarycfg
 from conary.conarycfg import ConfigFile
 from conary.lib import cfgtypes
 
-RBUILDER_CONFIG = "/srv/rbuilder/rbuilder.conf"
+RBUILDER_CONFIG = "/srv/rbuilder/config/rbuilder.conf"
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
+
+# these are keys that are generated for the "generated" configuration file
+keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
+                           'companyName', 'corpSite', 'defaultBranch',
+                           'projectDomainName', 'externalDomainName', 'SSL',
+                           'secureHost', 'bugsEmail', 'adminMail',
+                           'externalPasswordURL', 'authCacheTimeout' ]
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 

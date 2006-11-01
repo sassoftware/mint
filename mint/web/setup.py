@@ -16,6 +16,7 @@ from mod_python import apache
 from mint import mint_error
 from mint import shimclient
 from mint.config import RBUILDER_GENERATED_CONFIG
+from mint.config import keysForGeneratedConfig
 from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 
@@ -34,13 +35,6 @@ configGroups = {
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
 }
-
-# these are keys that are generated for the "generated" configuration file
-keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
-                           'companyName', 'corpSite', 'defaultBranch',
-                           'projectDomainName', 'externalDomainName', 'SSL',
-                           'secureHost', 'bugsEmail', 'adminMail',
-                           'externalPasswordURL', 'authCacheTimeout' ]
 
 
 class SetupHandler(WebHandler):
