@@ -33,7 +33,7 @@ merge_and_cook group-image_maker
 create_build rbuilder group-image_maker raw_hd_image --wait --option "freespace 50" --option "swapSize 0"
 merge toolkit-image
 fetch_build toolkit-image image_maker.img.gz
-rm -f RECIPES_PATH/toolkit-image/image_maker.img
+rm -f $RECIPES_PATH/toolkit-image/image_maker.img
 gunzip $RECIPES_PATH/toolkit-image/image_maker.img.gz
 commit toolkit-image
 cook toolkit-image
