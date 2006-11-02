@@ -298,6 +298,7 @@ class AdminHandler(WebHandler):
             if label in labels:
                 labels.remove(label)
 
+            initialKwargs['url'] = mirror['sourceUrl']
             initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
             mirrored = True
 
