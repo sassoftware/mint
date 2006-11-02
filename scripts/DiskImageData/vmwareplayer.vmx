@@ -38,6 +38,7 @@ floppy0.autodetect = "TRUE"
 # Mass Storage
 #####
 
+@ADAPTERDEV@0.present = "TRUE"
 @ADAPTERDEV@0:0.present = "TRUE"
 @ADAPTERDEV@0:0.fileName = "@FILENAME@.vmdk"
 @ADAPTERDEV@0:0.redo = ""
