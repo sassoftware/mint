@@ -183,7 +183,7 @@
                 <img src="${cfg.staticPath}/apps/mint/images/save_changes_button.png" alt="Save Changes" />
             </button>
             <input type="hidden" name="projectId" value="${projectId}" />
-            <input type="hidden" name="useMirror" value="${mirrored and 'net' or 'none'}" />
+            <input py:if="mirrored" type="hidden" name="useMirror" value="${mirrored and 'net' or 'none'}" />
         </form>
         </div>
     </body>

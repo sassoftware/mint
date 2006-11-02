@@ -225,8 +225,8 @@ class AdminHandler(WebHandler):
                 # set the internal label to our authUser and authPass
                 project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
 
-                if editing:
-                    mirror = self.client.getInboundMirror(projectId)
+                mirror = self.client.getInboundMirror(projectId)
+                if mirror and editing:
                     mirrorId = mirror['inboundMirrorId']
                     self.client.editInboundMirror(mirrorId, [label] + additionalLabels, url, externalUser, externalPass)
                 else:
