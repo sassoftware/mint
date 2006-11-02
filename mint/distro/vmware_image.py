@@ -10,11 +10,27 @@ from conary.lib import util, log
 class VMwareImage(bootable_image.BootableImage):
     @bootable_image.timeMe
     def zipVMwarePlayerFiles(self, dir, outfile):
-        zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
-        for f in os.listdir(dir):
-            zip.write(os.path.join(dir, f), os.path.join(self.basefilename, f))
-        zip.close()
-        os.chmod(outfile, 0644)
+        cwd = os.getcwd()
+        os.chdir(dir)
+        try:
+            files = os.listdir(dir)
+            os.mkdir(os.path.join(dir, self.basefilename))
+            for fr in files:
+                if fr.endswith('.vmx'):
+                    os.chmod(os.path.join(dir, fr), 0755)
+                else:
+                    os.chmod(os.path.join(dir, fr), 0600)
+                os.rename(os.path.join(dir, fr),
+                os.path.join(dir, self.basefilename, fr))
+            pathOut, baseOut = os.path.split(outfile)
+            util.execute('zip -rD %s %s' % (baseOut, self.basefilename))
+            os.rename(baseOut, outfile)
+        finally:
+            try:
+                os.chdir(cwd)
+            except OSError, e:
+                if e.errno == 2:
+                    pass
 
     @bootable_image.timeMe
     def createVMwarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
@@ -53,7 +69,8 @@ class VMwareImage(bootable_image.BootableImage):
     @bootable_image.timeMe
     def createVMX(self, outfile, displayName, memsize):
         #Read in the stub file
-        infile = open(os.path.join(self.imgcfg.dataDir, 'vmwareplayer.vmx'), 'rb')
+        infile = open(os.path.join(self.imgcfg.dataDir, self.templateName),
+                      'rb')
         #Replace the @DELIMITED@ text with the appropriate values
         filecontents = infile.read()
         infile.close()
@@ -98,8 +115,8 @@ class VMwareImage(bootable_image.BootableImage):
             #self.status('Compressing hard disk image')
             #zipfn = self.compressImage(self.outfile)
 
-            self.status('Creating VMware Player Image')
-            fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-',
+            self.status('Creating %s Image' % self.productName)
+            fd, vmfn = tempfile.mkstemp(self.suffix, 'mint-MDI-cvmpi-',
                                         self.cfg.imagesPath)
             os.close(fd)
             del fd
@@ -124,6 +141,9 @@ class VMwareImage(bootable_image.BootableImage):
         self.swapSize = self.build.getDataValue("swapSize") * 1048576
         self.adapter = self.build.getDataValue('diskAdapter')
         self.vmSnapshots = self.build.getDataValue('vmSnapshots')
+        self.templateName = 'vmwareplayer.vmx'
+        self.productName = "VMware Player"
+        self.suffix = '.vmware.zip'
         return res
 
 class VMwareESXImage(VMwareImage):
@@ -134,6 +154,9 @@ class VMwareESXImage(VMwareImage):
         self.adapter = 'lsilogic'
         self.vmSnapshots = False
         self.createType = 'vmfs'
+        self.templateName = 'vmwareesx.vmx'
+        self.productName = "VMware ESX Server"
+        self.suffix = '.esx.zip'
         return res
 
     @bootable_image.timeMe
