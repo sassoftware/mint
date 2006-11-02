@@ -119,7 +119,7 @@ class AdminHandler(WebHandler):
     def _validateExternalProject(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
-                        useMirror, externalAuth, authType,
+                        useMirror, authType,
                         additionalLabelsToMirror):
         additionalLabels = []
         if not name:
@@ -142,9 +142,9 @@ class AdminHandler(WebHandler):
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
-        if useMirror == 'net' and not externalAuth:
+        if useMirror == 'net' and authType == 'none':
             self._addErrors("A mirrored repository must use authentication")
-        if externalAuth:
+        if authType != 'none':
             if url.startswith('http:'):
                 self._addErrors("Repository URL must start with https if external authentication is required")
             if authType == 'userpass':
@@ -161,19 +161,17 @@ class AdminHandler(WebHandler):
 
     @strFields(name = '', hostname = '', label = '', url = '',\
         externalUser = '', externalPass = '', externalEntKey = '',\
-        externalEntClass = '', authType = 'username',\
+        externalEntClass = '', authType = 'none',\
         additionalLabelsToMirror = '', useMirror = 'none')
-    @boolFields(externalAuth = False)
     @intFields(projectId = -1)
     def processAddExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
-                        useMirror, externalAuth, authType,
-                        additionalLabelsToMirror, projectId, *args, **kwargs):
+                        useMirror, authType, additionalLabelsToMirror,
+                        projectId, *args, **kwargs):
 
         kwargs = {'name': name, 'hostname': hostname, 'label': label,
-            'url': url, 'externalAuth': externalAuth,
-            'authType': authType, 'externalUser': externalUser,
+            'url': url, 'authType': authType, 'externalUser': externalUser,
             'externalPass': externalPass,
             'externalEntKey': externalEntKey,
             'externalEntClass': externalEntClass,
@@ -181,6 +179,7 @@ class AdminHandler(WebHandler):
             'additionalLabelsToMirror': additionalLabelsToMirror}
 
         editing = (projectId != -1)
+        externalAuth = (authType != 'none')
 
         additionalLabels, extLabel = self._validateExternalProject(**kwargs)
         if not self._getErrors():
@@ -244,10 +243,10 @@ class AdminHandler(WebHandler):
             else:
                 return self.addExternal(**kwargs)
 
-    @strFields(authType = 'userpass')
+    @strFields(authType = 'none')
     def addExternal(self, *args, **kwargs):
         from mint import database
-        kwargs.setdefault('authtype', 'userpass')
+        kwargs.setdefault('authtype', 'none')
         try:
             self.client.getProjectByHostname('rpath')
         except database.ItemNotFound:
@@ -279,7 +278,6 @@ class AdminHandler(WebHandler):
         initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
         userMap = conaryCfg.user.find(fqdn)
 
-        initialKwargs['externalAuth'] = True
         ent = conarycfg.loadEntitlement(os.path.join(self.cfg.dataPath, "entitlements"), fqdn)
         if ent:
             initialKwargs['authType'] = 'entitlement'
@@ -290,7 +288,7 @@ class AdminHandler(WebHandler):
             initialKwargs['externalPass'] = userMap[1]
             initialKwargs['authType'] = 'userpass'
             if userMap[0] == 'anonymous':
-                initialKwargs['externalAuth'] = False
+                initialKwargs['authType'] = 'none'
 
         initialKwargs['useMirror'] = 'none'
         mirrored = False

@@ -16,20 +16,8 @@
 ?>
     <head>
         <title>${formatTitle('Add External Project')}</title>
-        <script>
-            function requireAuth() {
-                externalAuth = $('externalAuth');
-                externalAuth.checked = true;
-                externalAuth.disabled = true;
-                showElement('authSettings');
-            }
-            function unRequireAuth() {
-                externalAuth = $('externalAuth');
-                externalAuth.disabled = false;
-            }
-        </script>
     </head>
-    <body onload="javascript:if(${int(not kwargs['externalAuth'])}) hideElement('authSettings')">
+    <body>
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
@@ -109,12 +97,11 @@
 
 
             <h2>Authentication</h2>
-            <p><b>
-                <input onclick="javascript:toggle_element_by_checkbox('authSettings', 'externalAuth');"
-                    type="checkbox" class="check" name="externalAuth" value="1" id="externalAuth" py:attrs="{'checked': kwargs['externalAuth'] and 'checked' or None}" />
-                <label for="externalAuth">External repository requires authentication</label>
-            </b></p>
             <table class="mainformhorizontal" id="authSettings">
+                <tr>
+                    <td><input id="authTypeNone" type="radio" class="check" name="authType" value="none" py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/><label for="authTypeNone">Anonymous access only</label>
+                    </td>
+                </tr>
                 <tr>
                     <td><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
                     </td>
@@ -150,20 +137,17 @@
             <p py:if="not mirrored">
                 <div>
                     <input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
-                           py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}"
-                           onclick="unRequireAuth();" />
+                           py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" />
                     <label for="useMirror_none">Do not mirror this repository.</label>
                 </div>
                 <div>
                     <input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
-                            py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}"
-                            onclick="requireAuth();" />
+                            py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" />
                     <label for="useMirror_net">Mirror this repository over a network connection only. (requires authentication)</label>
                 </div>
                 <div py:if="not editing">
                     <input type="radio" class="radio" name="useMirror" value="preload" id="useMirror_preload"
-                           py:attrs="{'checked': kwargs['useMirror'] == 'preload' and 'checked' or None}"
-                           onclick="requireAuth();" />
+                           py:attrs="{'checked': kwargs['useMirror'] == 'preload' and 'checked' or None}" />
                     <label for="useMirror_preload">Mirror this repository with a pre-load disk drive and update via network. (requires authentication)</label>
                 </div>
             </p>

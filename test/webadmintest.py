@@ -61,7 +61,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'label' : 'conary.rpath.com@rpl:1',
                               'url' : '',
                               'useMirror': 'net',
-                              'externalAuth': '1',
+                              'authType': 'userpass',
                               'externalUser': 'mirror',
                               'externalPass': 'mirrorpass'})
 
@@ -87,7 +87,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'name':            'rPath Linux',
              'label':           'conary.rpath.com@rpl:devel',
              'url':             '',
-             'externalAuth':    '1',
              'authType':        'entitlement',
              'externalEntKey':  'entitlementkey',
              'externalEntClass':'entitlementclass',
