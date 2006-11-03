@@ -422,22 +422,23 @@ class DistroTest(MintRepositoryHelper):
         return ii
 
     def testAnacondaTemplates(self):
+        if not os.path.exists("/sbin/mksquashfs"):
+            raise testsuite.SkipTestException("squashfstools not installed, skipping this test")
+
         testDir = self.servers.getServer(0).getTestDir()
         templateDir = tempfile.mkdtemp()
         tmpDir = tempfile.mkdtemp()
 
-        self.hideOutput()
         try:
             util.copytree(os.path.join(testDir, 'archive', 'anaconda'), tmpDir)
             ii = self.getInstallableIso()
             ii.isocfg = installable_iso.IsoConfig()
             ii.isocfg.rootstatWrapper = os.path.abspath(testDir + "../scripts/rootstat_wrapper.so")
 
-            ii._makeTemplate(templateDir, tmpDir + '/anaconda', None, None)
-            for f in 'cpiogz.out', 'cramfs.img', 'isofs.iso':
+            self.captureAllOutput(ii._makeTemplate, templateDir, tmpDir + '/anaconda', None, None)
+            for f in 'cpiogz.out', 'cramfs.img', 'isofs.iso', 'squashfs.img':
                 assert(os.stat(os.path.join(templateDir, f))[stat.ST_SIZE])
         finally:
-            self.showOutput()
             util.rmtree(templateDir)
             util.rmtree(tmpDir)
 
