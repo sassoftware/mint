@@ -110,10 +110,18 @@ def staleGroup(troveSpec):
         ccsfn = [x for x in os.listdir('.') if x.endswith('.ccs')][0]
         cs = changeset.ChangeSetFromFile(ccsfn)
         newTrv = trove.Trove([x for x in cs.iterNewTroveList()][0])
-        return sorted([x for x in trv.iterTroveList(strongRefs = True,
-                                                    weakRefs=True)]) != \
-               sorted([x for x in newTrv.iterTroveList(strongRefs = True,
-                                                       weakRefs=True)])
+        before = sorted([x for x in trv.iterTroveList(strongRefs = True, weakRefs=True)])
+        after = sorted([x for x in newTrv.iterTroveList(strongRefs = True, weakRefs=True)])
+        isDifferent = False
+        if len(before) != len(after):
+            isDifferent = True
+        else:
+            for (c, x) in enumerate(after):
+                if x != before[c] and versions.CookLabel.name not in x[1].asString():
+                    isDifferent = True
+
+        return isDifferent
+
     finally:
         os.chdir(curDir)
         util.rmtree(tmpDir)
