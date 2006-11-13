@@ -253,7 +253,7 @@ def conaryHandler(req, cfg, pathInfo):
 
         nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
 
-        nscfg.serverName = repName
+        nscfg.serverName = [repName]
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
         nscfg.logFile = cfg.reposLog and \
                         os.path.join(cfg.dataPath, 'logs', 'repository.log') \
