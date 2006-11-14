@@ -24,7 +24,8 @@ extra_dist = \
 	rootstat_wrapper.c	\
 	job-server.init.in	\
 	multi-jobserver.init.in	\
-        cleanup-bindmounts.init.in
+        cleanup-bindmounts.init.in \
+        backup
 
 SUBDIRS = data DiskImageData mailman
 
@@ -51,6 +52,8 @@ install: install-subdirs
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
 	install -m 755 cleanup-bindmounts.init.in $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
+	mkdir -p $(DESTDIR)/etc/raa/backups.d
+	install -m 755 backup $(DESTDIR)/etc/raa/backups.d/rbuilder-backup
 
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
