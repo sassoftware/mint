@@ -11,6 +11,7 @@ from mint import database
 from mint import mailinglists
 from mint import mint_error
 from mint import userlevels
+from mint.web import webhandler
 
 def requiresHttps(func):
     def wrapper(self, *args, **kwargs):
@@ -87,6 +88,17 @@ def writersOnly(func):
             return func(self, **kwargs)
         else:
             raise mint_error.PermissionDenied
+    return wrapper
+
+def postOnly(func):
+    """
+    Require a method to be called with the POST HTTP method.
+    """
+    def wrapper(self, *args, **kwargs):
+        if self.req.method != 'POST':
+            raise webhandler.HttpForbidden
+        else:
+            return func(self, *args, **kwargs)
     return wrapper
 
 def mailList(func):

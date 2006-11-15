@@ -21,6 +21,7 @@ class FakeReq:
     unparsed_uri = '/hello'
     parsed_uri = ['http', '', 'user', 'pass', 'www.example.com', 80, '/hello', '', '']
     hostname = 'www.example.com'
+    method = "GET"
 
     def __init__(self, ssl = False):
         self.subprocess_env['HTTPS'] = ssl and "on" or "off"
@@ -148,6 +149,15 @@ class WebDecoratorTest(unittest.TestCase):
 
         w = decorators.mailList(raiseMailError)
         assert(w(self) == "it's magic!")
+
+    def testPostOnly(self):
+        w = decorators.postOnly(dummy)
+
+        self.req = FakeReq()
+        self.assertRaises(webhandler.HttpForbidden, w, self)
+
+        self.req.method = "POST"
+        assert(w(self))
 
 
 if __name__ == "__main__":
