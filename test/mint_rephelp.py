@@ -183,6 +183,9 @@ class MintApacheServer(rephelp.ApacheServer):
     def reset(self):
         if os.path.exists(self.reposDir + "/repos/"):
             util.rmtree(self.reposDir + "/repos/")
+        if os.path.exists(self.reposDir + "/entitlements/"):
+            util.rmtree(self.reposDir + "/entitlements/")
+
         rephelp.ApacheServer.reset(self)
         self.needsPGPKey = False
         self.mintDb.reset()
