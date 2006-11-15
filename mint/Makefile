@@ -30,7 +30,6 @@ python_files =			\
 	mailinglists.py		\
 	mint_error.py		\
 	mirror.py		\
-	mirrorprime.py		\
 	news.py			\
 	pkgindex.py		\
 	profile.py		\
