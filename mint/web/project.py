@@ -114,6 +114,7 @@ class ProjectHandler(WebHandler):
             anonymous = True in [x[0] == 'anonymous' for x in userMap.values()]
         else:
             mirrored = False
+            anonymous = False
         return self._write("projectPage", mirrored = mirrored, anonymous = anonymous)
 
     def conaryUserCfg(self, auth):
