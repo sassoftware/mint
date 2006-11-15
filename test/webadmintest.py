@@ -70,10 +70,46 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
-        assert(client.getInboundMirrors() == [[1, 1, 'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat', 'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
+        assert(client.getInboundMirrors() == [[1, 1,
+            'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat',
+            'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+
+    def testPreloadMirroredProject(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'preload',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        page = self.assertContent("/project/rpath/",
+            "To preload this external project as a local mirror")
+
+        page = self.fetch("/admin/addExternal")
+
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath2',
+                              'name' : 'rPath Linux 2',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'preload',
+                              'authType': 'none',
+                              'externalUser': 'anonymous',
+                              'externalPass': 'anonymous'})
+
+        self.assertNotContent("/project/rpath2/",
+            "To preload this external project as a local mirror")
 
     def testCreateExternalProjectEntitlement(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

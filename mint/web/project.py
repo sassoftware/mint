@@ -102,7 +102,19 @@ class ProjectHandler(WebHandler):
 
     @redirectHttp
     def projectPage(self, auth):
-        return self._write("projectPage")
+        if self.auth.admin:
+            # various bits of logic to figure out if we should prompt for
+            # mirror preloading
+
+            # already mirrored?
+            mirrored = bool(self.client.getInboundMirror(self.project.id))
+
+            # anonymous external projects can't be mirrored
+            _, _, userMap = self.client.getLabelsForProject(self.project.id)
+            anonymous = True in [x[0] == 'anonymous' for x in userMap.values()]
+        else:
+            mirrored = False
+        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous)
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")

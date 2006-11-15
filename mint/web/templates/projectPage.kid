@@ -44,7 +44,7 @@ from mint.helperfuncs import truncateForDisplay
 
                     <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="project.hidden">This project is hidden.</p>
-                    <p py:if="project.external">This project is externally managed.</p>
+                    <p py:if="project.external and not auth.admin">This project is externally managed.</p>
                     <p py:if="not (projectCommits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
 
                     <h2>Administrative Options</h2>
@@ -57,7 +57,7 @@ from mint.helperfuncs import truncateForDisplay
                             <option py:if="not project.hidden" value="project_hide">Hide Project</option>
                             <option py:if="project.hidden" value="project_unhide">Unhide Project</option>
                         </select>
-                        
+
                         <button id="projectAdminSubmitButton" type="submit">Go</button>
                         <input type="hidden" value="${project.getId()}" name="projectId" />
                     </form>
@@ -72,6 +72,12 @@ from mint.helperfuncs import truncateForDisplay
                     pages (but will appear in search results). When software has been
                     committed into this project's repository, it will no longer be
                     considered fledgling, and will appear on "Browse Projects" pages.
+                </p>
+
+                <p class="help" py:if="project.external and (not mirrored) and (not anonymous) and auth.admin">
+                    To preload this external project as a local mirror, please have the preload drive containing
+                    the contents for <b>${project.getLabel().split("@")[0]}</b>, connected to the rBuilder server, and click
+                    <a href="https://${cfg.hostName}.${cfg.siteDomainName}:8003/rAA/loadmirror/LoadMirror/">Load Mirror</a>.
                 </p>
 
                 <div py:if="project.getProjectUrl()" py:strip="True">
