@@ -58,6 +58,9 @@ class SetupHandler(WebHandler):
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
 
+        if self.req.uri[-1] != '/':
+            self._redirect("http://%s/setup/" % self.req.hostname)
+
         # only admins are allowed here
         if not self.auth.admin and self.cfg.configured:
             raise HttpForbidden
