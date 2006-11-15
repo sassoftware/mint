@@ -220,6 +220,10 @@ def conaryHandler(req, cfg, pathInfo):
         repNameCache = {}
         domainNameCache = {}
 
+    # XXX: we need to nerf the repNameCache because we can now modify
+    # RepNameMap and we don't have a clean way to reset the cache.
+    repNameCache = {}
+
     repNameMap = getRepNameMap(db)
     projectName = repName.split(".")[0]
     if repName in repNameMap:
