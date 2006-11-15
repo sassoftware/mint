@@ -166,6 +166,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                                  {'conary.rpath.com': 'http://conary.rpath.com/conary/'},
                                                  {'conary.rpath.com': ('anonymous', 'anonymous')}))
 
+    def testEditMirroredProject(self):
+        # mainly make sure that user-entered settings are preserved on the edit
+        # page, and not taken from the internal Labels table by mistake (RBL-1170)
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'preload',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        p = client.getProjectByHostname('rpath')
+        page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
+
+        self.failUnless('value="https://conary.rpath.com/conary/"' in page.body)
+        self.failUnless('name="externalUser" value="mirror"' in page.body)
+        self.failUnless('name="externalPass" value="mirrorpass"' in page.body)
 
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

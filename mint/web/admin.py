@@ -299,6 +299,8 @@ class AdminHandler(WebHandler):
                 labels.remove(label)
 
             initialKwargs['url'] = mirror['sourceUrl']
+            initialKwargs['externalUser'] = mirror['sourceUsername']
+            initialKwargs['externalPass'] = mirror['sourcePassword']
             initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
             mirrored = True
 
