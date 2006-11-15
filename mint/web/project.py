@@ -1002,6 +1002,10 @@ class ProjectHandler(WebHandler):
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
             msg += " (project has been orphaned)"
+
+        if 'groupTroveId' in self.session:
+            del self.session['groupTroveId']
+
         self._setInfo(msg)
         self._predirect("members")
 
