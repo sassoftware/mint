@@ -69,7 +69,7 @@ status() {
                    echo "$LONGNAME is running."
                    ;;
                *)
-                   echo "Job server shut down uncleanly. Please restart."
+                   echo "Job server shut down uncleanly. Please restart the job server."
                    ;;
             esac
             ;;
