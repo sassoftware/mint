@@ -69,7 +69,7 @@ status() {
                    echo "$LONGNAME is running."
                    ;;
                *)
-                   echo "Lockfile is stale. Run '$0 stop' to remove it."
+                   echo "Job server shut down uncleanly. Please restart."
                    ;;
             esac
             ;;
