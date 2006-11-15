@@ -341,14 +341,6 @@ class AdminHandler(WebHandler):
             self._setInfo("Failed to %s the job server" % operation)
         return self.jobs(*args, **kwargs)
 
-    def outbound(self, *args, **kwargs):
-        outboundLabels = [ [x[0], self.client.getProject(x[1])] + x[2:] for x in self.client.getOutboundMirrors()]
-        return self._write('admin/outbound', outboundLabels = outboundLabels)
-
-    def addOutbound(self, *args, **kwargs):
-        projects = self.client.getProjectsList()
-        return self._write('admin/add_outbound', projects = projects)
-
     def selections(self, *args, **kwargs):
         return self._write('admin/selections',
                            selectionData=self.client.getFrontPageSelection())
@@ -498,23 +490,46 @@ class AdminHandler(WebHandler):
 
         return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
+    def outbound(self, *args, **kwargs):
+        outboundLabels = [ [x[0], self.client.getProject(x[1])] + x[2:] for x in self.client.getOutboundMirrors()]
+        return self._write('admin/outbound', outboundLabels = outboundLabels)
+
+    def addOutbound(self, *args, **kwargs):
+        projects = self.client.getProjectsList()
+        return self._write('admin/add_outbound', projects = projects, kwargs = kwargs)
+
     @intFields(projectId = None)
-    @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)
+    @strFields(targetUrl = '', mirrorUser = '', mirrorPass = '')
     @boolFields(mirrorSources = False, allLabels = False)
-    def processAddOutbound(self, projectId,
-            targetUrl, mirrorUser, mirrorPass,
-            mirrorSources, allLabels,
-            *args, **kwargs):
-        project = self.client.getProject(projectId)
-        label = project.getLabel()
+    def processAddOutbound(self, projectId, targetUrl, mirrorUser, mirrorPass,
+            mirrorSources, allLabels, *args, **kwargs):
 
-        outboundMirrorId = self.client.addOutboundMirror(projectId, [label], targetUrl, mirrorUser, mirrorPass, allLabels)
-        if not mirrorSources:
-            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                                               ["-.*:source", "-.*:debuginfo",
-                                                "+.*"])
+        inputKwargs = {'projectId': projectId, 'targetUrl': targetUrl,
+            'mirrorUser': mirrorUser, 'mirrorPass': mirrorPass,
+            'mirrorSources': mirrorSources, 'allLabels': allLabels}
 
-        self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+        if not mirrorUser:
+            self._addErrors("Mirror username must be specified")
+        if not mirrorPass:
+            self._addErrors("Mirror user password must be specified")
+        if not targetUrl:
+            self._addErrors("Target URL must be specified")
+        elif not targetUrl.endswith("/conary/"):
+            self._addErrors("Target URL must end with /conary/")
+
+        if not self._getErrors():
+            project = self.client.getProject(projectId)
+            label = project.getLabel()
+
+            outboundMirrorId = self.client.addOutboundMirror(projectId, [label], targetUrl, mirrorUser, mirrorPass, allLabels)
+            if not mirrorSources:
+                self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                                                   ["-.*:source", "-.*:debuginfo",
+                                                    "+.*"])
+
+            self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self.addOutbound(**inputKwargs)
 
     @listFields(str, remove = [])
     def removeOutbound(self, remove, *args, **kwargs):

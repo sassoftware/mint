@@ -6,6 +6,11 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+    for var in ['projectId', 'targetUrl', 'mirrorUser',
+        'mirrorPass', 'mirrorSources', 'allLabels']:
+        kwargs[var] = kwargs.get(var, '')
+?>
     <head>
         <title>${formatTitle('Add Outbound Mirror')}</title>
     </head>
@@ -22,14 +27,15 @@
                         <th><em class="required">Project to mirror:</em></th>
                         <td>
                             <select name="projectId">
-                                <option py:for="project in projects" value="${project[0]}">${project[2]}</option>
+                                <option py:attrs="{'selected': kwargs['projectId'] == project[0] and 'selected' or None}"
+                                        py:for="project in projects" value="${project[0]}">${project[2]}</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
                         <th><em class="required">URL of target repository:</em></th>
                         <td>
-                            <input type="text" autocomplete="off" name="targetUrl" maxlength="255" value=""/>
+                            <input type="text" autocomplete="off" name="targetUrl" maxlength="255" value="${kwargs['targetUrl']}"/>
                             <p class="help">Use the full URL of the target repository.
                                 If the target repository requires the use of SSL, be sure to use https://.
                             </p>
@@ -38,11 +44,11 @@
 
                     <tr>
                         <th><em class="required">Username:</em></th>
-                        <td><input autocomplete="off" type="text" name="mirrorUser" style="width: 25%;" /></td>
+                        <td><input autocomplete="off" type="text" name="mirrorUser" style="width: 25%;" value="${kwargs['mirrorUser']}" /></td>
                     </tr>
                     <tr>
                         <th><em class="required">Password:</em></th>
-                        <td><input autocomplete="off" type="password" name="mirrorPass" style="width: 25%;" /></td>
+                        <td><input autocomplete="off" type="password" name="mirrorPass" style="width: 25%;" value="${kwargs['mirrorPass']}" /></td>
                     </tr>
                     <tr>
                         <td colspan="2"><hr /></td>
@@ -50,13 +56,15 @@
                     <tr>
                         <th rowspan="2">Mirroring options:</th>
                         <td>
-                            <input class="check" type="checkbox" name="mirrorSources" value="1" id="mirrorSources" />
+                            <input py:attrs="{'checked': kwargs['mirrorSources'] and 'checked' or None}"
+                                   class="check" type="checkbox" name="mirrorSources" value="1" id="mirrorSources" />
                             <label for="mirrorSources">Mirror source components to target repository.</label>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input class="check" type="checkbox" name="allLabels" value="1" id="allLabels" />
+                            <input py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}"
+                                   class="check" type="checkbox" name="allLabels" value="1" id="allLabels" />
                             <label for="allLabels">Mirror all labels to the target repository,
                                 rather than only the default project label.</label>
                         </td>
