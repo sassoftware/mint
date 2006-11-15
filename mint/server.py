@@ -884,9 +884,10 @@ class MintServer(object):
     def _notifyUser(self, action, user, project, userlevel=None):
         userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
                                              'Unknown')
-        projectUrl = 'http://%s.%s%sproject/%s/' %\
-                      (self.cfg.hostName, project.getDomainname(),
-                       self.cfg.basePath, project.getHostname())
+        projectUrl = 'http://%s%sproject/%s/' %\
+                      (self.cfg.projectSiteHost,
+                       self.cfg.basePath,
+                       project.getHostname())
 
         greeting = "Hello,"
 
