@@ -18,7 +18,6 @@ from mint import users
 from mint.session import SqlSession
 from mint.web.cache import pageCache, reqHash
 
-kidCache = {}
 
 class WebHandler(object):
     """Mixin class for various helpful web methods."""
@@ -119,11 +118,9 @@ class WebHandler(object):
             self.req.log_error("The password for %s has been reset to %s" % (user.username, newpw))
 
     def _writeRss(self, **values):
-        if "rss20.kid" not in kidCache:
-            path = os.path.join(self.cfg.templatePath, "rss20.kid")
-            kidCache["rss20.kid"] = kid.load_template(path)
+        path = os.path.join(self.cfg.templatePath, "rss20.kid")
+        template = kid.load_template(path)
 
-        template = kidCache["rss20.kid"]
         t = template.Template(**values)
         t.assume_encoding = 'latin1'
         self.req.content_type = "text/xml"
