@@ -146,6 +146,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 output = method(**d)
             except http.InvalidPassword:
                 raise HttpForbidden
+            except errors.OpenError, e:
+                self._addErrors(str(e))
+                self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost,
+                    self.cfg.basePath, self.project.hostname))
             except conaryerrors.InvalidRegex, e:
                 return self._write("error",
                                    shortError = "Invalid Regular Expression",
