@@ -687,8 +687,11 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         # test restarting jobs
         job.setStatus(jobstatus.ERROR, "Error Message")
-        client.startImageJob(build.getId())
+        job.refresh()
+        assert(job.timeFinished)
 
+        client.startImageJob(build.getId())
+        job.refresh()
         assert(job.getStatus() == jobstatus.WAITING)
 
         # test duplicate job handling
@@ -703,7 +706,10 @@ class JobsTest(fixtures.FixturedUnitTest):
             self.fail("get all Job Id's returned incorrect results")
         # important to test separately: finishing a job generates
         # follow-on SQL statements
-        job.setStatus(jobstatus.FINISHED,"Finished")
+        job.setStatus(jobstatus.FINISHED, "Finished")
+
+        job.refresh()
+        assert(job.timeFinished)
 
     @fixtures.fixture('Full')
     def testStubImage(self, db, data):

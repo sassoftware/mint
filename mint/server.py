@@ -2534,10 +2534,7 @@ class MintServer(object):
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
         self._filterJobAccess(jobId)
-        if newStatus == jobstatus.FINISHED:
-            self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
-        else:
-            self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage)
+        self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
         return True
 
     @typeCheck()
