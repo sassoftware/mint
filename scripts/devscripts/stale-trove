@@ -7,6 +7,7 @@ import tempfile
 
 from conary import conarycfg
 from conary import conaryclient
+from conary import state
 from conary import trove
 from conary import versions
 from conary.conaryclient import cmdline
