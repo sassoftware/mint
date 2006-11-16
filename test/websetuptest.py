@@ -30,7 +30,7 @@ import mint_rephelp
 class FakeRequest(object):
     __slots__ = [ 'err_headers_out', 'hostname', 'headers_in',
             'headers_out', 'method', 'error_logged', 'content_type',
-            'options']
+            'options', 'uri']
 
     def __init__(self, hostname, methodname, filename):
         self.method = methodname
@@ -41,6 +41,7 @@ class FakeRequest(object):
         self.error_logged = False
         self.content_type = 'text/xhtml'
         self.options = {}
+        self.uri = '/setup/'
 
     def log_error(self, msg):
         self.error_logged = True
@@ -173,7 +174,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_password2': 'foopass' }
 
         generatedConfigFilePath = os.path.join(self.cfg.dataPath, 'rbuilder-generated.conf')
-        self.sh.req = FakeRequest('foo.rpath.local', 'GET', '/processSetup')
+        self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.req.options = { 'generatedConfigFile': generatedConfigFilePath }
         self.sh.cfg = copy.deepcopy(self.cfg)
         self.sh.cfg.configured = False
@@ -217,7 +218,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_password': 'foopass',
                    'new_password2': 'foopass43' }
 
-        self.sh.req = FakeRequest('foo.rpath.local', 'GET', '/processSetup')
+        self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.cfg = self.cfg
         self.sh.cfg.configured = False
         client = self.getClient('admin')
@@ -238,7 +239,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_password': '',
                    'new_password2': '' }
 
-        self.sh.req = FakeRequest('foo.rpath.local', 'GET', '/processSetup')
+        self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.cfg = self.cfg
         self.sh.cfg.configured = False
         client = self.getClient('admin')
