@@ -13,7 +13,7 @@ backupFile = "/srv/rbuilder/rbuilder.conf-pre-2.0.3"
 
 # target config file already exists, bailing
 if os.path.exists(backupFile):
-    print "migrate-config has already been run (/srv/rbuilder/config/rbuilder-generated.conf already contains a hostName entry)"
+    print "migrate-config has already been run (backup file %s already exists)" % backupFile
     sys.exit(1)
 
 shutil.copy("/srv/rbuilder/rbuilder.conf", backupFile)
