@@ -38,6 +38,8 @@ generatedFile.close()
 # in rbuilder-custom.conf
 customFile = open("/srv/rbuilder/config/rbuilder-custom.conf", "w+")
 for k in customKeys:
+    if k == "visibleBuildTypes":
+        continue
     if newCfg[k] != oldCfg[k]:
         oldCfg.displayKey(k, out = customFile)
 customFile.close()
