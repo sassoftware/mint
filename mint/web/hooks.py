@@ -31,32 +31,67 @@ from mint.web.rpchooks import rpcHandler
 from mint.web.webhandler import normPath, HttpError, getHttpAuth
 from mint.web.rmakehandler import rMakeHandler
 
-from conary.web import webauth
 from conary import dbstore
 from conary.dbstore import sqlerrors
-from conary.lib import log
+from conary.lib import util as conaryutil
+from conary.lib import epdb, log
 from conary.lib import coveragehook
+from conary.repository import changeset
+from conary.repository import errors
 from conary.repository import shimclient
+from conary.repository.filecontainer import FileContainer
 from conary.repository.netrepos import netserver
 from conary.repository.transport import Transport
 
-from conary.server import apachemethods
-
 BUFFER=1024 * 256
-
-def getProtocol(isSecure):
-    return isSecure and "https" or "http"
 
 def post(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
-    protocol = getProtocol(isSecure)
+    if isSecure:
+        protocol = "https"
+    else:
+        protocol = "http"
 
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
             return apache.HTTP_NOT_FOUND
 
-        apachemethods.post(port, isSecure, repos, req)
+        encoding = req.headers_in.get('Content-Encoding', None)
+        data = req.read()
+        if encoding == 'deflate':
+            data = zlib.decompress(data)
+
+        authToken = getHttpAuth(req)
+        if type(authToken) is int:
+            return authToken
+
+        if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
+            return apache.HTTP_FORBIDDEN
+
+        (params, method) = xmlrpclib.loads(data)
+
+        wrapper = repos.callWrapper
+        params = [protocol, port, method, authToken, params]
+        kwargs = {'remoteIp': req.connection.remote_ip}
+        try:
+            result = wrapper(*params, **kwargs)
+        except (errors.InsufficientPermission):
+            sys.stderr.flush()
+            return apache.HTTP_FORBIDDEN
+
+        # take off the usedAnonymous flag
+        usedAnonymous = result[0]
+        result = result[1:]
+        resp = xmlrpclib.dumps((result,), methodresponse=1)
+        req.content_type = "text/xml"
+        encoding = req.headers_in.get('Accept-encoding', '')
+        if len(resp) > 200 and 'deflate' in encoding:
+            req.headers_out['Content-encoding'] = 'deflate'
+            resp = zlib.compress(resp, 5)
+        if usedAnonymous:
+            req.headers_out["X-Conary-UsedAnonymous"] = "1"
+        req.write(resp)
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
@@ -65,85 +100,100 @@ def post(port, isSecure, repos, cfg, req):
 def get(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
-    protocol = getProtocol(isSecure)
+    def _writeNestedFile(req, name, tag, size, f, sizeCb):
+        if changeset.ChangedFileTypes.refr[4:] == tag[2:]:
+            path = f.read()
+            size = os.stat(path).st_size
+            tag = tag[0:2] + changeset.ChangedFileTypes.file[4:]
+            sizeCb(size, tag)
+            req.sendfile(path)
+        else:
+            sizeCb(size, tag)
+            req.write(f.read())
+
+    if isSecure:
+        protocol = "https"
+    else:
+        protocol = "http"
 
     uri = req.uri
     if uri.endswith('/'):
         uri = uri[:-1]
     cmd = os.path.basename(uri)
+    fields = util.FieldStorage(req)
 
     if cmd == "changeset":
-        apachemethods.get(port, isSecure, repos, req)
+        authToken = getHttpAuth(req)
+        if type(authToken) is int:
+            return authToken
+        if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
+            return apache.HTTP_FORBIDDEN
+
+        localName = repos.tmpPath + "/" + req.args + "-out"
+        size = os.stat(localName).st_size
+
+        if localName.endswith(".cf-out"):
+            try:
+                f = open(localName, "r")
+            except IOError:
+                self.send_error(404, "File not found")
+                return None
+
+            os.unlink(localName)
+
+            items = []
+            totalSize = 0
+            for l in f.readlines():
+                (path, size) = l.split()
+                size = int(size)
+                totalSize += size
+                items.append((path, size))
+            del f
+        else:
+            size = os.stat(localName).st_size;
+            items = [ (localName, size) ]
+            totalSize = size
+
+        req.content_type = "application/x-conary-change-set"
+        for (path, size) in items:
+            if path.endswith('.ccs-out'):
+                cs = FileContainer(open(path))
+                cs.dump(req.write,
+                        lambda name, tag, size, f, sizeCb:
+                            _writeNestedFile(req, name, tag, size, f,
+                                             sizeCb))
+
+                del cs
+            else:
+                req.sendfile(path)
+
+            if path.startswith(repos.tmpPath) and \
+                    not(os.path.basename(path)[0:6].startswith('cache-')):
+                os.unlink(path)
+
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
-def getRepository(projectName, repName, dbName, cfg, req):
-    nscfg = netserver.ServerConfig()
-    nscfg.externalPasswordURL = cfg.externalPasswordURL
-    nscfg.authCacheTimeout = cfg.authCacheTimeout
+def putFile(port, isSecure, repos, req):
+    if not isSecure and repos.forceSecure:
+        return apache.HTTP_FORBIDDEN
 
-    repositoryDir = os.path.join(cfg.reposPath, repName)
+    path = repos.tmpPath + "/" + req.args + "-in"
+    size = os.stat(path).st_size
+    if size != 0:
+	return apache.HTTP_UNAUTHORIZED
 
-    nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
-    nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+    f = open(path, "w+")
+    s = req.read(BUFFER)
+    while s:
+	f.write(s)
+	s = req.read(BUFFER)
 
-    nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
+    f.close()
 
-    nscfg.serverName = [repName]
-    nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
-    nscfg.logFile = cfg.reposLog and \
-                    os.path.join(cfg.dataPath, 'logs', 'repository.log') \
-                    or None
-
-    if os.path.basename(req.uri) == "changeset":
-       rest = os.path.dirname(req.uri) + "/"
-    else:
-       rest = req.uri
-
-    if req.hostname != "conary.digium.com":
-        urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
-            (req.hostname, projectName)
-    else:
-        urlBase = "%%(protocol)s://%s:%%(port)d/conary/"% \
-            req.hostname
-
-    # set up the commitAction
-    buildLabel = repName + "@" + cfg.defaultBranch
-    if cfg.SSL:
-        protocol = "https"
-        host = cfg.secureHost
-    else:
-        protocol = "http"
-        host = req.hostname
-
-    repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
-
-    if cfg.commitAction:
-        nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
-                                           'buildLabel': buildLabel,
-                                           'projectName': projectName,
-                                           'commitEmail': cfg.commitEmail,
-                                           'basePath' : cfg.basePath}
-    else:
-        nscfg.commitAction = None
-
-    if req.hostname == "conary.digium.com":
-        nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --config-file /srv/rbuilder/conaryrc --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
-
-    if os.access(repositoryDir, os.F_OK):
-        repos = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
-        shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
-        #repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
-        #shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
-
-        #repositories[repHash].forceSecure = cfg.SSL
-    else:
-        req.log_error("failed to open repository directory: %s" % repositoryDir)
-        repos = shim = None
-    return repos, shim
-
+    return apache.OK
 
 def conaryHandler(req, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
@@ -196,19 +246,79 @@ def conaryHandler(req, cfg, pathInfo):
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
     if not repositories.has_key(repHash):
-        repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req)
-        repositories[repHash] = repo
-        shim_repositories[repHash] = shimRepo
-    else:
-        repo = repositories[repHash]
-        shimRepo = shim_repositories[repHash]
+        nscfg = netserver.ServerConfig()
+        nscfg.externalPasswordURL = cfg.externalPasswordURL
+        nscfg.authCacheTimeout = cfg.authCacheTimeout
+
+        repositoryDir = os.path.join(cfg.reposPath, repName)
+
+        nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
+        nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+
+        nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
+
+        nscfg.serverName = [repName]
+        nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
+        nscfg.logFile = cfg.reposLog and \
+                        os.path.join(cfg.dataPath, 'logs', 'repository.log') \
+                        or None
+
+        if os.path.basename(req.uri) == "changeset":
+           rest = os.path.dirname(req.uri) + "/"
+        else:
+           rest = req.uri
+
+        if req.hostname != "conary.digium.com":
+            urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
+                (req.hostname, projectName)
+        else:
+            urlBase = "%%(protocol)s://%s:%%(port)d/conary/"% \
+                req.hostname
+
+        # set up the commitAction
+        buildLabel = repName + "@" + cfg.defaultBranch
+        if cfg.SSL:
+            protocol = "https"
+            host = cfg.secureHost
+        else:
+            protocol = "http"
+            host = req.hostname
+
+        repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
+
+        if cfg.commitAction:
+            nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
+                                               'buildLabel': buildLabel,
+                                               'projectName': projectName,
+                                               'commitEmail': cfg.commitEmail,
+                                               'basePath' : cfg.basePath}
+        else:
+            nscfg.commitAction = None
+
+        if req.hostname == "conary.digium.com":
+            nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --config-file /srv/rbuilder/conaryrc --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
+
+        if os.access(repositoryDir, os.F_OK):
+            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
+            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
+
+            repositories[repHash].forceSecure = cfg.SSL
+        else:
+            req.log_error("failed to open repository directory: %s" % repositoryDir)
+            repositories[repHash] = None
+            shim_repositories[repHash] = None
+
+    repo = repositories[repHash]
+    shimRepo = shim_repositories[repHash]
+
 
     if method == "POST":
-        return post(port, secure, (repo, shimRepo), cfg, req)
+        rt = post(port, secure, (repo, shimRepo), cfg, req)
+        return rt
     elif method == "GET":
         return get(port, secure, (repo, shimRepo), cfg, req)
     elif method == "PUT":
-        return apachemethods.putFile(port, secure, repo, req)
+        return putFile(port, secure, repo, req)
     else:
         return apache.HTTP_METHOD_NOT_ALLOWED
 
