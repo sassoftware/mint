@@ -28,6 +28,8 @@ NotAdvertisedError = """Mailing lists must be advertised"""
 
 InvalidSubscriptionPolicy = """Mailing lists may not require approval for subscription"""
 
+InvalidNonmembers = """Commits list poster is not allowed to post"""
+
 def checkVals(mlist):
     errors = []
     if mlist.archive_private == True:
@@ -42,6 +44,9 @@ def checkVals(mlist):
     if mlist.subscribe_policy not in [1]:
         errors.append( InvalidSubscriptionPolicy )
 
+    if mlist.accept_these_nonmembers != ['rbuilder@rpath.com']:
+        errors.append(InvalidNonmembers)
+
     if errors:
         raise InvalidSetting(list = mlist.real_name, errors=errors)
     return True
@@ -53,6 +58,7 @@ def setVals(mlist):
     mlist.max_message_size = 2048
     mlist.advertised = True
     mlist.subscribe_policy = 1
+    mlist.accept_these_nonmembers = ['rbuilder@rpath.com']
     mlist.Save()
     mlist.Unlock()
 
