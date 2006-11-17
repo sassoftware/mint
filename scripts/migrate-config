@@ -27,6 +27,10 @@ oldCfg.read("/srv/rbuilder/rbuilder.conf")
 newCfg = config.MintConfig()
 newCfg.read("/srv/rbuilder/config/rbuilder.conf")
 
+if not newCfg.configured:
+    print "migate-config will not run on instance of rbuilder which has not been configured"
+    sys.exit(1)
+
 allKeys = set(oldCfg.keys())
 generatedKeys = set(config.keysForGeneratedConfig)
 customKeys = allKeys - generatedKeys
