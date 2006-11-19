@@ -131,6 +131,8 @@ def isIndividual():
     return _individual
 
 
+EXCLUDED_PATHS = ['test', 'scripts', 'raaplugins', 'schema.py']
+
 def main(argv=None, individual=True):
     import testhelp
     testhelp.isIndividual = isIndividual
@@ -139,6 +141,9 @@ def main(argv=None, individual=True):
 
         def getCoverageDirs(self, environ):
             return environ['mint']
+
+        def getCoverageExclusions(self, environ):
+            return EXCLUDED_PATHS
 
     global _handler
     global _individual

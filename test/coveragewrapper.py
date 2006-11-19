@@ -3,6 +3,7 @@ import imp
 import os.path
 import sys
 import re
+import types
 
 conaryPath = os.environ.get('CONARY_PATH', None)
 if not conaryPath:
@@ -14,7 +15,6 @@ if conaryPath not in sys.path:
 
 from conary.lib import util
 
-EXCLUDED_PATHS = ['test', 'scripts', 'raaplugins', 'schema.py']
 
 class CoverageWrapper(object):
     def __init__(self, coveragePath, dataPath, annotatePath):
@@ -47,6 +47,8 @@ class CoverageWrapper(object):
 
     def displayReport(self, files, displayMissingLines=False):
         assert(not displayMissingLines)
+        missingSortKey = lambda x: (len(x[2]), len(x[1]))
+        sortFn = lambda a,b: cmp(missingSortKey(a), missingSortKey(b))
         coverage = self.getCoverage()
         coverage.report(files, show_missing=False)
 
@@ -127,8 +129,6 @@ def _isPythonFile(fullPath, posFilters=[r'\.py$'], negFilters=['sqlite']):
     return True
 
 def getFilesToAnnotate(baseDirs=[], filesToFind=[], exclude=[]):
-    exclude += EXCLUDED_PATHS
-
     notExists = set(filesToFind)
     addAll = not filesToFind
 
