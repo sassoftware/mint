@@ -9,16 +9,42 @@ import shutil
 import sys
 import os
 
-backupFile = "/srv/rbuilder/rbuilder.conf-pre-2.0.3"
+def _doMigration(oldCfg, newCfg):
+    allKeys = set(oldCfg.keys())
+    generatedKeys = set(config.keysForGeneratedConfig)
+    customKeys = allKeys - generatedKeys
 
-# check for a vital setting in /srv/rbuilder/config/rbuilder-generated.conf
-f = open("/srv/rbuilder/config/rbuilder-generated.conf")
-genConfig = f.read()
-if 'hostName' in genConfig:
-    print "migrate-config has already been run (/srv/rbuilder/config/rbuilder-generated.conf already contains a hostName entry)"
+    # save "generated" keys to rbuilder-generated.conf
+    generatedFile = open("/srv/rbuilder/config/rbuilder-generated.conf", "w")
+    for k in generatedKeys:
+        oldCfg.displayKey(k, out = generatedFile)
+    generatedFile.close()
+
+    # everything else that is different from the stock config goes
+    # in rbuilder-custom.conf
+    customFile = open("/srv/rbuilder/config/rbuilder-custom.conf", "w+")
+    for k in customKeys:
+        if k == "visibleBuildTypes":
+            continue
+        if newCfg[k] != oldCfg[k]:
+            oldCfg.displayKey(k, out = customFile)
+    customFile.close()
+
+    # patch the old config file to indicate that it's not being used anymore
+    f = open("/srv/rbuilder/rbuilder.conf", "w")
+    print >> f, """# THIS FILE IS NO LONGER USED, IT REMAINS AS A PLACEHOLDER.
+# Any modifications made here will not take effect. Please see:
+#
+#   /srv/rbuilder/config/rbuilder-custom.conf
+#
+# ...to make modifications to rBuilder's configuration."""
+    f.close()
+
+if not os.path.exists("/srv/rbuilder/rbuilder.conf"):
+    print "Old config file doesn't exist, skipping migration"
     sys.exit(1)
-f.close()
 
+backupFile = "/srv/rbuilder/rbuilder.conf-pre-2.0.3"
 shutil.copy("/srv/rbuilder/rbuilder.conf", backupFile)
 
 oldCfg = config.MintConfig()
@@ -27,38 +53,11 @@ oldCfg.read("/srv/rbuilder/rbuilder.conf")
 newCfg = config.MintConfig()
 newCfg.read("/srv/rbuilder/config/rbuilder.conf")
 
-if not newCfg.configured:
-    print "migate-config will not run on instance of rbuilder which has not been configured"
+if oldCfg.configured and not newCfg.configured:
+    print "Migrating configuration files to new scheme..."
+    _doMigration(oldCfg, newCfg)
+    sys.exit(0)
+else:
+    print "No need to migrate configuration file at this time."
     sys.exit(1)
 
-allKeys = set(oldCfg.keys())
-generatedKeys = set(config.keysForGeneratedConfig)
-customKeys = allKeys - generatedKeys
-
-# save "generated" keys to rbuilder-generated.conf
-generatedFile = open("/srv/rbuilder/config/rbuilder-generated.conf", "w")
-for k in generatedKeys:
-    oldCfg.displayKey(k, out = generatedFile)
-generatedFile.close()
-
-# everything else that is different from the stock config goes
-# in rbuilder-custom.conf
-customFile = open("/srv/rbuilder/config/rbuilder-custom.conf", "w+")
-for k in customKeys:
-    if k == "visibleBuildTypes":
-        continue
-    if newCfg[k] != oldCfg[k]:
-        oldCfg.displayKey(k, out = customFile)
-customFile.close()
-
-# patch the old config file to indicate that it's not being used anymore
-f = open("/srv/rbuilder/rbuilder.conf", "w")
-print >> f, """# THIS FILE IS NO LONGER USED, IT REMAINS AS A PLACEHOLDER.
-# Any modifications made here will not take effect. Please see:
-#
-#   /srv/rbuilder/config/rbuilder-custom.conf
-#
-# ...to make modifications to rBuilder's configuration."""
-f.close()
-
-sys.exit(0)

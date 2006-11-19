@@ -95,7 +95,7 @@ class MintConfig(ConfigFile):
     debugMode               = (cfgtypes.CfgBool, False)
     sendNotificationEmails  = (cfgtypes.CfgBool, True)
     profiling               = (cfgtypes.CfgBool, False)
-    configured              = (cfgtypes.CfgBool, True)
+    configured              = (cfgtypes.CfgBool, False)
     hideFledgling           = (cfgtypes.CfgBool, False)
 
     reposDBDriver           = 'sqlite'
