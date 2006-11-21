@@ -70,6 +70,13 @@ class RBuilderMain(options.MainHandler):
 
     abstractCommand = commands.RBuilderCommand
 
+    def getConfigFile(self, argv):
+        # ignore --skip-default-config
+        if '--skip-default-config' in argv:
+            argv.remove('--skip-default-config')
+            pass
+        return self.configClass(readConfigFiles = True)
+
     @classmethod
     def usage(class_, rc = 1):
         print 'rbuilder: command-line interface to an rBuilder Server'

@@ -17,7 +17,7 @@
             <table>
                 <tr><td>
                     <p style="width: 50%;">
-                        <a href="${noLink}"><img src="${cfg.staticPath}apps/mint/images/no_button.png" alt="No" /></a>
+                        <a class="imageButton" href="${noLink}"><img src="${cfg.staticPath}apps/mint/images/no_button.png" alt="No" /></a>
                     </p>
                 </td>
                 <td>

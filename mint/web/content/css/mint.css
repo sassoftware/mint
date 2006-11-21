@@ -51,6 +51,9 @@ label a:hover {
     text-decoration: none;
 }
 
+a.imageButton:hover {
+    background-color: transparent;
+}
 
 a img {
     border: none;

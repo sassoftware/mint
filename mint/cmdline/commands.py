@@ -12,14 +12,12 @@ from conary.lib import options
 class RBuilderCommand(options.AbstractCommand):
     docs = {'config'             : ("Set config KEY to VALUE", "'KEY VALUE'"),
             'config-file'        : ("Read PATH config file", "PATH"),
-            'skip-default-config': "Don't read default config file (~/.rbuilderrc)",
            }
 
     def addParameters(self, argDef):
         d = {}
         d["config"] = MULT_PARAM
         d["config-file"] = MULT_PARAM
-        d["skip-default-config"] = NO_PARAM
         argDef[self.defaultGroup] = d
 
 
