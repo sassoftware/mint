@@ -7,6 +7,7 @@ import os
 import shutil
 import mysqlharness
 import rephelp
+import socket
 import sys
 import testsuite
 import urlparse
@@ -40,9 +41,14 @@ from conary.lib import util
 MINT_HOST = 'test'
 MINT_DOMAIN = 'rpath.local'
 if bool(os.environ.get("MINT_TEST_SAMEDOMAINS", "")):
-    MINT_PROJECT_DOMAIN = MINT_DOMAIN
+    hostname = socket.gethostname()
+    MINT_DOMAIN = MINT_PROJECT_DOMAIN = ".".join(hostname.split('.')[1:])
+    MINT_HOST = hostname.split('.')[0]
 else:
     MINT_PROJECT_DOMAIN = 'rpath.local2'
+
+FQDN = MINT_HOST + '.' + MINT_DOMAIN
+PFQDN = MINT_HOST + '.' + MINT_PROJECT_DOMAIN
 
 # Stop any redirection loops, if encountered, after 20 redirects.
 MAX_REDIRECTS = 20

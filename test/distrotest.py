@@ -15,7 +15,7 @@ import md5
 import rephelp
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import EmptyCallback
-from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import buildtypes
 from mint.distro import gencslist, anaconda_images, splitdistro
@@ -340,9 +340,9 @@ class DistroTest(MintRepositoryHelper):
             cfg.root = ':memory:'
             useSsl = not os.environ.get('MINT_TEST_NOSSL', 0)
             cfg.repositoryMap = {'testproject.%s' % MINT_PROJECT_DOMAIN :
-                                 'http%s://test.%s/repos/testproject/' % \
-                                 (useSsl and 's' or '',
-                                  self.mintCfg.projectDomainName)}
+                                 'http%s://%s.%s/repos/testproject/' % \
+                                 (useSsl and 's' or '', self.mintCfg.hostName,
+                                 self.mintCfg.projectDomainName)}
             cfg.initializeFlavors()
             client = conaryclient.ConaryClient(cfg)
 

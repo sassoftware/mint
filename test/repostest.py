@@ -11,7 +11,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 from mint import pkgindex
 import recipes
 
@@ -373,7 +373,7 @@ class RepositoryTest(MintRepositoryHelper):
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.'+MINT_PROJECT_DOMAIN+'@rpl:devel']
         extProject.editLabel(labelId, "external.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
-            'http%s://test.%s:%d/repos/external/' % ((self.mintCfg.SSL and 's' or ''), MINT_PROJECT_DOMAIN, port), 'testuser', 'testpass')
+            'http%s://%s:%d/repos/external/' % ((self.mintCfg.SSL and 's' or ''), PFQDN, port), 'testuser', 'testpass')
 
         upi = pkgindex.UpdatePackageIndexExternal()
         upi.logPath = None

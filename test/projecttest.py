@@ -9,7 +9,7 @@ testsuite.setup()
 import sys
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
@@ -106,7 +106,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProjectByHostname("foo")
         assert(data['projectId'] == project.getId())
 
-        project = client.getProjectByFQDN("foo.%s" % MINT_PROJECT_DOMAIN)
+        project = client.getProjectByPFQDN("foo.%s" % MINT_PROJECT_DOMAIN)
         assert(data['projectId'] == project.getId())
 
     @fixtures.fixture("Full")
@@ -235,7 +235,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
         self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
+        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByPFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
                           "foo")
@@ -489,13 +489,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient('admin')
 
         hideProjId = client.newProject('Proj', 'proj', 'rpath.local')
-        assert(self._checkRepoMap('repositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\n'))
+        assert(self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % PFQDN) )
 
         adminClient.hideProject(hideProjId)
         assert(self._checkRepoMap(''))
 
         client.newProject('Baz', 'baz', 'rpath.local')
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\n'))
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN))
 
         # one regular project, one hidden project, one external project
         reposUrl = 'http://bar.rpath.local/conary/'
@@ -504,12 +504,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                                    'bar.rpath.local@rpl:devel',
                                                     reposUrl)
         # only the regular project will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\n'))
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN))
 
         # two regular projects, one external project, not mirrored
         adminClient.unhideProject(hideProjId)
         # both regular projects will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\n'))
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\nrepositoryMap proj.rpath.local http://%s/repos/proj/\n' %\
+            (PFQDN, PFQDN)))
 
         exProject = client.getProject(exProjectId)
         # two regular projects, one external project, mirrored
@@ -517,7 +518,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
             "http://www.example.com/conary/",
             "mirror", "mirrorpass")
         # all projects will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
+                                  'repositoryMap proj.rpath.local http://%s/repos/proj/\n'
+                                  'repositoryMap bar.rpath.local http://bar.rpath.local/conary/\n' % \
+                                  (PFQDN, PFQDN)))
 
     @fixtures.fixture('Full')
     def testGenConaryRc(self, db, data):
@@ -610,14 +614,14 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert project.timeModified == project.timeCreated
 
     @fixtures.fixture('Full')
-    def testBadFQDN(self, db, data):
+    def testBadPFQDN(self, db, data):
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         self.assertRaises(ItemNotFound,
-                          client.server._server.projects.getProjectIdByFQDN,
+                          client.server._server.projects.getProjectIdByPFQDN,
                           'bad.name')
         self.assertRaises(ItemNotFound,
-                          client.server._server.getProjectIdByFQDN,
+                          client.server._server.getProjectIdByPFQDN,
                           'not.in.the.db')
 
     @fixtures.fixture('Full')

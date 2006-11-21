@@ -8,6 +8,7 @@ import mint_rephelp
 import os
 import socket
 import selenium
+import time
 
 class SeleniumHelper(mint_rephelp.BaseWebHelper):
     def setUp(self):
@@ -37,7 +38,7 @@ class SeleniumHelper(mint_rephelp.BaseWebHelper):
         for x in range(0, timeout / 100):
             if accept in self.s.get_body_text():
                 return
-            sleep(0.1)
+            time.sleep(0.1)
 
         raise RuntimeError("Script-driven text never appeared: %s" % accept)
 

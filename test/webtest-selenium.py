@@ -76,8 +76,8 @@ class WebPageTest(SeleniumHelper):
         self.failUnless(not self.s.is_editable("submitButton"))
 
         # pick the available group
-        self.clickAjax("link=group-test", "test.rpath.local@rpl:devel")
-        self.clickAjax("link=test.rpath.local@rpl:devel", "1.0.0-1-1")
+        self.clickAjax("link=group-test", "test.%s@rpl:devel" % MINT_PROJECT_DOMAIN)
+        self.clickAjax("link=test.%s@rpl:devel" % MINT_PROJECT_DOMAIN, "1.0.0-1-1")
         self.clickAjax("link=1.0.0-1-1", "is: x86")
         self.clickAjax("flavorId0", "group-test=1.0.0-1-1 [is: x86]")
 

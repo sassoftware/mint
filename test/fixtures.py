@@ -14,7 +14,7 @@ import os
 import sys
 import pwd
 
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 
 from mint import shimclient
 from mint import config
