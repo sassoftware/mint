@@ -106,7 +106,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProjectByHostname("foo")
         assert(data['projectId'] == project.getId())
 
-        project = client.getProjectByPFQDN("foo.%s" % MINT_PROJECT_DOMAIN)
+        project = client.getProjectByFQDN("foo.%s" % MINT_PROJECT_DOMAIN)
         assert(data['projectId'] == project.getId())
 
     @fixtures.fixture("Full")
@@ -235,7 +235,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
         self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByPFQDN,
+        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
                           "foo")
@@ -618,10 +618,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         self.assertRaises(ItemNotFound,
-                          client.server._server.projects.getProjectIdByPFQDN,
+                          client.server._server.projects.getProjectIdByFQDN,
                           'bad.name')
         self.assertRaises(ItemNotFound,
-                          client.server._server.getProjectIdByPFQDN,
+                          client.server._server.getProjectIdByFQDN,
                           'not.in.the.db')
 
     @fixtures.fixture('Full')
