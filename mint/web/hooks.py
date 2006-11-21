@@ -26,6 +26,7 @@ from mint import maintenance
 from mint import server
 from mint.helperfuncs import extractBasePath
 from mint.projects import mysqlTransTable
+from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.webhandler import normPath, HttpError, getHttpAuth
@@ -376,13 +377,16 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     for key, val in sorted(info_dict_small.items()):
         body_small += '\n' + key + ': ' + str(val)
 
-    if cfg.bugsEmail:
-        users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                 cfg.bugsEmail, cfg.bugsEmailSubject, body)
-    if cfg.smallBugsEmail:
-        users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                 cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
-
+    try:
+        if cfg.bugsEmail:
+            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+                                     cfg.bugsEmail, cfg.bugsEmailSubject, body)
+        if cfg.smallBugsEmail:
+            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+                                     cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
+    except MailError, e:
+        log.error("Failed to send e-mail to %s, reason: %s" % \
+            (cfg.bugsEmail, str(e)))
 
 cfg = None
 db = None

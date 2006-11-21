@@ -840,6 +840,8 @@ def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
         sendMail(fromEmail, fromEmailName, toEmail, subject, body)
     except smtplib.SMTPRecipientsRefused:
         raise MailError("Email could not be sent: Recipient refused by server.")
+    except socket.error, e:
+        raise MailError("Email could not be sent: %s" % str(e))
 
 
 def validateEmailDomain(toEmail):
