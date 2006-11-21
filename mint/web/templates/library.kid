@@ -303,7 +303,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
         <div class="boxBody">
             <div py:for="i, step in enumerate(steps)" class="oneStep"
                 py:attrs="{'style': (i == curStep and i != len(steps)-1) and 'border-bottom: 1px solid black;' or None}">
-                <h2><span py:if="i &lt; curStep" style="color: green; float: right;">&#x2714;</span> ${i+1}. ${step}</h2>
+                <h2><img py:if="i &lt; curStep" style="float: right;" src="${cfg.staticPath}/apps/mint/images/icon_accept.gif" /> ${i+1}. ${step}</h2>
                 <div py:strip="True" py:if="curStep == i">${stepContent()}</div>
             </div>
         </div>
