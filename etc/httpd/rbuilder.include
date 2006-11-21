@@ -4,10 +4,10 @@
     # Aliases for our site
     Alias /conary-static/ 	/usr/share/conary/web-common/
     Alias /favicon.ico 		/usr/share/conary/web-common/apps/mint/images/favicon.ico
-    Alias /rbuilder/            /srv/rbuilder/rbuilder.conf/
-    Alias /conary/              /srv/rbuilder/rbuilder.conf/
-    Alias /repos/               /srv/rbuilder/rbuilder.conf/
-    Alias /xmlrpc-private/      /srv/rbuilder/rbuilder.conf/
+    Alias /rbuilder/            /srv/rbuilder/config/rbuilder.conf/
+    Alias /conary/              /srv/rbuilder/config/rbuilder.conf/
+    Alias /repos/               /srv/rbuilder/config/rbuilder.conf/
+    Alias /xmlrpc-private/      /srv/rbuilder/config/rbuilder.conf/
     Alias /images/              /srv/rbuilder/finished-images/
 
     # These redirect matches happen if the RedirectCond ruleset in 
