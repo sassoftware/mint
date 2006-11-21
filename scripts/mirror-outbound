@@ -46,6 +46,12 @@ class MirrorOutbound(SingletonScript):
         client = MintClient(sys.argv[1])
         cfg = mirror.MirrorConfiguration()
 
+        mintCfg = config.MintConfig()
+        mintCfg.read(config.RBUILDER_CONFIG)
+        tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
+        if os.access(tmpDir, os.W_OK):
+            util.settempdir(tmpDir)
+
         mirroredLabels = client.getOutboundMirrors()
 
         for label in mirroredLabels:
