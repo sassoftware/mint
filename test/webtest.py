@@ -1592,6 +1592,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                            code=[200])
         self.assertCode('/rss?feed=fakeFeed', code=404)
 
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         self.assertContent('/project/foo/rss',
                 content='Kung Foo Fighting (x86 Stub)&lt', code=[200])
 
