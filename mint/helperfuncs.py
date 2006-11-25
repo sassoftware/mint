@@ -7,6 +7,9 @@
 from conary import versions
 from conary.deps import deps
 
+import htmlentitydefs
+import re
+
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
     displayed string to maxWords (default 10) and the maximum number of
@@ -107,3 +110,18 @@ def getArchFromFlavor(flavor):
             pass
 
     return fs
+
+def fixentities(htmltext):
+    # replace HTML character entities with numerical references
+    # note: this won't handle CDATA sections properly
+    def repl(m):
+        entity = htmlentitydefs.entitydefs.get(m.group(1).lower())
+        if not entity:
+            return m.group(0)
+        elif len(entity) == 1:
+            if entity in "&<>'\"":
+                return m.group(0)
+            return "&#%d;" % ord(entity)
+        else:
+            return entity
+    return re.sub("&(\w+);?", repl, htmltext)

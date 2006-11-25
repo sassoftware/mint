@@ -5,9 +5,13 @@
 #
 import base64
 import kid
+from kid.pull import START, TEXT, END
+
 import os
 import textwrap
 import time
+
+import gettext
 
 from mod_python import apache
 from mod_python import Cookie
@@ -47,6 +51,11 @@ class WebHandler(object):
 
         # write out the template
         t = template.Template(**context)
+
+        lang = self.cfg.language
+        if lang != 'en':
+            xlator = make_i18n_filter(self.cfg.localeDir, lang)
+            t._filters.append(xlator)
 
         t.assume_encoding = 'latin1'
         returner = t.serialize(encoding = "utf-8", output = self.output)
@@ -261,6 +270,49 @@ def getHttpAuth(req):
         entitlement = [ None, None ]
 
     return authToken + entitlement
+
+
+catalogs = {}
+def get_catalog(locale, localeDir):
+    return gettext.translation(domain='rBuilder',
+            localedir=localeDir, languages=[locale])
+
+
+def make_i18n_filter(localeDir, locale = 'en'):
+    xl = locale
+    if locale not in catalogs:
+        catalogs[locale] = get_catalog(locale, localeDir)
+    catalog = catalogs[locale]
+
+    def i18n_filter(stream, template):
+        """Kid template filter which calls translates all elements matching language
+        attribute.
+        """
+        lang_attr = "lang"
+        locales=[xl]
+
+        for ev, item in stream:
+            if ev==START:
+                l = item.get(lang_attr)
+                if l:
+                    locale = l
+                    locales.append(l)
+            elif ev==TEXT:
+                prefix = ''
+                postfix = ''
+                if len(item) > 0 and item[0] == ' ': prefix =' '
+                if len(item) > 1 and item[-1] == ' ': postfix =' '
+                text = item.strip()
+                if text:
+                    item = catalog.ugettext(text)
+                    item = prefix + item + postfix
+            elif ev==END:
+                if item.get(lang_attr):
+                    locales.pop()
+                    locale = locales[-1]
+            yield (ev, item)
+
+    return i18n_filter
 
 
 class HttpError(Exception): #pragma: no cover

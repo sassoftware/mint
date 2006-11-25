@@ -129,6 +129,9 @@ class MintConfig(ConfigFile):
                                "Number of seconds to cache authentication results")
     removeTrovesVisible     = (cfgtypes.CfgBool, False)
 
+    language                = 'en'
+    localeDir               = '/usr/share/locale/'
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

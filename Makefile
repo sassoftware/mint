@@ -19,6 +19,7 @@ export mandir = $(datadir)/man
 export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
 export bindir = $(prefix)/bin
+export localedir = $(datadir)/locale
 export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
 export httpddir = $(sysconfdir)/httpd/conf.d/
 export maillistdir = /var/mailman
@@ -26,7 +27,7 @@ export raapluginsdir = $(libdir)/raa/rPath/
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts raaplugins commands etc doc 
+SUBDIRS = mint test scripts raaplugins commands etc doc locales
 
 extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 
@@ -84,6 +85,8 @@ REMOTEHOST=lambchop
 sync: doc
 	rsync  -a --rsh="ssh" $(BASEPATH) $(REMOTEHOST):$(REMOTEPATH)
 
+msgcat:
+	tg-admin i18n collect
 
 clean: clean-subdirs default-clean
 
