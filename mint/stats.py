@@ -30,18 +30,22 @@ class CommitsTable(database.DatabaseTable):
             projectId, timestamp, troveName, troveVersion, userId)
         self.db.commit()
 
-    def getCommitsByProject(self, projectId, limit = 10):
+    def getCommitsByProject(self, projectId, limit = 10, sourceOnly = True):
         """ Returns a list of up to the limit (default 10) most recent commits.
         Each commit is represented by a 4-tuple (trove name, short trailing
         version string, full version string with timestamp, commit timestamp."""
         commitList = []
+        if sourceOnly:
+            like = "AND troveName LIKE '%:source'"
+        else:
+            like = ""
+
         cu = self.db.cursor()
-        like = "%:source"
         cu.execute("""SELECT troveName, version, timestamp
                             FROM Commits
-                            WHERE projectId = ? AND troveName LIKE ?
-                            ORDER BY timestamp DESC LIMIT ?""",
-                   (projectId, like, limit))
+                            WHERE projectId = ? %s
+                            ORDER BY timestamp DESC LIMIT ?""" % like,
+                   projectId, limit)
         for x in cu.fetchall():
             v = versions.VersionFromString(x[1])
             # FIXME: set all the timestamps to 1.0.  The timestamps

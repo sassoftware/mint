@@ -1557,7 +1557,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
 
         cu = self.db.cursor()
-        r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, 100, userId)
+        r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares:source', '/restproject.rpath.local@foo:1/1.0.1-1', ?)", projectId, 100, userId)
         self.db.commit()
 
         self.assertCode("/rss?feed=newProjects", code = 200)
@@ -1591,6 +1591,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                            content='Kung Foo Fighting (x86 Stub)&lt',
                            code=[200])
         self.assertCode('/rss?feed=fakeFeed', code=404)
+
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        self.assertContent('/project/foo/rss',
+                content='Kung Foo Fighting (x86 Stub)&lt', code=[200])
+
+        self.assertContent('/project/testproject/rss?feed=commits',
+                content='whoCares:source', code=[200])
 
 
 if __name__ == "__main__":

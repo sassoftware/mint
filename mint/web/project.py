@@ -1047,6 +1047,25 @@ class ProjectHandler(WebHandler):
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
+        elif feed == "commits":
+            title = "%s - %s commits" % (self.cfg.productName, self.project.getName())
+            link = "http://%s%sproject/%s/" % \
+                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
+            desc = "Latest commits from %s" % self.project.getName()
+            items = []
+            hostname = self.project.getHostname()
+            projectName = self.project.getName()
+            # get commits from backend
+            for commit in self.project.getCommits():
+                troveName, troveVersionString, troveFrozenVersion, timestamp = commit
+                item = {}
+                item['title'] = "%s (version %s)" % (troveName, troveVersionString)
+                item['link'] = "http://%s%srepos/%s/troveInfo?t=%s;v=%s" % \
+                    (self.cfg.siteHost, self.cfg.basePath, hostname, troveName, troveFrozenVersion)
+                item['content']  = "A new version of %s has been committed to %s." % (troveName, projectName)
+                item['date_822'] = email.Utils.formatdate(timestamp)
+                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
+                items.append(item)
         else:
             items = []
             title = "Invalid RSS feed style requested."
