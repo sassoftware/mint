@@ -347,7 +347,6 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     def newBuild(self, auth):
-
         return self._write("editBuild",
             buildId = None,
             name = self.project.getName(),

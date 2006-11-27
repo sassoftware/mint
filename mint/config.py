@@ -26,6 +26,11 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
+# if this system is an x86_64 box, enable 64-bit bootable images.
+# we can override this if we know for a fact that we have external
+# 64-bit job servers handling jobs for this server.
+x86_64 = os.uname()[4] == 'x86_64'
+
 class CfgDownloadEnum(cfgtypes.CfgEnum):
     validValues = urltypes.urlTypes
 
@@ -101,7 +106,8 @@ class MintConfig(ConfigFile):
     reposDBDriver           = 'sqlite'
     reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
                                            'repos', '%s', 'sqldb')
-    visibleBuildTypes     = (cfgtypes.CfgList(CfgBuildEnum))
+    visibleBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
+    bootableX8664           = (cfgtypes.CfgBool, x86_64)
     maintenanceLockPath     = os.path.join(dataPath, 'run', 'maintenance.lock')
     announceLink            = ''
 
