@@ -36,7 +36,7 @@ class CommitsTable(database.DatabaseTable):
         version string, full version string with timestamp, commit timestamp."""
         commitList = []
         if sourceOnly:
-            like = "AND troveName LIKE '%:source'"
+            like = "AND troveName LIKE '%%:source'"
         else:
             like = ""
 
