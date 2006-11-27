@@ -346,7 +346,7 @@ TrovePicker.prototype.handleError = function() {
 var allTypes = map(parseInt, keys(buildTypeNames));
 
 var defaultType = INSTALLABLE_ISO;
-var x86_64Types = [INSTALLABLE_ISO];
+var x86_64Types = allTypes;
 var xenTypes = [RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL];
 
 function handleBuildTypes(flavor) {
