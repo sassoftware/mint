@@ -35,6 +35,8 @@ doc_files = NEWS
 
 dist_files = $(extra_files) $(doc_files)
 
+generated_files = VERSION *.tar.bz2
+
 tarball:
 	tar cjf $(DISTDIR).tar.bz2 `basename $(DISTDIR)`
 	rm -rf $(DISTDIR)
