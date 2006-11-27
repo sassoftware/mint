@@ -10,15 +10,7 @@
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
         <script>
             function allowXen() {
-                buildArch = $('buildArch');
-                if(buildArch.selectedIndex != 0) {
-                    $('domU').disabled = true;
-                    $('domU').checked = false;
-                    setOpacity($('domULabel'), 0.5);
-                } else {
-                    $('domU').disabled = false;
-                    setOpacity($('domULabel'), 1);
-                }
+                return;
             }
         </script>
     </head>
