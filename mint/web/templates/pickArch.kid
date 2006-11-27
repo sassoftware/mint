@@ -8,11 +8,6 @@
 -->
     <head>
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
-        <script>
-            function allowXen() {
-                return;
-            }
-        </script>
     </head>
 
     <body>
@@ -32,7 +27,7 @@
 
                 <form method="post" action="cookGroup">
                     <p>
-                        <select name="flavor" id="buildArch" onchange="allowXen();">
+                        <select name="flavor" id="buildArch">
                             <option value="1#x86">x86 (32-bit)</option>
                             <option value="1#x86_64">x86_64 (64-bit)</option>
                         </select>
