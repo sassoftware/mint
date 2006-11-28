@@ -55,19 +55,24 @@ class SessionsTable(DatabaseTable):
         sessIdx = None
         if r:
             sessIdx = r[0]
-        self.db.transaction()
-        try:
-            if sessIdx:
-                cu.execute("UPDATE Sessions set data=? WHERE sessIdx=?",
-                           cPickle.dumps(data), sessIdx)
-            else:
-                cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
-                           sid, cPickle.dumps(data))
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
+
+        # retry up to 10 times to make sure that we save the session data
+        tries = 0
+        while tries < 10:
+            try:
+                self.db.transaction()
+                if sessIdx:
+                    cu.execute("UPDATE Sessions set data=? WHERE sessIdx=?",
+                               cPickle.dumps(data), sessIdx)
+                else:
+                    cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
+                               sid, cPickle.dumps(data))
+                self.db.commit()
+                break
+            except:
+                self.db.rollback()
+                tries += 1
+                time.sleep(1)
 
     def delete(self, sid):
         cu = self.db.cursor()
