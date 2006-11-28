@@ -375,6 +375,7 @@ class RepositoryTest(MintRepositoryHelper):
         extProject.editLabel(labelId, "external.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             'http%s://%s:%d/repos/external/' % ((self.mintCfg.SSL and 's' or ''), PFQDN, port), 'testuser', 'testpass')
 
+        pkgindex.UpdatePackageIndexExternal.logFileName = None
         upi = pkgindex.UpdatePackageIndexExternal()
         upi.logPath = None
         upi.cfg = self.mintCfg

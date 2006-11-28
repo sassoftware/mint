@@ -20,6 +20,7 @@ from conary.repository import repository
 import os
 import os.path
 import sys
+import time
 
 hiddenLabels = [
     versions.Label('conary.rpath.com@rpl:rpl1'),
@@ -41,7 +42,7 @@ class PackageIndexTable(database.KeyedTable):
     fields = ['pkgId', 'projectId', 'name', 'version']
 
     indexes = {"PackageNameIdx": """CREATE INDEX PackageNameIdx
-                                        ON PackageIndex(name)""",
+                                        ON PackageIndex(name, version)""",
                "PackageIndexProjectIdx": """CREATE INDEX PackageIndexProjectIdx
                                                 ON PackageIndex(projectId)"""}
 
@@ -79,7 +80,8 @@ class PackageIndexer(scriptlibrary.SingletonScript):
     def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
         self.cfg = config.MintConfig()
         self.cfg.read(self.cfgPath)
-        self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
+        if self.logFileName:
+            self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
 
     def cleanup(self):
@@ -228,7 +230,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 names = netclients[host].troveNamesOnServer(host)
                 troves = netclients[host].getAllTroveLeaves(host, dict((x, None) for x in names if ':' not in x))
             except repository.errors.OpenError, e:
-                self.log.warning("unable to access %s", host)
+                self.log.warning("unable to access %s: %s", host, str(e))
                 continue
 
             packageDict = {}
@@ -252,15 +254,21 @@ class UpdatePackageIndexExternal(PackageIndexer):
             self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
 
         self.log.info("Updating database...")
+        updates = []
+        inserts = []
         for row in rows:
             cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
             r = cu.fetchone()
             if r:
                 pkgId = r[0]
-                cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
+                updates.append((row[0], row[1], row[2], pkgId))
             else:
-                cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
+                inserts.append(row)
 
+        st = time.time()
+        self.db.transaction()
+        cu.executemany("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", updates)
+        cu.executemany("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", inserts)
         self.db.commit()
-        print "Update complete."
+        self.log.info("Update complete: %.2fs" % (time.time() - st))
         return 0
