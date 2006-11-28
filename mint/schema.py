@@ -31,7 +31,7 @@ from conary.lib.tracelog import logMe
 # 3. Port migration code from mint/*.py (DatabaseTable objects)
 
 # database schema version
-VERSION = 26 # this needs to be +1 from the CURRENT version in mint/database.py
+VERSION = 28 # this needs to be +1 from the CURRENT version in mint/database.py
 
 def _createTrigger(db, table, column = "changed", pinned = False):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -584,7 +584,8 @@ def _createPackageIndex(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
         commit = True
-    db.createIndex("PackageIndex", "PackageIndexNameIdx", "name, projectId")
+    db.createIndex("PackageIndex", "PackageIndexNameIdx", "name, version")
+    db.createIndex("PackageIndex", "PackageIndexProjectIdx", "projectId")
 
     # packageIndexMark
     if 'PackageIndexMark' not in db.tables:

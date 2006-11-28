@@ -46,6 +46,17 @@ class PackageIndexTable(database.KeyedTable):
                "PackageIndexProjectIdx": """CREATE INDEX PackageIndexProjectIdx
                                                 ON PackageIndex(projectId)"""}
 
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 26 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("DROP INDEX PackageNameIdx")
+                cu.execute("CREATE INDEX PackageNameIdx ON PackageIndex(name, version)")
+                self.db.commit()
+            return dbversion >= 26
+        return True
+
     def search(self, terms, limit, offset):
         columns = ['name', 'version', 'projectId']
         searchcols = ['name']
