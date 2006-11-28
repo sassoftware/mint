@@ -5,7 +5,7 @@
 
 import os
 import re
-from time import sleep
+import time
 
 import testsuite
 testsuite.setup()
@@ -88,7 +88,7 @@ class RepositoryTest(MintRepositoryHelper):
         # give some time for the commit action to run
         iters = 0
         while True:
-            sleep(0.5)
+            time.sleep(0.5)
             iters += 1
             if project.getCommits() != []:
                 break
@@ -386,6 +386,36 @@ class RepositoryTest(MintRepositoryHelper):
 
         assert('/external.%s@rpl:tag2/1.0.1-1-1' % MINT_PROJECT_DOMAIN in x)
         assert('/external.%s@rpl:tag1/1.0.0-1-1' % MINT_PROJECT_DOMAIN in x)
+
+    def testUPI(self):
+        def _fakeCommit(pkg, projectId, timestamp, userId):
+            cu = self.db.cursor()
+            r = cu.execute("INSERT INTO Commits VALUES(?, ?, ?, '/conary.rpath.com@rpl:1/1.0-1-1', ?)", projectId, timestamp, pkg, userId)
+            self.db.commit()
+
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        _fakeCommit('package1', projectId, time.time(), userId)
+        _fakeCommit('package2', projectId, time.time(), userId)
+        _fakeCommit('package3', projectId, time.time(), userId)
+
+        upi = pkgindex.UpdatePackageIndex()
+        upi.logPath = None
+        upi.cfg = self.mintCfg
+        x = self.captureOutput(upi.run)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT name FROM PackageIndex ORDER BY name")
+        self.failUnlessEqual([x[0] for x in cu.fetchall()], ['package1', 'package2', 'package3'])
+        cu.execute("SELECT mark FROM PackageIndexMark")
+        self.failIf(cu.fetchone()[0] == 0)
+
+        _fakeCommit('package4', projectId, time.time(), userId)
+        x = self.captureOutput(upi.run)
+
+        cu.execute("SELECT name FROM PackageIndex ORDER BY name")
+        self.failUnlessEqual([x[0] for x in cu.fetchall()], ['package1', 'package2', 'package3', 'package4'])
 
 
 if __name__ == "__main__":

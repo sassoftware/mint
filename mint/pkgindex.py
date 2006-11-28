@@ -144,6 +144,8 @@ class UpdatePackageIndex(PackageIndexer):
                     packageIndex.append((labelMap[label], troveName,
                                          max(packageDict[troveName][label])))
 
+            inserts = []
+            updates = []
             for projectId, troveName, version in packageIndex:
                 cu.execute("""SELECT pkgId, version FROM PackageIndex
                                   WHERE projectId=? AND name=?""",
@@ -154,17 +156,19 @@ class UpdatePackageIndex(PackageIndexer):
                        version.branch().label()]
 
                 if not res:
-                    cu.execute("""INSERT INTO PackageIndex
-                                      (projectId, name, version)
-                                      VALUES (?, ?, ?)""",
-                               projectId, troveName, str(version))
-                    pass
+                    inserts.append((projectId, troveName, str(version)))
                 else:
                     pkgId = res[0]
-                    cu.execute("""UPDATE PackageIndex SET
-                                          projectId=?, name=?, version=?
-                                          WHERE pkgId=?""",
-                               projectId, troveName, str(version), pkgId)
+                    updates.append((projectId, troveName, str(version), pkgId))
+
+            self.db.transaction()
+            cu.executemany("""INSERT INTO PackageIndex
+                              (projectId, name, version)
+                              VALUES (?, ?, ?)""", inserts)
+            cu.executemany("""UPDATE PackageIndex SET
+                                  projectId=?, name=?, version=?
+                                  WHERE pkgId=?""", updates)
+            self.db.commit()
 
             cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
         except Exception, e:
