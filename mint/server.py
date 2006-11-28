@@ -63,6 +63,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
+from conary.dbstore import sqlerrors
 
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
@@ -2361,6 +2362,9 @@ class MintServer(object):
         from mint import cooktypes
         from mint import buildtypes
 
+        # what to return if we no job has been started
+        jobId = 0
+
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
@@ -2402,101 +2406,126 @@ class MintServer(object):
         # if multiple web servers use one database backend.
         ownerId = (os.getpid() << 47) + random.randint(0, (2 << 47) - 1)
 
-        cu = self.db.transaction()
+        # lock the jobs using ownerId
+        try:
+            cu = self.db.transaction()
+            cu.execute("""UPDATE Jobs SET owner=?
+                              WHERE owner IS NULL AND status=?""",
+                       ownerId, jobstatus.WAITING)
+            self.db.commit()
+        except:
+            # do nothing if we fail to lock any rows; we'll be back...
+            self.db.rollback()
+            return 0
 
-        cu.execute("""UPDATE Jobs SET owner=?
-                          WHERE owner IS NULL AND status=?""",
-                   ownerId, jobstatus.WAITING)
+        # we are now in a locked situation; wrap in try/finally
+        # to ensure that no matter what happens, we unlock any rows 
+        # we may have locked
+        try:
+            try:
+                cu = self.db.transaction()
+                archTypeQuery = archTypes and "(%s)" % \
+                                ', '.join(['?' for x in archTypes]) or ''
 
-        self.db.commit()
+                buildTypeQuery = buildTypes and "(%s)" % \
+                                ', '.join(['?' for x in buildTypes]) or ''
 
-        archTypeQuery = archTypes and "(%s)" % \
-                        ', '.join(['?' for x in archTypes]) or ''
+                # at least one of buildTypes or cookTypes will be defined,
+                # or this code would have already bailed out.
+                if not buildTypes:
+                    #client wants only cooks
+                    query = """SELECT Jobs.jobId FROM Jobs
+                               LEFT JOIN JobData
+                                   ON Jobs.jobId=JobData.jobId
+                               WHERE status=? AND JobData.name='arch'
+                                   AND Jobs.buildId IS NULL
+                                   AND owner=?
+                                   AND JobData.value IN %s
+                               ORDER BY timeSubmitted
+                               LIMIT 1""" % archTypeQuery
+                    cu.execute(query, jobstatus.WAITING, ownerId, *archTypes)
+                elif not cookTypes:
+                    # client wants only image jobs
+                    query = """SELECT Jobs.jobId FROM Jobs
+                               LEFT JOIN JobData
+                                   ON Jobs.jobId=JobData.jobId
+                                       AND JobData.name='arch'
+                               LEFT JOIN Builds
+                                   ON Builds.buildId=Jobs.buildId
+                               LEFT JOIN BuildData
+                                   ON BuildData.buildId=Jobs.buildId
+                                       AND BuildData.name='jsversion'
+                               WHERE status=?
+                                   AND Jobs.groupTroveId IS NULL
+                                   AND owner=?
+                                   AND BuildData.value=?
+                                   AND JobData.value IN %s
+                                   AND Builds.buildType IN %s
+                               ORDER BY timeSubmitted
+                               LIMIT 1""" % (archTypeQuery, buildTypeQuery)
+                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
+                               *(archTypes + buildTypes))
+                else:
+                    # client wants both cook and image jobs
+                    query = """SELECT Jobs.jobId FROM Jobs
+                               LEFT JOIN JobData
+                                   ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
+                               LEFT JOIN Builds
+                                   ON Builds.buildId=Jobs.buildId
+                               LEFT JOIN BuildData
+                                   ON BuildData.buildId=Jobs.buildId
+                                       AND BuildData.name='jsversion'
+                               WHERE status=? AND owner=?
+                                   AND ((BuildData.value=? AND
+                                       Builds.buildType IN %s) OR
+                                        (groupTroveId IS NOT NULL))
+                                   AND JobData.value IN %s
+                               ORDER BY timeSubmitted
+                               LIMIT 1""" % (buildTypeQuery, archTypeQuery)
+                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
+                               *(buildTypes + archTypes))
 
-        buildTypeQuery = buildTypes and "(%s)" % \
-                        ', '.join(['?' for x in buildTypes]) or ''
+                res = cu.fetchone()
+                if res:
+                    jobId = res[0]
+                    cu.execute("""UPDATE Jobs
+                                  SET status=?, statusMessage=?, timeStarted=?
+                                  WHERE jobId=?""",
+                               jobstatus.RUNNING, 'Starting', time.time(),
+                               jobId)
+                    if self.req:
+                        self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
+                    cu.execute("SELECT jobId FROM Jobs WHERE status=?",
+                               jobstatus.WAITING)
+                    # this is done inside the job lock. there is a small chance of race
+                    # condition, but the consequence would be that jobs might not
+                    # reflect the correct number on admin page. if this proves to be
+                    # too costly, move it outside the lock
+                    for ordJobId in [x[0] for x in cu.fetchall()]:
+                        cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
+                                   self.getJobWaitMessage(ordJobId), ordJobId)
 
-        # at least one of buildTypes or cookTypes will be defined,
-        # or this code would have already bailed out.
-        if not buildTypes:
-            #client wants only cooks
-            query = """SELECT Jobs.jobId FROM Jobs
-                       LEFT JOIN JobData
-                           ON Jobs.jobId=JobData.jobId
-                       WHERE status=? AND JobData.name='arch'
-                           AND Jobs.buildId IS NULL
-                           AND owner=?
-                           AND JobData.value IN %s
-                       ORDER BY timeSubmitted
-                       LIMIT 1""" % archTypeQuery
-            cu.execute(query, jobstatus.WAITING, ownerId, *archTypes)
-        elif not cookTypes:
-            # client wants only image jobs
-            query = """SELECT Jobs.jobId FROM Jobs
-                       LEFT JOIN JobData
-                           ON Jobs.jobId=JobData.jobId
-                               AND JobData.name='arch'
-                       LEFT JOIN Builds
-                           ON Builds.buildId=Jobs.buildId
-                       LEFT JOIN BuildData
-                           ON BuildData.buildId=Jobs.buildId
-                               AND BuildData.name='jsversion'
-                       WHERE status=?
-                           AND Jobs.groupTroveId IS NULL
-                           AND owner=?
-                           AND BuildData.value=?
-                           AND JobData.value IN %s
-                           AND Builds.buildType IN %s
-                       ORDER BY timeSubmitted
-                       LIMIT 1""" % (archTypeQuery, buildTypeQuery)
-            cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(archTypes + buildTypes))
-        else:
-            # client wants both cook and image jobs
-            query = """SELECT Jobs.jobId FROM Jobs
-                       LEFT JOIN JobData
-                           ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
-                       LEFT JOIN Builds
-                           ON Builds.buildId=Jobs.buildId
-                       LEFT JOIN BuildData
-                           ON BuildData.buildId=Jobs.buildId
-                               AND BuildData.name='jsversion'
-                       WHERE status=? AND owner=?
-                           AND ((BuildData.value=? AND
-                               Builds.buildType IN %s) OR
-                                (groupTroveId IS NOT NULL))
-                           AND JobData.value IN %s
-                       ORDER BY timeSubmitted
-                       LIMIT 1""" % (buildTypeQuery, archTypeQuery)
+                self.db.commit()
+            except:
+                self.db.rollback()
 
-            cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(buildTypes + archTypes))
-
-        res = cu.fetchone()
-
-        if not res:
-            jobId = 0
-        else:
-            jobId = res[0]
-            cu.execute("""UPDATE Jobs
-                              SET status=?, statusMessage=?, timeStarted=?
-                              WHERE jobId=?""",
-                       jobstatus.RUNNING, 'Starting', time.time(), jobId)
-            if self.req:
-                self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
-            cu.execute("SELECT jobId FROM Jobs WHERE status=?",
-                       jobstatus.WAITING)
-            # this is done inside the job lock. there is a small chance of race
-            # condition, but the consequence would be that jobs might not
-            # reflect the correct number on admin page. if this proves to be
-            # too costly, move it outside the lock
-            for ordJobId in [x[0] for x in cu.fetchall()]:
-                cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
-                           self.getJobWaitMessage(ordJobId), ordJobId)
-
-        cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
-                   ownerId, jobstatus.WAITING)
-        self.db.commit()
+        finally:
+            # This absolutely must happen, so retry at most 10 times,
+            # waiting one second between tries. Exceptions other than
+            # DatabaseLocked are passed up to the caller.
+            tries = 0
+            while tries < 10:
+                try:
+                    cu = self.db.transaction()
+                    cu.execute("""UPDATE Jobs SET owner=NULL
+                                      WHERE owner=?""", ownerId)
+                    self.db.commit()
+                    break
+                except:
+                    # rollback and try again
+                    self.db.rollback()
+                    tries += 1
+                    time.sleep(1)
 
         return jobId
 
