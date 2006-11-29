@@ -179,6 +179,7 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Builds ADD COLUMN deleted INTEGER DEFAULT '0'")
             if dbversion == 27 and not self.initialCreation:
                 if "BuildsView" not in self.db.views:
+                    cu = self.db.cursor()
                     cu.execute("""
                         CREATE VIEW
                             BuildsView AS
