@@ -84,12 +84,13 @@ class DatabaseTable(object):
     those indeces
     """
 
-    schemaVersion = 27
+    schemaVersion = 28
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
     createSQL_mysql = None
     indexes = {}
+    views = {}
 
     def __init__(self, db):
         """@param db: database connection object. database object will be
@@ -122,10 +123,15 @@ class DatabaseTable(object):
         if self.upToDate:
             self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
-            missing = set(self.indexes.keys()) - indexes
+            views = set(self.db.views.keys())
+            missingIndexes = set(self.indexes.keys()) - indexes
+            missingViews = set(self.views.keys()) - views
 
-            for index in missing:
+            for index in missingIndexes:
                 cu.execute(self.indexes[index])
+
+            for view in missingViews:
+                cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
 
     def __getattribute__(self, name):
         if name == 'db':
