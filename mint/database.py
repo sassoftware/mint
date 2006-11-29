@@ -124,7 +124,6 @@ class DatabaseTable(object):
             self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
             missingIndexes = set(self.indexes.keys()) - indexes
-            missingViews = set(self.views.keys()) - views
 
             for index in missingIndexes:
                 cu.execute(self.indexes[index])
