@@ -14,19 +14,26 @@ from conary.conaryclient.cmdline import parseTroveSpec
 
 DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'rbuilder', 'jobserver')
 
-def getVersions(basePath = None):
-    if basePath is None:
-        basePath = DEFAULT_BASEPATH
-    if os.path.exists(basePath):
-        ret = sorted([x for x in os.listdir(basePath) \
-                       if re.match('\d*(\.\d*)+.*', x) \
-                       and os.path.isdir(os.path.join(basePath, x))])
+def getBasePath(cfg):
+    if cfg:
+        basePath = os.path.join(cfg.dataPath, 'jobserver')
     else:
-        ret = None
+        basePath = DEFAULT_BASEPATH
+    return basePath
+
+def getVersions(cfg):
+    ret = None
+    if cfg:
+        basePath = getBasePath(cfg)
+        if os.path.exists(basePath):
+            ret = sorted([x for x in os.listdir(basePath) \
+                           if re.match('\d*(\.\d*)+.*', x) \
+                           and os.path.isdir(os.path.join(basePath, x))])
     return ret and ret or [constants.mintVersion]
 
-def getDefaultVersion(basePath = None):
+def getDefaultVersion(cfg = None):
     try:
-        return getVersions(basePath)[-1]
+        ret = getVersions(cfg)[-1]
     except IndexError:
-        raise mint_error.JobserverVersionMismatch("No job server versions available.")
+        ret = constants.mintVersion
+    return ret

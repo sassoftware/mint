@@ -16,6 +16,7 @@ import sys
 import tempfile
 import time
 
+from mint import config
 from mint import constants
 from mint import templates
 from mint import server
@@ -234,19 +235,21 @@ Much like Powdermilk Biscuits[tm]."""
 
     def testJsVersions(self):
         tmpDir = tempfile.mkdtemp()
+        cfg = config.MintConfig()
+        cfg.dataPath = tmpDir
         try:
-            self.failIf(jsversion.getVersions(tmpDir) != [constants.mintVersion])
+            self.failIf(jsversion.getVersions(cfg) != [constants.mintVersion])
 
             for dir in ('15.20.1', '1.5', '10.20', '10.2', '1.5.4beta', '1A',
                         'README'):
-                os.mkdir(os.path.join(tmpDir, dir))
+                util.mkdirChain(os.path.join(tmpDir, 'jobserver', dir))
             for fName in ('FOO', '1.5.4'):
-                f = open(os.path.join(tmpDir, fName), 'w')
+                f = open(os.path.join(tmpDir, 'jobserver', fName), 'w')
                 f.close()
-            self.failIf(jsversion.getVersions(tmpDir) !=
+            self.failIf(jsversion.getVersions(cfg) !=
                         ['1.5', '1.5.4beta', '10.2', '10.20', '15.20.1'],
                         "Version list contained improper job server versions.")
-            self.failIf(jsversion.getDefaultVersion(tmpDir) != '15.20.1',
+            self.failIf(jsversion.getDefaultVersion(cfg) != '15.20.1',
                         "Wrong default job server version.")
         finally:
             util.rmtree(tmpDir)
