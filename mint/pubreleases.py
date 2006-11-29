@@ -57,7 +57,7 @@ class PublishedReleasesTable(database.KeyedTable):
 
     def getBuilds(self, pubReleaseId):
         cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM Builds
+        cu.execute("""SELECT buildId FROM BuildsView
                       WHERE pubReleaseId = ?""", pubReleaseId)
         res = cu.fetchall()
         return [x[0] for x in res]
@@ -91,7 +91,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def getUniqueBuildTypes(self, pubReleaseId):
         cu = self.db.cursor()
         cu.execute("""SELECT buildType, troveFlavor
-                      FROM builds WHERE pubReleaseId = ?
+                      FROM BuildsView WHERE pubReleaseId = ?
                       ORDER BY buildType, troveFlavor""", pubReleaseId)
         uniqueBuildTypes = []
         for row in cu.fetchall():
@@ -136,4 +136,3 @@ class PublishedRelease(database.TableObject):
 
     def unpublish(self):
         return self.server.unpublishPublishedRelease(self.pubReleaseId)
-

@@ -662,13 +662,13 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf(cu.fetchall() != \
                     [(1L, 1L, None, None, '', '', '',
                       '/foo.rpath.local@rpl:devel/0.0:1.0.0-1-1', '',
-                      0L, None, None, None, None),
+                      0L, None, None, None, None, 0),
                      (2L, 2L, None, None, '', '', '',
                       '/foo.rpath.local@rpl:devel/0.0:1.0.1-1-1', '',
-                      0L, None, None, None, None),
+                      0L, None, None, None, None, 0),
                      (3L, 2L, 3L, None, 'pub', 'pub rel', '',
                       '/foo.rpath.local@rpl:devel/0.0:1.0.2-1-1', '',
-                      0L, None, None, None, None)],
+                      0L, None, None, None, None, 0)],
                     "Schema upgrade 20 failed for release to build conversion")
 
         cu.execute('SELECT * FROM PublishedReleases')

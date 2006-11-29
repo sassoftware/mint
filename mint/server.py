@@ -482,7 +482,7 @@ class MintServer(object):
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Jobs
-                        JOIN Builds USING(buildId)
+                        JOIN BuildsView USING(buildId)
                       WHERE jobId = ?
                         UNION SELECT projectId FROM Jobs
                                JOIN GroupTroves USING(groupTroveId)
@@ -494,8 +494,8 @@ class MintServer(object):
 
     def _filterBuildFileAccess(self, fileId):
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM BuildFiles 
-                          LEFT JOIN Builds
+        cu.execute("""SELECT projectId FROM BuildFiles
+                          LEFT JOIN BuildsView AS Builds
                               ON Builds.buildId = BuildFiles.buildId
                           WHERE fileId=?""", fileId)
         r = cu.fetchall()
@@ -1771,6 +1771,8 @@ class MintServer(object):
 
     @typeCheck(int)
     def getBuild(self, buildId):
+        if not self.builds.buildExists(buildId):
+            raise database.ItemNotFound
         self._filterBuildAccess(buildId)
         return self.builds.get(buildId)
 
@@ -1784,7 +1786,7 @@ class MintServer(object):
                                       timeCreated = time.time())
 
         self.buildData.setDataValue(buildId, 'jsversion',
-                                      jsversion.getDefaultVersion(),
+                                      jsversion.getDefaultVersion(self.cfg),
                                       data.RDT_STRING)
 
         return buildId
@@ -2110,7 +2112,7 @@ class MintServer(object):
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
         cu = self.db.cursor()
-        cu.execute("SELECT buildType FROM Builds WHERE buildId = ?",
+        cu.execute("SELECT buildType FROM BuildsView WHERE buildId = ?",
                 buildId)
         return cu.fetchone()[0]
 
@@ -2148,8 +2150,9 @@ class MintServer(object):
         found, jsVer = self.buildData.getDataValue(buildId, 'jsversion')
         if not found:
             raise JobserverVersionMismatch('No job server version available.')
-        if jsVer not in jsversion.getVersions():
-            raise JobserverVersionMismatch
+        versions = jsversion.getVersions(self.cfg)
+        if jsVer not in versions:
+            raise JobserverVersionMismatch(str(jsVer) + " not in " + str(versions))
 
         cu = self.db.cursor()
 
@@ -2165,7 +2168,7 @@ class MintServer(object):
                                    timeSubmitted = time.time(),
                                    timeStarted = 0,
                                    timeFinished = 0)
-            cu.execute('SELECT troveFlavor FROM Builds WHERE buildId=?',
+            cu.execute('SELECT troveFlavor FROM BuildsView WHERE buildId=?',
                        buildId)
             flavorString = cu.fetchone()[0]
             flavor = deps.ThawFlavor(flavorString)
@@ -2396,8 +2399,9 @@ class MintServer(object):
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise ParameterError("Not a legal Cook Type")
 
-        if jobserverVersion not in jsversion.getVersions():
-            raise ParameterError("Not a legal job server version: %s" % jobserverVersion)
+        if jobserverVersion not in jsversion.getVersions(self.cfg):
+            raise ParameterError("Not a legal job server version: %s (wants: %s)" % \
+                (jobserverVersion, str(jsversion.getVersions(self.cfg))))
         # client asked for nothing, client gets nothing.
         if not (buildTypes or cookTypes) or (not archTypes):
             return 0
@@ -2450,7 +2454,7 @@ class MintServer(object):
                                LEFT JOIN JobData
                                    ON Jobs.jobId=JobData.jobId
                                        AND JobData.name='arch'
-                               LEFT JOIN Builds
+                               LEFT JOIN BuildsView AS Builds
                                    ON Builds.buildId=Jobs.buildId
                                LEFT JOIN BuildData
                                    ON BuildData.buildId=Jobs.buildId
@@ -2470,7 +2474,7 @@ class MintServer(object):
                     query = """SELECT Jobs.jobId FROM Jobs
                                LEFT JOIN JobData
                                    ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
-                               LEFT JOIN Builds
+                               LEFT JOIN BuildsView AS Builds
                                    ON Builds.buildId=Jobs.buildId
                                LEFT JOIN BuildData
                                    ON BuildData.buildId=Jobs.buildId

@@ -81,13 +81,14 @@ class BuildsTable(database.KeyedTable):
                     timeCreated          DOUBLE,
                     createdBy            INTEGER,
                     timeUpdated          DOUBLE,
-                    updatedBy            INTEGER
+                    updatedBy            INTEGER,
+                    deleted              INTEGER DEFAULT '0'
                 )"""
 
     fields = ['buildId', 'projectId', 'pubReleaseId',
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
-              'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy']
+              'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy', 'deleted']
 
     indexes = {"BuildProjectIdIdx":\
                  """CREATE INDEX BuildProjectIdIdx
@@ -95,6 +96,8 @@ class BuildsTable(database.KeyedTable):
                "BuildPubReleaseIdIdx":\
                  """CREATE INDEX BuildPubReleaseIdIdx
                         ON Builds(pubReleaseId)"""}
+
+    views = {"BuildsView": "SELECT * FROM Builds WHERE deleted=0"}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -134,7 +137,7 @@ class BuildsTable(database.KeyedTable):
                                       troveName, troveVersion, troveFlavor,
                                       troveLastChanged, NULL AS timeCreated,
                                       NULL AS createdBy, NULL AS timeUpdated,
-                                      NULL as updatedBy
+                                      NULL AS updatedBy, 0 AS deleted
                                   FROM Releases
                                   LEFT JOIN ReleaseImageTypes
                                   ON ReleaseImageTypes.releaseId=
@@ -171,6 +174,17 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("DROP TABLE Releases")
                 cu.execute("DROP TABLE ReleaseData")
                 cu.execute("DROP TABLE ImageFiles")
+            if dbversion == 26 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Builds ADD COLUMN deleted INTEGER DEFAULT '0'")
+            if dbversion == 27 and not self.initialCreation:
+                if "BuildsView" not in self.db.views:
+                    cu.execute("""
+                        CREATE VIEW
+                            BuildsView AS
+                        SELECT * FROM Builds WHERE deleted=0
+                    """)
+
             return dbversion >= 20
         return True
 
@@ -182,7 +196,7 @@ class BuildsTable(database.KeyedTable):
 
         cu = self.db.cursor()
 
-        cu.execute("""SELECT buildId FROM Builds
+        cu.execute("""SELECT buildId FROM BuildsView
                       WHERE projectId=? AND
                             troveName IS NOT NULL AND
                             troveVersion IS NOT NULL AND
@@ -213,7 +227,7 @@ class BuildsTable(database.KeyedTable):
         cu.execute("""SELECT troveName,
                              troveVersion,
                              troveFlavor
-                      FROM Builds
+                      FROM BuildsView
                       WHERE buildId=?""",
                    buildId)
         r = cu.fetchone()
@@ -228,7 +242,7 @@ class BuildsTable(database.KeyedTable):
 
     def getPublished(self, buildId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM Builds WHERE buildId=?), 0)", buildId)
+        cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
         pubReleaseId = cu.fetchone()[0]
         if pubReleaseId:
             cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
@@ -239,32 +253,36 @@ class BuildsTable(database.KeyedTable):
 
     def getUnpublishedBuilds(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM Builds
+        cu.execute("""SELECT buildId FROM BuildsView
                       WHERE projectId = ? AND pubReleaseId IS NULL""",
                       projectId)
         res = cu.fetchall()
         return [x[0] for x in res]
 
     def deleteBuild(self, buildId):
-        cu = self.db.transaction()
         try:
-            cu.execute("DELETE FROM Builds WHERE buildId=?", buildId)
-            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
-            cu.execute("DELETE FROM Jobs WHERE buildId=?", buildId)
-            # normally, ON DELETE CASCADE takes care of this
-            if self.db.driver == 'sqlite':
-                cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
-                        (SELECT fileId FROM builds WHERE buildId=?)""", buildId)
-            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
+            # don't delete anything, just mark it deleted
+            cu = self.db.cursor()
+            cu.execute("UPDATE Builds SET deleted=1 WHERE buildId=?", buildId)
+#            cu.execute("DELETE FROM Builds WHERE buildId=?", buildId)
+#            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
+#            cu.execute("DELETE FROM Jobs WHERE buildId=?", buildId)
+#            # normally, ON DELETE CASCADE takes care of this
+#            if self.db.driver == 'sqlite':
+#                cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
+#                        (SELECT fileId FROM builds WHERE buildId=?)""", buildId)
+#            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
+            
         except:
             self.db.rollback()
+            raise
         else:
             self.db.commit()
 
     def buildExists(self, buildId):
         cu = self.db.cursor()
 
-        cu.execute("SELECT count(*) FROM Builds WHERE buildId=?", buildId)
+        cu.execute("SELECT count(*) FROM BuildsView WHERE buildId=?", buildId)
         return cu.fetchone()[0]
 
 
