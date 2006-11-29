@@ -6,9 +6,9 @@
 
 TOPDIR=..
 
-mo_files = */LC_MESSAGES/*.mo
+mo_files = $(wildcard */LC_MESSAGES/*.mo)
 
-po_files = */LC_MESSAGES/*.po
+po_files = $(wildcard */LC_MESSAGES/*.po)
 
 extra_dist = Makefile
 
