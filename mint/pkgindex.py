@@ -50,8 +50,8 @@ class PackageIndexTable(database.KeyedTable):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             if dbversion == 26 and not self.initialCreation:
+                self.db.dropIndex("PackageIndex", "PackageNameIdx")
                 cu = self.db.cursor()
-                cu.execute("DROP INDEX PackageNameIdx")
                 cu.execute("CREATE INDEX PackageNameIdx ON PackageIndex(name, version)")
                 self.db.commit()
             return dbversion >= 26
