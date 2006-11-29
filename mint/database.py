@@ -123,15 +123,15 @@ class DatabaseTable(object):
         if self.upToDate:
             self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
-            views = set(self.db.views.keys())
             missingIndexes = set(self.indexes.keys()) - indexes
             missingViews = set(self.views.keys()) - views
 
             for index in missingIndexes:
                 cu.execute(self.indexes[index])
 
-            for view in missingViews:
-                cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
+            for view in self.views.keys():
+                if view.lower() not in self.db.views.keys():
+                    cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
 
     def __getattribute__(self, name):
         if name == 'db':
