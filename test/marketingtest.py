@@ -454,8 +454,21 @@ class MarketingTest(fixtures.FixturedUnitTest):
             cu.execute("UPDATE Builds SET projectId=? WHERE buildId=?", projectId, buildId)
         db.commit()
 
-        x = selections.calculateTopProjects(db)
-        self.failUnlessEqual(x, [p2, p3, data['projectId']])
+        db.loadSchema()
+        topProjects = selections.TopProjectsTable(db)
+        topProjects.calculate()
+
+        l = topProjects.getList()
+        self.failUnlessEqual([x['projectId'] for x in l], [p2, p3, data['projectId']])
+
+        # test the update script mechanism
+        upl = selections.UpdateProjectLists()
+        upl.logPath = None
+        upl.cfg = self.cfg
+        upl.run()
+
+        l = topProjects.getList()
+        self.failUnlessEqual([x['projectId'] for x in l], [p2, p3, data['projectId']])
 
 
 if __name__ == "__main__":

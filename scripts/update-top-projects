@@ -1,0 +1,12 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All rights reserved
+#
+from mint import selections
+import os
+
+if __name__ == "__main__":
+    upl = selections.UpdateProjectLists()
+    os._exit(upl.run())

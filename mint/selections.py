@@ -4,11 +4,16 @@
 # All Rights Reserved
 #
 
+from mint import config
 from mint import database
+from mint import scriptlibrary
 import time
+
+from conary import dbstore
 
 class RankedProjectListTable(database.DatabaseTable):
     name = None
+    daysBack = 0
     fields = ['projectId', 'rank']
 
     def __init__(self, db):
@@ -36,6 +41,14 @@ class RankedProjectListTable(database.DatabaseTable):
         cu.execute("SELECT projectId, hostname, name FROM %s JOIN Projects USING(projectId) ORDER BY rank" % self.name)
         return cu.fetchall_dict()
 
+    def calculate(self):
+        if not self.daysBack:
+            raise NotImplementedError
+
+        l = calculateTopProjects(self.db, self.daysBack)
+        self.setList(l)
+
+
 # the following definitions are subject to change
 
 # "Top Projects" to be based on the top 10 projects based on downloads for
@@ -43,12 +56,14 @@ class RankedProjectListTable(database.DatabaseTable):
 # previous year's (365 days) download totals.
 class TopProjectsTable(RankedProjectListTable):
     name = "TopProjects"
+    daysBack = 365
 
 # "Most Popular" projects list to be based on the top 10 projects based on
 # downloads for the week. Downloads can be of any image type and are counted
 # based on the previous week's (7 days) download totals.
 class PopularProjectsTable(RankedProjectListTable):
     name = "PopularProjects"
+    daysBack = 7
 
 
 class FrontPageSelectionsTable(database.KeyedTable):
@@ -112,8 +127,6 @@ def calculateTopProjects(db, daysBack = 7):
         counts = counts.items()
         counts.sort(key = lambda x: x[1][0], reverse = True)
         counts = counts[:10]
-        import epdb
-        epdb.st()
 
         return [x[0] for x in counts]
     else:
@@ -126,3 +139,28 @@ def calculateTopProjects(db, daysBack = 7):
                 GROUP BY projectId
                 ORDER BY downloads DESC LIMIT 10""", time.time()-(daysBack * 3600))
         return [int(x['projectId']) for x in cu.fetchall_dict()]
+
+class UpdateProjectLists(scriptlibrary.SingletonScript):
+    db = None
+    cfg = None
+    cfgPath = config.RBUILDER_CONFIG
+
+    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
+        self.cfg = config.MintConfig()
+        self.cfg.read(self.cfgPath)
+        scriptlibrary.SingletonScript.__init__(self, aLockPath)
+
+    def action(self):
+        self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        self.db.loadSchema()
+        topProjects = TopProjectsTable(self.db)
+        popularProjects = PopularProjectsTable(self.db)
+
+        topProjects.calculate()
+        popularProjects.calculate()
+
+        return 0
+
+    def cleanup(self):
+        if self.db:
+            self.db.close()

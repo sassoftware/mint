@@ -16,6 +16,7 @@ script_dist =				\
 	mirror-prime-server		\
 	update-package-index		\
 	update-package-index-external	\
+	update-top-projects		\
 	set-password
 
 extra_dist = \
