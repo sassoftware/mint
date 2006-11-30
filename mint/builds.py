@@ -46,19 +46,18 @@ class UrlDownloadsTable(database.DatabaseTable):
     createSQL = """
         CREATE TABLE UrlDownloads (
             urlId               INTEGER NOT NULL,
-            url                 VARCHAR(255),
             timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
             ip                  CHAR(15)
         )"""
 
-    fields = ['urlId', 'url', 'timeDownloaded', 'ip']
+    fields = ['urlId', 'timeDownloaded', 'ip']
 
     def add(self, urlId, ip):
         t = sqllib.toDatabaseTimestamp()
         cu = self.db.cursor()
-        cu.execute("""INSERT INTO UrlDownloads (urlId, url, timeDownloaded, ip)
-            VALUES (?, (SELECT url FROM FilesUrls WHERE urlId=?), ?, ?)""",
-            urlId, urlId, t, ip)
+        cu.execute("""INSERT INTO UrlDownloads (urlId, timeDownloaded, ip)
+            VALUES (?, ?, ?)""",
+            urlId, t, ip)
         self.db.commit()
 
 
