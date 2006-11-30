@@ -122,6 +122,7 @@ class AdminHandler(WebHandler):
                         useMirror, authType,
                         additionalLabelsToMirror):
         additionalLabels = []
+        extLabel = ""
         if not name:
             self._addErrors("Missing project title")
         if not hostname:
