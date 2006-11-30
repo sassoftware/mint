@@ -132,7 +132,7 @@ class BuildDataTable(GenericDataTable):
             if dbversion == 23:
                 from mint import buildtypes
                 cu = self.db.cursor()
-                cu.execute('SELECT buildId FROM BuildsView WHERE buildType=?',
+                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
                            buildtypes.VMWARE_IMAGE)
                 for (buildId,) in cu.fetchall():
                     cu.execute("""INSERT INTO BuildData
@@ -141,7 +141,7 @@ class BuildDataTable(GenericDataTable):
             if dbversion == 25:
                 from mint import buildtypes
                 cu = self.db.cursor()
-                cu.execute('SELECT buildId FROM BuildsView WHERE buildType=?',
+                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
                            buildtypes.VMWARE_IMAGE)
                 for (buildId,) in cu.fetchall():
                     cu.execute("""INSERT INTO BuildData
