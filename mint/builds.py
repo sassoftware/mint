@@ -185,7 +185,7 @@ class BuildsTable(database.KeyedTable):
                         SELECT * FROM Builds WHERE deleted=0
                     """)
 
-            return dbversion >= 20
+            return dbversion >= 27
         return True
 
     def iterBuildsForProject(self, projectId):
