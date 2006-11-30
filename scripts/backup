@@ -93,7 +93,10 @@ def restore(cfg):
 
 def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
-    util.rmtree(backupPath)
+    try:
+        util.rmtree(backupPath)
+    except OSError:
+        pass
 
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
