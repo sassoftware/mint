@@ -233,6 +233,8 @@ def getTables(db, cfg):
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
     d['useit'] = useit.UseItTable(db, cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
+    d['topProjects'] = selections.TopProjectsTable(db)
+    d['popularProjects'] = selections.PopularProjectsTable(db)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
@@ -1605,6 +1607,17 @@ class MintServer(object):
     @private
     def getFrontPageSelection(self):
         return self.selections.getAll()
+
+    @typeCheck()
+    @private
+    def getPopularProjects(self):
+        return self.popularProjects.getList()
+
+    @typeCheck()
+    @private
+    def getTopProjects(self):
+        return self.topProjects.getList()
+
     #
     # LABEL STUFF
     #

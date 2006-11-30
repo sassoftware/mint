@@ -71,9 +71,9 @@ class SiteHandler(WebHandler):
     @cache
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+        popularProjects = self.client.getPopularProjects()
+        topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
-        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
         publishedReleases = self.client.getPublishedReleaseList()
         data = self.client.getUseItIcons()
@@ -91,7 +91,11 @@ class SiteHandler(WebHandler):
             table1Data = False
             table2Data = False
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
+            popularProjects=popularProjects, selectionData = selectionData,
+            topProjects = topProjects, spotlightData = spotlightData,
+            publishedReleases = publishedReleases, table1Data = table1Data,
+            table2Data = table2Data)
 
     @intFields(pageId=1)
     def applianceSpotlight(self, pageId, *args, **kwargs):

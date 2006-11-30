@@ -9,6 +9,7 @@ testsuite.setup()
 import time
 import fixtures
 from mint import mint_error
+from mint import selections
 
 class MarketingTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
@@ -420,6 +421,41 @@ class MarketingTest(fixtures.FixturedUnitTest):
                     "Allowed to submit an empty name")
         self.failIf(not client.addUseItIcon(1, 'foo', 'foo'),
                     "Valid submission not accepted")
+
+    @fixtures.fixture('Empty')
+    def testRankedProjectTables(self, db, data):
+        db.loadSchema()
+        topProjects = selections.TopProjectsTable(db)
+        client = self.getClient('admin')
+
+        p1 = client.newProject('p1', 'p1', 'localhost')
+        p2 = client.newProject('p2', 'p2', 'localhost')
+        p3 = client.newProject('p3', 'p3', 'localhost')
+
+        topProjects.setList([p1, p3, p2])
+        self.failUnlessEqual(topProjects.getList(),
+            [{'projectId': 1, 'hostname': 'p1', 'name': 'p1'},
+             {'projectId': 3, 'hostname': 'p3', 'name': 'p3'},
+             {'projectId': 2, 'hostname': 'p2', 'name': 'p2'}])
+
+    @fixtures.fixture('Full')
+    def testProjectCalculation(self, db, data):
+        client = self.getClient('admin')
+        p2 = client.newProject('p2', 'p2', 'localhost')
+        p3 = client.newProject('p3', 'p3', 'localhost')
+
+        projects = [data['projectId'], p3, p2]
+        builds = [data['buildId'], data['pubBuildId'], data['anotherBuildId']]
+        cu = db.cursor()
+        for buildId, projectId, count in zip(builds, projects, [10, 20, 30]):
+            # assuming urlId == buildId...
+            for c in range(count):
+                cu.execute("INSERT INTO UrlDownloads VALUES (?, ?, '127.0.0.1')", buildId, time.time())
+            cu.execute("UPDATE Builds SET projectId=? WHERE buildId=?", projectId, buildId)
+        db.commit()
+
+        x = selections.calculateTopProjects(db)
+        self.failUnlessEqual(x, [p2, p3, data['projectId']])
 
 
 if __name__ == "__main__":

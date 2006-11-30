@@ -684,8 +684,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         client.server._server.addDownloadHit(urlId, '1.2.3.4')
 
         cu = db.cursor()
-        cu.execute("SELECT url FROM UrlDownloads WHERE urlId=?", urlId)
-        self.failUnlessEqual(cu.fetchone()[0], 'file')
+        cu.execute("SELECT urlId FROM UrlDownloads WHERE urlId=?", urlId)
+        self.failUnlessEqual(cu.fetchone()[0], urlId)
 
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):

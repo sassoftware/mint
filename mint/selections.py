@@ -5,6 +5,51 @@
 #
 
 from mint import database
+import time
+
+class RankedProjectListTable(database.DatabaseTable):
+    name = None
+    fields = ['projectId', 'rank']
+
+    def __init__(self, db):
+        if self.name is None:
+            raise NotImplementedError
+
+        self.createSQL = """
+            CREATE TABLE %s (
+                projectId   INTEGER NOT NULL,
+                rank        INT NOT NULL
+            )""" % self.name
+
+        return database.DatabaseTable.__init__(self, db)
+
+
+    def setList(self, idList):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM %s" % self.name)
+        cu.executemany("INSERT INTO %s (rank, projectId) VALUES (?, ?)" % self.name,
+            enumerate(idList))
+        self.db.commit()
+
+    def getList(self):
+        cu = self.db.cursor()
+        cu.execute("SELECT projectId, hostname, name FROM %s JOIN Projects USING(projectId) ORDER BY rank" % self.name)
+        return cu.fetchall_dict()
+
+# the following definitions are subject to change
+
+# "Top Projects" to be based on the top 10 projects based on downloads for
+# the year. Downloads can be of any image type and are counted based on the
+# previous year's (365 days) download totals.
+class TopProjectsTable(RankedProjectListTable):
+    name = "TopProjects"
+
+# "Most Popular" projects list to be based on the top 10 projects based on
+# downloads for the week. Downloads can be of any image type and are counted
+# based on the previous week's (7 days) download totals.
+class PopularProjectsTable(RankedProjectListTable):
+    name = "PopularProjects"
+
 
 class FrontPageSelectionsTable(database.KeyedTable):
     name = 'FrontPageSelections'
@@ -39,3 +84,45 @@ class FrontPageSelectionsTable(database.KeyedTable):
         cu.execute("DELETE FROM %s WHERE itemId=?" % self.name, itemId)
         self.db.commit()
         return True
+
+
+def calculateTopProjects(db, daysBack = 7):
+    cu = db.cursor()
+
+    if db.driver == "sqlite":
+        # brute-force method since sqlite doesn't
+        # handle subselects the way MySQL can
+        counts = {}
+        cu.execute("SELECT urlId FROM UrlDownloads WHERE timeDownloaded > ?",
+            time.time() - (daysBack * 3600))
+        for x in cu.fetchall():
+            # fetch projectId
+            cu.execute("""SELECT projectId FROM Builds
+                            JOIN BuildFiles USING(buildId)
+                            JOIN BuildFilesUrlsMap USING(fileId)
+                            JOIN FilesUrls USING (urlId)
+                          WHERE urlId = ?""", x[0])
+            projectId = cu.fetchone()
+            if not projectId:
+                continue
+
+            c = counts.setdefault(projectId[0], [0])
+            c[0] += 1
+
+        counts = counts.items()
+        counts.sort(key = lambda x: x[1][0], reverse = True)
+        counts = counts[:10]
+        import epdb
+        epdb.st()
+
+        return [x[0] for x in counts]
+    else:
+        cu.execute("""SELECT COUNT(ip) AS downloads, urlId AS outerUrlId,
+            (SELECT DISTINCT projectid From Builds
+                JOIN Buildfiles USING(buildId)
+                JOIN BuildFilesUrlsMap USING(fileId)
+                JOIN FilesUrls USING (urlId) WHERE urlId=outerUrlId) AS projectId
+                FROM UrlDownloads WHERE timeDownloaded > ?
+                GROUP BY projectId
+                ORDER BY downloads DESC LIMIT 10""", time.time()-(daysBack * 3600))
+        return [int(x['projectId']) for x in cu.fetchall_dict()]

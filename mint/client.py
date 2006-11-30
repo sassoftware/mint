@@ -594,6 +594,12 @@ class MintClient:
     def getFrontPageSelection(self):
         return self.server.getFrontPageSelection()
 
+    def getTopProjects(self):
+        return self.server.getTopProjects()
+
+    def getPopularProjects(self):
+        return self.server.getPopularProjects()
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

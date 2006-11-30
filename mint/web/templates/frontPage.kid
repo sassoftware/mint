@@ -104,7 +104,7 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div py:if="selectionData or activeProjects or popularProjects" id="topten">
+        <div py:if="selectionData or topProjects or popularProjects" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
@@ -112,7 +112,7 @@ from mint.client import upstream
                     <tr>
                         <th py:if="selectionData" class="topten_header">Recommended Appliances</th>
                         <th class="topten_header">Most Popular</th>
-                        <th class="topten_header">Most Active</th>
+                        <th class="topten_header">Top Projects</th>
                         <th py:if="not selectionData" class="topten_header">Recent Releases</th>
                     </tr>
                     <tr>
@@ -126,14 +126,18 @@ from mint.client import upstream
                         <td>
                             <ol>
                                 <li py:for="project in popularProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                                        ${truncateForDisplay(project['name'], maxWordLen=30)}
+                                    </a>
                                 </li>
                             </ol>
                         </td>
                         <td>
                             <ol>
-                                <li py:for="project in activeProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                <li py:for="project in topProjects">
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                                        ${truncateForDisplay(project['name'], maxWordLen=30)}
+                                    </a>
                                 </li>
                             </ol>
                         </td>
