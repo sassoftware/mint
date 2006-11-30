@@ -128,9 +128,10 @@ class DatabaseTable(object):
             for index in missingIndexes:
                 cu.execute(self.indexes[index])
 
-            for view in self.views.keys():
-                if view.lower() not in [x.lower() for x in self.db.views.keys()]:
-                    cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
+            if self.schemaVersion == self.getDBVersion():
+                for view in self.views.keys():
+                    if view.lower() not in [x.lower() for x in self.db.views.keys()]:
+                        cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
 
     def __getattribute__(self, name):
         if name == 'db':
