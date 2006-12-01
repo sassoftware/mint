@@ -25,7 +25,7 @@ from mint import mint_error
 from mint import maintenance
 from mint import server
 from mint.helperfuncs import extractBasePath
-from mint.projects import mysqlTransTable
+from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
@@ -80,7 +80,7 @@ def get(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
-def getRepository(projectName, repName, dbName, cfg, req):
+def getRepository(projectName, repName, dbName, cfg, req, conaryDb):
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
@@ -133,13 +133,12 @@ def getRepository(projectName, repName, dbName, cfg, req):
     if req.hostname == "conary.digium.com":
         nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --config-file /srv/rbuilder/conaryrc --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
 
+    repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
-        repos = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
-        shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
-        #repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
-        #shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
+        repos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
+        shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
 
-        #repositories[repHash].forceSecure = cfg.SSL
+        shim.forceSecure = repos.forceSecure = cfg.SSL
     else:
         req.log_error("failed to open repository directory: %s" % repositoryDir)
         repos = shim = None
@@ -149,7 +148,7 @@ def getRepository(projectName, repName, dbName, cfg, req):
 def conaryHandler(req, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
-    global db
+    global db, conaryDb
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
@@ -183,21 +182,26 @@ def conaryHandler(req, cfg, pathInfo):
 
     repHash = repName + req.hostname
 
+    dbName = repName.translate(transTables[cfg.reposDBDriver])
     if cfg.reposDBDriver == "sqlite":
-        db = None
-        dbName = repName
+        conaryDb = None
     else:
-        # XXX mysql-specific hack--this needs to be abstracted out
-        dbName = repName.translate(mysqlTransTable)
         try:
-            db.rollback() # roll back any hanging transactions
-            if db.dbName != dbName:
-                db.use(dbName)
-        except sqlerrors.DatabaseError:
+            if not conaryDb:
+                conaryDb = dbstore.connect(cfg.reposDBPath % dbName, cfg.reposDBDriver)
+            else:
+                if conaryDb.reopen():
+                    req.log_error("reopened a dead database connection in hooks.py")
+
+                conaryDb.rollback() # roll back any hanging transactions
+                if conaryDb.dbName != dbName:
+                    conaryDb.use(dbName)
+        except sqlerrors.DatabaseError, e:
+            req.log_error("Error opening database %s: %s" % (dbName, str(e)))
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
     if not repositories.has_key(repHash):
-        repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req)
+        repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb)
         repositories[repHash] = repo
         shim_repositories[repHash] = shimRepo
     else:
@@ -289,8 +293,6 @@ def getRepNameMap(db):
         # wrap this in a try/except to avoid first-hit problems
         # before RepNameMap even exists.
         try:
-            if cfg.dbDriver != "sqlite":
-                db.use(cfg.dbPath.split("/")[-1])
             cu = db.cursor()
             cu.execute("SELECT fromName, toName FROM RepNameMap")
             for r in cu.fetchall():
@@ -306,9 +308,6 @@ def getProjectDomainName(db, hostName):
     global domainNameCache
 
     if hostName not in domainNameCache:
-        if cfg.dbDriver != "sqlite":
-            db.use(cfg.dbPath.split("/")[-1])
-
         cu = db.cursor()
         cu.execute('SELECT domainname FROM Projects WHERE hostname=?',
                    hostName)
@@ -324,7 +323,6 @@ def getProjectDomainName(db, hostName):
 
             # assume cfg.projectDomainName on error
             return cfg.projectDomainName
-            # raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
     return domainNameCache[hostName]
 
@@ -354,6 +352,8 @@ def handler(req):
     global db
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    else:
+        db.rollback()
 
     prof = profile.Profile(cfg)
 
@@ -405,5 +405,6 @@ def handler(req):
         coveragehook.save()
     return ret
 
+conaryDb = None
 repositories = {}
 shim_repositories = {}

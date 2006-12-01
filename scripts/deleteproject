@@ -5,7 +5,7 @@ import os, sys
 from mint import config
 from mint import database
 from mint import urltypes
-from mint.projects import mysqlTransTable
+from mint.projects import transTables
 
 from conary import dbstore
 from conary.lib import util
@@ -73,7 +73,7 @@ def deleteProject(cfg, projectName):
 
             # check for mysql
             if cfg.reposDBDriver == 'mysql':
-                dbName = reposName.translate(mysqlTransTable)
+                dbName = reposName.translate(transTables['mysql'])
 
                 # we need to delete the database manually with a drop database
                 try:
