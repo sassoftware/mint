@@ -26,7 +26,6 @@ from mint import urltypes
 
 from mint.distro import jobserver
 from mint.flavors import stockFlavors
-from mint.projects import mysqlTransTable
 
 from conary import dbstore
 from conary import sqlite3

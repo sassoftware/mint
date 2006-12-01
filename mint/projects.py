@@ -48,7 +48,12 @@ class DuplicateLabel(MintError):
     def __init__(self, reason = "Label already exists"):
         self.reason = reason
 
-mysqlTransTable = string.maketrans("-.:", "___")
+# functions to convert a repository name to a database-safe name string
+transTables = {
+    'sqlite': string.maketrans("", ""),
+    'mysql': string.maketrans("-.:", "___"),
+}
+
 
 class Project(database.TableObject):
     # XXX: disabled is slated for removal next schema upgrade --sgp
@@ -679,7 +684,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
     tableOpts = "character set latin1 collate latin1_bin"
 
     def translate(self, x):
-        return x.translate(mysqlTransTable)
+        return x.translate(transTables['mysql'])
 
     def create(self, name):
         path = self.cfg.reposDBPath % 'mysql'
