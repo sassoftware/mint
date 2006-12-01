@@ -725,6 +725,16 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failIf(not client.isLocalMirror(project.id),
                     "project is not local mirror with inbound label")
 
+    @fixtures.fixture('Full')
+    def testHideAllProjects(self, db, data):
+        client = self.getClient('admin')
+
+        client.server._server.cfg.hideNewProjects = True
+        projectId = client.newProject("Quux", "quux", "localhost")
+
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, True)
+
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 

@@ -596,6 +596,9 @@ class MintServer(object):
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
+        if self.cfg.hideNewProjects:
+            self.hideProject(projectId)
+
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
         return projectId

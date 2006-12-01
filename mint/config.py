@@ -134,6 +134,7 @@ class MintConfig(ConfigFile):
     authCacheTimeout        = (cfgtypes.CfgInt, None,
                                "Number of seconds to cache authentication results")
     removeTrovesVisible     = (cfgtypes.CfgBool, False)
+    hideNewProjects         = (cfgtypes.CfgBool, False)
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
