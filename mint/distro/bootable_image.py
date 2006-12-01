@@ -210,11 +210,10 @@ class BootableImage(ImageGenerator):
             log.info("grub not found. skipping setup.")
             return
         util.copytree(os.path.join(self.fakeroot, 'usr', 'share', 'grub', '*', '*'), os.path.join(self.fakeroot, 'boot', 'grub'))
-        #Create a stub grub.conf
-        if os.path.exists(os.path.join(self.fakeroot, 'etc', 'issue')):
-            name = open(os.path.join(self.fakeroot, 'etc', 'issue'), 'r').readlines()[0].strip()
-        else:
-            name = self.project.getName()
+
+        # Create a stub grub.conf
+        name = "%s (%s)" % (self.build.getName(), self.baseversion)
+
         # make initrd line in grub conf contingent on actually having one.
         macros = {'name': name, 'kversion': 'template', 'initrdCmd' : ''}
         bootDirFiles = os.listdir(os.path.join(self.fakeroot, 'boot'))
