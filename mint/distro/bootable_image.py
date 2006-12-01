@@ -212,7 +212,8 @@ class BootableImage(ImageGenerator):
         util.copytree(os.path.join(self.fakeroot, 'usr', 'share', 'grub', '*', '*'), os.path.join(self.fakeroot, 'boot', 'grub'))
 
         # Create a stub grub.conf
-        name = "%s (%s)" % (self.build.getName(), self.baseversion)
+        name = "%s (%s)" % (self.build.getName(),
+            self.build.getTroveVersion().trailingRevision().getVersion())
 
         # make initrd line in grub conf contingent on actually having one.
         macros = {'name': name, 'kversion': 'template', 'initrdCmd' : ''}
@@ -238,6 +239,7 @@ class BootableImage(ImageGenerator):
 #
 # Note that you do not have to rerun grub after making changes to this file
 #boot=/dev/xvda
+hiddenmenu
 default=0
 timeout=0
 title %(name)s (%(kversion)s)
@@ -252,6 +254,7 @@ title %(name)s (%(kversion)s)
 #
 # Note that you do not have to rerun grub after making changes to this file
 #boot=/dev/hda
+hiddenmenu
 default=0
 timeout=5
 title %(name)s (%(kversion)s)
@@ -267,6 +270,7 @@ title %(name)s (%(kversion)s)
 #
 # Note that you do not have to rerun grub after making changes to this file
 #boot=/dev/hda
+hiddenmenu
 default=0
 timeout=5
 title %(name)s (%(kversion)s)

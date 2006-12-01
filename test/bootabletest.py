@@ -143,7 +143,7 @@ class BootableImageTest(MintRepositoryHelper):
         bi._setupGrub()
         self.verifyContentsInFile(
             os.path.join(bi.fakeroot, 'etc', 'grub.conf'),
-            "title Test (template)"
+            "Test Build (1.0) (template)"
         )
 
     def testPrepareDiskImage(self):
