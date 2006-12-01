@@ -597,7 +597,9 @@ class MintServer(object):
                                   self.authToken[1])
 
         if self.cfg.hideNewProjects:
-            self.hideProject(projectId)
+            repos = self._getProjectRepo(project)
+            repos.deleteUserByName(project.getLabel(), 'anonymous')
+            self.projects.hide(projectId)
 
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()

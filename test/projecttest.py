@@ -727,7 +727,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testHideAllProjects(self, db, data):
-        client = self.getClient('admin')
+        client = self.getClient('nobody')
 
         client.server._server.cfg.hideNewProjects = True
         projectId = client.newProject("Quux", "quux", "localhost")
