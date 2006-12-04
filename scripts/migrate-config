@@ -14,15 +14,15 @@ def _doMigration(oldCfg, newCfg):
     generatedKeys = set(config.keysForGeneratedConfig)
     customKeys = allKeys - generatedKeys
 
-    # save "generated" keys to rbuilder-generated.conf
-    generatedFile = open("/srv/rbuilder/config/rbuilder-generated.conf", "w")
+    # save "generated" keys to rbuilder-generated.conf-stage
+    generatedFile = open("/srv/rbuilder/config/rbuilder-generated.conf-stage", "w")
     for k in generatedKeys:
         oldCfg.displayKey(k, out = generatedFile)
     generatedFile.close()
 
     # everything else that is different from the stock config goes
-    # in rbuilder-custom.conf
-    customFile = open("/srv/rbuilder/config/rbuilder-custom.conf", "w+")
+    # in rbuilder-custom.conf-stage
+    customFile = open("/srv/rbuilder/config/rbuilder-custom.conf-stage", "w+")
     for k in customKeys:
         if k == "visibleBuildTypes":
             continue
@@ -30,15 +30,6 @@ def _doMigration(oldCfg, newCfg):
             oldCfg.displayKey(k, out = customFile)
     customFile.close()
 
-    # patch the old config file to indicate that it's not being used anymore
-    f = open("/srv/rbuilder/rbuilder.conf", "w")
-    print >> f, """# THIS FILE IS NO LONGER USED, IT REMAINS AS A PLACEHOLDER.
-# Any modifications made here will not take effect. Please see:
-#
-#   /srv/rbuilder/config/rbuilder-custom.conf
-#
-# ...to make modifications to rBuilder's configuration."""
-    f.close()
 
 if not os.path.exists("/srv/rbuilder/rbuilder.conf"):
     print "Old config file doesn't exist, skipping migration"
