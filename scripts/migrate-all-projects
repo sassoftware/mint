@@ -9,9 +9,11 @@ import os, sys
 
 from mint import config
 from mint import maintenance
-from mint.projects import mysqlTransTable
+from mint.projects import transTables
 from conary import dbstore
 from conary.server import schema
+
+mysqlTransTable = transTables['mysql']
 
 cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
