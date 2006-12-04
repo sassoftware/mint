@@ -170,43 +170,46 @@ def conaryHandler(req, cfg, pathInfo):
         repNameCache = {}
         domainNameCache = {}
 
-    # XXX: we need to nerf the repNameCache because we can now modify
-    # RepNameMap and we don't have a clean way to reset the cache.
-    repNameCache = {}
+    if not isProjectExternal(db, hostName):
+        # XXX: we need to nerf the repNameCache because we can now modify
+        # RepNameMap and we don't have a clean way to reset the cache.
+        repNameCache = {}
 
-    repNameMap = getRepNameMap(db)
-    projectName = repName.split(".")[0]
-    if repName in repNameMap:
-        repName = repNameMap[repName]
-        req.log_error("remapping repository name: %s" % repName)
+        repNameMap = getRepNameMap(db)
+        projectName = repName.split(".")[0]
+        if repName in repNameMap:
+            repName = repNameMap[repName]
+            req.log_error("remapping repository name: %s" % repName)
 
-    repHash = repName + req.hostname
+        repHash = repName + req.hostname
 
-    dbName = repName.translate(transTables[cfg.reposDBDriver])
-    if cfg.reposDBDriver == "sqlite":
-        conaryDb = None
+        dbName = repName.translate(transTables[cfg.reposDBDriver])
+        if cfg.reposDBDriver == "sqlite":
+            conaryDb = None
+        else:
+            try:
+                if not conaryDb:
+                    conaryDb = dbstore.connect(cfg.reposDBPath % dbName, cfg.reposDBDriver)
+                else:
+                    if conaryDb.reopen():
+                        req.log_error("reopened a dead database connection in hooks.py")
+
+                    conaryDb.rollback() # roll back any hanging transactions
+                    if conaryDb.dbName != dbName:
+                        conaryDb.use(dbName)
+            except sqlerrors.DatabaseError, e:
+                req.log_error("Error opening database %s: %s" % (dbName, str(e)))
+                raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
+        if not repositories.has_key(repHash):
+            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb)
+            repositories[repHash] = repo
+            shim_repositories[repHash] = shimRepo
+        else:
+            repo = repositories[repHash]
+            shimRepo = shim_repositories[repHash]
     else:
-        try:
-            if not conaryDb:
-                conaryDb = dbstore.connect(cfg.reposDBPath % dbName, cfg.reposDBDriver)
-            else:
-                if conaryDb.reopen():
-                    req.log_error("reopened a dead database connection in hooks.py")
-
-                conaryDb.rollback() # roll back any hanging transactions
-                if conaryDb.dbName != dbName:
-                    conaryDb.use(dbName)
-        except sqlerrors.DatabaseError, e:
-            req.log_error("Error opening database %s: %s" % (dbName, str(e)))
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-
-    if not repositories.has_key(repHash):
-        repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb)
-        repositories[repHash] = repo
-        shim_repositories[repHash] = shimRepo
-    else:
-        repo = repositories[repHash]
-        shimRepo = shim_repositories[repHash]
+        repo = shimRepo = None
 
     if method == "POST":
         return post(port, secure, (repo, shimRepo), cfg, req)
@@ -325,6 +328,23 @@ def getProjectDomainName(db, hostName):
             return cfg.projectDomainName
 
     return domainNameCache[hostName]
+
+
+def isProjectExternal(db, hostname):
+    cu = db.cursor()
+    cu.execute("SELECT external FROM Projects WHERE hostname=?", hostname)
+    try:
+        external = cu.fetchone()[0]
+    except (IndexError, TypeError):
+        import traceback
+        tb = traceback.format_exc()
+
+        apache.log_error("error in isProjectExternal:")
+        for line in tb.split("\n"): 
+            apache.log_error(line)
+        external = False
+
+    return external
 
 
 def handler(req):

@@ -78,28 +78,19 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                 server = self.getProjectServerHostname())
 
     def testBrowseExternalProject(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        extProjectId = self.newProject(client, "External Project", "external",
-                MINT_PROJECT_DOMAIN)
+        client, userId = self.quickMintAdmin("testuser", "testpass")
 
-        cu = self.db.cursor()
-        cu.execute("UPDATE projects SET external = 1 WHERE projectId=?",
-                extProjectId)
-        self.db.commit()
-
-        extProject = client.getProject(extProjectId)
-        labelId = extProject.getLabelIdMap()['external.' + \
-                MINT_PROJECT_DOMAIN + '@rpl:devel']
         self.openRepository(1)
-        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'))
+        extProjectId = client.newExternalProject("External Project",
+            "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
+            'http://localhost:%d/conary/' % self.servers.getServer(1).port, False)
 
-        extProject.editLabel(labelId, "localhost1@rpl:devel",
-            'http://localhost:%d/conary/' % self.servers.getServer(1).port, 'anonymous', 'anonymous')
-
+        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:devel'))
         page = self.assertCode('/repos/external/browse', code = 200)
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
         # log in and make sure we see the same thing
+        page = self.webLogin('testuser', 'testpass')
         page = self.assertCode('/repos/external/browse', code = 200)
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 

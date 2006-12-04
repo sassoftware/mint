@@ -348,32 +348,23 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase:source'])
 
     def testUPIExternal(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        extProjectId = self.newProject(client, "External Project", "external",
-                MINT_PROJECT_DOMAIN)
+        client, userId = self.quickMintAdmin("testuser", "testpass")
 
-        cu = self.db.cursor()
-        cu.execute("UPDATE projects SET external = 1 WHERE projectId=?",
-                extProjectId)
-        self.db.commit()
+        self.openRepository(1)
+        extProjectId = client.newExternalProject("External Project",
+            "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
+            'http://localhost:%d/conary/' % self.servers.getServer(1).port, False)
 
         # two versions, different branches
         for x in "tag1", "tag2":
-            v = "/external.%s@rpl:%s/1.0.0" % (MINT_PROJECT_DOMAIN, x)
+            v = "/localhost1@rpl:%s/1.0.0" % x
             self.addComponent('testcase:runtime', v)
             self.addCollection('testcase', v, ['testcase:runtime'])
 
         # add a newer version on tag2
-        v = "/external.%s@rpl:tag2/1.0.1" % MINT_PROJECT_DOMAIN
+        v = "/localhost1@rpl:tag2/1.0.1"
         self.addComponent('testcase:runtime', v)
         self.addCollection('testcase', v, ['testcase:runtime'])
-
-        # make it really "external"
-        port = self.mintCfg.SSL and self.securePort or self.port
-        extProject = client.getProject(extProjectId)
-        labelId = extProject.getLabelIdMap()['external.'+MINT_PROJECT_DOMAIN+'@rpl:devel']
-        extProject.editLabel(labelId, "external.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
-            'http%s://%s:%d/repos/external/' % ((self.mintCfg.SSL and 's' or ''), PFQDN, port), 'testuser', 'testpass')
 
         pkgindex.UpdatePackageIndexExternal.logFileName = None
         upi = pkgindex.UpdatePackageIndexExternal()
@@ -381,11 +372,12 @@ class RepositoryTest(MintRepositoryHelper):
         upi.cfg = self.mintCfg
         self.captureOutput(upi.run)
 
+        cu = self.db.cursor()
         cu.execute("SELECT version FROM PackageIndex")
         x = [x[0] for x in cu.fetchall()]
 
-        assert('/external.%s@rpl:tag2/1.0.1-1-1' % MINT_PROJECT_DOMAIN in x)
-        assert('/external.%s@rpl:tag1/1.0.0-1-1' % MINT_PROJECT_DOMAIN in x)
+        assert('/localhost1@rpl:tag2/1.0.1-1-1')
+        assert('/localhost1@rpl:tag1/1.0.0-1-1')
 
     def testUPI(self):
         def _fakeCommit(pkg, projectId, timestamp, userId):
