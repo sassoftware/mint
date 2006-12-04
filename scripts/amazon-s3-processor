@@ -84,7 +84,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         adds = []
         earlierThan = time.time() - (self.s3cfg.unpublishedThresholdDays * 86400)
         cu.execute("""SELECT b.buildId, bf.fileId, bf.sha1, fu.url
-                        FROM projects p LEFT OUTER JOIN builds b USING (projectId)
+                        FROM projects p LEFT OUTER JOIN BuildsView b USING (projectId)
                                         LEFT OUTER JOIN publishedReleases pr USING (pubreleaseId)
                                         LEFT OUTER JOIN buildFiles bf USING (buildId)
                                         LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
@@ -211,6 +211,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                 r = cu.fetchall()
                 if len(r):
                     localUrlId = r[0][0]
+                    cu.execute("UPDATE UrlDownloads SET urlId=? WHERE urlId=?", urlId, localUrlId)
                     cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", localUrlId)
                 db.commit()
                 self.log.info("Database updated")
