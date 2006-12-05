@@ -171,6 +171,11 @@ class BootableImageTest(MintRepositoryHelper):
         bi.swapSize = 1024 * 1024
         bi.createTemporaryRoot()
 
+        util.mkdirChain(os.path.join(bi.fakeroot, 'etc'))
+        f = open(os.path.join(bi.fakeroot, 'etc', 'hosts'), 'w')
+        print >> f,"# this file should not be overwritten"
+        f.close()
+
         self.captureAllOutput(bi.fileSystemOddsNEnds)
 
         assert(os.stat(os.path.join(bi.fakeroot, "var", "swap"))[stat.ST_SIZE] == 1024 * 1024)
@@ -179,6 +184,10 @@ class BootableImageTest(MintRepositoryHelper):
                   '/var/lib/conarydb/conarydb',
                   '/etc/sysconfig/appliance-name']:
             self.failUnless(os.path.exists(bi.fakeroot + x))
+
+        f = open(os.path.join(bi.fakeroot, 'etc', 'hosts'))
+        self.failUnlessEqual("# this file should not be overwritten\n", f.read())
+        f.close()
 
     def testSparse(self):
         bi = self.setupBootableImage()

@@ -111,6 +111,11 @@ def outputfilesize(func):
         return returner
     return wrapper
 
+def copyfile(source, target):
+    if not os.path.exists(target):
+        return util.copyfile(source, target)
+
+
 
 class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
@@ -394,20 +399,20 @@ title %(name)s (%(kversion)s)
         self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
 
         #Add the other miscellaneous files needed
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'hosts'), os.path.join(self.fakeroot, 'etc'))
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'network'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'ifcfg-eth0'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'network-scripts'))
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'keyboard'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+        copyfile(os.path.join(self.imgcfg.dataDir, 'hosts'), os.path.join(self.fakeroot, 'etc'))
+        copyfile(os.path.join(self.imgcfg.dataDir, 'network'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+        copyfile(os.path.join(self.imgcfg.dataDir, 'ifcfg-eth0'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'network-scripts'))
+        copyfile(os.path.join(self.imgcfg.dataDir, 'keyboard'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
         #Was X installed?
         if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'bin', 'X11', 'X')):
             #copy in the xorg.conf file
-            util.copyfile(os.path.join(self.imgcfg.dataDir, 'xorg.conf'), os.path.join(self.fakeroot, 'etc', 'X11'))
+            copyfile(os.path.join(self.imgcfg.dataDir, 'xorg.conf'), os.path.join(self.fakeroot, 'etc', 'X11'))
             #tweak the inittab to start at level 5
             cmd = r"/bin/sed -e 's/^\(id\):[0-6]:\(initdefault:\)$/\1:5:\2/' -i %s" % os.path.join(self.fakeroot, 'etc', 'inittab')
             util.execute(cmd)
         #GPM?
         if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'sbin', 'gpm')):
-            util.copyfile(os.path.join(self.imgcfg.dataDir, 'mouse'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+            copyfile(os.path.join(self.imgcfg.dataDir, 'mouse'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
 
         # write the /etc/sysconfig/appliance-name for rpl:2 initscripts
         util.mkdirChain(os.path.join(self.fakeroot, 'etc', 'sysconfig'))
