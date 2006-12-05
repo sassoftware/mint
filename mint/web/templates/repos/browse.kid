@@ -18,7 +18,7 @@ from mint.helperfuncs import truncateForDisplay
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
-        py:if="(groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')) or
+        py:if="(groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source') and package != groupTrove.recipeName) or
                (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component and not package.startswith('group-'))">
         <?python
             if component:
@@ -77,29 +77,8 @@ from mint.helperfuncs import truncateForDisplay
 
                     <tr py:for="i, package in enumerate(packages)">
                         <td>
-                            <div>
-                              ${adder(package)}
-                              <span>
-                                <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a>
-                                <a py:if="package in components" class="trove"
-                                   href="javascript:toggle_display('components__${i}');"><img class="noborder" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
-                              </span>
-                            </div>
-                            <div py:if="package in components" id="components__${i}"
-                                 class="trovelist" style="display: none;">
-                                <ul>
-                                    <li py:for="component in components[package]">
-                                      <span py:if="component != 'source'" py:strip="True">
-                                        ${adder(package, component)}
-                                      </span>
-                                      <span>
-                                        <a href="troveInfo?t=${quote(package)}:${quote(component)}">
-                                            ${component}
-                                        </a>
-                                      </span>
-                                    </li>
-                                </ul>
-                            </div>
+                            ${adder(package)}
+                            <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a>
                         </td>
                     </tr>
                 </table>
