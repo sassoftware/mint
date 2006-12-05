@@ -155,21 +155,27 @@ class LoadMirror:
         if not self.client:
             self._openMintClient()
 
-        try:
-            proj = self.client.getProjectByHostname(serverName.split(".")[0])
-        except database.ItemNotFound:
+        found = None
+        for projectId, _, _ in self.client.getProjectsList():
+            project = self.client.getProject(projectId)
+            label = project.getLabel()
+            if label.startswith(serverName):
+                found = project
+                break
+
+        if not found:
             raise RuntimeError, "Can't find external project %s on rBuilder. " \
                 "Please add the project through the web interface first." % serverName
 
-        if not proj.external:
+        if not found.external:
             raise RuntimeError, "Project %s is not external: " \
                 "can't load mirror" % serverName
 
-        if self.client.isLocalMirror(proj.id):
+        if self.client.isLocalMirror(found.id):
             raise RuntimeError, "Project %s is already mirrored" \
                 % serverName
 
-        return proj
+        return found
 
     def _addUsers(self, serverName, mintCfg):
         cfg = netserver.ServerConfig()
