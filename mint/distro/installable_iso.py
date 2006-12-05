@@ -184,7 +184,7 @@ class InstallableIso(ImageGenerator):
     def writeBuildStamp(self, tmpPath):
         bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
-        print >> bsFile, self.project.getName()
+        print >> bsFile, self.build.getName()
         print >> bsFile, upstream(self.build.getTroveVersion())
         print >> bsFile, self.productDir
         print >> bsFile, self.build.getDataValue("bugsUrl")
@@ -210,7 +210,7 @@ class InstallableIso(ImageGenerator):
         print >> sys.stderr, "generating anaconda artwork."
         autoGenPath = tempfile.mkdtemp()
         ai = AnacondaImages( \
-            self.project.getName(),
+            self.build.getName(),
             indir = self.isocfg.anacondaImagesPath,
             outdir = autoGenPath,
             fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
@@ -309,7 +309,7 @@ class InstallableIso(ImageGenerator):
 
             discNum = d.split("disc")[-1]
             discNumStr = "Disc %d" % int(discNum)
-            truncatedName = self.project.getName()[:31-len(discNumStr)]
+            truncatedName = self.build.getName()[:31-len(discNumStr)]
             volumeId = "%s %s" % (truncatedName, discNumStr)
             outputIsoName = isoNameTemplate + d + ".iso"
             if os.access(os.path.join(sourceDir, d, "isolinux/isolinux.bin"), os.R_OK):
@@ -327,7 +327,7 @@ class InstallableIso(ImageGenerator):
                 call("mkisofs", "-o", outputDir + "/" + outputIsoName,
                      "-R", "-J", "-V", volumeId, "-T", ".")
 
-            isoList.append((outputIsoName, "%s Disc %s" % (self.project.getName(), discNum)))
+            isoList.append((outputIsoName, "%s Disc %s" % (self.build.getName(), discNum)))
 
         isoList = [ (os.path.join(outputDir, iso[0]), iso[1]) for iso in isoList ]
         # this for loop re-identifies any iso greater than 700MB as a DVD
@@ -585,7 +585,7 @@ class InstallableIso(ImageGenerator):
             os.unlink(discInfoPath)
         discInfoFile = open(discInfoPath, "w")
         print >> discInfoFile, time.time()
-        print >> discInfoFile, self.project.getName()
+        print >> discInfoFile, self.build.getName()
         print >> discInfoFile, anacondaArch
         print >> discInfoFile, "1"
         for x in ["base", "changesets", "pixmaps"]:
