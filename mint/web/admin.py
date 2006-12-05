@@ -256,7 +256,7 @@ class AdminHandler(WebHandler):
             kwargs.setdefault('hostname', 'rpath')
             kwargs.setdefault('url', 'https://conary.rpath.com/conary/')
             kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
-            kwargs.setdefault('additionalLabelsToMirror', 'conary.rpath.com@rpl:1-compat')
+            kwargs.setdefault('additionalLabelsToMirror', 'conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen')
         else:
             firstTime = False
 
