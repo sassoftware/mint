@@ -9,6 +9,7 @@ import re
 import time
 
 from mint import loadmirror
+from mint import config
 
 from raa.modules.raawebplugin import rAAWebPlugin
 from raa.modules.raawebplugin import immedTask
@@ -113,8 +114,12 @@ class LoadMirror(rAAWebPlugin):
         return self._getLog()
 
     def _getProjects(self):
-        # XXX fix hardcode
-        lm = loadmirror.LoadMirror(loadmirror.target, 'http://mintauth:mintpass@mint.rpath.local/xmlrpc-private/')
+        cfg = config.MintConfig()
+        cfg.read(config.RBUILDER_CONFIG)
+
+        lm = loadmirror.LoadMirror(loadmirror.target,
+            'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
+
         projects = []
         errors = {}
         for serverName in os.listdir(loadmirror.target):
