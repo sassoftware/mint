@@ -175,8 +175,10 @@ class BootableImageTest(MintRepositoryHelper):
 
         assert(os.stat(os.path.join(bi.fakeroot, "var", "swap"))[stat.ST_SIZE] == 1024 * 1024)
 
-        for x in ['/etc/conaryrc', '/etc/fstab', '/var/lib/conarydb/conarydb']:
-            assert(os.path.exists(bi.fakeroot + x))
+        for x in ['/etc/conaryrc', '/etc/fstab',
+                  '/var/lib/conarydb/conarydb',
+                  '/etc/sysconfig/appliance-name']:
+            self.failUnless(os.path.exists(bi.fakeroot + x))
 
     def testSparse(self):
         bi = self.setupBootableImage()

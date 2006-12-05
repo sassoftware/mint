@@ -409,6 +409,12 @@ title %(name)s (%(kversion)s)
         if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'sbin', 'gpm')):
             util.copyfile(os.path.join(self.imgcfg.dataDir, 'mouse'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
 
+        # write the /etc/sysconfig/appliance-name for rpl:2 initscripts
+        util.mkdirChain(os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+        appName = open(os.path.join(self.fakeroot, 'etc', 'sysconfig', 'appliance-name'), 'w')
+        print >> appName, self.build.getName()
+        appName.close()
+
     @timeMe
     def MakeE3FsImage(self, file):
         flags = ''
