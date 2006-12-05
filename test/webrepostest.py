@@ -37,13 +37,13 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # first try anonymous browsing
         page = self.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=test:runtime',
+            content = 'troveInfo?t=test',
             server = self.getProjectServerHostname())
 
         # now try logged-in
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=test:runtime',
+            content = 'troveInfo?t=test',
             server = self.getProjectServerHostname())
 
         # now try logged-in, as another user user
@@ -51,7 +51,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('test2', 'test2pass')
         page = self.webLogin('test2', 'test2pass')
         page = page.assertContent('/repos/testproject/browse', code = [200],
-            content = 'troveInfo?t=test:runtime',
+            content = 'troveInfo?t=test',
             server = self.getProjectServerHostname())
 
     def testBrowseHiddenProject(self):
@@ -74,7 +74,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # logged-in user should see the browser
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/test/browse', code = [200],
-                content = 'troveInfo?t=test:runtime',
+                content = 'troveInfo?t=test',
                 server = self.getProjectServerHostname())
 
     def testBrowseExternalProject(self):
