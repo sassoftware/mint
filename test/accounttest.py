@@ -318,31 +318,12 @@ class AccountTest(MintRepositoryHelper):
             self.fail("user level user search returned incorrect results.")
 
     def testChangePassword(self):
-        def deleteMintAuth(projectId):
-            client = self.openMintClient(('mintauth', 'mintpass'))
-            project = client.getProject(projectId)
-            cfg = project.getConaryConfig()
-            repos = ConaryClient(cfg).getRepos()
-            repos.deleteUserByName(versions.Label(project.getLabel()), 'mintauth')
-
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
+        client, userId = self.quickMintAdmin("testuser", "testpass")
         intProjectId = self.newProject(client, "Internal Project", "internal",
                 MINT_PROJECT_DOMAIN)
-        extProjectId = self.newProject(client, "External Project", "external",
-                MINT_PROJECT_DOMAIN)
-
-        deleteMintAuth(extProjectId)
-        extProject = client.getProject(extProjectId)
-        labelId = extProject.getLabelIdMap()['external.'+MINT_PROJECT_DOMAIN+'@rpl:devel']
-        extProject.editLabel(labelId, "external.%s@rpl:devel" % \
-                MINT_PROJECT_DOMAIN,
-            'http://%s.%s:%d/repos/external/' % (MINT_HOST,
-                MINT_PROJECT_DOMAIN, self.port), 'anonymous', 'anonymous')
-
-        cu = self.db.cursor()
-        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
-        self.db.commit()
+        extProjectId = client.newExternalProject("External Project",
+                "external", MINT_PROJECT_DOMAIN, "localhost@rpl:devel",
+                'http://localhost:%d/conary/' % self.servers.getServer(0).port, False)
 
         user = client.getUser(userId)
         user.setPassword("newpass")
@@ -354,14 +335,13 @@ class AccountTest(MintRepositoryHelper):
 
         intLabel = versions.Label('internal.' + MINT_PROJECT_DOMAIN + \
                 '@rpl:devel')
-        extLabel = versions.Label('external.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel')
+        extLabel = versions.Label('localhost@rpl:devel')
 
         # accessed using new password
         cfg = internal.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(intLabel) == [])
 
-        # external repositor will be accessed anonymously
+        # external repository will be accessed anonymously
         cfg = external.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(extLabel) == [])
 
