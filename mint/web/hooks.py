@@ -332,7 +332,9 @@ def getProjectDomainName(db, hostName):
 
 def isProjectExternal(db, hostname):
     cu = db.cursor()
-    cu.execute("SELECT external FROM Projects WHERE hostname=?", hostname)
+    cu.execute("""SELECT external AND NOT EXISTS
+        (SELECT * FROM InboundMirrors WHERE targetProjectId=projectId)
+        FROM Projects WHERE hostname=?""", hostname)
     try:
         external = cu.fetchone()[0]
     except (IndexError, TypeError):
