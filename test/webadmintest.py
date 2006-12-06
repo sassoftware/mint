@@ -71,7 +71,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # and make sure that the appropriate database entries are created
         assert(client.getInboundMirrors() == [[1, 1,
-            'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat',
+            'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen',
             'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
 
         # and make sure that the 'shell' repository was created
