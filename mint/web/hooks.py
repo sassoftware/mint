@@ -178,8 +178,8 @@ def conaryHandler(req, cfg, pathInfo):
         repNameMap = getRepNameMap(db)
         projectName = repName.split(".")[0]
         if repName in repNameMap:
+            req.log_error("remapping repository name: %s -> %s" % (repName, repNameMap[repName]))
             repName = repNameMap[repName]
-            req.log_error("remapping repository name: %s" % repName)
 
         repHash = repName + req.hostname
 
@@ -341,7 +341,7 @@ def isProjectExternal(db, hostname):
         import traceback
         tb = traceback.format_exc()
 
-        apache.log_error("error in isProjectExternal:")
+        apache.log_error("error in isProjectExternal('%s'):" % hostname)
         for line in tb.split("\n"): 
             apache.log_error(line)
         external = False
