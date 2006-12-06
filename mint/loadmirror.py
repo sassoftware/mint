@@ -209,11 +209,10 @@ class LoadMirror:
         call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, cfg)
-        localUrl = "http%s://%s%srepos/%s/" % (cfg.SSL and 's' or\
-                   '', cfg.projectSiteHost, cfg.basePath,
-                   serverName.split(".")[0])
+        localUrl = "http%s://%s%srepos/%s/" % (cfg.SSL and 's' or \
+                   '', cfg.projectSiteHost, cfg.basePath, project.hostname)
 
         # set the internal label to our authUser and authPass
         project.editLabel(labelId, label, localUrl, cfg.authUser, cfg.authPass)
         self.client.addInboundMirror(project.id, [label], "http://%s/conary/" % serverName, "", "")
-        self.client.addRemappedRepository(".".join((serverName.split(".")[0], cfg.projectDomainName)), serverName)
+        self.client.addRemappedRepository(".".join((project.hostname, cfg.projectDomainName)), serverName)
