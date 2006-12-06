@@ -557,7 +557,8 @@ title %(name)s (%(kversion)s)
     @timeMe
     def runTagScripts(self, target = 'ext3'):
         if not os.path.exists(self.imgcfg.umlKernel[self.arch]):
-            raise RuntimeError, "UML kernel not found: %s -- please check configuration of jobserver"
+            raise RuntimeError, "UML kernel not found: %s -- please check configuration of jobserver" % \
+                self.imgcfg.umlKernel[self.arch]
 
         if target == 'ext3':
             cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s mem=%s' % \
