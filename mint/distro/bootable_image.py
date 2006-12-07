@@ -180,6 +180,10 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.prefix = 'BDI:'
         self.timeStamp = 0
 
+        UpdateCallback.__init__(self)
+        ChangesetCallback.__init__(self)
+
+
 class BootableImage(ImageGenerator):
     configObject = BootableImageConfig
 
