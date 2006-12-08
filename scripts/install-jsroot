@@ -72,7 +72,7 @@ echo "Creating mtab and device nodes"
 touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
-chmod 666 $ROOT/dev/shm
+chmod 777 $ROOT/dev/shm
 mkdir -p $ROOT/dev/pts
 mkdir -p $ROOT/srv/rbuilder/finished-images/
 mkdir -p $ROOT/srv/rbuilder/entitlements/
