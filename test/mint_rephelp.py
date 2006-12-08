@@ -116,7 +116,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
 
-        rephelp.ApacheServer.__init__(self, useCache, name, reposDB, contents, server,
+        rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
                                       requireSigs, authCheck, entCheck, False)
         self.needsPGPKey = False
