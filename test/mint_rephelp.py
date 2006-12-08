@@ -112,12 +112,13 @@ mintCfg = None
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
             conaryPath, repMap, useCache = False, requireSigs = False,
-            authCheck = None, entCheck = None):
+            authCheck = None, entCheck = None, readOnlyRepository = False):
         self.mintPath = os.environ.get("MINT_PATH", "")
+        self.useCache = useCache
 
-        rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
+        rephelp.ApacheServer.__init__(self, useCache, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
-                                      useCache, requireSigs, authCheck, entCheck)
+                                      requireSigs, authCheck, entCheck, False)
         self.needsPGPKey = False
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
