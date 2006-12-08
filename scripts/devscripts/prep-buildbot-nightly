@@ -1,0 +1,13 @@
+#!/bin/sh
+
+LKG_INSTALL_LABEL="lkg.rdu.rpath.com@rpath:lkg-build"
+RAA_INSTALL_LABEL="raatest.rb.rpath.com@rpl:buildbot"
+
+[ -d test-root ] && rm -rf test-root
+conary update conary{,-build,-repository,-policy} rmake \
+    --install-label=$LKG_INSTALL_LABEL \
+    --root test-root --no-deps && \
+conary update group-dist \
+    --install-label=$RAA_INSTALL_LABEL \
+    --root test-root --no-deps
+exit $?
