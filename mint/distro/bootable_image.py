@@ -117,7 +117,7 @@ def copyfile(source, target):
 
 
 
-class InstallCallback(UpdateCallback, ChangesetCallback):
+class InstallCallback(UpdateCallback):
     def restoreFiles(self, size, totalSize):
         if totalSize != 0:
             self.restored += size
@@ -181,7 +181,6 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.timeStamp = 0
 
         UpdateCallback.__init__(self)
-        ChangesetCallback.__init__(self)
 
 
 class BootableImage(ImageGenerator):
