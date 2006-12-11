@@ -19,11 +19,11 @@ staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
 
 def backup(cfg, out):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
+    print >> out, backupPath
     util.mkdirChain(backupPath)
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
         util.execute("echo '.dump' | sqlite3 %s > %s" % (cfg.dbPath, dumpPath))
-    print >> out, dumpPath
     if cfg.reposDBDriver == 'sqlite':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
@@ -35,7 +35,6 @@ def backup(cfg, out):
             if os.path.exists(reposDBPath):
                 util.execute("echo '.dump' | sqlite3 %s > %s" % \
                               (reposDBPath, dumpPath))
-                print >> out, dumpPath
                 print >> out, cfg.reposContentsDir % reposDir
     for d in staticPaths:
         path = os.path.join(cfg.dataPath, d)
