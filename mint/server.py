@@ -2876,6 +2876,15 @@ class MintServer(object):
             not trove.endswith(':source'))
         return troves
 
+    @typeCheck(int)
+    @requiresAdmin
+    def killJob(self, jobId):
+        KILL_COMMAND = '/usr/share/rbuilder/scripts/killjob'
+        SUDO = '/usr/bin/sudo'
+        pid = os.fork()
+        if pid == 0:
+            os.execv(SUDO, [SUDO, KILL_COMMAND, str(jobId)])
+
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
