@@ -199,10 +199,28 @@ makeJobRowData = function(aRow) {
         dateOfInterest = aRow['timeFinished'];
     }
 
-    return [ aRow['jobId'], username, humanReadableDate(dateOfInterest),
+    if (aRow['status'] == STATUS_RUNNING) {
+        var button = BUTTON({'class':'killbutton'}, 'Kill');
+        connect(button, 'onclick', function(){killJob(aRow['jobId']);});
+        return [ aRow['jobId'], username, humanReadableDate(dateOfInterest),
+                jobDesc, aRow['statusMessage'], aRow['hostname'], button ];
+    }
+    else {
+        return [ aRow['jobId'], username, humanReadableDate(dateOfInterest),
                 jobDesc, aRow['statusMessage'], aRow['hostname'] ];
+    }
 };
 
+function killJob(jobId) {
+    logDebug('Killing job ' + repr(jobId));
+    var req = new JsonRpcRequest("jsonrpc/", "killJob");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(callbackVoid);
+    req.send(false, [jobId]);
+}
+
+function callbackVoid() {}
+    
 // RPC callbacks ------------------------------------------------------------
 
 function processGetCookStatus(aReq) {
@@ -300,7 +318,7 @@ function processListActiveJobs(aReq) {
                 TR(null, TH({ 'colspan': '5', 'colSpan': '5', 'class': 'tablesubhead' },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
-                    "Description", "Last Status Message Received", "Job Server IP"]),
+                    "Description", "Last Status Message Received", "Job Server IP", "Kill Job"]),
                     map(rowDisplay, runningJobsList));
         }
         if (finishedJobsList.length > 0) {
@@ -315,6 +333,12 @@ function processListActiveJobs(aReq) {
         appendChildNodes(jobTable, TABLE({ 'class': 'results' }, tableBody));
     }
 
+    // Disconnect signals to any kill buttons to prevent a memory leak after
+    // page refreshes
+    var buttons = getElementsByTagAndClassName('button', 'killbutton');
+    for (var i in buttons) {
+        disconnectAll(buttons[i]);
+    }
     // display it
     swapDOM(oldJobTable, jobTable);
 }
