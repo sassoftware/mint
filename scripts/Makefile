@@ -17,7 +17,8 @@ script_dist =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password
+	set-password		\
+	killjob
 
 extra_dist = \
 	Makefile		\
