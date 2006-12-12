@@ -190,6 +190,37 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless('name="externalUser" value="mirror"' in page.body)
         self.failUnless('name="externalPass" value="mirrorpass"' in page.body)
 
+    def testEditExternalProject(self):
+        # make sure that editing an external projects' label actually does the
+        # edit (RBL-1234)
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'preload',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        p = client.getProjectByHostname('rpath')
+        page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1-newlabel',
+                              'url' : '',
+                              'useMirror': 'none',
+                              'authType': 'none',
+                              'externalUser': '',
+                              'externalPass': ''})
+        self.failUnlessEqual(p.getLabel(), "conary.rpath.com@rpl:1-newlabel")
+
+
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)

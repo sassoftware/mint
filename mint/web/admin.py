@@ -203,17 +203,19 @@ class AdminHandler(WebHandler):
             # set up the authentication
             if externalAuth:
                 if authType == 'userpass':
-                    project.editLabel(labelId, label, url,
+                    project.editLabel(labelId, str(extLabel), url,
                             externalUser, externalPass)
                 elif authType == 'entitlement':
                     externalEnt = conarycfg.emitEntitlement(extLabel.getHost(), externalEntClass, externalEntKey)
                     entF = file(os.path.join(self.cfg.dataPath, "entitlements", extLabel.getHost()), "w")
                     entF.write(externalEnt)
                     entF.close()
-                    project.editLabel(labelId, label, url,
+                    project.editLabel(labelId, str(extLabel), url,
                             self.cfg.authUser, self.cfg.authPass)
+                else:
+                    raise RuntimeError, "Invalid authentication type specified"
             else:
-                project.editLabel(labelId, label, url,
+                project.editLabel(labelId, str(extLabel), url,
                     'anonymous', 'anonymous')
 
             # set up the mirror, if requested
@@ -223,7 +225,7 @@ class AdminHandler(WebHandler):
                            hostname)
 
                 # set the internal label to our authUser and authPass
-                project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
+                project.editLabel(labelId, str(extLabel), localUrl, self.cfg.authUser, self.cfg.authPass)
 
                 mirror = self.client.getInboundMirror(projectId)
                 if mirror and editing:
