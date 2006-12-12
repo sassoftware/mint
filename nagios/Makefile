@@ -7,7 +7,7 @@
 DESTDIR =
 SUBDIRS = mint_nagpy
 export TOPDIR = $(shell pwd)
-export VERSION = 0.1
+export VERSION = 0.2
 export DISTDIR = $(TOPDIR)/mint-nagpy-$(VERSION)
 export prefix = /usr
 export servicedir= /srv
