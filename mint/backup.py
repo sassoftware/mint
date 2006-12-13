@@ -74,7 +74,7 @@ def restore(cfg):
                           WHERE hostname = ?""", hostname)
             localMirror = cu.fetchone()[0]
             if localMirror:
-                util.rmtree(reposPath)
+                util.rmtree(reposPath, ignore_errors = True)
                 util.mkdirChain(os.path.join(reposPath, 'tmp'))
                 util.mkdirChain(os.path.join(reposPath, 'contents'))
                 reposDB = dbstore.connect(cfg.reposDBPath % repo,
@@ -101,10 +101,7 @@ def restore(cfg):
 
 def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
-    try:
-        util.rmtree(backupPath)
-    except OSError:
-        pass
+    util.rmtree(backupPath, ignore_errors = True)
 
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
