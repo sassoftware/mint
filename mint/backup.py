@@ -141,5 +141,4 @@ def run():
         usage(out = sys.stdout)
     else:
         usage()
-        sys.exit(1)
 
