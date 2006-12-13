@@ -93,7 +93,7 @@ def restore(cfg):
                                     cfg.reposDBPath % repo, cfg.authUser), 'w')
                 p.write(cfg.authPass + '\n')
                 p.close()
-    # refresh package index to ensure we don't reference troves untilt they're
+    # refresh package index to ensure we don't reference troves until they're
     # restored.
     from mint import pkgindex
     upie = pkgindex.UpdatePackageIndexExternal()
