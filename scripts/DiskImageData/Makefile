@@ -6,6 +6,8 @@ data_files = fstab \
 	     hosts \
 	     network \
 	     post-tag-scripts \
+             vmdisk.vmdk \
+             vmwareesx.vmx \
 	     vmwareplayer.vmx \
 	     mouse \
 	     xorg.conf \
