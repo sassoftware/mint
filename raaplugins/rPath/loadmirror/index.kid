@@ -58,7 +58,7 @@
                 ta = TEXTAREA({'id': 'preloadLog', 'rows': '15', 'cols': '90'}, logText);
                 swapDOM($('preloadLog'), ta);
                 scrollToBottom('preloadLog');
-                setTimeout("refreshLog()", 2500);
+                setTimeout("refreshLog()", 10000);
             }
 
             function refreshLog() {

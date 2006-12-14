@@ -46,7 +46,7 @@ class Callback:
             (self.serverName,
              (float(self.filesCopied)/float(self.totalFiles)) * 100.0)
 
-        if self.filesCopied > (self.lastCopied + 50):
+        if self.filesCopied > (self.lastCopied + 1000):
             self._write(msg)
             self.lastCopied = self.filesCopied
 
