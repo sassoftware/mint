@@ -32,16 +32,9 @@ from conary.lib.cfg import *
             </p>
 
             <p py:if="'Server Setup' in configGroups">
-                <span style='font-weight: bold; color: red;'>Note:</span>
                 Once you have created a project on your rBuilder server, you
                 will no longer be able to change the hostName or siteDomainName
                 fields.
-            </p>
-
-            <p><span style="font-weight: bold;">Note:</span>
-                The External Passwords options require completion only for
-                situations where you wish to use an external URL to handle
-                authentication of rBuilder accounts.
             </p>
 
             <p>When you've filled in the necessary information, click on

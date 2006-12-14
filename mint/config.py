@@ -130,7 +130,10 @@ class MintConfig(ConfigFile):
 
     # mimic exactly the conary server cfg items
     externalPasswordURL     = (cfgtypes.CfgString, None,
-                               "URL for external password verification")
+                               "URL for external password verification, "    \
+                               "required only for situations where you "     \
+                               "wish to use an external URL to handle "      \
+                               "authentication of rBuilder accounts.")
     authCacheTimeout        = (cfgtypes.CfgInt, None,
                                "Number of seconds to cache authentication results")
     removeTrovesVisible     = (cfgtypes.CfgBool, False)
