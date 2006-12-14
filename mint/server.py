@@ -3755,7 +3755,7 @@ class MintServer(object):
 
                 self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
-
+                self._generateConaryRcFile()
             for table in tables:
                 tables[table].db = self.db
                 tables[table].cfg = self.cfg
