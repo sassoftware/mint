@@ -3746,6 +3746,7 @@ class MintServer(object):
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
 
+            genConaryRc = False
             global tables
             if not tables or alwaysReload:
                 # use file locks to ensure we have a multi-process mutex
@@ -3755,7 +3756,7 @@ class MintServer(object):
 
                 self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
-                self._generateConaryRcFile()
+                genConaryRc = True
             for table in tables:
                 tables[table].db = self.db
                 tables[table].cfg = self.cfg
@@ -3767,6 +3768,9 @@ class MintServer(object):
 
             #Now it's safe to commit
             self.db.commit()
+
+            if genConaryRc:
+                self._generateConaryRcFile()
 
         except:
             #An error occurred during db creation or upgrading
