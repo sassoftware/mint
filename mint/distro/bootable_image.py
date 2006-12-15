@@ -313,7 +313,9 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def setupConaryClient(self):
-        self.conarycfg.threaded = True
+        # turn off threading until CNY-1086 is fixed
+        self.conarycfg.threaded = False
+
         self.conarycfg.root = self.fakeroot
         self.conarycfg.dbPath = '/var/lib/conarydb'
         self.conarycfg.installLabelPath = None
