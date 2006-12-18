@@ -93,11 +93,17 @@ def restore(cfg):
                                     cfg.reposDBPath % repo, cfg.authUser), 'w')
                 p.write(cfg.authPass + '\n')
                 p.close()
-    # refresh package index to ensure we don't reference troves until they're
+    # delete package index to ensure we don't reference troves until they're
     # restored.
-    from mint import pkgindex
-    upie = pkgindex.UpdatePackageIndexExternal()
-    os._exit(upie.run())
+    try:
+        cu.execute('DELETE FROM PackageIndex')
+        cu.execute('DELETE FROM PackageIndexMark')
+    except:
+        # this masks errors, since it does re-raise but we don't care.
+        # impact and cost are negligible.
+        db.rollback()
+    else:
+        db.commit()
 
 def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
@@ -120,8 +126,8 @@ def handle(func, *args, **kwargs):
         else:
             errno = 1
         import traceback
-        print ''.join(traceback.format_tb(bt))
-        print exception, e
+        print >> sys.stderr, ''.join(traceback.format_tb(bt))
+        print >> sys.stderr, exception, e
     sys.exit(errno)
 
 def run():
