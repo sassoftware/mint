@@ -228,17 +228,15 @@
                     filteredFileUrls = [ x for x in f['fileUrls'] if x[1] in self.cfg.visibleUrlTypes or x[1] == urltypes.LOCAL ]
                     urlTypeList = [ x[1] for x in filteredFileUrls ]
                 ?>
+                <img src="/conary-static/apps/mint/images/download-icon.png" style="float: right;"/>
                 <div py:strip="True" py:for="urlId, urlType, url in filteredFileUrls">
                     <span py:if="not (urlType == urltypes.LOCAL and self.cfg.redirectUrlType in urlTypeList)" style="vertical-align: top; font-size: smaller;">
                         <?python
                         fileUrl = cfg.basePath + 'downloadImage?fileId=%d%s' % (f['fileId'], (urlType not in (urltypes.LOCAL, self.cfg.redirectUrlType)) and ('&urlType=%d' % urlType) or '')
                         ?>
-                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}">
-                            ${urltypes.displayNames[urlType]}
-                        </a>
+                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="${fileUrl}">${urltypes.displayNames[urlType]}</a><br />
                     </span>
                 </div>
-                <img src="/conary-static/apps/mint/images/download-icon.png" />
             </td>
         </tr>
     </div>
