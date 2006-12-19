@@ -84,7 +84,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         adds = []
         earlierThan = time.time() - (self.s3cfg.unpublishedThresholdDays * 86400)
         cu.execute("""SELECT b.buildId, bf.fileId, bf.sha1, fu.url
-                        FROM projects p LEFT OUTER JOIN builds b USING (projectId)
+                        FROM projects p LEFT OUTER JOIN BuildsView b USING (projectId)
                                         LEFT OUTER JOIN publishedReleases pr USING (pubreleaseId)
                                         LEFT OUTER JOIN buildFiles bf USING (buildId)
                                         LEFT OUTER JOIN buildFilesUrlsMap USING (fileId)
@@ -128,9 +128,11 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
         # determine removes
         removes = []
         cu.execute("""SELECT fu.urlId, fu.urlType, fu.url
-                      FROM FilesUrls fu LEFT OUTER JOIN BuildFilesUrlsMap bfum
-                         USING (urlId)
-                      WHERE (bfum.fileId IS NULL AND fu.urlType in (?, ?))""",
+                      FROM FilesUrls fu
+                        JOIN BuildFilesUrlsMap bfum USING (urlId)
+                        JOIN BuildFiles bf USING (fileId)
+                        JOIN Builds b USING (buildId)
+                      WHERE (b.deleted=1 AND fu.urlType in (?, ?))""",
                       urltypes.AMAZONS3, urltypes.AMAZONS3TORRENT)
         rs = cu.fetchall()
         self.log.info("%d file urls are candidates for removal" % len(rs))
@@ -202,6 +204,8 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                 cu.execute("UPDATE BuildFiles SET filename = NULL, size = ?, sha1 = ? WHERE fileId = ?", fileSize, fileSha1, fileId)
                 cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3, so.getURL())
                 urlId = cu.lastrowid
+                s3UrlId = urlId # save this for later
+
                 cu.execute("INSERT INTO BuildFilesUrlsMap SET fileId = ?, urlId = ?", fileId, urlId)
                 cu.execute("INSERT INTO FilesUrls SET urlType = ?, url = ?", urltypes.AMAZONS3TORRENT, so.getTorrentURL())
                 urlId = cu.lastrowid
@@ -212,6 +216,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
                 if len(r):
                     localUrlId = r[0][0]
                     cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", localUrlId)
+                    cu.execute("UPDATE UrlDownloads SET urlId=? WHERE urlId=?", s3UrlId, localUrlId)
                 db.commit()
                 self.log.info("Database updated")
 
