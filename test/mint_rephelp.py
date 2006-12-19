@@ -548,6 +548,9 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getProjectServerHostname(self):
         return '%s.%s' % (MINT_HOST, MINT_PROJECT_DOMAIN)
 
+    def getProjectHostname(self, projectHostname):
+        return '%s.%s' % (projectHostname, MINT_PROJECT_DOMAIN)
+
     def getMintUrl(self):
         return 'http://%s:%d/' % (self.getServerData())
 
