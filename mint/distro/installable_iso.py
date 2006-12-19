@@ -56,7 +56,7 @@ class AnacondaTemplateMissing(Exception):
         return "Anaconda template missing for architecture: %s" % self._arch
 
 
-class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
+class Callback(callbacks.UpdateCallback):
     def requestingChangeSet(self):
         self._update('requesting %s from repository')
 
@@ -86,6 +86,7 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.prefix = prefix
 
     def __init__(self, status):
+        
         self.exceptions = []
         self.abortEvent = None
         self.status = status
@@ -94,6 +95,8 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.changeset = ''
         self.prefix = ''
         self.timeStamp = 0
+
+        callbacks.UpdateCallback.__init__(self)
 
 
 def _linkRecurse(fromDir, toDir):
