@@ -155,6 +155,9 @@ def conaryHandler(req, cfg, pathInfo):
         domainName = getProjectDomainName(db, hostName)
         repName = hostName + "." + domainName
     else:
+        parts = req.hostname.split(".")
+        hostName = parts[0]
+        domainName = ".".join(parts[1:])
         repName = req.hostname
 
     method = req.method.upper()
