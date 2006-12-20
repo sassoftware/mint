@@ -8,6 +8,8 @@ from mint.distro import bootable_image
 from conary.lib import util, log
 
 class VMwareImage(bootable_image.BootableImage):
+    fileType = buildtypes.typeNames[buildtypes.VMWARE_IMAGE]
+
     @bootable_image.timeMe
     def zipVMwarePlayerFiles(self, dir, outfile):
         cwd = os.getcwd()
@@ -53,7 +55,7 @@ class VMwareImage(bootable_image.BootableImage):
             self.zipVMwarePlayerFiles(vmbasedir, outfile)
         finally:
             util.rmtree(vmbasedir)
-        return (outfile, 'VMware Player Image')
+        return (outfile, self.fileType)
 
     @bootable_image.timeMe
     def createVMDK(self, outfile):
@@ -147,6 +149,8 @@ class VMwareImage(bootable_image.BootableImage):
         return res
 
 class VMwareESXImage(VMwareImage):
+    fileType = buildtypes.typeNames[buildtypes.VMWARE_ESX_IMAGE]
+
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
         self.freespace = self.build.getDataValue("freespace") * 1048576
