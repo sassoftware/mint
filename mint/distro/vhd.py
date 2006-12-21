@@ -1,4 +1,9 @@
-#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import md5
 import struct
 import stat
@@ -33,9 +38,7 @@ class PackedHeader(object):
             if name != 'checksum':
                 self._recalcChecksum = True
             self.fmtDict[name] = val
-            print "set %s to %s" % (str(name),str(val))
         else:
-            print "normal set %s to %s" % (str(name), str(val))
             return object.__setattr__(self, name, val)
 
     def __init__(self):
@@ -60,7 +63,6 @@ class PackedHeader(object):
             self.updateChecksum()
 
         args = [self.fmtDict[x[0]] for x in self.fmtList]
-        print self.fmt, "\n", args
 
         footer = struct.pack(self.fmt, *args)
         return footer
@@ -171,7 +173,7 @@ class DataBlock(object):
     def pack(self):
         return self.sectorBitmap.pack() + self.data
 
-def makeSparse(inFn, outFn):
+def makeDynamic(inFn, outFn):
     st = os.stat(inFn)
 
     inF = open(inFn)
@@ -197,62 +199,26 @@ def makeSparse(inFn, outFn):
 
     data = None
     blockIndex = 0
-    while True:
+    while data != '':
         data = inF.read(blockSize)
         if not data:
             break
-        print "munging block:", blockIndex
         block = DataBlock(data)
         if not block.isEmpty():
-            print "writing block:", blockIndex
             assert not (outF.tell() % DataBlock.sectorSize)
             bat[blockIndex] = outF.tell() / DataBlock.sectorSize
             outF.write(block.pack())
-        else:
-            print "skipped block:", blockIndex
         blockIndex += 1
 
     outF.write(footer.pack())
     outF.seek(batIndex)
     outF.write(bat.pack())
 
-
-if __name__ == "__main__":
-    inFn = sys.argv[1]
-    if inFn.endswith('.img'):
-        outFn = inFn.replace('.img', '.vhd')
-        makeSparse(inFn, outFn)
-        sys.exit(0)
-    if inFn.endswith('.img'):
-        print "Converting %s" % inFn
-        st = os.stat(inFn)
-        print st
-
-        outFn = inFn.replace('.img', '.vhd')
-
-        inF = open(inFn, "r")
-        outF = open(outFn, "w")
-        data = inF.read(512)
-        print "copying %s to %s" % (inFn, outFn)
-        while data:
-            outF.write(data)
-            data = inF.read(512)
-        footer = VHDFooter()
-        footer.originalSize = footer.currentSize = st[stat.ST_SIZE]
-
-        outF.write(footer.pack())
-        outF.close()
-    elif inFn.endswith('.vhd'):
-        print "Reading %s" % inFn
-        st = os.stat(inFn)
-        print st
-
-        inF = open(inFn)
-        inF.seek(st[stat.ST_SIZE]-512)
-        x = inF.read(512)
-        footer = VHDFooter()
-        for x in struct.unpack(footer.fmt, x):
-            if type(x) == str:
-                print "STR: %s" % repr(x)
-            else:
-                print "HEX: %x" % x
+def makeFlat(inFn):
+    st = os.stat(inFn)
+    inF = open(inFn, "a")
+    footer = VHDFooter()
+    footer.originalSize = footer.currentSize = st[stat.ST_SIZE]
+    inF.seek(st[stat.ST_SIZE])
+    inF.write(footer.pack())
+    inF.close()
