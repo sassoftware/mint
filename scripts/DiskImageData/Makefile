@@ -11,7 +11,8 @@ data_files = fstab \
 	     vmwareplayer.vmx \
 	     mouse \
 	     xorg.conf \
-	     keyboard
+	     keyboard \
+	     vpc.vmc
 
 datadir = /usr/share/rbuilder
 

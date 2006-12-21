@@ -22,7 +22,8 @@ python_files = \
         splitdistro.py          \
         tarball.py              \
         vmware_image.py         \
-	vhd.py
+	vhd.py                  \
+	vpc.py
 
 extra_dist = Makefile
 
