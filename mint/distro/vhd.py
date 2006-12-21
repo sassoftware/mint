@@ -11,12 +11,18 @@ import os
 import sys
 import time
 
+SEEK_SET = 0
+SEEK_CUR = 1
+SEEK_END = 2
+
+Y2K_UTC = 946684800
+
 class VHDDiskType:
     NoneType = 0
     Reserved = 1
     Fixed = 2
     Dynamic = 3
-    Differencing = 3
+    Differencing = 4
     Reserved2 = 5
 
 class PackedHeader(object):
@@ -30,6 +36,8 @@ class PackedHeader(object):
 
             if fmtDict and name in fmtDict:
                 item = fmtDict[name]
+            else:
+                raise
 
         return item
 
@@ -47,7 +55,7 @@ class PackedHeader(object):
         self.fmtDict = dict((x[0], x[2]) for x in self.fmtList)
 
         self.uuid = os.urandom(16)
-        self.timeStamp = time.time()
+        self.timeStamp = time.time() - Y2K_UTC
 
     def updateChecksum(self):
         self.checksum = 0
@@ -67,6 +75,11 @@ class PackedHeader(object):
         footer = struct.pack(self.fmt, *args)
         return footer
 
+    def unpack(self, data):
+        dataList = struct.unpack(self.fmt, data)
+        for key, val in zip([x[0] for x in self.fmtList], dataList):
+            self.__setattr__(key, val)
+
 
 class SparseDiskHeader(PackedHeader):
     fmtList = [
@@ -81,7 +94,14 @@ class SparseDiskHeader(PackedHeader):
         ("parentTimeStamp",     "I",    0),
         ("reserved",            "4s",   ''),
         ("parentName",          "512s", ""),
-        ("parentLocators",      "192s", ""),
+        ("parentLocator1",      "24s", ""),
+        ("parentLocator2",      "24s", ""),
+        ("parentLocator3",      "24s", ""),
+        ("parentLocator4",      "24s", ""),
+        ("parentLocator5",      "24s", ""),
+        ("parentLocator6",      "24s", ""),
+        ("parentLocator7",      "24s", ""),
+        ("parentLocator8",      "24s", ""),
         ("reserved2",           "256s", ""),
     ]
 
@@ -133,6 +153,7 @@ class BlockAllocationTable(object):
         res += ((512 - (len(res) % 512)) % 512) * chr(0)
         return res
 
+
 class SectorBitmap(object):
     def __init__(self, numSectors):
         # split the bit field into 64 bit chunks for ease of integrating with
@@ -172,6 +193,42 @@ class DataBlock(object):
 
     def pack(self):
         return self.sectorBitmap.pack() + self.data
+
+
+class ParentLocatorEntry(PackedHeader):
+    fmtList = [
+        ('platformCode', '>4s', None),
+        ('dataSpace',    'I',   None),
+        ('dataLength',   'I',   None),
+        ('reserved',     '4s',  ''),
+        ('dataOffset',   'Q',   None)
+        ]
+
+    def __init__(self, platformCode):
+        PackedHeader.__init__(self)
+        assert platformCode in ('Wi2r', 'Wi2k', 'W2ru', 'W2ku', 'Mac ', 'MacX')
+        self.platformCode = platformCode
+
+    def __setattr__(self, key, val):
+        if key == 'parentName':
+            if self.platformCode.startswith('W2'):
+                dataLength = len(val.encode('utf-16le'))
+            else:
+                dataLength = len(val)
+            self.dataLength = dataLength
+            self.dataSpace = ((dataLength / 512) + \
+                                  int(bool(dataLength % 512))) * 512
+        PackedHeader.__setattr__(self, key, val)
+
+    def getLocator(self):
+        if self.platformCode.startswith('W2'):
+            res = self.parentName.encode('utf-16le')
+        else:
+            res = self.parentName
+        res += (self.dataSpace - len(res)) * chr(0)
+        # fixme: add padding
+        return res
+
 
 def makeDynamic(inFn, outFn):
     st = os.stat(inFn)
@@ -213,6 +270,7 @@ def makeDynamic(inFn, outFn):
     outF.write(footer.pack())
     outF.seek(batIndex)
     outF.write(bat.pack())
+    outF.close()
 
 def makeFlat(inFn):
     st = os.stat(inFn)
@@ -222,3 +280,64 @@ def makeFlat(inFn):
     inF.seek(st[stat.ST_SIZE])
     inF.write(footer.pack())
     inF.close()
+
+def makeDifference(inFn, outFn, parentName = None):
+    """Make a difference virtual hard disk image
+
+       inFn is path to a virtual hard disk image to use as a base.
+       outFn is path to save difference virtual hard disk.
+       parentName is the name to use for the parent disk. This will be set to
+       inFn if no input is provided.
+       Please note, the function assumes these images will end up in the same
+       directory, so the basename of inFn will be used inside the difference
+       image."""
+    inF = open(inFn)
+    inF.seek(-512, SEEK_END)
+    footer = VHDFooter()
+    footer.unpack(inF.read())
+    inF.close()
+    parentName = parentName or os.path.basename(inFn)
+
+    footer.diskType = VHDDiskType.Differencing
+
+    header = SparseDiskHeader()
+
+    blockSize = DataBlock.sectorsPerBlock * DataBlock.sectorSize
+    numBatEntries = footer.currentSize / blockSize + \
+        int(bool(footer.currentSize % blockSize))
+
+    bat = BlockAllocationTable(numBatEntries)
+    header.maxTableEntries = numBatEntries
+    header.parentUuid = footer.uuid
+    header.parentTimeStamp = os.stat(inFn)[stat.ST_MTIME] - Y2K_UTC
+
+    footer.timeStamp = time.time() - Y2K_UTC
+    # VHD specification indicates this field must be utf-16
+    header.parentName = parentName.encode('utf-16be')
+
+    loc1 = ParentLocatorEntry('W2ru')
+    loc2 = ParentLocatorEntry('Wi2r')
+
+    loc1.parentName = parentName
+    loc2.parentName = parentName
+
+    outF = open(outFn, 'w')
+    outF.write(footer.pack())
+    headerLoc = outF.tell()
+    outF.write(header.pack())
+    outF.write(bat.pack())
+
+    loc1.dataOffset = outF.tell()
+    outF.write(loc1.getLocator())
+    loc2.dataOffset = outF.tell()
+    outF.write(loc2.getLocator())
+
+    outF.write(footer.pack())
+
+    # now fix the parent locators in the header
+    outF.seek(headerLoc)
+    header.parentLocator1 = loc1.pack()
+    header.parentLocator2 = loc2.pack()
+    outF.write(header.pack())
+
+    outF.close()
