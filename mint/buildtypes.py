@@ -17,6 +17,7 @@ validBuildTypes = {
     'RAW_HD_IMAGE'     : 7,
     'VMWARE_IMAGE'     : 8,
     'VMWARE_ESX_IMAGE' : 9,
+    'VIRTUAL_PC_IMAGE' : 10,
     }
 
 TYPES = validBuildTypes.values()
@@ -45,7 +46,8 @@ typeNames = {
     VMWARE_IMAGE:       "VMware\xae Player Image",
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Image",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
-    TARBALL:            "Compressed Tar File"
+    TARBALL:            "Compressed Tar File",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual PC",
 }
 
 typeNamesShort = {
@@ -57,7 +59,8 @@ typeNamesShort = {
     VMWARE_IMAGE:       "VMware\xae",
     VMWARE_ESX_IMAGE:   "VMware\xae ESX",
     LIVE_ISO:           "Demo CD/DVD",
-    TARBALL:            "Tar"
+    TARBALL:            "Tar",
+    VIRTUAL_PC_IMAGE:   "Virtual PC",
 }
 
 typeNamesMarketing = {
@@ -69,7 +72,8 @@ typeNamesMarketing = {
     VMWARE_IMAGE:       "VMware\xae Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
-    TARBALL:            "TAR File"
+    TARBALL:            "TAR File",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual PC",
 }
 
 # sizes are listed in bytes...
