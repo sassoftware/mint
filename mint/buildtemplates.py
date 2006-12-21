@@ -120,6 +120,12 @@ class zisofs(BooleanOption):
     default = True
     prompt = 'Compress filesystem'
 
+class vhdDiskType(EnumOption):
+    default = '2'
+    prompt = "VHD disk type"
+    options = {'Fixed Hard Disk Image' : 'fixed',
+               'Dynamic Hard Disk Image' : 'dynamic'}
+
 class boolArg(BooleanOption):
     default = False
     prompt = 'Garbage Boolean'
@@ -199,6 +205,11 @@ class TarballTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize',
                  'mirrorUrl']
     id = buildtypes.TARBALL
+
+class VirtualPCTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
+                 'swapSize', 'mirrorUrl', 'vhdDiskType']
+    id = buildtypes.VIRTUAL_PC_IMAGE
 
 ########################
 
