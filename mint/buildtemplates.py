@@ -121,10 +121,11 @@ class zisofs(BooleanOption):
     prompt = 'Compress filesystem'
 
 class vhdDiskType(EnumOption):
-    default = '2'
-    prompt = "VHD disk type"
-    options = {'Fixed Hard Disk Image' : 'fixed',
-               'Dynamic Hard Disk Image' : 'dynamic'}
+    default = 'dynamic'
+    prompt = "VHD hard disk type"
+    options = {'Fixed image' : 'fixed',
+               'Dynamic image' : 'dynamic',
+               'Difference image' : 'difference'}
 
 class boolArg(BooleanOption):
     default = False
