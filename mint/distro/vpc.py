@@ -44,7 +44,7 @@ class VirtualPCImage(bootable_image.BootableImage):
         try:
             filebase = os.path.join(vmbasedir, self.basefilename)
 
-            self.createVHD(filebase + '.vhd')
+            self.createVHD(filebase)
             #Populate the vmc file
             self.createVMC(filebase)
             #zip the resultant files
@@ -54,13 +54,18 @@ class VirtualPCImage(bootable_image.BootableImage):
         return (outfile, 'Virtual PC')
 
     @bootable_image.timeMe
-    def createVHD(self, outfile):
+    def createVHD(self, filebase):
         diskType = self.build.getDataValue('vhdDiskType')
         if diskType == 'dynamic':
-            vhd.makeDynamic(self.outfile, outfile)
+            vhd.makeDynamic(self.outfile, filebase + '.vhd')
         elif diskType == 'fixed':
             vhd.makeFlat(self.outfile)
-            os.rename(self.outfile, outfile)
+            os.rename(self.outfile, filebase + '.vhd')
+        elif diskType == 'difference':
+            vhd.makeDynamic(self.outfile, filebase + '-base.vhd')
+            os.chmod(filebase + '-base.vhd', 0400)
+            vhd.makeDifference(filebase + '-base.vhd', filebase + '.vhd',
+                               self.basefilename + '-base.vhd')
 
     @bootable_image.timeMe
     def createVMC(self, fileBase):
