@@ -40,6 +40,7 @@ from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
 from mint.distro.tarball import Tarball
+from mint.distro.vpc import VirtualPCImage
 
 generators = {
     buildtypes.INSTALLABLE_ISO:   InstallableIso,
@@ -51,6 +52,7 @@ generators = {
     buildtypes.RAW_FS_IMAGE:      RawFsImage,
     buildtypes.TARBALL:           Tarball,
     buildtypes.NETBOOT_IMAGE:     NetbootImage,
+    buildtypes.VIRTUAL_PC_IMAGE:  VirtualPCImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
