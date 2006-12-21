@@ -1,3 +1,9 @@
+
+# Copyright (c) 2004-2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import os
 import tempfile
 import zipfile
