@@ -47,7 +47,7 @@ typeNames = {
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Image",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual PC",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
 }
 
 typeNamesShort = {
@@ -60,7 +60,7 @@ typeNamesShort = {
     VMWARE_ESX_IMAGE:   "VMware\xae ESX",
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar",
-    VIRTUAL_PC_IMAGE:   "Virtual PC",
+    VIRTUAL_PC_IMAGE:   "Virtual Server",
 }
 
 typeNamesMarketing = {
@@ -73,7 +73,7 @@ typeNamesMarketing = {
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual PC",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
 }
 
 # sizes are listed in bytes...

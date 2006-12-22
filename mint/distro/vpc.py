@@ -38,7 +38,7 @@ class VirtualPCImage(bootable_image.BootableImage):
 
     @bootable_image.timeMe
     def createVirtualPCImage(self, outfile, basedir):
-        self.status('Compressing Microsoft Virtual PC Image')
+        self.status('Compressing Microsoft Virtual Server Image')
         #Create a temporary directory
         vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
         try:
@@ -51,7 +51,7 @@ class VirtualPCImage(bootable_image.BootableImage):
             self.zipVirtualPCFiles(vmbasedir, outfile)
         finally:
             util.rmtree(vmbasedir)
-        return (outfile, 'Virtual PC')
+        return (outfile, 'Virtual Server')
 
     @bootable_image.timeMe
     def createVHD(self, filebase):
@@ -95,7 +95,7 @@ class VirtualPCImage(bootable_image.BootableImage):
             # and instantiate the image itself
             self.createImage()
 
-            self.status('Creating Microsoft Virtual PC Image')
+            self.status('Creating Microsoft Virtual Server Image')
             fd, outfile = tempfile.mkstemp(self.suffix, 'mint-MDI-cvmpi-',
                                         self.cfg.imagesPath)
             os.close(fd)
