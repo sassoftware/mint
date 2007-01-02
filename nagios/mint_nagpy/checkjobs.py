@@ -77,9 +77,12 @@ class CheckJobs(NagiosPlugin):
         jobs = cu.fetchall_dict()
         badJobs = []
         for x in jobs:
+            currentTime = time.time()
             if x['status'] == jobstatus.RUNNING:
-                currentTime = time.time()
                 if currentTime - x['timeStarted'] > self.cfg.maxJobTime:
+                    badJobs.append(x['jobId'])
+            elif x['status'] == jobstatus.WAITING:
+                if currentTime - x['timeSubmitted'] > self.cfg.maxJobTime:
                     badJobs.append(x['jobId'])
             elif x['status'] == jobstatus.ERROR:
                 if x['timeStarted'] > timeStamp:
