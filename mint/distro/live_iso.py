@@ -216,6 +216,9 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         # for pivotroot
         os.mkdir(os.path.join(self.liveDir, 'initrd'))
 
+        # for fuse-based copy on write
+        os.mkdir(os.path.join(self.liveDir, 'readwriteroot'))
+
         self.mkinitrd()
 
         allKernels = [x for x in self.iterFiles( \

@@ -18,8 +18,8 @@ mknod /dev/ubda1 b 98 1
 #Link in the mouse
 ln -s psaux /dev/mouse
 
-# Clear mtab
-(> /etc/mtab) &> /dev/null
+# Symlink /proc/mounts to /etc/mtab
+ln -s /proc/mounts /etc/mtab
 
 # Enter mounted filesystems into /etc/mtab
 mount -f /
