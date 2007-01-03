@@ -1011,13 +1011,20 @@ class ProjectHandler(WebHandler):
     @requiresAuth
     @ownerOnly
     @intFields(span = 7)
-    def downloadChartImg(self, auth, span):
-        self.req.content_type = "image/png"
+    @strFields(format = 'png')
+    def downloadChartImg(self, auth, span, format):
+        contentTypes = {
+            'png': 'image/png',
+            'svg': 'image/svg+xml',
+            'pdf': 'application/pdf',
+        }
+
+        self.req.content_type = contentTypes[format]
 
         # constrain the span to a reasonable limit
         span = span <= 30 and span or 30
 
-        return self.client.getDownloadChart(self.project.id, days = span)
+        return self.client.getDownloadChart(self.project.id, days = span, format = format)
 
     @requiresAuth
     @ownerOnly

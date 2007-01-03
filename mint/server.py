@@ -3594,10 +3594,10 @@ class MintServer(object):
         return base64.b64encode(self._getReportObject(name).getPdf())
 
     @private
-    @typeCheck(int, int)
-    def getDownloadChart(self, projectId, days):
+    @typeCheck(int, int, str)
+    def getDownloadChart(self, projectId, days, format):
         chart = charts.DownloadChart(self.db, projectId, span = days)
-        return chart.getImageData()
+        return chart.getImageData(format)
 
     # mirrored labels
     @private

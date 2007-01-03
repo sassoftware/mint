@@ -515,8 +515,8 @@ class MintClient:
     def getReport(self, name):
         return self.server.getReport(name)
 
-    def getDownloadChart(self, projectId, days):
-        return self.server.getDownloadChart(projectId, days)
+    def getDownloadChart(self, projectId, days, format = 'png'):
+        return self.server.getDownloadChart(projectId, days, format)
 
     # label functions
     def versionIsExternal(self, versionStr):

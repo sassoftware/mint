@@ -15,6 +15,16 @@ import os
 
 DAY = 3600 * 24
 
+from reportlab.graphics import renderPM
+from reportlab.graphics import renderSVG
+from reportlab.graphics import renderPDF
+
+formatDict = {
+    'png': renderPM,
+    'svg': renderSVG,
+    'pdf': renderPDF,
+}
+
 class DownloadChart(Drawing):
     def __init__(self, db, projectId, interval = DAY, span = 7, width=600, height=400, *args, **kw):
         self._db = db
@@ -76,14 +86,9 @@ class DownloadChart(Drawing):
         return [data], labels
 
     def getImageData(self, format = 'png'):
-        fd, fn = tempfile.mkstemp(suffix = '.' + format)
-        data = None
-        try:
-            os.close(fd)
-            self.save(formats=[format], outDir = os.path.dirname(fn), fnRoot = fn[:-4])
-            f = open(fn)
-            data = f.read()
-            f.close()
-        finally:
-            os.unlink(fn)
-        return data
+        renderer = formatDict[format]
+        if renderer == renderPM:
+            d = renderer.drawToString(self, format)
+        else:
+            d = renderer.drawToString(self)
+        return d
