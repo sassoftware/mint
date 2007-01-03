@@ -1433,7 +1433,6 @@ class MintServer(object):
         return self.projects.search(terms, modified, limit, offset, includeInactive)
 
     @typeCheck(str, int, int)
-    @private
     def searchPackages(self, terms, limit, offset):
         """
         Collect the results as requested by the search terms
