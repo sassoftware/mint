@@ -1009,6 +1009,20 @@ class ProjectHandler(WebHandler):
         self._predirect("members")
 
     @requiresAuth
+    @ownerOnly
+    @intFields(span = 7)
+    def downloadChartImg(self, auth, span):
+        self.req.content_type = "image/png"
+        span = span <= 30 and span or 30
+        return self.client.getDownloadChart(self.project.id, days = span)
+
+    @requiresAuth
+    @ownerOnly
+    @intFields(span = 7)
+    def downloads(self, auth, span):
+        return self._write("downloads", span = span)
+
+    @requiresAuth
     @boolFields(confirmed = False)
     @dictFields(yesArgs = {})
     def resign(self, auth, confirmed, **yesArgs):

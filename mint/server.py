@@ -18,6 +18,7 @@ import tempfile
 import fcntl
 from urlparse import urlparse
 
+from mint import charts
 from mint import data
 from mint import database
 from mint import dbversion
@@ -3591,6 +3592,12 @@ class MintServer(object):
         if name not in reports.getAvailableReports():
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
+
+    @private
+    @typeCheck(int, int)
+    def getDownloadChart(self, projectId, days):
+        chart = charts.DownloadChart(self.db, projectId, span = days)
+        return chart.getImageData()
 
     # mirrored labels
     @private

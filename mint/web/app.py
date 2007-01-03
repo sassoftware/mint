@@ -139,7 +139,6 @@ class MintApp(WebHandler):
                 self.session.save()
             elif 'cacheable' in method.__dict__:
                 pageCache[reqHash(self.req)] = output
-
         except mint_error.MintError, e:
             if isinstance(e, mint_error.MaintenanceMode):
                 raise
