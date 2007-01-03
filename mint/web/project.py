@@ -1013,7 +1013,10 @@ class ProjectHandler(WebHandler):
     @intFields(span = 7)
     def downloadChartImg(self, auth, span):
         self.req.content_type = "image/png"
+
+        # constrain the span to a reasonable limit
         span = span <= 30 and span or 30
+
         return self.client.getDownloadChart(self.project.id, days = span)
 
     @requiresAuth

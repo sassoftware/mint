@@ -13,6 +13,7 @@ python_files =			\
 	spotlight.py		\
 	checkhtml.py		\
 	client.py		\
+	charts.py		\
 	config.py		\
 	constants.py		\
 	cooktypes.py		\
