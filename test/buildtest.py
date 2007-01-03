@@ -687,6 +687,19 @@ class BuildTest(fixtures.FixturedUnitTest):
         cu.execute("SELECT urlId FROM UrlDownloads WHERE urlId=?", urlId)
         self.failUnlessEqual(cu.fetchone()[0], urlId)
 
+    @fixtures.fixture('Full')
+    def testDownloadChart(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+        buildFiles = build.getFiles()
+
+        urlId = buildFiles[0]['fileUrls'][0][0]
+        client.server._server.addDownloadHit(urlId, '1.2.3.4')
+
+        x = client.getDownloadChart(data['projectId'], 7, 'png')
+        self.failUnlessEqual(x[:4], '\x89PNG')
+
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):
         client = self.getClient('admin')

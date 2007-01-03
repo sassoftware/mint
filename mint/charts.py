@@ -68,11 +68,9 @@ class DownloadChart(Drawing):
 
         now = time.time()
         for x in range(self._span, 0, -1):
-            print x
             start = now - (x * self._interval)
             end = now - ((x - 1) * self._interval)
 
-            print start, end
             cu.execute("""SELECT COUNT(ip) FROM UrlDownloads
                 JOIN FilesUrls USING(urlId)
                 JOIN BuildFilesUrlsMap USING (urlId)
@@ -91,4 +89,5 @@ class DownloadChart(Drawing):
             d = renderer.drawToString(self, format)
         else:
             d = renderer.drawToString(self)
+
         return d
