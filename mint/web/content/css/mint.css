@@ -592,6 +592,7 @@ div#footer {
     padding: 4px 8px 12px 4px;
     font-size: 10pt;
     float: left;
+    clear: right;
 }
 
 div#footer a {
