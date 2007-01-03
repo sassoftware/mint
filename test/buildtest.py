@@ -700,6 +700,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         x = client.getDownloadChart(data['projectId'], 7, 'png')
         self.failUnlessEqual(x[:4], '\x89PNG')
 
+        x = client.getDownloadChart(data['projectId'], 30, 'svg')
+        self.failUnless(x.strip().startswith('<svg>'))
+
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):
         client = self.getClient('admin')
