@@ -4,4 +4,4 @@
 # All rights reserved
 #
 mintVersion = '@version@'
-hgVersion = '@changeset@'
+hgChangeset = '@changeset@'
