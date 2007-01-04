@@ -8,7 +8,7 @@
 -->
     <head>
         <title>${formatTitle("Appliance Spotlight")}</title>
-        <link href="${cfg.corpSite}css/corp.css" type="text/css" rel="stylesheet" />
+        <link href="${cfg.corpSite}css/corp.css?v=${cacheFakeoutVersion}" type="text/css" rel="stylesheet" />
     </head>
     <body>
                 <div id="right" class="side">

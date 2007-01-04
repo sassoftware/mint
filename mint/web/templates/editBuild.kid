@@ -37,7 +37,7 @@ allowNone = ['anaconda-custom', 'media-template']
 
     <head>
         <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js?v=${cacheFakeoutVersion}"/>
     </head>
     <body>
         <div id="layout">

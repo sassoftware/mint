@@ -99,7 +99,7 @@
         <?python
             from mint import rmakeconstants
         ?>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript">
         <![CDATA[
         addLoadEvent(function() {

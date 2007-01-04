@@ -7,7 +7,7 @@
 -->
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'"
           py:attrs="item.attrib">
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
+          <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css?v=${cacheFakeoutVersion}" />
     </head>
 
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"

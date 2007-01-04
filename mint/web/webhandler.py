@@ -16,6 +16,7 @@ import gettext
 from mod_python import apache
 from mod_python import Cookie
 
+from mint import helperfuncs
 from mint import shimclient
 from mint import profile
 from mint import users
@@ -48,6 +49,7 @@ class WebHandler(object):
         # kwargs to _write)
         context = dict(self.__dict__.iteritems())
         context.update(values)
+        context.update({'cacheFakeoutVersion': helperfuncs.getVersionForCacheFakeout()})
 
         # write out the template
         t = template.Template(**context)

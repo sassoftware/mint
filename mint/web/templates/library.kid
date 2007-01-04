@@ -18,8 +18,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
     <div py:def="formatTitle(title)" py:strip="True" py:content="'%s%s%s'%(cfg.productName, title and ' - ', title)"/>
 
     <thead py:def="columnTitles(columns = [])" py:strip="False">
-        <tr>
-            <th py:for="columnName in columns">${columnName}</th>
+        <tr> <th py:for="columnName in columns">${columnName}</th>
         </tr>
     </thead>
 
@@ -54,7 +53,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
     </div>
 
     <div id="rMakeBuilder" py:def="rMakeBuilder" py:if="rMakeBuild">
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js?v=${cacheFakeoutVersion}"/>
         <?python
             statusIcons = {buildtrove.TROVE_STATE_FAILED : cfg.staticPath + "apps/mint/images/action_stop.gif",
                            buildtrove.TROVE_STATE_BUILDABLE : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
@@ -108,7 +107,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
     </div>
 
     <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js?v={cacheFakeoutVersion}"/>
         <script type="text/javascript">
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);

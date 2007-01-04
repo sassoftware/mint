@@ -6,9 +6,10 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
+
     <head>
         <title>${formatTitle('Preload Mirror')}</title>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/mirror.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/mirror.js?v={cacheFakeoutVersion}" />
     </head>
     <body>
         <div>

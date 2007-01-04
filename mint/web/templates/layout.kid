@@ -6,6 +6,8 @@
 #
 from mint import constants
 from mint import maintenance
+from mint import helperfuncs
+
 from urllib import quote
 onload = "javascript:;"
 ?>
@@ -17,21 +19,21 @@ onload = "javascript:;"
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript">
             <![CDATA[
                 var BaseUrl = '${cfg.basePath}';
                 var x86_64 = ${int(cfg.bootableX8664)};
             ]]>
         </script>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css?v=${cacheFakeoutVersion}" />
 
         <link rel="shortcut icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
         <link rel="icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
@@ -120,7 +122,7 @@ onload = "javascript:;"
                     <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
-                <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
+                <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}<span py:if="cfg.debugMode"><br />(built from Mercurial changeset ${constants.hgChangeset})</span></p>
             </div>
         </div>
         <div py:if="cfg.googleAnalyticsTracker" py:strip="True">

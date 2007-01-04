@@ -6,6 +6,7 @@
 
 from conary import versions
 from conary.deps import deps
+from mint import constants
 
 import htmlentitydefs
 import re
@@ -125,3 +126,13 @@ def fixentities(htmltext):
         else:
             return entity
     return re.sub("&(\w+);?", repl, htmltext)
+
+def getVersionForCacheFakeout():
+    """ This version string is used in our webpages where we want to 
+        force the Javascript or CSS to reload upon updating rBuilder.
+        See mint/web/templates/layout.kid for example usage. """
+    if ':' in constants.hgChangeset:
+        return constants.hgChangeset.split(':')[0]
+    else:
+        return '0'
+

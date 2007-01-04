@@ -9,7 +9,7 @@
 
     <head>
         <title>${formatTitle('rMake build Status')}</title>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js?v=${cacheFakeoutVersion}"/>
     </head>
     <body>
         <div id="layout">

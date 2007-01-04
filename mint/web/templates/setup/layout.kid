@@ -14,9 +14,9 @@ onload = "javascript:;"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../library.kid'">
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/setup.css" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css?v=${cacheFakeoutVersion}" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/setup.css?v=${cacheFakeoutVersion}" />
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
