@@ -36,6 +36,8 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from conary.errors import TroveNotFound
 
+import simplejson
+
 def getUserDict(members):
     users = { userlevels.USER: [],
               userlevels.DEVELOPER: [],
@@ -493,7 +495,6 @@ class ProjectHandler(WebHandler):
         self._predirect("build?id=%d" % buildId)
 
     @writersOnly
-    @intFields(id = None)
     @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
     def deleteBuild(self, auth, confirmed, **yesArgs):
@@ -513,6 +514,42 @@ class ProjectHandler(WebHandler):
                     yesArgs = { 'func': 'deleteBuild',
                                 'id': yesArgs['id'],
                                 'confirmed': '1' },
+                    noLink = "builds")
+
+    @writersOnly
+    @listFields(int, buildIdsToDelete = [])
+    @boolFields(confirmed = False)
+    @dictFields(yesArgs = {})
+    def deleteBuilds(self, auth, buildIdsToDelete, confirmed, **yesArgs):
+        if confirmed:
+            buildIds = simplejson.loads(yesArgs['buildIdsJSON'])
+            for buildId in buildIds:
+                build = self.client.getBuild(int(buildId))
+                build.deleteBuild()
+            self._setInfo("Builds deleted")
+            self._predirect("builds")
+        else:
+            if not buildIdsToDelete:
+                self._addErrors("No builds specified.")
+                self._predirect("builds")
+            numToDelete = len(buildIdsToDelete)
+            numPublished = 0
+            message = ""
+            for buildId in buildIdsToDelete:
+                build = self.client.getBuild(buildId)
+                if build.pubReleaseId:
+                    numPublished += 1
+            if numPublished:
+                message += "One or more of the builds you have specified are a part of a release. Deleting these builds will automatically delete the builds from their corresponding release(s). "
+
+            message += "Are you sure you want to delete these builds?"
+            # we use JSON to serialize that list because confirm.kid
+            # will eat the list.
+            return self._write("confirm",
+                    message = message,
+                    yesArgs = { 'func': 'deleteBuilds',
+                                'buildIdsJSON': simplejson.dumps(buildIdsToDelete),
+                                'confirmed': 1 },
                     noLink = "builds")
 
     @intFields(id = None)

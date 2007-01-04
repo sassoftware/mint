@@ -91,5 +91,89 @@ class WebPageTest(SeleniumHelper):
         self.failUnless("Build: Test Project" in self.s.get_body_text())
 
 
+    def testDeleteMultipleBuilds(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, "Build 1")
+        build.setDesc("Test build 1")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+
+        build2 = client.newBuild(projectId, "Build 2")
+        build2.setDesc("Test build 2")
+        build2.setBuildType(buildtypes.STUB_IMAGE)
+        build2.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
+        build2.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+
+        build3 = client.newBuild(projectId, "Build 3")
+        build3.setDesc("Test build 3")
+        build3.setBuildType(buildtypes.STUB_IMAGE)
+        build3.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
+        build3.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+
+        release = client.newPublishedRelease(projectId)
+        release.name = "Published Build"
+        release.version = "0.1"
+        release.addBuild(build2.id)
+        release.save()
+
+        self.setOptIns("foouser")
+
+        self.s.open(self.URL)
+        self.s.type("username", "foouser")
+        self.s.type("password", "foopass")
+        self.clickAndWait("signInSubmit")
+
+        self.failUnless("Edit my account" in self.s.get_body_text())
+
+        self.clickAndWait("link=Foo")
+        self.clickAndWait("link=Manage Builds")
+
+        self.failUnless("Build 1" in self.s.get_body_text())
+        self.failUnless("Build 2" in self.s.get_body_text())
+        self.failUnless("Build 3" in self.s.get_body_text())
+
+        self.clickAndWait("deleteBuildsSubmit")
+
+        self.failUnless("No builds specified" in self.s.get_body_text())
+
+        self.s.check("name=buildIdsToDelete value=%d" % build.id)
+        self.s.check("name=buildIdsToDelete value=%d" % build3.id)
+
+        self.clickAndWait("deleteBuildsSubmit")
+
+        self.failUnless("Are you sure" in self.s.get_body_text())
+        self.failIf("part of a release" in self.s.get_body_text())
+
+        self.clickAndWait("yes")
+
+        self.failUnless("Builds deleted" in self.s.get_body_text())
+        self.failIf("Build 1" in self.s.get_body_text())
+        self.failUnless("Build 2" in self.s.get_body_text())
+        self.failIf("Build 3" in self.s.get_body_text())
+
+        self.s.check("name=buildIdsToDelete value=%d" % build2.id)
+
+        self.clickAndWait("deleteBuildsSubmit")
+
+        self.failUnless("Are you sure" in self.s.get_body_text())
+        self.failUnless("part of a release" in self.s.get_body_text())
+
+        self.clickAndWait("yes")
+
+        self.failIf("Build 3" in self.s.get_body_text())
+        self.failUnless("no builds" in self.s.get_body_text())
+
 if __name__ == "__main__":
     testsuite.main()

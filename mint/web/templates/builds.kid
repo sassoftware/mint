@@ -41,7 +41,7 @@ from mint.web.templatesupport import downloadTracker
             <td class="buildInfo">${build.getDefaultName()}</td>
             <td class="buildInfo">${build.getArch()}</td>
             <td class="buildInfo">${buildtypes.typeNamesShort[build.getBuildType()]}</td>
-            <td class="buildInfo">&nbsp;<span py:if="not isPublished and not isInProgress" class="buildInfo">&nbsp;(<a href="${basePath}deleteBuild?id=${build.id}">delete</a>)</span>
+            <td class="buildInfo">&nbsp;<input py:if="not isPublished and not isInProgress" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
     </div>
@@ -51,13 +51,18 @@ from mint.web.templatesupport import downloadTracker
             rowNumber = 0
             hiddenName = 'older_build'
         ?>
-        <table py:if="builds" border="0" cellspacing="0" cellpadding="0" class="buildstable">
-            <div py:strip="True" py:for="build in builds">
-                ${buildsTableRow(build, rowNumber, numShowByDefault, hiddenName)}
-                <?python rowNumber += 1 ?>
-            </div>
-        </table>
+        <div py:if="builds" py:strip="True">
+            <form method="post" action="deleteBuilds">
+                <table py:if="builds" border="0" cellspacing="0" cellpadding="0" class="buildstable">
+                    <div py:strip="True" py:for="build in builds">
+                        ${buildsTableRow(build, rowNumber, numShowByDefault, hiddenName)}
+                        <?python rowNumber += 1 ?>
+                    </div>
+                </table>
         <p py:if="rowNumber > numShowByDefault"><a name="${hiddenName}" onclick="javascript:toggle_display_by_name('${hiddenName}');" href="#">(show all builds)</a></p>
+                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Builds</button></p>
+            </form>
+        </div>
         <p py:if="not builds">This project contains no builds.</p>
     </div>
 
