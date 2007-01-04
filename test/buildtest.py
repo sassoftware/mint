@@ -701,7 +701,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(x[:4], '\x89PNG')
 
         x = client.getDownloadChart(data['projectId'], 30, 'svg')
-        self.failUnless(x.strip().startswith('<svg>'))
+        self.failUnless(x.strip().startswith('<?xml'))
 
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):
