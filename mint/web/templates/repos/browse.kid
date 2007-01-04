@@ -18,7 +18,7 @@ from mint.helperfuncs import truncateForDisplay
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
-        py:if="(groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source') and package != groupTrove.recipeName) or
+        py:if="(groupTrove and not package.endswith(':source') and package != groupTrove.recipeName) or
                (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component and not package.startswith('group-'))">
         <?python
             if component:
