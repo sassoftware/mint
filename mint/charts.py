@@ -7,6 +7,8 @@ from reportlab.graphics.shapes import Drawing, String
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.charts.barcharts import HorizontalBarChart
 
+from reportlab.lib import colors
+
 from conary import dbstore
 from conary.dbstore import sqllib
 import time
@@ -24,6 +26,8 @@ formatDict = {
     'svg': renderSVG,
     'pdf': renderPDF,
 }
+
+rPathLightBlue = colors.HexColor(0x5d82b7)
 
 class DownloadChart(Drawing):
     def __init__(self, db, projectId, interval = DAY, span = 7, width=600, height=400, *args, **kw):
@@ -59,6 +63,8 @@ class DownloadChart(Drawing):
 
         self.chart.valueAxis.valueMax = max(self.chart.data[0]) + 10
         self.chart.valueAxis.valueMin = 0
+
+        self.chart.bars[0].fillColor = rPathLightBlue
 
     def getData(self, projectId):
         data = []
