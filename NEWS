@@ -1,3 +1,9 @@
+Changes in (new version):
+* TBD
+
+Changes in 2.1.0:
+* This needs to be filled in, although it's after the fact. :(
+
 Changes in 2.0.3:
 * rBuilder's configuration file now supports overrides via two files:
   rbuilder-generated.conf and rbuilder-custom.conf. rbuilder-generated.conf
