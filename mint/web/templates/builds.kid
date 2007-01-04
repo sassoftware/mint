@@ -26,7 +26,7 @@ from mint.web.templatesupport import downloadTracker
             isInProgress = build.id in buildsInProgress
         ?>
         <tr py:attrs="rowAttrs">
-            <td colspan="4" class="buildName">${truncateForDisplay(build.name)}
+            <td colspan="4" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
                 <span py:if="build.pubReleaseId" class="buildAssociated">
                     <?python
                         release = self.client.getPublishedRelease(build.pubReleaseId)
@@ -41,8 +41,7 @@ from mint.web.templatesupport import downloadTracker
             <td class="buildInfo">${build.getDefaultName()}</td>
             <td class="buildInfo">${build.getArch()}</td>
             <td class="buildInfo">${buildtypes.typeNamesShort[build.getBuildType()]}</td>
-            <td class="buildInfo">(<a href="${basePath}build?id=${build.id}">view</a>)
-                <span py:if="not isPublished and not isInProgress" class="buildInfo">&nbsp;(<a href="${basePath}deleteBuild?id=${build.id}">delete</a>)</span>
+            <td class="buildInfo">&nbsp;<span py:if="not isPublished and not isInProgress" class="buildInfo">&nbsp;(<a href="${basePath}deleteBuild?id=${build.id}">delete</a>)</span>
             </td>
         </tr>
     </div>
