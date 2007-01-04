@@ -77,7 +77,7 @@ from mint import buildtypes
                 <div py:if="projectPublishedReleases">
                     ${pubReleasesTable(projectPublishedReleases, isOwner)}
                 </div>
-                <div py:if="projectUnpublishedReleases and isOwner">
+                <div py:if="projectUnpublishedReleases and isWriter">
                     <h3>Unpublished Releases</h3>
                     ${pubReleasesTable(projectUnpublishedReleases, isOwner)}
                 </div>
