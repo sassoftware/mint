@@ -3,7 +3,13 @@
 #
 # All Rights Reserved
 #
+from mint import config
 from mint import database
+from mint import scriptlibrary
+
+import os
+import sys
+import traceback
 
 class InboundMirrorsTable(database.KeyedTable):
     name = 'InboundMirrors'
@@ -115,3 +121,28 @@ class RepNameMapTable(database.DatabaseTable):
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
         self.db.commit()
         return cu._cursor.lastrowid
+
+
+class MirrorScript(scriptlibrary.SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+    logFileName = None
+
+    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
+        self.cfg = config.MintConfig()
+        self.cfg.read(self.cfgPath)
+        if self.logFileName:
+            self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
+        scriptlibrary.SingletonScript.__init__(self, aLockPath)
+
+    def handle_args(self):
+        if len(sys.argv) < 2:
+            return False
+        return True
+
+    def usage(self):
+        print "usage: %s <url to rBuilder server>" % self.name
+        return 1
+
+    def logTraceback(self):
+        tb = traceback.format_exc()
+        [self.log.error(x) for x in tb.split("\n") if x.strip()]
