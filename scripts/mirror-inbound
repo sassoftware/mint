@@ -16,29 +16,14 @@ from conary.lib import util, log
 
 from mint import config
 from mint.client import MintClient
-from mint.scriptlibrary import SingletonScript
+from mint.mirror import MirrorScript
 
 log.setVerbosity(log.DEBUG)
 
-class MirrorInbound(SingletonScript):
-    cfgPath = config.RBUILDER_CONFIG
-
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
-    logPath = os.path.join(cfg.dataPath, 'logs', "mirror-inbound.log")
-    del cfg
-
-    def handle_args(self):
-        if len(sys.argv) < 2:
-            return False
-        return True
-
-    def usage(self):
-        print "usage: %s <url to rBuilder server>" % self.name
-        return 1
+class MirrorInbound(MirrorScript):
+    logFileName = "mirror-inbound.log"
 
     def action(self):
-        sys.excepthook = util.genExcepthook(debug=True)
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
 
@@ -55,38 +40,43 @@ class MirrorInbound(SingletonScript):
             inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
                     sourceUser, sourcePass = label
             targetProject = client.getProject(targetProjectId)
+            self.log.info("Mirroring %s" % targetProject.name)
 
-            targetLabelId = targetProject.getLabelIdMap().values()[0]
-            targetLabelStr, targetUrl, targetUser, targetPass = client.getLabel(targetLabelId)
-            reposHost = versions.Label(targetLabelStr).getHost()
+            try:
+                targetLabelId = targetProject.getLabelIdMap().values()[0]
+                targetLabelStr, targetUrl, targetUser, targetPass = client.getLabel(targetLabelId)
+                reposHost = versions.Label(targetLabelStr).getHost()
 
-            if mintCfg.SSL and targetUrl.startswith('http:'):
-                targetUrl = "https" + targetUrl[4:]
+                if mintCfg.SSL and targetUrl.startswith('http:'):
+                    targetUrl = "https" + targetUrl[4:]
 
-            cfg.source.repositoryMap = {reposHost: sourceUrl}
-            if sourceUser:
-                cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+                cfg.source.repositoryMap = {reposHost: sourceUrl}
+                if sourceUser:
+                    cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-            cfg.target.repositoryMap = {reposHost: targetUrl}
-            cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+                cfg.target.repositoryMap = {reposHost: targetUrl}
+                cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
-            cfg.host = reposHost
-            cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
+                cfg.host = reposHost
+                cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-            sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                      cfg.source.user,
-                                      entitlementDir = cfg.entitlementDirectory)
+                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                                          cfg.source.user,
+                                          entitlementDir = cfg.entitlementDirectory)
 
-            targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                      cfg.target.user,
-                                      entitlementDir = cfg.entitlementDirectory)
+                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                                          cfg.target.user,
+                                          entitlementDir = cfg.entitlementDirectory)
 
-            count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                     False, False)
-            while count:
                 count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                                          False, False)
-            
+                while count:
+                    count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
+                                             False, False)
+            except Exception, e:
+                self.log.error("Exception occurred mirroring %s" % targetProject.name)
+                self.logTraceback()
+
         return 0
 
 if __name__ == "__main__":

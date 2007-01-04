@@ -20,27 +20,12 @@ from conary.lib import util, log
 
 from mint import config
 from mint.client import MintClient
-from mint.scriptlibrary import SingletonScript
+from mint.mirror import MirrorScript
 
 log.setVerbosity(log.DEBUG)
-sys.excepthook = util.genExcepthook(debug=True)
 
-class MirrorOutbound(SingletonScript):
-    cfgPath = config.RBUILDER_CONFIG
-
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
-    logPath = os.path.join(cfg.dataPath, 'logs', "mirror-outbound.log")
-    del cfg
-
-    def handle_args(self):
-        if len(sys.argv) < 2:
-            return False
-        return True
-
-    def usage(self):
-        print "usage: %s <url to rBuilder server>" % self.name
-        return 1
+class MirrorOutbound(MirrorScript):
+    logFileName = "mirror-outbound.log"
 
     def action(self):
         client = MintClient(sys.argv[1])
@@ -60,40 +45,44 @@ class MirrorOutbound(SingletonScript):
             projectId = int(projectId)
             sourceProject = client.getProject(projectId)
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
+            self.log.info("Mirroring %s" % sourceProject.name)
+            
+            try:
+                labelStr, _, sourceUser, sourcePass  = \
+                          client.getLabel(sourceLabelId)
+                reposHost = versions.Label(labelStr).getHost()
+                sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
 
-            labelStr, _, sourceUser, sourcePass  = \
-                      client.getLabel(sourceLabelId)
-            reposHost = versions.Label(labelStr).getHost()
-            sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
+                cfg.target.repositoryMap = {reposHost: targetUrl}
+                cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
-            cfg.target.repositoryMap = {reposHost: targetUrl}
-            cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+                cfg.source.repositoryMap = {reposHost: sourceUrl}
+                cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-            cfg.source.repositoryMap = {reposHost: sourceUrl}
-            cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+                cfg.host = reposHost
 
-            cfg.host = reposHost
+                if mirrorAll:
+                    cfg.labels = []
+                else:
+                    cfg.labels = [versions.Label(labelStr)]
 
-            if mirrorAll:
-                cfg.labels = []
-            else:
-                cfg.labels = [versions.Label(labelStr)]
-
-            cfg.configLine('matchTroves ' + ' '.join(matchStrings))
+                cfg.configLine('matchTroves ' + ' '.join(matchStrings))
 
 
-            targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                  cfg.target.user,
-                                  entitlementDir = cfg.entitlementDirectory)
+                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                                      cfg.target.user,
+                                      entitlementDir = cfg.entitlementDirectory)
 
-            sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                  cfg.source.user,
-                                  entitlementDir = cfg.entitlementDirectory)
+                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                                      cfg.source.user,
+                                      entitlementDir = cfg.entitlementDirectory)
 
-            while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
-                                          False):
-                pass
-
+                while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
+                                              False):
+                    pass
+            except Exception, e:
+                self.log.error("Exception mirroring %s" % sourceProject.name)
+                self.logTraceback()
         return 0
 
 if __name__ == "__main__":
