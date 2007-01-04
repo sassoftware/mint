@@ -28,12 +28,7 @@ fi
 troveSpec=$1
 
 if [ -f $troveSpec ]; then
-    if [ ! -f /tmp/upstream ]; then
-        echo "Error: no /tmp/upstream must exist containing the jsroot upstream version." >&2
-        exit 1
-    fi
-
-    upstreamVer=$(cat /tmp/upstream)
+    upstreamVer=$(echo $troveSpec | sed -r 's/jobserver-([0-9\.]+)\.tar.*/\1/g')
 
     echo "Installing chroot from tarball: $upstreamVer"
     ROOT=/srv/rbuilder/jobserver/$upstreamVer/
