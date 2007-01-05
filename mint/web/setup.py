@@ -13,6 +13,7 @@ import time
 
 from mod_python import apache
 
+from mint import helperfuncs
 from mint import mint_error
 from mint import shimclient
 from mint.config import RBUILDER_GENERATED_CONFIG
@@ -207,5 +208,5 @@ class SetupHandler(WebHandler):
         path = os.path.join(templatePath, template + ".kid")
         template = kid.load_template(path)
 
-        t = template.Template(cfg = self.cfg, req = self.req, **values)
+        t = template.Template(cfg = self.cfg, req = self.req, cacheFakeoutVersion = helperfuncs.getVersionForCacheFakeout(), **values)
         return t.serialize(encoding = "utf-8", output = "xhtml")
