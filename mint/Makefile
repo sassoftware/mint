@@ -67,7 +67,7 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all default-subdirs constants.py rmakeconstants.py
 
-generated_files = *.pyo *.pyc
+generated_files = *.pyo *.pyc constants.py rmakeconstants.py
 
 .PHONY: clean dist install subdirs rmakeconstants.py
 
