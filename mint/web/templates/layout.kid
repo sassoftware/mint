@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2006 rPath, Inc.
+# Copyright (c) 2005-2007 rPath, Inc.
 # All Rights Reserved
 #
 from mint import constants
@@ -119,7 +119,7 @@ onload = "javascript:;"
                     </ul>
                 </div>
                 <div id="bottomText">
-                    <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                    <span id="copyright">Copyright &copy; 2005-2007 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
                 <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}<span py:if="cfg.debugMode"><br />(built from Mercurial changeset ${constants.hgChangeset})</span></p>

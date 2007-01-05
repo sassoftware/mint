@@ -4,7 +4,7 @@
 
     A small RPC library for handling both XML-RPC and JSON-RPC.
 
-    Copyright (c) 2006 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
 
 */
 

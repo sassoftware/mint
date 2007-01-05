@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 <!--
-    Copyright (c) 2005-2006 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'"

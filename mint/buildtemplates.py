@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2006 rPath, Inc.
+# Copyright (c) 2005-2007 rPath, Inc.
 #
 # All Rights Reserved
 import sys
