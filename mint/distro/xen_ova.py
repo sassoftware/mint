@@ -26,7 +26,7 @@ class XenOVA(raw_fs_image.RawFsImage):
         cwd = os.getcwd()
         os.chdir(dir)
         try:
-            util.execute('zip -rD %s %s' % (outfile, self.basefilename))
+            util.execute('zip -0rD %s %s' % (outfile, self.basefilename))
         finally:
             try:
                 os.chdir(cwd)
@@ -74,7 +74,7 @@ class XenOVA(raw_fs_image.RawFsImage):
             self.createXVA(tmpDir)
 
             # FIXME: do the dir-chunked split here
-            self.compressImage(self.outfile)
+            self.outfile = self.compressImage(self.outfile)
 
             os.rename(self.outfile, os.path.join(tmpDir, self.basefilename, 'sda', 'chunk-000000000.gz') )
 
