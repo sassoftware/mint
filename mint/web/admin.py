@@ -334,14 +334,21 @@ class AdminHandler(WebHandler):
 
     @strFields(operation = None)
     def jobserverOperation(self, operation, *args, **kwargs):
-        if operation not in ('start', 'stop', 'restart'):
+        if operation == 'Start Job Server':
+            op = 'start'
+        elif operation == 'Stop Job Server':
+            op = 'stop'
+        elif operation == 'Restart Job Server':
+            op = 'restart'
+        else:
             raise HttpNotFound
+
         try:
-            pipeFD = os.popen("sudo /sbin/service multi-jobserver %s" % operation)
+            pipeFD = os.popen("sudo /sbin/service multi-jobserver %s" % op)
             self._setInfo(pipeFD.read())
             pipeFD.close()
         except:
-            self._setInfo("Failed to %s the job server" % operation)
+            self._setInfo("Failed to %s the job server" % op)
         return self.jobs(*args, **kwargs)
 
     def selections(self, *args, **kwargs):

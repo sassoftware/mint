@@ -16,10 +16,10 @@
         <div id="spanright">
               <h2>Manage Jobs</h2>
               <h3>Current Job Server Status</h3>
-              <p>${jobServerStatus}</p>
+              <pre>${jobServerStatus}</pre>
               <form action="${cfg.basePath}admin/jobserverOperation" method="post">
-                  <button py:if="enableToggle" name="operation" value="start">Start Job Server</button>
-                  <button py:if="enableToggle" name="operation" value="stop">Stop Job Server</button>
+                  <input py:if="enableToggle" type="submit" name="operation" value="Start Job Server" />
+                  <input py:if="enableToggle" type="submit" name="operation" value="Stop Job Server" />
               </form>
               <p id="jobsTable">Retrieving job status from server...</p>
         </div>
