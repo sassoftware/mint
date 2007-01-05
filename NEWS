@@ -2,7 +2,27 @@ Changes in (new version):
 * TBD
 
 Changes in 2.1.0:
-* This needs to be filled in, although it's after the fact. :(
+* VMware ESX image creation (RBL-1139)
+* Xen DomU option when cooking a group (RBL-609)
+* Mirror pre-loading now using a USB HDD or similar device for
+  speed and space concerns (RBL-1023)
+* A "kill job" button on the Job Administration page (RBL-1052) 
+* Projects have an RSS feed of new package commits (RBL-913)
+* External projects can be edited after creation (RBL-767)
+* Inbound mirroring supports mirroring multiple labels (RBL-1041)
+* VMware images are created with SCSI disks by default (RBL-774)
+* VMware images can be created with either NAT or bridged networking
+  by default (RBL-870)
+* "Add Outbound Mirror" dialog input is validated for correctness
+  (RBL-1150) 
+* Mirror updates and package index updates log to /srv/rbuilder/logs/ (RBL-947)
+* Internet Explorer rendering/Javascript fixes (multiple issues)
+* Improved error message displayed when an error occurs contacting
+  external repositories (RBL-1082)
+* The build name (defaulting to project name) is used to brand
+  installable CDs (RBL-696)
+* Several database deadlocks identified and fixed (RBL-1096)
+* Several other bug fixes and UI enhancements (multiple issues) 
 
 Changes in 2.0.3:
 * rBuilder's configuration file now supports overrides via two files:
