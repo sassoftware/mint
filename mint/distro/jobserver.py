@@ -41,6 +41,7 @@ from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
 from mint.distro.tarball import Tarball
 from mint.distro.vpc import VirtualPCImage
+from mint.distro.xen_ova import XenOVA
 
 generators = {
     buildtypes.INSTALLABLE_ISO:   InstallableIso,
@@ -53,6 +54,7 @@ generators = {
     buildtypes.TARBALL:           Tarball,
     buildtypes.NETBOOT_IMAGE:     NetbootImage,
     buildtypes.VIRTUAL_PC_IMAGE:  VirtualPCImage,
+    buildtypes.XEN_OVA:           XenOVA,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')

@@ -18,6 +18,7 @@ validBuildTypes = {
     'VMWARE_IMAGE'     : 8,
     'VMWARE_ESX_IMAGE' : 9,
     'VIRTUAL_PC_IMAGE' : 10,
+    'XEN_OVA'          : 11,
     }
 
 TYPES = validBuildTypes.values()
@@ -48,6 +49,7 @@ typeNames = {
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
     VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
+    XEN_OVA:            "Xen Enterprise XVA",
 }
 
 typeNamesShort = {
@@ -61,6 +63,7 @@ typeNamesShort = {
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar",
     VIRTUAL_PC_IMAGE:   "Virtual Server",
+    XEN_OVA:            "XVA",
 }
 
 typeNamesMarketing = {
@@ -74,6 +77,7 @@ typeNamesMarketing = {
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
     VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
+    XEN_OVA:            "Xen Enterprise XVA",
 }
 
 # sizes are listed in bytes...

@@ -212,6 +212,13 @@ class VirtualPCTemplate(Template):
                  'swapSize', 'mirrorUrl', 'vhdDiskType']
     id = buildtypes.VIRTUAL_PC_IMAGE
 
+class VirtualPCTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
+                 'swapSize', 'mirrorUrl', 'vmMemory']
+    id = buildtypes.XEN_OVA
+
+
+
 ########################
 
 dataHeadings = {}
