@@ -23,7 +23,8 @@ python_files = \
         tarball.py              \
         vmware_image.py         \
 	vhd.py                  \
-	vpc.py
+	vpc.py			\
+	xen_ova.py
 
 extra_dist = Makefile
 
