@@ -36,7 +36,7 @@
             <li py:if="projectAdmin" py:attrs="{'class': (lastchunk in ('userlist', 'addGroupForm', 'addPermForm', 'manageGroupForm')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist">Manage Repository Permissions</a></li>
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
-            <li py:if="projectAdmin"><a href="${projectUrl}downloads">Download Statistics</a></li>
+            <li py:if="isWriter"><a href="${projectUrl}downloads">Download Statistics</a></li>
             <li py:attrs="{'class': (lastchunk == 'help') and 'selectedItem' or None}"><a href="${projectUrl}help">Help</a></li>
         </ul>
     </div>
