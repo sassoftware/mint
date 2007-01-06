@@ -37,17 +37,21 @@ class PackageIndexTable(database.KeyedTable):
             projectId   INT,
             name        CHAR(255),
             version     CHAR(255),
-            serverName  CHAR(255),
-            branchName  CHAR(255),
+            serverName  VARCHAR(254) NOT NULL,
+            branchName  VARCHAR(254) NOT NULL,
             isSource    INT DEFAULT '0'
         )"""
 
     fields = ['pkgId', 'projectId', 'name', 'version']
 
-    indexes = {"PackageNameIdx": """CREATE INDEX PackageNameIdx
-                                        ON PackageIndex(name, version)""",
-               "PackageIndexProjectIdx": """CREATE INDEX PackageIndexProjectIdx
-                                                ON PackageIndex(projectId)"""}
+    indexes = {
+        "PackageNameIdx":
+            """CREATE INDEX PackageNameIdx ON PackageIndex(name, version)""",
+        "PackageIndexProjectIdx":
+            """CREATE INDEX PackageIndexProjectIdx ON PackageIndex(projectId)""",
+        "PackageIndexServerBranchName":
+            """CREATE INDEX PackageIndexServerBranchName ON PackageIndex(serverName, branchName)"""
+    }
 
     def versionCheck(self):
         dbversion = self.getDBVersion()

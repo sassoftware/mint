@@ -578,6 +578,9 @@ def _createPackageIndex(db):
             projectId       INTEGER NOT NULL,
             name            VARCHAR(254) NOT NULL,
             version         VARCHAR(254) NOT NULL,
+            serverName      VARCHAR(254) NOT NULL,
+            branchName      VARCHAR(254) NOT NULL,
+            isSource        INT DEFAULT '0',
             CONSTRAINT PackageIndex_projectId_fk
                 FOREIGN KEY (projectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE
@@ -586,6 +589,7 @@ def _createPackageIndex(db):
         commit = True
     db.createIndex("PackageIndex", "PackageIndexNameIdx", "name, version")
     db.createIndex("PackageIndex", "PackageIndexProjectIdx", "projectId")
+    db.createIndex("PackageIndex", "PackageIndexServerBranchName", "serverName, branchName")
 
     # packageIndexMark
     if 'PackageIndexMark' not in db.tables:
