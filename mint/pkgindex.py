@@ -36,7 +36,10 @@ class PackageIndexTable(database.KeyedTable):
             pkgId       %(PRIMARYKEY)s,
             projectId   INT,
             name        CHAR(255),
-            version     CHAR(255)
+            version     CHAR(255),
+            serverName  CHAR(255),
+            branchName  CHAR(255),
+            isSource    INT DEFAULT '0'
         )"""
 
     fields = ['pkgId', 'projectId', 'name', 'version']
@@ -54,7 +57,23 @@ class PackageIndexTable(database.KeyedTable):
                 cu = self.db.cursor()
                 cu.execute("CREATE INDEX PackageNameIdx ON PackageIndex(name, version)")
                 self.db.commit()
-            return dbversion >= 26
+            if dbversion == 28 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE PackageIndex ADD COLUMN serverName CHAR(255)")
+                cu.execute("ALTER TABLE PackageIndex ADD COLUMN branchName CHAR(255)")
+                cu.execute("ALTER TABLE PackageIndex ADD COLUMN isSource CHAR(255) DEFAULT '0'")
+
+                cu.execute("SELECT pkgId, version FROM PackageIndex")
+                updates = []
+                for x in cu.fetchall():
+                    pkgId = x[0]
+                    label = versions.VersionFromString(x[1]).branch().label()
+                    serverName = label.getHost()
+                    branchName = label.getNamespace() + ":" + label.getLabel()
+                    updates.append((serverName, branchName, pkgId))
+                cu.executemany("UPDATE PackageIndex SET serverName=?, branchName=? WHERE pkgId=?", updates)
+
+            return dbversion >= 28
         return True
 
     def search(self, terms, limit, offset):
@@ -165,19 +184,25 @@ class UpdatePackageIndex(PackageIndexer):
                 res = [x[0] for x in cu.fetchall() if \
                        versions.VersionFromString(x[1]).branch().label() == \
                        version.branch().label()]
+                
+                label = version.branch().label()
+                serverName = label.getHost()
+                branchName = label.getNamespace() + ":" + label.getLabel()
 
                 if not res:
-                    inserts.append((projectId, troveName, str(version)))
+                    inserts.append((projectId, troveName, str(version), serverName, branchName))
                 else:
                     pkgId = res[0]
-                    updates.append((projectId, troveName, str(version), pkgId))
+                    updates.append((projectId, troveName, str(version), serverName, branchName, pkgId))
 
             self.db.transaction()
             cu.executemany("""INSERT INTO PackageIndex
-                              (projectId, name, version)
-                              VALUES (?, ?, ?)""", inserts)
+                              (projectId, name, version,
+                               serverName, branchName)
+                              VALUES (?, ?, ?, ?, ?)""", inserts)
             cu.executemany("""UPDATE PackageIndex SET
-                                  projectId=?, name=?, version=?
+                                  projectId=?, name=?, version=?,
+                                  serverName=?, branchName=?
                                   WHERE pkgId=?""", updates)
             self.db.commit()
 
@@ -263,7 +288,10 @@ class UpdatePackageIndexExternal(PackageIndexer):
 
             for troveName in packageDict:
                 for label in packageDict[troveName]:
-                    row = (projectIds[host], troveName, str(max(packageDict[troveName][label])))
+                    serverName = label.getHost()
+                    branchName = label.getNamespace() + ":" + label.getLabel()
+
+                    row = (projectIds[host], troveName, str(max(packageDict[troveName][label])), serverName, branchName)
                     rows.append(row)
 
             self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
@@ -272,18 +300,25 @@ class UpdatePackageIndexExternal(PackageIndexer):
         updates = []
         inserts = []
         for row in rows:
-            cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
+            cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row[:3])
             r = cu.fetchone()
             if r:
                 pkgId = r[0]
-                updates.append((row[0], row[1], row[2], pkgId))
+                updates.append((row[0], row[1], row[2], row[3], row[4], pkgId))
             else:
                 inserts.append(row)
 
         st = time.time()
         self.db.transaction()
-        cu.executemany("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", updates)
-        cu.executemany("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", inserts)
+        cu.executemany("""
+            UPDATE PackageIndex SET
+                projectId=?, name=?, version=?,
+                serverName=?, branchName=?
+            WHERE pkgId=?""", updates)
+        cu.executemany("""
+            INSERT INTO PackageIndex
+                (pkgId, projectId, name, version, serverName, branchName)
+            VALUES (NULL, ?, ?, ?, ?, ?)""", inserts)
         self.db.commit()
         self.log.info("Update complete: %.2fs" % (time.time() - st))
         return 0
