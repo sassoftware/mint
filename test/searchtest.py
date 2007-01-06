@@ -28,7 +28,7 @@ class BrowseTest(MintRepositoryHelper):
         cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
         pkgId = cu.fetchone()[0]
 
-        r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares')", (pkgId, projectId, name))
+        r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares', 'who', 'cares', 0)", (pkgId, projectId, name))
         self.db.commit()
 
     def _sortOrderDict(self):
