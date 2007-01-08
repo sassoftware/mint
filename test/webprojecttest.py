@@ -430,16 +430,22 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'config'))
         f = open(os.path.join(self.mintCfg.dataPath, 'config', 'conaryrc'), 'w')
         f.close()
-        troveNames, troveDict, metadata = projectHandler._getBasicTroves()
-        refNames = ('group-core', 'group-base', 'group-devel',
-                    'group-dist-base', 'group-dist-extras', 'group-gnome',
-                    'group-kde', 'group-netserver', 'group-xorg')
+        troveNames, troveDict, metadata, messages = projectHandler._getBasicTroves()
+        refNamesRpl1 = ('group-core', 'group-base', 'group-devel',
+                        'group-dist-extras', 'group-gnome',
+                        'group-kde', 'group-netserver', 'group-xorg')
 
-        for troveName in refNames:
-            assert troveName in troveNames
-        self.failIf(set(troveDict.keys()) != set(troveNames),
+        refNamesRaa = ('group-raa', )
+
+        for troveName in refNamesRpl1:
+            assert troveName in troveNames['conary.rpath.com@rpl:1']
+        for troveName in refNamesRaa:
+            assert troveName in troveNames['raa.rpath.org@rpl:1']
+
+        self.failIf(messages['conary.rpath.com@rpl:1'] != 'These troves come from rPath Linux on the conary.rpath.com@rpl:1 label')
+        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpl:1']),
                     "troveDict doesn't match trove names list")
-        self.failIf(set(troveDict.keys()) != set(metadata.keys()),
+        self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
 
     testsuite.context('more_cowbell')
