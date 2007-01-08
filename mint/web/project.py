@@ -150,8 +150,6 @@ class ProjectHandler(WebHandler):
             groupTrovesInProject = groupTrovesInProject)
 
     def _getBasicTroves(self):
-        # XXX all of this is kind of a hardcoded hack that should be pulled out
-        # into a config file somewhere, or something.
         cfg = conarycfg.ConaryConfiguration()
 
         conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
@@ -159,44 +157,41 @@ class ProjectHandler(WebHandler):
             cfg.read(conarycfgFile)
 
         cfg.dbPath = cfg.root = ":memory:"
-        label = versions.Label('conary.rpath.com@rpl:1')
-
         repos = conaryclient.ConaryClient(cfg).getRepos()
-        versionDict = repos.getTroveLeavesByLabel({'group-dist': {label: None}})['group-dist']
-        latestVersion = None
-        for version, flavorList in versionDict.iteritems():
-            if latestVersion is None or version > latestVersion:
-                latestVersion = version
-                latestFlavor = flavorList[0]
 
-        trove = repos.getTroves([('group-dist', latestVersion, latestFlavor)])[0]
+        from mint.web import basictroves
+        labels = basictroves.labelDict
+        messages = basictroves.messageDict
+        troveNames = {}
+        troveList = []
+        metadata = {}
 
-        # mash the trove list into something usable
-        troves = [(x[0], (x[1], x[2])) for x in trove.iterTroveList(strongRefs = True)]
+        for lbl, trv in labels.items():
+            label = versions.Label(lbl)
+            troveNames.update({lbl: []})
+            for group in trv:
+                versionDict = repos.getTroveLeavesByLabel({group[0]: {label: None}})[group[0]]
+                latestVersion = None
+                for version, flavorList in versionDict.iteritems():
+                    if latestVersion is None or version > latestVersion:
+                        latestVersion = version
+                        latestFlavor = flavorList[0]
 
-        # pop group-core out of the list and stick it on the top
-        troveNames = [x[0] for x in sorted(troves)]
-        troveNames = [troveNames.pop(troveNames.index('group-core'))] + troveNames
-        troveDict = dict(troves)
+                troveNames[lbl].append(group[0])
+                troveList.append((group[0], (latestVersion, latestFlavor)))
+                metadata.update({group[0]:group[1]})
 
-        metadata = {'group-core':           'A basic set of packages required for a functional system.',
-                    'group-base':           'Basic but non-essential packages.',
-                    'group-devel':          'Software development tools.',
-                    'group-dist-base':      None,
-                    'group-dist-extras':    'Some assorted extra packages.',
-                    'group-gnome':          'The GNOME desktop environment.',
-                    'group-kde':            'The KDE desktop environment.',
-                    'group-netserver':      'Network servers, tools, and support.',
-                    'group-xorg':           'The X.org windowing system.'}
-        return troveNames, troveDict, metadata
+        troveDict = dict(troveList)
+
+        return troveNames, troveDict, metadata, messages
 
     @writersOnly
     def newGroup(self, auth):
-        troves, troveDict, metadata = self._getBasicTroves()
+        troveNames, troveDict, metadata, messages = self._getBasicTroves()
 
         return self._write("newGroup", kwargs = {},
-                           troves = troves, troveDict = troveDict,
-                           metadata = metadata)
+                           troves = troveNames, troveDict = troveDict,
+                           metadata = metadata, messages = messages)
 
     @strFields(groupName = "", version = "", description = "")
     @listFields(str, initialTrove = [])
@@ -226,10 +221,11 @@ class ProjectHandler(WebHandler):
             self._predirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
-            troves, troveDict, metadata = self._getBasicTroves()
+            troves, troveDict, metadata, messages = self._getBasicTroves()
 
             return self._write("newGroup", kwargs = kwargs,
-                troves = troves, troveDict = troveDict, metadata = metadata)
+                troves = troves, troveDict = troveDict, metadata = metadata, 
+                         messages = messages)
 
     @intFields(id = None)
     @writersOnly
