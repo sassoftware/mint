@@ -74,7 +74,7 @@ generated_files = *.pyo *.pyc constants.py rmakeconstants.py
 subdir: default-subdirs
 
 constants.py: constants.py.in ../Makefile
-	sed -e s,@version@,$(VERSION),g -e s,@changeset@,$(shell hg parents -v | grep changeset | cut -c14-),g $< > $@
+	sed -e s,@version@,$(VERSION),g -e s,@changeset@,$(shell hg parents -v | grep -E '^changeset:' | cut -c14-),g $< > $@
 
 rmakeconstants.py: rmakeconstants.py.in
 	rm -f rmakeconstants.py
