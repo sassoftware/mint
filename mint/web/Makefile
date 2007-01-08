@@ -20,7 +20,8 @@ python_files = \
 	setup.py	\
 	site.py		\
 	webhandler.py	\
-	templatesupport.py
+	templatesupport.py \
+	basictroves.py
 
 extra_dist = Makefile
 
