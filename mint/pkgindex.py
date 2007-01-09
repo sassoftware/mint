@@ -86,12 +86,12 @@ class PackageIndexTable(database.KeyedTable):
         searchcols = ['name']
 
         terms, limiters = search.parseTerms(terms)
-        extras = search.limitersToSQL(limiters)
+        extras, extraSubs = search.limitersToSQL(limiters)
 
         terms = " ".join(terms)
 
         ids, count = database.KeyedTable.search(self, columns, 'PackageIndex',
-            searcher.Searcher.where(terms, searchcols, extras),
+            searcher.Searcher.where(terms, searchcols, extras, extraSubs),
             searcher.Searcher.order(terms, searchcols, 'name'),
             None, limit, offset)
 

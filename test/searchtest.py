@@ -4,15 +4,54 @@
 #
 
 import testsuite
+import unittest
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES, ordersql
+from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, \
+    LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, \
+    NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES
+from mint.projectlisting import ordersql
 from mint import userlevels
+from mint import search
 from mint import searcher
 
-class BrowseTest(MintRepositoryHelper):
 
+class SearchHelperTest(unittest.TestCase):
+    def testParseTerms(self):
+        self.failUnlessEqual(
+            search.parseTerms("httpd branch=rpl:1"),
+            (['httpd'], ['branch=rpl:1']))
+
+        self.failUnlessEqual(
+            search.parseTerms("httpd"),
+            (['httpd'], []))
+
+        self.failUnlessEqual(
+            search.parseTerms("server=conary.rpath.com"),
+            ([], ['server=conary.rpath.com']))
+
+
+    def testLimitersToSQL(self):
+        self.failUnlessEqual(
+            search.limitersToSQL(["server=conary.rpath.com"]),
+            (" AND serverName=?", ['conary.rpath.com']))
+
+        self.failUnlessEqual(
+            search.limitersToSQL(["server=conary.rpath.com", "branch=rpl:1"]),
+            (" AND serverName=? AND branchName=?", ['conary.rpath.com', 'rpl:1']))
+
+        # don't fail on unknown limiters
+        self.failUnlessEqual(
+            search.limitersToSQL(["server=conary.rpath.com", "frobnitz=blah"]),
+            (" AND serverName=?", ['conary.rpath.com']))
+
+
+
+
+
+
+class BrowseTest(MintRepositoryHelper):
     def _changeTimestamps(self, projectId, timeCreated, timeModified):
         cu = self.db.cursor()
         r = cu.execute("UPDATE Projects SET timeCreated=?, timeModified=? WHERE projectId=?", timeCreated, timeModified, projectId)

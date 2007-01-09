@@ -23,9 +23,13 @@ def parseTerms(termsStr):
 
 def limitersToSQL(limiters):
     sql = ""
+    subs = []
 
     for limiter in limiters:
         term, key = limiter.split('=')
-        sql += " AND %s='%s'" % (termMap[term], key)
+        if term not in termMap:
+            continue
+        sql += " AND %s=?" % (termMap[term])
+        subs.append(key)
 
-    return sql
+    return sql, subs
