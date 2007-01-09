@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 from mint import database
+from mint import search
 from mint import searcher
 from mint import projects
 from mint import config
