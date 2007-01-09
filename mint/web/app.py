@@ -254,6 +254,7 @@ class MintApp(WebHandler):
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
             'searchType':       self.searchType,
+            'searchTerms':      '',
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,
             'project':          None,
