@@ -184,9 +184,8 @@ class BuildUrlCommand(commands.RBuilderCommand):
                 if urlType == urltypes.AMAZONS3TORRENT:
                     urlBase = "http://%s/%s/downloadTorrent?fileId=%%d" % \
                         (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
-                else: 
+                else:
                     urlBase = "http://%s/%s/downloadImage?fileId=%%d" % \
                         (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
                 print urlBase % (file['fileId'])
-                sys.stdout.flush()
 commands.register(BuildUrlCommand)

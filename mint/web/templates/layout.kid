@@ -70,7 +70,7 @@ onload = "javascript:;"
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
                         <div>
                             <label class="search" for="searchLabel">I'm looking for a...</label>
-                            <input class="search" name="search" id="searchLabel" type="text" />
+                            <input class="search" name="search" id="searchLabel" type="text" value="$searchTerms" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
                             <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': (searchType == 'Projects') and 'checked' or None}" />
                             <label for="typeProject">Project</label>

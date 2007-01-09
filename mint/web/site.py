@@ -559,6 +559,7 @@ class SiteHandler(WebHandler):
 
     def _userSearch(self, auth, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Users", terms = terms, results = results,
                                             count = count, limit = limit, offset = offset, modified = 0)
 
@@ -573,6 +574,7 @@ class SiteHandler(WebHandler):
             packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
             searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
 
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
                                             count = count, limit = limit, offset = offset, modified = 0)
 
@@ -581,6 +583,7 @@ class SiteHandler(WebHandler):
         for i, x in enumerate(results[:]):
             results[i][0] = self.client.getProject(x[0])
 
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Projects", terms = terms, results = results,
                                             count = count, limit = limit, offset = offset, modified = modified)
 
