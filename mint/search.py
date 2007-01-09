@@ -11,7 +11,7 @@ termMap = {
 }
 
 
-def parseTerms(self, termsStr):
+def parseTerms(termsStr):
     # split and strip
     terms = [x.strip() for x in termsStr.split(" ")]
 
@@ -19,9 +19,9 @@ def parseTerms(self, termsStr):
     limiters = [x for x in terms if '=' in x]
     terms = [x for x in terms if '=' not in x]
 
-    return limiters, terms
+    return terms, limiters
 
-def limitersToSQL(self, limiters):
+def limitersToSQL(limiters):
     sql = ""
 
     for limiter in limiters:

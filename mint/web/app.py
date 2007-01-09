@@ -240,6 +240,7 @@ class MintApp(WebHandler):
         self.infoMsg = self.session.setdefault('infoMsg', "")
         self.searchType = self.session.setdefault('searchType', 'Projects')
         self.errorMsgList = self._getErrors()
+        self.searchTerms = ''
 
         # a set of information to be passed into the next handler
         context = {
@@ -254,7 +255,6 @@ class MintApp(WebHandler):
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
             'searchType':       self.searchType,
-            'searchTerms':      '',
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,
             'project':          None,
