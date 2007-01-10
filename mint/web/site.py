@@ -26,6 +26,7 @@ from mint import projectlisting
 from mint import shimclient
 from mint import users
 from mint import userlevels
+from mint.client import timeDelta
 from mint.session import SqlSession
 
 from mint.web.cache import cache
@@ -34,7 +35,7 @@ from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpPartialContent, HttpOK
 
-import conary.versions
+from conary import versions
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
 from mint.rmakeconstants import buildjob
@@ -344,11 +345,10 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('projectsSortOrder', 0)
         self.session['projectsSortOrder'] = sortOrder
         results, count = self.client.getProjects(sortOrder, limit, offset)
-        for i, x in enumerate(results[:]):
-            results[i][0] = self.client.getProject(x[0])
+        formattedRows, columns = self._formatProjectSearch(results)
 
-        results = [[x[0], x[1], x[2], x[3], x[4]] for x in results]
-        return self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+        return self._write("projects", sortOrder=sortOrder, limit=limit,
+            offset=offset, count=count, results = formattedRows, columns = columns)
 
     @requiresAdmin
     @intFields(sortOrder = -1, limit = 0, offset = 0)
@@ -361,7 +361,9 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
         results, count = self.client.getUsers(sortOrder, limit, offset)
-        return self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+        formattedRows, columns = self._formatUserSearch(results)
+        return self._write("users", sortOrder = sortOrder, limit = limit, offset = offset,
+            results = formattedRows, columns = columns, count = count)
 
     @requiresAuth
     @redirectHttps
@@ -540,6 +542,8 @@ class SiteHandler(WebHandler):
     @strFields(search = "", type = None)
     @intFields(limit = 0, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
+        self.searchTerms = search
+
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -557,35 +561,108 @@ class SiteHandler(WebHandler):
             return self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
 
+    #
+    # User search
+    #
+
+    def _formatUserSearch(self, results):
+        if self.auth.admin:
+            columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed', 'Status')
+        else:
+            columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed')
+
+        formattedRows = []
+        for result in results:
+            link = self.cfg.basePath + 'userInfo?id=%d' % result[0]
+            row = {
+                'columns': [(link, result[1]), result[2], timeDelta(result[5]), timeDelta(result[6])],
+            }
+
+            if self.auth.admin:
+                row['columns'].append(result[7] and "Active" or "Inactive")
+            formattedRows.append(row)
+        return formattedRows, columns
+
     def _userSearch(self, auth, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self.searchTerms = terms
-        return self._write("searchResults", searchType = "Users", terms = terms, results = results,
-                                            count = count, limit = limit, offset = offset, modified = 0)
 
-    def _packageSearch(self, terms, limit, offset):
-        results, count = self.client.getPackageSearchResults(terms, limit, offset)
+        formattedRows, columns = self._formatUserSearch(results)
+        return self._write("searchResults", searchType = "Users", terms = terms, results = formattedRows,
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0)
 
-        searchResults = []
+    #
+    # Package search
+    #
+
+    def _formatPackageSearch(self, results):
+        if self.groupTrove or self.rMakeBuild:
+            columns = ('Package', 'Project', '')
+        else:
+            columns = ('Package', 'Project')
+
+        formattedRows = []
         for x in results:
             p = self.client.getProject(x[2])
             host = p.getHostname()
             reposUrl = self.cfg.basePath + 'project/%s/' % host
             packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
-            searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
 
-        self.searchTerms = terms
-        return self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
-                                            count = count, limit = limit, offset = offset, modified = 0)
+            ver = versions.VersionFromString(x[1])
+
+            row = {
+                'columns':  [(packageUrl, x[0]), (reposUrl, p.getName())],
+                'desc':     '%s/%s' % (ver.trailingLabel(), ver.trailingRevision()),
+            }
+
+            # show the group trove links?
+            if self.groupTrove:
+                name = 'Add to %s' % self.groupTrove.recipeName
+                link = self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % \
+                    (self.groupTrove.projectName, self.groupTrove.getId(), quote(x[0]), x[1], quote(self.req.unparsed_uri))
+                row['columns'].append((link, name))
+
+            # show the rMake build links?
+            elif self.rMakeBuild and not self.rMakeBuild.status and not x[0].startswith('group-'):
+                projectHosts = [y[0].hostname for y in self.projectList if y[1] in userlevels.WRITERS]
+                if p.hostname in projectHosts:
+
+                    name = 'Add to %s' % self.rMakeBuild.title
+                    link = self.cfg.basePath + 'addrMakeTrove?trvName=%s;label=%s;referer=%s' % \
+                        (quote(x[0]), str(versions.VersionFromString(x[1]).branch().label()), quote(self.req.unparsed_uri))
+                    row['columns'].append((link, name))
+
+            formattedRows.append(row)
+        return formattedRows, columns
+
+    def _packageSearch(self, terms, limit, offset):
+        results, count = self.client.getPackageSearchResults(terms, limit, offset)
+
+        formattedRows, columns = self._formatPackageSearch(results)
+        return self._write("searchResults", searchType = "Packages", terms = terms, results = formattedRows,
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0)
+
+    #
+    # Project search
+    # 
+    def _formatProjectSearch(self, results):
+        columns = ('Project', 'Last Commit')
+        formattedRows = []
+        for x in results:
+            p = self.client.getProject(x[0])
+            row = {
+                'columns': [(p.getUrl(), p.getNameForDisplay()), timeDelta(x[4])],
+                'desc':    p.getDescForDisplay(),
+            }
+
+            formattedRows.append(row)
+        return formattedRows, columns
 
     def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
-        for i, x in enumerate(results[:]):
-            results[i][0] = self.client.getProject(x[0])
 
-        self.searchTerms = terms
-        return self._write("searchResults", searchType = "Projects", terms = terms, results = results,
-                                            count = count, limit = limit, offset = offset, modified = modified)
+        formattedRows, columns = self._formatProjectSearch(results)
+        return self._write("searchResults", searchType = "Projects", terms = terms, results = formattedRows,
+            columns = columns, count = count, limit = limit, offset = offset, modified = modified)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):

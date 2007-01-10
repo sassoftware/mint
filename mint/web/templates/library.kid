@@ -22,10 +22,10 @@ from mint.web.templatesupport import injectVersion, dictToJS
         </tr>
     </thead>
 
-    <div py:def="resultRow(resultset = [], resultsetdesc = None)" py:strip="True">
+    <div py:def="resultRow(result)" py:strip="True">
         <?python firstItem = True ?>
         <tr>
-            <div py:for="item in resultset" py:strip="True">
+            <div py:for="item in result['columns']" py:strip="True">
                 <td py:if="type(item) == tuple and len(item) == 2">
                     <a py:content="item[1]" href="${item[0]}" py:attrs="{ 'class': (firstItem and 'mainSearchItem' or None) }" />
                 </td>
@@ -33,9 +33,9 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 <?python firstItem = False ?>
             </div>
         </tr>
-        <tr py:if="resultsetdesc">
-            <td colspan="${len(resultset)}" class="mainSearchItemDesc">
-                ${resultsetdesc}
+        <tr py:if="result.get('desc')">
+            <td colspan="${len(result['columns'])}" class="mainSearchItemDesc">
+                ${result['desc']}
             </td>
         </tr>
     </div>
@@ -209,20 +209,12 @@ from mint.web.templatesupport import injectVersion, dictToJS
         </tr>
     </table>
 
-    <div py:def="formatResults(resultset = [])" py:strip="True">
-        <?python
-            ##This function must be implemented in any derived class
-            raise NotImplementedError
-        ?>
-        $resultRow(resultset)
-    </div>
-
     <!-- results structure:
         [('id', 'data item 1' ... 'data item n'), ]
     -->
     <tbody py:def="searchResults(results=[])" py:strip="True">
-        <div py:strip="True" py:for="i, resultset in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
-            ${formatResults(resultset)}
+        <div py:strip="True" py:for="i, row in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
+            ${resultRow(row)}
         </div>
     </tbody>
 

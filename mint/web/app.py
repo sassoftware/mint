@@ -239,6 +239,7 @@ class MintApp(WebHandler):
         self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', "")
         self.searchType = self.session.setdefault('searchType', 'Projects')
+        self.searchTerms = ''
         self.errorMsgList = self._getErrors()
 
         # a set of information to be passed into the next handler
