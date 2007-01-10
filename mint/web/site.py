@@ -543,8 +543,6 @@ class SiteHandler(WebHandler):
     @strFields(search = "", type = None)
     @intFields(limit = 0, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
-        self.searchTerms = search
-
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -588,6 +586,7 @@ class SiteHandler(WebHandler):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
 
         formattedRows, columns = self._formatUserSearch(results)
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Users", terms = terms, results = formattedRows,
             columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = [])
 
@@ -648,6 +647,7 @@ class SiteHandler(WebHandler):
         limiters, terms = searcher.limitersForDisplay(terms, describeFn)
 
         formattedRows, columns = self._formatPackageSearch(results)
+        self.searchTerms = " ".join(terms)
         return self._write("searchResults", searchType = "Packages", terms = terms, results = formattedRows,
             columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = limiters)
 
@@ -679,6 +679,7 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatProjectSearch(results)
         limiters, terms = searcher.limitersForDisplay(terms, describeFn)
 
+        self.searchTerms = " ".join(terms)
         return self._write("searchResults", searchType = "Projects", terms = terms, results = formattedRows,
             columns = columns, count = count, limit = limit, offset = offset, modified = modified, limiters = limiters)
 
