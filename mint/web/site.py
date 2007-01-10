@@ -672,7 +672,7 @@ class SiteHandler(WebHandler):
 
         def describeFn(key, val):
             if key == "buildtype":
-                desc = "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
+                return "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
             else:
                 return ""
 
