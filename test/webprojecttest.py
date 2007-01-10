@@ -487,6 +487,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.isOwner = True
         projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
         projectHandler.searchType = None
+        projectHandler.searchTerms = ''
         projectHandler.inlineMime = None
         projectHandler.infoMsg = None
         projectHandler.errorMsgList = []

@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 from mint import database
-from mint import search
 from mint import searcher
 from mint import projects
 from mint import config
@@ -23,10 +22,17 @@ import os.path
 import sys
 import time
 
+
 hiddenLabels = [
     versions.Label('conary.rpath.com@rpl:rpl1'),
     versions.Label('conary.rpath.com@ravenous:bugblatterbeast')
 ]
+
+termMap = {
+    'branch': 'branchName',
+    'server': 'serverName',
+}
+
 
 class PackageIndexTable(database.KeyedTable):
     name = 'PackageIndex'
@@ -85,8 +91,8 @@ class PackageIndexTable(database.KeyedTable):
         columns = ['name', 'version', 'projectId']
         searchcols = ['name']
 
-        terms, limiters = search.parseTerms(terms)
-        extras, extraSubs = search.limitersToSQL(limiters)
+        terms, limiters = searcher.parseTerms(terms)
+        extras, extraSubs = searcher.limitersToSQL(limiters, termMap)
 
         terms = " ".join(terms)
 

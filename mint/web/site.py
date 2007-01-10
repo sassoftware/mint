@@ -23,6 +23,7 @@ from mint import maintenance
 from mint import mailinglists
 from mint import projects
 from mint import projectlisting
+from mint import searcher
 from mint import shimclient
 from mint import users
 from mint import userlevels
@@ -588,7 +589,7 @@ class SiteHandler(WebHandler):
 
         formattedRows, columns = self._formatUserSearch(results)
         return self._write("searchResults", searchType = "Users", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0)
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = [])
 
     #
     # Package search
@@ -637,9 +638,18 @@ class SiteHandler(WebHandler):
     def _packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
 
+        def describeFn(key, val):
+            termNames = {
+                'branch': "only packages for %s branch",
+                'server': "only packages on %s server",
+            }
+            return termNames[key] % val
+
+        limiters, terms = searcher.limitersForDisplay(terms, describeFn)
+
         formattedRows, columns = self._formatPackageSearch(results)
         return self._write("searchResults", searchType = "Packages", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0)
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = limiters)
 
     #
     # Project search
@@ -660,9 +670,17 @@ class SiteHandler(WebHandler):
     def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
 
+        def describeFn(key, val):
+            if key == "buildtype":
+                desc = "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
+            else:
+                return ""
+
         formattedRows, columns = self._formatProjectSearch(results)
+        limiters, terms = searcher.limitersForDisplay(terms, describeFn)
+
         return self._write("searchResults", searchType = "Projects", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = modified)
+            columns = columns, count = count, limit = limit, offset = offset, modified = modified, limiters = limiters)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):

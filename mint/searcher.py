@@ -37,7 +37,7 @@ class SearchError(MintError):
 class SearchTermsError(SearchError):
     def __str__(self):
         return SearchError.__str__(self) + "Invalid search terms"
-    
+
 
 class Searcher :
     WORDS_PRE = 10
@@ -138,8 +138,12 @@ class Searcher :
         where += ' OR '.join([x for x in ortoks if x])
 
         # If nothing results, raise SearchTermsError
-        if not where.strip():
+        if not where.strip() and not extras:
             raise SearchTermsError
+
+        # hack
+        if not where.strip():
+            where = "1"
 
         return "WHERE " + where + " " + extras, substitutions + extraSubs
 
@@ -184,3 +188,54 @@ class Searcher :
             return tokenStr
         else:
             return extra
+
+
+def parseTerms(termsStr):
+    """Extract actual search terms and 'limiters' from a string.
+
+       Limiters look like: key=val
+    """
+    # split and strip
+    terms = [x.strip() for x in termsStr.split(" ")]
+
+    # limiters are terms that look like: limiter=key, eg, branch=rpl:1
+    limiters = [x for x in terms if '=' in x]
+    terms = [x for x in terms if '=' not in x]
+
+    return terms, limiters
+
+
+def limitersToSQL(limiters, termMap):
+    """Convert a set of limiters (key=val) into a SQL string suitable
+       for appending to a WHERE clause.
+    """
+    sql = ""
+    subs = []
+
+    for limiter in limiters:
+        term, key = limiter.split('=')
+        if term not in termMap:
+            continue
+        sql += " AND %s=?" % (termMap[term])
+        subs.append(key)
+
+    return sql, subs
+
+
+def limitersForDisplay(termsStr, describeFn = lambda x, y: "%s is %s" % (x, y)):
+    """Parse a terms string and return a list of dicts containing
+       a 'friendly' description of the limiter, and an associated
+       search term string without that limiter, suitable for use
+       in a "remove" link.
+    """
+    terms, limiters = parseTerms(termsStr)
+    limiterInfo = []
+    for limiter in limiters:
+        key, val = limiter.split("=")
+
+        info = {}
+        info['desc'] = describeFn(key, val)
+        info['newSearch'] = " ".join((set(limiters) - set([limiter])) | set(terms))
+        limiterInfo.append(info)
+
+    return limiterInfo, terms

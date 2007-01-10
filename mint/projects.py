@@ -8,6 +8,7 @@ import string
 import sys
 import time
 
+from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse
@@ -459,10 +460,32 @@ class ProjectsTable(database.KeyedTable):
                    Projects.timeCreated) AS timeModified"""]
         searchcols = ['name', 'description', 'hostname']
 
-        if includeInactive:
-            whereClause = searcher.Searcher.where(terms, searchcols)
-        else:
-            whereClause = searcher.Searcher.where(terms, searchcols, "AND hidden=0")
+        # extract a list of build types to search for.
+        # these are additive, unlike other search limiters.
+        buildTypes = []
+        terms, limiters = searcher.parseTerms(terms)
+        for limiter in limiters:
+            key, val = limiter.split("=")
+
+            if key == "buildtype":
+                if int(val) in buildtypes.TYPES:
+                    buildTypes.append(int(val))
+
+        # build the extra SQL bits from the build types list
+        extras = ""
+        extraSubs = []
+        if buildTypes:
+            extras += """ AND (EXISTS(SELECT buildId FROM BuildsView 
+                                        WHERE buildType IN (%s) AND pubReleaseId IS NOT NULL AND
+                                              projectId=Projects.projectId))""" % \
+                (", ".join("?" * len(buildTypes)))
+            extraSubs += buildTypes
+
+        if not includeInactive:
+            extras += " AND hidden=0"
+
+        terms = " ".join(terms)
+        whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
 
         ids, count = database.KeyedTable.search(self, columns, 'Projects',
                 whereClause,

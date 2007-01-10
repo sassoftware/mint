@@ -46,7 +46,6 @@ python_files =			\
 	rmakeconstants.py	\
 	schema.py		\
 	scriptlibrary.py	\
-	search.py		\
 	searcher.py		\
 	selections.py		\
 	server.py		\

@@ -23,6 +23,13 @@
             </div>
             <div id="spanleft">
                 <h2>Search Results: ${searchType}</h2>
+
+                <p class="help" py:if="limiters">
+                    <div py:for="limiter in limiters">
+                        Showing ${limiter['desc']} (<a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified">remove</a>)
+                    </div>
+                </p>
+
                 ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
                 <table cellspacing="0" cellpadding="0" class="results">
                     ${columnTitles(columns)}
