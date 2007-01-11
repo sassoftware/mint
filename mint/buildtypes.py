@@ -42,6 +42,8 @@ flavorFlags = {
     'APPLIANCE':    101,
 }
 
+FLAG_TYPES = flavorFlags.values()
+
 flavorFlagsFromId = dict((x[1], x[0]) for x in flavorFlags.items())
 
 sys.modules[__name__].__dict__.update(flavorFlags)
@@ -102,6 +104,10 @@ typeNamesMarketing = {
     TARBALL:            "TAR File",
     VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
     XEN_OVA:            "Xen Enterprise XVA",
+
+    # flavor flags here
+    XEN_DOMU:           "Xen DomU",
+    APPLIANCE:          "Appliance",
 }
 
 # sizes are listed in bytes...

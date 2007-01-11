@@ -757,27 +757,5 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(files), 0)
 
 
-class OldBuildTest(MintRepositoryHelper):
-    def makeInstallableIsoCfg(self):
-        mintDir = os.environ['MINT_PATH']
-        os.mkdir("%s/changesets" % self.tmpDir)
-        util.mkdirChain("%s/templates/x86/PRODUCTNAME" % self.tmpDir)
-        util.mkdirChain("%s/templates/x86_64/PRODUCTNAME" % self.tmpDir)
-
-        cfg = installable_iso.IsoConfig()
-        cfg.configPath = self.tmpDir
-        cfg.scriptPath = mintDir + "/scripts/"
-        cfg.cachePath = self.tmpDir + "/changesets/"
-        cfg.anacondaImagesPath = "/dev/null"
-        cfg.templatePath = self.tmpDir + "/templates/"
-        cfg.SSL = False
-
-        cfgFile = open(cfg.configPath + "/installable_iso.conf", 'w')
-        cfg.display(cfgFile)
-        cfgFile.close()
-
-        return cfg
-
-
 if __name__ == "__main__":
     testsuite.main()

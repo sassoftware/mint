@@ -293,9 +293,9 @@ def getExtraFlags(buildFlavor):
         buildFlavor = deps.ThawFlavor(buildFlavor)
 
     extraFlags = []
-    for flavor, flag in buildtypes.flavorFlags.values():
+    for flag, flavor in buildtypes.flavorFlagFlavors.items():
         if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
-            extraFlags.append(flag)
+            extraFlags.append(buildtypes.flavorFlagNames[flag])
 
     return extraFlags
 

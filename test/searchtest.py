@@ -13,6 +13,7 @@ from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, \
     LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, \
     NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES
 from mint.projectlisting import ordersql
+from mint import buildtypes
 from mint import userlevels
 from mint import searcher
 from mint import pkgindex
@@ -309,7 +310,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testSearchProjectsWithBuilds(self, db, data):
-        client, userId = self.getClient('user'), data['user']
+        client, userId = self.getClient('admin'), data['admin']
         self.db = db
 
         self._changeTimestamps(data['projectId'], 1128540046, 1128540046)
@@ -322,6 +323,36 @@ class BrowseTest(fixtures.FixturedUnitTest):
 
         x = client.getProjectSearchResults("buildtype=0 buildtype=2")
         self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+
+        build = client.getBuild(data['buildId'])
+        build.setTrove("group-dist", str(build.getTroveVersion()), "1#x86|5#use:xen:domU")
+        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease.addBuild(build.id)
+        pubRelease.publish()
+
+        x = client.getProjectSearchResults("buildtype=100")
+        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+
+        # create another project
+        projectId = client.newProject("Bar", "bar", "rpath.org")
+        self._changeTimestamps(projectId, 1128540046, 1128540046)
+        rel2 = client.newPublishedRelease(projectId)
+        build = client.newBuild(projectId, "Test Published Build")
+        build.setTrove("group-dist", "localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:xen:domU:appliance")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setFiles([["file", "file title 1"]])
+        rel2.addBuild(build.id)
+        rel2.publish()
+
+        # search for two different flavor flags
+        x = client.getProjectSearchResults("buildtype=100 buildtype=101")
+        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0],
+                               [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
+
+        # search for a build type and a flavor flag
+        x = client.getProjectSearchResults("buildtype=0 buildtype=101")
+        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0],
+                               [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
 
 
 if __name__ == "__main__":

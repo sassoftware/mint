@@ -463,6 +463,7 @@ class ProjectsTable(database.KeyedTable):
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.
         buildTypes = []
+        flavorFlagTypes = []
         terms, limiters = searcher.parseTerms(terms)
         for limiter in limiters:
             key, val = limiter.split("=")
@@ -470,6 +471,8 @@ class ProjectsTable(database.KeyedTable):
             if key == "buildtype":
                 if int(val) in buildtypes.TYPES:
                     buildTypes.append(int(val))
+                elif int(val) in buildtypes.FLAG_TYPES:
+                    flavorFlagTypes.append(buildtypes.flavorFlagsFromId[int(val)])
 
         # build the extra SQL bits from the build types list
         extras = ""
@@ -480,6 +483,19 @@ class ProjectsTable(database.KeyedTable):
                                               projectId=Projects.projectId))""" % \
                 (", ".join("?" * len(buildTypes)))
             extraSubs += buildTypes
+        if flavorFlagTypes:
+            sql = """EXISTS(SELECT buildId
+                              FROM BuildsView
+                                JOIN BuildData USING(buildId) 
+                              WHERE BuildData.name in (%s) AND BuildData.value=1)""" % \
+                (", ".join("?" * len(flavorFlagTypes)))
+            extraSubs += flavorFlagTypes
+            # append as an OR if we are already filtering by some build types,
+            # or an AND if we are only searching flavor flags
+            if extras:
+                extras += "OR " + sql
+            else:
+                extras = "AND " + sql
 
         if not includeInactive:
             extras += " AND hidden=0"
