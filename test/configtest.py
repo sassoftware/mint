@@ -37,7 +37,7 @@ class ConfigTest(MintRepositoryHelper):
 
         for enumVal in buildtypes.TYPES:
             # enumVal is an int
-            self.failIf(cEnum.parseString(cEnum.format(enumVal)) != enumVal,
+            self.failIf(cEnum.parseString(cEnum.format(enumVal), None) != enumVal,
                         "Enum format didn't divine correct name for %d" % \
                         enumVal)
 
