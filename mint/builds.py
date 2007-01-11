@@ -310,7 +310,7 @@ def getImportantFlavors(buildFlavor):
 
     flavors = []
     for id, flavor in buildtypes.flavorFlagFlavors.items():
-        if buildFlavor and buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
+        if buildFlavor is not None and buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
             flavors.append(buildtypes.flavorFlagsFromId[id])
 
     return flavors
