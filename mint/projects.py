@@ -497,7 +497,7 @@ class ProjectsTable(database.KeyedTable):
                 extras += "OR " + sql + ")"
             else:
                 extras = "AND " + sql
-        else:
+        elif buildTypes:
             extras += ")"
 
         if not includeInactive:
