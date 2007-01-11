@@ -279,16 +279,6 @@ class BuildTest(fixtures.FixturedUnitTest):
                     "'most recent first'")
 
     @fixtures.fixture("Full")
-    def testHasVMwareImage(self, db, data):
-        client = self.getClient("owner")
-        build = client.getBuild(data['buildId'])
-
-        assert(build.hasVMwareImage() == False)
-
-        build.setFiles([["test.vmware.zip", "Test Image"]])
-        assert(build.hasVMwareImage() == True)
-
-    @fixtures.fixture("Full")
     def testGetDisplayTemplates(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
