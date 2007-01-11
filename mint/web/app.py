@@ -133,6 +133,14 @@ class MintApp(WebHandler):
         d = self.fields.copy()
         d['auth'] = self.auth
 
+        def logTraceback():
+            import traceback
+            tb = traceback.format_exc()
+
+            for line in tb.split("\n"):
+                self.req.log_error(line)
+            return tb
+
         try:
             output = method(**d)
             if self.auth.authorized:
@@ -142,22 +150,18 @@ class MintApp(WebHandler):
         except mint_error.MintError, e:
             if isinstance(e, mint_error.MaintenanceMode):
                 raise
-            import traceback
-            tb = traceback.format_exc()
-
-            for line in tb.split("\n"):
-                self.req.log_error(line)
-
+            tb = logTraceback()
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
             output = self._write("error", shortError = err_name, error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:
+            tb = logTraceback()
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
-        except fields.BadParameterError, e:
-            output = self._write("error", shortError = "Bad Parameter", error = str(e))
-        except TypeError, e: # this trap should probably move to fields.py in Conary someday...
-            output = self._write("error", shortError = "Bad Parameter", error = str(e))
+        except (TypeError, fields.BadParameterError), e:
+            tb = logTraceback()
+            output = self._write("error", shortError = "Bad Parameter", error = str(e),
+                traceback = self.cfg.debugMode and tb or None)
 
         self.req.write(output)
         self._clearAllMessages()
