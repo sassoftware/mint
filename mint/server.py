@@ -18,6 +18,7 @@ import tempfile
 import fcntl
 from urlparse import urlparse
 
+from mint import buildtypes
 from mint import charts
 from mint import data
 from mint import database
@@ -2056,9 +2057,16 @@ class MintServer(object):
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        return self.builds.setTrove(buildId, troveName,
-                                                 troveVersion,
-                                                 troveFlavor)
+        r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
+
+        # clear out all "important flavors"
+        for x in buildtypes.flavorFlags.keys():
+            self.buildData.removeDataValue(buildId, x)
+
+        # and set the new ones
+        for x in builds.getImportantFlavors(troveFlavor):
+            self.buildData.setDataValue(buildId, x, 1, data.RDT_INT)
+        return r
 
     @typeCheck(int, str)
     @requiresAuth
@@ -2381,7 +2389,6 @@ class MintServer(object):
         @return: jobId of job to execute, or 0 for no job.
         """
         from mint import cooktypes
-        from mint import buildtypes
 
         # what to return if we no job has been started
         jobId = 0

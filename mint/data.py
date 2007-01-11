@@ -89,6 +89,14 @@ class GenericDataTable(database.DatabaseTable):
             dataDict[name] = value
         return dataDict
 
+    def removeDataValue(self, id, name):
+        cu = self.db.cursor()
+
+        cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
+        self.db.commit()
+
+        return True
+
 
 class JobDataTable(GenericDataTable):
     name = "JobData"

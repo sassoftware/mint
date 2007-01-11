@@ -278,6 +278,26 @@ class BuildTest(fixtures.FixturedUnitTest):
                     "getBuildsForProject is not ordered by "
                     "'most recent first'")
 
+    @fixtures.fixture("Empty")
+    def testFlavorFlags(self, db, data):
+        client = self.getClient("test")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        build = client.newBuild(projectId, 'build 1')
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance")
+        self.failUnlessEqual(build.getDataValue("APPLIANCE"), 1)
+
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance:xen:domU")
+        self.failUnlessEqual(build.getDataValue("APPLIANCE"), 1)
+        self.failUnlessEqual(build.getDataValue("XEN_DOMU"), 1)
+
+        build.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        self.failUnless("APPLIANCE" not in build.getDataDict())
+        self.failUnless("XEN_DOMU" not in build.getDataDict())
+
     @fixtures.fixture("Full")
     def testGetDisplayTemplates(self, db, data):
         client = self.getClient("owner")

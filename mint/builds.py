@@ -184,8 +184,16 @@ class BuildsTable(database.KeyedTable):
                             BuildsView AS
                         SELECT * FROM Builds WHERE deleted=0
                     """)
+            if dbversion == 29 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("SELECT buildId, troveFlavor FROM Builds")
+                inserts = []
+                for x in cu.fetchall():
+                    for flavor in getImportantFlavors(x[1]):
+                        inserts.append((x[0], flavor, RDT_INT))
 
-            return dbversion >= 27
+                cu.executemany("INSERT INTO BuildData VALUES (?, ?, 1, ?)", inserts)
+            return dbversion >= 29
         return True
 
     def iterBuildsForProject(self, projectId):
@@ -276,15 +284,36 @@ class BuildsTable(database.KeyedTable):
         return cu.fetchone()[0]
 
 
-def getExtraFlags(flavor):
-    if type(flavor) == str:
-        flavor = deps.ThawFlavor(flavor)
+def getExtraFlags(buildFlavor):
+    """Return a list of human-readable strings describing various
+       characteristics that a flavor may have, defined by the
+       flavorFlags dictionary in buildtypes.py.
+    """
+    if type(buildFlavor) == str:
+        buildFlavor = deps.ThawFlavor(buildFlavor)
 
     extraFlags = []
-    if flavor.stronglySatisfies(deps.parseFlavor('use: xen, domU')):
-        extraFlags.append("Xen Virtual Appliance")
+    for flavor, flag in buildtypes.flavorFlags.values():
+        if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
+            extraFlags.append(flag)
 
     return extraFlags
+
+
+def getImportantFlavors(buildFlavor):
+    """Return a list of machine-readable string suitable for storage
+       in a database, to store various 'important' pieces of information about
+       a flavor for quick retrieval and search.
+    """
+    if type(buildFlavor) == str:
+        buildFlavor = deps.ThawFlavor(buildFlavor)
+
+    flavors = []
+    for id, flavor in buildtypes.flavorFlagFlavors.items():
+        if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
+            flavors.append(buildtypes.flavorFlagsFromId[id])
+
+    return flavors
 
 
 class Build(database.TableObject):

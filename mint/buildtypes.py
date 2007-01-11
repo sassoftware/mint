@@ -31,6 +31,30 @@ deprecatedBuildTypes = {
     'QEMU_IMAGE' : RAW_HD_IMAGE
     }
 
+#
+# These are identifying pieces of information that we can extract from the
+# flavor of a build, but not necessarily tied to any particular build type.
+#
+# These can sometimes be used as a buildType, indexes starting at 100.
+#
+flavorFlags = {
+    'XEN_DOMU':     100,
+    'APPLIANCE':    101,
+}
+
+flavorFlagsFromId = dict((x[1], x[0]) for x in flavorFlags.items())
+
+sys.modules[__name__].__dict__.update(flavorFlags)
+
+flavorFlagFlavors = {
+    XEN_DOMU:   "use: xen, domU",
+    APPLIANCE:  "use: appliance",
+}
+
+flavorFlagNames = {
+    XEN_DOMU:   "Xen Virtual Appliance",
+    APPLIANCE:  "Appliance",
+}
 
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 
