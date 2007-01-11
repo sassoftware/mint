@@ -480,22 +480,25 @@ class ProjectsTable(database.KeyedTable):
         if buildTypes:
             extras += """ AND (EXISTS(SELECT buildId FROM BuildsView 
                                         WHERE buildType IN (%s) AND pubReleaseId IS NOT NULL AND
-                                              projectId=Projects.projectId))""" % \
+                                              projectId=Projects.projectId)""" % \
                 (", ".join("?" * len(buildTypes)))
             extraSubs += buildTypes
         if flavorFlagTypes:
             sql = """EXISTS(SELECT buildId
                               FROM BuildsView
-                                JOIN BuildData USING(buildId) 
-                              WHERE BuildData.name in (%s) AND BuildData.value=1)""" % \
+                                JOIN BuildData USING(buildId)
+                              WHERE BuildData.name in (%s)
+                              AND projectId=Projects.projectId)""" % \
                 (", ".join("?" * len(flavorFlagTypes)))
             extraSubs += flavorFlagTypes
             # append as an OR if we are already filtering by some build types,
             # or an AND if we are only searching flavor flags
             if extras:
-                extras += "OR " + sql
+                extras += "OR " + sql + ")"
             else:
                 extras = "AND " + sql
+        else:
+            extras += ")"
 
         if not includeInactive:
             extras += " AND hidden=0"

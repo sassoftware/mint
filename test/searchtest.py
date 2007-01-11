@@ -330,19 +330,23 @@ class BrowseTest(fixtures.FixturedUnitTest):
         pubRelease.addBuild(build.id)
         pubRelease.publish()
 
-        x = client.getProjectSearchResults("buildtype=100")
-        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
-
         # create another project
         projectId = client.newProject("Bar", "bar", "rpath.org")
         self._changeTimestamps(projectId, 1128540046, 1128540046)
         rel2 = client.newPublishedRelease(projectId)
         build = client.newBuild(projectId, "Test Published Build")
-        build.setTrove("group-dist", "localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:xen:domU:appliance")
+        build.setTrove("group-dist", "localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance")
         build.setBuildType(buildtypes.STUB_IMAGE)
         build.setFiles([["file", "file title 1"]])
         rel2.addBuild(build.id)
         rel2.publish()
+
+        x = client.getProjectSearchResults("buildtype=100")
+        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+
+        x = client.getProjectSearchResults("buildtype=101")
+        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046]], 1))
+
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")
@@ -350,7 +354,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
                                [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
 
         # search for a build type and a flavor flag
-        x = client.getProjectSearchResults("buildtype=0 buildtype=101")
+        x = client.getProjectSearchResults("buildtype=2 buildtype=101")
         self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0],
                                [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
 
