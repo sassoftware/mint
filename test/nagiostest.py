@@ -16,6 +16,9 @@ try:
     sys.path.insert(0, "../nagios/")
     import nagpy
     from mint_nagpy import checkjobs, config as nagios_config
+
+    checkjobs.CheckJobs.parseArgs = lambda x: None
+
 except ImportError:
     nagpy = None
 
