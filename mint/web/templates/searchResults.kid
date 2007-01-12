@@ -26,16 +26,16 @@
 
                 <p class="help" py:if="limiters">
                     <div py:for="limiter in limiters">
-                        Showing ${limiter['desc']} (<a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified">remove</a>)
+                        Showing ${limiter['desc']} (<a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified;removed=1">remove</a>)
                     </div>
                 </p>
 
-                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
+                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, terms, modified, int(limitsRemoved)), terms, count, limit, offset)}
                 <table cellspacing="0" cellpadding="0" class="results">
                     ${columnTitles(columns)}
                     ${searchResults(results)}
                 </table>
-                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
+                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, terms, modified, int(limitsRemoved)), terms, count, limit, offset, True)}
             </div>
         </div>
     </body>

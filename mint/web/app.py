@@ -241,7 +241,7 @@ class MintApp(WebHandler):
 
         # Handle messages stashed in the session
         self.inlineMime = self.session.setdefault('inlineMime', [])
-        self.infoMsg = self.session.setdefault('infoMsg', "")
+        self.infoMsg = self.session.setdefault('infoMsg', '')
         self.searchType = self.session.setdefault('searchType', 'Projects')
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()

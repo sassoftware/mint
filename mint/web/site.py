@@ -541,8 +541,8 @@ class SiteHandler(WebHandler):
             raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
-    @intFields(limit = 0, offset = 0, modified = 0)
-    def search(self, auth, type, search, modified, limit, offset):
+    @intFields(limit = 0, offset = 0, modified = 0, removed = 0)
+    def search(self, auth, type, search, modified, limit, offset, removed):
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -550,11 +550,19 @@ class SiteHandler(WebHandler):
                     self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
         if type == "Projects":
-            return self._projectSearch(search, modified, limit, offset)
+            return self._projectSearch(search, modified, limit, offset, removed)
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
-            return self._packageSearch(search, limit, offset)
+            if self.groupTrove and not removed:
+                for x in self.groupTrove.listTroves():
+                    if x['trvName'] == 'group-core':
+                        label = versions.Label(x['trvLabel'])
+                        search += " branch=" + label.getNamespace() + ":" + label.getLabel()
+                        self._setInfo("Because you are building a group, only search results compatible with your group are shown.")
+                        break
+
+            return self._packageSearch(search, limit, offset, removed)
         else:
             self.session['searchType'] = ''
             return self._write("error", shortError = "Invalid Search Type",
@@ -588,7 +596,8 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatUserSearch(results)
         self.searchTerms = terms
         return self._write("searchResults", searchType = "Users", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = [])
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = [],
+            limitsRemoved = False)
 
     #
     # Package search
@@ -634,7 +643,7 @@ class SiteHandler(WebHandler):
             formattedRows.append(row)
         return formattedRows, columns
 
-    def _packageSearch(self, terms, limit, offset):
+    def _packageSearch(self, terms, limit, offset, limitsRemoved = False):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
 
         def describeFn(key, val):
@@ -647,9 +656,12 @@ class SiteHandler(WebHandler):
         limiters, terms = searcher.limitersForDisplay(terms, describeFn)
 
         formattedRows, columns = self._formatPackageSearch(results)
-        self.searchTerms = " ".join(terms)
+
+        terms = " ".join(terms)
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Packages", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = limiters)
+            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = limiters,
+            limitsRemoved = limitsRemoved)
 
     #
     # Project search
@@ -667,7 +679,7 @@ class SiteHandler(WebHandler):
             formattedRows.append(row)
         return formattedRows, columns
 
-    def _projectSearch(self, terms, modified, limit, offset):
+    def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
 
         def describeFn(key, val):
@@ -679,9 +691,11 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatProjectSearch(results)
         limiters, terms = searcher.limitersForDisplay(terms, describeFn)
 
-        self.searchTerms = " ".join(terms)
+        terms = " ".join(terms)
+        self.searchTerms = terms
         return self._write("searchResults", searchType = "Projects", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = modified, limiters = limiters)
+            columns = columns, count = count, limit = limit, offset = offset, modified = modified, limiters = limiters,
+            limitsRemoved = limitsRemoved)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):

@@ -205,6 +205,7 @@ class WebHandler(object):
 
     def _setInfo(self, message):
         self.session['infoMsg'] = message
+        self.infoMsg = message
         if (isinstance(self.session, SqlSession)):
             self.session.save()
 
