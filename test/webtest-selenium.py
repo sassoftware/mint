@@ -16,6 +16,7 @@
 #  /usr/sbin/selenium-server
 #
 
+import re
 import testsuite
 testsuite.setup()
 
@@ -52,6 +53,21 @@ class WebPageTest(SeleniumHelper):
 
         self.clickAndWait("newProject")
         self.failUnless("This is a fledgling project" in self.s.get_body_text())
+
+    def testQueryParamsLogin(self):
+        client, userId = self.quickMintUser("foouser", "foopass")
+
+        self.setOptIns("foouser")
+
+        projectId = self.newProject(client, hostname = 'test')
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setFiles([["file", "file title 1"]])
+        build.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+
+        self.s.open(self.URL + "/project/test/build?id=%d" % build.id)
+        self.failUnless(re.search(r'name="to" value=".*/project/test/build%3Fid%3D\d+"',
+            self.s.get_html_source(), re.MULTILINE))
 
     def testGroupBuilder(self):
         client, userId = self.quickMintUser("foouser", "foopass")

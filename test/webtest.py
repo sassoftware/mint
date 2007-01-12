@@ -1586,7 +1586,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         release.addBuild(build.id)
         release.save()
         release.publish()
-        
+
         self.assertContent('/rss?feed=newReleases', 
                            content='Kung Foo Fighting (x86 Stub)&lt',
                            code=[200])
