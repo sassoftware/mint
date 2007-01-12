@@ -16,6 +16,7 @@ import sys
 import tempfile
 import time
 
+from mint import copyutils
 from mint import config
 from mint import constants
 from mint import templates
@@ -477,6 +478,27 @@ Much like Powdermilk Biscuits[tm]."""
         import usertemplates
         self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
         sys.path.pop(0)
+
+    def testCopyTree(self):
+        # test copying tree with different syntaxes
+        d = tempfile.mkdtemp()
+        subdir = os.sep.join((d, 'subdir'))
+        os.mkdir(subdir)
+        fn = os.sep.join((subdir, 'hello'))
+        f = open(fn, 'w')
+        f.write('hello')
+        d2 = tempfile.mkdtemp()
+        subdir2 = os.sep.join((d2, 'subdir'))
+        fn2 = os.sep.join((subdir2, 'hello'))
+        copyutils.copytree(subdir, d2)
+        assert(os.path.isdir(subdir2) and os.path.exists(fn2))
+        util.rmtree(subdir2)
+        copyutils.copytree(subdir + '/', d2)
+        assert(os.path.isdir(subdir2) and os.path.exists(fn2))
+
+        copyutils.copytree(subdir + '/hello', d2)
+        assert(os.path.isdir(subdir2) and os.path.exists(fn2))
+        util.rmtree(d)
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
