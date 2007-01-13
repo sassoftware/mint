@@ -10,6 +10,7 @@ from mint import scriptlibrary
 import time
 
 from conary import dbstore
+from conary.dbstore.sqllib import toDatabaseTimestamp
 
 class RankedProjectListTable(database.DatabaseTable):
     name = None
@@ -109,7 +110,7 @@ def calculateTopProjects(db, daysBack = 7):
         # handle subselects the way MySQL can
         counts = {}
         cu.execute("SELECT urlId FROM UrlDownloads WHERE timeDownloaded > ?",
-            time.time() - (daysBack * 3600))
+            toDatabaseTimestamp(time.time() - (daysBack * 86400)))
         for x in cu.fetchall():
             # fetch projectId
             cu.execute("""SELECT projectId FROM Builds
@@ -130,15 +131,15 @@ def calculateTopProjects(db, daysBack = 7):
 
         return [x[0] for x in counts]
     else:
-        cu.execute("""SELECT COUNT(ip) AS downloads, urlId AS outerUrlId,
+        cu.execute("""SELECT COUNT(urlId) AS downloads, urlId AS outerUrlId,
             (SELECT DISTINCT projectid From Builds
                 JOIN Buildfiles USING(buildId)
                 JOIN BuildFilesUrlsMap USING(fileId)
                 JOIN FilesUrls USING (urlId) WHERE urlId=outerUrlId) AS projectId
                 FROM UrlDownloads WHERE timeDownloaded > ?
                 GROUP BY projectId
-                ORDER BY downloads DESC LIMIT 10""", time.time()-(daysBack * 3600))
-        return [int(x['projectId']) for x in cu.fetchall_dict()]
+                ORDER BY downloads DESC LIMIT 10""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
+        return [(int(x['projectId']), int(x['downloads'])) for x in cu.fetchall_dict()]
 
 class UpdateProjectLists(scriptlibrary.SingletonScript):
     db = None
