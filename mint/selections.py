@@ -139,7 +139,7 @@ def calculateTopProjects(db, daysBack = 7):
                 FROM UrlDownloads WHERE timeDownloaded > ?
                 GROUP BY projectId
                 ORDER BY downloads DESC LIMIT 10""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
-        return [(int(x['projectId']), int(x['downloads'])) for x in cu.fetchall_dict()]
+        return [(int(x['projectId']) for x in cu.fetchall_dict()]
 
 class UpdateProjectLists(scriptlibrary.SingletonScript):
     db = None
