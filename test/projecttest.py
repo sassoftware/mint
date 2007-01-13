@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 import sys
+import os
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
@@ -663,10 +664,18 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         projectName = project.hostname
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundMirrors (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword) VALUES(?, '', '', '', '')", project.id)
+        cu.execute("""INSERT INTO InboundMirrors
+            (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword)
+            VALUES(?, '', '', '', '')""", project.id)
         db.commit()
         project.refresh()
         del project
+
+        os.mkdir(self.cfg.dataPath + "/entitlements")
+        entFile = os.path.join(self.cfg.dataPath, "entitlements", "foo.%s" % MINT_PROJECT_DOMAIN)
+        f = open(entFile, 'w')
+        f.write("...")
+        f.close()
 
         # call the database deletion script
         self.failUnless(self._callDeleteProjectScript(projectName) == 0,
@@ -674,6 +683,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         # check for remnants
         self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
+        self.failUnless(not os.path.exists(entFile))
 
     @fixtures.fixture('Full')
     def testDeleteExtraUrlsProjectScript(self, db, data):

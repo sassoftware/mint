@@ -103,6 +103,11 @@ def deleteProject(cfg, projectName):
     rmtree(imagesPath)
     status('')
 
+    # delete any entitlements
+    entFile = os.path.join(cfg.dataPath, 'entitlements', actualFQDN)
+    if os.path.exists(entFile):
+        os.unlink(entFile)
+
     print "Deleting Records from rBuilder Database"
     # remove bits from rBuilder Database
     try:
