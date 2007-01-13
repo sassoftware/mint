@@ -11,6 +11,8 @@ import fixtures
 from mint import mint_error
 from mint import selections
 
+from conary.dbstore.sqllib import toDatabaseTimestamp
+
 class MarketingTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testSpotlight(self, db, data):
@@ -450,7 +452,8 @@ class MarketingTest(fixtures.FixturedUnitTest):
         for buildId, projectId, count in zip(builds, projects, [10, 20, 30]):
             # assuming urlId == buildId...
             for c in range(count):
-                cu.execute("INSERT INTO UrlDownloads VALUES (?, ?, '127.0.0.1')", buildId, time.time())
+                cu.execute("INSERT INTO UrlDownloads VALUES (?, ?, '127.0.0.1')",
+                    buildId, toDatabaseTimestamp(time.time()))
             cu.execute("UPDATE Builds SET projectId=? WHERE buildId=?", projectId, buildId)
         db.commit()
 
