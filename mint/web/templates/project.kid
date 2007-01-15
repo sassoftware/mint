@@ -188,7 +188,7 @@
         <tr style="background: #f0f0f0; font-weight: bold;" class="buildHeader">
             <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
             <td style="text-align: center;">${build.getArch()}
-            &nbsp;${buildtypes.typeNames[build.buildType]}</td>
+            &nbsp;${buildtypes.typeNamesMarketing[build.buildType]}</td>
         </tr>
         ${buildFiles(build)}
         <tr><td>&nbsp;</td></tr>
