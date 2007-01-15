@@ -32,7 +32,7 @@ class VirtualIronVHD(vpc.VirtualPCImage):
             self.zipVirtualPCFiles(vmbasedir, outfile)
         finally:
             util.rmtree(vmbasedir)
-        return (outfile, buildtypes.typeNames[self.buildType])
+        return (outfile, self.fileType)
 
     def write(self):
         try:
