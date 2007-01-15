@@ -7,19 +7,21 @@
 import sys
 
 validBuildTypes = {
-    'BOOTABLE_IMAGE'   : 0,
-    'INSTALLABLE_ISO'  : 1,
-    'STUB_IMAGE'       : 2,
-    'RAW_FS_IMAGE'     : 3,
-    'NETBOOT_IMAGE'    : 4,
-    'TARBALL'          : 5,
-    'LIVE_ISO'         : 6,
-    'RAW_HD_IMAGE'     : 7,
-    'VMWARE_IMAGE'     : 8,
-    'VMWARE_ESX_IMAGE' : 9,
-    'VIRTUAL_PC_IMAGE' : 10,
-    'XEN_OVA'          : 11,
-    }
+    'BOOTABLE_IMAGE'    : 0,
+    'INSTALLABLE_ISO'   : 1,
+    'STUB_IMAGE'        : 2,
+    'RAW_FS_IMAGE'      : 3,
+    'NETBOOT_IMAGE'     : 4,
+    'TARBALL'           : 5,
+    'LIVE_ISO'          : 6,
+    'RAW_HD_IMAGE'      : 7,
+    'VMWARE_IMAGE'      : 8,
+    'VMWARE_ESX_IMAGE'  : 9,
+    'VIRTUAL_PC_IMAGE'  : 10,
+    'XEN_OVA'           : 11,
+    'VIRTUAL_IRON'      : 12,
+    'PARALLELS'         : 13,
+}
 
 TYPES = validBuildTypes.values()
 
@@ -70,12 +72,14 @@ typeNames = {
     RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
-    VMWARE_IMAGE:       "VMware\xae Player Image",
-    VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Image",
+    VMWARE_IMAGE:       "VMware\xae Virtual Appliance",
+    VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
     VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
     XEN_OVA:            "Xen Enterprise XVA",
+    VIRTUAL_IRON:       "Virtual Iron (VHD)",
+    PARALLELS:          "Parallels Virtual Appliance",
 }
 
 typeNamesShort = {
@@ -90,6 +94,8 @@ typeNamesShort = {
     TARBALL:            "Tar",
     VIRTUAL_PC_IMAGE:   "Virtual Server",
     XEN_OVA:            "XVA",
+    VIRTUAL_IRON:       "Virtual Iron",
+    PARALLELS:          "Parallels",
 }
 
 typeNamesMarketing = {
@@ -104,6 +110,8 @@ typeNamesMarketing = {
     TARBALL:            "TAR File",
     VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
     XEN_OVA:            "Xen Enterprise XVA",
+    VIRTUAL_IRON:       "Virtual Iron (VHD)",
+    PARALLELS:          "Parallels Virtual Appliance",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
