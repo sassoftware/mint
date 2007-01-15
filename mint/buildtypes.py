@@ -76,9 +76,9 @@ typeNames = {
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
-    XEN_OVA:            "Xen Enterprise XVA",
-    VIRTUAL_IRON:       "Virtual Iron (VHD)",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae VHD Virtual Appliance",
+    XEN_OVA:            "Xen Enterprise Virtual Appliance",
+    VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
 }
 
@@ -108,9 +108,9 @@ typeNamesMarketing = {
     VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae Virtual Server",
-    XEN_OVA:            "Xen Enterprise XVA",
-    VIRTUAL_IRON:       "Virtual Iron (VHD)",
+    VIRTUAL_PC_IMAGE:   "Microsoft\xae VHD Virtual Server",
+    XEN_OVA:            "Xen Enterprise Virtual Appliance",
+    VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
 
     # flavor flags here
