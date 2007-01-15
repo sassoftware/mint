@@ -16,6 +16,9 @@ from mint.distro import vhd
 from conary.lib import util, log
 
 class VirtualPCImage(bootable_image.BootableImage):
+    templateName = 'vpc.vmc'
+    suffix = '.vpc.zip'
+
     @bootable_image.timeMe
     def zipVirtualPCFiles(self, dir, outfile):
         cwd = os.getcwd()
@@ -117,6 +120,3 @@ class VirtualPCImage(bootable_image.BootableImage):
         bootable_image.BootableImage.__init__(self, *args, **kwargs)
         self.freespace = self.build.getDataValue("freespace") * 1048576
         self.swapSize = self.build.getDataValue("swapSize") * 1048576
-
-        self.templateName = 'vpc.vmc'
-        self.suffix = '.vpc.zip'

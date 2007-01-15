@@ -22,6 +22,7 @@ python_files = \
         splitdistro.py          \
         tarball.py              \
         vmware_image.py         \
+	virtual_iron.py		\
 	vhd.py                  \
 	vpc.py			\
 	xen_ova.py

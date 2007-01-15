@@ -217,7 +217,10 @@ class XenOVATemplate(Template):
                  'swapSize', 'mirrorUrl', 'vmMemory']
     id = buildtypes.XEN_OVA
 
-
+class VirtualIronVHDTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
+                 'swapSize', 'mirrorUrl', 'vhdDiskType']
+    id = buildtypes.VIRTUAL_IRON
 
 ########################
 
