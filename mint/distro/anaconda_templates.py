@@ -83,7 +83,7 @@ class Image(object):
         call(['syslinux', output])
 
     def mksquashfs(self, inputDir, output):
-        cmd = ['mksquashfs', inputDir, output, '-all-root']
+        cmd = ['/sbin/mksquashfs', inputDir, output, '-all-root']
         call(cmd)
 
     def __init__(self, isocfg, templateDir, tmpDir):
