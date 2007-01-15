@@ -1,5 +1,23 @@
-Changes in (new version):
-* TBD
+Changes in 2.1.0 (live push Jan 15 2007):
+* Logging in from pages with GET parameters now works again. (RBL-1240)
+* Create /readwriteroot for rpl:2-era livecds (RBL-1233)
+* Make /etc/mtab a symlink to /proc/mounts for livecds (RBL-1225)
+* Download statistics are now available as a graphical chart. (RBL-1213)
+* rBuilder now supports VHD formats. (RBL-1198)
+* There is now an easy way to delete multiple builds quickly. (RBL-1195)
+* Speed improvements in the repository browser. (RBL-1177)
+* New CSS and Javascript are accessed using a query parameter made up
+  of the mercurial changeset ID, eliminating the need for the user
+  to press shift-reload to force their browser to fetch new files. (RBL-1017)
+* Developers can now see unpublished releases in the list view. (RBL-968)
+* group-raa is now included in the list of groups to initially populate
+  a group trove. (RBL-925)
+* The search API is now "open". (RBL-846)
+* Very large VMware images are now zipped correctly. (RBL-798)
+* Users with a group build open will see selective search results
+  when searching for a package. (RBL-629)
+* Searching projects with specific image types in a published release
+  is possible.
 
 Changes in 2.1.0:
 * VMware ESX image creation (RBL-1139)
