@@ -14,6 +14,14 @@ from conary.lib import util
 import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 from mint import database
+from mint.web import admin
+from mint.web.webhandler import HttpMoved
+
+class rogueReq(object):
+    def __init__(self):
+        self.err_headers_out = {}
+        self.headers_out = {}
+        self.uri = ''
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateExternalProject(self):
@@ -233,17 +241,27 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/admin/addOutbound",
             content = "Project to mirror:")
 
-        page = page.postForm(1, self.post,
-            {'projectId':       str(projectId),
-             'targetUrl':       'http://www.example.com/conary/',
-             'mirrorUser':      'mirror',
-             'mirrorPass':      'mirrorpass',
-             'mirrorSources':   0})
+        def fakeUpdateMirror(user, servername, sp):
+            return 'totallyfakepassword'
+        
+        ad = admin.AdminHandler()
+        ad._updateMirror = fakeUpdateMirror
+        ad.session = {}
+        ad.client = client
+        ad.cfg = self.mintCfg
+        ad.req = rogueReq()
+        self.assertRaises(HttpMoved, ad. processAddOutbound,
+                              projectId=projectId, 
+                              targetUrl='http://www.example.com/conary/', 
+                              mirrorUser='mirror', mirrorPass='mirrorPass')
 
         label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)
+        fqdn = client.getProject(projectId).getFQDN()
         assert(client.getOutboundMirrors() == \
-            [[1, 1, label, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False, ['-.*:source', '-.*:debuginfo', '+.*']]])
+            [[1, 1, label, 'https://www.example.com/conary/', 
+            '%s->www.example.com' % fqdn, 'totallyfakepassword', False, False,
+            ['-.*:source', '-.*:debuginfo', '+.*']]])
 
         assert(client.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
@@ -262,16 +280,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         page = self.fetch("/admin/addOutbound")
-        page = page.postForm(1, self.post,
-            {'projectId':       str(projectId),
-             'targetUrl':       'http://www.example.com/conary/',
-             'mirrorUser':      'mirror',
-             'mirrorPass':      'mirrorpass',
-             'mirrorSources':   '1'})
+
+        def fakeUpdateMirror(user, servername, sp):
+            return 'totallyfakepassword'
+        
+        ad = admin.AdminHandler()
+        ad._updateMirror = fakeUpdateMirror
+        ad.session = {}
+        ad.client = client
+        ad.cfg = self.mintCfg
+        ad.req = rogueReq()
+        self.assertRaises(HttpMoved, ad. processAddOutbound,
+                              projectId=projectId, 
+                              targetUrl='http://www.example.com/conary/', 
+                              mirrorUser='mirror', mirrorPass='mirrorPass',
+                              mirrorSources=1)
+
         label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)
+        fqdn = client.getProject(projectId).getFQDN()
         assert(client.getOutboundMirrors() == \
-            [[1, 1, label, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False, []]])
+            [[1, 1, label, 'https://www.example.com/conary/', 
+            '%s->www.example.com' % fqdn, 'totallyfakepassword', False, False,
+            []]])
         assert(client.getOutboundMirrorMatchTroves(1) == [])
 
     def testBrowseUsers(self):
