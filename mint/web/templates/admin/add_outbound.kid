@@ -33,21 +33,20 @@
                         </td>
                     </tr>
                     <tr>
-                        <th><em class="required">URL of target repository:</em></th>
+                        <th><em class="required">FQDN of target repository:</em></th>
                         <td>
                             <input type="text" autocomplete="off" name="targetUrl" maxlength="255" value="${kwargs['targetUrl']}"/>
-                            <p class="help">Use the full URL of the target repository.
-                                If the target repository requires the use of SSL, be sure to use https://.
+                            <p class="help">Use the FQDN of the target repository. (example: mirror.rpath.com)
                             </p>
                         </td>
                     </tr>
 
                     <tr>
-                        <th><em class="required">Username:</em></th>
+                        <th><em class="required">rAA Username:</em></th>
                         <td><input autocomplete="off" type="text" name="mirrorUser" style="width: 25%;" value="${kwargs['mirrorUser']}" /></td>
                     </tr>
                     <tr>
-                        <th><em class="required">Password:</em></th>
+                        <th><em class="required">rAA Password:</em></th>
                         <td><input autocomplete="off" type="password" name="mirrorPass" style="width: 25%;" value="${kwargs['mirrorPass']}" /></td>
                     </tr>
                     <tr>
