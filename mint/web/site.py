@@ -610,16 +610,17 @@ class SiteHandler(WebHandler):
             columns = ('Package', 'Project')
 
         formattedRows = []
-        for x in results:
-            p = self.client.getProject(x[2])
-            host = p.getHostname()
-            reposUrl = self.cfg.basePath + 'project/%s/' % host
-            packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
+        for troveName, troveVersionStr, projectId in results:
+            p = self.client.getProject(projectId)
+            projectHost = p.getHostname()
+            projectName = p.name
+            reposUrl = self.cfg.basePath + 'project/%s/' % projectHost
+            packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s;v=%s' % (projectHost, quote_plus(troveName), quote_plus(troveVersionStr))
 
-            ver = versions.VersionFromString(x[1])
+            ver = versions.VersionFromString(troveVersionStr)
 
             row = {
-                'columns':  [(packageUrl, x[0]), (reposUrl, p.getName())],
+                'columns':  [(packageUrl, troveName), (reposUrl, projectName)],
                 'desc':     '%s/%s' % (ver.trailingLabel(), ver.trailingRevision()),
             }
 
@@ -627,17 +628,17 @@ class SiteHandler(WebHandler):
             if self.groupTrove:
                 name = 'Add to %s' % self.groupTrove.recipeName
                 link = self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % \
-                    (self.groupTrove.projectName, self.groupTrove.getId(), quote(x[0]), x[1], quote(self.req.unparsed_uri))
+                    (self.groupTrove.projectName, self.groupTrove.getId(), quote(troveName), troveVersionStr, quote(self.req.unparsed_uri))
                 row['columns'].append((link, name))
 
             # show the rMake build links?
-            elif self.rMakeBuild and not self.rMakeBuild.status and not x[0].startswith('group-'):
+            elif self.rMakeBuild and not self.rMakeBuild.status and not troveName.startswith('group-'):
                 projectHosts = [y[0].hostname for y in self.projectList if y[1] in userlevels.WRITERS]
                 if p.hostname in projectHosts:
 
                     name = 'Add to %s' % self.rMakeBuild.title
                     link = self.cfg.basePath + 'addrMakeTrove?trvName=%s;label=%s;referer=%s' % \
-                        (quote(x[0]), str(versions.VersionFromString(x[1]).branch().label()), quote(self.req.unparsed_uri))
+                        (quote(troveName), str(versions.VersionFromString(troveVersionStr).branch().label()), quote(self.req.unparsed_uri))
                     row['columns'].append((link, name))
 
             formattedRows.append(row)
