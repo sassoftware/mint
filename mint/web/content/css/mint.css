@@ -1170,11 +1170,15 @@ button#userCancel {
     height: 31px;
 }
 
-/* VMware image button for release pages */
-img.vmwarebutton {
+td.buildTypeIcon {
+    text-align: right;
+}
+
+td.buildTypeIcon img {
     float: right;
     margin: 0 0 0 20px;
 }
+
 
 div.palette div.boxBody {
     padding: 0px 8px 0px 8px;

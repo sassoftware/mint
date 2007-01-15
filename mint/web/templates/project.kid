@@ -191,7 +191,13 @@
             &nbsp;${buildtypes.typeNamesMarketing[build.buildType]}</td>
         </tr>
         ${buildFiles(build)}
-        <tr><td>&nbsp;</td></tr>
+        <tr><td colspan="2" class="buildTypeIcon">${getBuildIcon(build)}</td></tr>
+    </div>
+
+    <div py:strip="True" py:def="getBuildIcon(build)">
+        <a py:if="build.buildType == buildtypes.VMWARE_IMAGE" title="Download VMware Player" href="http://www.vmware.com/download/player/">
+            <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" />
+        </a>
     </div>
 
     <div py:strip="True" py:def="buildFiles(build)">

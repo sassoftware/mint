@@ -38,7 +38,7 @@
                 <h3>Description</h3>
                 <p>${release.description.strip() or "Release has no description."}</p>
                 <div id="builds">
-                    <h3><a py:if="hasVMwareBuild" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Builds</h3>
+                    <h3>Builds</h3>
                     ${buildTable(builds)}
                     <p py:if="not builds">Release contains no builds.</p>
                 </div>
