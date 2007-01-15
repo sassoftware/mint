@@ -511,6 +511,24 @@ class AdminHandler(WebHandler):
         projects = self.client.getProjectsList()
         return self._write('admin/add_outbound', projects = projects, kwargs = kwargs)
 
+    def _updateMirror(self, user, servername, sp):
+        passwd = ''
+        try:
+            res1 = sp.conaryserver.ConaryServer.addServerName(servername)
+            passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
+        except xmlrpclib.ProtocolError, e:
+            self._addErrors("""%s.  Please be sure your 
+                                  rPath Mirror is configured 
+                                  properly.""" % e.errmsg)
+        except socket.error, e:
+            self._addErrors("""%s. Please be sure you rPath Mirror
+                               is configured properly.""" % e.args[1])
+        else: 
+            if not res1 or not passwd:
+                self._addErrors("""An error occured configuring your rPath
+                                   Mirror.""")
+        return passwd
+
     @intFields(projectId = None)
     @strFields(targetUrl = '', mirrorUser = '', mirrorPass = '')
     @boolFields(mirrorSources = False, allLabels = False)
@@ -538,20 +556,8 @@ class AdminHandler(WebHandler):
             servername = project.getFQDN()
             user = '%s->%s' % (servername, mirrorUrl)
             sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/" % (mirrorUser, mirrorPass, mirrorUrl))
-            try:
-                res1 = sp.conaryserver.ConaryServer.addServerName(servername)
-                passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
-            except xmlrpclib.ProtocolError, e:
-                self._addErrors("""%s.  Please be sure your 
-                                      rPath Mirror is configured 
-                                      properly.""" % e.errmsg)
-            except socket.error, e:
-                self._addErrors("""%s. Please be sure you rPath Mirror
-                                   is configured properly.""" % e.args[1])
-            else: 
-                if not res1 or not passwd:
-                    self._addErrors("""An error occured configuring your rPath
-                                       Mirror.""")
+            passwd = self._updateMirror(user, servername, sp)
+
         if not self._getErrors():
             project = self.client.getProject(projectId)
             label = project.getLabel()
