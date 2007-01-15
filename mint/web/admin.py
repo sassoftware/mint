@@ -7,6 +7,9 @@
 import os
 import sys
 import BaseHTTPServer
+import xmlrpclib
+import urllib
+import socket
 
 from mod_python import apache
 
@@ -519,19 +522,40 @@ class AdminHandler(WebHandler):
             'mirrorSources': mirrorSources, 'allLabels': allLabels}
 
         if not mirrorUser:
-            self._addErrors("Mirror username must be specified")
+            self._addErrors("rAA username must be specified")
         if not mirrorPass:
-            self._addErrors("Mirror user password must be specified")
+            self._addErrors("rAA user password must be specified")
         if not targetUrl:
-            self._addErrors("Target URL must be specified")
-        elif not targetUrl.endswith("/conary/"):
-            self._addErrors("Target URL must end with /conary/")
+            self._addErrors("Target FQDN must be specified")
+
+        urltype, mirrorUrl = urllib.splittype(targetUrl)
+        if not urltype:
+            mirrorUrl = '//' + mirrorUrl
+        mirrorUrl, ignoreMe = urllib.splithost(mirrorUrl)
 
         if not self._getErrors():
             project = self.client.getProject(projectId)
+            servername = project.getFQDN()
+            user = '%s->%s' % (servername, mirrorUrl)
+            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/" % (mirrorUser, mirrorPass, mirrorUrl))
+            try:
+                res1 = sp.conaryserver.ConaryServer.addServerName(servername)
+                passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
+            except xmlrpclib.ProtocolError, e:
+                self._addErrors("""%s.  Please be sure your 
+                                      rPath Mirror is configured 
+                                      properly.""" % e.errmsg)
+            except socket.error, e:
+                self._addErrors("""%s. Please be sure you rPath Mirror
+                                   is configured properly.""" % e.args[1])
+            else: 
+                if not res1 or not passwd:
+                    self._addErrors("""An error occured configuring your rPath
+                                       Mirror.""")
+        if not self._getErrors():
+            project = self.client.getProject(projectId)
             label = project.getLabel()
-
-            outboundMirrorId = self.client.addOutboundMirror(projectId, [label], targetUrl, mirrorUser, mirrorPass, allLabels)
+            outboundMirrorId = self.client.addOutboundMirror(projectId, [label], 'https://%s/conary/' % mirrorUrl, user, passwd, allLabels)
             if not mirrorSources:
                 self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
                                                    ["-.*:source", "-.*:debuginfo",
@@ -543,6 +567,7 @@ class AdminHandler(WebHandler):
 
     @listFields(str, remove = [])
     def removeOutbound(self, remove, *args, **kwargs):
+        outbound = self.client.getOutboundMirrors()
         for ids in remove:
             self.client.delOutboundMirror(int(ids))
         self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
