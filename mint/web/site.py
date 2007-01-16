@@ -558,7 +558,10 @@ class SiteHandler(WebHandler):
                 for x in self.groupTrove.listTroves():
                     if x['trvName'] == 'group-core':
                         label = versions.Label(x['trvLabel'])
-                        search += " branch=" + label.getNamespace() + ":" + label.getLabel()
+                        labelLimiter = "branch=%s:%s" % \
+                                (label.getNamespace(), label.getLabel())
+                        if labelLimiter not in search:
+                            search += " %s" % labelLimiter
                         self._setInfo("Because you are building a group, only search results compatible with your group are shown.")
                         break
 
@@ -595,8 +598,10 @@ class SiteHandler(WebHandler):
 
         formattedRows, columns = self._formatUserSearch(results)
         self.searchTerms = terms
-        return self._write("searchResults", searchType = "Users", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = [],
+        return self._write("searchResults", searchType = "Users", 
+            terms = terms, fullTerms = terms, results = formattedRows,
+            columns = columns, count = count, limit = limit,
+            offset = offset, modified = 0, limiters = [],
             limitsRemoved = False)
 
     #
@@ -654,14 +659,17 @@ class SiteHandler(WebHandler):
             }
             return termNames[key] % val
 
-        limiters, terms = searcher.limitersForDisplay(terms, describeFn)
+        fullTerms = terms
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn)
 
         formattedRows, columns = self._formatPackageSearch(results)
 
         terms = " ".join(terms)
         self.searchTerms = terms
-        return self._write("searchResults", searchType = "Packages", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = 0, limiters = limiters,
+        return self._write("searchResults", searchType = "Packages",
+            terms = terms, fullTerms = fullTerms, results = formattedRows,
+            columns = columns, count = count, limit = limit, offset = offset,
+            modified = 0, limiters = limiters,
             limitsRemoved = limitsRemoved)
 
     #
@@ -683,6 +691,10 @@ class SiteHandler(WebHandler):
     def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
 
+        buildTypes = list(set(self.cfg.visibleBuildTypes) - \
+                set([ int(v) for k, v in searcher.parseLimiters(terms) \
+                    if k == 'buildtype' ]))
+
         def describeFn(key, val):
             if key == "buildtype":
                 return "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
@@ -690,13 +702,19 @@ class SiteHandler(WebHandler):
                 return ""
 
         formattedRows, columns = self._formatProjectSearch(results)
-        limiters, terms = searcher.limitersForDisplay(terms, describeFn)
+
+        fullTerms = terms
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn)
 
         terms = " ".join(terms)
         self.searchTerms = terms
-        return self._write("searchResults", searchType = "Projects", terms = terms, results = formattedRows,
-            columns = columns, count = count, limit = limit, offset = offset, modified = modified, limiters = limiters,
-            limitsRemoved = limitsRemoved)
+        return self._write("searchResults", searchType = "Projects",
+                terms = terms, fullTerms = fullTerms,
+                results = formattedRows,
+                columns = columns, count = count, limit = limit,
+                offset = offset, modified = modified, limiters = limiters,
+                limitsRemoved = limitsRemoved,
+                buildTypes = buildTypes)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):

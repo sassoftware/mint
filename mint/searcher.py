@@ -221,6 +221,16 @@ def limitersToSQL(limiters, termMap):
 
     return sql, subs
 
+def parseLimiters(termsStr):
+    """Return a list of all limiters as 2-tuples (key, value)."""
+
+    limiterlist = []
+    terms, limiters = parseTerms(termsStr)
+    for limiter in limiters:
+        k, v = limiter.split("=")
+        limiterlist.append((k, v),)
+
+    return limiterlist
 
 def limitersForDisplay(termsStr, describeFn = lambda x, y: "%s is %s" % (x, y)):
     """Parse a terms string and return a list of dicts containing
@@ -228,14 +238,15 @@ def limitersForDisplay(termsStr, describeFn = lambda x, y: "%s is %s" % (x, y)):
        search term string without that limiter, suitable for use
        in a "remove" link.
     """
-    terms, limiters = parseTerms(termsStr)
     limiterInfo = []
+    terms, limiters = parseTerms(termsStr)
     for limiter in limiters:
-        key, val = limiter.split("=")
+        k, v = limiter.split("=")
 
         info = {}
-        info['desc'] = describeFn(key, val)
+        info['desc'] = describeFn(k, v)
         info['newSearch'] = " ".join((set(limiters) - set([limiter])) | set(terms))
         limiterInfo.append(info)
 
     return limiterInfo, terms
+
