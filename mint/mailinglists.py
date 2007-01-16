@@ -94,7 +94,7 @@ class MailingListClient:
             return False
         else:
             try:
-                return self.server.Mailman.setOptions(listname, listpw, {'description': description})
+                return self.server.Mailman.setOptions(listname, listpw, {'description': description, 'generic_nonmember_action': 3})
             except:
                 raise MailingListException("Mailing List Error")
 
@@ -120,9 +120,9 @@ class MailingListClient:
         lists = self.list_lists(projectname)
         settings = {
             ### XXX Come up with orphanage settings
-                'emergency': 1,
-                'member_moderation_action': 1,
-                'generic_nonmember_action': 2,
+                'emergency': 1, # Turn on emergency moderation
+                'member_moderation_action': 2, # reject all member posts
+                'generic_nonmember_action': 3, # discard nonmember posts
                 'member_moderation_notice': "This list has been disabled because the project to which it belongs has been orphaned.  Please visit the project's web page if you wish to adopt this project and take control of its mailing lists."
             }
         for list in lists:
@@ -142,7 +142,7 @@ class MailingListClient:
         settings = {
                 'emergency': 0,
                 'member_moderation_action': 0,
-                'generic_nonmember_action': 2, # refuse all nonmember posts
+                'generic_nonmember_action': 3, # discard all nonmember posts
                 'member_moderation_notice': "",
                 'owner': [auth.email]
             }
