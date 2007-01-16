@@ -488,7 +488,7 @@ class ProjectsTable(database.KeyedTable):
                               FROM BuildsView
                                 JOIN BuildData USING(buildId)
                               WHERE BuildData.name in (%s)
-                              AND projectId=Projects.projectId)""" % \
+                              AND projectId=Projects.projectId AND pubReleaseId IS NOT NULL)""" % \
                 (", ".join("?" * len(flavorFlagTypes)))
             extraSubs += flavorFlagTypes
             # append as an OR if we are already filtering by some build types,
