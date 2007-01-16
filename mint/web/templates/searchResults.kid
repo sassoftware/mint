@@ -2,7 +2,7 @@
 <?python
     import time
     from mint import searcher
-    from mint.buildtypes import typeNamesMarketing
+    from mint import buildtypes
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -33,7 +33,7 @@
                         <option value="${fullTerms}">--</option>
                         <option value="${fullTerms} buildtype=${bt}"
                                 py:for="bt in buildTypes + [buildtypes.XEN_DOMU]"
-                                py:content="typeNamesMarketing[bt]" />
+                                py:content="buildtypes.typeNamesMarketing[bt]" />
                     </select>
                     <input type="submit">Go</input>
                 </form>
