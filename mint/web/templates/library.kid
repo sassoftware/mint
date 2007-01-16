@@ -190,7 +190,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
         <tr>
             <td>
                 <span style="float: left;" py:if="count != 0 and not footer">
-                    ${count} match${plural} found for <strong>${terms}</strong>;
+                    ${count} match${plural} found<span py:if="terms" py:omit="True"> for <strong>${terms}</strong></span>;
                     Showing ${offset + 1}-${min(offset+limit, count)};
                 </span>
                 <span style="float: right;" py:if="count != 0">
