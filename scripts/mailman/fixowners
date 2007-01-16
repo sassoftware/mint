@@ -7,4 +7,4 @@ fi
 LOC=/var/mailman/bin
 CONF=/var/mailman/bin/fixowners.conf
 
-PYTHONPATH=$PYTHONPATH python ${LOC}/fixowners.py -C ${CONF}
+PYTHONPATH=$PYTHONPATH python ${LOC}/fixowners.py -C ${CONF} 1> /dev/null
