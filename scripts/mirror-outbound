@@ -33,10 +33,6 @@ class MirrorOutbound(MirrorScript):
 
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
-        tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
-        if os.access(tmpDir, os.W_OK):
-            util.settempdir(tmpDir)
-
         mirroredLabels = client.getOutboundMirrors()
 
         for label in mirroredLabels:
@@ -76,6 +72,10 @@ class MirrorOutbound(MirrorScript):
                 sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                       cfg.source.user,
                                       entitlementDir = cfg.entitlementDirectory)
+
+                tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
+                if os.access(tmpDir, os.W_OK):
+                    util.settempdir(tmpDir)
 
                 while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
                                               False):

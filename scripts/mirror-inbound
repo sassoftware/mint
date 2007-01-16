@@ -27,9 +27,6 @@ class MirrorInbound(MirrorScript):
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
 
-        tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
-        if os.access(tmpDir, os.W_OK):
-            util.settempdir(tmpDir)
         client = MintClient(sys.argv[1])
         cfg = mirror.MirrorConfiguration()
         cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
@@ -70,6 +67,10 @@ class MirrorInbound(MirrorScript):
 
                 count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                                          False, False)
+
+                tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
+                if os.access(tmpDir, os.W_OK):
+                    util.settempdir(tmpDir)
                 while count:
                     count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                                              False, False)
