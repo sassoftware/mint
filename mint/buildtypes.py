@@ -62,9 +62,8 @@ flavorFlagNames = {
 
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 
-# NOTA BENE. If you want to put in special characters (e.g. a copyright or
-# registered trademark) in typeNames{,Short,Marketing}, please use the 
-# equivalent ISO-LATIN-1 escape (e.g. \xae for registered trademark).
+# NOTA BENE: Using Latin-1 here is harmful to XML-RPC which expects UTF-8
+# Until we figure out the root cause, use "(R)" for registered trademark here.
 
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
@@ -72,11 +71,11 @@ typeNames = {
     RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
-    VMWARE_IMAGE:       "VMware\xae Virtual Appliance",
-    VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
+    VMWARE_IMAGE:       "VMware (R) Virtual Appliance",
+    VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae VHD Virtual Appliance",
+    VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Appliance",
     XEN_OVA:            "Xen Enterprise Virtual Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
@@ -88,8 +87,8 @@ typeNamesShort = {
     RAW_FS_IMAGE:       "Raw FS",
     STUB_IMAGE:         "Stub",
     RAW_HD_IMAGE:       "HDD",
-    VMWARE_IMAGE:       "VMware\xae",
-    VMWARE_ESX_IMAGE:   "VMware\xae ESX",
+    VMWARE_IMAGE:       "VMware (R)",
+    VMWARE_ESX_IMAGE:   "VMware (R) ESX",
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar",
     VIRTUAL_PC_IMAGE:   "Virtual Server",
@@ -104,11 +103,11 @@ typeNamesMarketing = {
     RAW_FS_IMAGE:       "Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Parallels, QEMU (Raw Hard Disk)",
-    VMWARE_IMAGE:       "VMware\xae Virtual Appliance",
-    VMWARE_ESX_IMAGE:   "VMware\xae ESX Server Virtual Appliance",
+    VMWARE_IMAGE:       "VMware (R) Virtual Appliance",
+    VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
-    VIRTUAL_PC_IMAGE:   "Microsoft\xae VHD Virtual Server",
+    VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Server",
     XEN_OVA:            "Xen Enterprise Virtual Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
