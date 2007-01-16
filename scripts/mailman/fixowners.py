@@ -43,8 +43,8 @@ def FixOwners(cfg, mlist, minturl):
             #set the list read only.  See mint/mailinglists.py for the
             #current settings
             mlist.emergency = 1
-            mlist.member_moderation_action = 1
-            mlist.generic_nonmember_action = 2
+            mlist.member_moderation_action = 2
+            mlist.generic_nonmember_action = 3
             mlist.member_moderation_notice = """
 This list has been disabled because the project to which it belongs
 has been orphaned.  Please visit the project's web page if you wish
@@ -107,7 +107,7 @@ def main():
                continue
            if not mlist.owner:
                # XXX: Do real error reporting
-               print >>sys.stderr, "No owners for %s" % listname
+               print  "No owners for %s" % listname
                FixOwners(cfg, mlist, xmlrpcurl) 
 
 if __name__ == '__main__':
