@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python #need a comment?
+<?python
     from mint import userlevels, buildtypes
     from mint.client import timeDelta
     from mint.client import upstream
@@ -13,6 +13,13 @@
             return version.trailingRevision().asString()
         else:
             return up
+
+    icons = {
+        buildtypes.VMWARE_IMAGE: ("get-vmware-player.png", "http://www.vmware.com/download/player/", "Download VMware Player"),
+        buildtypes.RAW_HD_IMAGE: ("get-parallels.png", "http://www.parallels.com/", "Try Parallels Compressor Server"),
+        buildtypes.VIRTUAL_IRON: ("get-virtual-iron.png", "http://www.virtualiron.com/free", "Virtual Iron: Download Now"),
+    }
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -195,8 +202,8 @@
     </div>
 
     <div py:strip="True" py:def="getBuildIcon(build)">
-        <a py:if="build.buildType == buildtypes.VMWARE_IMAGE" title="Download VMware Player" href="http://www.vmware.com/download/player/">
-            <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" />
+        <a py:if="build.buildType in icons" title="${icons[build.buildType][2]}" href="${icons[build.buildType][1]}">
+            <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icons[build.buildType][0]}" alt="${icons[build.buildType][2]}" />
         </a>
     </div>
 
