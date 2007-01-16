@@ -16,6 +16,7 @@ from mint import pkgindex
 import recipes
 
 from conary import repository
+from conary.repository import errors
 from conary import versions
 from conary.conarycfg import ConaryConfiguration, UserInformation
 from conary.conaryclient import ConaryClient
@@ -146,6 +147,17 @@ class RepositoryTest(MintRepositoryHelper):
 
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == ['group-test'])
+
+    def testCookBadPwResponse(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        self.cfg.user.remove(('testproject.rpath.local2', 'testuser', 'testpass'))
+        self.cfg.user.addServerGlob('testproject.rpath.local2', 'testuser', 'badpass')
+        self.assertRaises(errors.InsufficientPermission,
+            self.makeSourceTrove, "testcase", testRecipe)
 
     def testMultipleContentsDirs(self):
         self.openRepository()

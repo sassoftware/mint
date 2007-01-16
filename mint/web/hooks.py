@@ -57,8 +57,7 @@ def post(port, isSecure, repos, cfg, req):
         if not repos:
             return apache.HTTP_NOT_FOUND
 
-        apachemethods.post(port, isSecure, repos, req)
-        return apache.OK
+        return apachemethods.post(port, isSecure, repos, req)
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
@@ -74,8 +73,7 @@ def get(port, isSecure, repos, cfg, req):
     cmd = os.path.basename(uri)
 
     if cmd == "changeset":
-        apachemethods.get(port, isSecure, repos, req)
-        return apache.OK
+        return apachemethods.get(port, isSecure, repos, req)
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))

@@ -46,7 +46,7 @@ class MirrorOutbound(MirrorScript):
             sourceProject = client.getProject(projectId)
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
             self.log.info("Mirroring %s" % sourceProject.name)
-            
+
             try:
                 labelStr, _, sourceUser, sourcePass  = \
                           client.getLabel(sourceLabelId)
