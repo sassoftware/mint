@@ -66,7 +66,7 @@ class WebPageTest(SeleniumHelper):
         build.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
         self.s.open(self.URL + "/project/test/build?id=%d" % build.id)
-        self.failUnless(re.search(r'name="to" value=".*/project/test/build%3Fid%3D\d+"',
+        self.failUnless(re.search(r'.*/project/test/build%3Fid%3D\d+',
             self.s.get_html_source(), re.MULTILINE))
 
     def testGroupBuilder(self):

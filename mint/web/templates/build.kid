@@ -17,10 +17,10 @@ from mint import urltypes
     <head>
         <title>${formatTitle('Project Build')}</title>
         <script type="text/javascript">
-            <![CDATA[
-                addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
-            ]]>
             <div py:if="isWriter" py:strip="True">
+                <![CDATA[
+                    addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
+                ]]>
                 <![CDATA[
                     addLoadEvent(function() {getBuildStatus(${build.id})});
                 ]]>
