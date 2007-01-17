@@ -217,7 +217,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         os.mkdir(os.path.join(self.liveDir, 'initrd'))
 
         # for fuse-based copy on write
-        os.mkdir(os.path.join(self.fakeroot, 'readwriteroot'))
+        util.mkdirChain(os.path.join(self.fakeroot, 'readwriteroot'))
 
         self.mkinitrd()
 
