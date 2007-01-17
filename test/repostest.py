@@ -154,8 +154,8 @@ class RepositoryTest(MintRepositoryHelper):
         projectId = self.newProject(client)
 
         project = client.getProject(projectId)
-        self.cfg.user.remove(('testproject.rpath.local2', 'testuser', 'testpass'))
-        self.cfg.user.addServerGlob('testproject.rpath.local2', 'testuser', 'badpass')
+        self.cfg.user.remove(('testproject.' + MINT_PROJECT_DOMAIN, 'testuser', 'testpass'))
+        self.cfg.user.addServerGlob('testproject.rpath.' + MINT_PROJECT_DOMAIN, 'testuser', 'badpass')
         self.assertRaises(errors.InsufficientPermission,
             self.makeSourceTrove, "testcase", testRecipe)
 
