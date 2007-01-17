@@ -73,10 +73,11 @@ class XenOVA(raw_fs_image.RawFsImage):
 
             self.createXVA(tmpDir)
 
-            # FIXME: do the dir-chunked split here
-            self.outfile = self.compressImage(self.outfile)
+            chunkPrefix = os.path.join(tmpDir, self.basefilename, 'sda', 'chunk-')
 
-            os.rename(self.outfile, os.path.join(tmpDir, self.basefilename, 'sda', 'chunk-000000000.gz') )
+            util.execute('split -b 1000000000 -a 8 -d %s "%s"' % \
+                (self.outfile, chunkPrefix))
+            util.execute('for a in "%s*"; do gzip $a; done' % chunkPrefix)
 
             self.zipOVAFiles(tmpDir, outFile)
 
