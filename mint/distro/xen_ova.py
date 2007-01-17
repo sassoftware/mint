@@ -75,7 +75,7 @@ class XenOVA(raw_fs_image.RawFsImage):
 
             chunkPrefix = os.path.join(tmpDir, self.basefilename, 'sda', 'chunk-')
 
-            util.execute('split -b 1000000000 -a 8 -d %s "%s"' % \
+            util.execute('split -b 1000000000 -a 9 -d %s "%s"' % \
                 (self.outfile, chunkPrefix))
             util.execute('for a in "%s*"; do gzip $a; done' % chunkPrefix)
 
