@@ -347,7 +347,7 @@ var allTypes = map(parseInt, keys(buildTypeNames));
 
 var defaultType = INSTALLABLE_ISO;
 if(x86_64)
-    var x86_64Types = allTypes;
+    var x86_64Types = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, XEN_OVA, VIRTUAL_PC_IMAGE, VIRTUAL_IRON];
 else
     var x86_64Types = [INSTALLABLE_ISO];
 
