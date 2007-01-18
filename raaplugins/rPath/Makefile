@@ -6,7 +6,7 @@
 
 all: subdirs
 
-SUBDIRS=rbalog loadmirror
+SUBDIRS=rbalog loadmirror inboundmirror
 
 python_files = __init__.py
 
