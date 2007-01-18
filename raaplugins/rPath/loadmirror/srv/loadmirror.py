@@ -7,6 +7,7 @@ from raa.modules.raasrvplugin import rAASrvPlugin
 from mint import loadmirror, config
 
 import os
+import statvfs
 
 class Callback(loadmirror.Callback):
     def __init__(self, serverName, totalFiles, statusFile = None, logger = None):
@@ -42,7 +43,16 @@ class LoadMirror(rAASrvPlugin):
         loader = loadmirror.LoadMirror(loadmirror.target,
             'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
         loadmirror.mountMirrorLoadDrive()
-
+        
+        srv = os.statvfs('/srv')
+        disk = os.statvfs(loadmirror.target)
+        available = srv[statvfs.F_BSIZE] * srv[statvfs.F_BAVAIL]
+        repoSize = int(disk[statvfs.F_BSIZE] * (disk[statvfs.F_BLOCKS] - disk[statvfs.F_BAVAIL]) * 1.1)
+        if available < repoSize:
+            error = '%s MB of disk space needed to preload mirror but only %s MB available' % (repoSize / 0x100000, available / 0x100000)
+            log.error(error)
+            raise error
+        
         mirrored = 0
         for serverName in os.listdir(loadmirror.target):
             if not os.path.exists(os.path.join(loadmirror.target, serverName, "MIRROR-INFO")):
