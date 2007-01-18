@@ -389,7 +389,6 @@ function selectiveDisable(flavor, flavorMatch, allowed) {
                     setOpacity(elLabel, 0.5);
                 }
                 else {
-                    el.disabled = false;
                     setOpacity(elLabel, 1.0);
                     if(x == allowed[0]) {
                         el.checked = true;
