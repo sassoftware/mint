@@ -30,6 +30,7 @@ class MirrorOutbound(MirrorScript):
     def action(self):
         client = MintClient(sys.argv[1])
         cfg = mirror.MirrorConfiguration()
+        cfg.entitlementDirectory = None
 
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
@@ -63,7 +64,6 @@ class MirrorOutbound(MirrorScript):
                     cfg.labels = [versions.Label(labelStr)]
 
                 cfg.configLine('matchTroves ' + ' '.join(matchStrings))
-
 
                 targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                       cfg.target.user,
