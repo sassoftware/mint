@@ -75,10 +75,10 @@
                         <li py:if="isOwner">
                             <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
                         </li>
-                        <li py:if="auth.admin">
+                        <li py:if="isOwner">
                             <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
                         </li>
-                        <li py:if="auth.admin">
+                        <li py:if="isOwner">
                             <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
                         </li>
                     </ul>
