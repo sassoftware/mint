@@ -17,6 +17,10 @@ from mint import database
 from mint.web import admin
 from mint.web.webhandler import HttpMoved
 
+# make webunit not so picky about input tags closed
+import webunit
+webunit.SimpleDOM.EMPTY_HTML_TAGS.remove('input')
+
 class rogueReq(object):
     def __init__(self):
         self.err_headers_out = {}
@@ -236,8 +240,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/admin/outbound",
-            content = "No projects are currently mirrored")
         page = self.assertContent("/admin/addOutbound",
             content = "Project to mirror:")
 

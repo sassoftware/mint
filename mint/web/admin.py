@@ -19,6 +19,7 @@ from mint import maintenance
 from mint import projectlisting
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 
+from kid.pull import XML
 from conary import conarycfg, versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
@@ -316,13 +317,19 @@ class AdminHandler(WebHandler):
 
 
     def external(self, auth):
-        projects = []
+        columns = ['Project Name', 'Mirrored']
+        rows = []
         for p in self.client.getProjectsList():
             project = self.client.getProject(p[0])
-            if project.external:
-                projects.append(project)
+            if not project.external:
+                continue
 
-        return self._write('admin/external', projects = projects)
+            mirrored = self.client.getInboundMirror(project.id)
+            data = [('editExternal?projectId=%s' % project.id, project.name),
+                    bool(mirrored) and 'Yes' or 'No']
+            rows.append({'columns': data})
+
+        return self._write('admin/external', columns = columns, rows = rows)
 
     def jobs(self, *args, **kwargs):
         try:
@@ -456,7 +463,7 @@ class AdminHandler(WebHandler):
         yesArgs = dict(func='delSpotlight', itemId=itemId)
         return self._write('confirm', message=message, noLink=noLink, 
                            yesArgs=yesArgs)
-    
+
     @intFields(itemId=None)
     def delSpotlight(self, itemId, *args, **kwargs):
         self.client.deleteSpotlightItem(itemId)
@@ -501,11 +508,24 @@ class AdminHandler(WebHandler):
             table1Data = False
             table2Data = False
 
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
+            popularProjects=popularProjects, selectionData = selectionData,
+            activeProjects = activeProjects, spotlightData=spotlightData,
+            publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     def outbound(self, *args, **kwargs):
-        outboundLabels = [ [x[0], self.client.getProject(x[1])] + x[2:] for x in self.client.getOutboundMirrors()]
-        return self._write('admin/outbound', outboundLabels = outboundLabels)
+        columns = ["Project", "Labels Mirrored", "Target Repository", "Remove"]
+
+        rows = []
+        for x in self.client.getOutboundMirrors():
+            outboundMirrorId, projectId, label, url, user, passwd, allLabels, recurse, matchStrings = x
+            project = self.client.getProject(projectId)
+
+            data = [(project.getUrl(), project.name), allLabels and "All Labels" or label,
+                url, XML('<input type="checkbox" name="remove" value="%d" />' % outboundMirrorId) ]
+            rows.append({'columns': data})
+
+        return self._write('admin/outbound', rows = rows, columns = columns)
 
     def addOutbound(self, *args, **kwargs):
         projects = self.client.getProjectsList()

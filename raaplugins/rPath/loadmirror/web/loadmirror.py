@@ -56,8 +56,6 @@ class LoadMirrorTable(DatabaseTable):
 
 
 class LoadMirror(rAAWebPlugin):
-    '''
-    '''
     displayName = _("Pre-load Mirrored Repositories")
 
     tableClass = LoadMirrorTable
@@ -67,6 +65,7 @@ class LoadMirror(rAAWebPlugin):
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def index(self):
         schedId = self._setCommand("mount")
+
         return dict(schedId = schedId['schedId'])
 
     @immedTask

@@ -15,18 +15,11 @@
             ${adminResourcesMenu()}
         </div>
         <div id="spanright">
-            <table py:if="projects" class="outboundMirrors">
-                <tr style="font-weight: bold; background: #eeeeee;">
-                    <td>External Projects</td>
-                </tr>
-                <tr py:for="project in projects">
-                    <td><a href="editExternal?projectId=${project.id}">${project.name}</a></td>
-                </tr>
+            <p py:if="rows ">Click on the name of an external project to edit its settings.</p>
+            <table cellspacing="0" cellpadding="0" class="results">
+                ${columnTitles(columns)}
+                ${searchResults(rows)}
             </table>
-            <p py:if="projects">Click on the name of an external project to edit its settings.</p>
-            <div py:if="not projects">
-                No projects are currently external.
-            </div>
             <p><a href="addExternal"><b>Add a New External Project</b></a></p>
         </div>
     </body>
