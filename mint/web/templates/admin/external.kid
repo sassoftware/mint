@@ -15,7 +15,9 @@
             ${adminResourcesMenu()}
         </div>
         <div id="spanright">
-            <p py:if="rows ">Click on the name of an external project to edit its settings.</p>
+            <h2>Externally-Managed Projects</h2>
+            <p class="help">Externally-managed projects allow a remote Conary repository to be accessible by
+                    this rBuilder. Click on the name of an external project to edit its settings.</p>
             <table cellspacing="0" cellpadding="0" class="results">
                 ${columnTitles(columns)}
                 ${searchResults(rows)}

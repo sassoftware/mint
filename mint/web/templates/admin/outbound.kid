@@ -15,13 +15,12 @@
         </div>
         <div id="spanright">
             <form action="${cfg.basePath}admin/removeOutbound" method="post">
-                <h2>Outbound Mirroring</h2>
+                <h2>Outbound Mirrored Projects</h2>
                 <p class="help">
                     You can select projects in ${cfg.productName} to be mirrored out to
                     an external Conary repository.
                 </p>
 
-                <h3>Projects Currently Mirrored</h3>
                 <table cellspacing="0" cellpadding="0" class="results">
                     ${columnTitles(columns)}
                     ${searchResults(rows)}
