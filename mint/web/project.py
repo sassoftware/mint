@@ -789,7 +789,9 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     @strFields(list=None)
     @mailList
-    def deleteList(self, auth, mlists, list):
+    def deleteList(self, auth, mlists, list, confirmed=0, **kwargs):
+        if not confirmed:
+            return self._write("confirm", message = 'Are you sure you want to delete the mailing list "%s"' % list, yesArgs = {'func':'deleteList', 'confirmed':'1', 'list':list}, noLink =  'mailingLists')
         hostname = self.project.getHostname()
         pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)
         if pcre.search(list):
