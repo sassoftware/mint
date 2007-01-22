@@ -75,7 +75,7 @@ from mint import urltypes
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [1]
+SERVER_VERSIONS = [1, 2]
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
@@ -1793,7 +1793,12 @@ class MintServer(object):
         if not self.builds.buildExists(buildId):
             raise database.ItemNotFound
         self._filterBuildAccess(buildId)
-        return self.builds.get(buildId)
+        build = self.builds.get(buildId)
+
+        if self.clientVer == 1:
+            del build['deleted']
+
+        return build
 
     @typeCheck(int, str, bool)
     @requiresAuth

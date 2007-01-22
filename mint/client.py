@@ -24,7 +24,7 @@ from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
 
-CLIENT_VERSIONS = [1]
+CLIENT_VERSIONS = [2]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
