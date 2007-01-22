@@ -49,7 +49,7 @@ class LoadMirror(rAASrvPlugin):
 
         log = loadmirror.logger
         loader = loadmirror.LoadMirror(loadmirror.target,
-            'http://%s:%s@mint.rpath.local/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
+            'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
         loadmirror.mountMirrorLoadDrive()
         
         
