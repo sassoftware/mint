@@ -28,6 +28,7 @@ from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.setup import SetupHandler
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
+from mint import maintenance
 
 from conary.web import fields
 
@@ -119,13 +120,16 @@ class MintApp(WebHandler):
 
         self.auth = self.client.checkAuth()
         if self.auth.authorized:
-            self.user = self.client.getUser(self.auth.userId)
-            self.projectList = self.client.getProjectsByMember(self.auth.userId)
-            self.projectDict = {}
-            for project, level in self.projectList:
-                l = self.projectDict.setdefault(level, [])
-                l.append(project)
-
+            if not maintenance.getMaintenanceMode(self.cfg) or self.auth.admin:
+                self.user = self.client.getUser(self.auth.userId)
+                self.projectList = self.client.getProjectsByMember(self.auth.userId)
+                self.projectDict = {}
+                for project, level in self.projectList:
+                    l = self.projectDict.setdefault(level, [])
+                    l.append(project)
+            else:
+                if pathInfo not in  ('/maintenance/', '/logout/'):
+                    raise mint_error.MaintenanceMode
         self.auth.setToken(self.authToken)
 
         method = self._getHandler(pathInfo)
