@@ -344,9 +344,11 @@ class BrowseTest(fixtures.FixturedUnitTest):
         x = client.getProjectSearchResults("buildtype=100")
         self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
 
-        x = client.getProjectSearchResults("buildtype=101")
+        # broken search queries shouldn't traceback
+        x = client.getProjectSearchResults("b buildtype=")
         self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046]], 1))
-
+        x = client.getProjectSearchResults("b =101")
+        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046]], 1))
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")
