@@ -146,6 +146,20 @@ class BootableImageTest(MintRepositoryHelper):
             "Test Build (1.0) (template)"
         )
 
+    def testGrubVMWare(self):
+        bi = self.setupBootableImage()
+        for d in 'sbin', 'boot/grub', 'etc':
+            util.mkdirChain(os.path.join(bi.fakeroot, d))
+        file(os.path.join(bi.fakeroot, 'sbin', 'grub'), "w").close()
+
+        from mint import  buildtypes
+        bi.build.buildType = buildtypes.VMWARE_IMAGE
+        bi._setupGrub()
+        self.verifyContentsInFile(
+            os.path.join(bi.fakeroot, 'etc', 'grub.conf'),
+            "clock=pit"
+        )
+
     def testPrepareDiskImage(self):
         bi = self.setupBootableImage()
         _, bi.outfile = tempfile.mkstemp()
