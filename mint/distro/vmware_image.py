@@ -7,6 +7,7 @@
 import os
 import tempfile
 import zipfile
+from StringIO import StringIO
 
 from mint import buildtypes
 from mint.distro import bootable_image
@@ -77,6 +78,14 @@ class VMwareImage(bootable_image.BootableImage):
     @bootable_image.timeMe
     def createVMX(self, outfile, displayName, memsize):
         #Read in the stub file
+        desc = self.project.getDesc()
+        sio = StringIO(desc)
+        vmxStr = ''
+        # VMX file  uses '|0A' to represent a newline
+        # in an entry.  Substitue |0A for \n or \r\n in the description  
+        for line in sio:
+            vmxStr += '|0A' 
+            vmxStr += line.rstrip()
         infile = open(os.path.join(self.imgcfg.dataDir, self.templateName),
                       'rb')
         #Replace the @DELIMITED@ text with the appropriate values
@@ -84,6 +93,7 @@ class VMwareImage(bootable_image.BootableImage):
         infile.close()
         #@NAME@ @MEM@ @FILENAME@
         displayName.replace('"', '')
+        filecontents = filecontents.replace('@DESCRIPTION@', vmxStr)
         filecontents = filecontents.replace('@NAME@', displayName)
         filecontents = filecontents.replace('@MEM@', str(memsize))
         filecontents = filecontents.replace('@FILENAME@', self.basefilename)
