@@ -228,6 +228,8 @@ def parseLimiters(termsStr):
     terms, limiters = parseTerms(termsStr)
     for limiter in limiters:
         k, v = limiter.split("=")
+        if not k or not v:
+            continue
         limiterlist.append((k, v),)
 
     return limiterlist
@@ -242,6 +244,8 @@ def limitersForDisplay(termsStr, describeFn = lambda x, y: "%s is %s" % (x, y)):
     terms, limiters = parseTerms(termsStr)
     for limiter in limiters:
         k, v = limiter.split("=")
+        if not k or not v:
+            continue
 
         info = {}
         info['desc'] = describeFn(k, v)

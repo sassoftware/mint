@@ -466,7 +466,13 @@ class ProjectsTable(database.KeyedTable):
         flavorFlagTypes = []
         terms, limiters = searcher.parseTerms(terms)
         for limiter in limiters:
-            key, val = limiter.split("=")
+            try:
+                key, val = limiter.split("=")
+            except ValueError:
+                continue # ignore malformed limiters
+
+            if not val:
+                continue
 
             if key == "buildtype":
                 if int(val) in buildtypes.TYPES:
