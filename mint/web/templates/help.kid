@@ -31,9 +31,9 @@ from mint.helperfuncs import truncateForDisplay
                 <h3>Help Topics</h3>
                 <ul>
                     <li py:if="isWriter">
-                        <a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a>
+                        <a href="http://wiki.rpath.com/wiki/rBuilder:rBO_Appliance-Building_Tutorial">Setting up ${isOwner and "your" or "the"} project build environment</a>
                     </li>
-                    <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
+                    <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config">Installing packages from ${isOwner and "your" or "this"} project</a></li>
                 </ul>
             </div>
         </div>

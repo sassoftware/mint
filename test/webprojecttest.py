@@ -41,34 +41,6 @@ class rogueReq(object):
         self.uri = ''
 
 class WebProjectTest(mint_rephelp.WebRepositoryHelper):
-    def testConaryCfg(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
-
-        #Anonymous
-        page = self.assertContent('/project/testproject/conaryUserCfg',
-                                  code=[200],
-                                  content='Which option should I choose?',
-                                  server=self.getProjectServerHostname())
-        page = self.assertContent('/project/testproject/conaryDevelCfg',
-                        code=[200],
-                        content='Build Label: <strong><tt>%s</tt></strong>' %\
-                                 self.cfg.buildLabel.asString(),
-                        server=self.getProjectServerHostname())
-
-        #User
-        self.webLogin('testuser', 'testpass')
-        page = self.assertContent('/project/testproject/conaryUserCfg',
-                                  code=[200],
-                                  content='Which option should I choose?',
-                                  server=self.getProjectServerHostname())
-        page = self.assertContent('/project/testproject/conaryDevelCfg',
-                        code=[200],
-                        content='Build Label: <strong><tt>%s</tt></strong>' %\
-                                 self.cfg.buildLabel.asString(),
-                        server=self.getProjectServerHostname())
-
     def testBuildsPerms(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',

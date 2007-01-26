@@ -24,8 +24,7 @@
                             <th>Project Title</th>
                             <td>
                                 <input type="text" name="name" value="${kwargs['name']}" />
-                                <p class="help">The title is a longer, more descriptive name for your project.
-                                                Eg., <strong>My Custom Linux</strong>
+                                <p class="help">The title is a longer, more descriptive name for your project, such as "<strong>My Custom Linux</strong>."
                                 </p>
                             </td>
                         </tr>

@@ -119,12 +119,6 @@ class ProjectHandler(WebHandler):
             anonymous = False
         return self._write("projectPage", mirrored = mirrored, anonymous = anonymous)
 
-    def conaryUserCfg(self, auth):
-        return self._write("conaryUserCfg")
-
-    def conaryDevelCfg(self, auth):
-        return self._write("conaryDevelCfg")
-
     def releases(self, auth):
         return self._write("pubreleases")
 

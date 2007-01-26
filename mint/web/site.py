@@ -207,8 +207,11 @@ class SiteHandler(WebHandler):
     @strFields(page = "")
     @intFields(step = 1)
     def help(self, auth, page, step):
+        if page == 'lm-project-naming':
+            self._redirect("http://wiki.rpath.com/wiki/rBuilder:Create_a_Project")
         if not helpDocument(page):
-            return self._write("docs/overview")
+            # Redirect to the main rbuilder wiki
+            self._redirect("http://wiki.rpath.com/wiki/rBuilder")
         return self._write("docs/" + page, step = step)
 
     @redirectHttps

@@ -27,7 +27,7 @@
 
     <body>
         <div class="layout">
-            <h1>rBuilder Online for Users</h1>
+            <h1>rBuilder for Users</h1>
 
             <h2>Download and Install Complete Distributions</h2>
             <p>

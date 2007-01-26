@@ -8,12 +8,10 @@ kid_files =			\
 	dev-tutorial.kid	\
         feedback.kid            \
         minihelp.kid            \
-        overview.kid            \
         privacy.kid             \
         tos.kid                 \
 	user-tutorial.kid	\
-	legal.kid		\
-	lm-project-naming.kid
+	legal.kid		
 
 python_files =
 

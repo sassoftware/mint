@@ -44,7 +44,6 @@
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
             <li py:if="isWriter"><a href="${projectUrl}downloads">Download Statistics</a></li>
-            <li py:attrs="{'class': (lastchunk == 'help') and 'selectedItem' or None}"><a href="${projectUrl}help">Help</a></li>
         </ul>
     </div>
 
@@ -133,23 +132,19 @@
             </div>
         </div>
         <div class="boxBody" py:if="not projectList">
-            <h3>Get Involved</h3>
+            <h3>Get Started</h3>
 
-            <p>Now's the time to get involved with the ${cfg.productName}
-            community. There are several ways you can do this:</p>
+            <p>Participate in the ${cfg.productName} community by:</p>
 
             <ul>
-                <li>You can <a
-                href="http://${SITE}newProject"><strong>create a new
-                project</strong></a>.</li>
+                <li><a
+                href="http://${SITE}newProject"><strong>Creating a new
+                project</strong></a></li>
 
-                <li>You can join an existing project.</li>
+                <li>Joining an existing project</li>
             </ul>
 
-            <p>To join an existing project, use the browse or search boxes
-            in header to find a project that interests you.
-            Then, click on the project name, and click on the "Request to join"
-            link to submit your request to the project's owners.</p>
+            <p>To join an existing project, use the "Browse projects" link or "Search" text box at the top of the page to find a project of interest. Then, submit your request to project owners: click a project name, click "View Project Membership" on the project panel at the left, and click "Request to join this project."</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
