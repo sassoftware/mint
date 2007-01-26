@@ -35,7 +35,7 @@
                     <tr>
                         <th><em class="required">FQDN of target repository:</em></th>
                         <td>
-                            <input type="text" autocomplete="off" name="targetUrl" maxlength="255" value="${kwargs['targetUrl']}"/>
+                            <input type="text" name="targetUrl" maxlength="255" value="${kwargs['targetUrl']}"/>
                             <p class="help">Use the FQDN of the target repository. (example: mirror.rpath.com)
                             </p>
                         </td>
@@ -43,7 +43,7 @@
 
                     <tr>
                         <th><em class="required">rAA Username:</em></th>
-                        <td><input autocomplete="off" type="text" name="mirrorUser" style="width: 25%;" value="${kwargs['mirrorUser']}" /></td>
+                        <td><input type="text" name="mirrorUser" style="width: 25%;" value="${kwargs['mirrorUser']}" /></td>
                     </tr>
                     <tr>
                         <th><em class="required">rAA Password:</em></th>
