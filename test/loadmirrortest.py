@@ -10,10 +10,14 @@ testsuite.setup()
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 from mint import loadmirror
+from mint.client import MintClient
+from mint.projects import Project
+from mint.config import MintConfig
 
 import fixtures
 from conary.lib import util
 
+import mock
 import sys
 import os
 
@@ -124,6 +128,40 @@ class LoadMirrorUnitTest(unittest.TestCase):
             partitions = self.archiveDir + "/partitions-missing",
             mounts = self.archiveDir + "/mounts")
 
+    def createFile(self, fileName, contents = ''):
+        f = open(fileName, "w")
+        f.write(contents)
+        f.close()
+
+    def testCopyFiles(self):
+        # heavily mocked test case for LoadMirror.copyFiles
+        project = mock.MockInstance(Project)
+        project._mock.set(id = 1, hostname = 'test')
+
+        from conary.repository.netrepos import netserver
+        oldNetworkRepositoryServer = netserver.NetworkRepositoryServer
+        netserver.NetworkRepositoryServer = mock.MockObject()
+
+        callback = loadmirror.Callback('test.rpath.local', 1)
+        lm = loadmirror.LoadMirror(None, None)
+        lm.cfg = MintConfig()
+        lm.cfg.dataPath = tempfile.mkdtemp()
+        lm.cfg.projectSiteHost = 'test.rpath.local'
+        lm.cfg.projectDomainName = 'rpath.local'
+
+        lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None))
+        lm.sourceDir = tempfile.mkdtemp()
+
+        util.mkdirChain(lm.sourceDir + '/test.rpath.local')
+        self.createFile(lm.sourceDir + '/test.rpath.local/MIRROR-INFO')
+        self.createFile(lm.sourceDir + '/test.rpath.local/sqldb', 'contents of testfile')
+
+        lm.copyFiles('test.rpath.local', project, callback = callback.callback)
+
+        # clean up
+        util.rmtree(lm.cfg.dataPath)
+        util.rmtree(lm.sourceDir)
+        netserver.NetworkRepositoryServer = oldNetworkRepositoryServer
 
 
 if __name__ == "__main__":
