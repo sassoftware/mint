@@ -24,8 +24,11 @@ class RankedProjectListTable(database.DatabaseTable):
         self.createSQL = """
             CREATE TABLE %s (
                 projectId   INTEGER NOT NULL,
-                rank        INT NOT NULL
-            )""" % self.name
+                rank        INTEGER NOT NULL,
+                CONSTRAINT %s_projectId_fk
+                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                        ON DELETE CASCADE
+            )""" % (self.name, self.name)
 
         return database.DatabaseTable.__init__(self, db)
 
