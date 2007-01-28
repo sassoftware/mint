@@ -330,7 +330,7 @@ class KeyedTable(DatabaseTable):
         #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM %s " % table
         for leftJoin in leftJoins:
-            query += " LEFT JOIN %s USING (%s) " % leftJoin
+            query += " LEFT OUTER JOIN %s USING (%s) " % leftJoin
         query += where[0] + " ORDER BY %s" % order
         subs.extend(where[1])
 
