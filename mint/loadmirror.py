@@ -9,6 +9,7 @@ from conary.lib import util
 from conary.repository.netrepos import netserver
 
 import logging
+from math import floor
 import re
 import os
 import sys
@@ -44,7 +45,7 @@ class Callback:
 
         msg = "Copying files for %s: %2.0f%%" % \
             (self.serverName,
-             (float(self.filesCopied)/float(self.totalFiles)) * 100.0)
+             floor(float(self.filesCopied)/float(self.totalFiles) * 100.0))
 
         if self.filesCopied > (self.lastCopied + 1000):
             self._write(msg)
@@ -138,6 +139,9 @@ class LoadMirror:
         else:
             self.log = logger
 
+        self.cfg = config.MintConfig()
+        self.cfg.read(config.RBUILDER_CONFIG)
+
     def parseMirrorInfo(self, serverName):
         """Parse a mirror info file: <sourceDir>/<serverName>/MIRROR-INFO"""
         f = open(os.path.join(self.sourceDir, serverName, "MIRROR-INFO"))
@@ -193,26 +197,24 @@ class LoadMirror:
         repos.auth.addAcl(mintCfg.authUser, None, None, True, False, True)
         repos.auth.setMirror(mintCfg.authUser, True)
 
-    def copyFiles(self, serverName, project, callback = None):
+    def copyFiles(self, serverName, project, targetOwner = None, callback = None):
         labelIdMap, _, _ = self.client.getLabelsForProject(project.id)
         label, labelId = labelIdMap.items()[0]
 
-        cfg = config.MintConfig()
-        cfg.read(config.RBUILDER_CONFIG)
-        targetPath = os.path.join(cfg.dataPath, "repos") + os.path.sep
+        targetPath = os.path.join(self.cfg.dataPath, "repos") + os.path.sep
         util.mkdirChain(targetPath)
 
         sourcePath = os.path.join(self.sourceDir, serverName)
 
-        copyutils.copytree(sourcePath, targetPath, callback = callback)
+        copyutils.copytree(sourcePath, targetPath, fileowner = targetOwner,
+            dirowner = targetOwner, callback = callback)
         os.unlink(os.path.join(targetPath, serverName, "MIRROR-INFO"))
-        call("chown -R apache.apache %s" % targetPath)
 
-        self._addUsers(serverName, cfg)
-        localUrl = "http%s://%s%srepos/%s/" % (cfg.SSL and 's' or \
-                   '', cfg.projectSiteHost, cfg.basePath, project.hostname)
+        self._addUsers(serverName, self.cfg)
+        localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or \
+                   '', self.cfg.projectSiteHost, self.cfg.basePath, project.hostname)
 
         # set the internal label to our authUser and authPass
-        project.editLabel(labelId, label, localUrl, cfg.authUser, cfg.authPass)
+        project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
         self.client.addInboundMirror(project.id, [label], "http://%s/conary/" % serverName, "", "")
-        self.client.addRemappedRepository(".".join((project.hostname, cfg.projectDomainName)), serverName)
+        self.client.addRemappedRepository(".".join((project.hostname, self.cfg.projectDomainName)), serverName)

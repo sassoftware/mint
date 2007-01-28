@@ -51,8 +51,7 @@ class LoadMirror(rAASrvPlugin):
         loader = loadmirror.LoadMirror(loadmirror.target,
             'http://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser, cfg.authPass))
         loadmirror.mountMirrorLoadDrive()
-        
-        
+
         mirrored = 0
         for serverName in os.listdir(loadmirror.target):
             if not os.path.exists(os.path.join(loadmirror.target, serverName, "MIRROR-INFO")):
@@ -62,10 +61,16 @@ class LoadMirror(rAASrvPlugin):
             numFiles = loader.parseMirrorInfo(serverName)
             cb = Callback(serverName, numFiles, logger = log)
 
+            if os.getuid() == 0:
+                import pwd
+                apacheUser = pwd.getpwnam('apache')[2:4]
+            else:
+                apacheUser = None
+
             try:
                 project = loader.findTargetProject(serverName)
                 log.info("Found project eligible to load: %s", serverName)
-                loader.copyFiles(serverName, project, callback = cb.callback)
+                loader.copyFiles(serverName, project, targetOwner = apacheUser, callback = cb.callback)
                 mirrored += 1
             except RuntimeError, e:
                 log.warning(e)

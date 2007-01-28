@@ -39,15 +39,24 @@ def _copyVisit(arg, dirname, names):
     dest = arg[2]
     filemode = arg[3]
     dirmode = arg[4]
+    fileowner = arg[5]
+    dirowner = arg[6]
     if dirmode:
         os.chmod(dirname, dirmode)
+    if dirowner:
+        os.chown(dirname, *dirowner)
     for name in names:
         if filemode:
             os.chmod(dirname+os.sep+name, filemode)
+        if fileowner:
+            os.chown(dirname+os.sep+name, *fileowner)
         sourcelist.append(os.path.normpath(
             dest + os.sep + dirname[sourcelen:] + os.sep + name))
 
-def copytree(sources, dest, symlinks=False, filemode=None, dirmode=None, callback = None):
+def copytree(sources, dest, symlinks=False,
+        filemode=None, dirmode=None,
+        fileowner=None, dirowner=None,
+        callback = None):
     """
     Copies tree(s) from sources to dest, returning a list of
     the filenames that it has written.
@@ -63,8 +72,10 @@ def copytree(sources, dest, symlinks=False, filemode=None, dirmode=None, callbac
             _copytree(source, thisdest, symlinks, callback = callback)
             if dirmode:
                 os.chmod(thisdest, dirmode)
+            if dirowner:
+                os.chown(thisdest, *dirowner)
             os.path.walk(source, _copyVisit,
-                         (sourcelist, len(source), thisdest, filemode, dirmode))
+                         (sourcelist, len(source), thisdest, filemode, dirmode, fileowner, dirowner))
         else:
             log.debug('copying [file] %s to %s', source, dest)
             shutil.copy2(source, dest)
@@ -78,5 +89,7 @@ def copytree(sources, dest, symlinks=False, filemode=None, dirmode=None, callbac
                 thisdest = dest
             if filemode:
                 os.chmod(thisdest, filemode)
+            if fileowner:
+                os.chown(thisdest, *fileowner)
             sourcelist.append(thisdest)
     return sourcelist

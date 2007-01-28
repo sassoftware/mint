@@ -490,7 +490,7 @@ Much like Powdermilk Biscuits[tm]."""
         d2 = tempfile.mkdtemp()
         subdir2 = os.sep.join((d2, 'subdir'))
         fn2 = os.sep.join((subdir2, 'hello'))
-        copyutils.copytree(subdir, d2)
+        copyutils.copytree(subdir, d2, fileowner = (os.getuid(), os.getuid()))
         assert(os.path.isdir(subdir2) and os.path.exists(fn2))
         util.rmtree(subdir2)
         copyutils.copytree(subdir + '/', d2)
