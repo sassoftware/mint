@@ -248,7 +248,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
         snoofId = client.newProject("Snoof Project", "snoof", "rpath.org")
         self._changeTimestamps(snoofId, 1128540003, 1129540003)
 
-        if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046]], 1):
+        if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046, 4]], 1):
             self.fail("Search for 'Foo' did not return the correct results.")
         res = client.getProjectSearchResults('Project')
         assert(res[1] == 4)
@@ -316,13 +316,13 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self._changeTimestamps(data['projectId'], 1128540046, 1128540046)
 
         x = client.getProjectSearchResults("buildtype=2")
-        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046, 1]], 1))
 
         x = client.getProjectSearchResults("buildtype=0")
         self.failUnlessEqual(x, ([], 0))
 
         x = client.getProjectSearchResults("buildtype=0 buildtype=2")
-        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046, 1]], 1))
 
         build = client.getBuild(data['buildId'])
         build.setTrove("group-dist", str(build.getTroveVersion()), "1#x86|5#use:xen:domU")
@@ -342,23 +342,23 @@ class BrowseTest(fixtures.FixturedUnitTest):
         rel2.publish()
 
         x = client.getProjectSearchResults("buildtype=100")
-        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046]], 1))
+        self.failUnlessEqual(x, ([[data['projectId'], 'foo', 'Foo', '', 1128540046, 2]], 1))
 
         # broken search queries shouldn't traceback
         x = client.getProjectSearchResults("b buildtype=")
-        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046]], 1))
+        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2]], 1))
         x = client.getProjectSearchResults("b =101")
-        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046]], 1))
+        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2]], 1))
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")
-        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0],
-                               [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
+        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0, 2],
+                               [1, 'foo', 'Foo', '', 1128540046.0, 2]], 2), x)
 
         # search for a build type and a flavor flag
         x = client.getProjectSearchResults("buildtype=2 buildtype=101")
-        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0],
-                               [1, 'foo', 'Foo', '', 1128540046.0]], 2), x)
+        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0, 2],
+                               [1, 'foo', 'Foo', '', 1128540046.0, 2]], 2), x)
 
 
 if __name__ == "__main__":

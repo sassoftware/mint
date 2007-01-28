@@ -24,8 +24,11 @@ class RankedProjectListTable(database.DatabaseTable):
         self.createSQL = """
             CREATE TABLE %s (
                 projectId   INTEGER NOT NULL,
-                rank        INT NOT NULL
-            )""" % self.name
+                rank        INTEGER NOT NULL,
+                CONSTRAINT %s_projectId_fk
+                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                        ON DELETE CASCADE
+            )""" % (self.name, self.name)
 
         return database.DatabaseTable.__init__(self, db)
 
@@ -39,7 +42,7 @@ class RankedProjectListTable(database.DatabaseTable):
 
     def getList(self):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId, hostname, name FROM %s JOIN Projects USING(projectId) ORDER BY rank" % self.name)
+        cu.execute("SELECT projectId, hostname, name FROM %s JOIN Projects USING(projectId) ORDER BY rank LIMIT 10" % self.name)
         return cu.fetchall_dict()
 
     def calculate(self):
@@ -127,7 +130,6 @@ def calculateTopProjects(db, daysBack = 7):
 
         counts = counts.items()
         counts.sort(key = lambda x: x[1][0], reverse = True)
-        counts = counts[:10]
 
         return [x[0] for x in counts]
     else:
@@ -138,8 +140,8 @@ def calculateTopProjects(db, daysBack = 7):
                 JOIN FilesUrls USING (urlId) WHERE urlId=outerUrlId) AS projectId
                 FROM UrlDownloads WHERE timeDownloaded > ?
                 GROUP BY projectId
-                ORDER BY downloads DESC LIMIT 10""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
-        return [int(x['projectId']) for x in cu.fetchall_dict()]
+                ORDER BY downloads DESC""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
+        return [int(x['projectId']) for x in cu.fetchall_dict() if x['projectId'] != None]
 
 class UpdateProjectLists(scriptlibrary.SingletonScript):
     db = None

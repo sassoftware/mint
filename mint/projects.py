@@ -437,7 +437,7 @@ class ProjectsTable(database.KeyedTable):
 
         return ids
 
-    def search(self, terms, modified, limit, offset, includeInactive=False):
+    def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=False):
         """
         Returns a list of projects matching L{terms} of length L{limit}
         starting with item L{offset}.
@@ -446,19 +446,26 @@ class ProjectsTable(database.KeyedTable):
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
         @param includeInactive:  Include hidden and fledgling projects
+        @param byPopularity: Sort by popularity metric.
         @return:       a dictionary of the requested items.
                        each entry will contain four bits of data:
                         The hostname for use with linking,
                         The project name,
                         The project's description
                         The date last modified.
+                        The projects popularity rank.
         """
-        columns = ['projectId', 'hostname', 'name', 'description',
+        columns = ['Projects.projectId', 'Projects.hostname',
+                   'Projects.name', 'Projects.description',
                    """IFNULL(
                        (SELECT MAX(Commits.timestamp) FROM Commits
                        WHERE Commits.projectId=Projects.projectId),
-                   Projects.timeCreated) AS timeModified"""]
+                   Projects.timeCreated) AS timeModified""",
+                   """IFNULL(TopProjects.rank,
+                       (SELECT COUNT(projectId) FROM Projects))
+                       AS rank"""]
         searchcols = ['name', 'description', 'hostname']
+        leftJoins = [ ('TopProjects', 'projectId') ]
 
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.
@@ -507,16 +514,22 @@ class ProjectsTable(database.KeyedTable):
             extras += ")"
 
         if not includeInactive:
-            extras += " AND hidden=0"
+            extras += " AND Projects.hidden=0"
 
         terms = " ".join(terms)
+
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
+
+        if byPopularity:
+            orderByClause = 'rank ASC'
+        else:
+            orderByClause = searcher.Searcher.order(terms, searchcols, 'UPPER(Projects.name)')
 
         ids, count = database.KeyedTable.search(self, columns, 'Projects',
                 whereClause,
-                searcher.Searcher.order(terms, searchcols, 'UPPER(name)'),
+                orderByClause,
                 searcher.Searcher.lastModified('timeModified', modified),
-                limit, offset)
+                limit, offset, leftJoins)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)

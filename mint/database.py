@@ -292,7 +292,7 @@ class KeyedTable(DatabaseTable):
 
         return True
 
-    def search(self, columns, table, where, order, modified, limit, offset):
+    def search(self, columns, table, where, order, modified, limit, offset, leftJoins=[]):
         """
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
         @param columns: list of columns to return
@@ -302,6 +302,7 @@ class KeyedTable(DatabaseTable):
         @param modified: Last modification time.  Empty string to skip this check.
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
+        @param leftJoins: tuples of table(s) to join on (table, using)
         @return:       a dictionary of the requested items.
                        each entry will contain four bits of data:
                         The hostname for use with linking,
@@ -328,6 +329,8 @@ class KeyedTable(DatabaseTable):
             raise
         #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM %s " % table
+        for leftJoin in leftJoins:
+            query += " LEFT OUTER JOIN %s USING (%s) " % leftJoin
         query += where[0] + " ORDER BY %s" % order
         subs.extend(where[1])
 
