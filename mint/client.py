@@ -229,16 +229,17 @@ class MintClient:
         """
         return self.server.searchUsers(terms, limit, offset)
 
-    def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0):
+    def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0, byPopularity = False):
         """
         Collect the results as requested by the search terms
         @param terms: Search terms
         @param modified: int, see searcher.py for a list of values
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param byPopularity: if True, order items by popularity metric
         @return:       dictionary of Items requested
         """
-        return self.server.searchProjects(terms, modified, limit, offset)
+        return self.server.searchProjects(terms, modified, limit, offset, byPopularity)
 
     def getPackageSearchResults(self, terms, limit = 10, offset = 0):
         """
