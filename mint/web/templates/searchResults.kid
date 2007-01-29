@@ -53,9 +53,7 @@
                 </form>
 
                 <p py:if="limiters">
-                    <div py:for="limiter in limiters">
-                        <a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified;removed=1${xtraParams}" style="background-color: transparent; color: transparent;"><img src="${cfg.staticPath}/apps/mint/images/x_out.gif" alt="remove" title="Remove" width="12" height="12" /></a>&nbsp;Showing <b>${limiter['desc']}</b>
-                    </div>
+                    <div py:for="limiter in limiters"><a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified;removed=1${xtraParams}" class="imageButton"><img src="${cfg.staticPath}/apps/mint/images/x_out.gif" alt="remove" title="Remove" width="12" height="12" /></a>&nbsp;Showing <b>${limiter['desc']}</b></div>
                 </p>
 
                 <div py:strip="True" py:if="not count"><p>No results found containing <b>${terms}</b>.</p></div>

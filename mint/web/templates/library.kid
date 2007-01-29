@@ -196,13 +196,9 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 <span style="float: right;" py:if="count != 0">
                     Page ${limit and offset/limit+1 or 1} of ${limit and (count+limit-1)/limit or 1}
 
-                    <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
-                        <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" class="noborder" />
-                    </a>
+                    <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" class="imageButton" py:if="offset != 0"><img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" class="noborder" /></a>
                     <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif" alt="Previous" title="No previous results" width="11" height="11" class="noborder"/>
-                    <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
-                        <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next" title="Next Page" width="11" height="11" class="noborder" />
-                    </a>
+                    <a href="${urlbase};limit=${limit};offset=${offset+limit}" class="imageButton" py:if="offset+limit &lt; count"><img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next" title="Next Page" width="11" height="11" class="noborder" /></a>
                     <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif" alt="No next page" title="No subsequent results" width="11" height="11" class="noborder"/>
                 </span>
             </td>
