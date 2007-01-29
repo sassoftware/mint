@@ -33,7 +33,6 @@
                         <tr>
                             <td>
                                 <label for="buildTypeRestriction">Restrict by Build Type</label>
-                                <input type="hidden" name="type" value="Projects" />
                                 <select id="buildTypeRestriction" name="search">
                                     <option value="${fullTerms}">--</option>
                                     <option value="${fullTerms} buildtype=${bt}"
@@ -43,13 +42,14 @@
                             </td>
                             <td>
                                 <input type="checkbox" py:attrs="{'checked': byPopularity and 'checked' or None}" name="byPopularity" value="1" />
-                                <label for="byPopularity">Rank results by Popularity</label>
+                                <label for="byPopularity">Rank by Popularity</label>
                             </td>
                             <td>
                                 <button type="submit">Update</button>
                             </td>
                         </tr>
                     </table>
+                    <input type="hidden" name="type" value="Projects" />
                 </form>
 
                 <p py:if="limiters">
