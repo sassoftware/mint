@@ -262,7 +262,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         fqdn = client.getProject(projectId).getFQDN()
         assert(client.getOutboundMirrors() == \
             [[1, 1, label, 'https://www.example.com/conary/', 
-            '%s->www.example.com' % fqdn, 'totallyfakepassword', False, False,
+            '%s-www.example.com' % fqdn, 'totallyfakepassword', False, False,
             ['-.*:source', '-.*:debuginfo', '+.*']]])
 
         assert(client.getOutboundMirrorMatchTroves(1) == \
@@ -303,7 +303,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         fqdn = client.getProject(projectId).getFQDN()
         assert(client.getOutboundMirrors() == \
             [[1, 1, label, 'https://www.example.com/conary/', 
-            '%s->www.example.com' % fqdn, 'totallyfakepassword', False, False,
+            '%s-www.example.com' % fqdn, 'totallyfakepassword', False, False,
             []]])
         assert(client.getOutboundMirrorMatchTroves(1) == [])
 
