@@ -132,7 +132,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/editGroup?id=%d' \
                                       % groupTrove.id,
                                   code=[200],
-                                  content='Cook This Group',
+                                  content='Save and Cook',
                                   server=self.getProjectServerHostname())
 
     def testEditGrouprMake(self):
@@ -150,7 +150,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/editGroup?id=%s' \
                                       % groupTrove.id,
                                   code=[200],
-                                  content='Cook This Group',
+                                  content='Save and Cook',
                                   server=self.getProjectServerHostname())
 
     def testEditGroup2(self):
@@ -184,7 +184,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/editGroup?id=%d' \
                                       % groupTrove.id,
                                   code=[200],
-                                  content='Cook This Group',
+                                  content='Save and Cook',
                                   server=self.getProjectServerHostname())
         page = self.fetch('/project/testproject/closeCurrentGroup?referer=/',
                           server=self.getProjectServerHostname())
@@ -201,7 +201,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/editGroup?id=%d' \
                                       % groupTrove.id,
                                   code=[200],
-                                  content='Cook This Group',
+                                  content='Save and Cook',
                                   server=self.getProjectServerHostname())
         page = self.fetch('/project/testproject/deleteGroup',
                           ok_codes = [403],

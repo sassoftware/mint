@@ -270,10 +270,8 @@ button#searchSubmit {
     height: 31px;
 }
 
-button#addMemberSubmit,
-button#editGroupApply,
-button#editGroupCook,
-button#editGroupDelete {
+button#addMemberSubmit
+{
     width: 164px;
     height: 31px;
 }
@@ -898,17 +896,20 @@ div#groupBuilder table tr:first-child {
 }
 
 table.groupTroveItems {
+    border-collapse: collapse;
+    background-color:#F8F8F8;
+    border-top: 0;
+    border-left: 1px solid #ccc;
+    border-bottom: 1px solid #aaa;
+    border-right: 1px solid #aaa;
 }
 
-tr.editGroupHeader {
-    font-size: 110%;
-    font-weight: bold;
-    color: white;
-    background-color: rgb(153, 153, 153);
+table.groupTroveItems > tr > td {
+    padding: 2px 6px 2px 6px;
 }
 
 table.groupTroveItems > tr:first-child td {
-    padding: 0.5em;
+    padding: 4px;
 }
 
 table.groupTroveItems textarea {
@@ -981,7 +982,7 @@ span#editProject {
     margin-right: 20px;
 }
 
-.formgroupTitle {
+tr.editGroupHeader, .formgroupTitle {
     border-top: 1px solid #ccc;
     border-left: 1px solid #ccc;
     border-bottom: 1px solid #aaa;

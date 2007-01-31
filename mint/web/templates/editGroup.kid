@@ -31,23 +31,23 @@ from mint.grouptrove import KNOWN_COMPONENTS
             <h1>Edit Group</h1>
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
-                    <tr class="editGroupHeader"><td style="padding: 0.5em;" colspan="4">
-                        <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
-                        <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit
-                            <img  id="editGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
-                    </td></tr>
-                    <tr id="editGTDropdown" style="display:none;">
+                    <tr class="editGroupHeader">
                         <td colspan="4">
-                            <table style="padding: 0.75em; background: #eeeeee;">
+                            <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
+                        </td>
+                    </tr>
+                    <tr id="editGTDropdown">
+                        <td colspan="4">
+                            <table>
                                 <tr>
                                     <td>Version</td>
-                                    <td colspan="3"><input type="text" value="${curGroupTrove.upstreamVersion}" name="version"/></td>
+                                    <td colspan="3"><input type="text" value="${curGroupTrove.upstreamVersion}" name="version" style="width: 100%;" /></td>
                                 </tr>
                                 <tr>
                                     <td>Description</td>
-                                    <td colspan="3"><textarea rows="10" name="description" py:content="curGroupTrove.description"/></td>
+                                    <td colspan="3"><textarea style="width: 100%;" rows="4" name="description" py:content="curGroupTrove.description"/></td>
                                 </tr>
-                                <tr>
+                                <tr style="margin-bottom: 6px;">
                                     <td colspan="4">
                                         <div style="float:right">
                                             <a onclick="javascript:toggle_display('componentGTDropdown');" href="#">Manage Components
@@ -68,9 +68,11 @@ from mint.grouptrove import KNOWN_COMPONENTS
                                                 removedComponents = curGroupTrove.listRemovedComponents()
                                             ?>
 
-				            <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
+                                            <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
                                                 <td>
-                                                    <input type="checkbox" class="check" name="components" value="${component}" py:attrs="{'checked': component in removedComponents and 'checked' or None}"/> ${component}
+                                                    <input type="checkbox" class="check" name="components" value="${component}"
+                                                        py:attrs="{'checked': component in removedComponents and 'checked' or None}"
+                                                        py:content="component" />
                                                 </td>
                                                 <td>${desc}</td>
                                             </tr>
@@ -80,7 +82,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
                             </table>
                         </td>
                     </tr>
-                    <tr style="background: #efefef;">
+                    <tr class="formgroupTitle" style="font-size: smaller;">
                         <td>Trove</td>
                         <td>Version</td>
                         <td>Lock Version</td>
@@ -105,19 +107,17 @@ from mint.grouptrove import KNOWN_COMPONENTS
                     </tr>
                 </table>
                 <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
-                <p><button id="editGroupApply" class="img" type="submit">
-                    <img src="${cfg.staticPath}/apps/mint/images/apply_changes_button.png" alt="Apply Changes" />
-                </button></p>
-            </form>
+                <button id="editGroupCook" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';" type="button">
+                    <b>Save and Cook</b>
+                </button>
 
-            <p>
-                <button id="editGroupCook" class="img" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';" type="button">
-                    <img src="${cfg.staticPath}/apps/mint/images/cook_this_group_button.png" alt="Cook This Group" />
+                <button id="editGroupApply" type="submit">
+                    Save Changes Only
                 </button>
-                <button id="editGroupDelete" class="img" onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';" type="button">
-                    <img src="${cfg.staticPath}/apps/mint/images/delete_this_group_button.png" alt="Delete This Group" />
+                <button id="editGroupDelete" onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';" type="button">
+                    Delete This Group
                 </button>
-            </p>
+            </form>
 
             <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
             <p>You have a group. Now add packages to it from any
