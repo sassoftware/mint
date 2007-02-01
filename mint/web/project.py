@@ -20,6 +20,7 @@ from mint import userlevels
 from mint import users
 
 from mint import buildtemplates
+from mint import helperfuncs
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
@@ -561,7 +562,7 @@ class ProjectHandler(WebHandler):
                 if buildInProgress:
                     builtAt = "In process"
                 else:
-                    builtAt = time.asctime(time.localtime(buildJob.timeFinished))
+                    builtAt = helperfuncs.formatTime(buildJob.timeFinished)
         try:
             trove, version, flavor = build.getTrove()
             files = build.getFiles()

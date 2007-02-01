@@ -10,6 +10,7 @@ from mint import constants
 
 import htmlentitydefs
 import re
+import time
 
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
@@ -136,3 +137,5 @@ def getVersionForCacheFakeout():
     else:
         return '0'
 
+def formatTime(t):
+    return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(t))
