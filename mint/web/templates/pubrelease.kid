@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint.helperfuncs import formatTime
+from mint.helperfuncs import truncateForDisplay
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
