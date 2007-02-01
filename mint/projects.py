@@ -715,10 +715,10 @@ class LabelsTable(database.KeyedTable):
 
 
 class Databases(database.KeyedTable):
-    name = "Databases"
+    name = "ReposDatabases"
     key = "databaseId"
     createSQL = """
-        CREATE TABLE Databases (
+        CREATE TABLE ReposDatabases (
             databaseId      %(PRIMARYKEY)s,
             driver          VARCHAR(64),
             path            VARCHAR(255)

@@ -342,7 +342,7 @@ def getProjectDomainName(db, hostName):
 def getReposDB(db, dbName, hostName, cfg):
     cu = db.cursor()
     cu.execute("""SELECT driver, path
-        FROM Databases JOIN ProjectDatabase USING (databaseId)
+        FROM ReposDatabases JOIN ProjectDatabase USING (databaseId)
         WHERE projectId=(SELECT projectId FROM Projects WHERE hostname=?)""", hostName)
 
     r = cu.fetchone()

@@ -441,7 +441,7 @@ class RepositoryTest(MintRepositoryHelper):
         os.rename(self.mintCfg.reposDBPath % dbName, newPath)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO Databases VALUES (NULL, 'sqlite', ?)", newPath)
+        cu.execute("INSERT INTO ReposDatabases VALUES (NULL, 'sqlite', ?)", newPath)
         cu.execute("INSERT INTO ProjectDatabase VALUES (?, 1)", projectId)
         self.db.commit()
 
