@@ -89,7 +89,7 @@ from mint import urltypes
 
                 <h3>Notes</h3>
                 <?python notes = build.getDesc().strip()?>
-                <div py:if="notes" py:content="notes" />
+                <div py:for="note in notes.splitlines()" py:content="truncateForDisplay(note, 10000000, 70)" />
                 <div py:if="not notes">This build has no notes.</div>
 
                 <div py:def="xenHelp">

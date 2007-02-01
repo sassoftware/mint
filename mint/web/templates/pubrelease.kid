@@ -41,7 +41,10 @@ from mint.helperfuncs import formatTime
                 <div class="help" py:if="release.isPublished()">Release published ${formatTime(release.timePublished)}</div>
 
                 <h3>Description</h3>
-                <p>${release.description.strip() or "Release has no description."}</p>
+                <p py:if="not release.description">Release has no description.</p>
+                <p py:for="line in release.description.splitlines()">
+                    ${truncateForDisplay(line, 100000000, 70)}
+                </p>
                 <div id="builds">
                     <h3>Builds</h3>
                     ${buildTable(builds)}
