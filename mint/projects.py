@@ -713,6 +713,31 @@ class LabelsTable(database.KeyedTable):
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
 
+
+class Databases(database.KeyedTable):
+    name = "Databases"
+    key = "databaseId"
+    createSQL = """
+        CREATE TABLE Databases (
+            databaseId      %(PRIMARYKEY)s,
+            driver          VARCHAR(64),
+            path            VARCHAR(255)
+        )"""
+
+    fields = ['databaseId', 'driver', 'path']
+
+
+class ProjectDatabase(database.DatabaseTable):
+    name = "ProjectDatabase"
+    createSQL = """
+        CREATE TABLE ProjectDatabase (
+            projectId       INT NOT NULL,
+            databaseId      INT NOT NULL
+        )"""
+
+    fields = ['projectId', 'databaseId']
+
+
 class RepositoryDatabase:
     def __init__(self, cfg):
         self.cfg = cfg

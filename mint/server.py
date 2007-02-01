@@ -240,6 +240,11 @@ def getTables(db, cfg):
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
+
+    # tables for per-project repository db connections
+    d['projectDatabase'] = projects.ProjectDatabase(db)
+    d['databases'] = projects.Databases(db)
+
     outDatedTables = [x for x in d.values() if not x.upToDate]
     while outDatedTables[:]:
         d['version'].bumpVersion()

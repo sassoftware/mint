@@ -78,14 +78,14 @@ def get(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
-def getRepository(projectName, repName, dbName, cfg, req, conaryDb):
+def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
-    nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
+    nscfg.repositoryDB = dbTuple
     nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
 
     nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
@@ -185,12 +185,13 @@ def conaryHandler(req, cfg, pathInfo):
         repHash = repName + req.hostname
 
         dbName = repName.translate(transTables[cfg.reposDBDriver])
-        if cfg.reposDBDriver == "sqlite":
+        reposDBDriver, reposDBPath = getReposDB(db, dbName, hostName, cfg)
+        if reposDBDriver == "sqlite":
             conaryDb = None
         else:
             try:
                 if not conaryDb:
-                    conaryDb = dbstore.connect(cfg.reposDBPath % dbName, cfg.reposDBDriver)
+                    conaryDb = dbstore.connect(reposDBPath, reposDBDriver)
                 else:
                     if conaryDb.reopen():
                         req.log_error("reopened a dead database connection in hooks.py")
@@ -202,8 +203,16 @@ def conaryHandler(req, cfg, pathInfo):
                 req.log_error("Error opening database %s: %s" % (dbName, str(e)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
+        # clear the repository cache if the db connection has changed
+        if repHash in repositories:
+            if repositories[repHash].dbTuple != (reposDBDriver, reposDBPath):
+                del repositories[repHash]
+
         if not repositories.has_key(repHash):
-            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb)
+            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath))
+            if repo:
+                repo.dbTuple = (reposDBDriver, reposDBPath)
+
             repositories[repHash] = repo
             shim_repositories[repHash] = shimRepo
         else:
@@ -329,6 +338,19 @@ def getProjectDomainName(db, hostName):
             return cfg.projectDomainName
 
     return domainNameCache[hostName]
+
+def getReposDB(db, dbName, hostName, cfg):
+    cu = db.cursor()
+    cu.execute("""SELECT driver, path
+        FROM Databases JOIN ProjectDatabase USING (databaseId)
+        WHERE projectId=(SELECT projectId FROM Projects WHERE hostname=?)""", hostName)
+
+    r = cu.fetchone()
+    if r:
+        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]))
+        return r[0], r[1]
+    else:
+        return cfg.reposDBDriver, cfg.reposDBPath % dbName
 
 
 def isProjectExternal(db, hostname):
