@@ -1792,6 +1792,7 @@ class MintServer(object):
         del build['timeUpdated']
         del build['updatedBy']
         del build['pubReleaseId']
+        del build['deleted']
         return build
 
     @typeCheck(int)
