@@ -5,17 +5,14 @@
 #
 
 import dns.resolver
-import email
 import md5
 import os
 import random
-import re
 import smtplib
 import socket
 import string
 import sys
 import time
-import urllib
 from email import MIMEText
 
 from mint import database

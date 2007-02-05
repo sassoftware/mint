@@ -47,7 +47,7 @@ class WebPageTest(SeleniumHelper):
 
         self.failUnless("Edit my account" in self.s.get_body_text())
 
-        self.clickAndWait("link=create a new project")
+        self.clickAndWait("link=Creating a new project")
         self.s.type("hostname", "test")
         self.s.type("title", "Test Project")
 

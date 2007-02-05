@@ -70,7 +70,6 @@ from conary.dbstore import sqlerrors
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
      as supportedrMakeApiVersions
-from mint import urltypes
 
 import gettext
 gettext.install('rBuilder')

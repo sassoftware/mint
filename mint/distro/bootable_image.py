@@ -5,7 +5,6 @@
 #
 
 # python standard library imports
-import errno
 from math import ceil
 import os
 import sys
@@ -13,7 +12,6 @@ import re
 import pwd
 import time
 import tempfile
-import zipfile
 
 # mint imports
 from mint import mint_error
