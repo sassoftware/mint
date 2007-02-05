@@ -191,13 +191,13 @@ class DistroTest(MintRepositoryHelper):
         ai.processImages()
 
         sha1s = {
-            'first-lowres.png': '9806b35fb077a1971c67645cd1e316078ae5000d',
-            'anaconda_header.png': '818d5c1f4e7838037ae91ad68ebd975a6c1fec46',
-            'progress_first.png': '0f4ebf8f39c94b7e678e2a3a5aaddfa4685881de',
-            'syslinux-splash.png': 'c187339e5f1e39059f8277f542525942b4005332',
-            'first.png': 'e5c9f81694c4fe1d74efe4f26d9ea737b2ee283d',
-            'splash.png': '7022e7e156ac253e772b06751a7670148e8ce851',
-            'progress_first-375.png': '3a510f4d87259442389a78b7af434087fae4e178'
+            'anaconda_header.png': '01b37e19cb4a6f7384fd08fe6a954dd9850f0e26',
+            'first-lowres.png': '45f64c471e5f290698f3fccf1e64625b2080da36',
+            'first.png': '1ce4a9fa599e1440eae0b4994ba896eec4999862',
+            'progress_first-375.png': '9fcc14b1785c22a53e54e23cc55a15226b05ab80',
+            'progress_first.png': '74d30f33a1d5c06c518631f8c04a62bb44ff0d05',
+            'splash.png': 'd935e0a02547f0becbd6b3085ce4a965d067fec2',
+            'syslinux-splash.png': '2bc715342409e6d44441042bd6d71664b875fed1',
         }
 
         for f in os.listdir(self.tmpDir + "/ai/"):
@@ -212,13 +212,23 @@ class DistroTest(MintRepositoryHelper):
         ai.processImages()
 
         sha1s = {
-            'first-lowres.png':         '6bbd85d7379a569beceaa3f00e651841601a6564',
-            'anaconda_header.png':      '3739d0588704367d285577bdec7114b7a2b4b482',
-            'progress_first.png':       'd4c4d6087da670fc1739a874f7ef044318d57a0f',
-            'syslinux-splash.png':      'b5aa477cf62ce570eb5a8a17c5d5e3f6717b1dc1',
-            'first.png':                '3b5aee9a37551c6889a568f7e2d639295c0f8ad2',
-            'splash.png':               '29931484c8f8bd5b9055aa88a9cbd0314183f573',
-            'progress_first-375.png':   '6031ba99c41d0d4874ef10d5aef600ba11b577dc'
+            'first-lowres.png': '6bbd85d7379a569beceaa3f00e651841601a6564',
+            'anaconda_header.png': '3739d0588704367d285577bdec7114b7a2b4b482',
+            'progress_first.png': 'd4c4d6087da670fc1739a874f7ef044318d57a0f',
+            'syslinux-splash.png': 'b5aa477cf62ce570eb5a8a17c5d5e3f6717b1dc1',
+            'first.png': '3b5aee9a37551c6889a568f7e2d639295c0f8ad2',
+            'splash.png': '29931484c8f8bd5b9055aa88a9cbd0314183f573',
+            'progress_first-375.png': '6031ba99c41d0d4874ef10d5aef600ba11b577dc'
+        }
+
+        sha1s = {
+            'first-lowres.png': '37ef4561df8381dcb5b62b7056b2d3daf735ecfd',
+            'anaconda_header.png': 'cdf8cad458a267132ad705ea6593d5c048286b63',
+            'progress_first.png': '6d32bb69c5ff5b906247615d6b76ba9a883a82ab',
+            'syslinux-splash.png': 'bd73380fbb00e6809e00fd6ad82d5c3d53478b49',
+            'first.png': '4fd642626b6137dbc72665a0753b9bb2cea3a1ad',
+            'splash.png': '6dcd8f068a95f625a7fcaa5d2b06e646455bbaa4',
+            'progress_first-375.png': '072407829547b0640ba20626614d67b94b75ae9c'
         }
 
         for f in os.listdir(self.tmpDir + "/ai/"):
