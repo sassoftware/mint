@@ -17,6 +17,7 @@ from mint import users
 from mint import mint_error
 from mint import maintenance
 from mint import projectlisting
+from mint.helperfuncs import cleanseUrl
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 
 from kid.pull import XML
@@ -537,12 +538,12 @@ class AdminHandler(WebHandler):
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
         except xmlrpclib.ProtocolError, e:
-            self._addErrors("""%s.  Please be sure your 
-                                  rPath Mirror is configured 
-                                  properly.""" % e.errmsg)
+            self._addErrors("""Protocol Error: %s (%d %s). Please be sure your
+                                  rPath Mirror is configured properly.""" % \
+                (cleanseUrl('https', e.url), e.errcode, e.errmsg))
         except socket.error, e:
             self._addErrors("""%s. Please be sure you rPath Mirror
-                               is configured properly.""" % e.args[1])
+                               is configured properly.""" % str(e))
         else: 
             if not res1 or not passwd:
                 self._addErrors("""An error occured configuring your rPath

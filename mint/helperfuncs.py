@@ -139,3 +139,9 @@ def getVersionForCacheFakeout():
 
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(t))
+
+
+def cleanseUrl(protocol, url):
+    if url.find('@') != -1:
+        return protocol + '://<user>:<pwd>@' + url.rsplit('@', 1)[1]
+    return url
