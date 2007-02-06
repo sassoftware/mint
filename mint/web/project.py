@@ -1039,7 +1039,7 @@ class ProjectHandler(WebHandler):
         self._predirect("members")
 
     @requiresAuth
-    @ownerOnly
+    @writersOnly
     @intFields(span = 7)
     @strFields(format = 'png')
     def downloadChartImg(self, auth, span, format):
@@ -1057,7 +1057,7 @@ class ProjectHandler(WebHandler):
         return self.client.getDownloadChart(self.project.id, days = span, format = format)
 
     @requiresAuth
-    @ownerOnly
+    @writersOnly
     @intFields(span = 7)
     def downloads(self, auth, span):
         return self._write("downloads", span = span)
