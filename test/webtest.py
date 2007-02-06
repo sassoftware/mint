@@ -28,6 +28,11 @@ from repostest import testRecipe
 from conary import versions
 from conary.repository import errors
 
+# make webunit not so picky about input tags closed
+import webunit
+webunit.SimpleDOM.EMPTY_HTML_TAGS.remove('input')
+
+
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def _checkRedirect(self, url, expectedRedirect, code=301):
         page = self.assertCode(url, code)
@@ -853,7 +858,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.fetch('/project/foo/pickArch?id=1')
+        page = self.fetch('/project/foo/editGroup2?id=1&version=1.0.0&action=Save%20and%20Cook')
 
         # this line would trigger a group cook if a job server were running
         page.postForm(1, self.post, {'arch' : "1#x86", 'id' : '1'})
@@ -1210,7 +1215,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           groupTrove.id)
 
         # cook the group to make it go away
-        page = self.fetch('/project/testproject/pickArch?id=%d' % \
+        page = self.fetch('/project/testproject/editGroup2?id=%d&action=Save%%20and%%20Cook&version=1.0' % \
                           groupTrove.id)
 
         page = page.postForm(1, self.post, {'flavor': ['1#x86']})
@@ -1243,7 +1248,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           groupTrove.id)
 
         # cook the group to make it go away
-        page = self.fetch('/project/testproject/pickArch?id=%d' % \
+        page = self.fetch('/project/testproject/editGroup2?id=%d&action=Save%%20and%%20Cook&version=1.0' % \
                           groupTrove.id)
 
         page.postForm(1, self.post, {"flavor" : ["1#x86"]})

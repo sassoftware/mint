@@ -236,11 +236,7 @@ class ProjectHandler(WebHandler):
         self.groupProject = self.client.getProject(self.groupTrove.projectId)
         return self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
 
-    @intFields(id = None)
-    @strFields(version = None, description = '')
-    @listFields(str, components = [])
-    @writersOnly
-    def editGroup2(self, auth, id, version, description, components, **kwargs):
+    def _saveGroupInfo(self, id, version, description, components, **kwargs):
         curGroupTrove = self.client.getGroupTrove(id)
 
         # Set the new version and description
@@ -255,10 +251,24 @@ class ProjectHandler(WebHandler):
             if t['versionLock'] ^ (cvalue == 'on'):
                 curGroupTrove.setTroveVersionLock(t['groupTroveItemId'], cvalue == 'on')
 
-        curGroupTrove.refresh()
         curGroupTrove.setRemovedComponents(components)
-        self._setInfo('Changes saved successfully')
-        self._predirect("editGroup?id=%d" % id)
+
+    @intFields(id = None)
+    @strFields(version = None, description = '', action = None)
+    @listFields(str, components = [])
+    @writersOnly
+    def editGroup2(self, auth, id, version, description, components, action, **kwargs):
+        if action == "Save Changes Only":
+            self._saveGroupInfo(id, version, description, components, **kwargs)
+            self._setInfo('Changes saved successfully')
+            self._predirect("editGroup?id=%d" % id)
+        elif action == "Delete This Group":
+            self._predirect("deleteGroup?id=%d" % id)
+        elif action == "Save and Cook":
+            self._saveGroupInfo(id, version, description, components, **kwargs)
+            return self._write("pickArch", groupTroveId = id)
+        else:
+            raise HttpNotFound
 
     @strFields(referer = None)
     @writersOnly
@@ -315,14 +325,9 @@ class ProjectHandler(WebHandler):
         self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id = None)
-    @writersOnly
-    def pickArch(self, auth, id):
-        return self._write("pickArch", groupTroveId = id)
-
-    @intFields(id = None)
     @listFields(str, flavor = ['1#x86'])
     @writersOnly
-    def cookGroup(self, auth, flavor, id):
+    def cookGroup(self, auth, id, flavor):
         curGroupTrove = self.client.getGroupTrove(id)
 
         arch = deps.mergeFlavorList([deps.ThawFlavor(x) for x in flavor]).freeze()

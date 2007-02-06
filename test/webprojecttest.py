@@ -166,7 +166,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         self.webLogin('testuser', 'testpass')
         page = self.fetch( \
-            '/project/testproject/editGroup2?id=%d&version=1.0.1&%' \
+            '/project/testproject/editGroup2?id=%d&version=1.0.1&action=Save%%20Changes%%20Only&%' \
                 'd__versionLock=on' \
                 % (groupTrove.id, groupTroveItemId),
             server=self.getProjectServerHostname())
@@ -310,7 +310,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
                                              'No Description', False)
         self.webLogin('testuser', 'testpass')
-        page = self.fetch('/project/testproject/pickArch?id=%d' % groupTrove.id,
+        page = self.fetch('/project/testproject/editGroup2?id=%d&action=Save%%20and%%20Cook&version=1.0.0' % groupTrove.id,
                           server=self.getProjectServerHostname())
         assert 'Choose an architecture' in page.body
 

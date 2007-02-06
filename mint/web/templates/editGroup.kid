@@ -70,11 +70,11 @@ from mint.grouptrove import KNOWN_COMPONENTS
 
                                             <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
                                                 <td>
-                                                    <input type="checkbox" class="check" name="components" value="${component}"
+                                                    <input type="checkbox" class="check" name="components" value="${component}" id="component_${component}"
                                                         py:attrs="{'checked': component in removedComponents and 'checked' or None}"
                                                         py:content="component" />
                                                 </td>
-                                                <td>${desc}</td>
+                                                <td><label for="component_${component}">${desc}</label></td>
                                             </tr>
                                         </table>
                                     </td>
@@ -107,16 +107,10 @@ from mint.grouptrove import KNOWN_COMPONENTS
                     </tr>
                 </table>
                 <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
-                <button id="editGroupCook" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';" type="button">
-                    <b>Save and Cook</b>
-                </button>
 
-                <button id="editGroupApply" type="submit">
-                    Save Changes Only
-                </button>
-                <button id="editGroupDelete" onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';" type="button">
-                    Delete This Group
-                </button>
+                <input name="action" type="submit" value="Save and Cook" style="font-weight: bold;" />
+                <input name="action" type="submit" value="Save Changes Only" />
+                <input name="action" type="submit" value="Delete This Group" />
             </form>
 
             <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
