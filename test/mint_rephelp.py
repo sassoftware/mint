@@ -12,6 +12,9 @@ import sys
 import testsuite
 import urlparse
 
+# make webunit not so picky about input tags closed
+import webunit
+webunit.SimpleDOM.EMPTY_HTML_TAGS.remove('input')
 from webunit import webunittest
 
 from mint.web import hooks

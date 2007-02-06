@@ -17,10 +17,6 @@ from mint import database
 from mint.web import admin
 from mint.web.webhandler import HttpMoved
 
-# make webunit not so picky about input tags closed
-import webunit
-webunit.SimpleDOM.EMPTY_HTML_TAGS.remove('input')
-
 class rogueReq(object):
     def __init__(self):
         self.err_headers_out = {}

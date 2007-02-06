@@ -28,10 +28,6 @@ from repostest import testRecipe
 from conary import versions
 from conary.repository import errors
 
-# make webunit not so picky about input tags closed
-import webunit
-webunit.SimpleDOM.EMPTY_HTML_TAGS.remove('input')
-
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def _checkRedirect(self, url, expectedRedirect, code=301):
