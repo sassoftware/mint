@@ -30,7 +30,7 @@ onload = "javascript:;"
                 <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
                 <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
                 <div id="corpLogo">
-                    <img src="${cfg.staticPath}/apps/mint/images/corplogo_notrans.png" width="80" height="98" alt="rPath Logo" />
+                    <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" width="80" height="98" alt="rPath Logo" />
                 </div>
                 <div id="prodLogo">
                     <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
@@ -44,7 +44,7 @@ onload = "javascript:;"
                 <div>
                 </div>
                 <div id="bottomText" style="border: none;">
-                    <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                    <span id="copyright">Copyright &copy; 2005-2007 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
             </div>
