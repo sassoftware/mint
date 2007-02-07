@@ -174,7 +174,10 @@ def conaryHandler(req, cfg, pathInfo):
     if not isProjectExternal(db, hostName):
         # XXX: we need to nerf the repNameCache because we can now modify
         # RepNameMap and we don't have a clean way to reset the cache.
+        # XXX: slate these caches for complete removal--they are no longer
+        # useful to be cached.
         repNameCache = {}
+        domainNameCache = {}
 
         repNameMap = getRepNameMap(db)
         projectName = repName.split(".")[0]
