@@ -21,6 +21,7 @@ dist: defaultdist dist-subdirs
 # only datatemplates are allowed to override initial python files.
 defaultdist: $(dist_files)
 	cp -a usertemplates.py $(DISTDIR)/mint/usertemplates.py
+	cp -a urltypes.py $(DISTDIR)/mint/urltypes.py
 
 clean: default-clean clean-subdirs
 
