@@ -134,3 +134,4 @@ chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 echo "Activating new bind mounts"
 mount -a
 
+/sbin/service multi-jobserver start
