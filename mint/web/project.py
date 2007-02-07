@@ -325,6 +325,11 @@ class ProjectHandler(WebHandler):
         self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id = None)
+    @writersOnly
+    def pickArch(self, auth, id):
+        return self._write("pickArch", groupTroveId = id)
+
+    @intFields(id = None)
     @listFields(str, flavor = ['1#x86'])
     @writersOnly
     def cookGroup(self, auth, id, flavor):
