@@ -26,7 +26,7 @@ from mint.web.templatesupport import downloadTracker
         ?>
         <tr py:attrs="rowAttrs">
             <td colspan="4" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
-                <span py:if="isInProgress" class="buildAssociated">
+                <span py:if="isPublished" class="buildAssociated">
                     <?python
                         release = self.client.getPublishedRelease(build.pubReleaseId)
                     ?>
