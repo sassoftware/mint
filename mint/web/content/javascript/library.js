@@ -31,19 +31,6 @@ function toggle_display(tid) {
     }
 }
 
-// similar to toggle_display, except does multiple elements based on name
-function toggle_display_by_name(elName) {
-    var el_ary = document.getElementsByName(elName);
-    for (var i=0; i < el_ary.length; i++) {
-        if (el_ary[i].style.display == "none") {
-            el_ary[i].style.display = "";
-        }
-        else if (el_ary[i].style.display == "") {
-            el_ary[i].style.display = "none";
-        }
-    }
-}
-
 function toggle_element_by_checkbox(elId, checkId) {
     el = $(elId);
     check = $(checkId);
