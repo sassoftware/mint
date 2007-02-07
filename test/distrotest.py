@@ -197,7 +197,7 @@ class DistroTest(MintRepositoryHelper):
             'progress_first-375.png': '9fcc14b1785c22a53e54e23cc55a15226b05ab80',
             'progress_first.png': '74d30f33a1d5c06c518631f8c04a62bb44ff0d05',
             'splash.png': 'd935e0a02547f0becbd6b3085ce4a965d067fec2',
-            'syslinux-splash.png': '2bc715342409e6d44441042bd6d71664b875fed1',
+            'syslinux-splash.png': '3880e3f18bec6580a7f338920c5492a296a3058c',
         }
 
         for f in os.listdir(self.tmpDir + "/ai/"):
@@ -225,7 +225,7 @@ class DistroTest(MintRepositoryHelper):
             'first-lowres.png': '37ef4561df8381dcb5b62b7056b2d3daf735ecfd',
             'anaconda_header.png': 'cdf8cad458a267132ad705ea6593d5c048286b63',
             'progress_first.png': '6d32bb69c5ff5b906247615d6b76ba9a883a82ab',
-            'syslinux-splash.png': 'bd73380fbb00e6809e00fd6ad82d5c3d53478b49',
+            'syslinux-splash.png': '38580822ca5bce41299bb64c175c412c4b1b25dd',
             'first.png': '4fd642626b6137dbc72665a0753b9bb2cea3a1ad',
             'splash.png': '6dcd8f068a95f625a7fcaa5d2b06e646455bbaa4',
             'progress_first-375.png': '072407829547b0640ba20626614d67b94b75ae9c'
