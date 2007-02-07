@@ -8,7 +8,7 @@ SUBDIRS =
 
 dist_files =
 
-python_files = usertemplates.py
+python_files = usertemplates.py urltypes.py
 
 all: default-subdirs
 
