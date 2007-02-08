@@ -12,7 +12,7 @@ class RBALog(rAAWebPlugin):
     '''
         Display jobserver log
     '''
-    displayName = _("View rBuilder Log")
+    displayName = _("Job Server Log")
 
     logPath = 'srv/rbuilder/logs/job-server.log'
     jsrvPath = '/srv/rbuilder/jobserver/'
