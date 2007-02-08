@@ -209,6 +209,7 @@ class LoadMirror:
         copyutils.copytree(sourcePath, targetPath, fileowner = targetOwner,
             dirowner = targetOwner, callback = callback)
         os.unlink(os.path.join(targetPath, serverName, "MIRROR-INFO"))
+        call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, self.cfg)
         localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or \
