@@ -1,30 +1,88 @@
-Changes in 2.1.0 (live push Jan 15 2007):
-* Logging in from pages with GET parameters now works again. (RBL-1240)
-* Create /readwriteroot for rpl:2-era livecds (RBL-1233)
-* Make /etc/mtab a symlink to /proc/mounts for livecds (RBL-1225)
-* Download statistics are now available as a graphical chart. (RBL-1213)
-* rBuilder now supports VHD formats. (RBL-1198)
-* There is now an easy way to delete multiple builds quickly. (RBL-1195)
-* Speed improvements in the repository browser. (RBL-1177)
-* New CSS and Javascript are accessed using a query parameter made up
-  of the mercurial changeset ID, eliminating the need for the user
-  to press shift-reload to force their browser to fetch new files. (RBL-1017)
-* Developers can now see unpublished releases in the list view. (RBL-968)
+Changes in 3.0.0
+================
+
+Features
+--------
+* rBuilder now supports Microsoft Virtual Hardware (VHD) as well as
+  Virtual Iron build types. (RBL-1198)
+* The "VMware Player Image" build type is now known as "VMware Virtual
+  Appliance". (RBL-1274)
+* Users who are currently building a group with Group Builder will have their
+  package searches restricted to packages having the same namespace:tag
+  (e.g. rpl:1) as the version of group-core currently included
+  in the group they are building. (RBL-629)
+* Inbound mirror operations may now be scheduled via rAA. (RBL-1157)
+* Inbound and outbound mirror logging has been enhanced. (RBL-1242)
+* It is now possible to delete multiple builds from the "manage builds"
+  web interface. (RBL-1195)
+* Project developers are now able to see unpublished releases in the
+  Manage Releases page. (RBL-968)
+* A number of speed improvements have been made to the repository
+  browser. (RBL-1177)
+* Download statistics are now available as a chart. (RBL-1213)
+* The release description page now contains date/time information
+  about a given release.
+
+Fixes
+-----
+* The mirror preload operation now checks for sufficient free disk
+  space before importing.  (RBL-1014)
+* Maintenance mode no longer creates a redirect loop when attempting
+  to access the web interface while logged in. (RBL-1028)
+* The Cook Group button on the Edit Group page now saves any group recipe
+  changes before cooking the group. (RBL-1085)
+* It is no longer necessary to press shift-reload to properly refresh
+  the page after upgrading rBuilder. (RBL-1017)
+* Logging in from pages with GET parameters (e.g. search pages)
+  works again. (RBL-1240)
+* The Start Job Server button on the Manage Jobs screen now functions
+  properly. Also, the job server status information is formatted to
+  be easier to read. (RBL-1245)
+* Demo CD/DVDs now have /etc/mtab as a symlink to /proc/mounts.
+  (RBL-1225)
+* Developers can now see unpublished releases in the list view.
+  (RBL-968)
 * group-raa is now included in the list of groups to initially populate
   a group trove. (RBL-925)
-* The search API is now "open". (RBL-846)
-* Very large VMware images are now zipped correctly. (RBL-798)
-* Users with a group build open will see selective search results
-  when searching for a package. (RBL-629)
-* Searching projects with specific image types in a published release
-  is possible.
+* Users may now restrict their project search results to projects which
+  have published releases containing builds with the desired build
+  types.
+* Page rendering fixed when a user with more than five projects is
+  logged in. (RBL-1253)
+* Clicking on a package in a search will take you to the proper version
+  of the package in the repository browser. (RBL-1264)
+* Backups to Samba shares now function properly. (RBL-1293)
+* Outbound mirroring now uses /srv/rbuilder/tmp instead of /tmp.
+  (RBL-1295)
+* The "(show more builds)" link on the "Manage/View Builds" pages --
+  which appeared if a project had more than ten builds -- was
+  removed, as it did not function properly under some browsers.
+  (RBL-868)
+* Recreating a build that uses an older jobserver no longer causes
+  the jobserver to crash. (RBL-1318)
+* Committing to an rBuilder-hosted repository with incorrect credentials
+  now gives an appropriate error message as opposed to a stacktrace.
+  (RBL-1296)
+* Restarting Apache is no longer necessary when adding an external
+  project to rBuilder. (RBL-1347)
+* The  default Anaconda artwork no longer says "Created by rBuilder Online"
+  when being built by the rBuilder Appliance. (RBL-1281)
+* System update entitlements are no longer incorrectly used for inbound
+  mirror updates. (RBL-1308)
+* The rBuilder CLI no longer stacktraces if a child process in a pipeline
+  exits before all data is consumed in the pipeline. (RBL-1276)
 
-Changes in 2.1.0:
+Changes in 2.1.1
+================
+* VMware builds now complete successfully. (RBL-1297)
+
+Changes in 2.1.0
+================
 * VMware ESX image creation (RBL-1139)
 * Xen DomU option when cooking a group (RBL-609)
 * Mirror pre-loading now using a USB HDD or similar device for
   speed and space concerns (RBL-1023)
-* A "kill job" button on the Job Administration page (RBL-1052) 
+* A "kill job" button on the Job Administration page (RBL-1052)
 * Projects have an RSS feed of new package commits (RBL-913)
 * External projects can be edited after creation (RBL-767)
 * Inbound mirroring supports mirroring multiple labels (RBL-1041)
@@ -32,7 +90,7 @@ Changes in 2.1.0:
 * VMware images can be created with either NAT or bridged networking
   by default (RBL-870)
 * "Add Outbound Mirror" dialog input is validated for correctness
-  (RBL-1150) 
+  (RBL-1150)·
 * Mirror updates and package index updates log to /srv/rbuilder/logs/ (RBL-947)
 * Internet Explorer rendering/Javascript fixes (multiple issues)
 * Improved error message displayed when an error occurs contacting
@@ -40,10 +98,11 @@ Changes in 2.1.0:
 * The build name (defaulting to project name) is used to brand
   installable CDs (RBL-696)
 * Several database deadlocks identified and fixed (RBL-1096)
-* Several other bug fixes and UI enhancements (multiple issues) 
+* Several other bug fixes and UI enhancements (multiple issues)
 
-Changes in 2.0.3:
-* rBuilder's configuration file now supports overrides via two files:
+Changes in 2.0.3
+================
+* rBuilder's configuration file now supports overrides via two files
   rbuilder-generated.conf and rbuilder-custom.conf. rbuilder-generated.conf
   is updated via the "first-time setup" mode of rBuilder and should not
   be edited by hand. rbuilder-custom.conf is to be used for "site-local"
@@ -52,12 +111,14 @@ Changes in 2.0.3:
   overwritten upon any future update to rBuilder and therefore should not 
   be edited by a customer or SE under any circumstances. (RBL-1047)
 
-Changes in 2.0.2:
+Changes in 2.0.2
+================
 * S3 support.
 * The "search/browse entries per page" setting now properly applies to
   browse pages.
 
-Changes in 2.0.0:
+Changes in 2.0.0
+================
 * Rearchitected the releases system, and replaced it with releases and builds.
 * Releases can now consist of an arbitrary set of builds; a build
   is a combination of group-trove (trove, version, flavor) + build type
@@ -86,7 +147,8 @@ Changes in 2.0.0:
   extraction. (RBL-830)
 * VMware images now default to bridged networking mode.
 
-Changes in 1.6.3:
+Changes in 1.6.3
+================
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
   now in /srv/rbuilder/rbuilder.conf.
 * Projects created using rBA may use a custom domain name.
@@ -131,11 +193,11 @@ Changes in 1.6.3:
 * Component Removal from Group Builder now exists. For now the settings are in
   the 'Edit Group' dialog. The location may change.
 * Client cookie settings are tested at login instead of silently failing.
-* Outbound mirroring uses matchTroves instead of excludedTroves:
+* Outbound mirroring uses matchTroves instead of excludedTroves
     NOTE: This change requires rBO/A to use conary 1.0.17 or later.
 
-Changes in 1.6.1:
-
+Changes in 1.6.1
+================
 * Bootable images now save the taghandler script and the output
   of that script in /root/, the same way the installable CD does.
 * A warning now appears at the top of the project page if the project's
@@ -149,41 +211,41 @@ Changes in 1.6.1:
   table.
 * The group cook page uses the new status dialog.
 
-Changes in 1.6.0:
-
-* Redirects in the group builder are now handled more correctly:
+Changes in 1.6.0
+================
+* Redirects in the group builder are now handled more correctly
   the correct flavored redirect will be pulled in automatically.
 * Group Builder conflicts have been modified to behave more intuitively.
   User specified troves will always replace troves pulled in from deps.
 * Many other changes and bug fixes.
 
-Changes in 1.5.4:
-
+Changes in 1.5.4
+================
 * configurable ISO sizes
 * media-template support
 
-Changes in 1.5.0;
-
+Changes in 1.5.0
+================
 * Massive UI updates.
 * Many bug fixes.
 * Bootable image support.
 
-Changes in 1.2.3:
-
+Changes in 1.2.3
+================
 * Move to the proposed official mailman XMLRPC patch
 * Add a link on the mailing list page to allow project owners to reset
   list passwords
 
-Changes in 1.2.2:
-
+Changes in 1.2.2
+================
 * The users admin interface now displays properly on a MySQL install.
 * ShimNetClient uses the default rate limit instead of explicitly 
   using 0.
 * The releases page has been redesigned.
 * Many bug fixes and updates.
 
-Changes in 1.2.1:
-
+Changes in 1.2.1
+================
 * Fix redirect from rpath.com to www.rpath.com (for example)
 * Fix bugzilla #552 (Group Builder didn't show up in Project Resources in
   repository browser.
@@ -204,10 +266,10 @@ Changes in 1.2.1:
 * Anaconda-installed ISOs now have an initial conaryrc which reads all config
   files from /etc/conary/conf.d/
 
-Changes in 1.2.0:
-
+Changes in 1.2.0
+================
 * Many changes to remove usernames and passwords from repository maps.
-* Config file changes: authRepoMap no longer contains username/password:
+* Config file changes: authRepoMap no longer contains username/password
   move them to authUser and authPass.
 * iso_gen.conf now contains an SSL flag which must match the mint configuration.
 * A bug in the downloadImage handler has been fixed.
@@ -221,8 +283,8 @@ Changes in 1.2.0:
 * Add support for creating bootable VMWare Images
 * Refactor the job server to generate multiple image types from a single
 
-Changes in 1.1.3:
-
+Changes in 1.1.3
+================
 * 1.1.2 was never launched to the live site.
 * Sessions are now saved only for logged-in users.
 * Redirect handling in the web code has been refactored
@@ -236,8 +298,8 @@ Changes in 1.1.3:
 * The job server now has a --no-daemon option to prevent
   the server from forking off to a separate process.
 
-Changes in 1.1.2:
-
+Changes in 1.1.2
+================
 * The JobData and ReleaseData tables are now abstracted into a new
   GenericDataTable for future reuse.  As part of this change the JobData table
   will be dropped and recreated.  As such any jobs happening during the upgrade
@@ -246,8 +308,8 @@ Changes in 1.1.2:
 * Reports can be accessed in PDF format on the web.
 * Lots of bug fixes.
 
-Changes in 1.1.1:
-
+Changes in 1.1.1
+================
 * Customized Anaconda images are now automatically generated if
   anaconda-custom does not exist on the project repository.
 * Group Builder groups can be cooked to x86 and x86_64 targets.
@@ -261,8 +323,8 @@ Changes in 1.1.1:
 * Bug fixes in the database code, RSS news handling.
 * Fixed an fd leak in the installable ISO generation code.
 
-Changes in 1.1.0:
-
+Changes in 1.1.0
+================
 * Massive performance improvements including caching of kid table objects,
   not reloading the database structure every hit, accessing the authrepo
   database file directly instead of spawning an http access, and many
@@ -273,34 +335,34 @@ Changes in 1.1.0:
 * The installable ISO generator now copies anything from /usr/share/anaconda/ in
   anaconda-custom to the product.img.
 
-Changes in 1.0.2:
-
+Changes in 1.0.2
+================
 * Finished ISOs are placed in a separate path from the temporary generation
   location, to ease cleanup and pure-http access of images.
 * The job server now prefers to run a user 'isogen', instead of root.
 
-Changes in 1.0.1:
-
+Changes in 1.0.1
+================
 * Highly improved developer and user tutorials.
 * Many small bug fixes and aesthetic updates.
 
-Changes in 1.0.0:
-
+Changes in 1.0.0
+================
 * Integration with the rPath corporate site.
 
-Changes in 0.9.2:
-
+Changes in 0.9.2
+================
 * Filter unpublished images out of the Recently Published Releases
   box.
 
-Changes in 0.9.1:
-
+Changes in 0.9.1
+================
 * Filter hidden and disabled projects out of the ISO Factory
   box.
 * Properly call condUpstream in web/templates/project.kid.
 
-Changes in 0.9.0:
-
+Changes in 0.9.0
+================
 * Lots of updated documentation.
 * Lots of basePath usage fixes.
 * Traps certain broken requests earlier, and returns
@@ -318,8 +380,8 @@ Changes in 0.9.0:
 * A "New Releases" sitebar has been added, with an associated
   RSS feed.
 
-Changes in 0.8.0:
-
+Changes in 0.8.0
+================
 * A missing or broken authrepo is now handled more
   gracefully.
 * ISO generation: Long project titles are properly
@@ -331,14 +393,14 @@ Changes in 0.8.0:
   overlay.
 * You can now choose versions of a group trove from any branch
   on the repository to construct an image.
-* Image files are now accessible without a CGI-style query param:
+* Image files are now accessible without a CGI-style query param
      /downloadImages/<fileid>/<filename>
 * release.getFiles() now returns tuples of (fileId, file basename, title)
   instead of returning the entire pathname.
 * Some login cookie bugs were fixed.
 
-Changes in 0.6.2:
-
+Changes in 0.6.2
+================
 * Shows only published releases in the releases sidebar.
 * Fix a bug where a user would end up in the authrepo
   even if the confirmation email failed to send.
@@ -348,14 +410,14 @@ Changes in 0.6.2:
   files in the same directory that job-server found its
   config file.
 
-Changes in 0.6.1:
-
+Changes in 0.6.1
+================
 * Downloads of the first file in a release are counted.
 * Breadcrumbs in the repository trove file list are fixed.
 * Sort releases in "Recent Releases" sidebar by version, descending.
 
-Changes in 0.6.0:
-
+Changes in 0.6.0
+================
 * Sidebars are collapsable for more screen real estate.
 * Symlinks are now properly displayed as such in the trove files view.
 * The buggy member edit popup has been replaced with "Promote"
@@ -368,8 +430,8 @@ Changes in 0.6.0:
 * Editing a project title is new possible.
 * Many small fixes and improvements.
 
-Changes in 0.5.4:
-
+Changes in 0.5.4
+================
 * Many UI and documentation fixes.
 * "External" projects can be added which point to repositories
   not handled by mint.
@@ -378,8 +440,8 @@ Changes in 0.5.4:
   actually exist.
 * Some bugs in the commitAction prepration have been fixed.
 
-Changes in 0.5.3:
-
+Changes in 0.5.3
+================
 * The cached or pre-existing changesets are now double checked against
   the latest version from the repository before they are used for
   installable ISO images.
@@ -390,8 +452,8 @@ Changes in 0.5.3:
 * In-band membership requests are now possible in the web interface.
 * SSL support for login and repository access is now possible.
 
-Changes in 0.5.2:
-
+Changes in 0.5.2
+================
 * JobsTable moved to a subclass of KeyedTable.
 * Switch to using dnspython from socket.gethostbyname
   to make sure an email server has a valid MX record.
@@ -401,13 +463,13 @@ Changes in 0.5.2:
 * Several broken URLs were fixed.
 * Repositories now keep contents logs for ease of backup.
 
-Changes in 0.5.1:
-
+Changes in 0.5.1
+================
 * Documentation improvements
 * Some minor bug fixes
 
-Changes in 0.5.0:
-
+Changes in 0.5.0
+================
 * Lots of documentation added.
 * News is displayed as HTML, not plain text, mainly so links and paragraph
   breaks are preserved.
@@ -417,52 +479,52 @@ Changes in 0.5.0:
 * Traceback email now includes a lot more information about the
   http request that triggered the error.
 
-Changes in 0.4.8:
-
+Changes in 0.4.8
+================
 * Fixed the repository browser again for non-members by
   switching from the broken shim client to the working netclient.
 * Fixed a few typos.
 
-Changes in 0.4.7:
-
+Changes in 0.4.7
+================
 * Also output repository browser HTML as text/html.
 
-Changes in 0.4.6:
-
+Changes in 0.4.6
+================
 * Output strict HTML using the text/html content type instead of
   XHTML with application/xml+xhtml content type for IE compatibilty.
 
-Changes in 0.4.5:
-
+Changes in 0.4.5
+================
 * Fixed access to repository browser by logged-in non-members of a project
 * Fixed redirect of reserved hosts.
 
-Changes in 0.4.4:
-
+Changes in 0.4.4
+================
 * Small bug fixes.
 
-Changes in 0.4.3:
-
+Changes in 0.4.3
+================
 * Cosmetic changes.
 
-Changes in 0.4.2:
-
+Changes in 0.4.2
+================
 * Fix urls in package search results page.
 * Add a "corpSite" configuration option to point certain links
   at an outside site.
 * Debug mode (emailing of tracebacks) is now a configuration option.
 
-Changes in 0.4.1:
-
+Changes in 0.4.1
+================
 * Add a makefile for templates/admin
 * Add code to email tracebacks to administrator on error
 * Projects can now be hidden.
 
-Changes in 0.4.0:
-
+Changes in 0.4.0
+================
 * Projects are now accessible under the main site: 
   http://hostname/project/<projectname>
-* Repositories are now accessible under a specified repository hostname:
+* Repositories are now accessible under a specified repository hostname
     http://repos.mint.org/projname/
 * User login is now handled using mod_python sessions instead of a simple
   base64-encoded authentication token on the client side.
@@ -475,18 +537,18 @@ Changes in 0.4.0:
   rPath product stylesheets.
 * Repositories now use a per-repo changeset cache.
 
-Changes in 0.3.9:
-
+Changes in 0.3.9
+================
 * Fixed a bug in userInfo template which would cause a traceback if
   the viewing user was not a member of any projects or was not logged in.
 
-Changes in 0.3.8:
-
+Changes in 0.3.8
+================
 * Email notifications for project membership changes.
 * Minor UI improvements. 
 
-Changes in 0.3.7:
-
+Changes in 0.3.7
+================
 * News entries are now ordered correctly: publication date descending 
 * Cancel account works.
 * Pending users who are not confirmed yet don't show up in 
@@ -509,8 +571,8 @@ Changes in 0.3.7:
 * Some checks have been added to prevent an owner of a project from leaving
   the project in a "headless" state with developers, but no owners.
 
-Changes in 0.3.6:
-
+Changes in 0.3.6
+================
 * Mailman management scripts are now included.
 * Forgotten password functionality fixes.
 * Users who change their email address are now required to validate
