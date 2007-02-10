@@ -119,13 +119,37 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
 
+        self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
                                       requireSigs, authCheck, entCheck, False)
         self.needsPGPKey = False
 
-        self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
+        # self.createConfig()
+        # point every mint server at the same database
+        # we don't need completely separate mint instances
+        # in the current test suite, but we do need multiple
+        # apache servers serving up the same instance.
+        global mintCfg
+        if not mintCfg:
+            self.getMintCfg()
+            mintCfg = self.mintCfg
+        else:
+            self.mintCfg = mintCfg
+
+        f = file(self.serverRoot + "/rbuilder.conf", "w")
+        self.mintCfg.display(f)
+        f.close()
+
+        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if mintDb == "sqlite":
+            self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
+        elif mintDb == "mysql":
+            self.mintDb = MySqlMintDatabase(reposDB.path)
+
+    def createConfig(self):
+        rephelp.ApacheServer.createConfig(self)
         # Add dynamic images path to apache settings if necessary
         f = open("%s/httpd.conf" % self.serverRoot)
         if 'finished-images' not in f.read():
@@ -163,28 +187,6 @@ class MintApacheServer(rephelp.ApacheServer):
                 shutil.copy("%s/server/test.%s" % (self.getTestDir(), ext),
                         "%s" % self.serverRoot)
 
-        # point every mint server at the same database
-        # we don't need completely separate mint instances
-        # in the current test suite, but we do need multiple
-        # apache servers serving up the same instance.
-        global mintCfg
-        if not mintCfg:
-            self.getMintCfg()
-            mintCfg = self.mintCfg
-        else:
-            self.mintCfg = mintCfg
-
-        f = file(self.serverRoot + "/rbuilder.conf", "w")
-        self.mintCfg.display(f)
-        f.close()
-
-        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if mintDb == "sqlite":
-            self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
-        elif mintDb == "mysql":
-            self.mintDb = MySqlMintDatabase(reposDB.path)
-
-        
     def start(self):
         rephelp.ApacheServer.start(self)
         self.mintDb.start()
@@ -293,7 +295,7 @@ class MintServerCache(rephelp.ServerCache):
         serverDir = os.environ.get('CONARY_PATH') + '/conary/server'
         serverClass = MintApacheServer
 
-        return server, serverClass, serverDir
+        return server, serverClass, serverDir, None, None
 
 
 rephelp._servers = MintServerCache()

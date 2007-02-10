@@ -1834,7 +1834,6 @@ class MintServer(object):
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
             for urlId, urlType, url in fileUrlList:
-                self.removeFileUrl(buildId, fileId, urlId)
                 # if this location is local, delete the file
                 if urlType == urltypes.LOCAL:
                     fileName = url
