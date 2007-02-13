@@ -15,7 +15,7 @@
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
 ?>
     <head>
-        <title>${formatTitle('Add External Project')}</title>
+        <title>${formatTitle((editing and 'Edit' or 'Add') + ' External Project')}</title>
     </head>
     <body>
         <div id="left" class="side">
@@ -23,7 +23,7 @@
         </div>
         <div id="spanright">
           <form action="${cfg.basePath}admin/processAddExternal" method="post">
-            <h2>Add External Project</h2>
+            <h2>${editing and 'Edit ' or 'Add '} External Project</h2>
             <p py:if="not editing" class="help">External projects appear just like the
             projects you host on ${cfg.productName} with one exception:
             the respository is <em>not</em> stored on
