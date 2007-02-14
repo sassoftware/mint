@@ -444,24 +444,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(project.getLabel() == 'bar.rpath.com@foo:bar')
 
     @testsuite.context("quick")
-    def testBrowseProjects(self):
-        self.registerErrorContent("Error")
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        project = client.getProject(projectId)
-        project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
-
-        cu = self.db.cursor()
-        r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, 100, userId)
-        self.db.commit()
-
-        for sortOrder in range(10):
-            page = self.fetch('/projects?sortOrder=%d' % sortOrder,
-                               ok_codes = [200])
-
     def testSearchProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        project = client.getProject(projectId)
+        project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
 
         page = self.fetch('/search?type=Projects&search=foo',
                           ok_codes = [200])
@@ -956,11 +944,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Unconfirmed user broke out of confirm email jail'
                     ' on project home page.')
 
-        page = page.fetchWithRedirect('/projects',
+        page = page.fetchWithRedirect('/',
                 server = self.getProjectServerHostname())
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail on'
-                    ' projects page.')
+                    ' front page.')
 
         page = page.fetchWithRedirect('/repos/foo/browse',
                 server = self.getProjectServerHostname())
@@ -1002,7 +990,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.db.commit()
 
         #session not in table but is cached
-        page = self.fetch('/projects?sortOrder=9', ok_codes = [200])
+        page = self.fetch('/', ok_codes = [200])
 
         # session not in table and not in cache
         self.failIf(username in page.body,

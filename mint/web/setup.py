@@ -68,7 +68,7 @@ class SetupHandler(WebHandler):
         if not self.auth.admin and self.cfg.configured:
             raise HttpForbidden
 
-        if self.client.getProjects(0, 0, 0)[1] \
+        if self.client.getNewProjects(1, True) \
                and 'Server Setup' in configGroups:
             del configGroups['Server Setup']
 

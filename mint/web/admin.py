@@ -16,7 +16,6 @@ from mod_python import apache
 from mint import users
 from mint import mint_error
 from mint import maintenance
-from mint import projectlisting
 from mint.helperfuncs import cleanseUrl
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 
@@ -491,8 +490,6 @@ class AdminHandler(WebHandler):
         else:
             newData = kwargs['newData']
             
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
-        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         publishedReleases = self.client.getPublishedReleaseList()
 
         if newData:
@@ -510,8 +507,8 @@ class AdminHandler(WebHandler):
             table2Data = False
 
         return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
-            popularProjects=popularProjects, selectionData = selectionData,
-            activeProjects = activeProjects, spotlightData=spotlightData,
+            popularProjects= [], selectionData = selectionData,
+            activeProjects = [], spotlightData=spotlightData,
             publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     def outbound(self, *args, **kwargs):

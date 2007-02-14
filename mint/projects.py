@@ -12,6 +12,7 @@ from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse
+from mint import helperfuncs
 from mint import mailinglists
 from mint import projectlisting
 from mint import searcher
@@ -402,28 +403,17 @@ class ProjectsTable(database.KeyedTable):
 
         return int(cu.fetchone()[0])
 
-    def getProjects(self, sortOrder, limit, offset, includeInactive=False):
-        """ Return a list of projects with no filtering whatsoever
-        @param sortOrder: Order the projects by this criteria
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @param includeInactive: Include hidden projects and fledglings
-        """
+    def getNewProjects(self, limit, showFledgling):
         cu = self.db.cursor()
 
-        # XXX: This is intimately tied together to the ridiculous ball of SQL
-        # inside mint/projectlisting.py. Here there be dragons. --sgp
-        innerWhereClause = outerWhereClause = ""
-        if not includeInactive:
-            innerWhereClause = "WHERE hidden=0"
-        if self.cfg.hideFledgling and not includeInactive:
-            outerWhereClause = "WHERE (fledgling=0 OR external=1)"
+        if showFledgling:
+            fledgeQuery = ""
+        else:
+            fledgeQuery = "AND EXISTS(SELECT troveName FROM Commits WHERE projectId=Projects.projectId LIMIT 1)"
 
-        # audited for sql injection. this is safe only because the params to
-        # this function are ensured to be ints by mintServer typeChecking.
-        SQL = projectlisting.sqlbase % (innerWhereClause, outerWhereClause,
-            projectlisting.ordersql[sortOrder])
-        cu.execute(SQL, limit, offset)
+        cu.execute("""SELECT projectId, hostname, name, description, timeModified
+                FROM Projects WHERE hidden=0 AND external=0 %s ORDER BY timeCreated DESC
+                LIMIT ?""" % fledgeQuery, limit)
 
         ids = []
         for x in cu.fetchall():
@@ -432,8 +422,7 @@ class ProjectsTable(database.KeyedTable):
             # cast id and timestamp to int
             ids[-1][0] = int(ids[-1][0])
             ids[-1][4] = int(ids[-1][4])
-            if len(ids[-1][projectlisting.descindex]) > projectlisting.desctrunclength:
-                ids[-1][projectlisting.descindex] = ids[-1][projectlisting.descindex][:projectlisting.desctrunclength] + "..."
+            ids[-1][3] = helperfuncs.truncateForDisplay(ids[-1][3])
 
         return ids
 

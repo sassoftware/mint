@@ -1458,23 +1458,18 @@ class MintServer(object):
         """
         return self.projects.getProjectsList()
 
-    @typeCheck(int, int, int)
+    @typeCheck(int, bool)
     @private
-    def getProjects(self, sortOrder, limit, offset):
+    def getNewProjects(self, limit, showFledgling):
         """
         Collect a list of projects.
         NOTE: admins can see everything including hidden and fledgling
         projects regardless of the value of self.cfg.hideFledgling.
-        @param sortOrder: Order the projects by this criteria
         @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @return: a 2-tuple (list of projects, total number of projects)
+        @param showFledgling:  Boolean to show fledgling (empty) projects or not
+        @return: a list of projects
         """
-        if self.auth and self.auth.admin:
-            includeInactive = True
-        else:
-            includeInactive = False
-        return self.projects.getProjects(sortOrder, limit, offset, includeInactive), self.projects.getNumProjects(includeInactive)
+        return self.projects.getNewProjects(limit, showFledgling)
 
     @typeCheck()
     @requiresAdmin

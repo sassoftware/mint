@@ -28,7 +28,6 @@
                 <?python xtraParams = "" ?>
                 <form py:if="searchType == 'Projects' and buildTypes"
                       method="get" action="search">
-                      <?python xtraParams = ";byPopularity=%d" % int(byPopularity) ?>
                     <table>
                         <tr>
                             <td>
@@ -41,10 +40,6 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="checkbox" py:attrs="{'checked': byPopularity and 'checked' or None}" name="byPopularity" value="1" />
-                                <label for="byPopularity">Rank by Popularity</label>
-                            </td>
-                            <td>
                                 <button type="submit">Update</button>
                             </td>
                         </tr>
@@ -53,18 +48,18 @@
                 </form>
 
                 <p py:if="limiters">
-                    <div py:for="limiter in limiters"><a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified;removed=1${xtraParams}" class="imageButton"><img src="${cfg.staticPath}/apps/mint/images/x_out.gif" alt="remove" title="Remove" width="12" height="12" /></a>&nbsp;Showing <b>${limiter['desc']}</b></div>
+                    <div py:for="limiter in limiters"><a href="search?type=$searchType;search=${limiter['newSearch']};modified=$modified;removed=1" class="imageButton"><img src="${cfg.staticPath}/apps/mint/images/x_out.gif" alt="remove" title="Remove" width="12" height="12" /></a>&nbsp;Showing <b>${limiter['desc']}</b></div>
                 </p>
 
                 <div py:strip="True" py:if="not count"><p>No results found containing <b>${terms}</b>.</p></div>
                 <div py:strip="True" py:if="count">
-                    ${navigation("search?type=%s;search=%s;modified=%d;removed=%d%s"%(searchType, fullTerms, modified, int(limitsRemoved), xtraParams), terms, count, limit, offset)}
+                    ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, fullTerms, modified, int(limitsRemoved)), terms, count, limit, offset)}
                     <table cellspacing="0" cellpadding="0" class="results">
                         ${columnTitles(columns)}
                         ${searchResults(results)}
                     </table>
                 </div>
-                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d%s"%(searchType, fullTerms, modified, int(limitsRemoved), xtraParams), terms, count, limit, offset, True)}
+                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, fullTerms, modified, int(limitsRemoved)), terms, count, limit, offset, True)}
             </div>
         </div>
     </body>

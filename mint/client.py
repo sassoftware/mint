@@ -258,14 +258,13 @@ class MintClient:
         """
         return self.server.getProjectsList()
 
-    def getProjects(self, sortOrder, limit, offset):
+    def getNewProjects(self, limit, showFledgling):
         """
-        Return a list of projects unfiltered in any way
-        @param sortOrder: Order in which to sort the results
+        Return a list of newest projects
         @param limit:     Number of items to return
-        @param offset:    Begin listing at this offset
+        @param showFledgling: Boolean to show fledgling (empty) projects or not.
         """
-        return self.server.getProjects(sortOrder, limit, offset)
+        return self.server.getNewProjects(limit, showFledgling)
 
     def getLabelsForProject(self, projectId,
             overrideAuth = False, newUser = '', newPass = ''):

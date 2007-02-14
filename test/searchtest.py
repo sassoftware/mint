@@ -111,20 +111,6 @@ class BrowseTest(fixtures.FixturedUnitTest):
         r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares', 'who', 'cares', 0)", (pkgId, projectId, name))
         self.db.commit()
 
-    def _sortOrderDict(self):
-        return {
-            PROJECTNAME_ASC:   ['bal', 'bar', 'baz', 'biz'],
-            PROJECTNAME_DES:   ['biz', 'baz', 'bar', 'bal'],
-            LASTMODIFIED_ASC:  ['biz', 'bal', 'bar', 'baz'],
-            LASTMODIFIED_DES:  ['baz', 'bar', 'bal', 'biz'],
-            CREATED_ASC:       ['bar', 'baz', 'bal', 'biz'],
-            CREATED_DES:       ['biz', 'bal', 'baz', 'bar'],
-            NUMDEVELOPERS_ASC: ['bar', 'biz', 'baz', 'bal'],
-            NUMDEVELOPERS_DES: ['bal', 'baz', 'bar', 'biz'],
-            ACTIVITY_ASC:      ['biz', 'baz', 'bal', 'bar'],
-            ACTIVITY_DES:      ['bar', 'bal', 'baz', 'biz'],
-            }
-
     @fixtures.fixture("Empty")
     def testBrowse(self, db, data):
         self.db = db
@@ -141,98 +127,18 @@ class BrowseTest(fixtures.FixturedUnitTest):
         balId = client.newProject("Bal", "bal", "rpath.org")
         self._changeTimestamps(balId, 1128540003, 1129540003)
         bizId = client.newProject("Biz", "biz", "rpath.org")
-        self._changeTimestamps(balId, 1128540003, 1129540003)
+        self._changeTimestamps(bizId, 1128540003, 1129540003)
 
-        barProject = client.getProject(barId)
-        bazProject = client.getProject(bazId)
-        balProject = client.getProject(balId)
+        self.failUnlessEqual(client.getNewProjects(10, True),
+            [[3, 'bal', 'Bal', '', 1129540003], [4, 'biz', 'Biz', '', 1129540003],
+             [2, 'baz', 'Baz', '', 1126640046], [1, 'bar', 'Bar', '', 1124540046]])
 
-        # add some fake commits for sorting
-        self._fakeCommit(barId, 1129550003, userId)
-        self._fakeCommit(bazId, 1129560003, userId2)
-        self._fakeCommit(balId, 1129541003, userId4)
-        self._fakeCommit(balId, 1129542003, userId3)
-        self._fakeCommit(barId, 1129543003, userId)
-        self._fakeCommit(barId, 1129544003, userId)
-        # and a couple of really old ones that won't show up...
-        self._fakeCommit(bazId, 1120040003, userId2)
-        self._fakeCommit(bazId, 1120040013, userId2)
-        self._fakeCommit(bizId, 1120040008, userId2)
+        self.failUnlessEqual(client.getNewProjects(10, False), [])
 
-        bazProject.addMemberById(userId3, userlevels. DEVELOPER)
+        self._fakeCommit(barId, 1124540047, userId2)
 
-        balProject.addMemberById(userId3, userlevels. DEVELOPER)
-        balProject.addMemberById(userId4, userlevels. DEVELOPER)
-
-        sortOrderDict = self._sortOrderDict()
-        for sortOrder in range(10):
-            # For admins, all projects should be returned
-            results, count = client.getProjects(sortOrder, 30, 0)
-            self.failUnlessEqual(count, 4, msg = 'getProjects returned the wrong project count (admin).')
-
-            # For non-admins, hidden/fledglings should be ignored
-            results, count = client2.getProjects(sortOrder, 30, 0)
-            self.failUnlessEqual(count, 4, msg = 'getProjects returned the wrong project count.')
-
-            self.failUnlessEqual([x[1] for x in results], sortOrderDict[sortOrder])
-
-        self.failUnlessEqual(client.getProjectsList(),
-            [(balId, 0, 'bal - Bal'), (barId, 0, 'bar - Bar'), (bazId, 0, 'baz - Baz'), (bizId, 0, 'biz - Biz')])
-
-    @fixtures.fixture("Empty")
-    def testFledgling(self, db, data):
-        self.db = db
-        client, userId = self.getClient('test'), data['test']
-
-        hideFledgling = self.cfg.hideFledgling
-        try:
-            projectId = client.newProject("Bar", "bar", "rpath.org")
-            self._changeTimestamps(projectId, 1124540046, 1124540046)
-
-            self.cfg.hideFledgling = False
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
-                        "Fledgling projects not counted in project list")
-
-            self.cfg.hideFledgling = True
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1],
-                        "Fledgling projects counted in project list")
-
-            # add a fake commit to trigger non-fledgling status
-            self._fakeCommit(projectId, 1129550003, userId)
-
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
-                        "Non fledgling project didn't show up")
-
-        finally:
-            self.cfg.hideFledgling = hideFledgling
-
-    @fixtures.fixture("Empty")
-    def testExternal(self, db, data):
-        self.db = db
-        client, userId = self.getClient('test'), data['test']
-
-        hideFledgling = self.cfg.hideFledgling
-        try:
-            projectId = client.newProject("Bar", "bar", "rpath.org")
-            self._changeTimestamps(projectId, 1124540046, 1124540046)
-
-            self.cfg.hideFledgling = False
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
-                        "Fledgling projects not counted in project list")
-
-            self.cfg.hideFledgling = True
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1],
-                        "Fledgling projects counted in project list")
-
-            # alter project to appear to be external
-            cu = self.db.cursor()
-            cu.execute("UPDATE Projects set external=1")
-            self.db.commit()
-
-            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
-                        "external project counted as fledgling")
-        finally:
-            self.cfg.hideFledgling = hideFledgling
+        self.failUnlessEqual(client.getNewProjects(10, False),
+            [[1, 'bar', 'Bar', '', 1124540046]])
 
     @fixtures.fixture("Empty")
     def testSearchProjects(self, db, data):

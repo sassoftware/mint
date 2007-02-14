@@ -341,21 +341,6 @@ class SiteHandler(WebHandler):
             else:
                 return self._write("register_active")
 
-    @intFields(sortOrder = -1, limit = 0, offset = 0)
-    def projects(self, auth, sortOrder, limit, offset, submit = 0):
-        if not limit:
-            limit =  self.user and \
-                self.user.getDataValue('searchResultsPerPage') or 10
-
-        if sortOrder < 0:
-            sortOrder = self.session.get('projectsSortOrder', 0)
-        self.session['projectsSortOrder'] = sortOrder
-        results, count = self.client.getProjects(sortOrder, limit, offset)
-        formattedRows, columns = self._formatProjectSearch(results)
-
-        return self._write("projects", sortOrder=sortOrder, limit=limit,
-            offset=offset, count=count, results = formattedRows, columns = columns)
-
     @requiresAdmin
     @intFields(sortOrder = -1, limit = 0, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
@@ -547,8 +532,7 @@ class SiteHandler(WebHandler):
 
     @strFields(search = "", type = None)
     @intFields(limit = 0, offset = 0, modified = 0, removed = 0)
-    @boolFields(byPopularity = False)
-    def search(self, auth, type, search, modified, limit, offset, removed, byPopularity):
+    def search(self, auth, type, search, modified, limit, offset, removed):
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -556,7 +540,7 @@ class SiteHandler(WebHandler):
                     self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
         if type == "Projects":
-            return self._projectSearch(search, modified, limit, offset, byPopularity, removed)
+            return self._projectSearch(search, modified, limit, offset, removed)
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
@@ -694,8 +678,8 @@ class SiteHandler(WebHandler):
             formattedRows.append(row)
         return formattedRows, columns
 
-    def _projectSearch(self, terms, modified, limit, offset, byPopularity=False, limitsRemoved = False):
-        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset, byPopularity)
+    def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False):
+        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
 
         buildTypes = list(set(self.cfg.visibleBuildTypes + [buildtypes.XEN_DOMU]) - \
                 set([ int(v) for k, v in searcher.parseLimiters(terms) \
@@ -721,7 +705,7 @@ class SiteHandler(WebHandler):
                 offset = offset, modified = modified, limiters = limiters,
                 limitsRemoved = limitsRemoved,
                 buildTypes = buildTypes,
-                byPopularity = byPopularity)
+                byPopularity = True)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):
@@ -813,7 +797,7 @@ class SiteHandler(WebHandler):
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
         if feed == "newProjects":
-            results, count = self.client.getProjects(projectlisting.CREATED_DES, 10, 0)
+            results = self.client.getNewProjects(10, showFledgling = False)
 
             title = "%s - New Projects" % self.cfg.productName
             link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
