@@ -31,6 +31,7 @@ from conary import repository
 from conary import sqlite3
 from conary.lib import sha1helper
 
+from conary.repository.netrepos.netauth import nameCharacterSet
 
 class MailError(MintError):
     def __str__(self):
@@ -53,6 +54,10 @@ class UserAlreadyExists(MintError):
 class GroupAlreadyExists(MintError):
     def __str__(self):
         return "group already exists"
+
+class InvalidUsername(MintError):
+    def __str__(self):
+        return "Username may contain only letters, digits, '-', '_', and '.'"
 
 class LastOwner(MintError):
     def __str__(self):
@@ -254,6 +259,9 @@ class UsersTable(database.KeyedTable):
                         displayEmail, blurb, active):
         if self.cfg.sendNotificationEmails and not active:
             validateEmailDomain(email)
+        for letter in username:
+            if letter not in nameCharacterSet:
+                raise InvalidUsername
 
         confirm = confirmString()
 

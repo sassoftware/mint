@@ -9,6 +9,7 @@ testsuite.setup()
 import fixtures
 from mint import mint_error, users
 from mint.database import ItemNotFound
+from mint.users import InvalidUsername
 
 class UsersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -261,6 +262,14 @@ class UsersTest(fixtures.FixturedUnitTest):
         assert(client.getUserSearchResults('%%%') != sRes)
         client = self.getClient('owner')
         assert(client.getUserSearchResults('%%%') == sRes)
+
+    @fixtures.fixture('Empty')
+    def testInvalidCharacters(self, db, data):
+        client = self.getClient('admin')
+
+        self.assertRaises(InvalidUsername, client.registerNewUser,
+            "bad username", "password", "Ronald Frobnitz",
+            "ronald@frobnitz.com", "ronald at frobnitz dot com", "")
 
 
 if __name__ == "__main__":
