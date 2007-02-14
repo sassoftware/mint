@@ -530,8 +530,8 @@ class SiteHandler(WebHandler):
             raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
-    @intFields(limit = 0, offset = 0, modified = 0, removed = 0)
-    def search(self, auth, type, search, modified, limit, offset, removed):
+    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0)
+    def search(self, auth, type, search, modified, limit, offset, removed, showAll):
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -539,7 +539,7 @@ class SiteHandler(WebHandler):
                     self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
         if type == "Projects":
-            return self._projectSearch(search, modified, limit, offset, removed)
+            return self._projectSearch(search, modified, limit, offset, removed, not showAll)
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
@@ -677,8 +677,9 @@ class SiteHandler(WebHandler):
             formattedRows.append(row)
         return formattedRows, columns
 
-    def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False):
-        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
+    def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False, filterNoDownloads = True):
+        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset,
+            filterNoDownloads = filterNoDownloads)
 
         buildTypes = list(set(self.cfg.visibleBuildTypes + [buildtypes.XEN_DOMU]) - \
                 set([ int(v) for k, v in searcher.parseLimiters(terms) \
@@ -696,6 +697,9 @@ class SiteHandler(WebHandler):
         limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn)
 
         terms = " ".join(terms)
+
+        if terms.strip() != "" or limiters:
+            filterNoDownloads = False
         self.searchTerms = terms
         return self._write("searchResults", searchType = "Projects",
                 terms = terms, fullTerms = fullTerms,
@@ -703,6 +707,7 @@ class SiteHandler(WebHandler):
                 columns = columns, count = count, limit = limit,
                 offset = offset, modified = modified, limiters = limiters,
                 limitsRemoved = limitsRemoved,
+                filterNoDownloads = filterNoDownloads,
                 buildTypes = buildTypes,
                 byPopularity = True)
 

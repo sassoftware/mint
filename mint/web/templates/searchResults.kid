@@ -25,7 +25,7 @@
             <div id="spanleft">
                 <h2>Search Results: ${searchType}</h2>
 
-                <?python xtraParams = "" ?>
+                <?python extraParams = filterNoDownloads and "" or ";showAll=1" ?>
                 <form py:if="searchType == 'Projects' and buildTypes"
                       method="get" action="search">
                     <table>
@@ -43,6 +43,11 @@
                                 <button type="submit">Update</button>
                             </td>
                         </tr>
+                        <tr>
+                            <div py:if="filterNoDownloads" class="help">Showing only projects with releases.
+                                <a href="search?type=$searchType;search=$terms;modified=$modified;showAll=1">Show All Projects</a>
+                            </div>
+                        </tr>
                     </table>
                     <input type="hidden" name="type" value="Projects" />
                 </form>
@@ -53,13 +58,13 @@
 
                 <div py:strip="True" py:if="not count"><p>No results found containing <b>${terms}</b>.</p></div>
                 <div py:strip="True" py:if="count">
-                    ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, fullTerms, modified, int(limitsRemoved)), terms, count, limit, offset)}
+                    ${navigation("search?type=%s;search=%s;modified=%d;removed=%d%s" % (searchType, fullTerms, modified, int(limitsRemoved), extraParams), terms, count, limit, offset)}
                     <table cellspacing="0" cellpadding="0" class="results">
                         ${columnTitles(columns)}
                         ${searchResults(results)}
                     </table>
                 </div>
-                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d"%(searchType, fullTerms, modified, int(limitsRemoved)), terms, count, limit, offset, True)}
+                ${navigation("search?type=%s;search=%s;modified=%d;removed=%d%s" % (searchType, fullTerms, modified, int(limitsRemoved), extraParams), terms, count, limit, offset, True)}
             </div>
         </div>
     </body>

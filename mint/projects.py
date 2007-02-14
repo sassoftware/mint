@@ -425,7 +425,7 @@ class ProjectsTable(database.KeyedTable):
 
         return ids
 
-    def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=True):
+    def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=True, filterNoDownloads = True):
         """
         Returns a list of projects matching L{terms} of length L{limit}
         starting with item L{offset}.
@@ -508,16 +508,16 @@ class ProjectsTable(database.KeyedTable):
 
         # if there are no query terms, show only projects
         # that have something downloadable.
-        showOnlyDownloads = (terms.strip() == "")
+        if filterNoDownloads:
+            filterNoDownloads = (terms.strip() == "")
 
-        # if we aren't asking for a specific build type, but we are
-        # asking for only projects with downloadable stuff, filter
-        # by the existence of a published release.
-        if not buildTypes and not flavorFlagTypes and showOnlyDownloads:
-            extras += """ AND EXISTS(SELECT buildId FROM BuildsView
-                                                    WHERE projectId=Projects.projectId 
-                                                      AND pubReleaseId IS NOT NULL)"""
-
+            # if we aren't asking for a specific build type, but we are
+            # asking for only projects with downloadable stuff, filter
+            # by the existence of a published release.
+            if not buildTypes and not flavorFlagTypes and filterNoDownloads:
+                extras += """ AND EXISTS(SELECT buildId FROM BuildsView
+                                                        WHERE projectId=Projects.projectId 
+                                                          AND pubReleaseId IS NOT NULL)"""
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
 

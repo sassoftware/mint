@@ -1418,9 +1418,9 @@ class MintServer(object):
             includeInactive = False
         return self.users.search(terms, limit, offset, includeInactive)
 
-    @typeCheck(str, int, int, int, bool)
+    @typeCheck(str, int, int, int, bool, bool)
     @private
-    def searchProjects(self, terms, modified, limit, offset, byPopularity):
+    def searchProjects(self, terms, modified, limit, offset, byPopularity, filterNoDownloads):
         """
         Collect the results as requested by the search terms.
         NOTE: admins can see everything including hidden and fledgling
@@ -1436,7 +1436,7 @@ class MintServer(object):
             includeInactive = True
         else:
             includeInactive = False
-        return self.projects.search(terms, modified, limit, offset, includeInactive, byPopularity)
+        return self.projects.search(terms, modified, limit, offset, includeInactive, byPopularity, filterNoDownloads)
 
     @typeCheck(str, int, int)
     def searchPackages(self, terms, limit, offset):

@@ -51,18 +51,6 @@ class SearchHelperTest(unittest.TestCase):
             searcher.limitersForDisplay("foo bar"),
             ([], ['foo', 'bar']))
 
-    def testSearchEmpty(self):
-        search = searcher.Searcher()
-        # empty search
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, '', ['foo', 'bar'])
-
-    def testSearchDefunctToken(self):
-        search = searcher.Searcher()
-        # empty token
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, '""', ['foo', 'bar'])
-
     def testExactResults(self):
         search = searcher.Searcher()
         self.failIf(search.order('foo OR bar', ['name']) != \
@@ -158,7 +146,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
         assert(client.getProjectSearchResults('Snoo')[1] == 2)
         assert(client.getProjectSearchResults('Camp Town Racers sing this song... doo dah... doo dah...') == ([], 0) )
         assert(client.getProjectSearchResults('snooze OR Boo')[1] == 2)
-
+        assert(client.getProjectSearchResults('snooze OR Boo')[1] == 2)
 
     @fixtures.fixture("Empty")
     def testSearchProjectOrder(self, db, data):
@@ -175,7 +163,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
         rId = client.newProject("rPath Project", "rpath1", "rpath.org")
         self._changeTimestamps(rId, 1124540046, 1124540046)
 
-        projectList, len= client.getProjectSearchResults('Project')
+        projectList, len= client.getProjectSearchResults('Project', byPopularity = False)
 
         self.failIf([x[1] for x in projectList] != \
                     ['animal', 'banjo', 'rpath1','zarumba'],
@@ -254,13 +242,18 @@ class BrowseTest(fixtures.FixturedUnitTest):
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")
-        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0, 2],
-                               [1, 'foo', 'Foo', '', 1128540046.0, 2]], 2), x)
+        self.failUnlessEqual(([[1, 'foo', 'Foo', '', 1128540046.0, 2],
+                               [2, 'bar', 'Bar', '', 1128540046.0, 2]], 2), x)
 
         # search for a build type and a flavor flag
         x = client.getProjectSearchResults("buildtype=2 buildtype=101")
-        self.failUnlessEqual(([[2, 'bar', 'Bar', '', 1128540046.0, 2],
-                               [1, 'foo', 'Foo', '', 1128540046.0, 2]], 2), x)
+        self.failUnlessEqual(([[1, 'foo', 'Foo', '', 1128540046.0, 2],
+                               [2, 'bar', 'Bar', '', 1128540046.0, 2]], 2), x)
+
+        # test filterNoDownloads
+        x = client.getProjectSearchResults("", filterNoDownloads = True)
+        self.failUnlessEqual(([[1, 'foo', 'Foo', '', 1128540046.0, 2],
+                               [2, 'bar', 'Bar', '', 1128540046.0, 2]], 2), x)
 
 
 if __name__ == "__main__":
