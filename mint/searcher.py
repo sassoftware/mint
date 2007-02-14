@@ -137,10 +137,6 @@ class Searcher :
         # Finally paste the OR blocks together
         where += ' OR '.join([x for x in ortoks if x])
 
-        # If nothing results, raise SearchTermsError
-        if not where.strip() and not extras:
-            raise SearchTermsError
-
         # hack
         if not where.strip():
             where = "1"

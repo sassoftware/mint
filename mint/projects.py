@@ -425,7 +425,7 @@ class ProjectsTable(database.KeyedTable):
 
         return ids
 
-    def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=False):
+    def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=True):
         """
         Returns a list of projects matching L{terms} of length L{limit}
         starting with item L{offset}.
