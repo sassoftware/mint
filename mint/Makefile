@@ -35,7 +35,6 @@ python_files =			\
 	news.py			\
 	pkgindex.py		\
 	profile.py		\
-	projectlisting.py	\
 	builds.py		\
 	projects.py		\
 	buildtypes.py		\

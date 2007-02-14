@@ -14,7 +14,6 @@ from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse
 from mint import helperfuncs
 from mint import mailinglists
-from mint import projectlisting
 from mint import searcher
 from mint import userlevels
 from mint import builds

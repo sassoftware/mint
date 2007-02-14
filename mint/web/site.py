@@ -22,7 +22,6 @@ from mint import jobs
 from mint import maintenance
 from mint import mailinglists
 from mint import projects
-from mint import projectlisting
 from mint import searcher
 from mint import shimclient
 from mint import users

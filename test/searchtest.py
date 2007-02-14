@@ -9,10 +9,6 @@ testsuite.setup()
 
 import fixtures
 
-from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, \
-    LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, \
-    NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES
-from mint.projectlisting import ordersql
 from mint import buildtypes
 from mint import userlevels
 from mint import searcher
