@@ -229,7 +229,7 @@ class MintClient:
         """
         return self.server.searchUsers(terms, limit, offset)
 
-    def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0, byPopularity = False):
+    def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0, byPopularity = True):
         """
         Collect the results as requested by the search terms
         @param terms: Search terms
