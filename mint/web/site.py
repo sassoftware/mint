@@ -591,7 +591,7 @@ class SiteHandler(WebHandler):
             terms = terms, fullTerms = terms, results = formattedRows,
             columns = columns, count = count, limit = limit,
             offset = offset, modified = 0, limiters = [],
-            limitsRemoved = False)
+            limitsRemoved = False, extraParams = "")
 
     #
     # Package search
@@ -659,7 +659,7 @@ class SiteHandler(WebHandler):
             terms = terms, fullTerms = fullTerms, results = formattedRows,
             columns = columns, count = count, limit = limit, offset = offset,
             modified = 0, limiters = limiters,
-            limitsRemoved = limitsRemoved)
+            limitsRemoved = limitsRemoved, extraParams = "")
 
     #
     # Project search
