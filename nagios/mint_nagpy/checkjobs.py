@@ -72,8 +72,8 @@ class CheckJobs(NagiosPlugin):
         cfg.read(self.mintConfigPath)
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
-        cu.execute("""SELECT jobId, status, statusMessage, timeStarted
-                      FROM jobs""")
+        cu.execute("""SELECT jobId, status, statusMessage, timeStarted,
+                      timeSubmitted FROM jobs""")
         jobs = cu.fetchall_dict()
         badJobs = []
         for x in jobs:
