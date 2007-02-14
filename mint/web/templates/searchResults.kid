@@ -25,7 +25,6 @@
             <div id="spanleft">
                 <h2>Search Results: ${searchType}</h2>
 
-                <?python extraParams = filterNoDownloads and "" or ";showAll=1" ?>
                 <form py:if="searchType == 'Projects' and buildTypes"
                       method="get" action="search">
                     <table>

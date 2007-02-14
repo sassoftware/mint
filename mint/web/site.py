@@ -701,6 +701,12 @@ class SiteHandler(WebHandler):
         if terms.strip() != "" or limiters:
             filterNoDownloads = False
         self.searchTerms = terms
+        
+        if filterNoDownloads:
+            extraParams = ""
+        else:
+            extraParams = ";showAll=1"
+        
         return self._write("searchResults", searchType = "Projects",
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
@@ -709,7 +715,7 @@ class SiteHandler(WebHandler):
                 limitsRemoved = limitsRemoved,
                 filterNoDownloads = filterNoDownloads,
                 buildTypes = buildTypes,
-                byPopularity = True)
+                extraParams = extraParams)
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):
