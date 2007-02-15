@@ -383,25 +383,6 @@ class ProjectsTable(database.KeyedTable):
 
         return [tuple(x) for x in cu.fetchall()]
 
-    def getNumProjects(self, includeInactive=False):
-        cu = self.db.cursor()
-        whereClause = ""
-        if not includeInactive:
-            whereClause += "hidden=0 "
-        if self.cfg.hideFledgling and not includeInactive:
-            whereClause += "%s %s" % ((whereClause and "AND" or ""),
-                """(EXISTS(SELECT * FROM Commits WHERE Commits.projectId =
-                                                    Projects.projectId)
-                    OR external=1)""")
-        if whereClause:
-            whereClause = "WHERE " + whereClause
-
-        cmd = """SELECT COUNT(name) FROM Projects %s """ % whereClause
-
-        cu.execute(cmd)
-
-        return int(cu.fetchone()[0])
-
     def getNewProjects(self, limit, showFledgling):
         cu = self.db.cursor()
 
