@@ -2,6 +2,7 @@
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
+import time
 
 import testsuite
 import unittest
@@ -48,7 +49,7 @@ class SearchHelperTest(unittest.TestCase):
             ([{'newSearch': 'foo bar', 'desc': 'baz is biz'}], ['foo', 'bar']))
 
         self.failUnlessEqual(
-            searcher.limitersForDisplay("foo bar"),
+            searcher.limitersForDisplay("foo bar baz= =zab"),
             ([], ['foo', 'bar']))
 
     def testExactResults(self):
@@ -75,6 +76,44 @@ class SearchHelperTest(unittest.TestCase):
                     "UPPER(name)<>'A', name",
                     "extra term disregaded")
 
+    def testParseLimiters(self):
+        self.failUnlessEqual(
+            searcher.parseLimiters("foo=bar baz=biz =wak bak="),
+            [('foo', 'bar'), ('baz', 'biz')]
+        )
+
+    def testLastModified(self):
+        search = searcher.Searcher()
+
+        oldTime = time.time
+        time.time = lambda x = 100: x
+        self.failUnlessEqual(
+            search.lastModified(100, searcher.THREEDAYS),
+            '100 > (100 - 259200)')
+        time.time = oldTime
+
+    def testTruncate(self):
+        search = searcher.Searcher()
+
+        ls = "this is a very long string that has many many words. "\
+             "it goes on and on and never ends, until we hit the far "\
+             "side of the screen. still going!"
+
+        self.failUnlessEqual(search.truncate(None, "frob"), "")
+        shortened = '...has many many words. it goes on and on and never '\
+                    'ends, until we hit the far side of the screen....'
+        self.failUnlessEqual(search.truncate(ls, "never"), shortened)
+
+    def testWhere(self):
+        search = searcher.Searcher()
+
+        x = search.where('"this is" "a test"', ['bah'])
+        self.failUnlessEqual(x, ('WHERE (UPPER(bah) LIKE UPPER(?) ) '\
+                                 ' AND (UPPER(bah) LIKE UPPER(?) ) '\
+                                 ' AND (UPPER(bah) LIKE UPPER(?) ) '\
+                                 ' AND (UPPER(bah) LIKE UPPER(?) ) '\
+                                 ' AND (UPPER(bah) LIKE UPPER(?) )  ',
+                                 ['%this%', '%is%', '% %', '%a%', '%test%']))
 
 class BrowseTest(fixtures.FixturedUnitTest):
     def _changeTimestamps(self, projectId, timeCreated, timeModified):
