@@ -709,6 +709,25 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "project is not local mirror with inbound label")
 
     @fixtures.fixture('Full')
+    def testEditMirror(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+
+        client.addInboundMirror(project.id, ['conary.rpath.com@rpl:1'],
+            'http://example.com/conary/', 'user', 'pass')
+
+        client.editInboundMirror(project.id, ['conary.rpath.com@rpl:devel', 'conary.rpath.com@rpl:1'],
+            'http://www.example.com/conary/', 'username', 'password')
+
+        self.failUnlessEqual(client.getInboundMirror(project.id),
+            {'inboundMirrorId': 1,
+             'sourceUrl': 'http://www.example.com/conary/',
+             'sourceUsername': 'username',
+             'sourceLabels': 'conary.rpath.com@rpl:devel conary.rpath.com@rpl:1',
+             'sourcePassword': 'password', 'targetProjectId': 1}
+        )
+
+    @fixtures.fixture('Full')
     def testHideAllProjects(self, db, data):
         client = self.getClient('nobody')
 
