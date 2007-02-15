@@ -10,6 +10,7 @@ testsuite.setup()
 import os
 
 import mint_rephelp
+import fixtures
 from mint.web import project
 from mint import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
@@ -496,6 +497,69 @@ class DirectProjectTest(testsuite.TestCase):
                     "getUserDict returned bad results")
 
 
+class FixturedProjectTest(fixtures.FixturedUnitTest):
+    def setUp(self):
+        fixtures.FixturedUnitTest.setUp(self)
+        self.ph = project.ProjectHandler()
+        self.ph.session = {}
+
+        def fakeRedirect(*args, **kwargs):
+            raise HttpMoved
+
+        self.ph._redirect = fakeRedirect
+
+
+    @fixtures.fixture('Full')
+    def testResign(self, db, data):
+        client = self.getClient("developer")
+        p = client.getProject(data['projectId'])
+
+        self.ph.cfg = self.cfg
+        self.ph.client = client
+        self.ph.project = p
+        self.ph.userLevel = userlevels.DEVELOPER
+
+        auth = users.Authorization(userId = data['developer'], authorized = True)
+        self.assertRaises(HttpMoved, self.ph.resign, auth = auth,
+            confirmed = True, id = data['developer'])
+
+    @fixtures.fixture('Full')
+    def testProjectActions(self, db, data):
+        client = self.getClient("admin")
+        p = client.getProject(data['projectId'])
+
+        self.ph.cfg = self.cfg
+        self.ph.client = client
+        self.ph.project = p
+        self.ph.userLevel = userlevels.OWNER
+
+        auth = users.Authorization(userId = data['admin'],
+            authorized = True, admin = True)
+
+        self.assertRaises(HttpMoved, self.ph.processProjectAction,
+            auth = auth, projectId = p.id, operation = "project_hide")
+        p.refresh()
+        self.failUnless(p.hidden)
+
+        self.assertRaises(HttpMoved, self.ph.processProjectAction,
+            auth = auth, projectId = p.id, operation = "project_hide")
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already hidden'])
+
+        self.assertRaises(HttpMoved, self.ph.processProjectAction,
+            auth = auth, projectId = p.id, operation = "project_unhide")
+        p.refresh()
+        self.failUnless(not p.hidden)
+        self.ph.session = {}
+
+        self.assertRaises(HttpMoved, self.ph.processProjectAction,
+            auth = auth, projectId = p.id, operation = "project_unhide")
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already visible'])
+
+        self.ph.session = {}
+        self.assertRaises(HttpMoved, self.ph.processProjectAction,
+            auth = auth, projectId = p.id, operation = "project_not_valid")
+        self.failUnlessEqual(self.ph.session['errorMsgList'],
+            ['Please select a valid project administration option from the menu'])
 
 
 if __name__ == "__main__":

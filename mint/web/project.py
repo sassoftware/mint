@@ -1031,23 +1031,6 @@ class ProjectHandler(WebHandler):
                 (user.getUsername(), self.project.getNameForDisplay()))
         self._predirect("members")
 
-    @intFields(id = None)
-    @ownerOnly
-    def delMember(self, auth, id):
-        user = self.client.getUser(id)
-        self.project.delMemberById(id)
-        msg = "User %s deleted from project %s" % \
-                (user.getName(), self.project.getNameForDisplay())
-        if self.project.getMembers() == []:
-            self.project.orphan(self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-            msg += " (project has been orphaned)"
-
-        if 'groupTroveId' in self.session:
-            del self.session['groupTroveId']
-
-        self._setInfo(msg)
-        self._predirect("members")
-
     @requiresAuth
     @writersOnly
     @intFields(span = 7)
