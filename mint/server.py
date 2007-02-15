@@ -1672,45 +1672,6 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.labels.removeLabel(projectId, labelId)
 
-    @typeCheck(str)
-    @private
-    def versionIsExternal(self, versionStr):
-        cu = self.db.cursor()
-
-        try:
-            hostname = (versionStr.split('/')[1]).split('@')[0]
-        except:
-            # All exceptions at this point will be string parsing errors.
-            # however we raise an itemNotFound to prevent illicit attempts
-            # to deduce hidden project names
-            raise database.ItemNotFound
-
-        cu.execute("SELECT projectId FROM Labels WHERE label LIKE ?",
-                   "%s%%" % hostname)
-
-        res = cu.fetchone()
-
-        if not res:
-            # FIXME: this needs to be an exception condition to prevent
-            # rBO making non-hosted content appear as part of the site.
-            return True
-
-        projectId = res[0]
-
-        # remember to filter access to hidden projects
-        # we couldn't do it right away because we didn't have the projectId
-        self._filterProjectAccess(projectId)
-
-        cu.execute("SELECT external FROM Projects WHERE projectId=?",
-                   projectId)
-
-        res = cu.fetchone()
-
-        if not res:
-            return True
-
-        return bool(res[0])
-
     def _generateConaryRcFile(self):
         if not self.cfg.createConaryRcFile:
             return False

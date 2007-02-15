@@ -541,36 +541,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         finally:
             self.cfg.createConaryRcFile = createConaryRcFile
 
-    @fixtures.fixture("Empty")
-    def testBrokenVersion(self, db, data):
-        client = self.getClient('test')
-        self.assertRaises(ItemNotFound, client.versionIsExternal, 'foo')
-
-    @fixtures.fixture('Full')
-    def testProjectVersion(self, db, data):
-        client = self.getClient('admin')
-        project = client.getProject(data['projectId'])
-        label = project.getLabel()
-        versionStr = '/' + label + '/1.0.2-2-1'
-        assert(client.versionIsExternal(versionStr) == project.external)
-        cu = db.cursor()
-        cu.execute('UPDATE Projects SET external=1 WHERE projectId=?', project.id)
-        db.commit()
-        project.refresh()
-        assert(client.versionIsExternal(versionStr) == project.external)
-
-    @fixtures.fixture('Full')
-    def testMissingProjectVersion(self, db, data):
-        client = self.getClient('admin')
-        project = client.getProject(data['projectId'])
-        label = project.getLabel()
-        versionStr = '/' + label + '/1.0.2-2-1'
-        cu = db.cursor()
-        cu.execute('DELETE FROM Projects WHERE projectId=?', project.id)
-        db.commit()
-        # result must always be true
-        assert(client.versionIsExternal(versionStr))
-
     @fixtures.fixture('Full')
     def testProjectUrl(self, db, data):
         client = self.getClient('admin')

@@ -72,63 +72,6 @@ class LabelsTest(fixtures.FixturedUnitTest):
         assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
     @fixtures.fixture("Full")
-    def testExternalVersions(self, db, data):
-        def addLabel(projectId, label, url = 'http://none'):
-            cu.execute("""INSERT INTO Labels
-                              (projectId, label, url, username, password)
-                              VALUES(?, ?, ?, 'none', 'none')""",
-                       projectId, label, url)
-
-        adminClient = self.getClient("admin")
-
-        # foo project is given to us by the fixture
-        projectId = data['projectId']
-        project = adminClient.getProject(data['projectId'])
-
-        projectId2 = adminClient.newProject("Bar Project", "bar", "localhost")
-        project2 = adminClient.getProject(projectId2)
-
-        cu = db.cursor()
-
-        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
-                   projectId2)
-
-        addLabel(projectId, 'foo.rpath.org@rpl:devel')
-        addLabel(projectId, 'bar.rpath.org@rpl:devel')
-        addLabel(projectId2, 'baz.rpath.org@rpl:devel')
-        addLabel(projectId, 'foo.rpath.org@diff:label')
-        db.commit()
-
-        # a local project returns False
-        self.failIf(adminClient.versionIsExternal( \
-            '/foo.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
-                    "internal version appeared external")
-
-        # an external project returns True
-        self.failIf(not adminClient.versionIsExternal( \
-            '/baz.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
-                    "external version appeared internal")
-
-        # missing item raises ItemNotFound
-        # FIXME: re-enable once versionIsExternal raises an exception
-        #self.assertRaises(database.ItemNotFound, adminClient.versionIsExternal,
-        #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
-
-
-        cu.execute("UPDATE Projects SET hidden=1 WHERE projectId=?",
-                   projectId2)
-
-        # legal reference to local hidden project returns False
-        self.failIf(adminClient.versionIsExternal( \
-            '/foo.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
-                    "internal version appeared external")
-
-        # illegal reference to local hidden project raises ItemNotFound
-        # FIXME: re-enable once versionIsExternal raises an exception
-        #self.assertRaises(database.ItemNotFound, adminClient2.versionIsExternal,
-        #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
-
-    @fixtures.fixture("Full")
     def testInboundMirrors(self, db, data):
         projectId = data['projectId']
         adminClient = self.getClient("admin")

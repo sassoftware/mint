@@ -518,10 +518,6 @@ class MintClient:
     def getDownloadChart(self, projectId, days, format = 'png'):
         return self.server.getDownloadChart(projectId, days, format)
 
-    # label functions
-    def versionIsExternal(self, versionStr):
-        return self.server.versionIsExternal(versionStr)
-
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, sourceUsername, sourcePassword):
         return self.server.addInboundMirror(targetProjectId, sourceLabels,
