@@ -18,6 +18,7 @@ staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
 # toolkit is linked to outgoing job server architecture.
 
 def backup(cfg, out):
+    reposContentsDir = cfg.reposContentsDir.split(' ')
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
     print >> out, backupPath
     util.mkdirChain(backupPath)
@@ -35,7 +36,7 @@ def backup(cfg, out):
             if os.path.exists(reposDBPath):
                 util.execute("echo '.dump' | sqlite3 %s > %s" % \
                               (reposDBPath, dumpPath))
-                print >> out, cfg.reposContentsDir % reposDir
+                print >> out, reposContentsDir[0] % reposDir
     for d in staticPaths:
         path = os.path.join(cfg.dataPath, d)
         if os.path.exists(path):
