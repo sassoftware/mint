@@ -310,30 +310,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/users", code = [200],
             content = '<a href="/userInfo?id=%d"' % userId)
 
-    def testNotifyAllUsers(self):
-        self.quickMintUser('localuser', 'localpass', email = 'test@localhost')
-        self.quickMintUser('otheruser', 'otherpass', email = 'test@NONE')
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass',
-                                             email = "test@NONE")
-
-        self.webLogin('adminuser', 'adminpass')
-
-        page = self.assertContent("/admin/notify",
-            code = [200], content = 'value="notify_send"')
-
-        page = page.postForm(1, self.post,
-            {'subject':     'This is is my subject',
-             'body':        'This is my body.',
-             'operation':  'notify_send'})
-
-        # make sure that our users were invalidated properly. admins and users
-        # at localhost are expempted from invalidation
-        self.assertRaises(database.ItemNotFound,
-                          client.server._server.getConfirmation, 'adminuser')
-        self.assertRaises(database.ItemNotFound,
-                          client.server._server.getConfirmation, 'localuser')
-        assert(client.server._server.getConfirmation('otheruser'))
-
     def testNoAdminPowers(self):
         self.assertCode("/admin/", code = 403)
 

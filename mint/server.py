@@ -977,42 +977,6 @@ class MintServer(object):
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    @typeCheck(str, str)
-    @requiresAdmin
-    @private
-    def notifyUsers(self, subject, body):
-        """
-        Send an e-mail message to all registered members.
-        XXX Should we store these notifications somehow?
-        """
-        #First get a list of the users
-        userlist = self.users.getUsersWithEmail()
-        # record the MintAdmin userGroupId
-        cu = self.db.cursor()
-        cu.execute("""SELECT userGroupId
-                          FROM UserGroups
-                          WHERE userGroup='MintAdmin'""");
-        adminGroupId = cu.fetchone()[0]
-
-        for user in userlist:
-            #Figure out the user's full name and e-mail address
-            email = "%s<%s>" % (user[1], user[2])
-            # FIXME Do we want to do some substitution in the subject/body?
-            try:
-                users.sendMailWithChecks(self.cfg.adminMail,
-                                         self.cfg.productName,
-                                         email, subject, body)
-            except users.MailError, e:
-                # Invalidate the user, so he/she must change his/her address at
-                # the next login
-                cu.execute("""SELECT COUNT(*)
-                                  FROM UserGroupMembers
-                                  WHERE userId=? and userGroupId=?""",
-                           user[0], adminGroupId)
-                if not (cu.fetchone()[0] or user[2].endswith('@localhost')):
-                    self.users.invalidateUser(user[0])
-        return True
-
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private

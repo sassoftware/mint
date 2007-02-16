@@ -89,26 +89,6 @@ class AdminHandler(WebHandler):
                      }
             return self._write("admin/newUser", kwargs = kwargs)
 
-
-    def notify(self, *args, **kwargs):
-        return self._write('admin/notify', kwargs=kwargs)
-
-    def sendNotify(self, *args, **kwargs):
-        if not kwargs.get('subject', None):
-            self._addErrors('You must supply a subject')
-        if not kwargs.get('body', None):
-            self._addErrors('You must supply a message body')
-        if not self._getErrors():
-            try:
-                returner = self.client.notifyUsers(str(kwargs['subject']), str(kwargs['body']))
-                self._setInfo('Message sent successfully')
-            except Exception, e:
-                self._addErrors('An unknown error occurred: %s' % str(e))
-                return self.notify(*args, **kwargs)
-        else:
-            return self.notify(*args, **kwargs)
-        self._redirect(self.cfg.basePath + "admin/")
-
     def reports(self, *args, **kwargs):
         reports = self.client.listAvailableReports()
         return self._write('admin/report', kwargs=kwargs,

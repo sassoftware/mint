@@ -426,13 +426,6 @@ class MintClient:
         """
         return self.server.getNewsLink()
 
-    def notifyUsers(self, subject, body):
-        """
-        Send a message with the subject and body specified to all registered
-        members using their confirmed e-mail address.
-        """
-        return self.server.notifyUsers(subject, body)
-
     def promoteUserToAdmin(self, userId):
         """
         Promotes a user to an administrator.
