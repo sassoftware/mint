@@ -32,9 +32,15 @@ def waitForBuild(client, buildId, interval = 5):
 bootableTypes = [buildtypes.RAW_FS_IMAGE,
                  buildtypes.TARBALL,
                  buildtypes.RAW_HD_IMAGE,
-                 buildtypes.VMWARE_IMAGE]
+                 buildtypes.VMWARE_IMAGE,
+                 buildtypes.VMWARE_ESX_IMAGE,
+                 buildtypes.VIRTUAL_IRON,
+                 buildtypes.VIRTUAL_PC_IMAGE,]
+
 deprecatedTypes = [buildtypes.STUB_IMAGE,
-                   buildtypes.NETBOOT_IMAGE]
+                   buildtypes.NETBOOT_IMAGE,
+                   buildtypes.XEN_OVA,
+                   buildtypes.PARALLELS]
 
 def genHelp():
     h = "<project name> <troveSpec> <build type>\n\n"
