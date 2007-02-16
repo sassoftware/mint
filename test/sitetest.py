@@ -84,6 +84,11 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent('/applianceSpotlight?pageId=3', 
                            content='apps/mint/images/next.gif',
                            code = [200])
+        for x in (0,1,2,3,4):
+            adminClient.addUseItIcon(x, 'test%s.image' % x, 'test%s.link' % x)
+        self.assertContent('/', 
+                           content='test3.link',
+                           code = [200])
 
     def testEditUserSettings(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -157,6 +162,17 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent('/cancelAccount?confirmed=1', 
                            content='Are you sure you want to close your account?',
                            code=[301])
+
+    def testGroupTroveSearch(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
+        gt.addTrove('group-core', '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
+        page = page.fetch('/project/foo/editGroup?id=%s' % gt.id)
+        page = page.fetch('/search?type=Packages')
+        self.failIf('only packages for rpl:1 branch' not in page.body, 
+                    "Package search failed to limit search to rpl:1 branch")
 
 if __name__ == "__main__":
     testsuite.main()
