@@ -189,7 +189,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'useMirror': 'net',
                               'authType': 'userpass',
                               'externalUser': 'mirror',
-                              'externalPass': 'mirrorpass'})
+                              'externalPass': 'mirrorpass',
+                              'additionalLabelsToMirror': ''})
 
         p = client.getProjectByHostname('rpath')
         page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
@@ -197,6 +198,20 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless('value="https://conary.rpath.com/conary/"' in page.body)
         self.failUnless('name="externalUser" value="mirror"' in page.body)
         self.failUnless('name="externalPass" value="mirrorpass"' in page.body)
+
+        # check editing of additionalLabelsToMirror
+        page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1-other',
+                              'url' : '',
+                              'useMirror': 'net',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        self.failUnlessEqual(client.getInboundMirror(1)['sourceLabels'], 'conary.rpath.com@rpl:1-other')
 
         # turn off mirroring
         page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
@@ -243,7 +258,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalUser': '',
                               'externalPass': ''})
         self.failUnlessEqual(p.getLabel(), "conary.rpath.com@rpl:1-newlabel")
-
 
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

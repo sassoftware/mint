@@ -123,7 +123,7 @@ class AdminHandler(WebHandler):
                 # skip a redundant label specification
                 if l != label:
                     try:
-                        extLabel = versions.Label(l)
+                        testlabel = versions.Label(l)
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
@@ -151,6 +151,9 @@ class AdminHandler(WebHandler):
                         useMirror, authType, additionalLabelsToMirror,
                         projectId, *args, **kwargs):
 
+        print >> sys.stderr, label
+        sys.stderr.flush()
+
         kwargs = {'name': name, 'hostname': hostname, 'label': label,
             'url': url, 'authType': authType, 'externalUser': externalUser,
             'externalPass': externalPass,
@@ -163,6 +166,8 @@ class AdminHandler(WebHandler):
         externalAuth = (authType != 'none')
 
         additionalLabels, extLabel = self._validateExternalProject(**kwargs)
+        print >> sys.stderr, extLabel
+        sys.stderr.flush()
         if not self._getErrors():
             if not editing:
                 projectId = self.client.newExternalProject(name, hostname,
@@ -210,9 +215,9 @@ class AdminHandler(WebHandler):
 
                 if mirror and editing:
                     mirrorId = mirror['inboundMirrorId']
-                    self.client.editInboundMirror(mirrorId, [label] + additionalLabels, url, externalUser, externalPass)
+                    self.client.editInboundMirror(mirrorId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass)
                 else:
-                    self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
+                    self.client.addInboundMirror(projectId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass)
                     self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
             elif useMirror == 'none' and mirror and editing:
