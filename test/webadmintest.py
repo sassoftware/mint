@@ -231,8 +231,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
-
+        # Test repMapName
+        projectId = client.newExternalProject("Foo", "testproject", MINT_PROJECT_DOMAIN, 'testproject.fake.project.domain@rpl:devel', 'https://fake.project.domain/conary/', True)
+        client.addRemappedRepository('testproject.' + MINT_PROJECT_DOMAIN,
+                                     'testproject.fake.project.domain')
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
@@ -253,9 +255,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               targetUrl='http://www.example.com/conary/', 
                               mirrorUser='mirror', mirrorPass='mirrorPass')
 
-        label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
+        label = "testproject." + 'fake.project.domain' + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)
-        fqdn = client.getProject(projectId).getFQDN()
+        fqdn = client.translateProjectFQDN(client.getProject(projectId).getFQDN())
         assert(client.getOutboundMirrors() == \
             [[1, 1, label, 'https://www.example.com/conary/', 
             '%s-www.example.com' % fqdn, 'totallyfakepassword', False, False,
