@@ -3582,6 +3582,12 @@ class MintServer(object):
             return {}
 
     @private
+    @typeCheck(int)
+    @requiresAdmin
+    def delInboundMirror(self, inboundMirrorId):
+        return self.inboundMirrors.delete(inboundMirrorId)
+
+    @private
     @typeCheck(int, (list, str), str, str, str, bool, bool)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels, targetUrl,

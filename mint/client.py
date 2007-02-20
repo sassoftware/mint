@@ -536,6 +536,9 @@ class MintClient:
         return self.server.editInboundMirror(targetProjectId, sourceLabels,
             sourceUrl, sourceUsername, sourcePassword)
 
+    def delInboundMirror(self, inboundMirrorId):
+        return self.server.delInboundMirror(inboundMirrorId)
+
     def getOutboundMirrors(self):
         return self.server.getOutboundMirrors()
 

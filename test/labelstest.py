@@ -77,14 +77,19 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         targetLabel = project.getLabel()
-        adminClient.addInboundMirror(projectId, [targetLabel],
+        mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
         labels = adminClient.getInboundMirrors()
-        assert(labels ==
+        self.failUnlessEqual(labels,
                 [[1, projectId, targetLabel, 'http://www.example.com/conary/',
                   'mirror', 'mirrorpass']])
+
+        # test delete
+        adminClient.delInboundMirror(mirrorId)
+        labels = adminClient.getInboundMirrors()
+        self.failUnlessEqual(labels, [])
 
     @fixtures.fixture("Full")
     def testOutboundMirror(self, db, data):
