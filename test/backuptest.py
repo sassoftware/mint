@@ -28,7 +28,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     def testBackup(self, db, data):
 
         if self.cfg.dbDriver != 'sqlite':
-            raise SkipTestException("Test only works on sqlite")
+            raise testsuite.SkipTestException("Test only works on sqlite")
 
         client = self.getClient("admin")
         client.newExternalProject('External Project Not to be Backed Up',
@@ -75,7 +75,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     def testRestore(self, db, data):
 
         if self.cfg.dbDriver != 'sqlite':
-            raise SkipTestException("Test only works on sqlite")
+            raise testsuite.SkipTestException("Test only works on sqlite")
 
         client = self.getClient("admin")
         client.newExternalProject('External Project Not to be Backed Up',
