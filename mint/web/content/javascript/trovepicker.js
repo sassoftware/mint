@@ -347,11 +347,11 @@ var allTypes = map(parseInt, keys(buildTypeNames));
 
 var defaultType = INSTALLABLE_ISO;
 if(x86_64)
-    var x86_64Types = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, XEN_OVA, VIRTUAL_PC_IMAGE, VIRTUAL_IRON];
+    var x86_64Types = [INSTALLABLE_ISO, VMWARE_IMAGE, VMWARE_ESX_IMAGE, RAW_FS_IMAGE, RAW_HD_IMAGE, XEN_OVA, VIRTUAL_PC_IMAGE, VIRTUAL_IRON];
 else
     var x86_64Types = [INSTALLABLE_ISO];
 
-var xenTypes = [RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA];
+var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA];
 
 function handleBuildTypes(flavor) {
     forEach(allTypes, function(x) {
@@ -387,13 +387,6 @@ function selectiveDisable(flavor, flavorMatch, allowed) {
                 if (findValue(allowed, x) == -1) {
                     el.disabled = true;
                     setOpacity(elLabel, 0.5);
-                }
-                else {
-                    setOpacity(elLabel, 1.0);
-                    if(x == allowed[0]) {
-                        el.checked = true;
-                        onBuildTypeChange("formgroup_" + x);
-                    }
                 }
             }
         });
