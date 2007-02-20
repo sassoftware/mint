@@ -34,6 +34,8 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
 
     def testApplianceSpotlight(self):
         adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
+        page = self.webLogin('adminuser', 'adminpass')
+
         end = time.strftime('%m/%d/%Y', time.gmtime(time.time() + 7*24*60*60))
         start = time.strftime('%m/%d/%Y', time.gmtime(time.time() - 7*24*60*60))
         adminClient.addSpotlightItem('Test Current', 'Description',
