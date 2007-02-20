@@ -216,8 +216,7 @@ class AdminHandler(WebHandler):
                     self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
             elif useMirror == 'none' and mirror and editing:
-                sys.stderr.flush()
-
+                project.editLabel(labelId, str(extLabel), url, externalUser, externalPass)
                 self.client.delInboundMirror(mirror['inboundMirrorId'])
                 self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
 
