@@ -448,6 +448,9 @@ class MintClient:
          """
          return self.server.getJobServerStatus()
 
+    def translateProjectFQDN(self, fqdn):
+        return self.server.translateProjectFQDN(fqdn)
+
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid) or None
