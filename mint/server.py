@@ -376,6 +376,12 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, args, exception = e)
 
+    @typeCheck(str)
+    @requiresAdmin
+    @private
+    def translateProjectFQDN(self, fqdn):
+        return self._translateProjectFQDN(fqdn)
+
     def _translateProjectFQDN(self, fqdn):
         cu = self.db.cursor()
         cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', fqdn)
