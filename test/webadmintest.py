@@ -186,7 +186,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'name' : 'rPath Linux',
                               'label' : 'conary.rpath.com@rpl:1',
                               'url' : '',
-                              'useMirror': 'preload',
+                              'useMirror': 'net',
                               'authType': 'userpass',
                               'externalUser': 'mirror',
                               'externalPass': 'mirrorpass'})
@@ -197,6 +197,22 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless('value="https://conary.rpath.com/conary/"' in page.body)
         self.failUnless('name="externalUser" value="mirror"' in page.body)
         self.failUnless('name="externalPass" value="mirrorpass"' in page.body)
+
+        # turn off mirroring
+        page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'none',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        self.failUnlessEqual(client.getInboundMirrors(), [])
+        self.failUnlessEqual(client.translateProjectFQDN('rpath' + MINT_PROJECT_DOMAIN),
+            'rpath' + MINT_PROJECT_DOMAIN)
 
     def testEditExternalProject(self):
         # make sure that editing an external projects' label actually does the

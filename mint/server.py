@@ -3658,6 +3658,15 @@ class MintServer(object):
     def _addRemappedRepository(self, fromName, toName):
         return self.repNameMap.new(fromName = fromName, toName = toName)
 
+    @private
+    @typeCheck(str)
+    @requiresAdmin
+    def delRemappedRepository(self, fromName):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", fromName)
+        self.db.commit()
+        return True
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req

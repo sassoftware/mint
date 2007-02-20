@@ -127,11 +127,7 @@ class AdminHandler(WebHandler):
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
-        if useMirror == 'net' and authType == 'none':
-            self._addErrors("A mirrored repository must use authentication")
         if authType != 'none':
-            if url.startswith('http:'):
-                self._addErrors("Repository URL must start with https if external authentication is required")
             if authType == 'userpass':
                 if not externalUser:
                     self._addErrors("Missing username for local mirror authentication")
@@ -202,6 +198,7 @@ class AdminHandler(WebHandler):
                 project.editLabel(labelId, str(extLabel), url,
                     'anonymous', 'anonymous')
 
+            mirror = self.client.getInboundMirror(projectId)
             # set up the mirror, if requested
             if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
@@ -211,13 +208,18 @@ class AdminHandler(WebHandler):
                 # set the internal label to our authUser and authPass
                 project.editLabel(labelId, str(extLabel), localUrl, self.cfg.authUser, self.cfg.authPass)
 
-                mirror = self.client.getInboundMirror(projectId)
                 if mirror and editing:
                     mirrorId = mirror['inboundMirrorId']
                     self.client.editInboundMirror(mirrorId, [label] + additionalLabels, url, externalUser, externalPass)
                 else:
                     self.client.addInboundMirror(projectId, [label] + additionalLabels, url, externalUser, externalPass)
                     self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
+            # remove mirroring if requested
+            elif useMirror == 'none' and mirror and editing:
+                sys.stderr.flush()
+
+                self.client.delInboundMirror(mirror['inboundMirrorId'])
+                self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external project %s" % (verb, name))
@@ -289,6 +291,7 @@ class AdminHandler(WebHandler):
             initialKwargs['externalUser'] = mirror['sourceUsername']
             initialKwargs['externalPass'] = mirror['sourcePassword']
             initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
+            initialKwargs['useMirror'] = 'net'
             mirrored = True
 
         return self._write('admin/addExternal', firstTime = False,

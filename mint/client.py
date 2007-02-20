@@ -560,9 +560,12 @@ class MintClient:
     def addRemappedRepository(self, fromName, toName):
         return self.server.addRemappedRepository(fromName, toName)
 
+    def delRemappedRepository(self, fromName):
+        return self.server.delRemappedRepository(fromName)
+
     def getUseItIcons(self):
         return self.server.getUseItIcons()
-    
+
     def deleteUseItIcon(self, itemId):
         return self.server.deleteUseItIcon(itemId)
 

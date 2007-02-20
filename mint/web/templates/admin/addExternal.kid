@@ -99,7 +99,9 @@
             <h2>Authentication</h2>
             <table class="mainformhorizontal" id="authSettings">
                 <tr>
-                    <td><input id="authTypeNone" type="radio" class="check" name="authType" value="none" py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/><label for="authTypeNone">Anonymous access only</label>
+                    <td><input id="authTypeNone" type="radio" class="check" name="authType" value="none"
+                        py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/>
+                        <label for="authTypeNone">Anonymous access only</label>
                     </td>
                 </tr>
                 <tr>
@@ -115,7 +117,9 @@
                     <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" value="${kwargs['externalPass']}" /></td>
                 </tr>
                 <tr>
-                    <td><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement" py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" /><label for="authTypeEnt">Use an entitlement</label>
+                    <td><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
+                        py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" />
+                        <label for="authTypeEnt">Use an entitlement</label>
                     </td>
                 </tr>
                 <tr>
@@ -134,26 +138,21 @@
 
 
             <h2>Mirror Settings</h2>
-            <p py:if="not mirrored">
+            <p>
                 <div>
                     <input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
                            py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" />
-                    <label for="useMirror_none">Do not mirror this repository.</label>
+                    <label for="useMirror_none">Do not mirror this repository; or mirror this repository with a mirror pre-load disk.</label>
                 </div>
                 <div>
                     <input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
                             py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" />
                     <label for="useMirror_net">Mirror this repository over a network connection only. (requires authentication)</label>
                 </div>
-                <div py:if="not editing">
-                    <input type="radio" class="radio" name="useMirror" value="preload" id="useMirror_preload"
-                           py:attrs="{'checked': kwargs['useMirror'] == 'preload' and 'checked' or None}" />
-                    <label for="useMirror_preload">Mirror this repository with a pre-load disk drive and update via network. (requires authentication)</label>
-                </div>
             </p>
             <table class="mainformhorizontal" id="mirrorSettings">
                 <tr>
-                   <th><em class="required">Additional labels to mirror:</em></th>
+                   <th><em>Additional labels to mirror:</em></th>
                    <td>
                        <input type="text" autocomplete="off" name="additionalLabelsToMirror" value="${kwargs['additionalLabelsToMirror']}" />
                        <p class="help">This should be a space-separated list of additional repository labels to mirror.</p>
@@ -167,7 +166,6 @@
                 <img src="${cfg.staticPath}/apps/mint/images/save_changes_button.png" alt="Save Changes" />
             </button>
             <input type="hidden" name="projectId" value="${projectId}" />
-            <input py:if="mirrored" type="hidden" name="useMirror" value="${mirrored and 'net' or 'none'}" />
         </form>
         </div>
     </body>
