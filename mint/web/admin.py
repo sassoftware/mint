@@ -166,8 +166,6 @@ class AdminHandler(WebHandler):
         externalAuth = (authType != 'none')
 
         additionalLabels, extLabel = self._validateExternalProject(**kwargs)
-        print >> sys.stderr, extLabel
-        sys.stderr.flush()
         if not self._getErrors():
             if not editing:
                 projectId = self.client.newExternalProject(name, hostname,
