@@ -82,9 +82,15 @@ class BackupTest(fixtures.FixturedUnitTest):
                 'externalproj', MINT_PROJECT_DOMAIN, 'foo.bar.baz@rpl:1',
                 'http://foo.bar.baz/conary/')
 
-        client.newExternalProject('Mirrored project',
+        mirroredId = client.newExternalProject('Mirrored project',
                 'mirrored', MINT_PROJECT_DOMAIN, 'mirrored.bar.baz@rpl:1',
                 'http://mirrored.bar.baz/conary/', mirror = True)
+        project = client.getProject(mirroredId)
+        labelId = project.getLabelIdMap().values()[0]
+        project.editLabel(labelId, "mirrored.bar.baz@rpl:1",
+            "http://localhost/repos/mirrored/", "mintauth", "mintpass")
+        client.addInboundMirror(mirroredId, ['mirrored.bar.baz@rpl:1'],
+            "http://mirrored.bar.baz/conary/", "mirror", "mirror")
 
         tosh = StringIO.StringIO()
         backup.backup(self.cfg, tosh)
@@ -92,8 +98,15 @@ class BackupTest(fixtures.FixturedUnitTest):
         backup.restore(self.cfg)
 
         self.failUnless(os.path.exists(self.cfg.dbPath))
-        # XXX need to check localmirrors
 
+        # all restored projects are reverted to simple external projects
+        self.failUnlessEqual(client.getInboundMirrors(), [])
+
+        # make sure the url, user, and pass are preserved:
+        self.failUnlessEqual(client.getLabelsForProject(mirroredId),
+            ({'mirrored.bar.baz@rpl:1': mirroredId},
+             {'mirrored.bar.baz': 'http://mirrored.bar.baz/conary/'}, # original URL, not the internal
+             {'mirrored.bar.baz': ('mirror', 'mirror')})) # original user/pass, not internal
 
     @fixtures.fixture("Full")
     def testHandleException(self, db, data):

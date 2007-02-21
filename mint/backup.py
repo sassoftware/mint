@@ -51,8 +51,8 @@ def restore(cfg):
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     cu = db.cursor()
-    cu.execute("SELECT hostname, domainname FROM Projects")
-    for hostname, domainname in [x for x in cu.fetchall()]:
+    cu.execute("SELECT hostname, domainname, projectId FROM Projects")
+    for hostname, domainname, projectId in [x for x in cu.fetchall()]:
         repo = hostname + '.' + domainname
         cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', repo)
         r = cu.fetchone()
@@ -68,32 +68,21 @@ def restore(cfg):
                     os.unlink(dbPath)
                 util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
         else:
-            cu.execute("""SELECT IFNULL(targetProjectId, 0) > 0 AS localMirror
-                          FROM Projects
-                          LEFT JOIN InboundMirrors ON Projects.projectId =
-                                  InboundMirrors.targetProjectId
-                          WHERE hostname = ?""", hostname)
-            localMirror = cu.fetchone()[0]
+            cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
+            localMirror = cu.fetchone_dict()
             if localMirror:
+                # convert back to external-only project for later mirroring
                 util.rmtree(reposPath, ignore_errors = True)
-                util.mkdirChain(os.path.join(reposPath, 'tmp'))
-                util.mkdirChain(os.path.join(reposPath, 'contents'))
-                reposDB = dbstore.connect(cfg.reposDBPath % repo,
-                                          cfg.reposDBDriver)
-                conary.server.schema.loadSchema(reposDB)
-                serverFile = \
-                    os.path.join(os.path.split(conary.server.__file__)[0],
-                                 'server.py')
-                p = os.popen('%s --db "%s %s" --add-user anonymous' % \
-                                 (serverFile, cfg.reposDBDriver,
-                                  cfg.reposDBPath % repo), 'w')
-                p.write('anonymous\n')
-                p.close()
-                p = os.popen('%s --db "%s %s" --add-user %s --admin --mirror' \
-                                 % (serverFile, cfg.reposDBDriver,
-                                    cfg.reposDBPath % repo, cfg.authUser), 'w')
-                p.write(cfg.authPass + '\n')
-                p.close()
+
+                # revert Labels table to pre-mirror settings
+                cu.execute("UPDATE Labels SET url=?, username=?, password=?",
+                    localMirror['sourceUrl'], localMirror['sourceUsername'],
+                    localMirror['sourcePassword'])
+
+                cu.execute("DELETE FROM RepNameMap WHERE toName=?", repo)
+                cu.execute("DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
+                    localMirror['inboundMirrorId'])
+
     # delete package index to ensure we don't reference troves until they're
     # restored.
     try:

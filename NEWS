@@ -13,6 +13,9 @@ Changes in @NEW@
 * The "Notify All Users" functionality has been removed. (RBL-1370)
 * In certain circumstances, rBuilder could set up an externa Update Service
   with the wrong hostname for mirror contents. This has been fixed. (RBL-1369)
+* Upon backup restore, all external mirrored projects are reverted to external
+  projects only. This prevents a race condition where the repository is
+  unusable while the mirror update proceeds. (RBL-1291)
 
 Changes in 3.0.0
 ================
