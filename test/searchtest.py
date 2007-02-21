@@ -232,10 +232,12 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self._fakePackage(projectId, "barmatic")
         self._fakePackage(projectId, "foobar")
         self._fakePackage(projectId, "BarBotIcs")
+        self._fakePackage(projectId, "BarBotIcs:source")
         self.failUnlessEqual(client.getPackageSearchResults('broken'),
             ([['brokenPackage', 'whoCares', 1]], 1))
         self.failUnlessEqual(client.getPackageSearchResults('foo')[1], 2)
-        self.failUnlessEqual(client.getPackageSearchResults('barbot')[1], 1)
+        self.failUnlessEqual(client.getPackageSearchResults('barbot')[1], 2)
+        self.failUnlessEqual(client.getPackageSearchResults(':source')[1], 1)
 
     @fixtures.fixture("Full")
     def testSearchProjectsWithBuilds(self, db, data):

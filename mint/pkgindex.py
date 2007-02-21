@@ -94,6 +94,11 @@ class PackageIndexTable(database.KeyedTable):
         terms, limiters = searcher.parseTerms(terms)
         extras, extraSubs = searcher.limitersToSQL(limiters, termMap)
 
+        # with any kind of branch/server limiters, assume we want
+        # to filter out sources too.
+        if limiters:
+            extras += " AND isSource=0"
+
         terms = " ".join(terms)
 
         ids, count = database.KeyedTable.search(self, columns, 'PackageIndex',
@@ -161,7 +166,7 @@ class UpdatePackageIndex(PackageIndexer):
                               FROM Commits
                               LEFT JOIN Projects
                                   ON Commits.projectId=Projects.projectId
-                              WHERE troveName NOT LIKE '%:%'
+                              WHERE (troveName NOT LIKE '%:%' OR troveName LIKE '%:source')
                               AND hidden=0 AND disabled=0
                               AND timestamp >=
                                   (SELECT mark FROM PackageIndexMark)""")
@@ -200,25 +205,27 @@ class UpdatePackageIndex(PackageIndexer):
                 res = [x[0] for x in cu.fetchall() if \
                        versions.VersionFromString(x[1]).branch().label() == \
                        version.branch().label()]
-                
+
                 label = version.branch().label()
                 serverName = label.getHost()
                 branchName = label.getNamespace() + ":" + label.getLabel()
 
                 if not res:
-                    inserts.append((projectId, troveName, str(version), serverName, branchName))
+                    inserts.append((projectId, troveName, str(version), serverName,
+                        branchName, troveName.endswith(':source')))
                 else:
                     pkgId = res[0]
-                    updates.append((projectId, troveName, str(version), serverName, branchName, pkgId))
+                    updates.append((projectId, troveName, str(version), serverName,
+                        branchName, troveName.endswith(':source'), pkgId))
 
             self.db.transaction()
             cu.executemany("""INSERT INTO PackageIndex
                               (projectId, name, version,
-                               serverName, branchName)
-                              VALUES (?, ?, ?, ?, ?)""", inserts)
+                               serverName, branchName, isSource)
+                              VALUES (?, ?, ?, ?, ?, ?)""", inserts)
             cu.executemany("""UPDATE PackageIndex SET
                                   projectId=?, name=?, version=?,
-                                  serverName=?, branchName=?
+                                  serverName=?, branchName=?, isSource=?
                                   WHERE pkgId=?""", updates)
             self.db.commit()
 
@@ -229,7 +236,7 @@ class UpdatePackageIndex(PackageIndexer):
             exitcode = 1
             raise
         else:
-            self.log.info("Completed successfully")
+            self.log.info("Completed successfully: %d" % len(inserts))
             exitcode = 0
             self.db.commit()
         return exitcode
@@ -284,7 +291,9 @@ class UpdatePackageIndexExternal(PackageIndexer):
             self.log.info("Retrieving trove list from %s...", host)
             try:
                 names = netclients[host].troveNamesOnServer(host)
-                troves = netclients[host].getAllTroveLeaves(host, dict((x, None) for x in names if ':' not in x))
+                names = dict((x, None) for x in names if ':' not in x or x.endswith(':source'))
+                troves = netclients[host].getAllTroveLeaves(host, names)
+
             except repository.errors.OpenError, e:
                 self.log.warning("unable to access %s: %s", host, str(e))
                 continue
@@ -307,7 +316,9 @@ class UpdatePackageIndexExternal(PackageIndexer):
                     serverName = label.getHost()
                     branchName = label.getNamespace() + ":" + label.getLabel()
 
-                    row = (projectIds[host], troveName, str(max(packageDict[troveName][label])), serverName, branchName)
+                    isSource = troveName.endswith(':source')
+                    row = (projectIds[host], troveName, str(max(packageDict[troveName][label])),
+                        serverName, branchName, isSource)
                     rows.append(row)
 
             self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
@@ -320,7 +331,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
             r = cu.fetchone()
             if r:
                 pkgId = r[0]
-                updates.append((row[0], row[1], row[2], row[3], row[4], pkgId))
+                updates.append((row[0], row[1], row[2], row[3], row[4], row[5], pkgId))
             else:
                 inserts.append(row)
 
@@ -329,12 +340,12 @@ class UpdatePackageIndexExternal(PackageIndexer):
         cu.executemany("""
             UPDATE PackageIndex SET
                 projectId=?, name=?, version=?,
-                serverName=?, branchName=?
+                serverName=?, branchName=?, isSource=?
             WHERE pkgId=?""", updates)
         cu.executemany("""
             INSERT INTO PackageIndex
-                (pkgId, projectId, name, version, serverName, branchName)
-            VALUES (NULL, ?, ?, ?, ?, ?)""", inserts)
+                (pkgId, projectId, name, version, serverName, branchName, isSource)
+            VALUES (NULL, ?, ?, ?, ?, ?, ?)""", inserts)
         self.db.commit()
         self.log.info("Update complete: %.2fs" % (time.time() - st))
         return 0

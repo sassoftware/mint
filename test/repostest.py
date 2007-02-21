@@ -376,6 +376,7 @@ class RepositoryTest(MintRepositoryHelper):
         # add a newer version on tag2
         v = "/localhost1@rpl:tag2/1.0.1"
         self.addComponent('testcase:runtime', v)
+        self.addComponent('testcase:source', v)
         self.addCollection('testcase', v, ['testcase:runtime'])
 
         pkgindex.UpdatePackageIndexExternal.logFileName = None
@@ -385,11 +386,12 @@ class RepositoryTest(MintRepositoryHelper):
         self.captureOutput(upi.run)
 
         cu = self.db.cursor()
-        cu.execute("SELECT version, serverName, branchName FROM PackageIndex")
-        x = [(x[0], x[1], x[2]) for x in cu.fetchall()]
+        cu.execute("SELECT name, version, serverName, branchName, isSource FROM PackageIndex")
+        x = [(x[0], x[1], x[2], x[3], x[4]) for x in cu.fetchall()]
 
-        self.failUnless(('/localhost1@rpl:tag1/1.0.0-1-1', 'localhost1', 'rpl:tag1') in x)
-        self.failUnless(('/localhost1@rpl:tag2/1.0.1-1-1', 'localhost1', 'rpl:tag2') in x)
+        self.failUnless(('testcase', '/localhost1@rpl:tag1/1.0.0-1-1', 'localhost1', 'rpl:tag1', 0) in x)
+        self.failUnless(('testcase', '/localhost1@rpl:tag2/1.0.1-1-1', 'localhost1', 'rpl:tag2', 0) in x)
+        self.failUnless(('testcase:source', '/localhost1@rpl:tag2/1.0.1-1', 'localhost1', 'rpl:tag2', 1) in x)
 
     def testUPI(self):
         def _fakeCommit(pkg, projectId, timestamp, userId):
@@ -403,6 +405,7 @@ class RepositoryTest(MintRepositoryHelper):
         _fakeCommit('package1', projectId, time.time(), userId)
         _fakeCommit('package2', projectId, time.time(), userId)
         _fakeCommit('package3', projectId, time.time(), userId)
+        _fakeCommit('package3:source', projectId, time.time(), userId)
 
         upi = pkgindex.UpdatePackageIndex()
         upi.logPath = None
@@ -411,20 +414,22 @@ class RepositoryTest(MintRepositoryHelper):
 
         cu = self.db.cursor()
         cu.execute("SELECT name FROM PackageIndex ORDER BY name")
-        self.failUnlessEqual([x[0] for x in cu.fetchall()], ['package1', 'package2', 'package3'])
+        self.failUnlessEqual([x[0] for x in cu.fetchall()], ['package1', 'package2', 'package3', 'package3:source'])
         cu.execute("SELECT mark FROM PackageIndexMark")
         self.failIf(cu.fetchone()[0] == 0)
 
         _fakeCommit('package4', projectId, time.time(), userId)
         x = self.captureOutput(upi.run)
 
-        cu.execute("SELECT name, version, serverName, branchName FROM PackageIndex ORDER BY name")
-        x = [(x[0], x[1], x[2], x[3]) for x in cu.fetchall()]
+        cu.execute("SELECT name, version, serverName, branchName, isSource FROM PackageIndex ORDER BY name")
+        x = [(x[0], x[1], x[2], x[3], x[4]) for x in cu.fetchall()]
 
-        self.failUnless(('package1', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1') in x)
-        self.failUnless(('package2', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1') in x)
-        self.failUnless(('package3', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1') in x)
-        self.failUnless(('package4', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1') in x)
+        self.failUnless(('package1', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 0) in x)
+        self.failUnless(('package2', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 0) in x)
+        self.failUnless(('package3', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 0) in x)
+        self.failUnless(('package3:source', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 1) in x)
+        self.failUnless(('package4', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 0) in x)
+
 
     def testPerProjectRepositoryDatabases(self):
         # create a project
