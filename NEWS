@@ -1,3 +1,19 @@
+Changes in @NEW@
+================
+
+* Mirrored repositories can now be converted to external repositories,
+  effectively disabling the mirror process. The mirrored contents are
+  preserved, but not used, unless mirroring is re-enabled. (RBL-1292)
+* Some bugs in the external project editing have been fixed. (RBL-1243)
+* The specific option to add an external project and preload with a disk
+  drive has been removed. The same functionality is available if you
+  select "Do not mirror this repository". In-line documentation has been
+  updated. (RBL-1323)
+* Usernames for rBuilder accounts follow new Conary restrictions. (RBL-1338)
+* The "Notify All Users" functionality has been removed. (RBL-1370)
+* In certain circumstances, rBuilder could set up an externa Update Service
+  with the wrong hostname for mirror contents. This has been fixed. (RBL-1369)
+
 Changes in 3.0.0
 ================
 
