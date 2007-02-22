@@ -17,6 +17,8 @@ import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 import rephelp
 
+from webunit import webunittest
+
 class SiteTest(mint_rephelp.WebRepositoryHelper):
     def _checkRedirect(self, url, expectedRedirect, code=301):
         page = self.assertCode(url, code)
@@ -35,6 +37,9 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testApplianceSpotlight(self):
         adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
         page = self.webLogin('adminuser', 'adminpass')
+        
+        self.assertContent('/applianceSpotlight', content='There are currently no appliances in the archive.  Please check back later.',
+                           code = [200])
 
         end = time.strftime('%m/%d/%Y', time.gmtime(time.time() + 7*24*60*60))
         start = time.strftime('%m/%d/%Y', time.gmtime(time.time() - 7*24*60*60))
@@ -86,10 +91,19 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent('/applianceSpotlight?pageId=3', 
                            content='apps/mint/images/next.gif',
                            code = [200])
-        for x in (0,1,2,3,4):
+        adminClient.addUseItIcon(0, 'test.image', 'test.link')
+        self.assertContent('/', 
+                           content='test.link',
+                           code = [200])
+        for x in (1,2,3):
             adminClient.addUseItIcon(x, 'test%s.image' % x, 'test%s.link' % x)
         self.assertContent('/', 
                            content='test3.link',
+                           code = [200])
+
+        adminClient.addUseItIcon(4, 'test4.image', 'test4.link')
+        self.assertContent('/', 
+                           content='test4.link',
                            code = [200])
 
     def testEditUserSettings(self):
@@ -175,6 +189,43 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/search?type=Packages')
         self.failIf('only packages for rpl:1 branch' not in page.body, 
                     "Package search failed to limit search to rpl:1 branch")
+    
+    def testPackageSearchFormat(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        cu = self.db.cursor()
+        for name in ('package1', 'package2', 'package3'):
+            cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+            pkgId = cu.fetchone()[0]
+            r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, '/test.project.test@test:test/1.1-1-1', ?, 'test:test', 0)", (pkgId, projectId, name, MINT_PROJECT_DOMAIN))
+        self.db.commit()
+        self.failIf('<tr> <td> <a href="/repos/foo/troveInfo?t=package2;v=%2Ftest.project.test%40test%3Atest%2F1.1-1-1" class="mainSearchItem">package2</a> </td> <td> <a href="/project/foo/">Foo</a> </td> </tr>' not in ' '.join(self.fetch('/search?type=Packages').body.split()))
+        gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
+        gt.addTrove('group-core', '/blah.blah.blah@test:test/1.1.1-1-1', '', '', False, False, False)
+        page = page.fetch('/project/foo/editGroup?id=%s' % gt.id)
+        page = page.fetch('/search?type=Packages')
+        self.failIf('Add to group-blah' not in page.body)
+
+    def testBadCmd(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+        self.assertRaises(webunittest.HTTPError, page.fetch, '/badcmd')
+
+    def testProcessUserAction(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        adminClient, adminUserId = self.quickMintAdmin('adminuser','adminpass')
+        page = self.webLogin('adminuser', 'adminpass')
+        page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_reset_password' % userId) 
+        self.failIf('Password successfully reset for user foouser' not in page.body)
+        page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_cancel' % adminUserId) 
+        self.failIf("You cannot close your account from this interface." not in page.body)
+        page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_promote_admin' % userId) 
+        self.failIf("Promoted foouser to administrator." not in page.body)
+        page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_demote_admin' % userId) 
+        self.failIf("Revoked administrative privileges for foouser" not in page.body)
+        page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_cancel' % userId) 
+        self.failIf("Account deleted for user foouser" not in page.body)
 
 if __name__ == "__main__":
     testsuite.main()
