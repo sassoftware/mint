@@ -598,6 +598,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                   content = 'has no releases',
                                   code = [200])
 
+        page = self.assertCode('/project/foo/latestRelease', code = 302)
+
     def testReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
@@ -633,6 +635,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "Missing build size information")
         self.failUnless(buildSha1 in page.body,
                 "Missing build sha1 information")
+
+        # make sure /latestRelease redirects to latest release
+        self.assertCode('/project/foo/latestRelease', code = 302)
 
     def testReleasesPageMultipleFileUrls(self):
         client, userId = self.quickMintUser('foouser','foopass')

@@ -39,6 +39,9 @@ from mint.helperfuncs import truncateForDisplay
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
+
+                ${downloadsMenu(latestBuilds)}
+
                 <div py:if="auth.admin" py:strip="True">
 
                     <h2>Project Status</h2>
@@ -46,7 +49,8 @@ from mint.helperfuncs import truncateForDisplay
                     <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="project.hidden">This project is hidden.</p>
                     <p py:if="project.external and not auth.admin">This project is externally managed.</p>
-                    <p py:if="not (projectCommits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
+                    <p py:if="not (projectCommits or project.external)">This project is considered to be a fledgling
+                        (i.e. no software has been committed to its repository).</p>
 
                     <h2>Administrative Options</h2>
 
@@ -92,44 +96,6 @@ from mint.helperfuncs import truncateForDisplay
                 </p>
                 <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
                 <hr />
-                <h2>What can I do with this project?</h2>
-
-                <p>This is ${isOwner and "your" or "the"} project's home page.
-                        <span py:strip="True" py:if="isOwner">Here, you can communicate
-                        to your users the description or goal for your project.
-                        Do this by clicking on the "Edit Project" link next to the
-                        project name.</span>
-                        <span py:strip="True" py:if="not isOwner">Here, you can read the
-                        description or goal for this project.</span>
-                </p>
-
-                <p>From here you can use the left-hand tabs to:</p>
-                <ul>
-                        <li py:if="isOwner">Create, edit, and publish a project build</li>
-                        <li py:if="not isOwner">Download an official project build</li>
-                        <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
-                        <li py:if="isOwner">Add or remove developers working on your project</li>
-                        <li py:if="not isOwner">List the developers working on this project
-                            <span py:strip="True" py:if="not isWriter">and request to join them</span>
-                        </li>
-                        <li py:if="isOwner">Create and manage your project's mailing lists</li>
-                        <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
-                        <li>
-                            Subscribe to release news
-                            <a href="${basePath}rss">
-                                <img style="border: none; vertical-align: middle;"
-                                     src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
-                            </a>
-                        </li>
-
-                </ul>
-
-                <p>
-                    For detailed information on building or installing software
-                    for ${isOwner and "your" or "this"} project, check out the
-                    project's <a href="${project.getUrl()}help">help
-                    pages</a>.
-                </p>
             </div>
         </div>
     </body>

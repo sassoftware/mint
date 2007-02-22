@@ -86,6 +86,12 @@ class ProjectHandler(WebHandler):
         self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
         self.projectUnpublishedReleases = [x for x in self.projectReleases if not x.isPublished()]
         self.projectCommits =  self.project.getCommits()
+        if self.projectPublishedReleases:
+            self.latestPublishedRelease = self.projectPublishedReleases[0]
+            self.latestBuilds = [self.client.getBuild(x) for x in self.latestPublishedRelease.getBuilds()]
+        else:
+            self.latestPublishedRelease = None
+            self.latestBuilds = []
 
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
@@ -100,8 +106,8 @@ class ProjectHandler(WebHandler):
 
         return method
 
-    def _predirect(self, path = ""):
-        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path))
+    def _predirect(self, path = "", temporary = False):
+        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
 
     @redirectHttp
     def projectPage(self, auth):
@@ -737,6 +743,13 @@ class ProjectHandler(WebHandler):
             self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
         else:
             return self._write("pubrelease", release = release, builds = builds)
+
+    def latestRelease(self, auth):
+        if not self.latestPublishedRelease:
+            self._addErrors("This project does not have any published releases.")
+            self._predirect(temporary = True)
+        else:
+            self._predirect('release?id=%d' % (self.latestPublishedRelease.id), temporary = True)
 
     @writersOnly
     @intFields(buildId = None)

@@ -44,6 +44,7 @@
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
             <li py:if="isWriter"><a href="${projectUrl}downloads">Download Statistics</a></li>
+            <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config">Help</a></li>
         </ul>
     </div>
 
@@ -100,6 +101,7 @@
         </div>
       </div>
     </div>
+
 
     <div py:def="projectsPane()" id="projectsPane" >
         <?python
@@ -235,5 +237,32 @@
             </td>
         </tr>
     </div>
+
+    <div py:def="downloadsMenu(builds, display='block')" py:omit="True">
+      <div py:if="builds" class="downloadPalette" id="release">
+        <div class="boxHeader">Download NOW</div>
+        <div style="display: $display;">
+            <ul style="list-style-type: none;">
+                <div py:for="build in builds">
+                    <?python
+                        # fetch the first file and the first URL we have for a build
+                        file = build.getFiles()[0]
+                        title = file['title'] or ("Disc %d" % (file['idx'], ))
+                        fileUrl = cfg.basePath + 'downloadImage?fileId=%d' % file['fileId']
+                        extraFlags = getExtraFlags(build.troveFlavor)
+                    ?>
+                    <li>
+                        <a href="$fileUrl">${build.getArch()} ${buildtypes.typeNamesMarketing[build.buildType]}</a>
+                        <span py:omit="True" py:if="extraFlags">(${", ".join(extraFlags)})</span>
+                    </li>
+                </div>
+            </ul>
+
+            <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types" target="_blank"><b>Which one do I want?</b></a></span>
+            <span><a href="${project.hostname}/latestRelease"><b>More Information...</b></a></span>
+        </div>
+      </div>
+    </div>
+
 
 </html>
