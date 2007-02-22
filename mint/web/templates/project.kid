@@ -259,7 +259,7 @@
             </ul>
 
             <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types" target="_blank"><b>Which one do I want?</b></a></span>
-            <span><a href="${project.hostname}/latestRelease"><b>More Information...</b></a></span>
+            <span><a href="${project.getUrl()}latestRelease"><b>More Information...</b></a></span>
         </div>
       </div>
     </div>
