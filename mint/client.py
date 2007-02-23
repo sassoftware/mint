@@ -296,6 +296,9 @@ class MintClient:
         """
         return self.server.unhideProject(projectId)
 
+    def getAvailableBuildTypes(self):
+        return self.server.getAvailableBuildTypes()
+
     def getBuild(self, buildId):
         """
         Retrieve a L{builds.Build} object by build id.

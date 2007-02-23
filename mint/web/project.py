@@ -369,6 +369,7 @@ class ProjectHandler(WebHandler):
             version = None,
             flavor = None,
             arch = None,
+            visibleTypes = self.client.getAvailableBuildTypes(),
             kwargs = {})
 
     @writersOnly
@@ -397,6 +398,7 @@ class ProjectHandler(WebHandler):
                 version = version,
                 flavor = thawedFlavor,
                 arch = arch,
+                visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
         elif action == "Recreate Build":
             job = self.client.startImageJob(buildId)

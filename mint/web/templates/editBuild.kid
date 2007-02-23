@@ -76,7 +76,7 @@ allowNone = ['anaconda-custom', 'media-template']
 
                     <div class="formgroupTitle">Build Types</div>
                     <div class="formgroup">
-                        <div py:strip="True" py:for="key in self.cfg.visibleBuildTypes">
+                        <div py:strip="True" py:for="key in visibleTypes">
                             <input class="reversed" id="buildtype_${key}"
                                 name="buildtype" value="${key}" 
                                 onclick="javascript:onBuildTypeChange('formgroup_${key}');"
