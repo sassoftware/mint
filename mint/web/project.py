@@ -369,6 +369,7 @@ class ProjectHandler(WebHandler):
             version = None,
             flavor = None,
             arch = None,
+            visibleTypes = self.client.getAvailableBuildTypes(),
             kwargs = {})
 
     @writersOnly
@@ -397,6 +398,7 @@ class ProjectHandler(WebHandler):
                 version = version,
                 flavor = thawedFlavor,
                 arch = arch,
+                visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
         elif action == "Recreate Build":
             job = self.client.startImageJob(buildId)
@@ -583,22 +585,27 @@ class ProjectHandler(WebHandler):
             trove, version, flavor = build.getTrove()
             files = build.getFiles()
             fileIds = list(set([x['fileId'] for x in files]))
+            amiId = build.getDataValue('amiId', validate = False)
+            amiS3Manifest = build.getDataValue('amiS3Manifest', validate=False)
         except builds.TroveNotSet:
             self._predirect("editBuild?buildId=%d" % build.id)
         else:
             return self._write("build", build = build,
                 name = build.getName(),
                 files = files,
-                trove = trove,
                 fileIds = fileIds,
+                trove = trove,
                 version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
                 buildId = id,
                 projectId = self.project.getId(),
+                notes = build.getDesc().strip(),
                 buildInProgress = buildInProgress,
                 extraFlags = extraFlags,
                 builtBy = builtBy,
-                builtAt = builtAt)
+                builtAt = builtAt,
+                amiId = amiId,
+                amiS3Manifest = amiS3Manifest)
 
     @ownerOnly
     def newRelease(self, auth):

@@ -351,7 +351,8 @@ if(x86_64)
 else
     var x86_64Types = [INSTALLABLE_ISO];
 
-var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA];
+var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA,
+                AMI];
 
 function handleBuildTypes(flavor) {
     forEach(allTypes, function(x) {

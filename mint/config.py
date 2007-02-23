@@ -107,6 +107,7 @@ class MintConfig(ConfigFile):
     reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
                                            'repos', '%s', 'sqldb')
     visibleBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
+    excludeBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
     bootableX8664           = (cfgtypes.CfgBool, x86_64)
     maintenanceLockPath     = os.path.join(dataPath, 'run', 'maintenance.lock')
     announceLink            = ''

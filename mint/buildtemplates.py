@@ -156,6 +156,10 @@ class anacondaTemplatesTrove(TroveOption):
     default = ''
     prompt  = 'Version of anaconda-templates to use when creating this image'
 
+class amiHugeDiskMountpoint(StringOption):
+    default = '/tmp'
+    prompt  = 'Mountpoint for scratch space (/dev/sda2) on AMI'
+
 ###
 # Templates
 # classes must end with 'Template' to be properly processed.
@@ -221,6 +225,11 @@ class VirtualIronVHDTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'mirrorUrl', 'vhdDiskType']
     id = buildtypes.VIRTUAL_IRON
+
+class AMITemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName',
+                 'amiHugeDiskMountpoint', 'installLabelPath', 'mirrorUrl']
+    id = buildtypes.AMI
 
 ########################
 

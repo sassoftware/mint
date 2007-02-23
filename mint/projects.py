@@ -460,17 +460,22 @@ class ProjectsTable(database.KeyedTable):
         extras = ""
         extraSubs = []
         if buildTypes:
-            extras += """ AND (EXISTS(SELECT buildId FROM BuildsView 
-                                        WHERE buildType IN (%s) AND pubReleaseId IS NOT NULL AND
-                                              projectId=Projects.projectId)""" % \
+            extras += """ AND (EXISTS(SELECT buildId FROM BuildsView
+                                        LEFT JOIN PublishedReleases USING(pubReleaseId)
+                                        WHERE buildType IN (%s)
+                                            AND pubReleaseId IS NOT NULL
+                                            AND BuildsView.projectId=Projects.projectId
+                                            AND PublishedReleases.timePublished IS NOT NULL)""" % \
                 (", ".join("?" * len(buildTypes)))
             extraSubs += buildTypes
         if flavorFlagTypes:
-            sql = """EXISTS(SELECT buildId
-                              FROM BuildsView
-                                JOIN BuildData USING(buildId)
+            sql = """EXISTS(SELECT BuildsView.buildId FROM BuildsView
+                                LEFT JOIN PublishedReleases USING(pubReleaseId)
+                                JOIN BuildData ON BuildsView.buildId=BuildData.buildId
                               WHERE BuildData.name in (%s)
-                              AND projectId=Projects.projectId AND pubReleaseId IS NOT NULL)""" % \
+                                AND BuildsView.projectId=Projects.projectId
+                                AND pubReleaseId IS NOT NULL
+                                AND PublishedReleases.timePublished IS NOT NULL)""" % \
                 (", ".join("?" * len(flavorFlagTypes)))
             extraSubs += flavorFlagTypes
             # append as an OR if we are already filtering by some build types,
@@ -496,9 +501,11 @@ class ProjectsTable(database.KeyedTable):
             # asking for only projects with downloadable stuff, filter
             # by the existence of a published release.
             if not buildTypes and not flavorFlagTypes and filterNoDownloads:
-                extras += """ AND EXISTS(SELECT buildId FROM BuildsView
-                                                        WHERE projectId=Projects.projectId 
-                                                          AND pubReleaseId IS NOT NULL)"""
+                extras += """ AND EXISTS(SELECT BuildsView.buildId FROM BuildsView
+                                            LEFT JOIN PublishedReleases USING(pubReleaseId)
+                                            WHERE BuildsView.projectId=Projects.projectId
+                                              AND pubReleaseId IS NOT NULL
+                                              AND timePublished IS NOT NULL)"""
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
 

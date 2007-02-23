@@ -9,11 +9,26 @@ import os
 import sys
 import re
 
+from mint import config
+
+from conary import dbstore
+
 JOBSERVER_DIR = '/srv/rbuilder/jobserver'
 JOBSERVER_LOG = 'srv/rbuilder/logs/job-server.log'
 MINT_LOG = 'srv/mint/logs/job-server.log'
 PS = '/bin/ps -p'
 KILL = '/bin/kill'
+
+
+def clearJobData(jobId):
+    cfg = config.MintConfig()
+    cfg.read(config.RBUILDER_CONFIG)
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    cu = db.cursor()
+    cu.execute("""UPDATE Jobs SET status = 4, 
+                  statusMessage = 'Job failed to complete' WHERE jobId=?""", 
+                  jobId)
+    db.commit()
 
 def findPid(jobId):
     jsdirs = [x for x in os.listdir(JOBSERVER_DIR) if os.path.isdir(os.path.join(JOBSERVER_DIR, x))]    
@@ -28,7 +43,7 @@ def findPid(jobId):
 
         match = re.compile('\[(\d+)\] INFO:.*job.*started.*\(id %s\)' % jobId)
         for y in fd:
-	    p = match.search(y)
+            p = match.search(y)
             if p:
                 pid = p.group(1)
                 if not os.system('%s %s 1>& /dev/null' % (PS, pid)):
@@ -39,9 +54,12 @@ def findPid(jobId):
 def main(jobid):
     pid = findPid(jobid)
     if not pid:
+        clearJobData(jobid)
         sys.exit(1)
     if os.system('%s %s' % (KILL, pid)):
-        sys.exit(1)
+        if os.system('%s -9 %s' % (KILL, pid)):
+            sys.exit(1)
+        clearJobData(jobid)
 
 if __name__ == '__main__':
     main(sys.argv[1])

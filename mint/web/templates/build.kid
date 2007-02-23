@@ -57,6 +57,14 @@ from mint import urltypes
                 <h3>Details</h3>
 
                 <table class="troveinfo">
+                    <tr py:if="amiId and not buildInProgress">
+                        <th>AMI ID</th>
+                        <td>${amiId}</td>
+                    </tr>
+                    <tr py:if="amiS3Manifest and not buildInProgress">
+                        <th>AMI Bundle Manifest</th>
+                        <td>${amiS3Manifest}</td>
+                    </tr>
                     <tr>
                         <th>Group</th>
                         <td>${build.getTroveName()}</td>
@@ -88,7 +96,6 @@ from mint import urltypes
                 </table>
 
                 <h3>Notes</h3>
-                <?python notes = build.getDesc().strip()?>
                 <div py:for="note in notes.splitlines()" py:content="truncateForDisplay(note, 10000000, 70)" />
                 <div py:if="not notes">This build has no notes.</div>
 
@@ -102,7 +109,6 @@ from mint import urltypes
 
                 <div py:strip="True" py:if="not buildInProgress">
                     <h3>Downloads</h3>
-                    <?python files = build.getFiles() ?>
                     <div py:if="files" py:strip="True">
                         <table>
                             ${buildFiles(build)}

@@ -7,6 +7,7 @@
 python_files = \
 	anaconda_images.py	\
 	anaconda_templates.py	\
+	ami.py			\
 	gencslist.py		\
 	group_trove.py		\
 	imagegen.py		\
