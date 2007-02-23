@@ -615,7 +615,7 @@ class SiteHandler(WebHandler):
 
             row = {
                 'columns':  [(packageUrl, troveName), (reposUrl, projectName)],
-                'desc':     '%s/%s' % (ver.trailingLabel(), ver.trailingRevision()),
+                'desc':     '%s=%s' % (troveName, troveVersionStr.lstrip('/')),
             }
 
             # show the group trove links?
