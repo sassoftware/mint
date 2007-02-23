@@ -436,12 +436,12 @@ class Build(database.TableObject):
             raise ParameterError("%s is not a legal enumerated value" % value)
         return self.server.setBuildDataValue(self.getId(), name, value, dataType)
 
-    def getDataValue(self, name):
+    def getDataValue(self, name, validate = True):
         template = self.getDataTemplate()
         isPresent, val = self.server.getBuildDataValue(self.getId(), name)
-        if not isPresent and name not in template:
+        if (not isPresent and name not in template) and validate:
             raise BuildDataNameError( "%s not in data template" % name)
-        if not isPresent:
+        if not isPresent and name in template:
             val = template[name][1]
         return val
 
