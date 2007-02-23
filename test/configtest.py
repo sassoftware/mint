@@ -44,17 +44,17 @@ class ConfigTest(MintRepositoryHelper):
         # if we get here, there are no apparent issues with the CfgBuildType
         # class. errors with the cfg object manipulation generated elsewhere.
         cfg = config.MintConfig()
-        self.failIf(cfg.visibleBuildTypes,
+        self.failIf(cfg.excludeBuildTypes,
                     "Build type illegally appeared as visible")
 
-        cfg.configLine("visibleBuildTypes INSTALLABLE_ISO")
-        self.failIf(cfg.visibleBuildTypes != [buildtypes.INSTALLABLE_ISO],
-                    "visibleBuildTypes did not incorporate first build type")
+        cfg.configLine("excludeBuildTypes INSTALLABLE_ISO")
+        self.failIf(cfg.excludeBuildTypes != [buildtypes.INSTALLABLE_ISO],
+                    "excludeBuildTypes did not incorporate first build type")
 
-        cfg.configLine("visibleBuildTypes RAW_HD_IMAGE")
-        self.failIf(cfg.visibleBuildTypes != \
+        cfg.configLine("excludeBuildTypes RAW_HD_IMAGE")
+        self.failIf(cfg.excludeBuildTypes != \
                     [buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE],
-                    "visibleBuildTypes did not properly incorporate "
+                    "excludeBuildTypes did not properly incorporate "
                     "a second build")
 
 if __name__ == "__main__":
