@@ -681,7 +681,7 @@ class SiteHandler(WebHandler):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset,
             filterNoDownloads = filterNoDownloads)
 
-        buildTypes = list(set(self.cfg.visibleBuildTypes + [buildtypes.XEN_DOMU]) - \
+        buildTypes = list(set(self.client.getAvailableBuildTypes() + [buildtypes.XEN_DOMU]) - \
                 set([ int(v) for k, v in searcher.parseLimiters(terms) \
                     if k == 'buildtype' ]))
 
