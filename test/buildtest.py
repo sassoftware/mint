@@ -567,14 +567,14 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testGetAvailBuildTypes(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
-        visibleBuildTypes = self.cfg.visibleBuildTypes
+        excludeBuildTypes = self.cfg.excludeBuildTypes
         try:
-            for buildTypes in ([], [1, 2, 3]):
-                self.cfg.visibleBuildTypes = buildTypes
+            for buildTypes in ([], [buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE, buildtypes.LIVE_ISO]):
+                self.cfg.excludeBuildTypes = buildTypes
                 assert client.server._server.getAvailableBuildTypes() == \
-                       buildTypes
+                       [x for x in buildtypes.TYPES if x not in buildTypes + [buildtypes.BOOTABLE_IMAGE]]
         finally:
-            self.cfg.visibleBuildTypes = visibleBuildTypes
+            self.cfg.excludeBuildTypes = excludeBuildTypes
 
     @fixtures.fixture('Full')
     def testGetMissingJSVersion(self, db, data):
