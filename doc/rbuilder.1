@@ -31,19 +31,95 @@ by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
 
 \fI<image-type>\fR -- one of the following:
 
-\fBinstallable_iso\fR, \fBraw_hd_image\fR, \fBraw_fs_image\fR,
-\fBtarball\fR, \fBlive_iso\fR, \fBvmware_image\fR
+\fBinstallable_iso\fR --  Installable CD/DVD
 
-Returns a build ID in a form suitable for use with \fBeval\fR 
+\fBlive_iso\fR -- Demo CD/DVD (Live CD/DVD)
+
+\fBraw_fs_image\fR -- Raw Filesystem Image
+
+\fBraw_hd_image\fR -- Raw Hard Disk Image
+
+\fBtarball\fR -- Compressed Tar File
+
+\fBvirtual_pc_image\fR -- Microsoft (R) VHD Virtual Appliance
+
+\fBvirtual_iron\fR -- Virtual Iron (TM) Virtual Appliance
+
+\fBvmware_esx_image\fR -- VMware (R) ESX Server Virtual Appliance
+
+\fBvmware_image\fR -- VMware (R) Virtual Appliance
+
+Returns a build ID in a form suitable for use with \fBeval\fR
 (such as BUILD_ID=100).  Use the \fB--wait\fR option with 
 \fBbuild-create\fR to block until the build completes.
 
-Set specific build options using the \fB--option\fR keyword.  A full 
-listing of possible options for each build type can be seen using: 
-\fBrbuilder build-create --help\fR. Options are specified using a 
-\fI'<key> <value>'\fR syntax, where <key> is the name of the option 
-you are setting, and <value> is the specific value you want to use. 
-Specify multiple options using \fB--option\fR multiple times.
+Set specific build options using \fB--option=\fI'<key> <value>'\fR
+where <key> is the name of the option and <value> is the value
+you wish to set for that option.  Options not specified will
+result in apply the default values for those options.  Specify
+multiple options using \fB--option\fR multiple times.
+
+The options corresponding to each build type are as follows:
+
+installable_iso: \fBanaconda-custom\fR, \fBanaconda-templates\fR, \fBautoResolve\fR, \fBbaseFileName\fR, \fBbetaNag\fR, \fBbugsUrl\fR, \fBinstallLabelPath\fR, \fBmaxIsoSize\fR, \fBmedia-template\fR, \fBmirrorUrl\fR, \fBshowMediaCheck\fR, \fBswapSize\fR 
+
+live_iso: \fBautoResolve\fR, \fBbaseFileName\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBunionfs\fR, \fBzisofs\fR
+
+raw_fs_image: \fBautoResolve\fR, \fBbaseFileName\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBswapSize\fR 
+
+raw_hd_image: \fBautoResolve\fR, \fBbaseFileName\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBswapSize\fR 
+
+tarball: \fBautoResolve\fR, \fBbaseFileName\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBswapSize\fR 
+
+virtual_pc_image: \fBautoResolve\fR, \fBbaseFileName\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBswapSize\fR, \fBvhdDiskType\fR
+
+virtual_iron: \fBautoResolve\fR, \fBbaseFileName\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBswapSize\fR, \fBvhdDiskType\fR
+
+vmware_esx_image: \fBautoResolve\fR, \fBbaseFileName\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBnatNetworking\fR, \fBswapSize\fR, \fBvmMemory\fR
+
+vmware_image: \fBautoResolve\fR, \fBbaseFileName\fR, \fBdiskAdapter\fR, \fBfreespace\fR, \fBinstallLabelPath\fR, \fBmirrorUrl\fR, \fBnatNetworking\fR, \fBswapSize\fR, \fBvmMemory\fR, \fBvmSnapshots\fR
+
+The options listed are further defined as follows:
+
+\fB--option='autoResolve <value>'\fR -- Automatically install required dependencies during updates (values: True or False; default: False)
+
+\fB--option='anaconda-custom <value>'\fR -- Version of the anaconda-custom trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-custom
+
+\fB--option='anaconda-templates <value>'\fR -- Version of the anaconda-templates trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-templates
+
+\fB--option='baseFileName <value>'\fR -- Custom prefix for filenames output from the build (default: \fIname-version-architecture\fR)
+
+\fB--option='betaNag <value>'\fR -- Alert message displayed during install that this build is a beta (values: True or False; default: False)
+
+\fB--option='bugsUrl <value>'\fR -- Specify a URL where appliance users can obtain assistance, shown in the help screens displayed during install (default: http://issues.rpath.com/)
+
+\fB--option='diskAdapter <value>'\fR -- Hard disk adapter, SCSI or IDE, for which the image should be built (values: lsilogic or ide; default: lsilogic)
+
+\fB--option='freespace <value>'\fR -- Free space in MB that should be allocated in the image (default: 250)
+
+\fB--option='installLabelPath <value>'\fR -- Custom Conary installLabelPath setting from which the appliance will install and update software (default is blank to let the value be a Conary default)
+
+\fB--option='maxIsoSize <value>'\fR -- ISO size (default: 681574400)
+
+\fB--option='media-template <value>'\fR -- Version of the media-template trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/media-template
+
+\fB--option='mirrorUrl <value>'\fR -- rPath Mirror URL from which the appliance will obtain Conary configuration settings (default is blank)
+
+\fB--option='natNetworking <value>'\fR -- Use NAT instead of bridged networking (values: True or False; default: False to use bridged)
+
+\fB--option='showMediaCheck <value>'\fR -- Prompt the installing user whether to test the CD/DVD media before installation (values: True or False; default: False)
+
+\fB--option='swapSize <value>'\fR -- Swap space in MB that should be reserved in this image (default: 128)
+
+\fB--option='unionfs <value>'\fR -- Enable UnionFS for the entire filesystem (requires the UnionFS kernel module; values: True or False; default: False); for more details, see http://wiki.rpath.com/wiki/rBuilder:Demo_CD
+
+\fB--option='vhdDiskType <value>'\fR -- VHD hard disk type (values: dynamic, fixed, difference; default: dynamic)
+
+\fB--option='vmMemory <value>'\fR -- Memory in MB that VMware should use when running the image (default: 256)
+
+\fB--option='vmSnapshots <value>'\fR -- Allow VMware snapshot creation within the image (value: True or False; default: False)
+
+\fB--option='zisofs <value>'\fR -- Compress the filesystem to take up less space on the filesystem (values: True or False; default: True for compression)
 
 .TP 4
 .B build-wait \fI<build-id>\fR
