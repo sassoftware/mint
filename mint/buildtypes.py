@@ -21,6 +21,7 @@ validBuildTypes = {
     'XEN_OVA'           : 11,
     'VIRTUAL_IRON'      : 12,
     'PARALLELS'         : 13,
+    'AMI'               : 14,
 }
 
 TYPES = validBuildTypes.values()
@@ -79,6 +80,7 @@ typeNames = {
     XEN_OVA:            "Xen Enterprise Virtual Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
+    AMI:                "Amazon Machine Image",
 }
 
 typeNamesShort = {
@@ -95,6 +97,7 @@ typeNamesShort = {
     XEN_OVA:            "XVA",
     VIRTUAL_IRON:       "Virtual Iron",
     PARALLELS:          "Parallels",
+    AMI:                "AMI",
 }
 
 typeNamesMarketing = {
@@ -111,6 +114,7 @@ typeNamesMarketing = {
     XEN_OVA:            "Xen Enterprise Virtual Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
+    AMI:                "Amazon Machine Image",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
