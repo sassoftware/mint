@@ -43,6 +43,7 @@ from mint.distro.tarball import Tarball
 from mint.distro.vpc import VirtualPCImage
 from mint.distro.xen_ova import XenOVA
 from mint.distro.virtual_iron import VirtualIronVHD
+from mint.distro.ami import AMIImage
 
 generators = {
     buildtypes.INSTALLABLE_ISO:   InstallableIso,
@@ -57,6 +58,7 @@ generators = {
     buildtypes.VIRTUAL_PC_IMAGE:  VirtualPCImage,
     buildtypes.XEN_OVA:           XenOVA,
     buildtypes.VIRTUAL_IRON:      VirtualIronVHD,
+    buildtypes.AMI:               AMIImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')

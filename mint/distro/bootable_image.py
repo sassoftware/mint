@@ -204,13 +204,6 @@ class BootableImage(ImageGenerator):
         sfdisk.write(input)
         retval = sfdisk.close()
 
-    def _writefstab(self):
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
-        if not self.swapSize:
-            # remove any reference to swap if swapSize is 0
-            util.execute('sed -i "s/.*swap.*//" %s' % \
-                         os.path.join(self.fakeroot, 'etc', 'fstab'))
-
     def _setupGrub(self):
         if not os.path.exists(os.path.join(self.fakeroot, 'sbin', 'grub')):
             log.info("grub not found. skipping setup.")
@@ -314,6 +307,13 @@ title %(name)s (%(kversion)s)
         os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
         os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
 
+    def writeFstab(self):
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
+        if not self.swapSize:
+            # remove any reference to swap if swapSize is 0
+            util.execute('sed -i "s/.*swap.*//" %s' % \
+                         os.path.join(self.fakeroot, 'etc', 'fstab'))
+
     def findFile(self, baseDir, fileName):
         for base, dirs, files in os.walk(baseDir):
             matches = [x for x in files if re.match(fileName, x)]
@@ -397,12 +397,13 @@ title %(name)s (%(kversion)s)
         except KernelTroveRequired:
             log.info("no kernel found at all. skipping.")
         else:
-            self.applyUpdate(kuJob, callback, 'conary-kernel-tag-script')
+            if kuJob:
+                self.applyUpdate(kuJob, callback, 'conary-kernel-tag-script')
 
     @timeMe
     def fileSystemOddsNEnds(self):
         #write the fstab
-        self._writefstab()
+        self.writeFstab()
         #create a swap file
         if self.swapSize:
             swap = open(os.path.join(self.fakeroot, 'var', 'swap'), 'w')
