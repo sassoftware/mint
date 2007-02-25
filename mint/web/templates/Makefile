@@ -37,7 +37,6 @@ kid_files = \
 	pickArch.kid		\
 	project.kid		\
 	projectPage.kid		\
-	projects.kid		\
 	register_active.kid	\
 	register_conf.kid	\
 	register.kid		\
