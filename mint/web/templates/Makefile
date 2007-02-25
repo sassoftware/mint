@@ -10,8 +10,6 @@ kid_files = \
 	applianceSpotlight.kid	\
 	build.kid		\
 	builds.kid		\
-	conaryDevelCfg.kid	\
-	conaryUserCfg.kid	\
 	confirmEmail.kid	\
 	confirm.kid		\
 	cookGroup.kid		\
