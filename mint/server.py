@@ -2098,10 +2098,10 @@ class MintServer(object):
     def getAvailableBuildTypes(self):
         # BOOTABLE_IMAGE should never be a valid image type, so make sure it's
         # removed
+        excludedTypes = [buildtypes.BOOTABLE_IMAGE]
         if self.cfg.excludeBuildTypes:
-            return [x for x in buildtypes.TYPES if x not in self.cfg.excludeBuildTypes + [buildtypes.BOOTABLE_IMAGE]]
-        else:
-            return [x for x in buildtypes.TYPES if x != buildtypes.BOOTABLE_IMAGE]
+            excludedTypes.extend(self.cfg.excludeBuildTypes)
+        return sorted([x for x in buildtypes.TYPES if x not in excludedTypes])
 
     @typeCheck(int)
     @requiresAuth

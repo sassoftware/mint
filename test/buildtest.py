@@ -572,7 +572,7 @@ class BuildTest(fixtures.FixturedUnitTest):
             for buildTypes in ([], [buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE, buildtypes.LIVE_ISO]):
                 self.cfg.excludeBuildTypes = buildTypes
                 assert client.server._server.getAvailableBuildTypes() == \
-                       [x for x in buildtypes.TYPES if x not in buildTypes + [buildtypes.BOOTABLE_IMAGE]]
+                       sorted([x for x in buildtypes.TYPES if x not in buildTypes + [buildtypes.BOOTABLE_IMAGE]])
         finally:
             self.cfg.excludeBuildTypes = excludeBuildTypes
 
