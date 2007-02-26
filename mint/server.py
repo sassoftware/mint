@@ -3550,10 +3550,14 @@ class MintServer(object):
     @requiresAdmin
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, sourceUsername, sourcePassword):
+        cu = self.db.cursor()
+        cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM InboundMirrors")
+        mirrorOrder = cu.fetchone()[0]
+
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
                 sourceUrl = sourceUrl, sourceUsername = sourceUsername,
-                sourcePassword = sourcePassword)
+                sourcePassword = sourcePassword, mirrorOrder = mirrorOrder)
         self._generateConaryRcFile()
         return x
 
@@ -3575,7 +3579,7 @@ class MintServer(object):
     def getInboundMirrors(self):
         cu = self.db.cursor()
         cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
-            sourceUsername, sourcePassword FROM InboundMirrors""")
+            sourceUsername, sourcePassword FROM InboundMirrors ORDER BY mirrorOrder""")
         return [list(x) for x in cu.fetchall()]
 
     @private
@@ -3594,26 +3598,35 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAdmin
     def delInboundMirror(self, inboundMirrorId):
-        return self.inboundMirrors.delete(inboundMirrorId)
+        self.inboundMirrors.delete(inboundMirrorId)
+        self._normalizeOrder("InboundMirrors", "inboundMirrorId")
+        return True
+
 
     @private
     @typeCheck(int, (list, str), str, str, str, bool, bool)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels, targetUrl,
             targetUsername, targetPassword, allLabels, recurse):
+        cu = self.db.cursor()
+        cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM OutboundMirrors")
+        mirrorOrder = cu.fetchone()[0]
+
         return self.outboundMirrors.new(sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        targetUrl = targetUrl,
                                        targetUsername = targetUsername,
                                        targetPassword = targetPassword,
                                        allLabels = allLabels,
-                                       recurse = recurse)
+                                       recurse = recurse,
+                                       mirrorOrder = mirrorOrder)
 
     @private
     @typeCheck(int)
     @requiresAdmin
     def delOutboundMirror(self, outboundMirrorId):
         self.outboundMirrors.delete(outboundMirrorId)
+        self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
         return True
 
     @private
@@ -3640,8 +3653,10 @@ class MintServer(object):
     @requiresAdmin
     def getOutboundMirrors(self):
         cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorId, sourceProjectId, targetLabels, targetUrl, targetUsername, targetPassword, allLabels, recurse, matchStrings FROM OutboundMirrors""")
-        return [list(x[:6]) + [bool(x[6]), bool(x[7]), x[8].split()] for x in cu.fetchall()]
+        cu.execute("""SELECT outboundMirrorId, sourceProjectId, targetLabels,
+                        targetUrl, targetUsername, targetPassword,
+                        allLabels, recurse, matchStrings, mirrorOrder FROM OutboundMirrors ORDER BY mirrorOrder""")
+        return [list(x[:6]) + [bool(x[6]), bool(x[7]), x[8].split(), x[9]] for x in cu.fetchall()]
 
     @private
     @typeCheck(int)
@@ -3651,6 +3666,53 @@ class MintServer(object):
             FROM InboundMirrors
             WHERE targetProjectId=?)""", projectId)
         return bool(cu.fetchone()[0])
+
+    @private
+    @typeCheck(int, int)
+    def setInboundMirrorOrder(self, mirrorId, order):
+        return self._setMirrorOrder("InboundMirrors", "inboundMirrorId", mirrorId, order)
+
+    @private
+    @typeCheck(int, int)
+    def setOutboundMirrorOrder(self, mirrorId, order):
+        return self._setMirrorOrder("OutboundMirrors", "outboundMirrorId", mirrorId, order)
+
+    def _setMirrorOrder(self, table, idField, mirrorId, order):
+        cu = self.db.cursor()
+
+        # other id
+        cu.execute("SELECT %s FROM %s WHERE mirrorOrder=?" % (idField, table), order)
+        oldId = cu.fetchone()
+        if oldId:
+            oldId = oldId[0]
+
+        # current order
+        cu.execute("SELECT mirrorOrder FROM %s WHERE %s=?" % (table, idField), mirrorId)
+        oldOrder = cu.fetchone()
+        if oldOrder:
+            oldOrder = oldOrder[0]
+
+        updates = [(order, mirrorId)]
+        if oldId is not None and oldOrder is not None:
+            updates.append((oldOrder, oldId))
+
+        # swap
+        cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?" % (table, idField), updates)
+        self.db.commit()
+
+        return self._normalizeOrder(table, idField)
+
+    def _normalizeOrder(self, table, idField):
+        # normalize mirror order, in case of deletions
+        updates = []
+        cu = self.db.cursor()
+        cu.execute("SELECT %s FROM %s ORDER BY mirrorOrder"  % (idField, table))
+        for i, x in enumerate(cu.fetchall()):
+            updates.append((i, x[0]))
+
+        cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?" % (table, idField), updates)
+        self.db.commit()
+        return True
 
     @private
     @typeCheck(str, str)
@@ -3739,6 +3801,8 @@ class MintServer(object):
             if genConaryRc:
                 self._generateConaryRcFile()
 
+            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
+            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         except:
             #An error occurred during db creation or upgrading
             self.db.rollback()

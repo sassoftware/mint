@@ -213,6 +213,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.failUnlessEqual(client.getInboundMirror(1)['sourceLabels'], 'conary.rpath.com@rpl:1-other')
 
+        self.fetch('/admin/external')
+
         # turn off mirroring
         page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
         page = page.postForm(1, self.post,
@@ -262,7 +264,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         # Test repMapName
-        projectId = client.newExternalProject("Foo", "testproject", MINT_PROJECT_DOMAIN, 'testproject.fake.project.domain@rpl:devel', 'https://fake.project.domain/conary/', True)
+        projectId = client.newExternalProject("Foo", "testproject",
+            MINT_PROJECT_DOMAIN, 'testproject.fake.project.domain@rpl:devel',
+            'https://fake.project.domain/conary/', True)
         client.addRemappedRepository('testproject.' + MINT_PROJECT_DOMAIN,
                                      'testproject.fake.project.domain')
         self.webLogin('adminuser', 'adminpass')
@@ -273,15 +277,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         def fakeUpdateMirror(user, servername, sp):
             return 'totallyfakepassword'
-        
+
         ad = admin.AdminHandler()
         ad._updateMirror = fakeUpdateMirror
         ad.session = {}
         ad.client = client
         ad.cfg = self.mintCfg
         ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad. processAddOutbound,
-                              projectId=projectId, 
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId,
                               targetUrl='http://www.example.com/conary/', 
                               mirrorUser='mirror', mirrorPass='mirrorPass')
 
@@ -291,7 +295,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(client.getOutboundMirrors() == \
             [[1, 1, label, 'https://www.example.com/conary/', 
             '%s-www.example.com' % fqdn, 'totallyfakepassword', False, False,
-            ['-.*:source', '-.*:debuginfo', '+.*']]])
+            ['-.*:source', '-.*:debuginfo', '+.*'], 0]])
 
         assert(client.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
@@ -303,6 +307,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         assert(client.getOutboundMirrors() == [])
 
+        client.addOutboundMirror(projectId, [''],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+        client.addOutboundMirror(projectId, [''],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+
+        self.assertContent("/admin/outbound", content = "example.com")
+
     def testCreateOutboundMirrorSources(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
@@ -313,16 +326,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         def fakeUpdateMirror(user, servername, sp):
             return 'totallyfakepassword'
-        
+
         ad = admin.AdminHandler()
         ad._updateMirror = fakeUpdateMirror
         ad.session = {}
         ad.client = client
         ad.cfg = self.mintCfg
         ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad. processAddOutbound,
-                              projectId=projectId, 
-                              targetUrl='http://www.example.com/conary/', 
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId,
+                              targetUrl='http://www.example.com/conary/',
                               mirrorUser='mirror', mirrorPass='mirrorPass',
                               mirrorSources=1)
 
@@ -332,7 +345,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(client.getOutboundMirrors() == \
             [[1, 1, label, 'https://www.example.com/conary/', 
             '%s-www.example.com' % fqdn, 'totallyfakepassword', False, False,
-            []]])
+            [], 0]])
         assert(client.getOutboundMirrorMatchTroves(1) == [])
 
     def testBrowseUsers(self):

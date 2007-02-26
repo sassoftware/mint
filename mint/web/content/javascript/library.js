@@ -417,6 +417,13 @@ function startImageJob(buildId) {
     req.send(true, [buildId]);
 }
 
+function setMirrorOrder(table, id, order) {
+    var req = new JsonRpcRequest("jsonrpc/", "set" + table + "Order");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [id, order]);
+}
+
 // event handlers -----------------------------------------------------------
 
 function setDisabledByElem(elem, disable) {

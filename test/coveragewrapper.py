@@ -178,3 +178,52 @@ def getFilesToAnnotateByPatch(baseDirs=[], patchLevel=2):
     return files, []
 
 
+
+def getFilesToAnnotateByPatch(baseDir, patchInput, filesDict=None):
+    if filesDict is None:
+        files = {}
+    else:
+        files = filesDict
+    cwd = os.getcwd()
+    try:
+        os.chdir(baseDir)
+        patchReaderPath = os.environ['COVERAGE_PATH'] + '/patchreader'
+        stdin, output = os.popen2('%s -p' % (patchReaderPath,), 'w')
+        stdin.write(patchInput.read())
+        stdin.flush()
+        stdin.close()
+    finally:
+        os.chdir(cwd)
+    while True:
+        fileName = output.readline().strip()
+        if not fileName:
+            break
+        lines = [ int(x) for x in output.readline().split()]
+        files[fileName] = lines
+
+def getFilesToAnnotateFromPatchFile(path, baseDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, open, path)
+    
+def getFilesToAnnotateFromHg(baseDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, os.popen, "hg diff")
+
+def getFilesToAnnotateFromHgOut(baseDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, os.popen, "hg diff -r $(hg parents -r $(hg outgoing | awk '/changeset/ { print $2}' | head -1  | cut -d: -f1)  | awk '/changeset/ { print $2}' | cut -d: -f1)")
+
+def _getFilesToAnnotateFromFn(baseDirs, fn, *args, **kw):
+    files = {}
+    curDir = os.getcwd()
+    try:
+        for baseDir in baseDirs:
+            os.chdir(baseDir)
+            output = fn(*args, **kw)
+            getFilesToAnnotateByPatch(baseDir, output, files)
+    finally:
+        os.chdir(curDir)
+
+    for fullPath in files.keys():
+        if not _isPythonFile(fullPath):
+            del files[fullPath]
+    
+    return files, []
+

@@ -15,6 +15,7 @@ import urlparse
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
 SimpleDOM.EMPTY_HTML_TAGS.remove('input')
+SimpleDOM.EMPTY_HTML_TAGS.remove('img')
 from webunit import webunittest
 
 from mint.web import hooks

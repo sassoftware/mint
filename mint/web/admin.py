@@ -302,19 +302,39 @@ class AdminHandler(WebHandler):
 
 
     def external(self, auth):
-        columns = ['Project Name', 'Mirrored']
-        rows = []
+        regColumns = ['Project Name', 'Mirrored']
+        regRows = []
+
+        # iterate through all projects, set up the
+        # regular project rows, and save the mirrored
+        # projects for later.
+        mirroredProjects = []
         for p in self.client.getProjectsList():
             project = self.client.getProject(p[0])
             if not project.external:
                 continue
-
             mirrored = self.client.getInboundMirror(project.id)
-            data = [('editExternal?projectId=%s' % project.id, project.name),
-                    bool(mirrored) and 'Yes' or 'No']
-            rows.append({'columns': data})
 
-        return self._write('admin/external', columns = columns, rows = rows)
+            if not mirrored:
+                data = [('editExternal?projectId=%s' % project.id, project.name),
+                        bool(mirrored) and 'Yes' or 'No']
+                regRows.append({'columns': data})
+            else:
+                mirroredProjects.append((project, mirrored))
+
+        # set up the mirrored projects list
+        mirroredProjects.sort(key = lambda x: x[1]['mirrorOrder'])
+        mirrorColumns = ['Mirrored Project Name', 'Order']
+        mirrorRows = []
+        for i, (project, mirrored) in enumerate(mirroredProjects):
+            orderHtml = self._makeMirrorOrderingLinks("InboundMirror",
+                len(mirroredProjects), mirrored['mirrorOrder'], i, mirrored['inboundMirrorId'])
+            data = [('editExternal?projectId=%s' % project.id, project.name), orderHtml]
+            mirrorRows.append({'columns': data})
+
+        return self._write('admin/external',
+            regColumns = regColumns, regRows = regRows,
+            mirrorColumns = mirrorColumns, mirrorRows = mirrorRows)
 
     def jobs(self, *args, **kwargs):
         try:
@@ -496,16 +516,40 @@ class AdminHandler(WebHandler):
             activeProjects = [], spotlightData=spotlightData,
             publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
+    def _makeMirrorOrderingLinks(self, name, count, order, index, id):
+        """Helper function to make the up/down links for mirror ordering"""
+        blank = """<img src="%s/apps/mint/images/blank.gif" width="15" height="15" />""" % \
+            self.cfg.staticPath
+        up = down = ""
+        if order > 0 and index > 0:
+            up = """<img src="%s/apps/mint/images/BUTTON_collapse.gif" class="pointer" 
+                         onclick="javascript:setMirrorOrder('%s', %d, %d);" />""" % \
+                (self.cfg.staticPath, name, id, order-1)
+        else:
+            up = blank
+        if order < count and index < (count-1):
+            down = """<img src="%s/apps/mint/images/BUTTON_expand.gif" class="pointer"
+                           onclick="javascript:setMirrorOrder('%s', %d, %d);" />""" % \
+                (self.cfg.staticPath, name, id, order+1)
+        else:
+            down = blank
+
+        orderHtml = XML("%s %s" % (up, down))
+        return orderHtml
+
     def outbound(self, *args, **kwargs):
-        columns = ["Project", "Labels Mirrored", "Target Repository", "Remove"]
+        columns = ["Project", "Labels Mirrored", "Target Repository", "Remove", "Order"]
 
         rows = []
-        for x in self.client.getOutboundMirrors():
-            outboundMirrorId, projectId, label, url, user, passwd, allLabels, recurse, matchStrings = x
+        mirrors = self.client.getOutboundMirrors()
+        for i, x in enumerate(mirrors):
+            outboundMirrorId, projectId, label, url, user, passwd, \
+                allLabels, recurse, matchStrings, order = x
             project = self.client.getProject(projectId)
 
+            orderHtml = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
             data = [(project.getUrl(), project.name), allLabels and "All Labels" or label,
-                url, XML('<input type="checkbox" name="remove" value="%d" />' % outboundMirrorId) ]
+                url, XML('<input type="checkbox" name="remove" value="%d" />' % outboundMirrorId), orderHtml ]
             rows.append({'columns': data})
 
         return self._write('admin/outbound', rows = rows, columns = columns)
