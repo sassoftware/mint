@@ -19,18 +19,28 @@ from mint.helperfuncs import truncateForDisplay
                     from conary import files
                     import os
                     from mint.helperfuncs import truncateForDisplay
+                    import urllib
+                    from conary import versions
 
                     url = "getFile?path=%s;pathId=%s;fileId=%s;fileV=%s" % (os.path.basename(path),
                                                                             sha1helper.md5ToString(pathId),
                                                                             sha1helper.sha1ToString(fileId),
                                                                             quote(version.asString()))
+                    troveVersion = None
+                    if version.isModifiedShadow():
+                        attrs = urllib.splitattr(self.toUrl)[1]
+                        for x in attrs:
+                            param, value = urllib.splitvalue(x)
+                            if param == 'v':
+                                troveVersion = versions.ThawVersion(urllib.unquote(value)).branch().asString()
+                                break
                 ?>
-                <td>${fObj.modeString()}</td>
-                <td>${fObj.inode.owner()}</td>
-                <td>${fObj.inode.group()}</td>
-                <td>${fObj.sizeString()}</td>
-                <td>${fObj.timeString()}</td>
-                <td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.modeString()}</td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }" >${fObj.inode.owner()}</td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.inode.group()}</td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified'  or None}">${fObj.sizeString()}</td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.timeString()}</td>
+                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">
                     <a py:if="isinstance(fObj, files.RegularFile) and not isinstance(fObj, files.SymbolicLink)" href="${url}" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</a>
                     <span py:if="isinstance(fObj, files.SymbolicLink)">${path} -&gt; ${fObj.target()}</span>
                     <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</span>
@@ -45,6 +55,7 @@ from mint.helperfuncs import truncateForDisplay
     <body>
         <div id="layout">
             <h2>Files in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
+            <p class="help">Shadowed files that have been modified on the current branch are displayed in <span class="modified">blue</span>.</p>
 
             ${fileList(fileIters)}
             <hr/>
