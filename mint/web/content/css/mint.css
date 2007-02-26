@@ -1418,3 +1418,7 @@ div.formsubgroup > div > a {
     cursor: pointer;
     text-decoration: underline;
 }
+
+img.pointer {
+    cursor: pointer;
+}

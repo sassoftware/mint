@@ -21,13 +21,14 @@ class InboundMirrorsTable(database.KeyedTable):
         sourceUrl       VARCHAR(767) NOT NULL,
         sourceUsername  VARCHAR(254),
         sourcePassword  VARCHAR(254),
+        mirrorOrder     INT DEFAULT 0,
         CONSTRAINT InboundMirrors_targetProjectId_fk
             FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
             ON DELETE CASCADE ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
     fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
-              'sourceUrls', 'sourceUsername', 'sourcePassword']
+              'sourceUrls', 'sourceUsername', 'sourcePassword', 'mirrorOrder']
 
     indexes = {'InboundMirrorsProjectIdIdx': """CREATE INDEX InboundMirrorsProjectIdIdx ON InboundMirrors(targetProjectId)"""}
 
@@ -45,7 +46,10 @@ class InboundMirrorsTable(database.KeyedTable):
                           il.password AS sourcePassword
                    FROM InboundLabels il JOIN labels l USING (labelId)""")
                 cu.execute("""DROP TABLE InboundLabels""")
-            return dbversion >= 25
+            if dbversion == 30:
+                cu.execute("ALTER TABLE InboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
+            return dbversion >= 30
+
         return True
 
 class OutboundMirrorsTable(database.KeyedTable):
@@ -61,6 +65,7 @@ class OutboundMirrorsTable(database.KeyedTable):
         allLabels        INT NOT NULL DEFAULT 0,
         recurse          INT NOT NULL DEFAULT 0,
         matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
+        mirrorOrder      INT DEFAULT 0,
         CONSTRAINT OutboundMirrors_sourceProjectId_fk
             FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
             ON DELETE CASCADE ON UPDATE CASCADE
@@ -68,7 +73,7 @@ class OutboundMirrorsTable(database.KeyedTable):
 
     fields = ['outboundMirrorId', 'sourceProjectId', 'targetLabels',
               'targetUrl', 'targetUsername', 'targetPassword', 'allLabels',
-              'recurse', 'matchStrings']
+              'recurse', 'matchStrings', 'mirrorOrder']
 
     indexes = {'OutboundMirrorsProjectIdIdx': """CREATE INDEX OutboundMirrorsProjectIdIdx ON OutboundMirrors(sourceProjectId)"""}
 
@@ -92,7 +97,9 @@ class OutboundMirrorsTable(database.KeyedTable):
                     cu.execute("""UPDATE OutboundMirrors SET matchStrings = ? WHERE outboundMirrorId = ?""", matchStrings, outboundMirrorId)
 
                 cu.execute("""DROP TABLE OutboundMatchTroves""")
-            return dbversion >= 25
+            if dbversion == 30:
+                cu.execute("ALTER TABLE OutboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
+            return dbversion >= 30
         return True
 
     def get(self, *args, **kwargs):

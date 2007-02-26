@@ -10,6 +10,8 @@ from conary.dbstore import sqlerrors
 
 from mint.mint_error import MintError
 
+CURRENT_SCHEMA_VERSION = 31
+
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):
         self.item = item
@@ -84,7 +86,7 @@ class DatabaseTable(object):
     those indeces
     """
 
-    schemaVersion = 30
+    schemaVersion = CURRENT_SCHEMA_VERSION
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"

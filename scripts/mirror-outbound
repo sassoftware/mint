@@ -38,7 +38,7 @@ class MirrorOutbound(MirrorScript):
 
         for label in mirroredLabels:
             outboundMirrorId, projectId, sourceLabels, targetUrl, \
-                targetUser, targetPass, mirrorAll, recurse, matchStrings = label
+                targetUser, targetPass, mirrorAll, recurse, matchStrings, order = label
             projectId = int(projectId)
             sourceProject = client.getProject(projectId)
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]

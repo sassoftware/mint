@@ -91,6 +91,16 @@ class LabelsTest(fixtures.FixturedUnitTest):
         labels = adminClient.getInboundMirrors()
         self.failUnlessEqual(labels, [])
 
+        mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+        mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+        cu = db.cursor()
+        cu.execute("SELECT mirrorOrder FROM InboundMirrors")
+        self.failUnlessEqual([0, 1], [x[0] for x in cu.fetchall()])
+
     @fixtures.fixture("Full")
     def testOutboundMirror(self, db, data):
         projectId = data['projectId']
@@ -104,7 +114,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
         labels = adminClient.getOutboundMirrors()
         assert(labels ==
                 [[1, projectId, sourceLabel, 'http://www.example.com/conary/',
-                  'mirror', 'mirrorpass', False, False, []]])
+                  'mirror', 'mirrorpass', False, False, [], 0]])
 
         adminClient.delOutboundMirror(1)
         labels = adminClient.getOutboundMirrors()
@@ -244,6 +254,42 @@ class LabelsTest(fixtures.FixturedUnitTest):
         for matchStr in ('+right', '-right'):
             # ensure no error is raised for properly formed params
             adminClient.setOutboundMirrorMatchTroves(1, [matchStr])
+
+    @fixtures.fixture("Full")
+    def testOutboundMirrorOrdering(self, db, data):
+        adminClient = self.getClient("admin")
+
+        def _build(idList, orderList):
+            cu = db.cursor()
+            cu.execute("DELETE FROM OutboundMirrors")
+
+            for id, order in zip(idList, orderList):
+                cu.execute("""INSERT INTO OutboundMirrors
+                    (outboundMirrorId, mirrorOrder, sourceProjectId, targetLabels,
+                     targetUrl)
+                    VALUES(?, ?, ?, "abcd", "asdf")""", id, order, data['projectId'])
+            db.commit()
+
+        def _getOrder():
+            cu = db.cursor()
+            cu.execute("SELECT outboundMirrorId, mirrorOrder FROM OutboundMirrors ORDER BY mirrorOrder")
+            return [(x[0], x[1]) for x in cu.fetchall()]
+
+        _build([0, 1, 2, 3], [0, 1, 2, 3])
+
+        adminClient.delOutboundMirror(1)
+        self.failUnlessEqual(_getOrder(), [(0, 0), (2, 1), (3, 2)])
+
+        adminClient.server._server.setOutboundMirrorOrder(2, 0)
+        self.failUnlessEqual(_getOrder(), [(2, 0), (0, 1), (3, 2)])
+
+        adminClient.server._server.setOutboundMirrorOrder(3, 3)
+        self.failUnlessEqual(_getOrder(), [(2, 0), (0, 1), (3, 2)])
+
+        newId = adminClient.addOutboundMirror(data['projectId'], ['frob'],
+            "http://www.example.com/conary/", "mirror", "mirrorpass")
+
+        self.failUnlessEqual(_getOrder(), [(2, 0), (0, 1), (3, 2), (newId, 3)])
 
 
 if __name__ == "__main__":
