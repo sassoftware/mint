@@ -182,7 +182,7 @@ def conaryHandler(req, cfg, pathInfo):
         repNameMap = getRepNameMap(db)
         projectName = repName.split(".")[0]
         if repName in repNameMap:
-            req.log_error("remapping repository name: %s -> %s" % (repName, repNameMap[repName]))
+            req.log_error("remapping repository name: %s -> %s" % (repName, repNameMap[repName]), apache.APLOG_INFO)
             repName = repNameMap[repName]
 
         repHash = repName + req.hostname
@@ -335,7 +335,7 @@ def getProjectDomainName(db, hostName):
 
             apache.log_error("error in getProjectDomainName:")
             for line in tb.split("\n"):
-                apache.log_error(line)
+                apache.log_error(line, apache.APLOG_DEBUG)
 
             # assume cfg.projectDomainName on error
             return cfg.projectDomainName
@@ -350,7 +350,7 @@ def getReposDB(db, dbName, hostName, cfg):
 
     r = cu.fetchone()
     if r:
-        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]))
+        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_DEBUG)
         return r[0], r[1]
     else:
         return cfg.reposDBDriver, cfg.reposDBPath % dbName
@@ -369,7 +369,7 @@ def isProjectExternal(db, hostname):
 
         apache.log_error("error in isProjectExternal('%s'):" % hostname)
         for line in tb.split("\n"): 
-            apache.log_error(line)
+            apache.log_error(line, apache.APLOG_DEBUG)
         external = False
 
     return external
