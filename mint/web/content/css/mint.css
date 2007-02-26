@@ -1419,6 +1419,22 @@ div.formsubgroup > div > a {
     text-decoration: underline;
 }
 
+.modified {
+    color: blue;
+}
+
+td.modified a:link {
+    color: blue;
+}
+
+td.modified a:visited {
+    color: blue;
+}
+
+td.modified a:hover {
+    color: white;
+}
+
 img.pointer {
     cursor: pointer;
 }
