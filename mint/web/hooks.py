@@ -350,7 +350,7 @@ def getReposDB(db, dbName, hostName, cfg):
 
     r = cu.fetchone()
     if r:
-        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_DEBUG)
+        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_INFO)
         return r[0], r[1]
     else:
         return cfg.reposDBDriver, cfg.reposDBPath % dbName
@@ -407,7 +407,7 @@ def handler(req):
 
     # reopen a dead database
     if db.reopen():
-        req.log_error("reopened a dead database connection in hooks.py")
+        req.log_error("reopened a dead database connection in hooks.py", apache.APLOG_WARNING)
 
     if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
         req.headers_out['Location'] = cfg.basePath + "setup/"
