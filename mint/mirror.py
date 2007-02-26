@@ -46,7 +46,7 @@ class InboundMirrorsTable(database.KeyedTable):
                           il.password AS sourcePassword
                    FROM InboundLabels il JOIN labels l USING (labelId)""")
                 cu.execute("""DROP TABLE InboundLabels""")
-            if dbversion == 30:
+            if dbversion == 30 and not self.initialCreation:
                 cu.execute("ALTER TABLE InboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
             return dbversion >= 30
 
@@ -97,7 +97,7 @@ class OutboundMirrorsTable(database.KeyedTable):
                     cu.execute("""UPDATE OutboundMirrors SET matchStrings = ? WHERE outboundMirrorId = ?""", matchStrings, outboundMirrorId)
 
                 cu.execute("""DROP TABLE OutboundMatchTroves""")
-            if dbversion == 30:
+            if dbversion == 30 and not self.initialCreation:
                 cu.execute("ALTER TABLE OutboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
             return dbversion >= 30
         return True

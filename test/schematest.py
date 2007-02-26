@@ -684,13 +684,13 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute("SELECT * FROM InboundMirrors")
         self.failUnlessEqual(cu.fetchall(),
-                [(1, 4, 'quux.rpath.local@rpl:devel', 'http://www.elsewhere.com/conary', 'somebody', 'somepass')],
+                [(1, 4, 'quux.rpath.local@rpl:devel', 'http://www.elsewhere.com/conary', 'somebody', 'somepass', 0)],
                 "Schema 25 upgrade didn't migrate InboundLabels")
 
         cu.execute("SELECT * FROM OutboundMirrors")
         self.failUnlessEqual(cu.fetchall(),
-                [(1, 5, 'fooz.rpath.local@rpl:devel', 'http://www.inbound.com/conary', 'dontguess', 'meplease', 0, 0, '-.*:source$ -.*:debuginfo$ +.*'),
-                 (2, 6, 'blarch.rpath.local@rpl:devel', 'http://www.mooz.com/conary', 'egghead', 'beaniebot', 0, 0, '')],
+                [(1, 5, 'fooz.rpath.local@rpl:devel', 'http://www.inbound.com/conary', 'dontguess', 'meplease', 0, 0, '-.*:source$ -.*:debuginfo$ +.*', 0),
+                 (2, 6, 'blarch.rpath.local@rpl:devel', 'http://www.mooz.com/conary', 'egghead', 'beaniebot', 0, 0, '', 1)],
                 "Schema 25 upgrade didn't migrate OutboundLabels")
 
 
