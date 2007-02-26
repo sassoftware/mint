@@ -426,15 +426,10 @@ class ProjectsTable(database.KeyedTable):
         """
         columns = ['Projects.projectId', 'Projects.hostname',
                    'Projects.name', 'Projects.description',
-                   """IFNULL(
-                       (SELECT MAX(Commits.timestamp) FROM Commits
-                       WHERE Commits.projectId=Projects.projectId),
-                   Projects.timeCreated) AS timeModified""",
-                   """IFNULL(TopProjects.rank,
-                       (SELECT COUNT(projectId) FROM Projects))
-                       AS rank"""]
+                   """COALESCE(LatestCommit.commitTime, Projects.timeCreated) AS timeModified""",
+                   """COALESCE(TopProjects.rank, (SELECT COUNT(projectId) FROM Projects)) AS rank"""]
         searchcols = ['name', 'description', 'hostname']
-        leftJoins = [ ('TopProjects', 'projectId') ]
+        leftJoins = [ ('TopProjects', 'projectId'), ('LatestCommit', 'projectId') ]
 
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.

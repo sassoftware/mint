@@ -236,6 +236,7 @@ def getTables(db, cfg):
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['topProjects'] = selections.TopProjectsTable(db)
     d['popularProjects'] = selections.PopularProjectsTable(db)
+    d['latestCommit'] = selections.LatestCommitTable(db)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)

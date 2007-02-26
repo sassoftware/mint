@@ -12,6 +12,34 @@ import time
 from conary import dbstore
 from conary.dbstore.sqllib import toDatabaseTimestamp
 
+# A convenience table with the latest timestamp of commit
+# of each project in rBuilder's database:
+class LatestCommitTable(database.DatabaseTable):
+    name = "LatestCommit"
+    fields = ['projectId', 'commitTime']
+
+    createSQL = """
+        CREATE TABLE LatestCommit (
+            projectId   INTEGER NOT NULL,
+            commitTime  INTEGER NOT NULL,
+            CONSTRAINT LatestCommit_projectId_fk
+                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                    ON DELETE CASCADE
+        )"""
+
+    indexes = {'LatestCommitTimestamp':
+        'CREATE INDEX LatestCommitTimestamp ON LatestCommit(projectId, commitTime)'}
+
+
+    def calculate(self):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM LatestCommit")
+        cu.execute("""INSERT INTO LatestCommit(projectId, commitTime)
+                SELECT projectId as projectId, MAX(timestamp) AS commitTime FROM Commits
+                GROUP BY projectId""")
+        self.db.commit()
+
+
 class RankedProjectListTable(database.DatabaseTable):
     name = None
     daysBack = 0
@@ -31,7 +59,6 @@ class RankedProjectListTable(database.DatabaseTable):
             )""" % (self.name, self.name)
 
         return database.DatabaseTable.__init__(self, db)
-
 
     def setList(self, idList):
         cu = self.db.cursor()
@@ -158,9 +185,11 @@ class UpdateProjectLists(scriptlibrary.SingletonScript):
         self.db.loadSchema()
         topProjects = TopProjectsTable(self.db)
         popularProjects = PopularProjectsTable(self.db)
+        latestCommits = LatestCommitTable(self.db)
 
         topProjects.calculate()
         popularProjects.calculate()
+        latestCommits.calculate()
 
         return 0
 
