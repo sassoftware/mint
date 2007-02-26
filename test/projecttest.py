@@ -720,7 +720,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
             'http://www.example.com/conary/', 'username', 'password')
 
         self.failUnlessEqual(client.getInboundMirror(project.id),
-            {'inboundMirrorId': 1,
+            {'inboundMirrorId': 1, 'mirrorOrder': 0,
              'sourceUrl': 'http://www.example.com/conary/',
              'sourceUsername': 'username',
              'sourceLabels': 'conary.rpath.com@rpl:devel conary.rpath.com@rpl:1',
