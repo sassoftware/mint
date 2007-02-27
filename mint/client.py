@@ -604,6 +604,12 @@ class MintClient:
     def getPopularProjects(self):
         return self.server.getPopularProjects()
 
+    def getTroveReferences(self, troveName, troveVersion, troveFlavor):
+        return self.server.getTroveReferences(troveName, troveVersion, troveFlavor)
+
+    def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
+        return self.server.getTroveDescendants(troveName, troveLabel, troveFlavor)
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

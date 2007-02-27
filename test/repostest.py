@@ -430,7 +430,6 @@ class RepositoryTest(MintRepositoryHelper):
         self.failUnless(('package3:source', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 1) in x)
         self.failUnless(('package4', '/conary.rpath.com@rpl:1/1.0-1-1', 'conary.rpath.com', 'rpl:1', 0) in x)
 
-
     def testPerProjectRepositoryDatabases(self):
         # create a project
         if self.mintCfg.reposDBDriver != "sqlite":
@@ -458,6 +457,19 @@ class RepositoryTest(MintRepositoryHelper):
         troveNames = nc.troveNames(versions.Label("testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel"))
         assert(troveNames == ['testcase:source'])
+
+    def testDescendantsAndReferences(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = self.newProject(client, name = "P1", hostname = "p1")
+        projectId = self.newProject(client, name = "P2", hostname = "p2")
+        projectId = self.newProject(client, name = "P3", hostname = "p3")
+
+        r = client.getTroveReferences('test', '/conary.rpath.com@rpl:1/1.0-1-1', '')
+        d = client.getTroveDescendants('test', 'conary.rpath.com@rpl:1', '')
+
+        self.failUnlessEqual(r, {'p1': [[]], 'p2': [[]], 'p3': [[]]})
+        self.failUnlessEqual(d, {'p1': [[]], 'p2': [[]], 'p3': [[]]})
 
 
 if __name__ == "__main__":

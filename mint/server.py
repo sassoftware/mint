@@ -3732,6 +3732,47 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    def _getAllRepositories(self):
+        """
+            Return a list of netclient objects for each repository
+            rBuilder knows about and the current user has access to.
+        """
+        cu = self.db.cursor()
+        cu.execute("SELECT projectId FROM Projects")
+
+        repos = []
+        for projectId in [x[0] for x in cu.fetchall()]:
+            if self._checkProjectAccess(projectId, userlevels.LEVELS):
+                p = projects.Project(self, projectId)
+                repo = self._getProjectRepo(p)
+                repos.append((p.hostname, repo))
+
+        return repos
+
+    @private
+    @typeCheck(str, str, str)
+    def getTroveReferences(self, troveName, troveVersion, troveFlavor):
+        references = {}
+        for hostname, repo in self._getAllRepositories():
+            d = repo.getTroveReferences([(troveName,
+                versions.VersionFromString(troveVersion),
+                deps.ThawFlavor(troveFlavor))])
+            references[hostname] = d
+
+        return references
+
+    @private
+    @typeCheck(str, str, str)
+    def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
+        descendants = {}
+        for hostname, repo in self._getAllRepositories():
+            d = repo.getTroveDescendants([(troveName,
+                versions.Label(troveLabel),
+                deps.ThawFlavor(troveFlavor))])
+            descendants[hostname] = d
+
+        return descendants
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
