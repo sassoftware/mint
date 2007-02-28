@@ -15,20 +15,27 @@ from conary.lib import cfgtypes
 from mint.cmdline import RBuilderMain, RBuilderShellConfig
 from mint.cmdline import builds, users
 from mint import buildtypes
+from mint import client
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
-class CmdLineTest(MintRepositoryHelper):
+class CmdLineTest(unittest.TestCase):
+    def setUp(self):
+        self.oldMintClientInit = client.MintClient.__init__
+        client.MintClient.__init__ = lambda x, y: x
+
+    def tearDown(self):
+        client.MintClient.__init__ = self.oldMintClientInit
+
     def checkRBuilder(self, cmd, fn, expectedArgs, cfgValues={},
                   returnVal=None, ignoreKeywords=False, **expectedKw):
         main = RBuilderMain()
-        cmd += ' --skip-default-config'
 
         cfgFd, cfgFn = tempfile.mkstemp()
         try:
             cfgF = os.fdopen(cfgFd, "w")
-            cfgF.write("serverUrl http://testuser:testpass@test.rpath.local:%d/xmlrpc-private/" % self.port)
+            cfgF.write("serverUrl http://testuser:testpass@test.rpath.local/xmlrpc-private/")
             cfgF.close()
 
             cmd += " --config-file=%s" % cfgFn
@@ -40,12 +47,7 @@ class CmdLineTest(MintRepositoryHelper):
 
     def testBadConfig(self):
         main = RBuilderMain()
-        try:
-            main.main(['rbuilder', '--skip-default-config', 'config'])
-        except cfgtypes.CfgError, e:
-            assert(str(e) == 'Please set the serverUrl configuration option in ~/.rbuilderrc')
-        else:
-            raise RuntimeError, 'expected exception not raised'
+        self.assertRaises(cfgtypes.CfgError, main.main, ['rbuilder', '--config-file=/tmp/doesnotexist', 'config'])
 
     def testBuildCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
