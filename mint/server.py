@@ -398,6 +398,7 @@ class MintServer(object):
             conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
             if os.path.exists(conarycfgFile):
                 cfg.read(conarycfgFile)
+
             repo = conaryclient.ConaryClient(cfg).getRepos()
         else:
             if self.cfg.SSL:
@@ -425,13 +426,12 @@ class MintServer(object):
                 port = int(self.cfg.projectDomainName.split(":")[1])
 
             cfg = netserver.ServerConfig()
-            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(fqdn)
+            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(fqdn, db = self.db)
             cfg.tmpDir = tmpPath
             cfg.serverName = fqdn
             cfg.contentsDir = reposPath + '/contents/'
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
-
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
             cfg = conarycfg.ConaryConfiguration()
@@ -441,6 +441,7 @@ class MintServer(object):
             cfg.repositoryMap.update(authRepo)
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
+
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
                 cfg.repositoryMap, cfg.user)
@@ -3745,31 +3746,29 @@ class MintServer(object):
             if self._checkProjectAccess(projectId, userlevels.LEVELS):
                 p = projects.Project(self, projectId)
                 repo = self._getProjectRepo(p)
-                repos.append((p.hostname, repo))
+                repos.append((p, repo))
 
         return repos
 
     @private
     @typeCheck(str, str, str)
     def getTroveReferences(self, troveName, troveVersion, troveFlavor):
-        references = {}
-        for hostname, repo in self._getAllRepositories():
-            d = repo.getTroveReferences([(troveName,
-                versions.VersionFromString(troveVersion),
-                deps.ThawFlavor(troveFlavor))])
-            references[hostname] = d
+        references = []
+        for p, repo in self._getAllRepositories():
+            q = (troveName, versions.VersionFromString(troveVersion), deps.ThawFlavor(troveFlavor))
+            d = repo.getTroveReferences(p.getFQDN(), [q])
+            references.append((p.id, [(x[0], str(x[1]), x[2].freeze()) for x in d[0]]))
 
         return references
 
     @private
     @typeCheck(str, str, str)
-    def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
-        descendants = {}
-        for hostname, repo in self._getAllRepositories():
-            d = repo.getTroveDescendants([(troveName,
-                versions.Label(troveLabel),
-                deps.ThawFlavor(troveFlavor))])
-            descendants[hostname] = d
+    def getTroveDescendants(self, troveName, troveBranch, troveFlavor):
+        descendants = []
+        for p, repo in self._getAllRepositories():
+            q = (troveName, versions.VersionFromString(troveBranch), deps.ThawFlavor(troveFlavor))
+            d = repo.getTroveDescendants(p.getFQDN(), [q])
+            descendants.append((p.id, [(str(x[0]), x[1].freeze()) for x in d[0]]))
 
         return descendants
 

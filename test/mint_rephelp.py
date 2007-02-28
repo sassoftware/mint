@@ -390,9 +390,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         else:
             port = self.port
             protocol = 'http'
-        self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
+        self.cfg.repositoryMap.update({"%s.%s" % (hostname, domainname):
             "%s://%s.%s:%d%srepos/%s/" % (protocol, MINT_HOST, 
-                    MINT_PROJECT_DOMAIN, port, self.mintCfg.basePath, hostname)}
+                    MINT_PROJECT_DOMAIN, port, self.mintCfg.basePath, hostname)})
 
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
                               client.server._authToken[0],

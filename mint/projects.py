@@ -734,24 +734,40 @@ class RepositoryDatabase:
         from conary.repository.netrepos import cacheset
         cacheset.CacheSet(('sqlite', cache + "/cache.sql"), None)
 
-    def getRepositoryDB(self, name):
-        raise NotImplementedError
+    def getRepositoryDB(self, name, db = None):
+        if db:
+            cu = db.cursor()
+            cu.execute("""SELECT driver, path
+                FROM ReposDatabases JOIN ProjectDatabase USING (databaseId)
+                WHERE projectId=(SELECT projectId FROM Projects WHERE hostname=?)""", name.split(".")[0])
+
+            r = cu.fetchone()
+        else:
+            r = None
+
+        if r:
+            print >> sys.stderr, "using alternate database:", r[0], r[1]
+            sys.stderr.flush()
+            return r[0], r[1]
+        else:
+            name = self.translate(name)
+            return self.cfg.reposDBDriver, self.cfg.reposDBPath % name
 
     def translate(self, x):
         return x
 
 
 class SqliteRepositoryDatabase(RepositoryDatabase):
+    driver = "sqlite"
+
     def create(self, name):
         util.mkdirChain(os.path.dirname(self.cfg.reposDBPath % name))
         RepositoryDatabase.create(self, name)
 
-    def getRepositoryDB(self, name):
-        return ('sqlite', self.cfg.reposDBPath % name)
-
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
     tableOpts = "character set latin1 collate latin1_bin"
+    driver = "mysql"
 
     def translate(self, x):
         return x.translate(transTables['mysql'])
@@ -778,7 +794,3 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
-
-    def getRepositoryDB(self, name):
-        dbName = self.translate(name)
-        return ('mysql', self.cfg.reposDBPath % dbName)

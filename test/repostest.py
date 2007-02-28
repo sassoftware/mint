@@ -459,17 +459,41 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase:source'])
 
     def testDescendantsAndReferences(self):
+        def _buildReferences(p):
+            verlist = [
+                "/%s.%s@rpl:linux//devel/1.0-1-1",
+                "/%s.%s@rpl:linux//devel//qa/1.0-1-1",
+                ]
+            for i, v in enumerate(verlist):
+                v = v % (p, MINT_PROJECT_DOMAIN)
+                for n1 in ["alpha", "beta"]:
+                    for n2 in [":runtime", ":data"]:
+                        self.addComponent(n1+n2, v)
+                    self.addCollection(n1, v, [":runtime", ":data"])
+                self.addCollection("alpha%d" % i, v, [("alpha", v), ("alpha:runtime",v)])
+                self.addCollection("beta%d" % i, v, [("beta", v), ("beta:runtime",v)], weakRefList = [("alpha:data",v)])
+
+
         client, userId = self.quickMintUser("testuser", "testpass")
 
+        # set up some references and shadows
         projectId = self.newProject(client, name = "P1", hostname = "p1")
+        _buildReferences("p1")
         projectId = self.newProject(client, name = "P2", hostname = "p2")
-        projectId = self.newProject(client, name = "P3", hostname = "p3")
+        v = "/p2.%s@rpl:linux//devel/1.0-1-1" % (MINT_PROJECT_DOMAIN)
+        v2 = "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % (MINT_PROJECT_DOMAIN)
+        self.addCollection("group-alpha", v, [("alpha:runtime", v2)], weakRefList = [("alpha", v2)])
 
-        r = client.getTroveReferences('test', '/conary.rpath.com@rpl:1/1.0-1-1', '')
-        d = client.getTroveDescendants('test', 'conary.rpath.com@rpl:1', '')
+        r = client.getTroveReferences('alpha', "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % MINT_PROJECT_DOMAIN, '')
+        self.failUnlessEqual(r,
+            {
+                1: [('alpha1', '/p1.%s@rpl:linux//devel//qa/1.0-1-1' % MINT_PROJECT_DOMAIN, '')],
+                2: [('group-alpha', '/p2.%s@rpl:linux//devel/1.0-1-1' % MINT_PROJECT_DOMAIN, '')]
+            }
+        )
 
-        self.failUnlessEqual(r, {'p1': [[]], 'p2': [[]], 'p3': [[]]})
-        self.failUnlessEqual(d, {'p1': [[]], 'p2': [[]], 'p3': [[]]})
+        d = client.getTroveDescendants('alpha', "/p1.%s@rpl:linux//devel" % MINT_PROJECT_DOMAIN, '')
+        self.failUnlessEqual(d, {1: [('/p1.%s@rpl:linux//devel//qa/1.0-1-1' % MINT_PROJECT_DOMAIN, '')], 2: []})
 
 
 if __name__ == "__main__":
