@@ -8,6 +8,7 @@ python_files =		\
 	__init__.py	\
 	commands.py	\
 	builds.py	\
+	refs.py		\
 	users.py
 
 extra_dist = Makefile

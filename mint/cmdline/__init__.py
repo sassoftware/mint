@@ -15,6 +15,7 @@ from mint.client import MintClient
 from mint.cmdline import builds
 from mint.cmdline import users
 from mint.cmdline import commands
+from mint.cmdline import refs
 from mint.mint_error import MintError
 
 class RBuilderShellConfig(ConfigFile):

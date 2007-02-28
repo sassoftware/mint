@@ -7,13 +7,15 @@ import os
 import tempfile
 import testsuite
 import unittest
+import mock
 testsuite.setup()
 
 import rephelp
 from conary.lib import cfgtypes
+from conary.deps import deps
 
 from mint.cmdline import RBuilderMain, RBuilderShellConfig
-from mint.cmdline import builds, users
+from mint.cmdline import builds, users, refs
 from mint import buildtypes
 from mint import client
 
@@ -81,9 +83,16 @@ class CmdLineTest(unittest.TestCase):
             [None, None, None, {'password': 'password'}, ['user-create', 'testuser', 'test@example.com']])
 
     def testUserMembership(self):
-            self.checkRBuilder('project-add testuser testproject developer',
-                'mint.cmdline.users.UserMembershipCommand.runCommand',
-                [None, None, None, {}, ['project-add', 'testuser', 'testproject', 'developer']])
+        self.checkRBuilder('project-add testuser testproject developer',
+            'mint.cmdline.users.UserMembershipCommand.runCommand',
+            [None, None, None, {}, ['project-add', 'testuser', 'testproject', 'developer']])
+
+    def testFindRefs(self):
+        self.checkRBuilder('find-refs frobtrove',
+            'mint.cmdline.refs.FindRefsCommand.runCommand',
+            [None, None, None, {}, ['find-refs', 'frobtrove']])
+
+
 
 
 class CmdLineFuncTest(MintRepositoryHelper):
@@ -153,6 +162,24 @@ class CmdLineFuncTest(MintRepositoryHelper):
 
         assert(res == "http://mint.rpath.local//downloadImage?fileId=1\n"
                       "http://mint.rpath.local//downloadImage?fileId=2\n")
+
+    def testFindRefs(self):
+        cfg = RBuilderShellConfig(False)
+        cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
+
+        c = mock.MockInstance(client.MintClient)
+        c._mock.enableMethod("getTroveReferences")
+        c.getTroveReferences = lambda *args: {
+            1: [('alpha1', '/p1.rpath.local@rpl:linux//devel//qa/1.0-1-1', '')]}
+
+        cmd = refs.FindRefsCommand()
+        cmd.findTrove = lambda nc, cc, n, v, f: (n, v, deps.parseFlavor(f))
+
+        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {}, ['find-refs', 'dummy[]'])
+        self.failUnless("Projects that include a reference" in res)
+
+        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {'flat-list': True}, ['find-refs', 'dummy[]'])
+        self.failUnless("alpha1=/p1.rpath.local@rpl:linux//devel//qa/1.0-1-1[]" in res)
 
 
 if __name__ == "__main__":
