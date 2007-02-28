@@ -163,7 +163,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         assert(res == "http://mint.rpath.local//downloadImage?fileId=1\n"
                       "http://mint.rpath.local//downloadImage?fileId=2\n")
 
-    def testFindRefs(self):
+    def testFindRefsCMD(self):
         cfg = RBuilderShellConfig(False)
         cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
 
