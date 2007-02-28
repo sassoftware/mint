@@ -66,7 +66,7 @@ class FindRefsCommand(commands.RBuilderCommand):
                         print "%s=%s[%s]" % (ref[0], ref[1], flavor)
                     else:
                         diff = flavorDiffs[flavor].isEmpty() and ("[%s]" % flavorDiffs[flavor]) or ""
-                        print "\t%s=%s%s" % (ref[0], ref[1], diff),
+                        print "\t%s=%s%s" % (ref[0], ref[1], diff)
 
 
 commands.register(FindRefsCommand)
