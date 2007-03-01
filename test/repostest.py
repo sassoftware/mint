@@ -484,7 +484,7 @@ class RepositoryTest(MintRepositoryHelper):
         v2 = "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % (MINT_PROJECT_DOMAIN)
         self.addCollection("group-alpha", v, [("alpha:runtime", v2)], weakRefList = [("alpha", v2)])
 
-        r = client.getTroveReferences('alpha', "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % MINT_PROJECT_DOMAIN, '')
+        r = client.getTroveReferences('alpha', "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % MINT_PROJECT_DOMAIN, [''])
         self.failUnlessEqual(r,
             {
                 1: [('alpha1', '/p1.%s@rpl:linux//devel//qa/1.0-1-1' % MINT_PROJECT_DOMAIN, '')],

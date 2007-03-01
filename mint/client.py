@@ -604,8 +604,8 @@ class MintClient:
     def getPopularProjects(self):
         return self.server.getPopularProjects()
 
-    def getTroveReferences(self, troveName, troveVersion, troveFlavor):
-        return dict(self.server.getTroveReferences(troveName, troveVersion, troveFlavor))
+    def getTroveReferences(self, troveName, troveVersion, troveFlavors = []):
+        return dict(self.server.getTroveReferences(troveName, troveVersion, troveFlavors))
 
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))

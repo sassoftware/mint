@@ -107,7 +107,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # test that trove info page renders without error
         page = self.assertContent('/repos/testproject/troveInfo?t=test:runtime',
-                                  content = "Trove information for",
+                                  content = "Information for component",
                                   server = self.getProjectServerHostname())
 
     def testReposRSS(self):
@@ -132,7 +132,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/repos/testproject/troveInfo?t=test:runtime')
-        fileLink = [x for x in page.getDOM().getByName('a') if x[0] == "Show Troves"][0]
+        fileLink = [x for x in page.getDOM().getByName('a') if x and x[0] == "Show Contents"][0]
 
         page = self.assertContent('/repos/testproject/' + \
                 fileLink.getattr('href'), code = [200],
@@ -196,6 +196,31 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # both should redirect
         self.assertCode('/conary', code = 301)
         self.assertCode('/conary/', code = 301)
+
+    def testReferencesAndDescendants(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        projectId = self.newProject(client, "testproject")
+
+        v1 = "/testproject.%s@rpl:linux/1.0-1-1" % MINT_PROJECT_DOMAIN
+        f1 = ''
+
+        self.addComponent("trove:runtime", v1, f1)
+        self.addCollection("trove", v1, [":runtime"], defaultFlavor = f1)
+
+        # set up a collection that includes both
+        v2 = "/testproject.%s@rpl:baz/1.0-1-1" % MINT_PROJECT_DOMAIN
+        self.addCollection("group-dist", v2, [("trove", v1)], defaultFlavor = f1)
+
+        # and set up a shadow
+        v3 = "/testproject.%s@rpl:linux//prod/1.0-1-1" % MINT_PROJECT_DOMAIN
+        self.addComponent("trove:runtime", v3, f1)
+        self.addCollection("trove", v3, [":runtime"], defaultFlavor = f1)
+
+        page = self.webLogin('testuser', 'testpass')
+        page = self.fetch("/findRefs?trvName=trove;trvVersion=%s" % v1)
+
+        self.failUnless("/testproject.rdu.rpath.com@rpl:linux//prod/1.0-1-1" in page.body)
+        self.failUnless("group-dist=/testproject.rdu.rpath.com@rpl:baz/1.0-1-1" in page.body)
 
 
 if __name__ == "__main__":

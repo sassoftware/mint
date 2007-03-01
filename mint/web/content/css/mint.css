@@ -1438,3 +1438,23 @@ td.modified a:hover {
 img.pointer {
     cursor: pointer;
 }
+
+ul.referenceList {
+    list-style-type: none;
+    padding-left: 12px;
+}
+
+ul.referenceList li {
+    font-size: larger;
+    font-weight: bold;
+}
+
+ul.referenceList li ul {
+    list-style-type: none;
+    padding-bottom: 1em;
+}
+
+ul.referenceList li ul li {
+    font-size: smaller;
+    font-weight: normal;
+}

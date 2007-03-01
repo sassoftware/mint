@@ -52,7 +52,7 @@ class FindRefsCommand(commands.RBuilderCommand):
             print "Projects that include a reference to %s=%s[%s]:" % (str(nvf[0]), str(nvf[1]), str(queryFlavor))
             print
 
-        r = client.getTroveReferences(nvf[0], str(nvf[1]), nvf[2].freeze())
+        r = client.getTroveReferences(nvf[0], str(nvf[1]), [nvf[2].freeze()])
         for projectId, refs in r.items():
             p = client.getProject(int(projectId))
             if refs and not flatList:

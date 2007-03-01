@@ -676,6 +676,7 @@ class MintServer(object):
     @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
+        fqdn = self._translateProjectFQDN(fqdn)
         projectId = self.projects.getProjectIdByFQDN(fqdn)
         self._filterProjectAccess(projectId)
         return projectId
@@ -3751,13 +3752,34 @@ class MintServer(object):
         return repos
 
     @private
-    @typeCheck(str, str, str)
-    def getTroveReferences(self, troveName, troveVersion, troveFlavor):
+    @typeCheck(str, str, (list, str))
+    def getTroveReferences(self, troveName, troveVersion, troveFlavors):
         references = []
+
+        if not troveFlavors:
+            v = versions.VersionFromString(troveVersion)
+            projectId = self.getProjectIdByFQDN(v.branch().label().getHost())
+            project = projects.Project(self, projectId)
+
+            repos = self._getProjectRepo(project)
+            flavors = repos.getAllTroveFlavors({troveName: [v]})
+            troveFlavors = [x.freeze() for x in flavors[troveName][v]]
+
+        q = []
+        for flavor in troveFlavors:
+            q.append((troveName, versions.VersionFromString(troveVersion), deps.ThawFlavor(flavor)))
+
         for p, repo in self._getAllRepositories():
-            q = (troveName, versions.VersionFromString(troveVersion), deps.ThawFlavor(troveFlavor))
-            d = repo.getTroveReferences(p.getFQDN(), [q])
-            references.append((p.id, [(x[0], str(x[1]), x[2].freeze()) for x in d[0]]))
+            host = versions.Label(p.getLabel()).getHost()
+            refs = repo.getTroveReferences(host, q)
+
+            results = set()
+            for ref in refs:
+                if ref:
+                    results.update([(x[0], str(x[1]), x[2].freeze()) for x in ref])
+
+            if results:
+                references.append((p.id, list(results)))
 
         return references
 
@@ -3767,7 +3789,8 @@ class MintServer(object):
         descendants = []
         for p, repo in self._getAllRepositories():
             q = (troveName, versions.VersionFromString(troveBranch), deps.ThawFlavor(troveFlavor))
-            d = repo.getTroveDescendants(p.getFQDN(), [q])
+            host = versions.Label(p.getLabel()).getHost()
+            d = repo.getTroveDescendants(host, [q])
             descendants.append((p.id, [(str(x[0]), x[1].freeze()) for x in d[0]]))
 
         return descendants

@@ -36,6 +36,8 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpPartialContent, HttpOK
 
 from conary import versions
+from conary.deps import deps
+from conary import conarycfg, conaryclient
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
 from mint.rmakeconstants import buildjob
@@ -1078,6 +1080,26 @@ class SiteHandler(WebHandler):
                                           'confirmed' : '1',
                                           'referer' : referer},
                                noLink = referer)
+
+    @requiresAuth
+    @strFields(trvName = None, trvVersion = None)
+    def findRefs(self, auth, trvName, trvVersion):
+        # this call is flavor-agnostic, but we have to find all
+        # the flavors of the requested trove so we can use that
+        # list to call getTroveReferences.
+        references = self.client.getTroveReferences(trvName, trvVersion)
+
+        # getTroveDescendants can be flavor-agnostic.
+        branch = versions.VersionFromString(trvVersion).branch()
+        descendants = self.client.getTroveDescendants(trvName, str(branch), '')
+
+        references = dict((self.client.getProject(x[0]), set((y[0], y[1]) for y in x[1])) for x in references.items() if x[1])
+        descendants = dict((self.client.getProject(x[0]), set((trvName, y[0], y[1]) for y in x[1])) for x in descendants.items() if x[1])
+
+        return self._write("findRefs",
+            trvName = trvName, trvVersion = trvVersion,
+            references = references, descendants = descendants)
+
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
