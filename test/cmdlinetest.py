@@ -13,6 +13,7 @@ testsuite.setup()
 import rephelp
 from conary.lib import cfgtypes
 from conary.deps import deps
+from conary import versions
 
 from mint.cmdline import RBuilderMain, RBuilderShellConfig
 from mint.cmdline import builds, users, refs
@@ -169,17 +170,27 @@ class CmdLineFuncTest(MintRepositoryHelper):
 
         c = mock.MockInstance(client.MintClient)
         c._mock.enableMethod("getTroveReferences")
+        c._mock.enableMethod("getTroveDescendants")
+
         c.getTroveReferences = lambda *args: {
             1: [('alpha1', '/p1.rpath.local@rpl:linux//devel//qa/1.0-1-1', '')]}
+        c.getTroveDescendants = lambda *args: {
+            1: [('/p1.rpath.local@rpl:linux//devel//desc/1.0-1-1', '')]}
 
         cmd = refs.FindRefsCommand()
-        cmd.findTrove = lambda nc, cc, n, v, f: (n, v, deps.parseFlavor(f))
+        cmd.findTrove = lambda nc, cc, n, v, f: (n, v and versions.VersionFromString("/conary.rpath.com@rpl:1/1.0-1-1") or None, deps.parseFlavor(''))
 
-        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {}, ['find-refs', 'dummy[]'])
+        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {},
+            ['find-refs', 'dummy=conary.rpath.com@rpl:1[]'])
         self.failUnless("Projects that include a reference" in res)
 
-        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {'flat-list': True}, ['find-refs', 'dummy[]'])
+        rc, res = self.captureOutput(cmd.runCommand, c, cfg, {'flat-list': True},
+            ['find-refs', 'dummy=conary.rpath.com@rpl:1[]'])
         self.failUnless("alpha1=/p1.rpath.local@rpl:linux//devel//qa/1.0-1-1[]" in res)
+        self.failUnless("dummy=/p1.rpath.local@rpl:linux//devel//desc/1.0-1-1[]" in res)
+
+        self.assertRaises(RuntimeError, cmd.runCommand, c, cfg, {},
+            ['find-refs', 'dummy'])
 
 
 if __name__ == "__main__":
