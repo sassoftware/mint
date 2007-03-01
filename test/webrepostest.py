@@ -219,8 +219,8 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('testuser', 'testpass')
         page = self.fetch("/findRefs?trvName=trove;trvVersion=%s" % v1)
 
-        self.failUnless("/testproject.rdu.rpath.com@rpl:linux//prod/1.0-1-1" in page.body)
-        self.failUnless("group-dist=/testproject.rdu.rpath.com@rpl:baz/1.0-1-1" in page.body)
+        self.failUnless(v3 in page.body)
+        self.failUnless(("group-dist=%s" % v2) in page.body)
 
 
 if __name__ == "__main__":
