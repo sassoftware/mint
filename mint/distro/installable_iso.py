@@ -502,6 +502,42 @@ class InstallableIso(ImageGenerator):
         finally:
             util.rmtree(tmpRoot)
 
+    def extractPublicKeys(self, keyDir, topdir):
+        self.status('Extracting Public Keys')
+        tmpRoot = tempfile.mkdtemp()    
+        client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
+        trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
+                                 (self.troveName, str(self.troveVersion), self.troveFlavor),
+                                 defaultFlavor = client.cfg.flavor)
+
+        if not trvList:
+            raise RuntimeError, "no match for %s" % groupName
+        elif len(trvList) > 1:
+            raise RuntimeError, "multiple matches for %s" % groupName        
+
+        tr = client.repos.getTrove(trvList[0][0], trvList[0][1], trvList[0][2])
+        fingerprints = {}
+        for x in client.repos.walkTroveSet(tr):
+            label = x.version.v.trailingLabel()
+            for sig in x.troveInfo.sigs.digitalSigs.iter():
+                if fingerprints.has_key(label):
+                    if sig[0] not in fingerprints[label]:
+                        fingerprints[label].append(sig[0])
+                else:
+                    fingerprints.update({label:[sig[0]]})
+
+        util.mkdirChain(os.path.join(tmpRoot, keyDir))
+        for label, fingerprints in fingerprints.items():
+            for fp in fingerprints:
+                fd = open(os.path.join(tmpRoot, keyDir, label.asString() + fp), 'w')
+                print >> fd, client.repos.getAsciiOpenPGPKey(label, fp)
+                fd.close()
+
+        call('cp', '-R', '--no-dereference', 
+             os.path.join(tmpRoot, keyDir), topdir)
+        
+        util.rmtree(tmpRoot)
+            
     def extractChangeSets(self, csdir):
         # build a set of the things we already have extracted.
         self.status("Extracting changesets")
@@ -597,6 +633,7 @@ class InstallableIso(ImageGenerator):
         discInfoFile.close()
 
         self.extractMediaTemplate(topdir)
+        self.extractPublicKeys('public_keys', topdir)
         self.setupKickstart(topdir)
         self.writeProductImage(topdir, self.build.getArchFlavor().freeze())
 
