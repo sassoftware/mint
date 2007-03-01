@@ -139,6 +139,7 @@ class MintConfig(ConfigFile):
                                "Number of seconds to cache authentication results")
     removeTrovesVisible     = (cfgtypes.CfgBool, False)
     hideNewProjects         = (cfgtypes.CfgBool, False)
+    allowTroveRefSearch     = (cfgtypes.CfgBool, True)
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'

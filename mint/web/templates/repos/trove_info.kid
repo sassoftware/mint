@@ -78,7 +78,7 @@ else:
         </a>
     </span>
 
-    <tr py:def="referencesLink(title, n, v)">
+    <tr py:def="referencesLink(title, n, v)" py:if="auth.authorized and cfg.allowTroveRefSearch">
         <th>Find references</th>
         <td>
             <a href="http://${SITE}findRefs?trvName=${quote(n)};trvVersion=${quote(str(v))}">

@@ -362,9 +362,6 @@ class MintServer(object):
             except Exception, e:
                 self._handleError(e, authToken, methodName, args)
                 raise
-            #except Exception, error:
-            #   exc_name = sys.exc_info()[0].__name__
-            #   return (True, (exc_name, error, str(error)))
             else:
                 self.db.commit()
                 return (False, r)
@@ -3751,6 +3748,17 @@ class MintServer(object):
 
         return repos
 
+    def _getProjectByLabel(self, label):
+        hostname = label.getHost()
+        cu = self.db.cursor()
+
+        cu.execute("SELECT projectId FROM Labels WHERE label LIKE '%s@%%'" % hostname)
+        r = cu.fetchone()
+        if r:
+            return projects.Project(self, r[0])
+        else:
+            return None
+
     @private
     @typeCheck(str, str, (list, str))
     def getTroveReferences(self, troveName, troveVersion, troveFlavors):
@@ -3758,8 +3766,7 @@ class MintServer(object):
 
         if not troveFlavors:
             v = versions.VersionFromString(troveVersion)
-            projectId = self.getProjectIdByFQDN(v.branch().label().getHost())
-            project = projects.Project(self, projectId)
+            project = self._getProjectByLabel(v.branch().label())
 
             repos = self._getProjectRepo(project)
             flavors = repos.getAllTroveFlavors({troveName: [v]})
@@ -3790,8 +3797,15 @@ class MintServer(object):
         for p, repo in self._getAllRepositories():
             q = (troveName, versions.VersionFromString(troveBranch), deps.ThawFlavor(troveFlavor))
             host = versions.Label(p.getLabel()).getHost()
-            d = repo.getTroveDescendants(host, [q])
-            descendants.append((p.id, [(str(x[0]), x[1].freeze()) for x in d[0]]))
+            refs = repo.getTroveDescendants(host, [q])
+
+            results = set()
+            for ref in refs:
+                if ref:
+                    results.update([(str(x[0]), x[1].freeze()) for x in ref])
+
+            if results:
+                descendants.append((p.id, list(results)))
 
         return descendants
 
