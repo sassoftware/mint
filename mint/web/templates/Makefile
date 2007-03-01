@@ -20,6 +20,7 @@ kid_files = \
 	editPubrelease.kid	\
 	editrMake.kid		\
 	error.kid		\
+	findRefs.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
 	groups.kid		\
