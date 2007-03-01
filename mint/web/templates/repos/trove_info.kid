@@ -58,14 +58,15 @@ else:
         </tr>
     </table>
 
-    <span py:def="lockedAdder(trove)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove)">
+    <span py:def="lockedAdder(trove, quotedVersion, referer)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove)">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=$quotedVersion;versionLock=1;referer=$referer"
            title="Add this exact version to ${groupTrove.recipeName}">
             Add this exact version to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
     </span>
 
-    <span py:def="adder(trove)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove) or isrMakeLegal(rMakeBuild, userLevel, trove.getName())">
+    <span py:def="adder(trove, quotedVersion, quotedLabel, referer)" style="float: right;"
+          py:if="isGroupBuilderLegal(groupTrove, trove) or isrMakeLegal(rMakeBuild, userLevel, trove.getName())">
         <a py:if="isGroupBuilderLegal(groupTrove, trove)"
            title="Add to ${groupTrove.recipeName}"
            href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=$quotedVersion;referer=$referer">
@@ -98,12 +99,13 @@ else:
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
 
             quotedVersion = quote(trove.getVersion().asString())
+            quotedLabel = quote(trove.getVersion().branch().label().asString())
             frozenVersion = quote(trove.getVersion().freeze())
             frozenFlavor = quote(trove.getFlavor().freeze())
         ?>
         <tr>
             <th>$title name:</th>
-            <td title="${trove.getName()}">${adder(trove)} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
+            <td title="${trove.getName()}">${adder(trove, quotedVersion, quotedLabel, quote(req.unparsed_uri))} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
         </tr>
         <tr>
             <th>Built from source:</th>
@@ -114,7 +116,7 @@ else:
         ${referencesLink(title, trove.getName(), trove.getVersion())}
         <tr>
             <th>Version:</th>
-            <td>${lockedAdder(trove)} ${splitVersionForDisplay(str(trove.getVersion()))}</td>
+            <td>${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))} ${splitVersionForDisplay(str(trove.getVersion()))}</td>
         </tr>
         <tr>
             <th>Flavor:</th>
