@@ -1451,6 +1451,7 @@ ul.referenceList li {
 
 ul.referenceList li ul {
     list-style-type: none;
+    padding-top: 6px;
     padding-bottom: 1em;
 }
 
