@@ -65,12 +65,13 @@ class MirrorInbound(MirrorScript):
                                           cfg.target.user,
                                           entitlementDir = cfg.entitlementDirectory)
 
-                count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                         False, False)
-
+                # set the correct tmpdir to use
                 tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
                 if os.access(tmpDir, os.W_OK):
                     util.settempdir(tmpDir)
+
+                count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
+                                         False, False)
                 while count:
                     count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                                              False, False)
