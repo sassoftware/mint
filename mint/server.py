@@ -3786,7 +3786,7 @@ class MintServer(object):
                     results.update([(x[0], str(x[1]), x[2].freeze()) for x in ref])
 
             if results:
-                references.append((p.id, list(results)))
+                references.append((int(p.id), list(results)))
 
         return references
 
@@ -3805,7 +3805,7 @@ class MintServer(object):
                     results.update([(str(x[0]), x[1].freeze()) for x in ref])
 
             if results:
-                descendants.append((p.id, list(results)))
+                descendants.append((int(p.id), list(results)))
 
         return descendants
 
