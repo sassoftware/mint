@@ -493,7 +493,7 @@ class RepositoryTest(MintRepositoryHelper):
         )
 
         d = client.getTroveDescendants('alpha', "/p1.%s@rpl:linux//devel" % MINT_PROJECT_DOMAIN, '')
-        self.failUnlessEqual(d, {1: [('/p1.%s@rpl:linux//devel//qa/1.0-1-1' % MINT_PROJECT_DOMAIN, '')]})
+        self.failUnlessEqual(d, {1: [(v2, '')], 2: [(v2, '')]})
 
 
 if __name__ == "__main__":
