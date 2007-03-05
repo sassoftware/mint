@@ -529,7 +529,7 @@ class InstallableIso(ImageGenerator):
         util.mkdirChain(os.path.join(tmpRoot, keyDir))
         for label, fingerprints in fingerprints.items():
             for fp in fingerprints:
-                fd = open(os.path.join(tmpRoot, keyDir, label.asString() + fp), 'w')
+                fd = open(os.path.join(tmpRoot, keyDir, fp.lower() + '.pgp'), 'w')
                 print >> fd, client.repos.getAsciiOpenPGPKey(label, fp)
                 fd.close()
 
