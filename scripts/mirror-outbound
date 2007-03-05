@@ -61,7 +61,7 @@ class MirrorOutbound(MirrorScript):
                 if mirrorAll:
                     cfg.labels = []
                 else:
-                    cfg.labels = [versions.Label(labelStr)]
+                    cfg.labels = [versions.Label(labelStr) for labelStr in sourceLabels.split(" ")]
 
                 cfg.configLine('matchTroves ' + ' '.join(matchStrings))
 

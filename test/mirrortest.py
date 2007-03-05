@@ -26,7 +26,7 @@ scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__)
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
     def createMirrorUser(self, repos,
-                         labelStr = "localhost.other.host@rpl:linux"):
+                         labelStr = "localhost.other.host@rpl:devel"):
         label = versions.Label(labelStr)
         repos.addUser(label, "mirror", "mirror")
         repos.addAcl(label, "mirror", None, None, True, False, False)
@@ -68,7 +68,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                   self.securePort
         else:
             url = "http://test.rpath.local:%d/repos/localhost/" % self.port
-        branchName = "localhost.rpath.local2@rpl:linux"
+        branchName = "localhost.rpath.local2@rpl:devel"
         mirrorScript = os.path.join(scriptPath , 'mirror-offline')
         assert(os.access(mirrorScript, os.X_OK))
         mirrorWorkDir = tempfile.mkdtemp()
@@ -135,7 +135,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         sourcePort = self.servers.getServer(1).port
         map = dict(self.cfg.repositoryMap)
         self.createMirrorUser(sourceRepos)
-        self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:linux")
+        self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:devel")
         self.createTroves(sourceRepos, 0, 2)
 
         self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:notforyou")
@@ -145,9 +145,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         projectId = self.newProject(client, "Mirrored Project", "localhost", domainname = "other.host")
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
-        project.editLabel(labelId, "localhost.other.host@rpl:linux",
+        project.editLabel(labelId, "localhost.other.host@rpl:devel",
             "https://test.rpath.local2:%d/repos/localhost/" % self.securePort, "mintauth", "mintpass")
-        client.addInboundMirror(projectId, ["localhost.other.host@rpl:linux"], "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
+        client.addInboundMirror(projectId, ["localhost.other.host@rpl:devel"], "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
@@ -175,7 +175,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         sourcePort = self.servers.getServer(1).port
         map = dict(self.cfg.repositoryMap)
         self.createMirrorUser(sourceRepos)
-        self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:linux")
+        self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:devel")
         self.createTroves(sourceRepos, 0, 2)
 
         self.cfg.buildLabel = versions.Label("localhost.other.host@rpl:alsothese")
@@ -185,9 +185,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         projectId = self.newProject(client, "Mirrored Project", "localhost", domainname = "other.host")
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
-        project.editLabel(labelId, "localhost.other.host@rpl:linux",
+        project.editLabel(labelId, "localhost.other.host@rpl:devel",
             "https://test.rpath.local2:%d/repos/localhost/" % self.securePort, "mintauth", "mintpass")
-        client.addInboundMirror(projectId, ["localhost.other.host@rpl:linux", "localhost.other.host@rpl:alsothese"], "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
+        client.addInboundMirror(projectId, ["localhost.other.host@rpl:devel", "localhost.other.host@rpl:alsothese"], "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
@@ -212,18 +212,18 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         targetRepos = self.openRepository(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
-        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:linux")
-        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:linux")
+        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:devel")
 
         # set up the source repository
         projectId = self.newProject(client, "Mirrored Project", "localhost")
         project = client.getProject(projectId)
         outboundMirrorId = client.addOutboundMirror(projectId,
-                ["localhost.rpath.local2@rpl:linux"],
+                ["localhost.rpath.local2@rpl:devel"],
                 "http://localhost:%s/conary/" % targetPort,
                 "mirror", "mirror", allLabels = True)
 
-        # create troves on rpl:linux
+        # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.createTroves(sourceRepos, 0, 2)
 
@@ -255,18 +255,18 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         targetRepos = self.openRepository(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
-        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:linux")
-        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:linux")
+        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:devel")
 
         # set up the source repository
         projectId = self.newProject(client, "Mirrored Project", "localhost")
         project = client.getProject(projectId)
         outboundMirrorId = client.addOutboundMirror(projectId,
-                ["localhost.rpath.local2@rpl:linux"],
+                ["localhost.rpath.local2@rpl:devel"],
                 "http://localhost:%s/conary/" % targetPort,
                 "mirror", "mirror", allLabels = False)
 
-        # create troves on rpl:linux
+        # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.createTroves(sourceRepos, 0, 2)
 
@@ -277,11 +277,50 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         # do the mirror
         self.outboundMirror()
 
-        # compare -- only troves from rpl:linux should exist on the target
+        # compare -- only troves from rpl:devel should exist on the target
         self.compareRepositories(sourceRepos, targetRepos,
                                  base = "localhost.rpath.local2",
-                                 onlyLabel = "localhost.rpath.local2@rpl:linux")
+                                 onlyLabel = "localhost.rpath.local2@rpl:devel")
         self.stopRepository(1)
+
+    def testOutboundMirrorSomeLabels(self):
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        # set up the target repository
+        targetRepos = self.openRepository(1,
+                                          serverName = "localhost.rpath.local2")
+        targetPort = self.servers.getServer(1).port
+        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:devel")
+
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        outboundMirrorId = client.addOutboundMirror(projectId,
+                ["localhost.rpath.local2@rpl:devel", "localhost.rpath.local2@rpl:other"],
+                "http://localhost:%s/conary/" % targetPort,
+                "mirror", "mirror", allLabels = False)
+
+        # create troves on rpl:devel
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 2)
+
+        # create some troves on a different label
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
+        self.createTroves(sourceRepos, 3, 5)
+
+        # do the mirror
+        self.outboundMirror()
+
+        # compare
+        self.compareRepositories(sourceRepos, targetRepos,
+                                 base = "localhost.rpath.local2")
+        self.stopRepository(1)
+
 
     def testMirrorOffline(self):
         global runTest
@@ -294,7 +333,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
 
-        # create troves on rpl:linux
+        # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.createTroves(sourceRepos, 0, 3)
 
@@ -307,7 +346,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                     ['contents', 'sqldb', 'tmp'])
             f = open(os.path.join(workDir, 'mirror-localhost.rpath.local2000.iso'))
             f.seek(51200)
-            assert(f.read(30) == 'localhost.rpath.local2\n1/1\n1\n\x00')
+
+            d = f.read(30)
+            self.failUnlessEqual(d, 'localhost.rpath.local2\n1/1\n2\n\x00')
         finally:
             try:
                 util.rmtree(workDir)
