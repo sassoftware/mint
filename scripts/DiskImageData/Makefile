@@ -12,7 +12,9 @@ data_files = fstab \
 	     mouse \
 	     xorg.conf \
 	     keyboard \
-	     vpc.vmc
+	     vpc.vmc \
+	     i18n	\
+	     clock
 
 datadir = /usr/share/rbuilder
 
