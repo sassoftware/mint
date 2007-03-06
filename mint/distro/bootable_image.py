@@ -614,10 +614,8 @@ title %(name)s (%(kversion)s)
                 # some targets require a work partition. size is in MB
                 fd = os.popen('/usr/bin/du -B1048576 -s %s' % \
                               self.outfile, 'r')
-                # double the source partition size should be more than enough,
-                # but cap it at 10 GB... unless more is really needed.
-                size = int(fd.read().strip().split()[0])
-                size = max(size, min(size * 2, 10240))
+                # double the source partition size should be more than enough
+                size = int(fd.read().strip().split()[0]) * 2
                 fd.close()
                 tmpFile2 = self.createSparseFile(size)
                 cmd += ' ubd3=%s' % tmpFile2
