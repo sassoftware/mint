@@ -433,8 +433,9 @@ title %(name)s (%(kversion)s)
         copyfile(os.path.join(self.imgcfg.dataDir, 'clock'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'clock'))
         copyfile(os.path.join(self.imgcfg.dataDir, 'i18n'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'i18n'))
 
-        copyfile(os.path.join(self.fakeroot, 'usr', 'share', 'zoneinfo', 'UTC'),
-                 os.path.join(self.fakeroot, 'etc', 'localtime'))
+        if os.path.exists(os.path.join(self.fakeroot, 'usr', 'share', 'zoneinfo', 'UTC')):
+            copyfile(os.path.join(self.fakeroot, 'usr', 'share', 'zoneinfo', 'UTC'),
+                     os.path.join(self.fakeroot, 'etc', 'localtime'))
 
         #Was X installed?
         if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'bin', 'X11', 'X')):
