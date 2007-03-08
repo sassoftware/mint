@@ -2338,22 +2338,6 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
 
-        # XXX: extend the archTypes to include the xen-capable flavors
-        # this idea should be cleaned up using real conary deps parsing
-        # when we have a chance.
-        for arch in archTypes[:]:
-            archTypes.append(arch + '|5#use:domU:xen')
-            archTypes.append(arch + '|5#use:dom0:xen')
-
-        # add PAE
-        for arch in archTypes[:]:
-            archTypes.append(arch + '|5#use:pae')
-
-        # add VMware
-        for arch in archTypes[:]:
-            archTypes.append(arch + '|5#use:vmware')
-
-
         buildTypes = []
         try:
             buildTypes = jobTypes['buildTypes']
@@ -2411,15 +2395,11 @@ class MintServer(object):
                 if not buildTypes:
                     #client wants only cooks
                     query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN JobData
-                                   ON Jobs.jobId=JobData.jobId
-                               WHERE status=? AND JobData.name='arch'
+                               WHERE status=?
                                    AND Jobs.buildId IS NULL
                                    AND owner=?
-                                   AND JobData.value IN %s
-                               ORDER BY timeSubmitted
-                               LIMIT 1""" % archTypeQuery
-                    cu.execute(query, jobstatus.WAITING, ownerId, *archTypes)
+                               ORDER BY timeSubmitted"""
+                    cu.execute(query, jobstatus.WAITING, ownerId)
                 elif not cookTypes:
                     # client wants only image jobs
                     query = """SELECT Jobs.jobId FROM Jobs
@@ -2444,8 +2424,6 @@ class MintServer(object):
                 else:
                     # client wants both cook and image jobs
                     query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN JobData
-                                   ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
                                LEFT JOIN BuildsView AS Builds
                                    ON Builds.buildId=Jobs.buildId
                                LEFT JOIN BuildData
@@ -2455,15 +2433,22 @@ class MintServer(object):
                                    AND ((BuildData.value=? AND
                                        Builds.buildType IN %s) OR
                                         (groupTroveId IS NOT NULL))
-                                   AND JobData.value IN %s
                                ORDER BY timeSubmitted
-                               LIMIT 1""" % (buildTypeQuery, archTypeQuery)
+                               """ % (buildTypeQuery)
                     cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                               *(buildTypes + archTypes))
+                               *(buildTypes))
 
-                res = cu.fetchone()
-                if res:
-                    jobId = res[0]
+                res = cu.fetchall()
+                for r in res:
+                    arch = deps.ThawFlavor(self.jobData.getDataValue(r[0], "arch")[1])
+                    for x in archTypes:
+                        if arch.satisfies(deps.ThawFlavor(x)):
+                            jobId = r[0]
+                            break # match first usable job we find
+                    if jobId:
+                        break
+
+                if jobId:
                     cu.execute("""UPDATE Jobs
                                   SET status=?, statusMessage=?, timeStarted=?
                                   WHERE jobId=?""",

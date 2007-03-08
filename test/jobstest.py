@@ -600,6 +600,22 @@ class JobsTest(fixtures.FixturedUnitTest):
                                   {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
+    @fixtures.fixture('CookJob')
+    def testStartCookFlavors(self, db, data):
+        # mark job as finished
+        client = self.getClient('test')
+        cu = db.cursor()
+        cu.execute("UPDATE JobData SET value='1#x86|5#xen,pae,domU' WHERE name='arch'")
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes': [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failUnless(job, "startNextJob didn't return a valid job")
+
+
+
     #####
     # test jobserver version
     #####
