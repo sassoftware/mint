@@ -34,16 +34,36 @@
 
                     </p>
                     <p>
-                        Check the box below to add Xen guest domain (DomU)
-                        support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
-                        information about Xen and rBuilder.
                     </p>
-                    <p>
-                        <div>
+
+                    <h3>Options</h3>
+                    <dl class="archOptions">
+                        <dt py:if="False">
+                            <input name="flavor" type="checkbox" value="5#use:vmware" id="vmware" />
+                            <label id="vmwareLabel" for="vmware">VMware tools support</label>
+                        </dt>
+                        <dd class="help" py:if="False">
+                            Check this box to add VMware guest tools to this group.
+                        </dd>
+                        <dt>
                             <input name="flavor" type="checkbox" value="5#use:domU:xen" id="domU" />
                             <label id="domULabel" for="domU">Xen DomU (unprivileged guest) support</label>
-                        </div>
-                    </p>
+                        </dt>
+                        <dd class="help">
+                            Check this box to add Xen guest domain (DomU)
+                            support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
+                            information about Xen and rBuilder.
+                        </dd>
+                        <dt>
+                            <input name="flavor" type="checkbox" value="5#use:pae" id="pae" />
+                            <label id="paeLabel" for="pae">PAE (physical address extension) support
+                            </label>
+                        </dt>
+                        <dd class="help">
+                            Check this box to use a PAE-enabled kernel for this group. This is
+                            required for Xen Enterprise guests and some other Xen Dom0 hypervisors.
+                        </dd>
+                    </dl>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
                     <input type="hidden" name="id" value="${groupTroveId}" />
                 </form> 

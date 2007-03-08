@@ -1459,3 +1459,11 @@ ul.referenceList li ul li {
     font-size: smaller;
     font-weight: normal;
 }
+
+dl.archOptions dt {
+    padding-bottom: 4px;
+}
+
+dl.archOptions dd {
+    padding-bottom: 8px;
+}
