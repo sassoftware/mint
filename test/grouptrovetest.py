@@ -59,10 +59,10 @@ groupsRecipe = """class GroupTest(GroupRecipe):
         r.setLabelPath('testproject.%s@rpl:devel', 'conary.rpath.com@rpl:1')
         r.add('testcase', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
         if Arch.x86_64:
-            r.add('group-core', flavor = 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test', searchPath = ['addons.rpath.com@rpl:1', 'testproject.%s@rpl:devel', 'conary.rpath.com@rpl:1'])
+            r.add('group-core', flavor = 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test', searchPath = ['addons.rpath.com@rpl:1', 'conary.rpath.com@rpl:1'])
         else:
-            r.add('group-core', flavor = 'is: x86', groupName = 'group-test', searchPath = ['addons.rpath.com@rpl:1', 'testproject.%s@rpl:devel', 'conary.rpath.com@rpl:1'])
-""" % ((MINT_PROJECT_DOMAIN,) * 4)
+            r.add('group-core', flavor = 'is: x86', groupName = 'group-test', searchPath = ['addons.rpath.com@rpl:1', 'conary.rpath.com@rpl:1'])
+""" % ((MINT_PROJECT_DOMAIN,) * 2)
 
 refRedirRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
