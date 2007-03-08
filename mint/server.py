@@ -2345,6 +2345,15 @@ class MintServer(object):
             archTypes.append(arch + '|5#use:domU:xen')
             archTypes.append(arch + '|5#use:dom0:xen')
 
+        # add PAE
+        for arch in archTypes[:]:
+            archTypes.append(arch + '|5#use:pae')
+
+        # add VMware
+        for arch in archTypes[:]:
+            archTypes.append(arch + '|5#use:vmware')
+
+
         buildTypes = []
         try:
             buildTypes = jobTypes['buildTypes']
