@@ -55,8 +55,8 @@
                             information about Xen and rBuilder.
                         </dd>
                         <dt>
-                            <input name="flavor" type="checkbox" value="5#use:pae" id="pae" />
-                            <label id="paeLabel" for="kernel.pae">PAE (physical address extension) support
+                            <input name="flavor" type="checkbox" value="5#use:kernel.pae" id="pae" />
+                            <label id="paeLabel" for="pae">PAE (physical address extension) support
                             </label>
                         </dt>
                         <dd class="help">
