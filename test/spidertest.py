@@ -17,7 +17,7 @@ import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
 from mint import buildtypes
-from mint import pkgindex
+from mint import pkgindexer
 
 from conary.lib import util
 
@@ -157,7 +157,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         trv = self.addCollection('group-test', '1.0.0', ['testcase'])
 
         # update package index
-        upi = pkgindex.UpdatePackageIndex()
+        upi = pkgindexer.UpdatePackageIndex()
         upi.logPath = None
         upi.cfg = self.mintCfg
 

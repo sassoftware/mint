@@ -34,6 +34,7 @@ python_files =			\
 	mirror.py		\
 	news.py			\
 	pkgindex.py		\
+	pkgindexer.py		\
 	profile.py		\
 	builds.py		\
 	projects.py		\
