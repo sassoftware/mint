@@ -55,6 +55,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             server = self.getProjectServerHostname())
 
     def testBrowseTooltips(self):
+        raise testsuite.SkipTestException("Not ready for primetime -- yet")
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
