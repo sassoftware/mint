@@ -29,13 +29,19 @@ class PackageIndexer(scriptlibrary.SingletonScript):
     db = None
     cfgPath = config.RBUILDER_CONFIG
 
-    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
+    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH,
+            aMintServer=None):
         self.cfg = config.MintConfig()
         self.cfg.read(self.cfgPath)
         if self.logFileName:
             self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
         # throwaway server to update database tables if needed (RBL-1434)
-        self._server = server.MintServer(self.cfg)
+        # note: need to allow a mintserver to be passed in to satify the 
+        # testsuite, which already has a properly configured mint server
+        if aMintServer:
+            self._server = aMintServer
+        else:
+            self._server = server.MintServer(self.cfg)
 
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
 
