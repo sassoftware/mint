@@ -380,7 +380,7 @@ class RepositoryTest(MintRepositoryHelper):
         self.addCollection('testcase', v, ['testcase:runtime'])
 
         pkgindexer.UpdatePackageIndexExternal.logFileName = None
-        upi = pkgindexer.UpdatePackageIndexExternal()
+        upi = pkgindexer.UpdatePackageIndexExternal(aMintServer=client.server._server)
         upi.logPath = None
         upi.cfg = self.mintCfg
         self.captureOutput(upi.run)
@@ -407,7 +407,7 @@ class RepositoryTest(MintRepositoryHelper):
         _fakeCommit('package3', projectId, time.time(), userId)
         _fakeCommit('package3:source', projectId, time.time(), userId)
 
-        upi = pkgindexer.UpdatePackageIndex()
+        upi = pkgindexer.UpdatePackageIndex(aMintServer=client.server._server)
         upi.logPath = None
         upi.cfg = self.mintCfg
         x = self.captureOutput(upi.run)
