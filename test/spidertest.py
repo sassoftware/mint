@@ -157,7 +157,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         trv = self.addCollection('group-test', '1.0.0', ['testcase'])
 
         # update package index
-        upi = pkgindexer.UpdatePackageIndex()
+        upi = pkgindexer.UpdatePackageIndex(aMintServer=client.server._server)
         upi.logPath = None
         upi.cfg = self.mintCfg
 
