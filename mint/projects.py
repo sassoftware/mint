@@ -427,9 +427,25 @@ class ProjectsTable(database.KeyedTable):
         columns = ['Projects.projectId', 'Projects.hostname',
                    'Projects.name', 'Projects.description',
                    """COALESCE(LatestCommit.commitTime, Projects.timeCreated) AS timeModified""",
-                   """COALESCE(TopProjects.rank, (SELECT COUNT(projectId) FROM Projects)) AS rank"""]
-        searchcols = ['name', 'description', 'hostname']
-        leftJoins = [ ('TopProjects', 'projectId'), ('LatestCommit', 'projectId') ]
+                   """COALESCE(TopProjects.rank, (SELECT COUNT(projectId) FROM Projects)) AS rank""",
+                   """COALESCE(tmpLatestReleases.timePublished, 0) AS lastRelease"""
+        ]
+
+        searchcols = ['Projects.name', 'Projects.description', 'hostname']
+        leftJoins = [ ('tmpLatestReleases', 'projectId'),
+                      ('LatestCommit', 'projectId'),
+                      ('TopProjects', 'projectId') ]
+
+        cu = self.db.cursor()
+        cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
+            projectId       INTEGER NOT NULL,
+            timePublished   INTEGER NOT NULL)""")
+
+        cu.execute("""INSERT INTO tmpLatestReleases (projectId, timePublished)
+            SELECT projectId as projectId, MAX(timePublished) AS timePublished FROM PublishedReleases
+            GROUP BY projectId""")
+
+        self.db.commit()
 
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.
@@ -517,6 +533,9 @@ class ProjectsTable(database.KeyedTable):
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
+
+        cu.execute("DROP TABLE tmpLatestReleases")
+        self.db.commit()
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 

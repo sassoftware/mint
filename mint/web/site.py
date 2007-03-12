@@ -667,12 +667,13 @@ class SiteHandler(WebHandler):
     # Project search
     # 
     def _formatProjectSearch(self, results):
-        columns = ('Project', 'Last Commit')
+        columns = ('Project', 'Last Commit', 'Last Release')
         formattedRows = []
         for x in results:
             p = self.client.getProject(x[0])
+
             row = {
-                'columns': [(p.getUrl(), p.getNameForDisplay()), timeDelta(x[4])],
+                'columns': [(p.getUrl(), p.getNameForDisplay()), timeDelta(x[4]), x[6] and timeDelta(x[6]) or "None"],
                 'desc':    p.getDescForDisplay(),
             }
 
