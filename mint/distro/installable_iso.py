@@ -504,28 +504,6 @@ class InstallableIso(ImageGenerator):
         finally:
             util.rmtree(tmpRoot)
 
-    def _decodeKey(self, asciiData):
-        data = StringIO.StringIO(asciiData)
-        nextLine=' '
-
-        try:
-            while(nextLine[0] != '-'):
-                nextLine = data.readline()
-            while (nextLine[0] != "\r") and (nextLine[0] != "\n"):
-                nextLine = data.readline()
-            buf = ""
-            nextLine = data.readline()
-            while(nextLine[0] != '-'):
-                buf = buf + nextLine
-                nextLine = data.readline()
-        except IndexError:
-            data.close()
-            return
-        data.close()
-
-        keyData = base64.b64decode(buf)
-        return keyData
-
     def extractPublicKeys(self, keyDir, topdir):
         self.status('Extracting Public Keys')
         tmpRoot = tempfile.mkdtemp()    
@@ -550,17 +528,22 @@ class InstallableIso(ImageGenerator):
                 else:
                     fingerprints.update({label:[sig[0]]})
 
-        keyRing = open(os.path.join(tmpRoot, 'public_keys.gpg'), 'w')
+        homeDir = tempfile.mkdtemp()
         for label, fingerprints in fingerprints.items():
             for fp in fingerprints:
                 key = client.repos.getAsciiOpenPGPKey(label, fp)
-                keyRing.write(self._decodeKey(key))
-        keyRing.close()
+                fd, fname = tempfile.mkstemp()
+                os.close(fd)
+                fd = open(fname, 'w')
+                fd.write(key)
+                fd.close()
+                call('gpg', '--home', homeDir, '--import', fname)
+                os.unlink(fname)
 
-
-        call('cp', '-R', '--no-dereference', 
-             os.path.join(tmpRoot, 'public_keys.gpg'), topdir)
+        call('gpg', '--home', homeDir, '--export', '-o', os.path.join(topdir,
+             'public_keys.gpg'))
         
+        util.rmtree(homeDir)
         util.rmtree(tmpRoot)
             
     def extractChangeSets(self, csdir):
