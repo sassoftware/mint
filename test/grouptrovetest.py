@@ -9,6 +9,8 @@ import os
 import sys
 import time
 
+import simplejson
+
 from conary import versions
 from conary.deps import deps
 from conary.conaryclient import ConaryClient
@@ -1259,6 +1261,27 @@ class GroupTroveTestConary(MintRepositoryHelper):
                     ".%s@rpl:devel/1.0-1-1', '', "
                     "groupName='group-conflict')\n\n" % MINT_PROJECT_DOMAIN != newRecipe,
                     "group recipe did not reflect proper conflict resolution.")
+
+    def testSerializeGroupTrove(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        addTestTrove(groupTrove, 'test-trove')
+        job = groupTrove.startCookJob('1#x86')
+
+        serialized = groupTrove.serialize()
+
+        groupTroveDict = simplejson.loads(serialized)
+
+        assert sorted(groupTroveDict.keys()) == \
+            ['UUID', 'description', 'jobData', 'labelPath', 'project',
+             'recipe', 'recipeName', 'serialVersion', 'troveItems', 'type',
+             'upstreamVersion']
+        assert groupTroveDict['project'].keys() == ['hostname', 'name', 'label']
 
 
 if __name__ == "__main__":

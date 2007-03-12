@@ -50,6 +50,10 @@ class Template(dict):
 # Changing the names or semantic meanings of option classes or templates is
 # the same thing as making a schema upgrade! do not do this lightly.
 
+# *** Extremely Important ***
+# adding options, or changing their meanings or defaults should be accompanied
+# by a bump in serializationVersion.
+
 ###
 # Option Classes
 ###

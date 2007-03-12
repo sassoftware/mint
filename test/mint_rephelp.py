@@ -28,7 +28,7 @@ from mint import buildtypes
 from mint import data
 from mint import urltypes
 
-from mint.distro import jobserver
+#from mint.distro import jobserver
 from mint.flavors import stockFlavors
 
 from conary import dbstore
@@ -505,6 +505,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             label[2], label[3])
 
     def writeIsoGenCfg(self):
+        raise testsuite.SkipTestExeption('this test references deleted code')
         cfg = jobserver.IsoGenConfig()
 
         cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
