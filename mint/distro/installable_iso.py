@@ -515,11 +515,9 @@ class InstallableIso(ImageGenerator):
                 nextLine = data.readline()
             buf = ""
             nextLine = data.readline()
-            print nextLine
             while(nextLine[0] != '-'):
                 buf = buf + nextLine
                 nextLine = data.readline()
-                print nextLine
         except IndexError:
             data.close()
             return
