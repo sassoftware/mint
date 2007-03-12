@@ -14,10 +14,9 @@ import tempfile
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-from mint import buildtypes, buildtemplates, jsversion
+from mint import buildtypes, buildtemplates
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.database import ItemNotFound
-from mint.distro import installable_iso
 from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
      PublishedReleaseMissing, PublishedReleasePublished, \
      JobserverVersionMismatch
