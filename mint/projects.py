@@ -439,7 +439,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
             projectId       INTEGER NOT NULL,
-            timePublished   INTEGER NOT NULL)""")
+            timePublished   DOUBLE NOT NULL)""")
 
         cu.execute("""INSERT INTO tmpLatestReleases (projectId, timePublished)
             SELECT projectId as projectId, MAX(timePublished) AS timePublished FROM PublishedReleases
