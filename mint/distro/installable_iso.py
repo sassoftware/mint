@@ -3,10 +3,12 @@
 #
 # All Rights Reserved
 #
+import base64
 import os
 import pwd
 import re
 import string
+import StringIO
 import subprocess
 import sys
 import tempfile
@@ -502,6 +504,28 @@ class InstallableIso(ImageGenerator):
         finally:
             util.rmtree(tmpRoot)
 
+    def _decodeKey(self, asciiData):
+        data = StringIO.StringIO(asciiData)
+        nextLine=' '
+
+        try:
+            while(nextLine[0] != '-'):
+                nextLine = data.readline()
+            while (nextLine[0] != "\r") and (nextLine[0] != "\n"):
+                nextLine = data.readline()
+            buf = ""
+            nextLine = data.readline()
+            while(nextLine[0] != '-'):
+                buf = buf + nextLine
+                nextLine = data.readline()
+        except IndexError:
+            data.close()
+            return
+        data.close()
+
+        keyData = base64.b64decode(buf)
+        return keyData
+
     def extractPublicKeys(self, keyDir, topdir):
         self.status('Extracting Public Keys')
         tmpRoot = tempfile.mkdtemp()    
@@ -526,15 +550,16 @@ class InstallableIso(ImageGenerator):
                 else:
                     fingerprints.update({label:[sig[0]]})
 
-        util.mkdirChain(os.path.join(tmpRoot, keyDir))
+        keyRing = open(os.path.join(tmpRoot, 'public_keys.gpg'), 'w')
         for label, fingerprints in fingerprints.items():
             for fp in fingerprints:
-                fd = open(os.path.join(tmpRoot, keyDir, fp.lower() + '.asc'), 'w')
-                print >> fd, client.repos.getAsciiOpenPGPKey(label, fp)
-                fd.close()
+                key = client.repos.getAsciiOpenPGPKey(label, fp)
+                keyRing.write(self._decodeKey(key))
+        keyRing.close()
+
 
         call('cp', '-R', '--no-dereference', 
-             os.path.join(tmpRoot, keyDir), topdir)
+             os.path.join(tmpRoot, 'public_keys.gpg'), topdir)
         
         util.rmtree(tmpRoot)
             

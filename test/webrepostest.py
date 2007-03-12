@@ -54,6 +54,20 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=test',
             server = self.getProjectServerHostname())
 
+    def testBrowseTooltips(self):
+        raise testsuite.SkipTestException("Not ready for primetime -- yet")
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime" ])
+
+        page = self.assertContent('/repos/testproject/browse', code = [200],
+            content = '1 trove',
+            server = self.getProjectServerHostname())
+
     def testBrowseHiddenProject(self):
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
 

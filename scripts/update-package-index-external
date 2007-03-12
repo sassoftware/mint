@@ -10,10 +10,10 @@
 # All rights reserved
 #
 
-from mint import pkgindex
+from mint import pkgindexer
 import os
 
 if __name__ == "__main__":
-    upie = pkgindex.UpdatePackageIndexExternal()
+    upie = pkgindexer.UpdatePackageIndexExternal()
     os._exit(upie.run())
 

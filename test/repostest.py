@@ -12,7 +12,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
-from mint import pkgindex
+from mint import pkgindexer
 import recipes
 
 from conary import repository
@@ -379,8 +379,8 @@ class RepositoryTest(MintRepositoryHelper):
         self.addComponent('testcase:source', v)
         self.addCollection('testcase', v, ['testcase:runtime'])
 
-        pkgindex.UpdatePackageIndexExternal.logFileName = None
-        upi = pkgindex.UpdatePackageIndexExternal()
+        pkgindexer.UpdatePackageIndexExternal.logFileName = None
+        upi = pkgindexer.UpdatePackageIndexExternal(aMintServer=client.server._server)
         upi.logPath = None
         upi.cfg = self.mintCfg
         self.captureOutput(upi.run)
@@ -407,7 +407,7 @@ class RepositoryTest(MintRepositoryHelper):
         _fakeCommit('package3', projectId, time.time(), userId)
         _fakeCommit('package3:source', projectId, time.time(), userId)
 
-        upi = pkgindex.UpdatePackageIndex()
+        upi = pkgindexer.UpdatePackageIndex(aMintServer=client.server._server)
         upi.logPath = None
         upi.cfg = self.mintCfg
         x = self.captureOutput(upi.run)

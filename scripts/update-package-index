@@ -4,9 +4,9 @@
 #
 # All rights reserved
 #
-from mint import pkgindex
+from mint import pkgindexer
 import os
 
 if __name__ == "__main__":
-    upi = pkgindex.UpdatePackageIndex()
+    upi = pkgindexer.UpdatePackageIndex()
     os._exit(upi.run())
