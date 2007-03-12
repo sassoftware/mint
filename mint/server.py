@@ -17,6 +17,7 @@ import time
 import tempfile
 import fcntl
 from urlparse import urlparse
+import StringIO
 
 from mint import buildtypes
 from mint import charts
@@ -33,6 +34,7 @@ from mint import pkgindex
 from mint import profile
 from mint import projects
 from mint import builds
+from mint import buildtemplates
 from mint import pubreleases
 from mint import reports
 from mint import requests
@@ -47,11 +49,13 @@ from mint import selections
 from mint import urltypes
 from mint import useit
 from mint import rmakebuild
-from mint import jsversion
 from mint.flavors import stockFlavors
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
+
+from mcp import client as mcpClient
+from mcp import mcp_error
 
 from conary import conarycfg
 from conary import conaryclient
@@ -1741,10 +1745,11 @@ class MintServer(object):
                                       name = productName,
                                       timeCreated = time.time())
 
-        self.buildData.setDataValue(buildId, 'jsversion',
-                                      jsversion.getDefaultVersion(self.cfg),
-                                      data.RDT_STRING)
+        mc = self._getMcpClient()
 
+        self.buildData.setDataValue(buildId, 'jsversion',
+                                    str(mc.getJSVersion()),
+                                    data.RDT_STRING)
         return buildId
 
     @typeCheck(int)
@@ -1818,6 +1823,41 @@ class MintServer(object):
     def getBuildDataDict(self, buildId):
         self._filterBuildAccess(buildId)
         return self.buildData.getDataDict(buildId)
+
+    @typeCheck(int)
+    @private
+    def serializeBuild(self, buildId):
+        self._filterBuildAccess(buildId)
+
+        buildDict = self.builds.get(buildId)
+        project = projects.Project(self, buildDict['projectId'])
+
+        cc = project.getConaryConfig()
+        cfgBuffer = StringIO.StringIO()
+        cc.display(cfgBuffer)
+        cfgData = cfgBuffer.getvalue()
+
+        r = {}
+        r['serialVersion'] = builds.SERIAL_VERSION
+        r['type'] = 'build'
+
+        for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
+                      'description', 'buildType'):
+            r[key] = buildDict[key]
+
+        r['data'] = self.buildData.getDataDict(buildId)
+
+        r['project'] = {'name' : project.name,
+                        'hostname' : project.hostname,
+                        'label' : project.getLabel(),
+                        'conaryCfg' : cfgData}
+
+        hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.externalDomainName)
+        r['UUID'] = '%s-build-%d' % (hostBase, buildId)
+
+        r['outputQueue'] = hostBase
+
+        return simplejson.dumps(r)
 
     @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
@@ -2111,54 +2151,9 @@ class MintServer(object):
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        found, jsVer = self.buildData.getDataValue(buildId, 'jsversion')
-        if not found:
-            raise JobserverVersionMismatch('No job server version available.')
-        versions = jsversion.getVersions(self.cfg)
-        if jsVer not in versions:
-            raise JobserverVersionMismatch(str(jsVer) + " not in " + str(versions))
-
-        cu = self.db.cursor()
-
-        cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE buildId=? AND groupTroveId IS NULL""",
-                   buildId)
-        r = cu.fetchall()
-        if len(r) == 0:
-            retval = self.jobs.new(buildId = buildId,
-                                   userId = self.auth.userId,
-                                   status = jobstatus.WAITING,
-                                   statusMessage = self.getJobWaitMessage(0),
-                                   timeSubmitted = time.time(),
-                                   timeStarted = 0,
-                                   timeFinished = 0)
-            cu.execute('SELECT troveFlavor FROM BuildsView WHERE buildId=?',
-                       buildId)
-            flavorString = cu.fetchone()[0]
-            flavor = deps.ThawFlavor(flavorString)
-            arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-            cu.execute("INSERT INTO JobData VALUES(?, 'arch', ?, 0)", retval,
-                       arch)
-        else:
-            jobId, status = r[0]
-            if status in (jobstatus.WAITING, jobstatus.RUNNING):
-                raise jobs.DuplicateJob
-            else:
-                # delete any files in the BuildFiles table prior to regeneration
-                cu.execute("DELETE FROM BuildFiles WHERE buildId = ?",
-                        buildId)
-
-                # getJobWaitMessage orders by timeSubmitted, so update must
-                # occur in two steps
-                self.jobs.update(jobId, status = jobstatus.WAITING,
-                                 timeSubmitted= time.time(), timeStarted = 0,
-                                 timeFinished = 0,
-                                 owner = None)
-                msg = self.getJobWaitMessage(jobId)
-                self.jobs.update(jobId, statusMessage = msg)
-                retval = jobId
-
-        return retval
+        mc = self._getMcpClient()
+        data = self.serializeBuild(buildId)
+        return mc.submitJob(data)
 
     @typeCheck(int, str)
     @private
@@ -2170,6 +2165,11 @@ class MintServer(object):
             raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
+
+        raise NotImplementedError
+
+        # all code past this exception is for old style jobs and
+        # must be refactored.
 
         cu = self.db.cursor()
         cu.execute("""SELECT jobId, status FROM Jobs
@@ -2202,78 +2202,6 @@ class MintServer(object):
 
         self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
         return retval
-
-    @private
-    @typeCheck(int)
-    def getJobWaitMessage(self, jobId):
-        queueLen = self._getJobQueueLength(jobId)
-        msg = "Next in line for processing"
-        if queueLen:
-            msg = "Number %d in line for processing" % (queueLen+1)
-        return msg
-
-    @typeCheck(int)
-    @private
-    def getJob(self, jobId):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        self._filterJobAccess(jobId)
-        cu = self.db.cursor()
-
-        cu.execute("SELECT userId, buildId AS releaseId, groupTroveId, status,"
-                   "  statusMessage, timeSubmitted, timeStarted, "
-                   "  timeFinished FROM Jobs"
-                   " WHERE jobId=?", jobId)
-
-        p = cu.fetchone()
-        if not p:
-            raise database.ItemNotFound("job")
-
-        dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
-                    'statusMessage', 'timeSubmitted', 'timeStarted',
-                    'timeFinished']
-        data = {}
-        for i, key in enumerate(dataKeys):
-            # these keys can be NULL from the db
-            if key in ('releaseId', 'groupTroveId') and p[i] is None:
-                data[key] = 0
-            else:
-                data[key] = p[i]
-
-        # ensure waiting job messages get updated
-        if data['status'] == jobstatus.WAITING:
-            data['statusMessage'] = self.getJobWaitMessage(jobId)
-        return data
-
-    @typeCheck(int)
-    @private
-    def getJob2(self, jobId):
-        self._filterJobAccess(jobId)
-        cu = self.db.cursor()
-
-        cu.execute("SELECT userId, buildId, groupTroveId, status,"
-                   "  statusMessage, timeSubmitted, timeStarted, "
-                   "  timeFinished FROM Jobs"
-                   " WHERE jobId=?", jobId)
-
-        p = cu.fetchone()
-        if not p:
-            raise database.ItemNotFound("job")
-
-        dataKeys = ['userId', 'buildId', 'groupTroveId', 'status',
-                    'statusMessage', 'timeSubmitted', 'timeStarted',
-                    'timeFinished']
-        data = {}
-        for i, key in enumerate(dataKeys):
-            # these keys can be NULL from the db
-            if key in ('buildId', 'groupTroveId') and p[i] is None:
-                data[key] = 0
-            else:
-                data[key] = p[i]
-
-        # ensure waiting job messages get updated
-        if data['status'] == jobstatus.WAITING:
-            data['statusMessage'] = self.getJobWaitMessage(jobId)
-        return data
 
     @typeCheck()
     @requiresAuth
@@ -2809,8 +2737,8 @@ class MintServer(object):
         label = versions.Label(project.getLabel())
         troves = nc.troveNamesOnServer(label.getHost())
 
-        troves = sorted(trove for trove in troves if 
-            (trove.startswith('group-') or 
+        troves = sorted(trove for trove in troves if
+            (trove.startswith('group-') or
              trove.startswith('fileset-')) and
             not trove.endswith(':source'))
         return troves
@@ -2830,63 +2758,24 @@ class MintServer(object):
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
-        build = builds.Build(self, buildId)
-        job = build.getJob()
-
-        if not job:
-            return {'status'  : jobstatus.NOJOB,
-                    'message' : jobstatus.statusNames[jobstatus.NOJOB],
-                    'queueLen': 0}
-        else:
-            status = job.getStatus()
-            return {'status'  : job.getStatus(),
-                    'message' : (status == jobstatus.WAITING \
-                                 and self.getJobWaitMessage(job.id) \
-                                 or  job.getStatusMessage()),
-                    'queueLen': self._getJobQueueLength(job.getId())}
+        mc = self._getMcpClient()
+        uuid = '%s.%s-build-%s' %(self.cfg.hostName,
+                                  self.cfg.externalDomainName, buildId)
+        try:
+            return mc.jobStatus(uuid)
+        except mcp_error.UnknownJob:
+            return 'no job', 'No Job'
 
     @typeCheck(int)
     @requiresAuth
     def getJobStatus(self, jobId):
         self._filterJobAccess(jobId)
 
-        job = jobs.Job(self, jobId)
+        mc = self._getMcpClient()
+        uuid = '%s.%s-cook-%s' %(self.cfg.hostName,
+                                  self.cfg.externalDomainName, jobId)
 
-        # FIXME: this code appears worthless. doesn't filterJobAccess ensure
-        # you *have* a job?
-        if not job:
-            return {'status'  : jobstatus.NOJOB,
-                    'message' : jobstatus.statusNames[jobstatus.NOJOB],
-                    'queueLen': 0}
-        else:
-            status = job.getStatus()
-            return {'status'  : job.getStatus(),
-                    'message' : (status == jobstatus.WAITING \
-                                 and self.getJobWaitMessage(job.id) \
-                                 or  job.getStatusMessage()),
-                    'queueLen': self._getJobQueueLength(jobId)}
-
-    def _getJobQueueLength(self, jobId):
-        self._filterJobAccess(jobId)
-        cu = self.db.cursor()
-        if jobId:
-            cu.execute("SELECT status FROM Jobs WHERE jobId=?", jobId)
-            res = cu.fetchall()
-            if not res:
-                raise database.ItemNotFound("No job with that Id")
-            # job is not in the queue
-            if res[0][0] != jobstatus.WAITING:
-                return 0
-            cu.execute("""SELECT COUNT(*) FROM Jobs
-                              WHERE timeSubmitted <
-                                  (SELECT timeSubmitted FROM Jobs
-                                      WHERE jobId = ?)
-                              AND status = ?""", jobId, jobstatus.WAITING)
-        else:
-            cu.execute("SELECT COUNT(*) FROM Jobs WHERE status = ?",
-                       jobstatus.WAITING)
-        return cu.fetchone()[0]
-
+        return mc.jobStatus(uuid)
 
     # session management
     @private
@@ -2960,68 +2849,6 @@ class MintServer(object):
                 pass
         return res
 
-    def _getRecipe(self, groupTroveId):
-        groupTrove = self.groupTroves.get(groupTroveId)
-        groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
-        removedComponents = self.groupTroveRemovedComponents.list(groupTroveId)
-
-        recipe = ""
-        name = ''.join((string.capwords(
-            ' '.join(groupTrove['recipeName'].split('-')))).split(' '))
-        indent = 4 * " "
-
-        recipe += "class " + name + "(GroupRecipe):\n"
-        recipe += indent + "name = '%s'\n" % groupTrove['recipeName']
-        recipe += indent + "version = '%s'\n\n" % groupTrove['upstreamVersion']
-        recipe += indent + "autoResolve = %s\n\n" % \
-                  str(groupTrove['autoResolve'])
-        recipe += indent + 'def setup(r):\n'
-
-        indent = 8 * " "
-        recipeLabels = self.getGroupTroveLabelPath(groupTroveId)
-        recipe += indent + "r.setLabelPath(%s)\n" % \
-                  str(recipeLabels).split('[')[1].split(']')[0]
-
-        if removedComponents:
-            recipe += indent + "r.removeComponents(('" + \
-                      "', '".join(removedComponents) + "'))\n"
-
-        for trv in groupTroveItems:
-            ver = trv['versionLock'] and trv['trvVersion'] or trv['trvLabel']
-
-            d = {}
-            d['name'] = trv['trvName']
-            d['flavor'] = trv['trvFlavor']
-            d['groupName'] = trv['subGroup']
-            d['ver'] = ver
-
-            # XXX HACK to use the "fancy-flavored" group troves from
-            # conary.rpath.com
-            if trv['trvName'].startswith('group-') and \
-                   trv['trvLabel'].startswith('conary.rpath.com@'):
-
-                branch = trv['trvLabel'].split("@")[1]
-                addonsLabel = "addons.rpath.com@" + branch
-
-                d['fancyFlavor'] = 'is:x86(i486,i586,i686) x86_64'
-                d['searchPath'] = str([addonsLabel, trv['trvLabel']])
-
-                recipe += indent + "if Arch.x86_64:\n"
-                recipe += (12 * " ") + "r.add('%(name)s', flavor = '%(fancyFlavor)s', groupName = '%(groupName)s', searchPath = %(searchPath)s)\n" % d
-                recipe += indent + "else:\n" + (4 * " ")
-                recipe += indent + "r.add('%(name)s', flavor = '%(flavor)s', groupName = '%(groupName)s', searchPath = %(searchPath)s)\n" % d
-            else:
-                recipe += indent + "r.add('%(name)s', '%(ver)s', '%(flavor)s', groupName = '%(groupName)s')\n" % d
-
-            # properly support redirected troves, by explicitly including them
-            for arch, redirList in self._resolveRedirects(groupTroveId, trv['trvName'], ver, trv['trvFlavor']).iteritems():
-                if redirList:
-                    recipe += indent + "if Arch.%s:\n" % arch.split("#")[1]
-                    for rName, rVer, rFlav in redirList:
-                        recipe += (12 * " ") + "r.add('%s', '%s', '%s', groupName = '%s')\n" % \
-                            (rName, rVer, rFlav, trv['subGroup'])
-        return recipe
-
     @typeCheck(int)
     @private
     @requiresAuth
@@ -3049,16 +2876,6 @@ class MintServer(object):
         for label in projectLabels:
             recipeLabels.insert(0, label)
         return recipeLabels
-
-    @typeCheck(int)
-    @private
-    @requiresAuth
-    def getRecipe(self, groupTroveId):
-        projectId = self.groupTroves.getProjectId(groupTroveId)
-        self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
-        return self._getRecipe(groupTroveId)
 
     @private
     @typeCheck(int, bool)
@@ -3134,6 +2951,67 @@ class MintServer(object):
             raise PermissionDenied
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
         return True
+
+    def _stripKeys(self, dictList, *keys):
+        res = []
+        for origDict in dictList:
+            newDict = {}
+            for key in origDict:
+                if key not in keys:
+                    newDict[key] = origDict[key]
+            res.append(newDict)
+        return res
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def serializeGroupTrove(self, groupTroveId):
+        # performed at the mint server level to have access to
+        # groupTrove, project and groupTrovItems objects
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+
+        groupTrove = grouptrove.GroupTrove(self, groupTroveId)
+        project = projects.Project(self, groupTrove.projectId)
+        job = groupTrove.getJob()
+        if not job:
+            raise badjujuError
+
+        cc = project.getConaryConfig()
+        cfgBuffer = StringIO.StringIO()
+        cc.display(cfgBuffer)
+        cfgData = cfgBuffer.getvalue()
+
+        r = {}
+        r['serialVersion'] = grouptrove.SERIAL_VERSION
+        r['type'] = 'cook'
+
+        r['recipeName'] = groupTrove.recipeName
+        r['upstreamVersion'] = groupTrove.upstreamVersion
+
+        r['autoResolve'] = groupTrove.autoResolve
+
+        r['jobData'] = self.jobData.getDataDict(job.id)
+
+        r['description'] = groupTrove.description
+
+        r['troveItems'] = self._stripKeys(self.groupTroveItems.listByGroupTroveId(groupTroveId), 'baseUrl', 'groupTroveItemId', 'groupTroveId', 'creatorId')
+        r['removedComponents'] = self.groupTroveRemovedComponents.list(groupTroveId)
+
+        r['label'] = project.getLabel()
+        r['labelPath'] = self.getGroupTroveLabelPath(groupTroveId)
+        r['repositoryMap'] = cc.repositoryMap
+
+        r['project'] = {'name' : project.name,
+                        'hostname' : project.hostname,
+                        'label' : project.getLabel(),
+                        'conaryCfg' : cfgData}
+
+        r['UUID'] = '%s.%s-cook-%d' % (self.cfg.hostName,
+                                        self.cfg.externalDomainName,
+                                        groupTrove.id)
+
+        return simplejson.dumps(r)
 
     #group trove component reomval specific functions
     @private
@@ -3814,6 +3692,21 @@ class MintServer(object):
 
         return descendants
 
+    # *** MCP RELATED FUNCTIONS ***
+    # always use this method to get an MCP client so that it can be cached
+    def _getMcpClient(self):
+        if not self.mcpClient:
+            mcpClientCfg = mcpClient.MCPClientConfig()
+            mcpClientCfg.read(os.path.join(self.cfg.dataPath,
+                                           'config', 'mcp-client.conf'))
+
+            self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
+        return self.mcpClient
+
+    def __del__(self):
+        if self.mcpClient:
+            self.mcpClient.disconnect()
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
@@ -3896,3 +3789,4 @@ class MintServer(object):
                 schemaLock.close()
 
         self.newsCache.refresh()
+        self.mcpClient = None

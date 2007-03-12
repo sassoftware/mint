@@ -134,8 +134,8 @@ class ProjectHandler(WebHandler):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         buildsInProgress = []
         for build in builds:
-            buildJob = build.getJob()
-            if buildJob and (buildJob.getStatus() <= jobstatus.RUNNING):
+            buildStatus, msg = build.getStatus()
+            if buildStatus not in ('no job', 'finished', 'failed'):
                 buildsInProgress.append(build.id)
 
         return self._write("builds", builds = builds,
@@ -440,8 +440,9 @@ class ProjectHandler(WebHandler):
         else:
             build = self.client.getBuild(buildId)
 
-        job = build.getJob()
-        if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
+        # enforce that job doesn't conflict
+        jobStatus, msg = build.getStatus()
+        if jobStatus not in ('no job', 'finished', 'failed'):
             self._addErrors("You cannot alter this build because a "
                             "conflicting image is currently being generated.")
             self._predirect("build?id=%d" % buildId)
@@ -497,7 +498,7 @@ class ProjectHandler(WebHandler):
             build.setDataValue(name, val)
 
         try:
-            job = self.client.startImageJob(buildId)
+            self.client.startImageJob(buildId)
         except jobs.DuplicateJob:
             pass
 
@@ -568,8 +569,10 @@ class ProjectHandler(WebHandler):
         buildInProgress = False
         builtBy = None
         builtAt = None
+        # FIXME: refactor all this to not use a job object...
+        # MCP_WORK
         if auth.authorized:
-            buildJob = build.getJob()
+            buildJob = None
             if buildJob:
                 buildInProgress = \
                         (buildJob.getStatus() <= jobstatus.RUNNING)

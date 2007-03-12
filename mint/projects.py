@@ -144,8 +144,8 @@ class Project(database.TableObject):
         labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
-        cfg.root = ":memory:"
-        cfg.dbPath = ":memory:"
+        #cfg.root = ":memory:"
+        #cfg.dbPath = ":memory:"
 
         cfg.initializeFlavors()
 

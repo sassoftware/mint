@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import tempfile
+import simplejson
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -21,7 +22,7 @@ from mint.distro import installable_iso
 from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
      PublishedReleaseMissing, PublishedReleasePublished, \
      JobserverVersionMismatch
-from mint.builds import BuildDataNameError
+from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
 
@@ -89,9 +90,9 @@ class BuildTest(fixtures.FixturedUnitTest):
             assert (build.getDataValue('showMediaCheck') is mediaCheck)
 
         # test bad name lockdown
-        self.assertRaises(BuildDataNameError,
+        self.assertRaises(builds.BuildDataNameError,
             build.setDataValue, 'undefinedName', 'test string')
-        self.assertRaises(BuildDataNameError,
+        self.assertRaises(builds.BuildDataNameError,
                           build.getDataValue, 'undefinedName')
 
         # test bad name with validation override
@@ -100,7 +101,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         assert('test string' == build.getDataValue('undefinedName'))
 
         # test bad name with validation override and no data type specified
-        self.assertRaises(BuildDataNameError,
+        self.assertRaises(builds.BuildDataNameError,
             build.setDataValue, 'undefinedName', None, False)
 
         build.setBuildType(buildtypes.STUB_IMAGE)
@@ -756,6 +757,25 @@ class BuildTest(fixtures.FixturedUnitTest):
         files = build.getFiles()
         self.failUnlessEqual(len(files), 0)
 
+    @fixtures.fixture('Full')
+    def testSerializeBuild(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+
+        serialized = build.serialize()
+
+        buildDict = simplejson.loads(serialized)
+
+        self.failIf(buildDict['serialVersion'] != 1,
+                    "Serial Version 1 was not honored")
+
+        assert sorted(buildDict.keys()) == \
+            ['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
+             'project', 'serialVersion', 'troveFlavor', 'troveName',
+             'troveVersion', 'type']
+
+        assert buildDict['project'].keys() == ['hostname', 'name', 'label']
 
 if __name__ == "__main__":
     testsuite.main()
