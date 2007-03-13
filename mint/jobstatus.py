@@ -21,20 +21,10 @@ sys.modules[__name__].__dict__.update(statuses)
 statusNames = dict([(statuses[x[0]], x[0].capitalize().replace('_', ' ')) \
                         for x in statuses.iteritems()])
 
-stautsCodeNames = dict([(x[1], 'STATUS_' + x[0].replace('_', '')) \
+statusCodeNames = dict([(x[1], 'STATUS_' + x[0].replace('_', '')) \
                             for x in statuses.iteritems()])
 
 STATUSES = statuses.keys()
-
-statusCodeNames = {
-    UNKNOWN:  "STATUS_UNKNOWN",
-    WAITING: "STATUS_WAITING",
-    RUNNING: "STATUS_RUNNING",
-    FINISHED: "STATUS_FINISHED",
-    DELETED: "STATUS_DELETED",
-    ERROR: "STATUS_ERROR",
-    NOJOB: "STATUS_NOJOB",
-}
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
