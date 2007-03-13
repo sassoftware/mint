@@ -2764,7 +2764,7 @@ class MintServer(object):
         try:
             return mc.jobStatus(uuid)
         except mcp_error.UnknownJob:
-            return 'no job', 'No Job'
+            return jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
     @typeCheck(int)
     @requiresAuth
