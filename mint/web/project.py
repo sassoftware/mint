@@ -135,7 +135,8 @@ class ProjectHandler(WebHandler):
         buildsInProgress = []
         for build in builds:
             buildStatus, msg = build.getStatus()
-            if buildStatus not in ('no job', 'finished', 'failed'):
+            if buildStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
+                                   jobstatus.FAILED):
                 buildsInProgress.append(build.id)
 
         return self._write("builds", builds = builds,
@@ -442,7 +443,8 @@ class ProjectHandler(WebHandler):
 
         # enforce that job doesn't conflict
         jobStatus, msg = build.getStatus()
-        if jobStatus not in ('no job', 'finished', 'failed'):
+        if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
+                             jobstatus.FAILED):
             self._addErrors("You cannot alter this build because a "
                             "conflicting image is currently being generated.")
             self._predirect("build?id=%d" % buildId)
