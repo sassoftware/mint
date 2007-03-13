@@ -1,0 +1,53 @@
+#!/usr/bin/python
+
+from conary import dbstore
+from conary.lib import util
+import os
+import struct
+import sys
+
+def checkFiles(reposPath):
+    db = dbstore.connect(os.path.join(reposPath, 'sqldb'), 'sqlite')
+    contentsPath = os.path.join(reposPath, 'contents')
+
+    cu = db.cursor()
+    cu.execute("SELECT COUNT(sha1) FROM FileStreams")
+    l = int(cu.fetchone()[0])
+
+    print "Reading %d streams from repository..." % l
+    cu.execute('select distinct hex(sha1) from filestreams')
+    missing = []
+
+    cu = util.PeekIterator(cu)
+    i = 0
+    try:
+        while cu.peek():
+            sha = cu.next()[0]
+            i += 1
+            if not sha:
+                continue
+            splitSha = struct.unpack('2s2s36s', sha)
+            if not os.path.exists(os.path.join(contentsPath, *splitSha)):
+                missing.append(sha)
+
+            if i % 500:
+                print '\rprogress: %d/%d%s' % (i, l, '\b' * 50),
+    except StopIteration:
+        print "\nHello!\n"
+        pass
+    print "\n"
+
+    db.close()
+    return missing
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "Usage: %s <path-to-repository>" % sys.argv[0]
+        sys.exit(1)
+
+    r = checkFiles(sys.argv[1])
+
+    if r:
+        print "Missing contents:", r
+    else:
+        print "No missing contents found."
