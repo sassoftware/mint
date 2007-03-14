@@ -38,6 +38,7 @@ from conary.dbstore import sqlerrors
 from conary.lib import log
 from conary.lib import coveragehook
 from conary.repository import shimclient
+from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
 from conary.repository.transport import Transport
 
@@ -138,7 +139,9 @@ def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
 
     repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
-        repos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
+        netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
+        repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
+
         shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
 
         shim.forceSecure = repos.forceSecure = cfg.SSL
