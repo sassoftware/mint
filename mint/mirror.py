@@ -52,7 +52,7 @@ class InboundMirrorsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE InboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
             if dbversion == 31 and not self.initialCreation:
                 cu.execute("ALTER TABLE InboundMirrors ADD COLUMN allLabels INT DEFAULT 0")
-            return dbversion >= 32
+            return dbversion >= 31
 
         return True
 

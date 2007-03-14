@@ -3778,8 +3778,9 @@ class MintServer(object):
             if genConaryRc:
                 self._generateConaryRcFile()
 
-            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
-            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
+                # do these only on table reloads too
+                self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
+                self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         except:
             #An error occurred during db creation or upgrading
             self.db.rollback()
