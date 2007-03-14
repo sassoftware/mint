@@ -282,6 +282,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
+        util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
 
         cfg.reposLog = False
 
