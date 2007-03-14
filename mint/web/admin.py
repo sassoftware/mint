@@ -104,7 +104,7 @@ class AdminHandler(WebHandler):
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
                         useMirror, authType,
-                        additionalLabelsToMirror):
+                        additionalLabelsToMirror, allLabels):
         additionalLabels = []
         extLabel = ""
         if not name:
@@ -138,6 +138,8 @@ class AdminHandler(WebHandler):
                     self._addErrors('Missing entitlement class for local mirror authentication')
                 if not externalEntClass:
                     self._addErrors('Missing entitlement key for local mirror authentication')
+        if additionalLabelsToMirror and allLabels:
+            self._addErrors("Do not request additional labels and all labels to be mirrored: these options are exclusive.")
         return additionalLabels, extLabel
 
     @strFields(name = '', hostname = '', label = '', url = '',\
@@ -145,14 +147,12 @@ class AdminHandler(WebHandler):
         externalEntClass = '', authType = 'none',\
         additionalLabelsToMirror = '', useMirror = 'none')
     @intFields(projectId = -1)
+    @boolFields(allLabels = False)
     def processAddExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntClass, externalEntKey,
                         useMirror, authType, additionalLabelsToMirror,
-                        projectId, *args, **kwargs):
-
-        print >> sys.stderr, label
-        sys.stderr.flush()
+                        projectId, allLabels, *args, **kwargs):
 
         kwargs = {'name': name, 'hostname': hostname, 'label': label,
             'url': url, 'authType': authType, 'externalUser': externalUser,
@@ -160,7 +160,8 @@ class AdminHandler(WebHandler):
             'externalEntKey': externalEntKey,
             'externalEntClass': externalEntClass,
             'useMirror': useMirror,
-            'additionalLabelsToMirror': additionalLabelsToMirror}
+            'additionalLabelsToMirror': additionalLabelsToMirror,
+            'allLabels': allLabels}
 
         editing = (projectId != -1)
         externalAuth = (authType != 'none')
@@ -213,9 +214,9 @@ class AdminHandler(WebHandler):
 
                 if mirror and editing:
                     mirrorId = mirror['inboundMirrorId']
-                    self.client.editInboundMirror(mirrorId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass)
+                    self.client.editInboundMirror(mirrorId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass, allLabels)
                 else:
-                    self.client.addInboundMirror(projectId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass)
+                    self.client.addInboundMirror(projectId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass, allLabels)
                     self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
             elif useMirror == 'none' and mirror and editing:
@@ -247,6 +248,7 @@ class AdminHandler(WebHandler):
             kwargs.setdefault('url', 'https://conary.rpath.com/conary/')
             kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
             kwargs.setdefault('additionalLabelsToMirror', 'conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen')
+            kwargs.setdefault('allLabels', 0)
         else:
             firstTime = False
 
@@ -293,6 +295,7 @@ class AdminHandler(WebHandler):
             initialKwargs['externalUser'] = mirror['sourceUsername']
             initialKwargs['externalPass'] = mirror['sourcePassword']
             initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
+            initialKwargs['allLabels'] = mirror['allLabels']
             initialKwargs['useMirror'] = 'net'
             mirrored = True
 

@@ -22,13 +22,15 @@ class InboundMirrorsTable(database.KeyedTable):
         sourceUsername  VARCHAR(254),
         sourcePassword  VARCHAR(254),
         mirrorOrder     INT DEFAULT 0,
+        allLabels       INT DEFAULT 0,
         CONSTRAINT InboundMirrors_targetProjectId_fk
             FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
             ON DELETE CASCADE ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
     fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
-              'sourceUrls', 'sourceUsername', 'sourcePassword', 'mirrorOrder']
+              'sourceUrls', 'sourceUsername', 'sourcePassword',
+              'mirrorOrder', 'allLabels']
 
     indexes = {'InboundMirrorsProjectIdIdx': """CREATE INDEX InboundMirrorsProjectIdIdx ON InboundMirrors(targetProjectId)"""}
 
@@ -48,7 +50,9 @@ class InboundMirrorsTable(database.KeyedTable):
                 cu.execute("""DROP TABLE InboundLabels""")
             if dbversion == 30 and not self.initialCreation:
                 cu.execute("ALTER TABLE InboundMirrors ADD COLUMN mirrorOrder INT DEFAULT 0")
-            return dbversion >= 30
+            if dbversion == 31 and not self.initialCreation:
+                cu.execute("ALTER TABLE InboundMirrors ADD COLUMN allLabels INT DEFAULT 0")
+            return dbversion >= 32
 
         return True
 

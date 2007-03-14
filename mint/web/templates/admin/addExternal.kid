@@ -11,7 +11,8 @@
     for var in ['name', 'hostname', 'label', 'url',
         'externalUser', 'externalPass', 'externalEntKey',
         'externalEntClass', 'authType', 'useMirror',
-        'externalAuth', 'authType', 'additionalLabelsToMirror']:
+        'externalAuth', 'authType', 'additionalLabelsToMirror',
+        'allLabels']:
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
 ?>
     <head>
@@ -155,6 +156,15 @@
                 </div>
             </p>
             <table class="mainformhorizontal" id="mirrorSettings">
+                <tr>
+                   <th><em><label for="allLabels">Mirror All Labels on Repository:</label></em></th>
+                   <td>
+                       <input class="radio" type="checkbox" name="allLabels" value="1"
+                            py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" id="allLabels" />
+                       <p class="help"><label for="allLabels">Check this box to mirror all of the labels
+                            available in the source repository.</label></p>
+                   </td>
+                </tr>
                 <tr>
                    <th><em>Additional labels to mirror:</em></th>
                    <td>

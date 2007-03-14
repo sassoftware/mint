@@ -80,7 +80,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and make sure that the appropriate database entries are created
         assert(client.getInboundMirrors() == [[1, 1,
             'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen',
-            'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
+            'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass', 0]])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
@@ -138,6 +138,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         )
 
         assert(os.path.exists(self.mintCfg.dataPath + "/entitlements/conary.rpath.com"))
+
+    def testExternalProjectMirrorAllLabels(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
+        # ensure "first time" content appears on page
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+            {'hostname':                'rpath',
+             'name':                    'rPath Linux',
+             'label':                   'conary.rpath.com@rpl:devel',
+             'url':                     '',
+             'authType':                'entitlement',
+             'externalEntKey':          'entitlementkey',
+             'externalEntClass':        'entitlementclass',
+             'allLabels':                   '1',
+             'additionalLabelsToMirror':'',
+             'useMirror':              'net',
+            }
+        )
+
+        self.failUnlessEqual(client.getInboundMirror(1)['allLabels'], 1)
 
     def testCreateExternalProjectNoAuth(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
