@@ -2455,7 +2455,7 @@ class MintServer(object):
                                jobstatus.RUNNING, 'Starting', time.time(),
                                jobId)
                     if self.req:
-                        self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
+                        self.jobData.setDataValue(jobId, "hostname", self.remoteIp, data.RDT_STRING)
                     cu.execute("SELECT jobId FROM Jobs WHERE status=?",
                                jobstatus.WAITING)
                     # this is done inside the job lock. there is a small chance of race
@@ -3826,7 +3826,8 @@ class MintServer(object):
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.connection.remote_ip
+            self.remoteIp = self.req.subprocess_env.get("HTTP_X_FORWARDED_FOR",
+                    self.req.connection.remote_ip)
         else:
             self.remoteIp = "0.0.0.0"
 

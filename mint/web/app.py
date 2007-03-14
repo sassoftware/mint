@@ -177,6 +177,11 @@ class MintApp(WebHandler):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
             protocol='http'
 
+        # get remote IP address (try HTTP_X_FORWARDED_FOR first, in case
+        # we are behind a proxy
+        self.remoteIp = self.req.subprocess_env.get("HTTP_X_FORWARDED_FOR",
+                self.req.connection.remote_ip)
+
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
         dots = fullHost.split('.')
@@ -278,7 +283,8 @@ class MintApp(WebHandler):
             'inlineMime':       self.inlineMime,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
-            'output':           self.output
+            'output':           self.output,
+            'remoteIp':         self.remoteIp
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']:
