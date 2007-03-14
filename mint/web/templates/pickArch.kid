@@ -38,7 +38,7 @@
 
                     <h3>Options</h3>
                     <dl class="archOptions">
-                        <dt py:if="False">
+                        <dt py:if="cfg.addonsHost">
                             <input name="flavor" type="checkbox" value="5#use:vmware" id="vmware" />
                             <label id="vmwareLabel" for="vmware">VMware tools support</label>
                         </dt>

@@ -143,6 +143,7 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
+    addonsHost              = None
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

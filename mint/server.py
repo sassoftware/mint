@@ -3001,10 +3001,14 @@ class MintServer(object):
                    trv['trvLabel'].startswith('conary.rpath.com@'):
 
                 branch = trv['trvLabel'].split("@")[1]
-                addonsLabel = "addons.rpath.com@" + branch
+
+                if self.cfg.addonsHost:
+                    addonsLabel = self.cfg.addonsHost + "@" + branch
+                    d['searchPath'] = str([addonsLabel, trv['trvLabel']])
+                else:
+                    d['searchPath'] = [trv['trvLabel']]
 
                 d['fancyFlavor'] = 'is:x86(i486,i586,i686) x86_64'
-                d['searchPath'] = str([addonsLabel, trv['trvLabel']])
 
                 recipe += indent + "if Arch.x86_64:\n"
                 recipe += (12 * " ") + "r.add('%(name)s', flavor = '%(fancyFlavor)s', groupName = '%(groupName)s', searchPath = %(searchPath)s)\n" % d

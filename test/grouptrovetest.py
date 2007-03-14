@@ -64,6 +64,22 @@ groupsRecipe = """class GroupTest(GroupRecipe):
             r.add('group-core', flavor = 'is: x86', groupName = 'group-test', searchPath = ['addons.rpath.com@rpl:1', 'conary.rpath.com@rpl:1'])
 """ % ((MINT_PROJECT_DOMAIN,) * 2)
 
+groupsRecipeNoAddons = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('testproject.%s@rpl:devel', 'conary.rpath.com@rpl:1')
+        r.add('testcase', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
+        if Arch.x86_64:
+            r.add('group-core', flavor = 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test', searchPath = ['conary.rpath.com@rpl:1'])
+        else:
+            r.add('group-core', flavor = 'is: x86', groupName = 'group-test', searchPath = ['conary.rpath.com@rpl:1'])
+""" % ((MINT_PROJECT_DOMAIN,) * 2)
+
+
 refRedirRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
     version = '1.0.0'
@@ -906,7 +922,11 @@ class GroupTroveTestConary(MintRepositoryHelper):
             'group-core', '/conary.rpath.com@rpl:devel//1/1.0-0.5-10',
             '1#x86', 'group-test', False, True, True)
 
+        assert(groupTrove.getRecipe() == groupsRecipeNoAddons)
+
+        client.server._server.cfg.addonsHost = "addons.rpath.com"
         assert(groupTrove.getRecipe() == groupsRecipe)
+        client.server._server.cfg.addonsHost = None
 
     def testGetRecipeRedir(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
