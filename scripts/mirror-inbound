@@ -35,7 +35,7 @@ class MirrorInbound(MirrorScript):
 
         for label in mirroredLabels:
             inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
-                    sourceUser, sourcePass = label
+                    sourceUser, sourcePass, allLabels = label
             targetProject = client.getProject(targetProjectId)
             self.log.info("Mirroring %s" % targetProject.name)
 
@@ -55,7 +55,10 @@ class MirrorInbound(MirrorScript):
                 cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
                 cfg.host = reposHost
-                cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
+                if allLabels:
+                    cfg.labels = []
+                else:
+                    cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
                 sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                           cfg.source.user,
