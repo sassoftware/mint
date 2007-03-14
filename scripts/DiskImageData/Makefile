@@ -14,7 +14,8 @@ data_files = fstab \
 	     keyboard \
 	     vpc.vmc \
 	     i18n	\
-	     clock
+	     clock	\
+	     ova.xml.in
 
 datadir = /usr/share/rbuilder
 
