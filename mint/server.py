@@ -2383,7 +2383,7 @@ class MintServer(object):
                                jobstatus.RUNNING, 'Starting', time.time(),
                                jobId)
                     if self.req:
-                        self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
+                        self.jobData.setDataValue(jobId, "hostname", self.remoteIp, data.RDT_STRING)
                     cu.execute("SELECT jobId FROM Jobs WHERE status=?",
                                jobstatus.WAITING)
                     # this is done inside the job lock. there is a small chance of race
@@ -3428,10 +3428,10 @@ class MintServer(object):
 
     # mirrored labels
     @private
-    @typeCheck(int, (list, str), str, str, str)
+    @typeCheck(int, (list, str), str, str, str, bool)
     @requiresAdmin
     def addInboundMirror(self, targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword):
+            sourceUrl, sourceUsername, sourcePassword, allLabels):
         cu = self.db.cursor()
         cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM InboundMirrors")
         mirrorOrder = cu.fetchone()[0]
@@ -3439,19 +3439,20 @@ class MintServer(object):
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
                 sourceUrl = sourceUrl, sourceUsername = sourceUsername,
-                sourcePassword = sourcePassword, mirrorOrder = mirrorOrder)
+                sourcePassword = sourcePassword, mirrorOrder = mirrorOrder,
+                allLabels = allLabels)
         self._generateConaryRcFile()
         return x
 
     @private
-    @typeCheck(int, (list, str), str, str, str)
+    @typeCheck(int, (list, str), str, str, str, bool)
     @requiresAdmin
     def editInboundMirror(self, targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword):
+            sourceUrl, sourceUsername, sourcePassword, allLabels):
         x = self.inboundMirrors.update(targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
                 sourceUrl = sourceUrl, sourceUsername = sourceUsername,
-                sourcePassword = sourcePassword)
+                sourcePassword = sourcePassword, allLabels = allLabels)
         self._generateConaryRcFile()
         return x
 
@@ -3461,7 +3462,7 @@ class MintServer(object):
     def getInboundMirrors(self):
         cu = self.db.cursor()
         cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
-            sourceUsername, sourcePassword FROM InboundMirrors ORDER BY mirrorOrder""")
+            sourceUsername, sourcePassword, allLabels FROM InboundMirrors ORDER BY mirrorOrder""")
         return [list(x) for x in cu.fetchall()]
 
     @private
@@ -3719,7 +3720,8 @@ class MintServer(object):
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.connection.remote_ip
+            self.remoteIp = self.req.subprocess_env.get("HTTP_X_FORWARDED_FOR",
+                    self.req.connection.remote_ip)
         else:
             self.remoteIp = "0.0.0.0"
 

@@ -777,8 +777,7 @@ class SiteHandler(WebHandler):
         # record the hit
         urlId = urlIdMap.get(redirectUrl, urlIdMap.get(filename, None))
         if urlId:
-            ip = self.req.connection.remote_ip
-            self.client.addDownloadHit(urlId, ip)
+            self.client.addDownloadHit(urlId, self.remoteIp)
 
         if redirectUrl:
             self._redirect(redirectUrl)

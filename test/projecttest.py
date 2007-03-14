@@ -717,12 +717,12 @@ class ProjectTest(fixtures.FixturedUnitTest):
             'http://example.com/conary/', 'user', 'pass')
 
         client.editInboundMirror(project.id, ['conary.rpath.com@rpl:devel', 'conary.rpath.com@rpl:1'],
-            'http://www.example.com/conary/', 'username', 'password')
+            'http://www.example.com/conary/', 'username', 'password', False)
 
         self.failUnlessEqual(client.getInboundMirror(project.id),
             {'inboundMirrorId': 1, 'mirrorOrder': 0,
              'sourceUrl': 'http://www.example.com/conary/',
-             'sourceUsername': 'username',
+             'sourceUsername': 'username', 'allLabels': 0,
              'sourceLabels': 'conary.rpath.com@rpl:devel conary.rpath.com@rpl:1',
              'sourcePassword': 'password', 'targetProjectId': 1}
         )

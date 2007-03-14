@@ -140,7 +140,11 @@ def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
     repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
         netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
-        repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
+        
+        if 'changesetCacheDir' in nscfg.keys():
+            repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
+        else:
+            repos = netRepos
 
         shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
 
