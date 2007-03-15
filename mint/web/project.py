@@ -132,15 +132,8 @@ class ProjectHandler(WebHandler):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        buildsInProgress = []
-        for build in builds:
-            buildStatus, msg = build.getStatus()
-            if buildStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
-                                   jobstatus.FAILED):
-                buildsInProgress.append(build.id)
 
-        return self._write("builds", builds = builds,
-                buildsInProgress = buildsInProgress)
+        return self._write("builds", builds = builds)
 
     @writersOnly
     def groups(self, auth):
