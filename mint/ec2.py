@@ -141,7 +141,7 @@ class EC2Wrapper(object):
     def getInstanceStatus(self, ec2InstanceId):
         rs = self.ec2conn.get_all_instances(instance_ids=[ec2InstanceId])
         instance = rs[0].instances[0]
-        return instance.status, instance.dns_name
+        return instance.state, instance.dns_name
 
     def terminateInstance(self, ec2InstanceId):
         try:

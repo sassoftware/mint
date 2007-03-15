@@ -57,11 +57,11 @@ class FakeEC2Reservation(object):
 
 class FakeEC2Instance(object):
 
-    __slots__ = ( 'amiId', 'id', 'status', 'dns_name' )
+    __slots__ = ( 'amiId', 'id', 'state', 'dns_name' )
 
-    def __init__(self, amiId, instanceId, status='pending', dns_name=''):
+    def __init__(self, amiId, instanceId, state='pending', dns_name=''):
         self.id = instanceId
-        self.status = status
+        self.state = state
         self.dns_name = dns_name
         self.amiId = amiId
 
@@ -247,8 +247,8 @@ Please log in via raa using the following password. %(raaPassword)s"""
         ec2Wrapper = ec2.EC2Wrapper(self.cfg)
         instanceId = client.launchAMIInstance(amiIds[0])
 
-        status, dns_name = client.getLaunchedAMIInstanceStatus(instanceId)
-        self.failUnlessEqual(status, 'pending')
+        state, dns_name = client.getLaunchedAMIInstanceStatus(instanceId)
+        self.failUnlessEqual(state, 'pending')
         self.failIf(dns_name)
 
     @fixtures.fixture("Empty")
