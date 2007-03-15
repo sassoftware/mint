@@ -17,6 +17,11 @@ EOUSAGE
     exit 1
 }
 
+# check to make sure that apache is not running
+function check_apache() {
+    pidof httpd > /dev/null 2>&1
+}
+
 if [ $# -lt 1 ]; then
     usage "Not enough arguments: $0 $*"
 fi
@@ -131,7 +136,6 @@ cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 EOTMPWATCH
 chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 
-echo "Activating new bind mounts"
-mount -a
-
-/sbin/service multi-jobserver start
+# only mount and start if apache is running
+check_apache && mount -a
+check_apache && /sbin/service multi-jobserver start
