@@ -33,9 +33,8 @@ def checkFiles(reposPath):
             if i % 500:
                 print '\rprogress: %d/%d%s' % (i, l, '\b' * 50),
     except StopIteration:
-        print "\nHello!\n"
         pass
-    print "\n"
+    print "\nNot all file streams will need to be checked. %d streams not checked." % (l-i)
 
     db.close()
     return missing
