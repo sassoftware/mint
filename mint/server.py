@@ -3728,6 +3728,7 @@ class MintServer(object):
         self.cfg = cfg
         self.req = req
         schemaLock = None
+        self.mcpClient = None
 
         global callLog
         if self.cfg.xmlrpcLogFile:
@@ -3808,4 +3809,3 @@ class MintServer(object):
                 schemaLock.close()
 
         self.newsCache.refresh()
-        self.mcpClient = None
