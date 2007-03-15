@@ -51,6 +51,7 @@ def handleImages(mcpCfg, mintCfg):
                 os.chown(filePath, isogenUid, apacheGid)
                 os.chmod(filePath, os.stat(newfile)[0] & 0777 | 0020)
             build.setFiles(urlMap)
+            client.stopJob(uuid)
     finally:
         mcpClient.disconnect()
         postQueue.disconnect()
