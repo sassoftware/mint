@@ -4,28 +4,27 @@
 # All Rights Reserved
 #
 
-UNKNOWN, WAITING, RUNNING, FINISHED, DELETED, ERROR, NOJOB = range(-1, 6)
+import sys
 
-STATUSES = range(-1, 6)
-statusNames = {
-    UNKNOWN: "Unknown",
-    WAITING: "Waiting",
-    RUNNING: "Running",
-    FINISHED: "Finished",
-    DELETED: "Deleted",
-    ERROR: "Error",
-    NOJOB: "No Job"
-}
+statuses = {
+    'UNKNOWN'  : -1,
+    'WAITING'  : 0,
+    'RUNNING'  : 100,
+    'BUILT'    : 200,
+    'FINISHED' : 300,
+    'FAILED'   : 301,
+    'ERROR'    : 301,
+    'NO_JOB'   : 401
+    }
 
-statusCodeNames = {
-    UNKNOWN:  "STATUS_UNKNOWN",
-    WAITING: "STATUS_WAITING",
-    RUNNING: "STATUS_RUNNING",
-    FINISHED: "STATUS_FINISHED",
-    DELETED: "STATUS_DELETED",
-    ERROR: "STATUS_ERROR",
-    NOJOB: "STATUS_NOJOB",
-}
+sys.modules[__name__].__dict__.update(statuses)
+statusNames = dict([(statuses[x[0]], x[0].capitalize().replace('_', ' ')) \
+                        for x in statuses.iteritems()])
+
+statusCodeNames = dict([(x[1], 'STATUS_' + x[0].replace('_', '')) \
+                            for x in statuses.iteritems()])
+
+STATUSES = statuses.keys()
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
