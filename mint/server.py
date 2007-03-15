@@ -2765,9 +2765,12 @@ class MintServer(object):
         uuid = '%s.%s-build-%s' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, buildId)
         try:
-            return mc.jobStatus(uuid)
+            status, message = mc.jobStatus(uuid)
         except mcp_error.UnknownJob:
-            return jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+            status, message = \
+                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+
+        return { 'status' : status, 'message' : message }
 
     @typeCheck(int)
     @requiresAuth
@@ -2778,7 +2781,14 @@ class MintServer(object):
         uuid = '%s.%s-cook-%s' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, jobId)
 
-        return mc.jobStatus(uuid)
+        try:
+            status, message = mc.jobStatus(uuid)
+        except mcp_error.UnknownJob:
+            status, message = \
+                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+
+        return { 'status' : status, 'message' : message }
+
 
     # session management
     @private
