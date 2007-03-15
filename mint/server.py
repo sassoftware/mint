@@ -1838,7 +1838,8 @@ class MintServer(object):
         cfgData = cfgBuffer.getvalue()
 
         if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n"
+            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
+                (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
         r['serialVersion'] = builds.SERIAL_VERSION
@@ -2996,7 +2997,8 @@ class MintServer(object):
         cfgData = cfgBuffer.getvalue()
 
         if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n"
+            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
+                (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
         r['serialVersion'] = grouptrove.SERIAL_VERSION
