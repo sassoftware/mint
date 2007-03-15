@@ -132,7 +132,6 @@ class ProjectHandler(WebHandler):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-
         return self._write("builds", builds = builds)
 
     @writersOnly
@@ -435,7 +434,8 @@ class ProjectHandler(WebHandler):
             build = self.client.getBuild(buildId)
 
         # enforce that job doesn't conflict
-        jobStatus, msg = build.getStatus()
+        res = build.getStatus()
+        jobStatus, msg = res['status'], res['message']
         if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
                              jobstatus.FAILED):
             self._addErrors("You cannot alter this build because a "
