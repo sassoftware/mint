@@ -15,7 +15,7 @@ from mcp import queue
 from mcp import jobstatus
 
 from mint import config as mint_config
-from mint import server as mint_server
+from mint import shimclient
 
 from conary import dbstore
 
