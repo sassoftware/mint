@@ -6,6 +6,7 @@
 #
 
 import os, sys
+import pwd
 import optparse
 import httplib
 
