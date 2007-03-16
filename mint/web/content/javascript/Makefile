@@ -1,4 +1,5 @@
 javascript_files =\
+	ec2.js \
 	groupbuilder.js \
 	library.js \
 	mirror.js \

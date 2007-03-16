@@ -1100,6 +1100,22 @@ class SiteHandler(WebHandler):
             trvName = trvName, trvVersion = trvVersion,
             references = references, descendants = descendants)
 
+    @intFields(id = -1)
+    def tryItNow(self, auth, id):
+        try:
+            bami = self.client.getBlessedAMI(id)
+        except database.ItemNotFound:
+            raise HttpNotFound
+
+        if not bami.isAvailable:
+            raise HttpNotFound
+
+        return self._write("tryItNow",
+                blessedAMIId = bami.id,
+                ec2AMIId = bami.ec2AMIId,
+                buildId = bami.buildId,
+                shortDescription = bami.shortDescription,
+                helptext = bami.helptext)
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
