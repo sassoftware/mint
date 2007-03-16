@@ -93,6 +93,12 @@ class AMIImage(bootable_image.BootableImage):
         c = boto.connect_ec2(self.amiConfig.publicKey,
                 self.amiConfig.privateKey)
         amiId = str(c.register_image(s3Manifest))
+        if self.amiConfig.launchGroups:
+            c.modify_image_attribute(amiId, attribute='launchPermission',
+                operation='add', groups=self.amiConfig.launchGroups)
+        if self.amiConfig.launchUsers:
+            c.modify_image_attribute(amiId, attribute='launchPermission',
+                operation='add', user_ids=self.amiConfig.launchUsers)
         self.build.setDataValue("amiId", amiId, RDT_STRING, False)
         self.build.setDataValue("amiS3Manifest", s3Manifest, RDT_STRING, False)
         return amiId
@@ -157,3 +163,6 @@ class AMIImageConfig(ConfigFile):
     # bucket to store EC2 virtual machines in
     bucket                      = 'rbuilder-ec2-test'
 
+    # default permissions for images that are registered
+    launchGroups                = cfgtypes.CfgList()
+    launchUsers                 = cfgtypes.CfgList()
