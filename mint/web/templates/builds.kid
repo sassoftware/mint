@@ -22,7 +22,6 @@ from mint.web.templatesupport import downloadTracker
             from mint.helperfuncs import truncateForDisplay
             rowAttrs = { 'class': (rowNumber % 2) and 'odd' or 'even' }
             isPublished = build.getPublished()
-            isInProgress = build.id in buildsInProgress
         ?>
         <tr py:attrs="rowAttrs">
             <td colspan="4" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
@@ -31,16 +30,13 @@ from mint.web.templatesupport import downloadTracker
                         release = self.client.getPublishedRelease(build.pubReleaseId)
                     ?>
                     <br />Part of ${isPublished and 'published' or 'unpublished'} release <a href="${basePath}release?id=${release.id}">${release.name} (Version ${release.version}) </a></span>
-                <div py:if="build.id in buildsInProgress" py:strip="True">
-                    <br /><span class="buildAssociated">This build is currently in progress.</span>
-                </div>
             </td>
         </tr>
         <tr py:attrs="rowAttrs">
             <td class="buildInfo">${build.getDefaultName()}</td>
             <td class="buildInfo">${build.getArch()}</td>
             <td class="buildInfo">${buildtypes.typeNamesShort[build.getBuildType()]}</td>
-            <td class="buildInfo">&nbsp;<input py:if="not isPublished and not isInProgress" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
+            <td class="buildInfo">&nbsp;<input py:if="not isPublished" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
     </div>
