@@ -27,6 +27,18 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 
+import mcp_helper
+from mcp import queue
+from mcp_helper import MCPTestMixin
+
+# Mock out the queues
+queue.Queue = mcp_helper.DummyQueue
+queue.Topic = mcp_helper.DummyQueue
+queue.MultiplexedQueue = mcp_helper.DummyMultiplexedQueue
+queue.MultiplexedTopic = mcp_helper.DummyMultiplexedQueue
+
+
+
 def stockBuildFlavor(db, buildId, arch = "x86_64"):
     cu = db.cursor()
     flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
@@ -76,6 +88,11 @@ class FixtureCache(object):
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         cfg.postCfg()
+
+        util.mkdirChain(cfg.dataPath + "/config/")
+        f = open(cfg.dataPath + "/config/mcp-client.conf", "w")
+        f.close()
+
         return cfg
 
     def delRepos(self):
@@ -554,7 +571,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         FixtureCache.__del__(self)
 
 
-class FixturedUnitTest(unittest.TestCase):
+class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
 
@@ -586,7 +603,9 @@ class FixturedUnitTest(unittest.TestCase):
             password = 'anonymous'
         else:
             password = '%spass' % username
-        return shimclient.ShimMintClient(self.cfg, (username, password))
+        s = shimclient.ShimMintClient(self.cfg, (username, password))
+        s.server._server.mcpClient = self.mcpClient
+        return s
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         client = self._getAdminClient()
@@ -660,7 +679,12 @@ class FixturedUnitTest(unittest.TestCase):
             os.dup2(oldErr, sys.stderr.fileno())
             os.dup2(oldOut, sys.stdout.fileno())
 
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        MCPTestMixin.setUp(self)
+
     def tearDown(self):
+        MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()
             self.cfg and util.rmtree(self.cfg.dataPath)

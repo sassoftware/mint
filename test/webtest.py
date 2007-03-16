@@ -20,7 +20,6 @@ from mint import mint_error
 from mint import database
 from mint import buildtypes
 from mint import jobstatus
-from mint import jsversion
 from mint import urltypes
 
 from repostest import testRecipe
