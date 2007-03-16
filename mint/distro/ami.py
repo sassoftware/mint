@@ -10,6 +10,7 @@ import tempfile
 import boto
 
 from conary.conarycfg import ConfigFile
+from conary.lib import cfgtypes
 from conary.lib import util
 
 from mint import buildtypes
