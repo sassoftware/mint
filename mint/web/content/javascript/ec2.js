@@ -1,18 +1,19 @@
-var statusId = 'startButton';
-var spinnerImg = 'apps/mint/images/circle-ball-dark-antialiased.gif';
-
+//
+// Copyright (C) 2007 rPath, Inc
+// All Rights Reserved
+//
 
 // ctor
 function LaunchedAMI(launchedAMIId) {
     this.launchedAMIId = launchedAMIId;
-    this.state = null;
-    this.dns_name = null;
     bindMethods(this);
+    this.getLaunchedAMIData();
     this.updateStatus();
 }
 
 // attributes
 LaunchedAMI.prototype.launchedAMIId = null;
+LaunchedAMI.prototype.data = null;
 LaunchedAMI.prototype.state = null;
 LaunchedAMI.prototype.dns_name = null;
 
@@ -29,16 +30,41 @@ LaunchedAMI.prototype.updateStatus = function() {
 
         if (this.state == 'pending') {
             callLater(5, this.updateStatus);
-        } else {
-            var oldStatus = $(statusId);
-            var newStatus = P(null, "Running on host " + this.dns_name);
-            swapDOM(oldStatus, newStatus);
         }
-
+        else {
+            this.updatePageWithNewState();
+        }
     };
 
     var req = new JsonRpcRequest("jsonrpc/",
         "getLaunchedAMIInstanceStatus");
+    req.setCallback(bind(callback, this));
+    req.send(true, [this.launchedAMIId]);
+
+};
+
+LaunchedAMI.prototype.updatePageWithNewState = function() {
+    hideElement("div_during_launch");
+    if (this.state == 'running') {
+        setNodeAttribute('rapLink', 'href', "http://"+this.dns_name+":8004/");
+        replaceChildNodes('rapPassword', this.data['raaPassword']);
+        showElement("div_success");
+    }
+    else {
+        showElement("div_failure");
+    }
+};
+
+LaunchedAMI.prototype.getLaunchedAMIData = function() {
+
+    // callback for launch status
+    var callback = function(aReq) {
+        logDebug("getLaunchedAMI response:", aReq.responseText);
+        var req = evalJSONRequest(aReq);
+        this.data = req;
+    };
+
+    var req = new JsonRpcRequest("jsonrpc/", "getLaunchedAMI");
     req.setCallback(bind(callback, this));
     req.send(false, [this.launchedAMIId]);
 
@@ -47,7 +73,7 @@ LaunchedAMI.prototype.updateStatus = function() {
 // ctor
 function EC2Launcher(blessedAMIId) {
     this.blessedAMIId = blessedAMIId;
-    connect(statusId, "onclick", this, "launchAMI");
+    connect("startButton", "onclick", this, "launchAMI");
     bindMethods(this);
 }
 
@@ -68,14 +94,13 @@ EC2Launcher.prototype.launchAMI = function(e) {
     // request the backend to launch the AMI instance
     var req = new JsonRpcRequest("jsonrpc/",
         "launchAMIInstance");
-    req.setCallback(callback);
+    req.setCallback(bind(callback, this));
     req.send(true, [this.blessedAMIId]);
 
     // Update status button
-    var oldStatus = $(statusId);
-    var newStatus = P({'id':statusId}, IMG({'src': staticPath + spinnerImg}), "Launching...");
-    disconnectAll(oldStatus);
-    swapDOM(oldStatus, newStatus);
+    disconnectAll($('startButton'));
+    hideElement('div_before_launch');
+    showElement('div_during_launch');
 
 };
 
