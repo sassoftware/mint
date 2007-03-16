@@ -24,6 +24,7 @@ onload = "javascript:;"
             <![CDATA[
                 var BaseUrl = '${cfg.basePath}';
                 var x86_64 = ${int(cfg.bootableX8664)};
+                var staticPath = "${cfg.staticPath}";
             ]]>
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js?v=${cacheFakeoutVersion}" />

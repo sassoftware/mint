@@ -154,32 +154,9 @@ def getFilesToAnnotate(baseDirs=[], filesToFind=[], exclude=[]):
                         allFiles.add(fullPath)
     return list(allFiles), notExists
 
-def getFilesToAnnotateByPatch(baseDirs=[], patchLevel=2):
-    files = {}
-    curDir = os.getcwd()
-    patchReaderPath = os.environ['COVERAGE_PATH'] + '/patchreader'
-
-    try:
-        for baseDir in baseDirs:
-            os.chdir(baseDir)
-            output = os.popen('hg diff | %s -p%s' % (patchReaderPath, patchLevel))
-            while True:
-                fileName = output.readline().strip()
-                if not fileName:
-                    break
-                lines = [ int(x) for x in output.readline().split()]
-                files[fileName] = lines
-    finally:
-        os.chdir(curDir)
-
-    for fullPath in files.keys():
-        if not _isPythonFile(fullPath):
-            del files[fullPath]
     return files, []
 
-
-
-def getFilesToAnnotateByPatch(baseDir, patchInput, filesDict=None):
+def getFilesToAnnotateByPatch(baseDir, exclude, patchInput, filesDict=None):
     if filesDict is None:
         files = {}
     else:
@@ -201,23 +178,28 @@ def getFilesToAnnotateByPatch(baseDir, patchInput, filesDict=None):
         lines = [ int(x) for x in output.readline().split()]
         files[fileName] = lines
 
-def getFilesToAnnotateFromPatchFile(path, baseDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, open, path)
+    for fileName in files.keys():
+        for excludePattern in exclude:
+            if re.search(excludePattern, fileName):
+                del files[fileName]
+
+def getFilesToAnnotateFromPatchFile(path, baseDirs=[], excludeDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, open, path)
     
-def getFilesToAnnotateFromHg(baseDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, os.popen, "hg diff")
+def getFilesToAnnotateFromHg(baseDirs=[], excludeDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, os.popen, "hg diff")
 
-def getFilesToAnnotateFromHgOut(baseDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, os.popen, "hg diff -r $(hg parents -r $(hg outgoing | awk '/changeset/ { print $2}' | head -1  | cut -d: -f1)  | awk '/changeset/ { print $2}' | cut -d: -f1)")
+def getFilesToAnnotateFromHgOut(baseDirs=[], excludeDirs=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, os.popen, "hg diff -r $(hg parents -r $(hg outgoing | awk '/changeset/ { print $2}' | head -1  | cut -d: -f1)  | awk '/changeset/ { print $2}' | cut -d: -f1)")
 
-def _getFilesToAnnotateFromFn(baseDirs, fn, *args, **kw):
+def _getFilesToAnnotateFromFn(baseDirs, excludeDirs, fn, *args, **kw):
     files = {}
     curDir = os.getcwd()
     try:
         for baseDir in baseDirs:
             os.chdir(baseDir)
             output = fn(*args, **kw)
-            getFilesToAnnotateByPatch(baseDir, output, files)
+            getFilesToAnnotateByPatch(baseDir, excludeDirs, output, files)
     finally:
         os.chdir(curDir)
 

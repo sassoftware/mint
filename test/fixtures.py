@@ -266,7 +266,6 @@ class FixtureCache(object):
                       'anotherBuildId': anotherBuild.id,
                       'groupTroveId':   groupTrove.id }
 
-
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
@@ -396,6 +395,21 @@ class FixtureCache(object):
         db.commit()
         return cfg, { 'test': testId }
 
+    def fixtureEC2(self, cfg):
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
+
+        adminId = self.createUser(cfg, db, username = 'admin', isAdmin = True)
+        client = shimclient.ShimMintClient(cfg, ('admin', 'adminpass'))
+
+        amiIds = []
+        for i in range(0,5):
+            amiIds.append(client.createBlessedAMI('ami-%08d' % i,
+                    "This is test AMI instance %d" % i))
+
+        return cfg, { 'adminId': adminId, 'amiIds': amiIds }
+
+
     def __del__(self):
         for f in self._fixtures.values():
             util.rmtree(f[0].dataPath)
@@ -423,7 +437,9 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        
+        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
+        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
         f.close()
@@ -520,6 +536,8 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
+        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
+        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # restore the mint db into a unique copy
         fixtureMintDbName = "mf%s" % name

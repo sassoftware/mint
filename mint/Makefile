@@ -23,6 +23,7 @@ python_files =			\
 	data.py			\
 	database.py		\
 	dbversion.py		\
+	ec2.py			\
 	flavors.py		\
 	grouptrove.py		\
 	helperfuncs.py		\
