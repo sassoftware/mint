@@ -38,6 +38,16 @@ from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import util
 
+import mcp_helper
+from mcp import queue
+from mcp_helper import MCPTestMixin
+
+# Mock out the queues
+queue.Queue = mcp_helper.DummyQueue
+queue.Topic = mcp_helper.DummyQueue
+queue.MultiplexedQueue = mcp_helper.DummyMultiplexedQueue
+queue.MultiplexedTopic = mcp_helper.DummyMultiplexedQueue
+
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
 # test suite.
@@ -305,7 +315,7 @@ rephelp._servers = MintServerCache()
 rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 
-class MintRepositoryHelper(rephelp.RepositoryHelper):
+class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def openRepository(self, serverIdx = 0, requireSigs = False, serverName = None):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs, serverName)
 
@@ -416,6 +426,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
+        MCPTestMixin.setUp(self)
         self.imagePath = os.path.join(self.tmpDir, "images")
         if not os.path.exists(self.imagePath):
             os.mkdir(self.imagePath)
@@ -424,6 +435,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         util.mkdirChain(os.path.join(self.reposDir, "tmp"))
 
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
+        self.mintServer.mcpClient = self.mcpClient
         self.db = self.mintServer.db
 
         # reset some caches
