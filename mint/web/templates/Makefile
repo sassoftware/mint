@@ -53,7 +53,8 @@ kid_files = \
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid		\
-	viewJoinRequest.kid
+	viewJoinRequest.kid \
+	confirmPublish.kid
 
 python_files = __init__.py
 

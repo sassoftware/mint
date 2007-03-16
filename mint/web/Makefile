@@ -21,7 +21,8 @@ python_files = \
 	site.py		\
 	webhandler.py	\
 	templatesupport.py \
-	basictroves.py
+	basictroves.py		\
+	vmtn.py
 
 extra_dist = Makefile
 

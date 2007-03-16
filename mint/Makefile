@@ -14,6 +14,8 @@ python_files =			\
 	checkhtml.py		\
 	client.py		\
 	charts.py		\
+	communityids.py \
+	communitytypes.py \
 	config.py		\
 	constants.py		\
 	cooktypes.py		\
