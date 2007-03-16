@@ -8,6 +8,7 @@ testsuite.setup()
 
 import sys
 import os
+import time
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
@@ -737,6 +738,66 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, True)
 
+    @fixtures.fixture("Full")
+    def testVAMData(self, db, data):
+        client = self.getClient('admin')
+        cu = db.cursor()
+        cu.execute("UPDATE Builds set buildType=8 WHERE buildId=1")
+        cu.execute("UPDATE Builds set buildType=9 WHERE buildId=2")
+        cu.execute("UPDATE Builds set timeUpdated=timeUpdated+1 WHERE buildId=2")
+        db.commit()
+        rel1 = client.getPublishedRelease(1)
+        rel2 = client.getPublishedRelease(2)
+        rel2.unpublish()
+        rel2.removeBuild(2)
+        rel1.addBuild(2)
+
+        from mint.web.project import ProjectHandler
+        ph = ProjectHandler()
+        ph.client = client
+        ph.project = client.getProject(1)
+        build = ph._getLatestVMwareBuild(rel1)
+        self.failIf(build.getId() != 2, "Latest VMware build not selected")
+
+        dat = ph._getPreviewData(rel1, build)
+        self.failIf(dat != {'oneLiner': 'Foo', 'longDesc': 'Foo', 'title': 'Test Published Build'}, "Incorrect preview information returned.")
+        cu = db.cursor()
+        cu.execute("""UPDATE Builds SET 
+                      description='This is a build description'
+                      WHERE buildId=2""")
+        cu.execute("""UPDATE Projects SET description='This is the project description' WHERE projectId=1""")
+        db.commit()
+        build = client.getBuild(2)
+        ph.project = client.getProject(1)
+        dat = ph._getPreviewData(rel1, build)
+        self.failIf(dat != {'oneLiner': 'This is a build description', 'longDesc': 'This is the project description', 'title': 'Test Published Build'}, "Incorrect preview information returned")
+        cu = db.cursor()
+        cu.execute("""UPDATE PublishedReleases SET 
+                      description='This is the release description'
+                      WHERE pubReleaseId=1""")
+        db.commit()
+        rel = client.getPublishedRelease(1)
+        dat = ph._getPreviewData(rel, build)
+        self.failIf(dat['oneLiner'] != 'This is the release description',
+                    'Incorrect preview information returned')
+
+        from conary.repository.netclient import NetworkRepositoryClient
+        oldgetTrove = NetworkRepositoryClient.getTrove
+        oldwalkTroveSet = NetworkRepositoryClient.walkTroveSet
+        NetworkRepositoryClient.getTrove = lambda *args: None
+        NetworkRepositoryClient.walkTroveSet = lambda *args: []
+        dat = ph._getVAMData(rel, build)
+        vamDat = {'userName': 'root', 'vmtools': False, 'hour': 20, 'title': 'Test Published Build', 'url': 'http://test.rpath.local2/project/foo/latestRelease', 'year': 2007, 'oneLiner': 'This is the release description', 'longDesc': 'This is the project description', 'minute': 36, 'month': 3, 'memory': 256, 'password': '', 'os': 'rPath Linux ', 'torrent': '1', 'day': 15, 'size': ''}
+        gmt = time.gmtime(build.timeUpdated)
+        vamDat['year'] = gmt[0]
+        vamDat['month'] = gmt[1]
+        vamDat['day'] = gmt[2]
+        vamDat['hour'] = gmt[3]
+        vamDat['minute'] = gmt[4]
+        self.failIf(dat != vamDat,
+        "Incorrect VAM data returned")
+        NetworkRepositoryClient.getTrove = oldgetTrove
+        NetworkRepositoryClient.walkTroveSet = oldwalkTroveSet
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
