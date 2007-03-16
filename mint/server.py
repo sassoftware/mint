@@ -20,6 +20,7 @@ from urlparse import urlparse
 
 from mint import buildtypes
 from mint import charts
+from mint import communityids
 from mint import data
 from mint import database
 from mint import dbversion
@@ -240,6 +241,7 @@ def getTables(db, cfg):
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
+    d['communityIds'] = communityids.CommunityIdsTable(db)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -1954,6 +1956,25 @@ class MintServer(object):
             publishedOnly = True
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 publishedOnly)
+
+    @typeCheck(int, int)
+    @private
+    @requiresAuth
+    def getCommunityId(self, projectId, communityType):
+        return self.communityIds.getCommunityId(projectId, communityType)
+
+    @typeCheck(int, int, str)
+    @private
+    @requiresAuth
+    def setCommunityId(self, projectId, communityType, communityId):
+        return self.communityIds.setCommunityId(projectId, communityType,
+                                                communityId)
+
+    @typeCheck(int, int)
+    @private
+    @requiresAuth
+    def deleteCommunityId(self, projectId, communityType):
+        return self.communityIds.deleteCommunityId(projectId, communityType)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
