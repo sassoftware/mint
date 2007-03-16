@@ -165,5 +165,5 @@ class AMIImageConfig(ConfigFile):
     bucket                      = 'rbuilder-ec2-test'
 
     # default permissions for images that are registered
-    launchGroups                = cfgtypes.CfgList()
-    launchUsers                 = cfgtypes.CfgList()
+    launchGroups                = cfgtypes.CfgList
+    launchUsers                 = cfgtypes.CfgList
