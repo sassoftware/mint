@@ -145,6 +145,10 @@ class MintConfig(ConfigFile):
     localeDir               = '/usr/share/locale/'
     addonsHost              = None
 
+    VAMUser                 = ''
+    VAMPassword             = ''
+
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
