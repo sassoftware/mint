@@ -1959,7 +1959,6 @@ class MintServer(object):
 
     @typeCheck(int, int)
     @private
-    @requiresAuth
     def getCommunityId(self, projectId, communityType):
         return self.communityIds.getCommunityId(projectId, communityType)
 

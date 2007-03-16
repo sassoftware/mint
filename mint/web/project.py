@@ -127,7 +127,11 @@ class ProjectHandler(WebHandler):
         else:
             mirrored = False
             anonymous = False
-        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous)
+        if self.cfg.VAMUser:
+            vmtnId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
+        else:
+            vmtnId = None
+        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous, vmtnId = vmtnId)
 
     def releases(self, auth):
         return self._write("pubreleases")
