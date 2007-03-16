@@ -219,7 +219,7 @@ def conaryHandler(req, cfg, pathInfo):
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         # clear the repository cache if the db connection has changed
-        if repHash in repositories:
+        if repHash in repositories and repositories[repHash]:
             if repositories[repHash].dbTuple != (reposDBDriver, reposDBPath):
                 del repositories[repHash]
 
