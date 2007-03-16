@@ -7,9 +7,11 @@ import email
 import os
 import re
 import sys
+import tempfile
 import time
 from mod_python import apache
 
+from mint import communitytypes
 from mint import database
 from mint import mailinglists
 from mint import jobs
@@ -29,6 +31,7 @@ from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 
 import conary
+from conary.lib import util
 from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
@@ -705,22 +708,156 @@ class ProjectHandler(WebHandler):
                                 'confirmed': '1' },
                     noLink = "releases")
 
+    def _getLatestVMwareBuild(self, pubrelease):
+        buildTypes = pubrelease.getUniqueBuildTypes()
+        vmw = False
+        for bt in buildTypes:
+            if bt[0] in (buildtypes.VMWARE_IMAGE, buildtypes.VMWARE_ESX_IMAGE):
+                vmw = True
+                break
+        if vmw:
+            changedTime = 0
+            latestBuild = None
+            for build in pubrelease.getBuilds():
+                bd = self.client.getBuild(build)
+                if bd.buildType in (buildtypes.VMWARE_IMAGE, buildtypes.VMWARE_ESX_IMAGE):
+                    ct = bd.timeUpdated
+                    if ct > changedTime:
+                        changedTime = ct
+                        latestBuild = bd
+        if vmw:
+            return latestBuild
+        else:
+            return None
+
+    
+    
+    def _getPreviewData(self, pubrelease, latestBuild):
+        dataDict = {} 
+        # Title
+        dataDict.update(title=latestBuild.getName())
+        # One Line Desc
+        if pubrelease.description:
+            dataDict.update(oneLiner=pubrelease.description)
+        elif latestBuild.getDesc():
+            dataDict.update(oneLiner=latestBuild.getDesc())
+        else:
+            dataDict.update(oneLiner=self.project.getName())
+        # Long Description
+        if self.project.getDesc():
+            dataDict.update(longDesc=self.project.getDesc())
+        else:
+            dataDict.update(longDesc=self.project.getName())
+
+        return dataDict
+
+    def _getVAMData(self, pubrelease, latestBuild):
+        # Get title, one line desc, and long desc
+        dataDict = self._getPreviewData(pubrelease, latestBuild) 
+
+        # URL
+        dataDict.update(url=self.project.getUrl() + 'latestRelease')
+        # Memory
+        dataDict.update(memory=latestBuild.getDataValue('vmMemory'))
+        # Size compressed
+        dataDict.update(size=latestBuild.getFiles()[0]['size']/0x100000)
+        if dataDict['size'] == '0M':
+            dataDict['size'] = ''
+        # VMware tools installed?
+        fl = latestBuild.getTroveFlavor()
+        if fl.stronglySatisfies(deps.parseFlavor('use: vmware')):
+            dataDict.update(vmtools='1')
+        else:
+            dataDict.update(vmtools=False)
+        # Bit Torrent Available
+        dataDict.update(torrent='1')
+        # User name
+        dataDict.update(userName='root')
+        # Password
+        dataDict.update(password='')
+
+        # OS 
+        cfg = self.project.getConaryConfig()
+        cfg.dbPath = cfg.root = ":memory:"
+        cclient = conaryclient.ConaryClient(cfg)
+
+        trove = latestBuild.getTrove()
+        tr = cclient.repos.getTrove(trove[0], versions.ThawVersion(trove[1]), deps.ThawFlavor(trove[2]))
+        ver = ''
+        for x in cclient.repos.walkTroveSet(tr):
+            if x.name() == 'group-core':
+                ver = x.version.v.trailingRevision().version
+                break
+        dataDict.update(os='rPath Linux ' + ver)
+        # Time
+        timeTup = time.gmtime(latestBuild.getChangedTime())
+        dataDict.update(year=timeTup[0])
+        dataDict.update(month=timeTup[1])
+        dataDict.update(day=timeTup[2])
+        dataDict.update(hour=timeTup[3])
+        dataDict.update(minute=timeTup[4])
+
+        return dataDict
+
     @ownerOnly
     @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
-    def publishRelease(self, auth, confirmed, **yesArgs):
+    @strFields(vmtn = '')
+    def publishRelease(self, auth, confirmed, vmtn, **yesArgs):
+        pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
         if confirmed:
-            pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
+            vmtnError = ''
+            if self.cfg.VAMUser and vmtn == 'on':
+            # Handle VAM stuff
+                build = self._getLatestVMwareBuild(pubrelease)        
+                if build:
+                    dataDict = self._getVAMData(pubrelease, build)
+                    communityId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
+                    if communityId:
+                        try:
+                            from mint.web import vmtn
+                            v = vmtn.VMTN()
+                            v.edit(self.cfg.VAMUser, self.cfg.VAMPassword,
+                                         dataDict, communityId)
+                        except:
+                            vmtnError = "Unable to update this project's VAM entry." 
+
+                    else:
+                        # Create new VAM entry & get vamId
+                        try:
+                            from mint.web import vmtn
+                            v = vmtn.VMTN()
+                            vamId = v.add(self.cfg.VAMUser, 
+                                                    self.cfg.VAMPassword,
+                                                    dataDict)
+                        except:
+                            vmtnError = "Unable to create a VAM entry for this project."
+                        else:
+                            self.client.setCommunityId(self.project.getId(), 
+                                                   communitytypes.VMWARE_VAM,
+                                                   vamId)
+
             pubrelease.publish()
-            self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version))
+            if vmtnError:
+                self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version) + '.  ' + vmtnError)
+            else:
+                self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version))
             self._predirect("releases")
         else:
-            return self._write("confirm",
+            if self.cfg.VAMUser:
+                build = self._getLatestVMwareBuild(pubrelease)        
+            else:
+                build = None
+            if build:
+                previewData = self._getPreviewData(pubrelease, build)
+            else:
+                previewData = False
+            return self._write("confirmPublish",
                     message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (i.e. add/remove builds, update metadata) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
-                    noLink = "releases")
+                    noLink = "releases", previewData = previewData)
 
     @ownerOnly
     @dictFields(yesArgs = {})
