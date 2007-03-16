@@ -18,11 +18,6 @@ from mint.data import RDT_STRING
 from mint.distro import bootable_image
 from mint.distro.imagegen import NoConfigFile
 
-AMIFstabAdditions = """
-# added to mount a huge /tmp and swap for AMIs
-/dev/sda2\t%s\t\text3\tdefaults 1 2
-/dev/sda3\tswap\t\tswap\tdefaults 0 0
-"""
 
 class AMIBundleError(mint_error.MintError):
     def __str__(self):
@@ -107,7 +102,10 @@ class AMIImage(bootable_image.BootableImage):
 
         # append some useful things for AMIs
         fstabFile = file(os.path.join(self.fakeroot, 'etc', 'fstab'), 'a+')
-        fstabFile.write(AMIFstabAdditions % self.hugeDiskMountpoint)
+        if self.hugeDiskMountpoint:
+            fstabFile.write("/dev/sda2\t%s\t\text3\tdefaults 1 2" % \
+                    self.hugeDiskMountpoint)
+        fstabFile.write("/dev/sda3\tswap\t\tswap\tdefaults 0 0")
         fstabFile.close()
 
     def updateKernelChangeSet(self, callback):
