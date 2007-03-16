@@ -368,6 +368,15 @@ class MintClient:
         """
         return self.server.deletePublishedRelease(pubReleaseId)
 
+    def getCommunityId(self, projectId, communityType):
+        return self.server.getCommunityId(projectId, communityType)
+
+    def setCommunityId(self, projectId, communityType, communityId):
+        return self.server.setCommunityId(projectId, communityType, communityId)
+
+    def deleteCommunityId(self, projectId, communityType):
+        return self.server.deleteCommunityId(projectId, communityType)
+
     def startImageJob(self, buildId):
         """
         Start a new image generation job.
