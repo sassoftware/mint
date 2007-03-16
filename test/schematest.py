@@ -11,7 +11,6 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, server
-from mint import jsversion
 from mint import buildtypes
 from conary import dbstore
 from conary import sqlite3
@@ -640,13 +639,6 @@ class UpgradePathTest(MintRepositoryHelper):
 
         self.failIf(cu.fetchone(),
                     "schema upgrade 14 failed for skipMediaCheck.")
-
-        cu.execute("""SELECT buildId, value FROM BuildData
-                          WHERE name='jsversion'""")
-
-        jsVer = jsversion.getDefaultVersion()
-        self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer), (3L, jsVer)],
-                    "schema upgrade 15 failed.")
 
         cu.execute("SELECT * FROM GroupTroves")
         self.failIf(cu.fetchall() != \

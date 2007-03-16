@@ -26,7 +26,7 @@ from mint import server
 from mint import userlevels
 from mint.database import ItemNotFound, DuplicateItem
 from mint.mint_error import PermissionDenied, ParameterError
-from mint.distro import group_trove
+# from mint.distro import group_trove
 from mint.jobs import DuplicateJob
 
 refRecipe = """class GroupTest(GroupRecipe):
