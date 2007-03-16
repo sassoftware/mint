@@ -189,9 +189,9 @@ def typeCheck(*paramTypes):
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError(_('%s was passed %s of type %s when '
+                    raise ParameterError('%s was passed %s of type %s when '
                                            'expecting %s for parameter number '
-                                           '%d') % \
+                                           '%d' % \
                         (baseFunc.__name__, repr(args[i]), str(type(args[i])),
                          str(paramTypes[i]), i+1))
             return func(self, *args)
@@ -390,7 +390,7 @@ class MintServer(object):
 
     def _getProjectRepo(self, project):
         maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = _("Repositories are currently offline."))
+            self.cfg, auth = None, msg = "Repositories are currently offline.")
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()

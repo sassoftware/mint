@@ -784,26 +784,28 @@ class ProjectTest(fixtures.FixturedUnitTest):
         from conary.repository.netclient import NetworkRepositoryClient
         oldgetTrove = NetworkRepositoryClient.getTrove
         oldwalkTroveSet = NetworkRepositoryClient.walkTroveSet
-        NetworkRepositoryClient.getTrove = lambda *args: None
-        NetworkRepositoryClient.walkTroveSet = lambda *args: []
-        dat = ph._getVAMData(rel, build)
-        vamDat = {'userName': 'root', 'vmtools': False, 'hour': 20,
-            'title': 'Test Published Build', 
-            'url': 'http://%s/project/foo/latestRelease' % PFQDN,
-            'year': 2007, 'oneLiner': 'This is the release description',
-            'longDesc': 'This is the project description', 'minute': 36, 'month': 3,
-            'memory': 256, 'password': '', 'os': 'rPath Linux ',
-            'torrent': '1', 'day': 15, 'size': 0}
+        try:
+            NetworkRepositoryClient.getTrove = lambda *args: None
+            NetworkRepositoryClient.walkTroveSet = lambda *args: []
+            dat = ph._getVAMData(rel, build)
+            vamDat = {'userName': 'root', 'vmtools': False, 'hour': 20,
+                'title': 'Test Published Build', 
+                'url': 'http://%s/project/foo/latestRelease' % PFQDN,
+                'year': 2007, 'oneLiner': 'This is the release description',
+                'longDesc': 'This is the project description', 'minute': 36, 'month': 3,
+                'memory': 256, 'password': '', 'os': 'rPath Linux ',
+                'torrent': '1', 'day': 15, 'size': 0}
 
-        gmt = time.gmtime(build.timeUpdated)
-        vamDat['year'] = gmt[0]
-        vamDat['month'] = gmt[1]
-        vamDat['day'] = gmt[2]
-        vamDat['hour'] = gmt[3]
-        vamDat['minute'] = gmt[4]
-        self.failUnlessEqual(dat, vamDat)
-        NetworkRepositoryClient.getTrove = oldgetTrove
-        NetworkRepositoryClient.walkTroveSet = oldwalkTroveSet
+            gmt = time.gmtime(build.getChangedTime())
+            vamDat['year'] = gmt[0]
+            vamDat['month'] = gmt[1]
+            vamDat['day'] = gmt[2]
+            vamDat['hour'] = gmt[3]
+            vamDat['minute'] = gmt[4]
+            self.failUnlessEqual(dat, vamDat)
+        finally:
+            NetworkRepositoryClient.getTrove = oldgetTrove
+            NetworkRepositoryClient.walkTroveSet = oldwalkTroveSet
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
