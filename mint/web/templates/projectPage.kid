@@ -47,6 +47,7 @@ from mint.helperfuncs import truncateForDisplay
                     <h2>Project Status</h2>
 
                     <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
+                    <p py:if="vmtnId">This project is listed on the <a href="http://www.vmware.com/vmtn/appliances/directory/${vmtnId}">VMware(R) Virtual Appliance Marketplace</a></p>
                     <p py:if="project.hidden">This project is hidden.</p>
                     <p py:if="project.external and not auth.admin">This project is externally managed.</p>
                     <p py:if="not (projectCommits or project.external)">This project is considered to be a fledgling
