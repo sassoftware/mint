@@ -55,23 +55,37 @@ class TableObject(object):
            @param id: database primary key"""
         raise NotImplementedError
 
-    def __init__(self, server, id):
+    def getDataAsDict(self):
+        d = {}
+        for x in self.__slots__:
+            d[x] = self.__getattribute__(x)
+        return d
+
+    def _loadData(self, data={}):
+        for key, val in data.items():
+            self.__setattr__(key, val)
+
+    def __init__(self, server, id, initialData=None):
         """@param server: a L{mint.server.MintServer} object
                           for manipulation of the item
                           represented by this object.
            @param id: database primary key of the item
                       to be represented by this object.
+           @param initialData: load from an initial dataset
         """
         self.id = id
         self.server = server
-        self.refresh()
+
+        if initialData:
+            self._loadData(initialData)
+        else:
+            self.refresh()
 
     def refresh(self):
         """Refreshes the object's internal fields of data about the item by forcing
            a call to L{getItem}."""
         data = self.getItem(self.id)
-        for key, val in data.items():
-            self.__setattr__(key, val)
+        self._loadData(data)
 
     def getId(self):
         """@return: database primary key of the item represented by this object"""

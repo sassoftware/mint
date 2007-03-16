@@ -24,6 +24,7 @@ from mint import communityids
 from mint import data
 from mint import database
 from mint import dbversion
+from mint import ec2
 from mint import grouptrove
 from mint import jobs
 from mint import jobstatus
@@ -66,7 +67,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
-from conary.dbstore import sqlerrors
+from conary.dbstore import sqlerrors, sqllib
 
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
@@ -241,6 +242,8 @@ def getTables(db, cfg):
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
+    d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
+    d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
 
     # tables for per-project repository db connections
@@ -3838,6 +3841,106 @@ class MintServer(object):
                 descendants.append((int(p.id), list(results)))
 
         return descendants
+
+    #
+    # EC2 Support for rBO
+    #
+
+    @typeCheck(str, str)
+    @requiresAdmin
+    @private
+    def createBlessedAMI(self, ec2AMIId, shortDescription):
+        return self.blessedAMIs.new(ec2AMIId = ec2AMIId,
+                shortDescription = shortDescription,
+                instanceTTL = self.cfg.ec2DefaultInstanceTTL,
+                mayExtendTTLBy = self.cfg.ec2DefaultMayExtendTTLBy)
+
+    @typeCheck(int)
+    @private
+    def getBlessedAMI(self, blessedAMIsId):
+        return self.blessedAMIs.get(blessedAMIsId)
+
+    @typeCheck(int, dict)
+    @private
+    @requiresAdmin
+    def updateBlessedAMI(self, blessedAMIId, valDict):
+        if len(valDict):
+            return self.blessedAMIs.update(blessedAMIId, **valDict)
+
+    @private
+    def getAvailableBlessedAMIs(self):
+        return self.blessedAMIs.getAvailable()
+
+    @typeCheck(int)
+    @private
+    def getLaunchedAMI(self, launchedAMIId):
+        return self.launchedAMIs.get(launchedAMIId)
+
+    @typeCheck(int, dict)
+    @private
+    @requiresAdmin
+    def updateLaunchedAMI(self, launchedAMIId, valDict):
+        if len(valDict):
+            return self.launchedAMIs.update(launchedAMIId, **valDict)
+
+    @private
+    def getActiveLaunchedAMIs(self):
+        return self.launchedAMIs.getActive()
+
+    @typeCheck(int)
+    @private
+    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
+        return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
+
+    @typeCheck(int)
+    @private
+    def launchAMIInstance(self, blessedAMIId):
+        # get blessed instance
+        try:
+            bami = self.blessedAMIs.get(blessedAMIId)
+        except database.ItemNotFound:
+            raise ec2.FailedToLaunchAMIInstance()
+
+        launchedFromIP = self.remoteIp
+        if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
+                self.cfg.ec2MaxInstancesPerIP):
+           raise ec2.TooManyAMIInstancesPerIP()
+
+        # generate the rAA Password
+        from mint.users import newPassword
+        raaPassword = newPassword(length=8)
+        userData = "[rpath]\nrap-password=%s" % raaPassword
+
+        # attempt to boot it up
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
+                userData=userData)
+
+        if not ec2InstanceId:
+            raise ec2.FailedToLaunchAMIInstance()
+
+        # store the instance information in our database
+        return self.launchedAMIs.new(blessedAMIId = bami['blessedAMIId'],
+                ec2InstanceId = ec2InstanceId,
+                launchedFromIP = launchedFromIP,
+                raaPassword = raaPassword,
+                expiresAfter = sqllib.toDatabaseTimestamp(offset=bami['instanceTTL']),
+                launchedAt = sqllib.toDatabaseTimestamp())
+
+    @requiresAdmin
+    @private
+    def terminateExpiredAMIInstances(self):
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        instancesToKill = self.launchedAMIs.getCandidatesForTermination()
+        instancesKilled = []
+        for launchedAMIId, ec2InstanceId in instancesToKill:
+            if ec2Wrapper.terminateInstance(ec2InstanceId):
+                self.launchedAMIs.update(launchedAMIId, isActive = False)
+                instancesKilled.append(launchedAMIId)
+        return instancesKilled
+
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

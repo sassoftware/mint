@@ -10,6 +10,7 @@ import time
 import xmlrpclib
 
 from mint import database
+from mint import ec2
 from mint import grouptrove
 from mint import jobs
 from mint import projects
@@ -618,6 +619,33 @@ class MintClient:
 
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
+
+    # ec2 "try it now" support
+    def createBlessedAMI(self, ec2AMIId, shortDescription):
+        return self.server.createBlessedAMI(ec2AMIId, shortDescription)
+
+    def getBlessedAMI(self, blessedAMIId):
+        return ec2.BlessedAMI(self.server, blessedAMIId)
+
+    def getAvailableBlessedAMIs(self):
+        return [self.getBlessedAMI(x) for x in \
+                self.server.getAvailableBlessedAMIs()]
+
+    def getLaunchedAMI(self, launchedAMIId):
+        return ec2.LaunchedAMI(self.server, launchedAMIId)
+
+    def getActiveLaunchedAMIs(self):
+        return [self.getLaunchedAMI(x) for x in \
+                self.server.getActiveLaunchedAMIs()]
+
+    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
+        return self.server.getLaunchedAMIInstanceStatus(launchedAMIId)
+
+    def launchAMIInstance(self, blessedAMIId):
+        return self.server.launchAMIInstance(blessedAMIId)
+
+    def terminateExpiredAMIInstances(self):
+        return self.server.terminateExpiredAMIInstances()
 
 
 class ServerProxy(xmlrpclib.ServerProxy):
