@@ -182,6 +182,9 @@ class MintApp(WebHandler):
         self.remoteIp = self.req.headers_in.get("X-Forwarded-For",
                 self.req.connection.remote_ip)
 
+        # sanitize IP just in case it's a list of proxied hosts
+        self.remoteIp = self.remoteIp.split(',')[0]
+
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
         dots = fullHost.split('.')

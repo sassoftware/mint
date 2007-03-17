@@ -3965,6 +3965,9 @@ class MintServer(object):
         else:
             self.remoteIp = "0.0.0.0"
 
+        # sanitize IP just in case it's a list of proxied hosts
+        self.remoteIp = self.remoteIp.split(',')[0]
+
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate

@@ -532,8 +532,8 @@ class SiteHandler(WebHandler):
             raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
-    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0)
-    def search(self, auth, type, search, modified, limit, offset, removed, showAll):
+    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0, byPopularity = 0)
+    def search(self, auth, type, search, modified, limit, offset, removed, showAll, byPopularity):
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
