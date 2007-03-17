@@ -3954,7 +3954,7 @@ class MintServer(object):
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.subprocess_env.get("HTTP_X_FORWARDED_FOR",
+            self.remoteIp = self.req.headers_in.get("X-Forwarded-For",
                     self.req.connection.remote_ip)
         else:
             self.remoteIp = "0.0.0.0"
