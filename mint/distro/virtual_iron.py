@@ -18,7 +18,7 @@ from conary.lib import util, log
 
 class VirtualIronVHD(vpc.VirtualPCImage):
     suffix = '.vhd.zip'
-    fileType = buildtypes.typeNames[buildtypes.XEN_OVA]
+    fileType = buildtypes.typeNames[buildtypes.VIRTUAL_IRON]
 
     @bootable_image.timeMe
     def createVirtualPCImage(self, outfile, basedir):
