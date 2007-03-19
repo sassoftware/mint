@@ -508,7 +508,6 @@ class InstallableIso(ImageGenerator):
         self.status('Extracting Public Keys')
         tmpRoot = tempfile.mkdtemp()    
         client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
-        print 'hi'
         trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
                                  (self.troveName, str(self.troveVersion), self.troveFlavor),
                                  defaultFlavor = client.cfg.flavor)
