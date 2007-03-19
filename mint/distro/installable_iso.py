@@ -34,7 +34,7 @@ from conary.repository import errors
 from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.lib import util, sha1helper
+from conary.lib import util, sha1helper, openpgpfile
 
 
 class IsoConfig(ConfigFile):
@@ -506,22 +506,31 @@ class InstallableIso(ImageGenerator):
 
     def extractPublicKeys(self, keyDir, topdir):
         self.status('Extracting Public Keys')
-        tmpRoot = tempfile.mkdtemp()    
-        client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
-        trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
-                                 (self.troveName, str(self.troveVersion), self.troveFlavor),
-                                 defaultFlavor = client.cfg.flavor)
+        tmpRoot = tempfile.mkdtemp()
+        client = self.getConaryClient(tmpRoot,
+                                      self.build.getArchFlavor().freeze())
+
+        trvList = client.repos.findTrove(None,
+                                         (self.troveName,
+                                          str(self.troveVersion),
+                                          self.troveFlavor),
+                                         defaultFlavor = client.cfg.flavor)
 
         if not trvList:
-            raise RuntimeError, "no match for %s" % groupName
+            raise RuntimeError, "no match for %s" % self.troveName
         elif len(trvList) > 1:
-            raise RuntimeError, "multiple matches for %s" % groupName        
+            raise RuntimeError, "multiple matches for %s" % self.troveName
 
         tr = client.repos.getTrove(trvList[0][0], trvList[0][1], trvList[0][2])
         fingerprints = {}
+        fpTrovespecs = {}
         for x in client.repos.walkTroveSet(tr):
             label = x.version.v.trailingLabel()
             for sig in x.troveInfo.sigs.digitalSigs.iter():
+                tspecList = fpTrovespecs.get(sig[0], set())
+                tspecList.add('%s=%s[%s]' % (x.getName(), str(x.getVersion()),
+                                             str(x.getFlavor())))
+                fpTrovespecs[sig[0]] = tspecList
                 if fingerprints.has_key(label):
                     if sig[0] not in fingerprints[label]:
                         fingerprints[label].append(sig[0])
@@ -529,23 +538,32 @@ class InstallableIso(ImageGenerator):
                     fingerprints.update({label:[sig[0]]})
 
         homeDir = tempfile.mkdtemp()
+        missingKeys = []
         for label, fingerprints in fingerprints.items():
             for fp in fingerprints:
-                key = client.repos.getAsciiOpenPGPKey(label, fp)
-                fd, fname = tempfile.mkstemp()
-                os.close(fd)
-                fd = open(fname, 'w')
-                fd.write(key)
-                fd.close()
-                call('gpg', '--home', homeDir, '--import', fname)
-                os.unlink(fname)
+                try:
+                    key = client.repos.getAsciiOpenPGPKey(label, fp)
+                    fd, fname = tempfile.mkstemp()
+                    os.close(fd)
+                    fd = open(fname, 'w')
+                    fd.write(key)
+                    fd.close()
+                    call('gpg', '--home', homeDir, '--import', fname)
+                    os.unlink(fname)
+                except openpgpfile.KeyNotFound:
+                    missingKeys.append(fp)
 
+        if missingKeys:
+            errorMessage = 'The following troves do not have keys in their associated repositories:\n'
+            for fingerprint in missingKeys:
+                errorMessage += '%s require %s\n' % (', '.join(fpTrovespecs[fingerprint]), fingerprint)
+            raise RuntimeError(errorMessage)
         call('gpg', '--home', homeDir, '--export', '-o', os.path.join(topdir,
              'public_keys.gpg'))
-        
+
         util.rmtree(homeDir)
         util.rmtree(tmpRoot)
-            
+
     def extractChangeSets(self, csdir):
         # build a set of the things we already have extracted.
         self.status("Extracting changesets")
