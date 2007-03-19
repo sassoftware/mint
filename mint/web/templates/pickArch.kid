@@ -54,12 +54,12 @@
                             support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
                             information about Xen and rBuilder.
                         </dd>
-                        <dt>
+                        <dt py:if="False">
                             <input name="flavor" type="checkbox" value="5#use:kernel.pae" id="pae" />
                             <label id="paeLabel" for="pae">PAE (physical address extension) support
                             </label>
                         </dt>
-                        <dd class="help">
+                        <dd class="help" py:if="False">
                             Check this box to use a PAE-enabled kernel for this group. This is
                             required for Xen Enterprise guests and some other Xen Dom0 hypervisors.
                         </dd>
