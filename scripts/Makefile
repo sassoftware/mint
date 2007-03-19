@@ -14,7 +14,6 @@ script_dist =				\
 	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
-	mirror-prime-server		\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
