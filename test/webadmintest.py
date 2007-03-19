@@ -254,6 +254,42 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(client.translateProjectFQDN('rpath' + MINT_PROJECT_DOMAIN),
             'rpath' + MINT_PROJECT_DOMAIN)
 
+    def testExternalToMirroredProject(self):
+        # mainly make sure that user-entered settings are preserved on the edit
+        # page, and not taken from the internal Labels table by mistake (RBL-1170)
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'none',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass',
+                              'additionalLabelsToMirror': ''})
+
+        self.failIf(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+
+        # turn off mirroring
+        p = client.getProjectByHostname('rpath')
+        page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:1',
+                              'url' : '',
+                              'useMirror': 'net',
+                              'authType': 'userpass',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass'})
+
+        self.failUnlessEqual(len(client.getInboundMirrors()), 1)
+        self.failUnless(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+
     def testEditExternalProject(self):
         # make sure that editing an external projects' label actually does the
         # edit (RBL-1234)

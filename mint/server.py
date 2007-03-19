@@ -3590,6 +3590,12 @@ class MintServer(object):
                 sourceUrl = sourceUrl, sourceUsername = sourceUsername,
                 sourcePassword = sourcePassword, mirrorOrder = mirrorOrder,
                 allLabels = allLabels)
+
+        fqdn = versions.Label(sourceLabels[0]).getHost()
+        if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
+            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
+                fqdn.split(".")[0], ".".join(fqdn.split(".")[1:]))
+
         self._generateConaryRcFile()
         return x
 
