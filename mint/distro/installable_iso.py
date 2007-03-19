@@ -506,16 +506,20 @@ class InstallableIso(ImageGenerator):
 
     def extractPublicKeys(self, keyDir, topdir):
         self.status('Extracting Public Keys')
-        tmpRoot = tempfile.mkdtemp()    
-        client = self.getConaryClient(tmpRoot, self.build.getArchFlavor().freeze())
-        trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
-                                 (self.troveName, str(self.troveVersion), self.troveFlavor),
-                                 defaultFlavor = client.cfg.flavor)
+        tmpRoot = tempfile.mkdtemp()
+        client = self.getConaryClient(tmpRoot,
+                                      self.build.getArchFlavor().freeze())
+
+        trvList = client.repos.findTrove(None,
+                                         (self.troveName,
+                                          str(self.troveVersion),
+                                          self.troveFlavor),
+                                         defaultFlavor = client.cfg.flavor)
 
         if not trvList:
-            raise RuntimeError, "no match for %s" % groupName
+            raise RuntimeError, "no match for %s" % self.troveName
         elif len(trvList) > 1:
-            raise RuntimeError, "multiple matches for %s" % groupName        
+            raise RuntimeError, "multiple matches for %s" % self.troveName
 
         tr = client.repos.getTrove(trvList[0][0], trvList[0][1], trvList[0][2])
         fingerprints = {}
@@ -556,10 +560,10 @@ class InstallableIso(ImageGenerator):
             raise RuntimeError(errorMessage)
         call('gpg', '--home', homeDir, '--export', '-o', os.path.join(topdir,
              'public_keys.gpg'))
-        
+
         util.rmtree(homeDir)
         util.rmtree(tmpRoot)
-            
+
     def extractChangeSets(self, csdir):
         # build a set of the things we already have extracted.
         self.status("Extracting changesets")
