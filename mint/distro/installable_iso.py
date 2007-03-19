@@ -34,7 +34,7 @@ from conary.repository import errors
 from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.lib import util, sha1helper
+from conary.lib import util, sha1helper, openpgpfile
 
 
 class IsoConfig(ConfigFile):
@@ -531,14 +531,18 @@ class InstallableIso(ImageGenerator):
         homeDir = tempfile.mkdtemp()
         for label, fingerprints in fingerprints.items():
             for fp in fingerprints:
-                key = client.repos.getAsciiOpenPGPKey(label, fp)
-                fd, fname = tempfile.mkstemp()
-                os.close(fd)
-                fd = open(fname, 'w')
-                fd.write(key)
-                fd.close()
-                call('gpg', '--home', homeDir, '--import', fname)
-                os.unlink(fname)
+                try:
+                    key = client.repos.getAsciiOpenPGPKey(label, fp)
+                    fd, fname = tempfile.mkstemp()
+                    os.close(fd)
+                    fd = open(fname, 'w')
+                    fd.write(key)
+                    fd.close()
+                    call('gpg', '--home', homeDir, '--import', fname)
+                    os.unlink(fname)
+                except openpgpfile.KeyNotFound:
+                    # If the key is not found, continue
+                    pass
 
         call('gpg', '--home', homeDir, '--export', '-o', os.path.join(topdir,
              'public_keys.gpg'))
