@@ -3034,9 +3034,9 @@ class MintServer(object):
                 d['fancyFlavor'] = 'is:x86(i486,i586,i686) x86_64'
 
                 recipe += indent + "if Arch.x86_64:\n"
-                recipe += (12 * " ") + "r.add('%(name)s', flavor = '%(fancyFlavor)s', groupName = '%(groupName)s', searchPath = %(searchPath)s)\n" % d
+                recipe += (12 * " ") + "r.add('%(name)s', flavor = '%(fancyFlavor)s', groupName = '%(groupName)s')\n" % d
                 recipe += indent + "else:\n" + (4 * " ")
-                recipe += indent + "r.add('%(name)s', flavor = '%(flavor)s', groupName = '%(groupName)s', searchPath = %(searchPath)s)\n" % d
+                recipe += indent + "r.add('%(name)s', flavor = '%(flavor)s', groupName = '%(groupName)s')\n" % d
             else:
                 recipe += indent + "r.add('%(name)s', '%(ver)s', '%(flavor)s', groupName = '%(groupName)s')\n" % d
 
