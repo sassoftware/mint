@@ -6,6 +6,7 @@
 
 script_dist =				\
 	amazon-s3-processor		\
+	check-repository		\
 	deleteproject			\
 	install-jsroot			\
 	job-server			\
