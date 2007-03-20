@@ -16,6 +16,7 @@ import sys
 import time
 import tempfile
 import fcntl
+import urllib
 from urlparse import urlparse
 
 from mint import buildtypes
@@ -3947,6 +3948,21 @@ class MintServer(object):
                 instancesKilled.append(launchedAMIId)
         return instancesKilled
 
+    @typeCheck(((unicode, str),), (list, int))
+    @private
+    def checkHTTPReturnCode(self, uri, expectedCodes):
+        if not expectedCodes:
+            expectedCodes = [200, 301, 302]
+        code = -1
+        opener = urllib.URLopener()
+        try:
+            f = opener.retrieve(uri)
+            return True
+        except IOError, ioe:
+            if ioe[0] == 'http error':
+                code = ioe[1]
+
+        return (code in expectedCodes)
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

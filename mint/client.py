@@ -647,6 +647,9 @@ class MintClient:
     def terminateExpiredAMIInstances(self):
         return self.server.terminateExpiredAMIInstances()
 
+    def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
+        return self.server.checkHTTPReturnCode(uri, expectedCodes)
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
