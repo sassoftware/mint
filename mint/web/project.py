@@ -618,7 +618,7 @@ class ProjectHandler(WebHandler):
     def newRelease(self, auth):
         currentBuilds = []
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if y.getFiles()]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \
@@ -640,7 +640,7 @@ class ProjectHandler(WebHandler):
         currentBuilds = [self.client.getBuild(x) for x in \
                 pubrelease.getBuilds()]
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if y.getFiles()]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \
