@@ -139,9 +139,12 @@ class EC2Wrapper(object):
             return None
 
     def getInstanceStatus(self, ec2InstanceId):
-        rs = self.ec2conn.get_all_instances(instance_ids=[ec2InstanceId])
-        instance = rs[0].instances[0]
-        return instance.state, instance.dns_name
+        try:
+            rs = self.ec2conn.get_all_instances(instance_ids=[ec2InstanceId])
+            instance = rs[0].instances[0]
+            return str(instance.state), str(instance.dns_name)
+        except EC2ResponseError:
+            return "unknown", ""
 
     def terminateInstance(self, ec2InstanceId):
         try:
