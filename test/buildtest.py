@@ -547,6 +547,11 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setFiles([])
         self.assertRaises(BuildEmpty, build.setPublished, pubRel.id, True)
 
+        # AMIs shouldn't throw BuildEmpty, as it's expected that they
+        # don't have any files
+        build.setBuildType(buildtypes.AMI)
+        self.failUnless(build.setPublished(pubRel.id, True))
+
     @fixtures.fixture('Full')
     def testGetImageTypesCompat(self, db, data):
         client = self.getClient('owner')

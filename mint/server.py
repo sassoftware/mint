@@ -2057,7 +2057,7 @@ class MintServer(object):
     @private
     def setBuildPublished(self, buildId, pubReleaseId, published):
         self._filterBuildAccess(buildId)
-        buildData = self.builds.get(buildId, fields=['projectId'])
+        buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
         if not self._checkProjectAccess(buildData['projectId'],
                 [userlevels.OWNER]):
             raise PermissionDenied()
@@ -2067,7 +2067,7 @@ class MintServer(object):
             raise PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
-        if published and not self.getBuildFilenames(buildId):
+        if published and (buildData['buildType'] != buildtypes.AMI and not self.getBuildFilenames(buildId)):
             raise BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
