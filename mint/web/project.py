@@ -91,10 +91,10 @@ class ProjectHandler(WebHandler):
         self.projectCommits =  self.project.getCommits()
         if self.projectPublishedReleases:
             self.latestPublishedRelease = self.projectPublishedReleases[0]
-            self.latestBuilds = [self.client.getBuild(x) for x in self.latestPublishedRelease.getBuilds()]
+            self.latestBuildsWithFiles = [self.client.getBuild(x) for x in self.latestPublishedRelease.getBuilds() if self.client.getBuild(x).getFiles()]
         else:
             self.latestPublishedRelease = None
-            self.latestBuilds = []
+            self.latestBuildsWithFiles = []
 
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
