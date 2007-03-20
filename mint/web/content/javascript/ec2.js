@@ -32,7 +32,7 @@ LaunchedAMI.prototype.updateStatus = function() {
             callLater(5, this.updateStatus);
         }
         else {
-            this.updatePageWithNewState();
+            this.checkRAA();
         }
     };
 
@@ -67,6 +67,26 @@ LaunchedAMI.prototype.getLaunchedAMIData = function() {
     var req = new JsonRpcRequest("jsonrpc/", "getLaunchedAMI");
     req.setCallback(bind(callback, this));
     req.send(false, [this.launchedAMIId]);
+
+};
+
+LaunchedAMI.prototype.checkRAA = function() {
+
+    // callback for launch status
+    var callback = function(aReq) {
+        logDebug("check RAA response:", aReq.responseText);
+        var req = evalJSONRequest(aReq);
+        if (!req) {
+            callLater(5, this.checkRAA);
+        }
+        else {
+            this.updatePageWithNewState();
+        }
+    };
+
+    var req = new JsonRpcRequest("jsonrpc/", "checkHTTPReturnCode");
+    req.setCallback(bind(callback, this));
+    req.send(true, ['http://'+this.dns_name+':8004/rAA/', [200,301,302]]);
 
 };
 
