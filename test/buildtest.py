@@ -779,7 +779,8 @@ class BuildTest(fixtures.FixturedUnitTest):
              'project', 'serialVersion', 'troveFlavor', 'troveName',
              'troveVersion', 'type']
 
-        assert buildDict['project'].keys() == ['hostname', 'name', 'label']
+        self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
+
 
 if __name__ == "__main__":
     testsuite.main()
