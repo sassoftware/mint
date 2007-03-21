@@ -554,7 +554,7 @@ class InstallableIso(ImageGenerator):
                 errorMessage = 'The following troves do not have keys in ' \
                     'their associated repositories:\n'
                 for fingerprint in missingKeys:
-                    errorMessage += '%s require %s\n' %  \
+                    errorMessage += '%s requires %s\n' %  \
                         (', '.join(fpTrovespecs[fingerprint]), fingerprint)
                 print >> sys.stderr, errorMessage
                 #raise RuntimeError(errorMessage)
