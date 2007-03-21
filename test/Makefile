@@ -17,7 +17,7 @@ python_files = \
                coverage.py \
                coveragewrapper.py \
                distrotest.py \
-               emailtest.py \
+	       ec2test.py \
                fixtures.py \
                grouptrovetest.py \
                helperfuncstest.py \

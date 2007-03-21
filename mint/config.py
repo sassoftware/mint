@@ -9,7 +9,6 @@ import sys
 from mint import client
 from mint import buildtypes 
 from mint import urltypes
-
 from conary import conarycfg
 from conary.conarycfg import ConfigFile
 from conary.lib import cfgtypes
@@ -144,6 +143,15 @@ class MintConfig(ConfigFile):
     language                = 'en'
     localeDir               = '/usr/share/locale/'
     addonsHost              = None
+    awsPublicKey            = None
+    awsPrivateKey           = None
+    ec2AccountId            = None
+    ec2S3Bucket             = None
+    ec2MakeAMIsPublic       = (cfgtypes.CfgBool, False)
+    ec2ExposeTryItLink      = (cfgtypes.CfgBool, False)
+    ec2MaxInstancesPerIP    = 10
+    ec2DefaultInstanceTTL   = 600
+    ec2DefaultMayExtendTTLBy= 2700
 
     VAMUser                 = ''
     VAMPassword             = ''

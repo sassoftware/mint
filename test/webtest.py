@@ -1593,6 +1593,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertContent('/project/testproject/rss?feed=commits',
                 content='whoCares:source', code=[200])
 
+    def testCheckHTTPReturnCode(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+
+        self.failUnless(client.checkHTTPReturnCode('http://%s.%s:%d/' % (MINT_HOST, MINT_DOMAIN, self.port)))
+        self.failIf(client.checkHTTPReturnCode('http://%s.%s:%d/somethingthatwillneverexist/' % (MINT_HOST, MINT_DOMAIN, self.port)))
+        # check unicode
+        self.failUnless(client.checkHTTPReturnCode(u'http://%s.%s:%d/' % (MINT_HOST, MINT_DOMAIN, self.port)))
+
 
 if __name__ == "__main__":
     testsuite.main()

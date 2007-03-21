@@ -16,6 +16,7 @@ import sys
 import time
 import tempfile
 import fcntl
+import urllib
 from urlparse import urlparse
 import StringIO
 
@@ -25,6 +26,7 @@ from mint import communityids
 from mint import data
 from mint import database
 from mint import dbversion
+from mint import ec2
 from mint import grouptrove
 from mint import jobs
 from mint import jobstatus
@@ -70,7 +72,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
-from conary.dbstore import sqlerrors
+from conary.dbstore import sqlerrors, sqllib
 
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
@@ -245,6 +247,8 @@ def getTables(db, cfg):
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
+    d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
+    d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
 
     # tables for per-project repository db connections
@@ -2097,7 +2101,7 @@ class MintServer(object):
     @private
     def setBuildPublished(self, buildId, pubReleaseId, published):
         self._filterBuildAccess(buildId)
-        buildData = self.builds.get(buildId, fields=['projectId'])
+        buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
         if not self._checkProjectAccess(buildData['projectId'],
                 [userlevels.OWNER]):
             raise PermissionDenied()
@@ -2107,7 +2111,7 @@ class MintServer(object):
             raise PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
-        if published and not self.getBuildFilenames(buildId):
+        if published and (buildData['buildType'] != buildtypes.AMI and not self.getBuildFilenames(buildId)):
             raise BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
@@ -3479,6 +3483,12 @@ class MintServer(object):
                 sourceUrl = sourceUrl, sourceUsername = sourceUsername,
                 sourcePassword = sourcePassword, mirrorOrder = mirrorOrder,
                 allLabels = allLabels)
+
+        fqdn = versions.Label(sourceLabels[0]).getHost()
+        if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
+            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
+                fqdn.split(".")[0], ".".join(fqdn.split(".")[1:]))
+
         self._generateConaryRcFile()
         return x
 
@@ -3731,6 +3741,7 @@ class MintServer(object):
 
         return descendants
 
+<<<<<<< /home/tgerla/hg/mint-the-cheat/mint/server.py
     # *** MCP RELATED FUNCTIONS ***
     # always use this method to get an MCP client so that it can be cached
     def _getMcpClient(self):
@@ -3746,6 +3757,123 @@ class MintServer(object):
         if self.mcpClient:
             self.mcpClient.disconnect()
 
+=======
+    #
+    # EC2 Support for rBO
+    #
+
+    @typeCheck(str, str)
+    @requiresAdmin
+    @private
+    def createBlessedAMI(self, ec2AMIId, shortDescription):
+        return self.blessedAMIs.new(ec2AMIId = ec2AMIId,
+                shortDescription = shortDescription,
+                instanceTTL = self.cfg.ec2DefaultInstanceTTL,
+                mayExtendTTLBy = self.cfg.ec2DefaultMayExtendTTLBy)
+
+    @typeCheck(int)
+    @private
+    def getBlessedAMI(self, blessedAMIsId):
+        return self.blessedAMIs.get(blessedAMIsId)
+
+    @typeCheck(int, dict)
+    @private
+    @requiresAdmin
+    def updateBlessedAMI(self, blessedAMIId, valDict):
+        if len(valDict):
+            return self.blessedAMIs.update(blessedAMIId, **valDict)
+
+    @private
+    def getAvailableBlessedAMIs(self):
+        return self.blessedAMIs.getAvailable()
+
+    @typeCheck(int)
+    @private
+    def getLaunchedAMI(self, launchedAMIId):
+        return self.launchedAMIs.get(launchedAMIId)
+
+    @typeCheck(int, dict)
+    @private
+    @requiresAdmin
+    def updateLaunchedAMI(self, launchedAMIId, valDict):
+        if len(valDict):
+            return self.launchedAMIs.update(launchedAMIId, **valDict)
+
+    @private
+    def getActiveLaunchedAMIs(self):
+        return self.launchedAMIs.getActive()
+
+    @typeCheck(int)
+    @private
+    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
+        return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
+
+    @typeCheck(int)
+    @private
+    def launchAMIInstance(self, blessedAMIId):
+        # get blessed instance
+        try:
+            bami = self.blessedAMIs.get(blessedAMIId)
+        except database.ItemNotFound:
+            raise ec2.FailedToLaunchAMIInstance()
+
+        launchedFromIP = self.remoteIp
+        if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
+                self.cfg.ec2MaxInstancesPerIP):
+           raise ec2.TooManyAMIInstancesPerIP()
+
+        # generate the rAA Password
+        from mint.users import newPassword
+        raaPassword = newPassword(length=8)
+        userData = "[rpath]\nrap-password=%s" % raaPassword
+
+        # attempt to boot it up
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
+                userData=userData)
+
+        if not ec2InstanceId:
+            raise ec2.FailedToLaunchAMIInstance()
+
+        # store the instance information in our database
+        return self.launchedAMIs.new(blessedAMIId = bami['blessedAMIId'],
+                ec2InstanceId = ec2InstanceId,
+                launchedFromIP = launchedFromIP,
+                raaPassword = raaPassword,
+                expiresAfter = sqllib.toDatabaseTimestamp(offset=bami['instanceTTL']),
+                launchedAt = sqllib.toDatabaseTimestamp())
+
+    @requiresAdmin
+    @private
+    def terminateExpiredAMIInstances(self):
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        instancesToKill = self.launchedAMIs.getCandidatesForTermination()
+        instancesKilled = []
+        for launchedAMIId, ec2InstanceId in instancesToKill:
+            if ec2Wrapper.terminateInstance(ec2InstanceId):
+                self.launchedAMIs.update(launchedAMIId, isActive = False)
+                instancesKilled.append(launchedAMIId)
+        return instancesKilled
+
+    @typeCheck(((unicode, str),), (list, int))
+    @private
+    def checkHTTPReturnCode(self, uri, expectedCodes):
+        if not expectedCodes:
+            expectedCodes = [200, 301, 302]
+        code = -1
+        opener = urllib.URLopener()
+        try:
+            f = opener.retrieve(uri)
+            return True
+        except IOError, ioe:
+            if ioe[0] == 'http error':
+                code = ioe[1]
+
+        return (code in expectedCodes)
+
+>>>>>>> /tmp/server.py~other.usec3R
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
@@ -3759,10 +3887,13 @@ class MintServer(object):
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.subprocess_env.get("HTTP_X_FORWARDED_FOR",
+            self.remoteIp = self.req.headers_in.get("X-Forwarded-For",
                     self.req.connection.remote_ip)
         else:
             self.remoteIp = "0.0.0.0"
+
+        # sanitize IP just in case it's a list of proxied hosts
+        self.remoteIp = self.remoteIp.split(',')[0]
 
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.

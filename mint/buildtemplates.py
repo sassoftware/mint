@@ -161,7 +161,7 @@ class anacondaTemplatesTrove(TroveOption):
     prompt  = 'Version of anaconda-templates to use when creating this image'
 
 class amiHugeDiskMountpoint(StringOption):
-    default = '/tmp'
+    default = ''
     prompt  = 'Mountpoint for scratch space (/dev/sda2) on AMI'
 
 ###

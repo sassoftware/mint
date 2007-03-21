@@ -91,10 +91,10 @@ class ProjectHandler(WebHandler):
         self.projectCommits =  self.project.getCommits()
         if self.projectPublishedReleases:
             self.latestPublishedRelease = self.projectPublishedReleases[0]
-            self.latestBuilds = [self.client.getBuild(x) for x in self.latestPublishedRelease.getBuilds()]
+            self.latestBuildsWithFiles = [self.client.getBuild(x) for x in self.latestPublishedRelease.getBuilds() if self.client.getBuild(x).getFiles()]
         else:
             self.latestPublishedRelease = None
-            self.latestBuilds = []
+            self.latestBuildsWithFiles = []
 
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
@@ -616,7 +616,7 @@ class ProjectHandler(WebHandler):
     def newRelease(self, auth):
         currentBuilds = []
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if y.getFiles()]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \
@@ -638,7 +638,7 @@ class ProjectHandler(WebHandler):
         currentBuilds = [self.client.getBuild(x) for x in \
                 pubrelease.getBuilds()]
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if y.getFiles()]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \

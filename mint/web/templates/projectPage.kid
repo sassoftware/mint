@@ -40,7 +40,7 @@ from mint.helperfuncs import truncateForDisplay
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
 
-                ${downloadsMenu(latestBuilds)}
+                ${downloadsMenu(latestBuildsWithFiles)}
 
                 <div py:if="auth.admin" py:strip="True">
 

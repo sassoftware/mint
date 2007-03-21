@@ -532,8 +532,8 @@ class SiteHandler(WebHandler):
             raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
-    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0)
-    def search(self, auth, type, search, modified, limit, offset, removed, showAll):
+    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0, byPopularity = 0)
+    def search(self, auth, type, search, modified, limit, offset, removed, showAll, byPopularity):
         limit = max(limit, 0)
         offset = max(offset, 0)
         if not limit:
@@ -1100,6 +1100,22 @@ class SiteHandler(WebHandler):
             trvName = trvName, trvVersion = trvVersion,
             references = references, descendants = descendants)
 
+    @intFields(id = -1)
+    def tryItNow(self, auth, id):
+        try:
+            bami = self.client.getBlessedAMI(id)
+        except database.ItemNotFound:
+            raise HttpNotFound
+
+        if not bami.isAvailable:
+            raise HttpNotFound
+
+        return self._write("tryItNow",
+                blessedAMIId = bami.id,
+                ec2AMIId = bami.ec2AMIId,
+                buildId = bami.buildId,
+                shortDescription = bami.shortDescription,
+                helptext = bami.helptext)
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')

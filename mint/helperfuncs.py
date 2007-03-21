@@ -138,7 +138,7 @@ def getVersionForCacheFakeout():
         return '0'
 
 def formatTime(t):
-    return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(t))
+    return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
 
 def cleanseUrl(protocol, url):

@@ -49,6 +49,7 @@ kid_files = \
 	rMakeStatus.kid		\
 	rss20.kid		\
 	searchResults.kid	\
+	tryItNow.kid		\
 	uploadKey.kid		\
 	userInfo.kid		\
 	userSettings.kid	\
