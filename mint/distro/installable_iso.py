@@ -562,7 +562,8 @@ class InstallableIso(ImageGenerator):
                 for fingerprint in missingKeys:
                     errorMessage += '%s require %s\n' %  \
                         (', '.join(fpTrovespecs[fingerprint]), fingerprint)
-                raise RuntimeError(errorMessage)
+                print >> sys.stderr, errorMessage
+                #raise RuntimeError(errorMessage)
             call('gpg', '--home', homeDir, '--export', '-o',
                  os.path.join(topdir, 'public_keys.gpg'))
         finally:
