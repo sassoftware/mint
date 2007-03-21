@@ -109,6 +109,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         self.failIf(blessedAMI.buildId)
 
         # update some things
+        blessedAMI.buildId = None
         blessedAMI.helptext = helptext
         blessedAMI.mayExtendTTLBy = 4000
         blessedAMI.save()
@@ -122,6 +123,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         self.failUnlessEqual(blessedAMI.mayExtendTTLBy, 4000)
 
         blessedAMI.isAvailable = False
+        blessedAMI.buildId = None
         blessedAMI.save()
         del blessedAMI
 
@@ -139,6 +141,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         # Now take one out of the pool and make sure it worked
         blessedAMI = client.getBlessedAMI(1)
+        blessedAMI.buildId = None
         blessedAMI.isAvailable = False
         blessedAMI.save()
 
