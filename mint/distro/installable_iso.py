@@ -28,9 +28,11 @@ from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 from conary import callbacks
 from conary import conaryclient
 from conary import conarycfg
+from conary.repository import changeset
 from conary.deps import deps
 from conary import versions
 from conary.repository import errors
+from conary import trove
 from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -504,7 +506,7 @@ class InstallableIso(ImageGenerator):
         finally:
             util.rmtree(tmpRoot)
 
-    def extractPublicKeys(self, keyDir, topdir):
+    def extractPublicKeys(self, keyDir, topdir, csdir):
         self.status('Extracting Public Keys')
         homeDir = tempfile.mkdtemp()
         tmpRoot = tempfile.mkdtemp()
@@ -512,34 +514,24 @@ class InstallableIso(ImageGenerator):
             client = self.getConaryClient(tmpRoot,
                                           self.build.getArchFlavor().freeze())
 
-            trvList = client.repos.findTrove(None,
-                                             (self.troveName,
-                                              str(self.troveVersion),
-                                              self.troveFlavor),
-                                             defaultFlavor = client.cfg.flavor)
-
-            if not trvList:
-                raise RuntimeError, "no match for %s" % self.troveName
-            elif len(trvList) > 1:
-                raise RuntimeError, "multiple matches for %s" % self.troveName
-
-            tr = client.repos.getTrove(trvList[0][0], trvList[0][1],
-                                       trvList[0][2])
             fingerprints = {}
             fpTrovespecs = {}
-            for x in client.repos.walkTroveSet(tr):
-                label = x.version.v.trailingLabel()
-                for sig in x.troveInfo.sigs.digitalSigs.iter():
-                    tspecList = fpTrovespecs.get(sig[0], set())
-                    tspecList.add('%s=%s[%s]' % (x.getName(),
-                                                 str(x.getVersion()),
-                                                 str(x.getFlavor())))
-                    fpTrovespecs[sig[0]] = tspecList
-                    if fingerprints.has_key(label):
-                        if sig[0] not in fingerprints[label]:
-                            fingerprints[label].append(sig[0])
-                    else:
-                        fingerprints.update({label:[sig[0]]})
+            for filename in [x for x in os.listdir(csdir) if x.endswith('.ccs')]:
+                cs = changeset.ChangeSetFromFile(os.path.join(csdir, filename))
+                troves = [trove.Trove(x) for x in cs.iterNewTroveList()]
+                for trv in troves:
+                    label = trv.version.v.trailingLabel()
+                    for sig in trv.troveInfo.sigs.digitalSigs.iter():
+                        tspecList = fpTrovespecs.get(sig[0], set())
+                        tspecList.add('%s=%s[%s]' % (trv.getName(),
+                                                 str(trv.getVersion()),
+                                                 str(trv.getFlavor())))
+                        fpTrovespecs[sig[0]] = tspecList
+                        if fingerprints.has_key(label):
+                            if sig[0] not in fingerprints[label]:
+                                fingerprints[label].append(sig[0])
+                        else:
+                            fingerprints.update({label:[sig[0]]})
 
             missingKeys = []
             for label, fingerprints in fingerprints.items():
@@ -668,7 +660,7 @@ class InstallableIso(ImageGenerator):
         discInfoFile.close()
 
         self.extractMediaTemplate(topdir)
-        self.extractPublicKeys('public_keys', topdir)
+        self.extractPublicKeys('public_keys', topdir, csdir)
         self.setupKickstart(topdir)
         self.writeProductImage(topdir, self.build.getArchFlavor().freeze())
 
