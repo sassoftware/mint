@@ -6,13 +6,16 @@
 import testsuite
 testsuite.setup()
 
-#from mint_rephelp import MintRepositoryHelper
+import os, sys
+import tempfile
 
 from mint.distro import installable_iso
 
 from conary import versions
+from conary.repository import changeset
+from conary import trove
 from conary.deps import deps
-from conary.lib import openpgpfile
+from conary.lib import openpgpfile, util
 
 TROVE_NAME = 'group-dummy'
 TROVE_VERSION = versions.VersionFromString('/test.rpath.local@rpl:devel/1-1-1')
@@ -25,7 +28,7 @@ class DummyTroveInfo(object):
 
     def iter(self):
         for base in ('0123456789', '9876543210'):
-            yield 4 * base
+            yield [4 * base]
 
 class DummyVersion(object):
     def __init__(self):
@@ -35,7 +38,7 @@ class DummyVersion(object):
         return 'test.rpath.local@rpl:devel'
 
 class DummyTrove(object):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.version = DummyVersion()
         self.troveInfo = DummyTroveInfo()
 
@@ -47,6 +50,17 @@ class DummyTrove(object):
 
     def getFlavor(self):
         return TROVE_FLAVOR
+
+    def count(self, *args, **kwargs):
+        return 0
+
+class DummyChangeSet(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def iterNewTroveList(self):
+        return [DummyTrove()]
+
 
 class DummyRepos(object):
     def findTrove(self, *args, **kwargs):
@@ -102,52 +116,52 @@ class KeyTest(testsuite.TestCase):
     def tearDown(self):
         installable_iso.call = self._call
 
-    def testNoTroves(self):
-        DummyRepos.findTrove = lambda *args, **kwargs: []
-        d = DummyIso()
-        try:
-            d.extractPublicKeys('', '')
-        except RuntimeError, e:
-            assert e.args ==  ("no match for group-dummy",)
-        else:
-            self.fail('expected RuntimeError')
-
-    def testMultiTroves(self):
-        DummyRepos.findTrove = lambda *args, **kwargs: ['1', '2']
-        d = DummyIso()
-        try:
-            d.extractPublicKeys('', '')
-        except RuntimeError, e:
-            assert e.args ==  ("multiple matches for group-dummy",)
-        else:
-            self.fail('expected RuntimeError')
-
     def testMissingKey(self):
         DummyRepos.findTrove = lambda *args, **kwargs: (('', '', ''),)
         d = DummyIso()
 
+        csdir = tempfile.mkdtemp()
+        logFd, logFile = tempfile.mkstemp()
+        oldErr = os.dup(sys.stderr.fileno())
+        os.dup2(logFd, sys.stderr.fileno())
+        os.close(logFd)
+        ChangeSetFromFile = changeset.ChangeSetFromFile
+        Trove = trove.Trove
         try:
-            d.extractPublicKeys('', '')
-        except RuntimeError, e:
-            assert e.args == ('The following troves do not have keys in their '
-                              'associated repositories:\ngroup-dummy='
-                              '/test.rpath.local@rpl:devel/1-1-1[is: x86] '
-                              'require 0\ngroup-dummy='
-                              '/test.rpath.local@rpl:devel/1-1-1[is: x86] '
-                              'require 9\n',)
-        else:
-            self.fail('expected RuntimeError')
+            f = open(os.path.join(csdir, 'test.ccs'), 'w')
+            f.write('')
+            f.close()
+            changeset.ChangeSetFromFile = DummyChangeSet
+            trove.Trove = DummyTrove
+
+            d.extractPublicKeys('', '', csdir)
+            f = open(logFile)
+            data = f.read()
+            f.close()
+            assert data == 'The following troves do not have keys in their ' \
+                'associated repositories:\ngroup-dummy=/' \
+                'test.rpath.local@rpl:devel/1-1-1[is: x86] requires ' \
+                '9876543210987654321098765432109876543210\n\n'
+        finally:
+            trove.Trove = Trove
+            changeset.ChangeSetFromFile = ChangeSetFromFile
+            os.dup2(oldErr, sys.stderr.fileno())
+            util.rmtree(csdir)
+            util.rmtree(logFile)
+
 
     def testFoundAll(self):
         DummyRepos.findTrove = lambda *args, **kwargs: (('', '', ''),)
         d = DummyIso()
 
         getAsciiOpenPGPKey = DummyRepos.getAsciiOpenPGPKey
+        csdir = tempfile.mkdtemp()
         try:
             DummyRepos.getAsciiOpenPGPKey = lambda *args : ''
-            d.extractPublicKeys('', '')
+            d.extractPublicKeys('', '', csdir)
         finally:
             DummyRepos.getAsciiOpenPGPKey = getAsciiOpenPGPKey
+            util.rmtree(csdir)
 
         assert d.statusList == ['Extracting Public Keys']
 
