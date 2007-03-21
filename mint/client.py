@@ -385,8 +385,7 @@ class MintClient:
         @return: an object representing the new job
         @rtype: L{mint.jobs.Job}
         """
-        jobId = self.server.startImageJob(buildId)
-        return self.getJob(jobId)
+        return self.server.startImageJob(buildId)
 
     def getJob(self, jobId):
         """
@@ -396,6 +395,7 @@ class MintClient:
         @returns: an object representing the requested job.
         @rtype: L{jobs.Job}
         """
+        raise NotImplementedError
         return jobs.Job(self.server, jobId)
 
     def listActiveJobs(self, filter):
