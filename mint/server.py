@@ -3741,7 +3741,6 @@ class MintServer(object):
 
         return descendants
 
-<<<<<<< /home/tgerla/hg/mint-the-cheat/mint/server.py
     # *** MCP RELATED FUNCTIONS ***
     # always use this method to get an MCP client so that it can be cached
     def _getMcpClient(self):
@@ -3757,7 +3756,6 @@ class MintServer(object):
         if self.mcpClient:
             self.mcpClient.disconnect()
 
-=======
     #
     # EC2 Support for rBO
     #
@@ -3873,7 +3871,6 @@ class MintServer(object):
 
         return (code in expectedCodes)
 
->>>>>>> /tmp/server.py~other.usec3R
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
