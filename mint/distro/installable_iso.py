@@ -551,7 +551,9 @@ class InstallableIso(ImageGenerator):
                         fd = open(fname, 'w')
                         fd.write(key)
                         fd.close()
-                        call('gpg', '--home', homeDir, '--import', fname)
+                        call('gpg', '--home', homeDir,
+                             '--trust-model', 'always',
+                             '--import', fname)
                         os.unlink(fname)
                     except openpgpfile.KeyNotFound:
                         missingKeys.append(fp)
@@ -564,7 +566,8 @@ class InstallableIso(ImageGenerator):
                         (', '.join(fpTrovespecs[fingerprint]), fingerprint)
                 print >> sys.stderr, errorMessage
                 #raise RuntimeError(errorMessage)
-            call('gpg', '--home', homeDir, '--export', '-o',
+            call('gpg', '--home', homeDir, '--export',
+                 '--no-auto-check-trustdb', '-o',
                  os.path.join(topdir, 'public_keys.gpg'))
         finally:
             util.rmtree(homeDir)
