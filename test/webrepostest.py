@@ -4,6 +4,8 @@
 #
 # All Rights Reserved
 #
+import os
+import shutil
 import testsuite
 testsuite.setup()
 
@@ -22,6 +24,27 @@ class TestCase(PackageRecipe):
     def setup(r):
         r.Create("/temp/foo")
         r.MakeDirs("/temp/directory", mode = 0775)
+"""
+
+testTransientRecipe1=r"""\
+class TransientRecipe1(PackageRecipe):
+    name = 'testcase'
+    version = '1.0'
+    clearBuildReqs()
+    fileText = 'bar\n'
+    def setup(r):
+	r.Create('/foo', contents=r.fileText)
+	r.Transient('/foo')
+"""
+testTransientRecipe2=r"""\
+class TransientRecipe2(PackageRecipe):
+    name = 'testcase'
+    version = '1.1'
+    clearBuildReqs()
+    fileText = 'blah\n'
+    def setup(r):
+	r.Create('/foo', contents=r.fileText)
+	r.Transient('/foo')
 """
 
 
@@ -236,6 +259,52 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         self.failUnless(v3 in page.body)
         self.failUnless(("group-dist=%s" % v2) in page.body)
+
+    def testClonedFrom(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        hostname = 'testproject.%s' % MINT_PROJECT_DOMAIN
+
+        # copied straight from conary-test-1.1/clonetest.py --sgp
+        os.chdir(self.workDir)
+        self.newpkg("testcase")
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe1)
+        self.addfile("testcase.recipe")
+        self.commit()
+        self.cookFromRepository('testcase')
+
+        self.mkbranch("1.0-1", "%s@rpl:shadow" % hostname, "testcase:source",
+                      shadow = True)
+
+        os.chdir(self.workDir)
+        shutil.rmtree("testcase")
+        self.checkout("testcase", "%s@rpl:shadow" % hostname)
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe2)
+        self.commit()
+
+        self.cfg.buildLabel = versions.Label("%s@rpl:shadow" % hostname)
+        self.cookFromRepository('testcase')
+        self.cfg.buildLabel = versions.Label("%s@rpl:devel" % hostname)
+
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase:source=%s@rpl:shadow' % hostname)
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase=%s@rpl:shadow' % hostname,
+                   fullRecurse=False)
+
+        self.openRepository()
+        page = self.webLogin('testuser', 'testpass')
+        page = self.fetch("/repos/testproject/troveInfo?t=testcase")
+        self.failUnless("Cloned from:" in page.body,
+                "Missing cloned from information in repos browser")
+
+        page = self.fetch("/repos/testproject/troveInfo?t=testcase:source")
+        self.failUnless("Cloned from:" in page.body,
+                "Missing cloned from information from source in repos browser")
 
 
 if __name__ == "__main__":

@@ -33,6 +33,11 @@ else:
             quotedVersion = quote(trove.getVersion().asString())
             frozenVersion = quote(trove.getVersion().freeze())
             frozenFlavor = quote(trove.getFlavor().freeze())
+            clonedFrom = trove.troveInfo.clonedFrom()
+            clonedFromStr = ''
+            if clonedFrom and '@LOCAL:' not in clonedFrom.asString():
+                clonedLink = "troveInfo?t=%s;v=%s" % (trove.getName(), quote(clonedFrom.asString()))
+                clonedFromStr = clonedFrom.asString()
         ?>
         <tr>
             <th>Package name:</th>
@@ -44,6 +49,10 @@ else:
                     </a>
                     ${truncateForDisplay(trove.getName(), maxWordLen=45)}
                 </td>
+        </tr>
+        <tr py:if="clonedFromStr">
+            <th>Cloned from:</th>
+            <td><a href="${clonedLink}">${splitVersionForDisplay(clonedFromStr)}</a></td>
         </tr>
         ${referencesLink("Package", trove.getName(), trove.getVersion())}
         <tr><th>Change log:</th>
@@ -102,6 +111,11 @@ else:
             quotedLabel = quote(trove.getVersion().branch().label().asString())
             frozenVersion = quote(trove.getVersion().freeze())
             frozenFlavor = quote(trove.getFlavor().freeze())
+            clonedFrom = trove.troveInfo.clonedFrom()
+            clonedFromStr = ''
+            if clonedFrom and '@LOCAL:' not in clonedFrom.asString():
+                clonedLink = "troveInfo?t=%s;v=%s" % (trove.getName(), quote(clonedFrom.asString()))
+                clonedFromStr = clonedFrom.asString()
         ?>
         <tr>
             <th>$title name:</th>
@@ -112,6 +126,10 @@ else:
             <td><a href="${sourceLink}" title="${trove.getSourceName()}">
                 ${truncateForDisplay(trove.getSourceName(), maxWordLen = 45)}
             </a></td>
+        </tr>
+        <tr py:if="clonedFromStr">
+            <th>Cloned from:</th>
+            <td><a href="${clonedLink}">${splitVersionForDisplay(clonedFromStr)}</a></td>
         </tr>
         ${referencesLink(title, trove.getName(), trove.getVersion())}
         <tr>
