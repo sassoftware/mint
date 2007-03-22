@@ -22,6 +22,8 @@ from conary import versions
 from conary.deps import deps
 from conary.dbstore import sqllib
 
+SERIAL_VERSION = 1
+
 class TroveNotSet(MintError):
     def __str__(self):
         return "this build needs a be associated with a group or fileset trove."
@@ -111,6 +113,9 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
                 cu.execute("UPDATE Releases SET description=desc")
             if dbversion == 14:
+                # jsversion is being removed entirely. this test needs to be
+                # reworked--tho I'm not sure anybody is on schema 13 or less
+                raise NotImplementedError
                 from mint import jsversion
                 cu = self.db.cursor()
                 cu.execute("""INSERT INTO ReleaseData
@@ -283,7 +288,6 @@ class BuildsTable(database.KeyedTable):
         cu.execute("SELECT count(*) FROM BuildsView WHERE buildId=?", buildId)
         return cu.fetchone()[0]
 
-
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various
        characteristics that a flavor may have, defined by the
@@ -387,12 +391,8 @@ class Build(database.TableObject):
             self.buildType = self.server.getBuildType(self.buildId)
         return self.buildType
 
-    def getJob(self):
-        jobId = self.server.getJobIdForBuild(self.id)
-        if jobId:
-            return jobs.Job(self.server, jobId)
-        else:
-            return None
+    def getStatus(self):
+        return self.server.getBuildStatus(self.id)
 
     def getFiles(self):
         return self.server.getBuildFilenames(self.buildId)
@@ -452,6 +452,9 @@ class Build(database.TableObject):
             if name not in dataDict:
                 dataDict[name] = template[name][1]
         return dataDict
+
+    def serialize(self):
+        return self.server.serializeBuild(self.buildId)
 
     def addFileUrl(self, fileId, urlType, url):
         return self.server.addFileUrl(self.getId(), fileId, urlType, url)

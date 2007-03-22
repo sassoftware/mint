@@ -139,14 +139,7 @@ class ProjectHandler(WebHandler):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        buildsInProgress = []
-        for build in builds:
-            buildJob = build.getJob()
-            if buildJob and (buildJob.getStatus() <= jobstatus.RUNNING):
-                buildsInProgress.append(build.id)
-
-        return self._write("builds", builds = builds,
-                buildsInProgress = buildsInProgress)
+        return self._write("builds", builds = builds)
 
     @writersOnly
     def groups(self, auth):
@@ -447,8 +440,11 @@ class ProjectHandler(WebHandler):
         else:
             build = self.client.getBuild(buildId)
 
-        job = build.getJob()
-        if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
+        # enforce that job doesn't conflict
+        res = build.getStatus()
+        jobStatus, msg = res['status'], res['message']
+        if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
+                             jobstatus.FAILED):
             self._addErrors("You cannot alter this build because a "
                             "conflicting image is currently being generated.")
             self._predirect("build?id=%d" % buildId)
@@ -504,7 +500,7 @@ class ProjectHandler(WebHandler):
             build.setDataValue(name, val)
 
         try:
-            job = self.client.startImageJob(buildId)
+            self.client.startImageJob(buildId)
         except jobs.DuplicateJob:
             pass
 
@@ -575,8 +571,10 @@ class ProjectHandler(WebHandler):
         buildInProgress = False
         builtBy = None
         builtAt = None
+        # FIXME: refactor all this to not use a job object...
+        # MCP_WORK
         if auth.authorized:
-            buildJob = build.getJob()
+            buildJob = None
             if buildJob:
                 buildInProgress = \
                         (buildJob.getStatus() <= jobstatus.RUNNING)

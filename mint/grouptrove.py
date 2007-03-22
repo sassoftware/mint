@@ -14,6 +14,7 @@ from mint import mint_error
 from conary import versions
 from conary.deps import deps
 
+SERIAL_VERSION = 1
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):
@@ -532,3 +533,6 @@ class GroupTrove(database.TableObject):
 
     def setRemovedComponents(self, components):
         return self.server.setGroupTroveRemovedComponents(self.id, components)
+
+    def serialize(self):
+        return self.server.serializeGroupTrove(self.id)

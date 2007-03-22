@@ -18,7 +18,6 @@ from mint import maintenance
 from mint import mint_error
 from mint import buildtypes
 from mint import users
-from mint import jsversion
 
 from conary.repository import errors
 
@@ -100,16 +99,6 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
                           'test:data',
                           '/testproject.' + MINT_PROJECT_DOMAIN + \
                           '@rpl:devel/1.0-1-1')
-
-    def testJobs(self):
-        client, userId = self.quickMintAdmin('admin', 'admin')
-        # use a shim client and skip the lockfile.
-        self.setMaintenanceMode(maintenance.LOCKED_MODE)
-        self.assertRaises(mint_error.MaintenanceMode,
-                          client.startNextJob,
-                          ['1#x86'],
-                          {'buildTypes' : [buildtypes.STUB_IMAGE]},
-                          jsversion.getDefaultVersion())
 
     def testRepos(self):
         client, userId = self.quickMintAdmin('admin', 'admin')

@@ -25,7 +25,6 @@ from mint import flavors
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
         hostPortParse, rewriteUrlProtocolPort, getArchFromFlavor
 from mint.client import timeDelta
-from mint import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
@@ -233,27 +232,6 @@ Much like Powdermilk Biscuits[tm]."""
         assert(extractBasePath("/foo", "/foo") == "/")
         assert(extractBasePath("/rbuilder/", "/") == "/rbuilder/")
         assert(extractBasePath("/rbuilder/foo", "/foo") == "/rbuilder/")
-
-    def testJsVersions(self):
-        tmpDir = tempfile.mkdtemp()
-        cfg = config.MintConfig()
-        cfg.dataPath = tmpDir
-        try:
-            self.failIf(jsversion.getVersions(cfg) != [constants.mintVersion])
-
-            for dir in ('15.20.1', '1.5', '10.20', '10.2', '1.5.4beta', '1A',
-                        'README'):
-                util.mkdirChain(os.path.join(tmpDir, 'jobserver', dir))
-            for fName in ('FOO', '1.5.4'):
-                f = open(os.path.join(tmpDir, 'jobserver', fName), 'w')
-                f.close()
-            self.failIf(jsversion.getVersions(cfg) !=
-                        ['1.5', '1.5.4beta', '10.2', '10.20', '15.20.1'],
-                        "Version list contained improper job server versions.")
-            self.failIf(jsversion.getDefaultVersion(cfg) != '15.20.1',
-                        "Wrong default job server version.")
-        finally:
-            util.rmtree(tmpDir)
 
     def testHostPortParse(self):
         self.assertEqual(hostPortParse('foo.bar.baz:80', 80),
