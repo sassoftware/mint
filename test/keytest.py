@@ -101,6 +101,7 @@ class DummyIso(installable_iso.InstallableIso):
         self.troveName = TROVE_NAME
         self.troveVersion = TROVE_VERSION
         self.troveFlavor = TROVE_FLAVOR
+        self.isocfg = self.configObject
 
     def status(self, status):
         self.statusList.append(status)
@@ -134,6 +135,13 @@ class KeyTest(testsuite.TestCase):
             changeset.ChangeSetFromFile = DummyChangeSet
             trove.Trove = DummyTrove
 
+            try:
+                d.extractPublicKeys('', '', csdir)
+            except RuntimeError:
+                pass
+            else:
+                self.fail('Missing keys did not raise runtime error')
+            d.isocfg.failOnKeyError = False
             d.extractPublicKeys('', '', csdir)
             f = open(logFile)
             data = f.read()

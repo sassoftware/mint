@@ -37,6 +37,7 @@ from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.lib import util, sha1helper, openpgpfile
+from conary.lib import cfgtypes
 
 
 class IsoConfig(ConfigFile):
@@ -50,6 +51,7 @@ class IsoConfig(ConfigFile):
     anacondaImagesPath  = '/usr/share/rbuilder/pixmaps'
     rootstatWrapper     = '/usr/lib/rbuilder/rootstat_wrapper.so'
     templatesLabel      = 'conary.rpath.com@rpl:1'
+    failOnKeyError      = (cfgtypes.CfgBool, True)
 
 
 class AnacondaTemplateMissing(Exception):
@@ -556,8 +558,10 @@ class InstallableIso(ImageGenerator):
                 for fingerprint in missingKeys:
                     errorMessage += '%s requires %s\n' %  \
                         (', '.join(fpTrovespecs[fingerprint]), fingerprint)
-                print >> sys.stderr, errorMessage
-                #raise RuntimeError(errorMessage)
+                if self.isocfg.failOnKeyError:
+                    raise RuntimeError(errorMessage)
+                else:
+                    print >> sys.stderr, errorMessage
             call('gpg', '--home', homeDir, '--export',
                  '--no-auto-check-trustdb', '-o',
                  os.path.join(topdir, 'public_keys.gpg'))
