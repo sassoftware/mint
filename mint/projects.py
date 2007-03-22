@@ -746,12 +746,9 @@ class RepositoryDatabase:
         self.cfg = cfg
 
     def create(self, name):
-        # pre-initialize the cache for test suite purposes
-        cache = os.path.dirname("%s/%s/cache.sql" % (self.cfg.reposPath, name))
-        if not os.path.exists(cache):
-            util.mkdirChain(os.path.dirname(cache))
-        from conary.repository.netrepos import cacheset
-        cacheset.CacheSet(('sqlite', cache + "/cache.sql"), None)
+        # this used to pre-initialize the cache for test suite purposes
+        # but there is no longer a cache db
+        pass
 
     def getRepositoryDB(self, name, db = None):
         if db:
