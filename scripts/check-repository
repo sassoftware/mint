@@ -18,12 +18,13 @@ def checkFiles(reposPath):
     cu.execute('select distinct hex(sha1) from filestreams')
     missing = []
 
-    cu = util.PeekIterator(cu)
     i = 0
-    try:
-        while cu.peek():
-            sha = cu.next()[0]
+
+    x = cu.fetchmany(1000)
+    while x:
+        for r in x:
             i += 1
+            sha = r[0]
             if not sha:
                 continue
             splitSha = struct.unpack('2s2s36s', sha)
@@ -32,8 +33,9 @@ def checkFiles(reposPath):
 
             if i % 500:
                 print '\rprogress: %d/%d%s' % (i, l, '\b' * 50),
-    except StopIteration:
-        pass
+        x = cu.fetchmany(1000)
+
+
     print "\nNot all file streams will need to be checked. %d streams not checked." % (l-i)
 
     db.close()
