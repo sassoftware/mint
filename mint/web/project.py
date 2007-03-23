@@ -765,7 +765,7 @@ class ProjectHandler(WebHandler):
         dataDict.update(memory=latestBuild.getDataValue('vmMemory'))
         # Size compressed
         dataDict.update(size=latestBuild.getFiles()[0]['size']/0x100000)
-        if dataDict['size'] == '0M':
+        if dataDict['size'] == '0':
             dataDict['size'] = ''
         # VMware tools installed?
         fl = latestBuild.getTroveFlavor()
@@ -781,18 +781,8 @@ class ProjectHandler(WebHandler):
         dataDict.update(password='')
 
         # OS 
-        cfg = self.project.getConaryConfig()
-        cfg.dbPath = cfg.root = ":memory:"
-        cclient = conaryclient.ConaryClient(cfg)
+        dataDict.update(os='rPath Linux')
 
-        trove = latestBuild.getTrove()
-        tr = cclient.repos.getTrove(trove[0], versions.ThawVersion(trove[1]), deps.ThawFlavor(trove[2]))
-        ver = ''
-        for x in cclient.repos.walkTroveSet(tr):
-            if x.name() == 'group-core':
-                ver = x.version.v.trailingRevision().version
-                break
-        dataDict.update(os='rPath Linux ' + ver)
         # Time
         timeTup = time.gmtime(latestBuild.getChangedTime())
         dataDict.update(year=timeTup[0])
