@@ -27,7 +27,7 @@ else:
 
 ?>
 
-    <table py:def="sourceTroveInfo(trove)" class="troveinfo">
+    <table py:def="sourceTroveInfo(trove, referer)" class="troveinfo">
         <?python
             quotedLabel = quote(str(trove.getVersion().branch().label()))
             quotedVersion = quote(trove.getVersion().asString())
@@ -202,7 +202,7 @@ else:
                 <h3>Information for ${title.lower()}: ${truncateForDisplay(troveName, maxWordLen = 45)}</h3>
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
-                    ${sourceTroveInfo(troves[0])}
+                    ${sourceTroveInfo(troves[0], referer)}
                     <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
                 </div>
                 <div py:strip="True" py:if="not troves[0].getName().endswith(':source')">
