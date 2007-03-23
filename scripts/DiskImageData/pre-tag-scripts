@@ -1,4 +1,0 @@
-# partially set up grub
-cat <<EOF > /boot/grub/device.map
-(hd0)   /dev/hda
-EOF

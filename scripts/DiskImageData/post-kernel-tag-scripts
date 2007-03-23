@@ -1,2 +1,0 @@
-#Remove the kernel template
-/sbin/grubby --remove-kernel=/boot/vmlinuz-template 

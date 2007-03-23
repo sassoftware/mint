@@ -1,3 +1,0 @@
-MOUSETYPE="ps2"
-DEVICE=/dev/input/mice
-XMOUSETYPE="PS/2"

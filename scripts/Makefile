@@ -8,8 +8,6 @@ script_dist =				\
 	amazon-s3-processor		\
 	check-repository		\
 	deleteproject			\
-	install-jsroot			\
-	job-server			\
 	load-offline-mirror		\
 	migrate-all-projects		\
 	migrate-config			\
@@ -18,19 +16,14 @@ script_dist =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password		\
-	killjob
+	set-password		
 
 extra_dist = \
 	Makefile		\
 	raw2vmdk.c		\
-	rootstat_wrapper.c	\
-	job-server.init.in	\
-	multi-jobserver.init.in	\
-        cleanup-bindmounts.init.in \
         backup
 
-SUBDIRS = data DiskImageData mailman
+SUBDIRS = mailman
 
 CFLAGS=-Wall -s -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 LDFLAGS=
@@ -40,7 +33,7 @@ dist_files = $(script_dist) $(extra_dist)
 
 all: default-all bin
 
-bin: raw2vmdk rootstat_wrapper.so
+bin: raw2vmdk
 
 install: install-subdirs
 	mkdir -p $(DESTDIR)/$(datadir)/rbuilder/scripts/
@@ -48,20 +41,12 @@ install: install-subdirs
 		install -m 755 $$f $(DESTDIR)/$(datadir)/rbuilder/scripts/$$f; \
 	done;
 
-	mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
-	install -m 755 job-server.init.in $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
-	install -m 755 multi-jobserver.init.in $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
-	install -m 755 cleanup-bindmounts.init.in $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/cleanup-bindmounts
 	mkdir -p $(DESTDIR)/etc/raa/backup.d
 	install -m 755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
 	mkdir -p $(DESTDIR)/$(libdir)/rbuilder/
-	install -m 755 rootstat_wrapper.so $(DESTDIR)/$(libdir)/rbuilder/
 
 dist: default-dist
 
@@ -70,12 +55,6 @@ clean: default-clean
 
 raw2vmdk: raw2vmdk.c
 	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
-
-rootstat_wrapper.o: rootstat_wrapper.c
-	$(CC) -Wall -O2 -s -fPIC -rdynamic -c rootstat_wrapper.c
-
-rootstat_wrapper.so: rootstat_wrapper.o
-	$(CC) -s -shared -rdynamic -o rootstat_wrapper.so rootstat_wrapper.o -lc -ldl
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
