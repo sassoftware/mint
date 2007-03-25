@@ -9,7 +9,8 @@ SUBDIRS = web reports templates cmdline
 python_files =			\
 	__init__.py		\
 	accesscontrol.py	\
-	backup.py               \
+	backup.py		\
+	broker.py		\
 	spotlight.py		\
 	checkhtml.py		\
 	client.py		\
