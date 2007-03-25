@@ -139,6 +139,31 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         assert(os.path.exists(self.mintCfg.dataPath + "/entitlements/conary.rpath.com"))
 
+    def testCreateExternalProjectEntitlementExtraWhitespace(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
+        # ensure "first time" content appears on page
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+            {'hostname':        'rpath',
+             'name':            'rPath Linux',
+             'label':           'conary.rpath.com@rpl:devel',
+             'url':             '',
+             'authType':        'entitlement',
+             'externalEntKey':  'entitlementkey  \n',
+             'externalEntClass':'  entitlementclass',
+            }
+        )
+
+        from conary.conarycfg import loadEntitlementFromString
+
+        entPath = self.mintCfg.dataPath + "/entitlements/conary.rpath.com"
+        xmlContent = open(entPath).read()
+        ent = loadEntitlementFromString(xmlContent, "conary.rpath.com", entPath)
+        self.failUnlessEqual(ent, ('entitlementclass', 'entitlementkey'))
+
     def testExternalProjectMirrorAllLabels(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')

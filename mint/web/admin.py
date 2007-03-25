@@ -154,6 +154,10 @@ class AdminHandler(WebHandler):
                         useMirror, authType, additionalLabelsToMirror,
                         projectId, allLabels, *args, **kwargs):
 
+        # strip extraneous whitespace
+        externalEntKey = externalEntKey.strip()
+        externalEntClass = externalEntClass.strip()
+
         kwargs = {'name': name, 'hostname': hostname, 'label': label,
             'url': url, 'authType': authType, 'externalUser': externalUser,
             'externalPass': externalPass,
