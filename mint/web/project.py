@@ -456,7 +456,6 @@ class ProjectHandler(WebHandler):
         build.setDesc(desc)
 
         jobArch = distTroveFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-        assert(jobArch in ('x86', 'x86_64'))
 
         # handle buildType check box state changes
         buildType = int(kwargs['buildtype'])

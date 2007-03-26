@@ -324,6 +324,34 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                       server=self.getProjectServerHostname())
         assert 'action="saveBuild"' in page.body
 
+    def testNewBuildUnknownArch(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        self.webLogin('testuser', 'testpass')
+
+        # totally bogus is: field
+        v1 = "/testproject.%s@rpl:linux/1.0-1-1" % MINT_PROJECT_DOMAIN
+        f1 = 'is: foomatic'
+
+        self.addComponent("testtrove:runtime", v1, f1)
+        self.addCollection("testtrove", v1, [":runtime"],
+                defaultFlavor = f1)
+
+        self.addCollection("group-dist", v1, [("testtrove", v1)],
+                defaultFlavor = f1)
+
+        self.setServer(self.getProjectServerHostname(), self.port)
+        page = self.fetchWithRedirect('/project/testproject/newBuild')
+        page.postForm(1, self.fetchWithRedirect,
+                {'buildtype': '2',
+                 'distTroveSpec': 'group-dist=/testproject.%s@rpl:linux/0.0:1.0-1-1[is: foomatic]' % MINT_PROJECT_DOMAIN,
+                 'name': 'Test build with bad arch',
+                 'desc': '',
+                 'action': 'saveBuild'})
+        page = page.fetchWithRedirect('/project/testproject/builds')
+        self.failUnless('foomatic' in page.body)
+
     def testEditBuild(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
