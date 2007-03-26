@@ -285,16 +285,18 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
     timeStamp = time.ctime(time.time())
     # log error
-    log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, exception.__name__, e)
-    log.error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
+    apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
     # send email
-    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(exception.__name__, e)
+    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' % (exception.__name__, e)
     body += 'Time of occurrence: %s\n\n' %timeStamp
     body += ''.join( traceback.format_tb(bt))
-    body += '\nConnection Information:\n'
+
+    print >> sys.stderr, body
+    sys.stderr.flush()
     for key, val in sorted(info_dict.items()):
         body += '\n' + key + ': ' + str(val)
 
+    body += '\nConnection Information:\n'
     body_small = 'Mint Exception: %s: %s' % (exception.__name__, e)
     for key, val in sorted(info_dict_small.items()):
         body_small += '\n' + key + ': ' + str(val)
@@ -307,7 +309,7 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
     except MailError, e:
-        log.error("Failed to send e-mail to %s, reason: %s" % \
+        apache.log_error("Failed to send e-mail to %s, reason: %s" % \
             (cfg.bugsEmail, str(e)))
 
 cfg = None
