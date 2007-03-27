@@ -10,6 +10,7 @@ import stat
 import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
+from mimetypes import guess_type
 
 from mod_python import apache
 
@@ -35,6 +36,7 @@ from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpPartialContent, HttpOK
 
+from conary.lib import util
 from conary import versions
 from conary.deps import deps
 from conary import conarycfg, conaryclient
@@ -762,6 +764,8 @@ class SiteHandler(WebHandler):
 
         # For urltype.LOCAL, construct the redirect URL
         # Use override redirect if it's set (e.g. redirecting to Amazon S3).
+
+        serveOurselves = False
         if urlType == urltypes.LOCAL:
             if overrideRedirect:
                 redirectUrl = overrideRedirect
@@ -770,6 +774,10 @@ class SiteHandler(WebHandler):
                 # the request.
                 if reqFilename and os.path.basename(filename) != reqFilename:
                     raise HttpNotFound
+                size = os.stat(filename)[stat.ST_SIZE]
+                if size >= (1024*1024) * 2047:
+                    serveOurselves = True
+
                 build = self.client.getBuild(buildId)
                 project = self.client.getProject(build.projectId) 
                 redirectUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
@@ -779,6 +787,19 @@ class SiteHandler(WebHandler):
         if urlId:
             self.client.addDownloadHit(urlId, self.remoteIp)
 
+        # apache 2.0 has trouble sending >2G files
+        if serveOurselves:
+            self.req.headers_out['Content-length'] = str(size)
+            self.req.headers_out['Content-Disposition'] = \
+                "attachment; filename=%s;" % os.path.basename(filename)
+            typeGuess = guess_type(filename)
+            if typeGuess[0]:
+                self.req.content_type = typeGuess[0]
+            else:
+                self.req.content_type = "application/octet-stream"
+            imgF = file(filename)
+            util.copyfileobj(imgF, self.req)
+            return HttpOK
         if redirectUrl:
             self._redirect(redirectUrl)
         else:
