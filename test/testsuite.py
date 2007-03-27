@@ -60,12 +60,23 @@ def setup():
     global testPath
     global archivePath
 
-    # set default CONARY_POLICY_PATH is it was not set.
+    # set default CONARY_POLICY_PATH if it was not set.
     conaryPolicy = os.getenv('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
     os.environ['CONARY_POLICY_PATH'] = conaryPolicy
 
-    # set default MINT_PATH, if it was not set.
+    # set default MCP_PATH if it was not set.
+    # assume mcp code tree is in same dir as mint code tree if all else fails
     parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
+    mcpPath = os.getenv('MCP_PATH', os.path.join(os.path.split(parDir)[0],
+                                                 'mcp' ))
+    os.environ['MCP_PATH'] = mcpPath
+    if mcpPath not in sys.path:
+        sys.path.insert(0, mcpPath)
+    mcpTestPath = os.path.join(mcpPath, 'test')
+    if mcpTestPath not in sys.path:
+        sys.path.insert(0, mcpTestPath)
+
+    # set default MINT_PATH, if it was not set.
     mintPath = os.getenv('MINT_PATH', parDir)
     os.environ['MINT_PATH'] = mintPath
 
