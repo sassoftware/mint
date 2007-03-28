@@ -1021,7 +1021,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
-        build.setFiles([['test.iso', 'Test Image']])
+        build.setFiles([[self.mintCfg.imagesPath + '/test.iso', 'Test Image']])
+
+        util.mkdirChain(self.mintCfg.imagesPath)
+        f = open(self.mintCfg.imagesPath + '/test.iso', 'w')
+        f.close()
 
         expectedLocalRedirect = 'http://%s.%s:%d/images/foo/%d/test.iso' % \
                 (MINT_HOST, MINT_DOMAIN, self.port, build.id)
@@ -1064,7 +1068,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
-        build.setFiles([['test.iso', 'Test Image']])
+        build.setFiles([[self.mintCfg.imagesPath + '/test.iso', 'Test Image']])
         files = build.getFiles()
         assert(len(files) == 1)
         fileId = files[0]['fileId']
@@ -1072,6 +1076,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 (MINT_HOST, MINT_DOMAIN, self.port, build.id)
         expectedRemoteRedirect = 'http://foo.elsewhere.org/'
         build.addFileUrl(fileId, urltypes.GENERICMIRROR, expectedRemoteRedirect)
+
+        util.mkdirChain(self.mintCfg.imagesPath)
+        f = open(self.mintCfg.imagesPath + '/test.iso', 'w')
+        f.close()
 
         # sanity checks
         self._checkRedirect('/downloadImage/1', expectedLocalRedirect)
@@ -1314,21 +1322,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # link historically showed up wrong by not pre-pending a /
         page = self.assertNotContent('/project/testproject/',
                                      'a href="register"')
-
-    def testReposSignin(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = self.newProject(client)
-
-        # link historically brought up a spurious "my projects" pane
-        page = self.assertContent('/repos/testproject/browse',
-                                     '/processLogin',
-                                     server = self.getProjectServerHostname())
-
-        page = self.webLogin('foouser', 'foopass')
-
-        page = self.assertContent('/repos/testproject/browse',
-                                     '/newProject',
-                                     server = self.getProjectServerHostname())
 
     def testTroveInfoLogin(self):
         client, userId = self.quickMintUser('foouser','foopass')

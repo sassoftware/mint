@@ -652,6 +652,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testRemovedComponentRecipe(self, db, data):
+        raise testsuite.SkipTestException("Move to jobslave")
         ownerId = data['owner']
         projectId = data['projectId']
         groupTroveId = data['groupTroveId']
@@ -893,6 +894,8 @@ class GroupTroveTestConary(MintRepositoryHelper):
         self.cookFromRepository("testcase", l, ignoreDeps = True)
 
     def testGetRecipe(self):
+        raise testsuite.SkipTestException("Move to jobslave")
+
         def bogusResolve(a, b, c, d):
             return []
 
@@ -1038,6 +1041,8 @@ class GroupTroveTestConary(MintRepositoryHelper):
                                                  False, False)
 
     def testCookAutoRecipe(self):
+        raise testsuite.SkipTestException("Move to jobslave")
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -1081,6 +1086,8 @@ class GroupTroveTestConary(MintRepositoryHelper):
                 self.fail("commits didn't show up")
 
     def testCookOnServer(self):
+        raise testsuite.SkipTestException("Move to jobslave")
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -1157,6 +1164,8 @@ class GroupTroveTestConary(MintRepositoryHelper):
         self.addCollection(pkgName, v, l)
 
     def testGroupTrovePathConflicts(self):
+        raise testsuite.SkipTestException("Move to jobslave")
+
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -1194,6 +1203,8 @@ class GroupTroveTestConary(MintRepositoryHelper):
 
 
     def testGrpTrvConfRes(self):
+        raise testsuite.SkipTestException("Move to jobslave")
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 

@@ -774,6 +774,10 @@ class SiteHandler(WebHandler):
                 # the request.
                 if reqFilename and os.path.basename(filename) != reqFilename:
                     raise HttpNotFound
+
+                if not os.path.exists(filename):
+                    raise HttpNotFound
+
                 size = os.stat(filename)[stat.ST_SIZE]
                 if size >= (1024*1024) * 2047:
                     serveOurselves = True

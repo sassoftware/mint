@@ -168,10 +168,10 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             build = client.newBuild(projectId, "Test Build")
             # add timestamp field.
             build.setTrove(trv.name(), trv.version.freeze(), "1#x86")
-            build.setFiles([["testimage.iso", "Test Image"]])
             imagePath = os.path.join(self.reposDir, "jobserver",
                                          "finished-images", project.hostname,
                                          str(build.id))
+            build.setFiles([[imagePath + "/testimage.iso", "Test Image"]])
             util.mkdirChain(imagePath)
             f = open(os.path.join(imagePath, 'testimage.iso'), 'w')
             f.write('bogus image')

@@ -685,6 +685,7 @@ class UpgradePathTest(MintRepositoryHelper):
                  (2, 6, 'blarch.rpath.local@rpl:devel', 'http://www.mooz.com/conary', 'egghead', 'beaniebot', 0, 0, '', 1)],
                 "Schema 25 upgrade didn't migrate OutboundLabels")
 
+        cfg.authDbPath = None
 
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
