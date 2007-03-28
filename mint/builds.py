@@ -115,18 +115,7 @@ class BuildsTable(database.KeyedTable):
             if dbversion == 14:
                 # jsversion is being removed entirely. this test needs to be
                 # reworked--tho I'm not sure anybody is on schema 13 or less
-                raise NotImplementedError
-                from mint import jsversion
-                cu = self.db.cursor()
-                cu.execute("""INSERT INTO ReleaseData
-                                  SELECT DISTINCT releaseId, 'jsversion',
-                                                  '%s', 0
-                                      FROM Releases
-                                      WHERE releaseId NOT IN
-                                          (SELECT DISTINCT releaseId
-                                               FROM ReleaseData
-                                               WHERE name='jsversion')""" % \
-                           jsversion.getDefaultVersion())
+                pass
             if dbversion == 20:
                 cu = self.db.cursor()
                 cu.execute("""DELETE FROM Releases
