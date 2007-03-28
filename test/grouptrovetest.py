@@ -1287,6 +1287,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
                     "group recipe did not reflect proper conflict resolution.")
 
     def testSerializeGroupTrove(self):
+        raise testsuite.SkipTestException("startCookJob NOT YET IMPLEMENTED")
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 

@@ -1444,6 +1444,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     "Illegal page reference was not contained.")
 
     def testBuild(self):
+        raise testsuite.SkipTestException("MCP not stubbed in web code")
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
