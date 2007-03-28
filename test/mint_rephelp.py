@@ -348,7 +348,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
-        return shimclient.ShimMintClient(self.mintCfg, authToken)
+        client = shimclient.ShimMintClient(self.mintCfg, authToken)
+        client.server._server.mcpClient = self.mcpClient
+        return client
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         """Retrieves a client, creates a user as specified by username and
@@ -362,7 +364,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         self.db.commit()
 
-        return self.openMintClient((username, password)), userId
+        client = self.openMintClient((username, password))
+        client.server._server.mcpClient = self.mcpClient
+        return client, userId
 
     def quickMintAdmin(self, username, password, email = "test@example.com"):
         # manipulate the UserGroups and UserGroup
@@ -382,6 +386,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                               WHERE UserGroup = 'MintAdmin'""")
             groupId = cu.fetchone()[0]
         client, userId = self.quickMintUser(username, password, email = email)
+        client.server._server.mcpClient = self.mcpClient
 
         cu.execute("SELECT userId from Users where username=?", username)
         authUserId = cu.fetchone()[0]
@@ -436,6 +441,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.mintServer.mcpClient = self.mcpClient
+
         self.db = self.mintServer.db
 
         # reset some caches
