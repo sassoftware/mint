@@ -79,10 +79,12 @@ def getFakeEC2Connection(awsPublicKey, awsPrivateKey):
 class Ec2Test(fixtures.FixturedUnitTest):
 
     def setUp(self):
+        fixtures.FixturedUnitTest.setUp(self)
         self.old_connect_ec2 = boto.connect_ec2
         boto.connect_ec2 = getFakeEC2Connection
 
     def tearDown(self):
+        fixtures.FixturedUnitTest.tearDown(self)
         boto.connect_ec2 = self.old_connect_ec2
 
     @fixtures.fixture("Full")
