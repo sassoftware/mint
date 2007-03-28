@@ -144,7 +144,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # test that trove info page renders without error
         page = self.assertContent('/repos/testproject/troveInfo?t=test:runtime',
-                                  content = "Information for component",
+                                  content = 'title="test:runtime"',
                                   server = self.getProjectServerHostname())
 
     def testReposRSS(self):
