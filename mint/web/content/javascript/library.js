@@ -360,7 +360,7 @@ function getCookStatus(jobId) {
     req.send(false, [jobId]);
     // continue calling self until we are finished
     if (cookStatus != null && cookStatus.status < STATUS_FINISHED) {
-        cookStatusId = setTimeout("getCookStatus("+jobId+")", cookStatusRefreshTime);
+        cookStatusId = setTimeout("getCookStatus('"+jobId+"')", cookStatusRefreshTime);
     }
 }
 
