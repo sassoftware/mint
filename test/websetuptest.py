@@ -85,6 +85,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         return FakeMintClient(*args)
 
     def setUp(self):
+        fixtures.FixturedUnitTest.setUp(self)
         self.sh = setup.SetupHandler()
         self.sh.cfg = config.MintConfig()
         self.sh.cfg.hostname = 'foo'
@@ -99,6 +100,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         time.sleep = self.__sleep
 
     def tearDown(self):
+        fixtures.FixturedUnitTest.tearDown(self)
         os.system = self.oldsystem
         time.sleep = self.oldsleep
 
