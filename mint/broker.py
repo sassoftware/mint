@@ -20,7 +20,6 @@ from mint import config as mint_config
 from mint import shimclient
 from mint import database
 
-from conary import dbstore
 from conary.lib import util
 
 timestamp = lambda x: '%s: %s' % (time.strftime(time.ctime()), x)
@@ -39,8 +38,6 @@ def handleImages(mcpCfg, mintCfg):
     print  timestamp("Subscribed to %s on %s:%s" % (queueName,
                      mcpCfg.queueHost, mcpCfg.queuePort))
 
-    db = dbstore.connect(mintCfg.dbPath, mintCfg.dbDriver)
-    cu = db.cursor()
     try:
         while True:
             data = simplejson.loads(postQueue.read())
@@ -61,6 +58,7 @@ def handleImages(mcpCfg, mintCfg):
                 continue
             finalDir = \
                 os.path.join(mintCfg.imagesPath, project.hostname, str(buildId))
+            util.mkdirChain(finalDir)
             try:
                 for url, fileDesc in urlMap:
                     filePath = os.path.join( \

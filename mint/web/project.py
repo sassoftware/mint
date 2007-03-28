@@ -342,11 +342,7 @@ class ProjectHandler(WebHandler):
         curGroupTrove = self.client.getGroupTrove(id)
 
         arch = deps.mergeFlavorList([deps.ThawFlavor(x) for x in flavor]).freeze()
-        job = curGroupTrove.getJob()
-        if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
-            jobId = curGroupTrove.startCookJob(arch)
-        else:
-            jobId = job.id
+        jobId = curGroupTrove.startCookJob(arch)
 
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']

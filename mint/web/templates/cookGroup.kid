@@ -11,7 +11,7 @@
         <script type="text/javascript">
             <![CDATA[
                 addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
-                addLoadEvent(function() {getCookStatus(${jobId})});
+                addLoadEvent(function() {getCookStatus('${jobId}')});
             ]]>
         </script>
     </head>

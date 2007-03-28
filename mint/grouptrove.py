@@ -40,13 +40,14 @@ class GroupTroveTable(database.KeyedTable):
                                  description TEXT,
                                  timeCreated INT,
                                  timeModified INT,
-                                 autoResolve INT
+                                 autoResolve INT,
+                                 cookCount INT
                                  )
     """
 
     fields = ['groupTroveId', 'projectId', 'creatorId', 'recipeName',
               'upstreamVersion', 'description', 'timeCreated', 'timeModified',
-              'autoResolve']
+              'autoResolve', 'cookCount']
 
     indexes = {"GroupTrovesProjectIdx": """CREATE INDEX GroupTrovesProjectIdx
                                                ON GroupTroves(projectId)""",
@@ -73,7 +74,12 @@ class GroupTroveTable(database.KeyedTable):
                 else:
                     cu.execute("""ALTER TABLE GroupTroves
                                       MODIFY COLUMN recipeName VARCHAR(200)""")
-            return dbversion >= 16
+            if dbversion == 32 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("""ALTER TABLE GroupTroves
+                                  ADD COLUMN cookCount INT""")
+                cu.execute("UPDATE GroupTroves SET cookCount=0")
+            return dbversion >= 32
         return True
 
     def listGroupTrovesByProject(self, projectId):
@@ -111,7 +117,8 @@ class GroupTroveTable(database.KeyedTable):
                  description = description,
                  timeCreated = timeStamp,
                  timeModified = timeStamp,
-                 autoResolve = int(autoResolve))
+                 autoResolve = int(autoResolve),
+                 cookCount = 0)
         return groupTroveId
 
     def delGroupTrove(self, groupTroveId):
@@ -147,6 +154,22 @@ class GroupTroveTable(database.KeyedTable):
         else:
             ret['projectName'] = r[0]
         return ret
+
+    def bumpCookCount(self, groupTroveId):
+        # this function will save the current value, increment it, then return
+        # the value the table had before the function was called.
+        # basically a post-increment function.
+        cu = self.db.cursor()
+        cu.execute("SELECT cookCount FROM GroupTroves WHERE groupTroveId=?",
+                   groupTroveId)
+        res = cu.fetchall()
+        if res:
+            cu.execute("""UPDATE GroupTroves
+                              SET cookCount=cookCount+1
+                              WHERE groupTroveId=?""", groupTroveId)
+            return res[0][0]
+        else:
+            return None
 
     def cleanup(self):
         cu = self.db.cursor()
