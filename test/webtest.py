@@ -24,6 +24,7 @@ from mint import urltypes
 
 from repostest import testRecipe
 
+from conary.lib import util
 from conary import versions
 from conary.repository import errors
 
@@ -1036,6 +1037,27 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # so should this
         page = self.assertCode('/downloadImage/1337', code = 404)
+
+    def testDownloadHugeImage(self):
+        if not os.path.exists("/usr/bin/curl"):
+            raise testsuite.SkipTestException("please install curl")
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(0)
+        build.setFiles([[self.mintCfg.imagesPath + '/huge.iso', 'Test Image']])
+
+        util.mkdirChain(self.mintCfg.imagesPath)
+        huge = self.mintCfg.imagesPath + '/huge.iso'
+        f = open(huge, 'w')
+        f.seek(long(4.5 * 1024 * 1024 * 1024))
+        f.write('1')
+        f.close()
+
+        url = "http://%s:%d/downloadImage/1" % self.getServerData()
+        f = os.popen("curl -s %s | md5sum" % url)
+
+        self.failUnless('91f30ef9e0212d71519da306782972b0' in f.read())
 
     def testDownloadISOWithUrlType(self):
         client, userId = self.quickMintUser("testuser", "testpass")
