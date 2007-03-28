@@ -2193,8 +2193,9 @@ class MintServer(object):
             raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
-
-        raise NotImplementedError
+        mc = self._getMcpClient()
+        data = self.serializeGroupTrove(groupTroveId, arch)
+        return mc.submitJob(data)
 
         # all code past this exception is for old style jobs and
         # must be refactored.
@@ -2235,6 +2236,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJobIds(self):
+        raise NotImplementedError
         cu = self.db.cursor()
 
         cu.execute("SELECT jobId FROM Jobs ORDER BY timeSubmitted")
@@ -2248,6 +2250,7 @@ class MintServer(object):
         @param filter: If True it will only show running or waiting jobs.
           If False it will show all jobs for past 24 hours plus waiting jobs.
         @return: list of jobIds"""
+        raise NotImplementedError
         cu = self.db.cursor()
 
         if filter:
@@ -2282,6 +2285,9 @@ class MintServer(object):
         @param jobserverVersion: string. version of the job server.
         @return: jobId of job to execute, or 0 for no job.
         """
+
+        raise NotImplementedError
+
         from mint import cooktypes
 
         # what to return if we no job has been started
@@ -2451,6 +2457,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJobIdForBuild(self, buildId):
+        raise NotImplementedError
         self._filterBuildAccess(buildId)
         cu = self.db.cursor()
 
@@ -2465,6 +2472,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJobIdForCook(self, groupTroveId):
+        raise NotImplementedError
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
@@ -2482,6 +2490,7 @@ class MintServer(object):
     @typeCheck(int, int, str)
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
+        raise NotImplementedError
         self._filterJobAccess(jobId)
         self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
         return True
@@ -2490,6 +2499,10 @@ class MintServer(object):
     @private
     @requiresAdmin
     def getJobServerStatus(self):
+        # this function needs to be deleted. we should use a rAA plugin to
+        # communicate with the MCP for status
+
+        raise NotImplementedError
         # Handling the job server in this manner is temporary
         # This is only useful in an appliance context at this time.
         pipeFD = os.popen("sudo /sbin/service multi-jobserver status")
@@ -2682,6 +2695,8 @@ class MintServer(object):
             filenames = [ (x[3], x[4], x[5]) for x in r ]
             return info[0], info[1], info[2], filenames
         else:
+            # FIXME: find a better error. jobs module is deprecated.
+            raise NotImplementedError
             raise jobs.FileMissing
 
     @typeCheck(int, ((str, unicode),))
@@ -2774,6 +2789,9 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAdmin
     def killJob(self, jobId):
+        # refactor to use MCP
+
+        raise NotImplementedError
         KILL_COMMAND = '/usr/share/rbuilder/scripts/killjob'
         SUDO = '/usr/bin/sudo'
         pid = os.fork()
@@ -2797,14 +2815,14 @@ class MintServer(object):
 
         return { 'status' : status, 'message' : message }
 
-    @typeCheck(int)
+    @typeCheck(unicode)
     @requiresAuth
-    def getJobStatus(self, jobId):
-        self._filterJobAccess(jobId)
+    def getJobStatus(self, uuid):
+
+        # FIXME: re-enable filtering based on UUID
+        #self._filterJobAccess(jobId)
 
         mc = self._getMcpClient()
-        uuid = '%s.%s-cook-%s' %(self.cfg.hostName,
-                                  self.cfg.externalDomainName, jobId)
 
         try:
             status, message = mc.jobStatus(uuid)
@@ -3001,24 +3019,23 @@ class MintServer(object):
         return res
 
     @private
-    @typeCheck(int)
+    @typeCheck(int, str)
     @requiresAuth
-    def serializeGroupTrove(self, groupTroveId):
+    def serializeGroupTrove(self, groupTroveId, arch):
         # performed at the mint server level to have access to
-        # groupTrove, project and groupTrovItems objects
+        # groupTrove, project and groupTroveItems objects
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
 
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)
         project = projects.Project(self, groupTrove.projectId)
-        job = groupTrove.getJob()
-        if not job:
-            raise badjujuError
 
         cc = project.getConaryConfig()
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue()
+
+        mc = self._getMcpClient()
 
         if self.cfg.createConaryRcFile:
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
@@ -3033,7 +3050,8 @@ class MintServer(object):
 
         r['autoResolve'] = groupTrove.autoResolve
 
-        r['jobData'] = self.jobData.getDataDict(job.id)
+        r['data'] = {'arch' : arch,
+                     'jsversion': str(mc.getJSVersion())}
 
         r['description'] = groupTrove.description
 
@@ -3049,9 +3067,11 @@ class MintServer(object):
                         'label' : project.getLabel(),
                         'conaryCfg' : cfgData}
 
-        r['UUID'] = '%s.%s-cook-%d' % (self.cfg.hostName,
-                                        self.cfg.externalDomainName,
-                                        groupTrove.id)
+        r['UUID'] = '%s.%s-cook-%d-%d' % \
+                         (self.cfg.hostName,
+                          self.cfg.externalDomainName,
+                          groupTrove.id,
+                          self.groupTroves.bumpCookCount(groupTroveId))
 
         return simplejson.dumps(r)
 
