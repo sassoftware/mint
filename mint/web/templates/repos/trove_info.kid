@@ -9,6 +9,7 @@ from urllib import quote
 from mint import userlevels
 from mint.helperfuncs import splitVersionForDisplay, truncateForDisplay
 from mint.web.templatesupport import isrMakeLegal, isGroupBuilderLegal
+from conary import deps
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -92,11 +93,8 @@ else:
         <th>Find references</th>
         <td>
             <a href="http://${SITE}findRefs?trvName=${quote(n)};trvVersion=${quote(str(v))}">
-                <b><u>Search</u></b>
-            </a>
-            <p class="help">Search for packages which are derived from this ${title.lower()} and
-                groups which include this ${title.lower()}.
-            </p>
+                <b><u>Search</u></b></a><p class="help" style="display: inline;"> for packages derived from this ${title.lower()} and
+                groups which include this ${title.lower()}.</p>
         </td>
     </tr>
 
@@ -116,14 +114,24 @@ else:
             if clonedFrom and '@LOCAL:' not in clonedFrom.asString():
                 clonedLink = "troveInfo?t=%s;v=%s" % (trove.getName(), quote(clonedFrom.asString()))
                 clonedFromStr = clonedFrom.asString()
+
+            flavors = []
+            for x in troves:
+                flavors.append(x.getFlavor())
+            reducedFlavors = deps.deps.flavorDifferences(flavors)
         ?>
         <tr>
-            <th>$title name:</th>
-            <td title="${trove.getName()}">${adder(trove, quotedVersion, quotedLabel, quote(req.unparsed_uri))} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
+            <th style="font-weight: bold;">$title name:</th>
+            <td style="font-weight: bold;" title="${trove.getName()}">${adder(trove, quotedVersion, quotedLabel, quote(req.unparsed_uri))} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
+        </tr>
+        <tr>
+            <th>Branch and Version:</th>
+            <td><a href="javascript:void(0);" id="shortVersion" onclick="hideElement(this); showElement('longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}</a>
+            <a href="javascript:void(0);" id="longVersion" onclick="hideElement(this); showElement('shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}</a>${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))} </td>
         </tr>
         <tr>
             <th>Built from source:</th>
-            <td><a href="${sourceLink}" title="${trove.getSourceName()}">
+            <td><a href="${sourceLink}" title="${'%s=%s' %(trove.getSourceName(), trove.getVersion())}">
                 ${truncateForDisplay(trove.getSourceName(), maxWordLen = 45)}
             </a></td>
         </tr>
@@ -131,20 +139,20 @@ else:
             <th>Cloned from:</th>
             <td><a href="${clonedLink}">${splitVersionForDisplay(clonedFromStr)}</a></td>
         </tr>
-        ${referencesLink(title, trove.getName(), trove.getVersion())}
         <tr>
-            <th>Version:</th>
-            <td>${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))} ${splitVersionForDisplay(str(trove.getVersion()))}</td>
-        </tr>
-        <tr>
-            <th>Flavor:</th>
+            <th py:if="len(troves) > 1">Flavors:</th>
+            <th py:if="len(troves) == 1">&nbsp;</th>
             <td>
                 <div py:for="trove in troves" py:strip="True">
-                    <p>${flavorWrap(trove.getFlavor())}</p>
+                    <span py:if="len(troves) > 1">${flavorWrap(reducedFlavors[trove.getFlavor()])}</span><br/>
+                     <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
+                     <a style="font-weight: normal; text-decoration: underline;"
+                                       href="files?t=${quote(troveName)};v=$frozenVersion;f=$frozenFlavor">Show Contents</a>
+                    </div>
                     <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
                         style="text-decoration: none; vertical-align: middle;">
                         <img id="${trove.getFlavor().freeze()}_items_expander" style="vertical-align: middle;" 
-                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> <b><u>Details</u></b>
+                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> <u>Details</u>
                     </a>
                     <table>
                         <tbody style="display: none;" id="${trove.getFlavor().freeze()}_items">
@@ -172,21 +180,20 @@ else:
                                     </div>
                                 </td>
                             </tr>
-                            <tr>
-                                <td colspan="2">
-                                    <a style="font-weight: bold; text-decoration: underline;"
-                                       href="files?t=${quote(troveName)};v=$frozenVersion;f=$frozenFlavor">Show Contents</a>
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
+                    <div py:if="len(troves) > 1" style="border-bottom:1px #e6e6e6 solid; margin-bottom: 15px; padding-bottom: 5px;" />
                 </div>
             </td>
         </tr>
+        ${referencesLink(title, trove.getName(), trove.getVersion())}
     </table>
 
     <head>
         <title>${formatTitle('%s Information: %s' % (title, truncateForDisplay(troveName, maxWordLen = 64)))}</title>
+        <script type="text/javascript">
+            addLoadEvent(function(){hideElement('longVersion')});
+        </script>
     </head>
     <body>
         <div id="layout">
@@ -199,7 +206,6 @@ else:
             </div>
             <div id="middle">
                 <h2 title="${troveName}">${project.getNameForDisplay(maxWordLen = 50)} - Repository Browser</h2>
-                <h3>Information for ${title.lower()}: ${truncateForDisplay(troveName, maxWordLen = 45)}</h3>
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
                     ${sourceTroveInfo(troves[0], referer)}
