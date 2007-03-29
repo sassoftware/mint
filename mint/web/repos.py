@@ -4,34 +4,37 @@
 # All Rights Reserved
 #
 import base64
+import itertools
 import os
+import string
 import sys
 import traceback
 
+from mimetypes import guess_type
+
 from mod_python import apache
 
+from urllib import unquote
+
+
 from mint import database
+from mint import mint_error
 from mint import userlevels
 from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
+from mint.web.decorators import ownerOnly
 
+from conary.deps import deps
+from conary.lib import sha1helper
 from conary import versions
-from conary.server import http
 from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 from conary import errors as conaryerrors
+from conary.web.fields import strFields, listFields, intFields
 
-# When Conary implements a new method in http.HttpHandler that needs
-# to be exposed in rBuilder, add the name of the method here.
-allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
-    'files', 'troveInfo', 'browse', 'getFile', 'userlist',
-    'deleteGroup', 'addPermForm', 'addPerm', 'addGroupForm',
-    'manageGroupForm', 'manageGroup', 'addGroup',
-    'deletePerm', 'editPermForm', 'editPerm')
-
-class ConaryHandler(WebHandler, http.HttpHandler):
+class ConaryHandler(WebHandler):
     def _filterAuth(self, **kwargs):
         memberList = kwargs.get('memberList', [])
         if isinstance(memberList, str):
@@ -44,18 +47,365 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                     error = "The group name you are attempting to edit is invalid.")
         return None
 
-    def manageGroup(self, **kwargs):
-        return self._filterAuth(**kwargs) or \
-               http.HttpHandler.manageGroup(self, **kwargs)
+    @strFields(search = '')
+    def getOpenPGPKey(self, auth, search, **kwargs):
+        from conary.lib.openpgpfile import KeyNotFound
+        # This function mimics limited key server behavior. The keyserver line
+        # for a gpg command must be formed manually--because gpg doesn't
+        # automatically know how to talk to limited key servers.
+        # A correctly formed gpg command looks like:
+        # 'gpg --keyserver=REPO_MAP/getOpenPGPKey?search=KEY_ID --recv-key KEY_ID'
+        # example: 'gpg --keyserver=http://admin:111111@localhost/conary/getOpenPGPKey?search=F7440D78FE813C882212C2BF8AC2828190B1E477 --recv-key F7440D78FE813C882212C2BF8AC2828190B1E477'
+        # repositories that allow anonymous users do not require userId/passwd
+        try:
+            keyData = self.repServer.getAsciiOpenPGPKey(self.authToken, 0, search)
+        except KeyNotFound:
+            return self._write("error", shortError = "Key Not Found", error = "OpenPGP Key %s is not in this repository" %search)
+        return self._write("pgp_get_key", keyId = search, keyData = keyData)
 
-    def deleteGroup(self, **kwargs):
-        return self._filterAuth(**kwargs) or \
-               http.HttpHandler.deleteGroup(self, **kwargs)
+    def pgpAdminForm(self, auth):
+        admin = self.repServer.auth.check(self.authToken,admin=True)
 
-    def addGroup(self, **kwargs):
-        return self._filterAuth(**kwargs) or \
-               http.HttpHandler.addGroup(self, **kwargs)
+        if admin:
+            users = self.repServer.auth.userAuth.getUserList()
+            users.append('--Nobody--')
+        else:
+            users = [ self.authToken[0] ]
 
+        # build a dict of useful information about each user's OpenPGP Keys
+        # xml-rpc calls must be made before kid template is invoked
+        openPgpKeys = {}
+        for user in users:
+            keys = []
+            if user == '--Nobody--':
+                userLookup = None
+            else:
+                userLookup = user
+
+            for fingerprint in self.repServer.listUsersMainKeys(self.authToken, 0, userLookup):
+                keyPacket = {}
+                keyPacket['fingerprint'] = fingerprint
+                keyPacket['subKeys'] = self.repServer.listSubkeys(self.authToken, 0, fingerprint)
+                keyPacket['uids'] = self.repServer.getOpenPGPKeyUserIds(self.authToken, 0, fingerprint)
+                keys.append(keyPacket)
+            openPgpKeys[user] = keys
+
+        return self._write("pgp_admin", users = users, admin=admin, openPgpKeys = openPgpKeys)
+
+    @strFields(key=None, owner="")
+    def pgpChangeOwner(self, auth, owner, key):
+        # The requiresAdmin decorator will not work with our authOveride
+        # tuple, so check for admin here
+        if not self.project:             
+            raise database.ItemNotFound("project")
+        if not self.auth.admin:
+            raise mint_error.PermissionDenied
+
+        if not owner or owner == '--Nobody--':
+            owner = None
+        self.repServer.changePGPKeyOwner(self.authToken, 0, owner, key)
+        self._redirect('pgpAdminForm')
+
+    @strFields(t = None, v = None, f = "")
+    def files(self, t, v, f, auth):
+        v = versions.ThawVersion(v)
+        f = deps.ThawFlavor(f)
+        parentTrove = self.repos.getTrove(t, v, f, withFiles = False)
+        # non-source group troves only show contained troves
+        if t.startswith('group-') and not t.endswith(':source'):
+            troves = sorted(parentTrove.iterTroveList(strongRefs=True))
+            return self._write("group_contents", troveName = t, troves = troves)
+        fileIters = []
+        # XXX: Needs to be optimized
+        # the walkTroveSet() will request a changeset for every
+        # trove in the chain.  then iterFilesInTrove() will
+        # request it again just to retrieve the filelist.
+        for trove in self.repos.walkTroveSet(parentTrove, withFiles = False):
+            files = self.repos.iterFilesInTrove(
+                trove.getName(),
+                trove.getVersion(),
+                trove.getFlavor(),
+                withFiles = True,
+                sortByPath = True)
+            fileIters.append(files)
+        return self._write("files",
+            troveName = t,
+            fileIters = itertools.chain(*fileIters))
+
+    @strFields(t = None, v = "")
+    def troveInfo(self, t, v, auth):
+        t = unquote(t)
+        leaves = {}
+        for serverName in self.serverNameList:
+            newLeaves = self.repos.getTroveVersionList(serverName, {t: [None]})
+            leaves.update(newLeaves)
+        if t not in leaves:
+            return self._write("error",
+                               error = '%s was not found on this server.' %t)
+
+        versionList = sorted(leaves[t].keys(), reverse = True)
+
+        if not v:
+            reqVer = versionList[0]
+        else:
+            try:
+                reqVer = versions.ThawVersion(v)
+            except (versions.ParseError, ValueError):
+                try:
+                    reqVer = versions.VersionFromString(v)
+                except:
+                    return self._write("error",
+                                       error = "Invalid version: %s" %v)
+
+        try:
+            query = [(t, reqVer, x) for x in leaves[t][reqVer]]
+        except KeyError:
+            return self._write("error",
+                               error = "Version %s of %s was not found on this server."
+                               %(reqVer, t))
+        troves = self.repos.getTroves(query, withFiles = False)
+
+        return self._write("trove_info", troveName = t, troves = troves,
+            versionList = versionList,
+            reqVer = reqVer)
+
+    @strFields(char = '')
+    def browse(self, char, auth):
+        defaultPage = False
+        if not char:
+            char = 'A'
+            defaultPage = True
+        # since the repository is multihomed and we're not doing any
+        # label filtering, a single call will return all the available
+        # troves. We use the first repository name here because we have to
+        # pick one,,,
+        troves = self.repos.troveNamesOnServer(self.serverNameList[0])
+
+        # keep a running total of each letter we see so that the display
+        # code can skip letters that have no troves
+        totals = dict.fromkeys(list(string.digits) + list(string.uppercase), 0)
+        packages = []
+        components = {}
+
+        # In order to jump to the first letter with troves if no char is specified
+        # We have to iterate through troves twice.  Since we have hundreds of troves,
+        # not thousands, this isn't too big of a deal.  In any case this will be
+        # removed soon when we move to a paginated browser
+        for trove in troves:
+            totals[trove[0].upper()] += 1
+        if defaultPage:
+            for x in string.uppercase:
+                if totals[x]:
+                    char = x
+                    break
+
+        if char in string.digits:
+            char = '0'
+            filter = lambda x: x[0] in string.digits
+        else:
+            filter = lambda x, char=char: x[0].upper() == char
+
+        for trove in troves:
+            if not filter(trove):
+                continue
+            if ":" not in trove:
+                packages.append(trove)
+            else:
+                package, component = trove.split(":")
+                l = components.setdefault(package, [])
+                l.append(component)
+
+        # add back troves that do not have a parent package container
+        # to the package list
+        noPackages = set(components.keys()) - set(packages)
+        for x in noPackages:
+            for component in components[x]:
+                packages.append(x + ":" + component)
+
+        return self._write("browse", packages = sorted(packages),
+                           components = components, char = char, totals = totals)
+
+    @strFields(path = None, pathId = None, fileId = None, fileV = None)
+    def getFile(self, path, pathId, fileId, fileV, auth):
+        pathId = sha1helper.md5FromString(pathId)
+        fileId = sha1helper.sha1FromString(fileId)
+        ver = versions.VersionFromString(fileV)
+
+        fileObj = self.repos.getFileVersion(pathId, fileId, ver)
+        contents = self.repos.getFileContents([(fileId, ver)])[0]
+
+        if fileObj.flags.isConfig():
+            self.req.content_type = "text/plain"
+        else:
+            typeGuess = guess_type(path)
+
+            self.req.headers_out["Content-Disposition"] = "attachment; filename=%s;" % path
+            if typeGuess[0]:
+                self.req.content_type = typeGuess[0]
+            else:
+                self.req.content_type = "application/octet-stream"
+
+        self.req.headers_out["Content-Length"] = fileObj.sizeString()
+        return contents.get().read()
+
+    @ownerOnly
+    def userlist(self, auth):
+        return self._write("user_admin", netAuth = self.repServer.auth)
+
+    @ownerOnly
+    @strFields(userGroupName = None)
+    def deleteGroup(self, auth, userGroupName):
+        self.repServer.auth.deleteGroup(userGroupName)
+        self._filterAuth(userGroupName=userGroupName) or self._redirect("userlist")
+
+    @ownerOnly
+    @strFields(userGroupName = "")
+    def addPermForm(self, auth, userGroupName):
+        groups = self.repServer.auth.getGroupList()
+        labels = self.repServer.auth.getLabelList()
+        troves = self.repServer.auth.getItemList()
+
+        return self._write("permission", operation='Add', group=userGroupName, trove=None,
+            label=None, groups=groups, labels=labels, troves=troves,
+            writeperm=None, capped=None, admin=None, remove=None)
+
+    @ownerOnly
+    @strFields(group = None, label = "", trove = "",
+               writeperm = "off", capped = "off", admin = "off", remove = "off")
+    def addPerm(self, auth, group, label, trove,
+                writeperm, capped, admin, remove):
+        writeperm = (writeperm == "on")
+        capped = (capped == "on")
+        admin = (admin == "on")
+        remove = (remove== "on")
+
+        try:
+            self.repServer.addAcl(self.authToken, 0, group, trove, label,
+               writeperm, capped, admin, remove = remove)
+        except errors.PermissionAlreadyExists, e:
+            return self._write("error", shortError="Duplicate Permission",
+                error = "Permissions have already been set for %s, please go back and select a different User, Label or Trove." % str(e))
+
+        self._redirect("userlist")
+
+    @ownerOnly
+    def addGroupForm(self, auth):
+        users = self.repServer.auth.userAuth.getUserList()
+        return self._write("add_group", modify = False, userGroupName = None, users = users, members = [], canMirror = False)
+
+    @ownerOnly
+    @strFields(userGroupName = None)
+    def manageGroupForm(self, auth, userGroupName):
+        users = self.repServer.auth.userAuth.getUserList()
+        members = set(self.repServer.auth.getGroupMembers(userGroupName))
+        canMirror = self.repServer.auth.groupCanMirror(userGroupName)
+
+        return self._filterAuth(auth=auth, userGroupName=userGroupName) or self._write("add_group", userGroupName = userGroupName, users = users, members = members, canMirror = canMirror, modify = True)
+
+    @ownerOnly
+    @strFields(userGroupName = None, newUserGroupName = None)
+    @listFields(str, memberList = [])
+    @intFields(canMirror = False)
+    def manageGroup(self, auth, userGroupName, newUserGroupName, memberList,
+                    canMirror):
+        if userGroupName != newUserGroupName:
+            try:
+                self.repServer.auth.renameGroup(userGroupName, newUserGroupName)
+            except errors.GroupAlreadyExists:
+                return self._write("error", shortError="Invalid Group Name",
+                    error = "The group name you have chosen is already in use.")
+
+            userGroupName = newUserGroupName
+
+        self.repServer.auth.updateGroupMembers(userGroupName, memberList)
+        self.repServer.auth.setMirror(userGroupName, canMirror)
+
+        self._filterAuth(memberList=memberList, userGruopName=userGroupName) or self._redirect("userlist")
+
+    @ownerOnly
+    @strFields(newUserGroupName = None)
+    @listFields(str, memberList = [])
+    @intFields(canMirror = False)
+    def addGroup(self, auth, newUserGroupName, memberList, canMirror):
+        try:
+            self.repServer.auth.addGroup(newUserGroupName)
+        except errors.GroupAlreadyExists:
+            return self._write("error", shortError="Invalid Group Name",
+                error = "The group name you have chosen is already in use.")
+
+        self.repServer.auth.updateGroupMembers(newUserGroupName, memberList)
+        self.repServer.auth.setMirror(newUserGroupName, canMirror)
+
+        self._filterAuth(memberList=memberList) or self._redirect("userlist")
+
+    @ownerOnly
+    @strFields(group = None, label = None, item = None)
+    def deletePerm(self, auth, group, label, item):
+        # labelId and itemId are optional parameters so we can't
+        # default them to None: the fields decorators treat that as
+        # required, so we need to reset them to None here:
+        if not label or label == "ALL":
+            label = None
+        if not item or item == "ALL":
+            item = None
+
+        self.repServer.auth.deleteAcl(group, label, item)
+        self._redirect("userlist")
+
+    @ownerOnly
+    @strFields(group = None, label = None, item = None)
+    def deletePerm(self, auth, group, label, item):
+        # labelId and itemId are optional parameters so we can't
+        # default them to None: the fields decorators treat that as
+        # required, so we need to reset them to None here:
+        if not label or label == "ALL":
+            label = None
+        if not item or item == "ALL":
+            item = None
+
+        self.repServer.auth.deleteAcl(group, label, item)
+        self._redirect("userlist")
+
+    @ownerOnly
+    @strFields(group = None, label = "", trove = "")
+    @intFields(writeperm = None, capped = None, admin = None, remove = None)
+    def editPermForm(self, auth, group, label, trove, writeperm, capped, admin,
+                     remove):
+        groups = self.repServer.auth.getGroupList()
+        labels = self.repServer.auth.getLabelList()
+        troves = self.repServer.auth.getItemList()
+
+        #remove = 0
+        return self._write("permission", operation='Edit', group=group, label=label,
+            trove=trove, groups=groups, labels=labels, troves=troves,
+            writeperm=writeperm, capped=capped, admin=admin, remove=remove)
+
+    @ownerOnly
+    @strFields(group = None, label = "", trove = "",
+               oldlabel = "", oldtrove = "",
+               writeperm = "off", capped = "off", admin = "off", remove = "off")
+    def editPerm(self, auth, group, label, trove, oldlabel, oldtrove,
+                writeperm, capped, admin, remove):
+        writeperm = (writeperm == "on")
+        capped = (capped == "on")
+        admin = (admin == "on")
+        remove = (remove == "on")
+
+        try:
+            self.repServer.editAcl(auth, 0, group, oldtrove, oldlabel, trove,
+               label, writeperm, capped, admin, canRemove = remove)
+        except errors.PermissionAlreadyExists, e:
+            return self._write("error", shortError="Duplicate Permission",
+                error = "Permissions have already been set for %s, please go back and select a different User, Label or Trove." % str(e))
+
+        self._redirect("userlist")
+
+    # FIXME the dependency on conary.repository.netrepos.NetworkRepositoryServer
+    # needs to be removed in favor of 
+    # conary.repository.netclient.NetworkRepositoryClient
+    #
+    # repServer is a NetworkRepositoryServer instance and is used by 
+    # most the the PGP and repository permissions methods
     def __init__(self, req, cfg, repServer = None):
         protocol = 'http'
         port = 80
@@ -123,9 +473,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                                        self.authToken, cfg.repositoryMap,
                                        cfg.user)
 
-        # make sure we explicitly allow this method
-        if self.cmd not in allowedMethods:
-            raise HttpNotFound
         try:
             method = self.__getattribute__(self.cmd)
         except AttributeError:
@@ -144,8 +491,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             d['auth'] = self.authToken
             try:
                 output = method(**d)
-            except http.InvalidPassword:
-                raise HttpForbidden
             except errors.OpenError, e:
                 self._addErrors(str(e))
                 self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost,
@@ -154,6 +499,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 return self._write("error",
                                    shortError = "Invalid Regular Expression",
                                    error = str(e))
+            except mint_error.PermissionDenied:
+                raise HttpForbidden
         finally:
             # carefully restore old credentials so that this code can work
             # outside of mod-python environments.
