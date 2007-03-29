@@ -85,14 +85,6 @@ from mint import urltypes
                         <th>Type</th>
                         <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
                     </tr>
-                    <tr>
-                        <th>Built By</th>
-                        <td><span py:if="builtBy" py:strip="True"><a href="http://${SITE}userInfo?id=${builtBy.id}">${builtBy.username}</a></span><span py:if="not builtBy" py:strip="True">Unknown</span></td>
-                    </tr>
-                    <tr py:if="not buildInProgress and builtAt">
-                        <th>Built At</th>
-                        <td>${builtAt}</td>
-                    </tr>
                 </table>
 
                 <h3>Notes</h3>

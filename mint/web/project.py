@@ -41,6 +41,8 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from conary.errors import TroveNotFound
 
+from mcp import mcp_error
+
 import simplejson
 
 def getUserDict(members):
@@ -397,10 +399,9 @@ class ProjectHandler(WebHandler):
                 visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
         elif action == "Recreate Build":
-            job = self.client.startImageJob(buildId)
             try:
                 job = self.client.startImageJob(buildId)
-            except jobs.DuplicateJob:
+            except mcp_error.JobConflict:
                 pass
             self._predirect("build?id=%d" % buildId)
         else:
@@ -589,23 +590,11 @@ class ProjectHandler(WebHandler):
         build = self.client.getBuild(id)
         extraFlags = builds.getExtraFlags(build.troveFlavor)
         buildInProgress = False
-        builtBy = None
-        builtAt = None
         # FIXME: refactor all this to not use a job object...
         # MCP_WORK
         if auth.authorized:
-            buildJob = None
-            if buildJob:
-                buildInProgress = \
-                        (buildJob.getStatus() <= jobstatus.RUNNING)
-                try:
-                    builtBy = self.client.getUser(buildJob.getUserId())
-                except database.ItemNotFound:
-                    pass
-                if buildInProgress:
-                    builtAt = "In process"
-                else:
-                    builtAt = helperfuncs.formatTime(buildJob.timeFinished)
+            buildInProgress = \
+                (build.getStatus()['status'] <= jobstatus.RUNNING)
         try:
             trove, version, flavor = build.getTrove()
             files = build.getFiles()
@@ -627,8 +616,6 @@ class ProjectHandler(WebHandler):
                 notes = build.getDesc().strip(),
                 buildInProgress = buildInProgress,
                 extraFlags = extraFlags,
-                builtBy = builtBy,
-                builtAt = builtAt,
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
