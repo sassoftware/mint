@@ -4,7 +4,9 @@
 # All rights reserved
 #
 
-labelDict = {'conary.rpath.com@rpl:1' :
+baseConaryLabel = 'conary.rpath.com@rpl:1'
+
+labelDict = {baseConaryLabel :
               [('group-core',
                 'A basic set of packages required for a functional system.'),
                ('group-base', 'Basic but non-essential packages.'),
@@ -20,6 +22,6 @@ labelDict = {'conary.rpath.com@rpl:1' :
               [('group-raa', 'The rPath Appliance Agent')]
             }
 
-messageDict = {'conary.rpath.com@rpl:1': 'These troves come from rPath Linux on the conary.rpath.com@rpl:1 label',
+messageDict = {baseConaryLabel: 'These troves come from rPath Linux on the %s label' % baseConaryLabel,
                'raa.rpath.org@rpl:1': 'The following trove comes from the raa.rpath.org@rpl:1 label'
               }
