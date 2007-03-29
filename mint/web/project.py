@@ -11,6 +11,7 @@ import tempfile
 import time
 from mod_python import apache
 
+from mint.web import basictroves
 from mint import communitytypes
 from mint import database
 from mint import mailinglists
@@ -160,7 +161,6 @@ class ProjectHandler(WebHandler):
         cfg.dbPath = cfg.root = ":memory:"
         repos = conaryclient.ConaryClient(cfg).getRepos()
 
-        from mint.web import basictroves
         labels = basictroves.labelDict
         messages = basictroves.messageDict
         troveNames = {}
@@ -493,6 +493,31 @@ class ProjectHandler(WebHandler):
                 else:
                     val = template[name][1]
             build.setDataValue(name, val)
+
+        trvName = 'anaconda-templates'
+        if not build.getDataValue(trvName):
+            cfg = self.project.getConaryConfig()
+
+            cfg.installLabelPath.append(\
+                versions.Label(basictroves.baseConaryLabel))
+
+            cfg.dbPath = cfg.root = ":memory:"
+            cclient = conaryclient.ConaryClient(cfg)
+
+            spec = conaryclient.cmdline.parseTroveSpec(trvName)
+            itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+            try:
+                uJob, suggMap = cclient.updateChangeSet(itemList,
+                                                        resolveDeps = False)
+
+                job = [x for x in uJob.getPrimaryJobs()][0]
+                strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]), str(job[2][1]))
+                build.setDataValue(trvName, strSpec)
+            except TroveNotFound:
+                print >> sys.stderr, "%s was not found for build Id: %d" % \
+                    (trvName, build.id)
+
+            sys.stderr.flush()
 
         try:
             self.client.startImageJob(buildId)
