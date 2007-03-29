@@ -404,6 +404,9 @@ class UpgradePathTest(MintRepositoryHelper):
                    time.time())
         self.db.commit()
 
+    def tearDown(self):
+        self.mintCfg.authDbPath = None
+
     def testSchemaVerEight(self):
         # Create a database matching schema 8 paradigm.
         # Instantiate table objects on this version and attempt an upgrade.
