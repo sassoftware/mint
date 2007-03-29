@@ -42,13 +42,13 @@ GenericRpcRequest.prototype.setCallbackData = function(aCallbackData) {
 };
 
 // set an errback handler for handling an error from XmlHttpRequest
-GenericRpcRequest.prototype.setErrback = function() {
-    this.errback = arguments;
+GenericRpcRequest.prototype.setErrback = function(aErrback) {
+    this.errback = aErrback;
 };
 
 // set a call that gets run no matter what (e.g. a finalizer)
-GenericRpcRequest.prototype.setFinalizer = function() {
-    this.finalizer = arguments;
+GenericRpcRequest.prototype.setFinalizer = function(aFinalizer) {
+    this.finalizer = aFinalizer;
 };
 
 // generic send function
