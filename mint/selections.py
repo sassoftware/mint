@@ -10,7 +10,7 @@ from mint import scriptlibrary
 import time
 
 from conary import dbstore
-from conary.dbstore.sqllib import toDatabaseTimestamp
+from mint.helperfuncs import toDatabaseTimestamp
 
 # A convenience table with the latest timestamp of commit
 # of each project in rBuilder's database:
