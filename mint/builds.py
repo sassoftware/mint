@@ -20,7 +20,6 @@ from mint.mint_error import MintError, ParameterError
 
 from conary import versions
 from conary.deps import deps
-from conary.dbstore import sqllib
 
 SERIAL_VERSION = 1
 
@@ -55,7 +54,7 @@ class UrlDownloadsTable(database.DatabaseTable):
     fields = ['urlId', 'timeDownloaded', 'ip']
 
     def add(self, urlId, ip):
-        t = sqllib.toDatabaseTimestamp()
+        t = helperfuncs.toDatabaseTimestamp()
         cu = self.db.cursor()
         cu.execute("""INSERT INTO UrlDownloads (urlId, timeDownloaded, ip)
             VALUES (?, ?, ?)""",

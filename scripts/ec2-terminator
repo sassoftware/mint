@@ -7,7 +7,6 @@ from mint import config
 from mint import scriptlibrary
 from mint.client import MintClient
 
-from conary.dbstore import sqllib
 from conary.lib import log
 
 log.setVerbosity(log.DEBUG)

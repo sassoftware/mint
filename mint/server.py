@@ -56,6 +56,7 @@ from mint.flavors import stockFlavors
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
+from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
 
 from mcp import client as mcpClient
 from mcp import mcp_error
@@ -3860,8 +3861,8 @@ class MintServer(object):
                 ec2InstanceId = ec2InstanceId,
                 launchedFromIP = launchedFromIP,
                 raaPassword = raaPassword,
-                expiresAfter = sqllib.toDatabaseTimestamp(offset=bami['instanceTTL']),
-                launchedAt = sqllib.toDatabaseTimestamp())
+                expiresAfter = toDatabaseTimestamp(offset=bami['instanceTTL']),
+                launchedAt = toDatabaseTimestamp())
 
     @requiresAdmin
     @private
@@ -3874,6 +3875,16 @@ class MintServer(object):
                 self.launchedAMIs.update(launchedAMIId, isActive = False)
                 instancesKilled.append(launchedAMIId)
         return instancesKilled
+
+    @typeCheck(int)
+    @private
+    def extendLaunchedAMITimeout(self, launchedAMIId):
+        lami = self.launchedAMIs.get(launchedAMIId)
+        bami = self.blessedAMIs.get(lami['blessedAMIId'])
+        newExpiresAfter = toDatabaseTimestamp(fromDatabaseTimestamp(lami['launchedAt']), offset=bami['instanceTTL'] + bami['mayExtendTTLBy'])
+        self.launchedAMIs.update(launchedAMIId,
+                expiresAfter = newExpiresAfter)
+        return True
 
     @typeCheck(((unicode, str),), (list, int))
     @private

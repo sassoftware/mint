@@ -22,8 +22,7 @@ from mint import constants
 from mint import templates
 from mint import server
 from mint import flavors
-from mint.helperfuncs import truncateForDisplay, extractBasePath, \
-        hostPortParse, rewriteUrlProtocolPort, getArchFromFlavor
+from mint.helperfuncs import *
 from mint.client import timeDelta
 from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.userlevels import myProjectCompare
@@ -477,6 +476,26 @@ Much like Powdermilk Biscuits[tm]."""
         copyutils.copytree(subdir + '/hello', d2)
         assert(os.path.isdir(subdir2) and os.path.exists(fn2))
         util.rmtree(d)
+
+    def testDatabaseTimestampFunctions(self):
+        x = time.time()
+        y = fromDatabaseTimestamp(toDatabaseTimestamp(x))
+        self.assertEqual(int(x), int(y), "failed normal case")
+
+        x = time.time() + 900
+        y = fromDatabaseTimestamp(toDatabaseTimestamp(x, offset=900)) - 900
+        self.assertEqual(int(x), int(y), "failed with offset")
+
+        x = time.time()
+        y = fromDatabaseTimestamp(str(toDatabaseTimestamp(x)))
+        self.assertEqual(int(x), int(y), "failed using string")
+
+        x = time.time()
+        y = fromDatabaseTimestamp(unicode(toDatabaseTimestamp(x)))
+        self.assertEqual(int(x), int(y), "failed using unicode")
+
+        self.assertRaises(ValueError, fromDatabaseTimestamp, '34842afjk')
+        self.assertRaises(ValueError, fromDatabaseTimestamp, [])
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):

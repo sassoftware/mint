@@ -10,7 +10,7 @@ from reportlab.graphics.charts.barcharts import HorizontalBarChart
 from reportlab.lib import colors
 
 from conary import dbstore
-from conary.dbstore import sqllib
+from mint import helperfuncs
 import time
 import tempfile
 import os
@@ -83,7 +83,7 @@ class DownloadChart(Drawing):
                 JOIN BuildFiles USING (fileId)
                 JOIN Builds USING (buildId)
                 WHERE projectId=? AND timeDownloaded <= ? AND timeDownloaded >= ?""",
-                    self._projectId, sqllib.toDatabaseTimestamp(end), sqllib.toDatabaseTimestamp(start))
+                    self._projectId, helperfuncs.toDatabaseTimestamp(end), helperfuncs.toDatabaseTimestamp(start))
             data.append(cu.fetchone()[0])
             labels.append(time.strftime("%Y-%m-%d", time.gmtime(start)))
 

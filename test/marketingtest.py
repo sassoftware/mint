@@ -10,8 +10,7 @@ import time
 import fixtures
 from mint import mint_error
 from mint import selections
-
-from conary.dbstore.sqllib import toDatabaseTimestamp
+from mint.helperfuncs import toDatabaseTimestamp
 
 class MarketingTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")

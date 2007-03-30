@@ -647,6 +647,9 @@ class MintClient:
     def terminateExpiredAMIInstances(self):
         return self.server.terminateExpiredAMIInstances()
 
+    def extendLaunchedAMITimeout(self, launchedAMIId):
+        return self.server.extendLaunchedAMITimeout(launchedAMIId)
+
     def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
         return self.server.checkHTTPReturnCode(uri, expectedCodes)
 

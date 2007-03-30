@@ -18,7 +18,7 @@ from mint import ec2
 from mint.database import ItemNotFound
 from mint_rephelp import MintRepositoryHelper
 
-from conary.dbstore import sqllib
+from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
 from conary.lib import util
 
 import fixtures
@@ -201,11 +201,11 @@ Please log in via raa using the following password. %(raaPassword)s"""
                 [x.id for x in activeAMIs])
 
         instance = client.getLaunchedAMI(instanceId)
-        instance.expiresAfter = sqllib.toDatabaseTimestamp(offset=-900)
+        instance.expiresAfter = toDatabaseTimestamp(offset=-900)
         instance.save()
 
         instance = client.getLaunchedAMI(instanceId3)
-        instance.expiresAfter = sqllib.toDatabaseTimestamp(offset=-20)
+        instance.expiresAfter = toDatabaseTimestamp(offset=-20)
         instance.save()
 
         # kill 'em
@@ -263,6 +263,25 @@ Please log in via raa using the following password. %(raaPassword)s"""
         ec2Wrapper = ec2.EC2Wrapper(self.cfg)
         self.assertRaises(ec2.FailedToLaunchAMIInstance,
                 client.launchAMIInstance, 3431)
+
+    @fixtures.fixture("EC2")
+    def testExtendInstanceTTL(self, db, data):
+        client = self.getClient("admin")
+        amiIds = data['amiIds']
+
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        instanceId = client.launchAMIInstance(amiIds[0])
+
+        blessedAMI = client.getBlessedAMI(amiIds[0])
+        launchedAMI = client.getLaunchedAMI(instanceId)
+
+        self.assertEqual(toDatabaseTimestamp(fromDatabaseTimestamp(launchedAMI.launchedAt) + blessedAMI.instanceTTL), launchedAMI.expiresAfter, "Failed normal case")
+
+        client.extendLaunchedAMITimeout(instanceId)
+        launchedAMI.refresh()
+
+        self.assertEqual(toDatabaseTimestamp(fromDatabaseTimestamp(launchedAMI.launchedAt) + blessedAMI.instanceTTL + blessedAMI.mayExtendTTLBy),
+                launchedAMI.expiresAfter, "Failed to extend the timeout")
 
 if __name__ == '__main__':
     testsuite.main()

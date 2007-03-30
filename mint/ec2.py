@@ -8,10 +8,10 @@
 import boto
 from boto.exception import EC2ResponseError
 
-from conary.dbstore.sqllib import toDatabaseTimestamp
 
 from mint import database
 from mint.mint_error import MintError
+from mint.helperfuncs import toDatabaseTimestamp
 
 class TooManyAMIInstancesPerIP(MintError):
     def __str__(self):
@@ -98,7 +98,6 @@ class LaunchedAMIsTable(database.KeyedTable):
                       WHERE isActive = 1 AND expiresAfter < ?""",
                       toDatabaseTimestamp())
         return [ x for x in cu.fetchall() ]
-
 
 class LaunchedAMI(database.TableObject):
 
