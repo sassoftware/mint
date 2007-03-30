@@ -495,30 +495,32 @@ class ProjectHandler(WebHandler):
                     val = template[name][1]
             build.setDataValue(name, val)
 
-        trvName = 'anaconda-templates'
-        if not build.getDataValue(trvName):
-            cfg = self.project.getConaryConfig()
+        if build.buildType == buildtypes.INSTALLABLE_ISO:
+            trvName = 'anaconda-templates'
+            if not build.getDataValue(trvName):
+                cfg = self.project.getConaryConfig()
 
-            cfg.installLabelPath.append(\
-                versions.Label(basictroves.baseConaryLabel))
+                cfg.installLabelPath.append(\
+                    versions.Label(basictroves.baseConaryLabel))
 
-            cfg.dbPath = cfg.root = ":memory:"
-            cclient = conaryclient.ConaryClient(cfg)
+                cfg.dbPath = cfg.root = ":memory:"
+                cclient = conaryclient.ConaryClient(cfg)
 
-            spec = conaryclient.cmdline.parseTroveSpec(trvName)
-            itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
-            try:
-                uJob, suggMap = cclient.updateChangeSet(itemList,
-                                                        resolveDeps = False)
+                spec = conaryclient.cmdline.parseTroveSpec(trvName)
+                itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+                try:
+                    uJob, suggMap = cclient.updateChangeSet(itemList,
+                                                            resolveDeps = False)
 
-                job = [x for x in uJob.getPrimaryJobs()][0]
-                strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]), str(job[2][1]))
-                build.setDataValue(trvName, strSpec)
-            except TroveNotFound:
-                print >> sys.stderr, "%s was not found for build Id: %d" % \
-                    (trvName, build.id)
+                    job = [x for x in uJob.getPrimaryJobs()][0]
+                    strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
+                                             str(job[2][1]))
 
-            sys.stderr.flush()
+                    build.setDataValue(trvName, strSpec)
+                except TroveNotFound:
+                    print >> sys.stderr, "%s was not found for build Id: %d" % \
+                        (trvName, build.id)
+                    sys.stderr.flush()
 
         try:
             self.client.startImageJob(buildId)
