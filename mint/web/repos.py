@@ -353,20 +353,6 @@ class ConaryHandler(WebHandler):
         self._redirect("userlist")
 
     @ownerOnly
-    @strFields(group = None, label = None, item = None)
-    def deletePerm(self, auth, group, label, item):
-        # labelId and itemId are optional parameters so we can't
-        # default them to None: the fields decorators treat that as
-        # required, so we need to reset them to None here:
-        if not label or label == "ALL":
-            label = None
-        if not item or item == "ALL":
-            item = None
-
-        self.repServer.auth.deleteAcl(group, label, item)
-        self._redirect("userlist")
-
-    @ownerOnly
     @strFields(group = None, label = "", trove = "")
     @intFields(writeperm = None, capped = None, admin = None, remove = None)
     def editPermForm(self, auth, group, label, trove, writeperm, capped, admin,
