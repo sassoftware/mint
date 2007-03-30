@@ -22,6 +22,7 @@ from mint import mint_error
 from mint import userlevels
 from mint.session import SqlSession
 from mint.web.templates import repos
+from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
 from mint.web.decorators import ownerOnly
 
@@ -32,7 +33,6 @@ from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 from conary import errors as conaryerrors
-from conary.web.fields import strFields, listFields, intFields
 
 class ConaryHandler(WebHandler):
     def _filterAuth(self, **kwargs):

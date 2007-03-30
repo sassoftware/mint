@@ -26,6 +26,7 @@ from mint import buildtemplates
 from mint import helperfuncs
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
+from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
@@ -38,7 +39,6 @@ from conary import conarycfg
 from conary.deps import deps
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from conary.errors import TroveNotFound
 
 from mcp import mcp_error

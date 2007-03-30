@@ -20,7 +20,7 @@ from mint import server
 from mint import shimclient
 from mint import users, userlevels
 from mint.session import SqlSession, COOKIE_NAME
-from mint.web import cache
+from mint.web import cache, fields
 from mint.web.admin import AdminHandler
 from mint.web.cache import pageCache, reqHash
 from mint.web.project import ProjectHandler
@@ -30,10 +30,9 @@ from mint.web.setup import SetupHandler
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint import maintenance
 
-from conary.web import fields
+stagnantAllowedPages = ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']
 
-
-#called from hooks.py if an exception was not caught
+# called from hooks.py if an exception was not caught
 class ErrorHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
@@ -42,7 +41,6 @@ class ErrorHandler(WebHandler):
     def errorPage(self, *args, **kwargs):
         return self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
 
-shimClients = {}
 
 class MintApp(WebHandler):
     project = None
@@ -111,12 +109,7 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
 
         # open up a new client with the retrieved authToken
-
-        # XXX short-circuit this cache until we can determine if it's completely
-        # safe in production:
-        if True or self.authToken not in shimClients:
-            shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
-        self.client = shimClients[self.authToken]
+        self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
 
         self.auth = self.client.checkAuth()
         if self.auth.authorized:
@@ -290,7 +283,7 @@ class MintApp(WebHandler):
             'remoteIp':         self.remoteIp
         }
 
-        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']:
+        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:
             context['cmd'] = 'confirmEmail'
             return self.siteHandler.handle(context)
 

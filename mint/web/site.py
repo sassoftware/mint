@@ -31,6 +31,7 @@ from mint.client import timeDelta
 from mint.session import SqlSession
 
 from mint.web.cache import cache
+from mint.web.fields import boolFields, dictFields, intFields, listFields, strFields
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
@@ -40,7 +41,6 @@ from conary.lib import util
 from conary import versions
 from conary.deps import deps
 from conary import conarycfg, conaryclient
-from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
