@@ -306,7 +306,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless("Cloned from:" in page.body,
                 "Missing cloned from information from source in repos browser")
 
-    def pgpTest(self):
+    def testPGPAndPermForms(self):
         client, userId = self.quickMintAdmin('testuser', 'testpass')
         page = self.webLogin('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -318,54 +318,63 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.addCollection("trove", v1, [":runtime"], defaultFlavor = f1)
         self.setServer(self.getProjectServerHostname(), self.port)
         rep = self.openRepository()
-        ascKeyData = """-----BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-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
-8wxJ65ebbZlQIA==
-=Ok7Y
------END PGP PUBLIC KEY BLOCK-----
-"""
-        rep.addNewAsciiPGPKey("testproject.%s@rpl:linux" % MINT_PROJECT_DOMAIN,
-                         'testuser', ascKeyData)
+        # Load getOpenPGPKey page
         page = page.fetch("/repos/testproject/getOpenPGPKey?search=0ED565B9")
-        self.failIf('<div>0ED565B9</div>' not in page.body, 'Unable to retrieve PGP key')
+        self.failIf('OpenPGP Ke' not in page.body, 'Unable to retrieve PGP key')
+        # Load pgpAdminForm
         page = page.fetch('/repos/testproject/pgpAdminForm')
-        self.failIf('679A E4B2 CB9B 87AB 32A7 3506 F604 9ED5 0ED5 65B9' not in page.body, 'Error PGP Admin Page.')
-        page = page.fetchWithRedirect('/repos/testproject/pgpChangeOwner?key=679AE4B2CB9B87AB32A73506F6049ED50ED565B9')
-        self.failIf('<option selected="selected" value="--Nobody--">--Nobody--</option>' not in page.body, 'Unable to change key owner')
+        self.failIf('--Nobody--' not in page.body, 'Error PGP Admin Page.')
+        # User List
+        page = page.fetch('/repos/testproject/userlist')
+        self.failIf('<b>testuser</b>' not in page.body, 'Incorrect user list')
+        # addPermForm
+        page = page.fetch('/repos/testproject/addPermForm')
+        self.failIf('testuser' not in page.body, 'Error in addPermForm')
+        # manageGroupForm
+        page = page.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser')
+        self.failIf('Edit Group' not in page.body, 'Error in manageGroupForm')
+        # addGroupForm
+        page = page.fetch('/repos/testproject/addGroupForm')
+        self.failIf('Add Group' not in page.body, 'Error in addGroupForm')
+        # editPermForm
+        page = page.fetch('/repos/testproject/editPermForm?group=testuser&writeperm=1&capped=0&admin=1&remove=1')
+        self.failIf('Edit Permission' not in page.body, 'Error in editPermForm')
         
-    
+    def testRepoPermissions(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        self.fetch('/repos/testproject/getOpenPGPKey')
+        self.fetch('/repos/testproject/pgpAdminForm')
+        self.fetch('/repos/testproject/pgpChangeOwner?key=blah&owner=blah', ok_codes = [403])
+        self.fetch('/repos/testproject/userlist', ok_codes = [403])
+        self.fetch('/repos/testproject/deleteGroup?userGroupName=foo', ok_codes=[403])
+        self.fetch('/repos/testproject/addPermForm', ok_codes=[403])
+        self.fetch('/repos/testproject/addPerm', ok_codes=[403])
+        self.fetch('/repos/testproject/addGroupForm', ok_codes=[403])
+        self.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser', ok_codes=[403])
+        self.fetch('/repos/testproject/manageGroup', ok_codes=[403])
+        self.fetch('/repos/testproject/addGroup', ok_codes=[403])
+        self.fetch('/repos/testproject/deletePerm', ok_codes=[403])
+        self.fetch('/repos/testproject/editPermForm', ok_codes=[403])
+        self.fetch('/repos/testproject/editPerm', ok_codes=[403])
+
+        page = self.webLogin('testuser', 'testpass')
+        page.fetch('/repos/testproject/getOpenPGPKey')
+        page.fetch('/repos/testproject/pgpAdminForm')
+        page.fetch('/repos/testproject/pgpChangeOwner?key=blah&owner=blah', ok_codes = [403])
+        page.fetch('/repos/testproject/userlist')
+        page.fetch('/repos/testproject/deleteGroup')
+        page.fetch('/repos/testproject/addPermForm')
+        page.fetch('/repos/testproject/addPerm')
+        page.fetch('/repos/testproject/addGroupForm')
+        page.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser')
+        page.fetch('/repos/testproject/manageGroup')
+        page.fetch('/repos/testproject/addGroup')
+        page.fetch('/repos/testproject/deletePerm')
+        page.fetch('/repos/testproject/editPermForm')
+        page.fetch('/repos/testproject/editPerm')
 
 if __name__ == "__main__":
     testsuite.main()
