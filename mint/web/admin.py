@@ -18,10 +18,10 @@ from mint import mint_error
 from mint import maintenance
 from mint.helperfuncs import cleanseUrl
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
+from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from kid.pull import XML
 from conary import conarycfg, versions
-from conary.web.fields import strFields, intFields, listFields, boolFields
 
 class AdminHandler(WebHandler):
     def handle(self, context):

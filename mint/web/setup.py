@@ -21,8 +21,8 @@ from mint.config import keysForGeneratedConfig
 from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
+from mint.web.fields import strFields, intFields, listFields, boolFields
 
-from conary.web.fields import strFields, intFields, listFields, boolFields
 from conary.repository.netrepos import netauth
 
 # be careful with 'Server Setup', code below and the associated kid template
