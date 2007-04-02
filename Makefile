@@ -90,6 +90,20 @@ sync: doc
 msgcat:
 	tg-admin i18n collect
 
+ccs: product
+	cvc co --dir rbuilder-$(VERSION) rbuilder=products.rpath.com@rpath:rba-devel
+	sed -i 's,version = ".*",version = "$(VERSION)",' \
+		rbuilder-$(VERSION)/rbuilder.recipe;
+	sed -i 's,version = '.*',version = "$(VERSION)",' \
+		rbuilder-$(VERSION)/rbuilder.recipe;
+	sed -i 's,r.addArchive(.*),r.addArchive("rbuilder-$(VERSION).tar.bz2"),' \
+		rbuilder-$(VERSION)/rbuilder.recipe;
+	cp rbuilder-$(VERSION).tar.bz2 rbuilder-$(VERSION)
+	# This is just to prime the cache for the cook from a recipe
+	cvc cook --build-label products.rpath.com@rpath:rba-devel --prep rbuilder=products.rpath.com@rpath:rba-devel
+	cvc cook --build-label products.rpath.com@rpath:rba-devel rbuilder-$(VERSION)/rbuilder.recipe
+	rm -rf rbuilder-$(VERSION)
+
 clean: clean-subdirs default-clean
 
 subdirs: default-subdirs
