@@ -131,7 +131,7 @@ class Project(database.TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
-    def editProject(self, projecturl, desc, name, appliance):
+    def editProject(self, projecturl, desc, name, appliance="unknown"):
         return self.server.editProject(self.id, projecturl, desc, name, appliance)
 
     def getLabelIdMap(self):
