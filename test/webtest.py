@@ -393,7 +393,48 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 {'title': 'Test Project', 'hostname': 'test'})
 
         project = client.getProjectByHostname("test")
-        assert(project.getName() == 'Test Project')
+        self.failUnlessEqual(project.getName(), 'Test Project')
+        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
+
+
+    def testApplianceFlagYesNewProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        page = page.assertCode('/newProject', code = 200)
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project', 'hostname': 'test',
+                 'appliance': 'yes'})
+
+        project = client.getProjectByHostname("test")
+        self.failUnlessEqual(project.getApplianceValue(), 'yes')
+
+    def testApplianceFlagNoNewProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        page = page.assertCode('/newProject', code = 200)
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project 2', 'hostname': 'test2',
+                 'appliance': 'no'})
+
+        project = client.getProjectByHostname("test2")
+        self.failUnlessEqual(project.getApplianceValue(), 'no')
+
+    def testApplianceFlagUnknownNewProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        page = page.assertCode('/newProject', code = 200)
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project 3', 'hostname': 'test3',
+                 'appliance': 'unknown'})
+
+        project = client.getProjectByHostname("test3")
+        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
 
     def testEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -404,6 +445,47 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertCode('/project/foo/editProject', code = 200)
+
+    def testApplianceFlagYesEditProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertCode('/project/foo/editProject', code = 200)
+        page = page.postForm(1, self.fetch,
+                {'name': 'Test Project', 'appliance': 'yes'})
+
+        project = client.getProjectByHostname("foo")
+        self.failUnlessEqual(project.getApplianceValue(), 'yes')
+
+    def testApplianceFlagNoEditProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertCode('/project/foo/editProject', code = 200)
+        page = page.postForm(1, self.fetch,
+                {'name': 'Test Project', 'appliance': 'no'})
+
+    def testApplianceFlagUnknownEditProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertCode('/project/foo/editProject', code = 200)
+        page = page.postForm(1, self.fetch,
+                {'name': 'Test Project', 'appliance': 'unknown'})
+        project = client.getProjectByHostname("foo")
+        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
 
     def testProcessEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
