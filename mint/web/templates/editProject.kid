@@ -40,10 +40,14 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Project Home Page</th>
+                            <th>Is This a Software Appliance?</th>
                             <td>
-                                <input type="text" name="projecturl" value="${kwargs['projecturl']}" />
-                                <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>
+                                <select style="width: auto;" name="appliance">
+                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'unknown') or None}" value="unknown">I Don't Know</option>
+                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
+                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
+                                </select>
+                                <p class="help">Please select "yes" if this project's main purpose is to produce a software appliance.</p>
                             </td>
                         </tr>
                         <tr>
@@ -52,6 +56,13 @@
                                 <textarea name="desc" cols="70" rows="12">${kwargs['desc']}</textarea>
                                 <p class="help">It may be useful to put alternate branch labels, project goals,
                                     mechanisms for joining a project, or other relevant information here.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Project Home Page</th>
+                            <td>
+                                <input type="text" name="projecturl" value="${kwargs['projecturl']}" />
+                                <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>
                             </td>
                         </tr>
                     </table>

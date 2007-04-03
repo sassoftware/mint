@@ -573,10 +573,10 @@ class MintServer(object):
         return SERVER_VERSIONS
 
     # project methods
-    @typeCheck(str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
         if not hostname:
@@ -589,12 +589,20 @@ class MintServer(object):
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
+        if appliance == "yes":
+            applianceValue = 1
+        elif appliance == "no":
+            applianceValue = 0
+        else:
+            applianceValue = None
+
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
                                       creatorId = self.auth.userId,
                                       description = desc,
                                       hostname = hostname,
                                       domainname = domainname,
+                                      isAppliance = applianceValue,
                                       projecturl = projecturl,
                                       timeModified = time.time(),
                                       timeCreated = time.time())
@@ -994,16 +1002,23 @@ class MintServer(object):
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    @typeCheck(int, str, str, str)
+    @typeCheck(int, str, str, str, str)
     @requiresAuth
     @private
-    def editProject(self, projectId, projecturl, desc, name):
+    def editProject(self, projectId, projecturl, desc, name, appliance):
         if projecturl and not (projecturl.startswith('https://') or \
                                projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
+        if appliance == "yes":
+            applianceValue = 1
+        elif appliance == "no":
+            applianceValue = 0
+        else:
+            applianceValue = None
         return self.projects.update(projectId, projecturl=projecturl,
-                                    description = desc, name = name)
+                                    description = desc, name = name,
+                                    isAppliance = applianceValue)
 
     @typeCheck(int)
     @requiresAdmin

@@ -60,7 +60,7 @@ class Project(database.TableObject):
     # XXX: disabled is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
-                 'hidden', 'external', 'disabled',
+                 'hidden', 'external', 'isAppliance', 'disabled',
                  'timeCreated', 'timeModified')
 
     def getItem(self, id):
@@ -131,8 +131,8 @@ class Project(database.TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
-    def editProject(self, projecturl, desc, name):
-        return self.server.editProject(self.id, projecturl, desc, name)
+    def editProject(self, projecturl, desc, name, appliance):
+        return self.server.editProject(self.id, projecturl, desc, name, appliance)
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
@@ -209,6 +209,16 @@ class Project(database.TableObject):
     def getPublishedReleases(self):
         return self.server.getPublishedReleasesByProject(self.id)
 
+    def getApplianceValue(self):
+        if not self.isAppliance:
+            if self.isAppliance == 0:
+                return "no"
+            else:
+                return "unknown"
+        else:
+            return "yes"
+
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
@@ -224,13 +234,14 @@ class ProjectsTable(database.KeyedTable):
                     disabled        INT DEFAULT 0,
                     hidden          INT DEFAULT 0,
                     external        INT DEFAULT 0,
+                    isAppliance     INT,
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
 
     # XXX: disabled is slated for removal next schema upgrade --sgp
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'description', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
+              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
                 "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
                 "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
@@ -311,7 +322,10 @@ class ProjectsTable(database.KeyedTable):
                         rDb.close()
                 if rDb:
                     rDb.close()
-            return dbversion >= 15
+            if dbversion == 33 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Projects ADD COLUMN isAppliance INT")
+            return dbversion >= 33
         return True
 
     def new(self, **kwargs):

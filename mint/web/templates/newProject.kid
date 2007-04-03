@@ -37,10 +37,19 @@
                             <p class="help">The title is a longer, more descriptive name for your project. For example, <strong>My Custom Linux</strong></p>
                         </td>
                     </tr>
-
                     <tr>
-
-                        <th>Project Description:</th>
+                        <th>Is This a Software Appliance?</th>
+                        <td>
+                            <select style="width: auto;" name="appliance">
+                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] in ('unknown', '')) or None}" value="unknown">I Don't Know</option>
+                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
+                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
+                            </select>
+                            <p class="help">Please select "yes" if this project's main purpose is to produce a software appliance.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Project Description</th>
                         <td>
                             <textarea rows="6" cols="72" name="blurb" py:content="kwargs['blurb']"></textarea>
                             <p class="help">Please provide a description of your project and your goals for it.</p>

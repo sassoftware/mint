@@ -994,12 +994,13 @@ class ProjectHandler(WebHandler):
             'name': self.project.getName(),
             'desc': self.project.getDesc(),
             'branch': self.project.getLabel().split('@')[1],
+            'appliance': self.project.getApplianceValue()
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @strFields(projecturl = '', desc = '', name = '', branch = '')
+    @strFields(projecturl = '', desc = '', name = '', branch = '', appliance = 'unknown')
     @ownerOnly
-    def processEditProject(self, auth, projecturl, desc, name, branch):
+    def processEditProject(self, auth, projecturl, desc, name, branch, appliance):
         if not name:
             self._addErrors("You must supply a project title")
         try:
@@ -1011,7 +1012,7 @@ class ProjectHandler(WebHandler):
 
         if not self._getErrors():
             try:
-                self.project.editProject(projecturl, desc, name)
+                self.project.editProject(projecturl, desc, name, appliance)
 
                 # this is a little bit nasty because the label API
                 # needs some work.
@@ -1025,7 +1026,8 @@ class ProjectHandler(WebHandler):
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                'branch': self.project.getLabel().split('@')[1]}
+                      'branch': self.project.getLabel().split('@')[1],
+                      'appliance': appliance }
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated project %s" % name)
