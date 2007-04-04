@@ -43,7 +43,7 @@
                             <th>Is This a Software Appliance?</th>
                             <td>
                                 <select style="width: auto;" name="appliance">
-                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'unknown') or None}" value="unknown">I Don't Know</option>
+                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'unknown') or None}" value="unknown">---</option>
                                     <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
                                     <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
                                 </select>
