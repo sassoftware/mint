@@ -156,6 +156,8 @@ class MintConfig(ConfigFile):
     VAMUser                 = ''
     VAMPassword             = ''
 
+    diffCacheDir            = '/srv/rbuilder/diffcache'
+
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
