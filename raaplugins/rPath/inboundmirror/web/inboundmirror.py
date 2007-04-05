@@ -83,14 +83,10 @@ class InboundMirror(rAAWebPlugin):
 
         repeatings = repeatschedules.getCurrentRepeatingSchedules(self.taskId)
 
-        if 1 == len(repeatings):
-            schedId = repeatings.keys()[0]
-
-            # If we have a repeating schedule, then invalidate it.
-            self.unschedule(schedId)
-
-            # We don't delete this schedule from the update checker table
-            # because maybe a task was just scheduled that requires this row.
+        if 1 >= len(repeatings):
+            for schedId in repeatings.keys():
+                # If we have a repeating schedule, then invalidate it.
+                self.unschedule(schedId)
 
         # Add a new schedule that contains the given parameters.
         if not status:
