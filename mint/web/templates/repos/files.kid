@@ -34,16 +34,24 @@ from mint.helperfuncs import truncateForDisplay
                             if param == 'v':
                                 troveVersion = versions.ThawVersion(urllib.unquote(value)).branch().asString()
                                 break
+                    from conary import checkin
+                    if checkin.nonCfgRe.match(os.path.basename(path)):
+                        binFile = True
+                    else:
+                        binFile = False
                 ?>
                 <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.modeString()}</td>
                 <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }" >${fObj.inode.owner()}</td>
                 <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.inode.group()}</td>
                 <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified'  or None}">${fObj.sizeString()}</td>
                 <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">${fObj.timeString()}</td>
-                <td py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">
+                <td style="width: auto;" py:attrs="{'class': version.branch().asString() == troveVersion and 'modified' or None }">
                     <a py:if="isinstance(fObj, files.RegularFile) and not isinstance(fObj, files.SymbolicLink)" href="${url}" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</a>
                     <span py:if="isinstance(fObj, files.SymbolicLink)">${path} -&gt; ${fObj.target()}</span>
                     <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</span>
+                </td>
+                <td py:if="troveName.endswith(':source')">
+                    <a py:if="version.branch().asString() == troveVersion and not binFile" href="${'diffShadow?t=%s;v=%s;path=%s;pathId=%s;fileId=%s' % (troveName, quote(version.asString()), os.path.basename(path), sha1helper.md5ToString(pathId), sha1helper.sha1ToString(fileId))}"><button>Calculate Diff</button></a>
                 </td>
             </tr>
         </table>
