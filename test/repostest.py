@@ -7,12 +7,16 @@ import os
 import re
 import time
 
+import difflib
+import shutil
+import tempfile
 import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 from mint import pkgindexer
+from mint.web.repos import ConaryHandler
 import recipes
 
 from conary import repository
@@ -20,6 +24,8 @@ from conary.repository import errors
 from conary import versions
 from conary.conarycfg import ConaryConfiguration, UserInformation
 from conary.conaryclient import ConaryClient
+from conary.deps import deps
+from conary.lib import sha1helper, util
 
 testRecipe = """
 class TestCase(PackageRecipe):
@@ -494,6 +500,188 @@ class RepositoryTest(MintRepositoryHelper):
 
         d = client.getTroveDescendants('alpha', "/p1.%s@rpl:linux//devel" % MINT_PROJECT_DOMAIN, '')
         self.failUnlessEqual(d, {1: [(v2, '')], 2: [(v2, '')]})
+
+
+    def testShadowDiff(self):
+        testTransientRecipe1=r"""\
+class TransientRecipe1(PackageRecipe):
+    name = 'testcase'
+    version = '1.0'
+    clearBuildReqs()
+    fileText = 'bar\n'
+    def setup(r):
+	r.Create('/foo', contents=r.fileText)
+	r.Transient('/foo')
+"""
+
+        testTransientRecipe2=r"""\
+class TransientRecipe2(PackageRecipe):
+    name = 'testcase'
+    version = '1.0'
+    clearBuildReqs()
+    fileText = 'blah\n'
+    def setup(r):
+	r.Create('/foo', contents=r.fileText)
+	r.Transient('/foo')
+"""
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        hostname = 'testproject.%s' % MINT_PROJECT_DOMAIN
+
+        # copied straight from conary-test-1.1/clonetest.py --sgp
+        os.chdir(self.workDir)
+        self.newpkg("testcase")
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe1)
+        self.addfile("testcase.recipe")
+        self.commit()
+        #self.cookFromRepository('testcase')
+
+        self.mkbranch("1.0-1", "%s@rpl:shadow" % hostname, "testcase:source",
+                      shadow = True)
+
+        os.chdir(self.workDir)
+        shutil.rmtree("testcase")
+        self.checkout("testcase", "%s@rpl:shadow" % hostname)
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe2)
+        self.writeFile('test.txt', 'this is a test file\n\n')
+        self.addfile('test.txt')
+        self.commit()
+        rc = self.openRepository()
+        ver = versions.VersionFromString('/testproject.rpath.local2@rpl:devel//shadow/1.0-1.1')
+        ver2 = versions.VersionFromString('/testproject.rpath.local2@rpl:devel//shadow/1.0-1')
+        ver3 = versions.VersionFromString('/testproject.rpath.local2@rpl:devel/1.0-1')
+
+        for pathid, path, fileid2, version in rc.iterFilesInTrove('testcase:source', ver2, deps.parseFlavor('')):
+            if path == 'testcase.recipe':
+                break
+        fileId2 = sha1helper.sha1ToString(fileid2) 
+
+        for pathid, path, fileid3, version in rc.iterFilesInTrove('testcase:source', ver3, deps.parseFlavor('')):
+            if path == 'testcase.recipe':
+                break
+        fileId3 = sha1helper.sha1ToString(fileid3) 
+
+        for pathid, path, fileid, version in rc.iterFilesInTrove('testcase:source', ver, deps.parseFlavor('')):
+            if path == 'testcase.recipe':
+                break
+        fileId = sha1helper.sha1ToString(fileid) 
+
+        for testpathid, testpath, testfileid, testversion in rc.iterFilesInTrove('testcase:source', ver, deps.parseFlavor('')):
+            if testpath == 'text.txt':
+                break
+        testfileId = sha1helper.sha1ToString(testfileid) 
+
+        try:
+            tmpDir = tempfile.mkdtemp()
+            oldCacheDir = self.mintCfg.diffCacheDir
+            self.mintCfg.diffCacheDir =  tmpDir 
+            ch = ConaryHandler(None, None)
+            ch.__dict__.update(cfg=self.mintCfg, repos=rc)
+            ch._write = lambda *args, **kwargs: (args, kwargs)
+            ret = ch.diffShadow(t='testcase:source', v=str(ver), path='testcase.recipe', pathId=None, fileId=fileId, auth=None)
+            ret2 = ch.diffShadow(t='testcase:source', v=str(ver2), path='testcase.recipe', pathId=None, fileId=fileId2, auth=None)
+            ret3 = ch.diffShadow(t='testcase:source', v=str(ver3), path='testcase.recipe', pathId=None, fileId=fileId3, auth=None)
+            ret4 = ch.diffShadow(t='testcase:source', v=str(ver), path='test.txt', pathId=None, fileId=testfileId, auth=None)
+
+            fd = open(os.path.join(tmpDir, 'test_cache.test.test@rpl:1__2_1-1'), 'w')
+            fd.write('  Testing cache.\n')
+            fd.close()
+            ret5 = ch.diffShadow(t='blah', v='/cache.test.test@rpl:1//2/1-1', 
+                                 path='baz', pathId=None, fileId='test',
+                                 auth=None)
+            self.failIf(ret5[1]['diffinfo']['leftFile'] == 'Testing cache.\n',
+                        'Cache failed.')
+        finally:
+            self.mintCfg.diffCacheDir = oldCacheDir
+            util.rmtree(tmpDir)
+
+        self.failIf(ret[0][0] != 'shadow_diff', 'Wrong template was rendered for diff')
+        self.failIf(ret[1]['diffinfo']['diffedLines'] != [1,5], 'Incorrect lines marked as diffed')
+        self.failIf(ret[1]['diffinfo']['leftLineNums'] != ret[1]['diffinfo']['rightLineNums'], 'Line numberings incorrect')
+        self.failIf(ret[1]['diffinfo']['leftFile'][1] == ret[1]['diffinfo']['rightFile'][1], 'Incorrect diff contents displayed')
+        self.failIf(ret2[0][0] != 'shadow_diff', 'Wrong template rendered for identical diff.')
+        self.failIf(ret2[1]['message'] != 'File contents are identical on both branches.', 'Incorrect message returned')
+        self.failIf(ret3[0][0] != 'error', 'Error page not rendered.')
+        self.failIf(ret4[1]['message'] != 'test.txt was created on the current branch.  No version exists on the parent.', 'Incorrect message returned')
+
+    def testNDiffParse(self):
+        """
+        Check to see if we are parsing the output of difflib.ndiff corectly.
+        """
+        f1 = r"""rBuilder provides a great way to deliver applications from development
+to production by eliminating the costly step of "porting" the application for
+the production environment. Because rBuilder automatically determines the exact
+system software stack to
+support the application, there is never any uncertainty regarding what needs to
+be available in the production instance.
+
+rBuilder also supports all of the major virtualization formats, so you can take
+your image straight to production as a virtual appliance. Incremental releases
+and maintenance are a snap because rBuilder manages all versioning and
+dependency resolution, letting you focus on the application instead of the system software. Read more about rBuilder.
+
+Try rBuilder Online today for free, and experience the simplicity of software
+appliances."""
+
+        f2 = r"""rBuilder provides a good way to deliver applications from development
+to production by eliminating the costly step of "porting" the application for
+the production environment. Because rBuilder automatically determines the exact
+system software stack to
+support the application, there is never any uncertainty regarding what needs to
+be available in the production instance.
+
+Take your image straight to production as a virtual appliance. Incremental releases
+and maintenance are easy because rBuilder manages all versioning and
+dependency resolution, letting you focus on the application instead of the system software. Read more about rBuilder.
+
+Try rBuilder Online today for free, and experience the simplicity of software
+appliances.
+
+
+That is all."""
+        ch = ConaryHandler(None, None)
+        res = ch._calcSideBySide(difflib.ndiff(f1.splitlines(), f2.splitlines()))
+        self.failIf(res != {'rightLineNums': [1, 2, 3, 4, 5, 6, 7, '', 8, 9, 10, 11, 12, 13, 14, 15, 16], 
+            'diffedLines': [0, 7, 8, 9, 14, 15, 16], 
+            'leftFile': ['rBuilder provides a great way to deliver applications from development', 
+            'to production by eliminating the costly step of "porting" the application for',
+            'the production environment. Because rBuilder automatically determines the exact', 
+            'system software stack to', 'support the application, there is never any uncertainty regarding what needs to', 
+            'be available in the production instance.', 
+            '', 
+            'rBuilder also supports all of the major virtualization formats, so you can take', 
+            'your image straight to production as a virtual appliance. Incremental releases', 
+            'and maintenance are a snap because rBuilder manages all versioning and', 
+            'dependency resolution, letting you focus on the application instead of the system software. Read more about rBuilder.', 
+            '',
+            'Try rBuilder Online today for free, and experience the simplicity of software', 
+            'appliances.', 
+            '',
+            '',
+            ''],
+            'leftLineNums': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, '', '', ''], 
+            'rightFile': ['rBuilder provides a good way to deliver applications from development',
+            'to production by eliminating the costly step of "porting" the application for', 
+            'the production environment. Because rBuilder automatically determines the exact', 
+            'system software stack to',
+            'support the application, there is never any uncertainty regarding what needs to', 
+            'be available in the production instance.',
+            '',
+            '', 
+            'Take your image straight to production as a virtual appliance. Incremental releases',
+            'and maintenance are easy because rBuilder manages all versioning and',
+            'dependency resolution, letting you focus on the application instead of the system software. Read more about rBuilder.', 
+            '', 
+            'Try rBuilder Online today for free, and experience the simplicity of software',
+            'appliances.',
+            '',
+            '', 
+            'That is all.']},
+            'Output of difflib.ndiff not parsed correctly.')
 
 
 if __name__ == "__main__":
