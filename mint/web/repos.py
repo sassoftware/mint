@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import base64
+import difflib
 import itertools
 import os
 import string
@@ -26,6 +27,7 @@ from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
 from mint.web.decorators import ownerOnly
 
+from conary import checkin
 from conary.deps import deps
 from conary.lib import sha1helper
 from conary import versions
@@ -385,6 +387,122 @@ class ConaryHandler(WebHandler):
                 error = "Permissions have already been set for %s, please go back and select a different User, Label or Trove." % str(e))
 
         self._redirect("userlist")
+
+    def _calcSideBySide(self, diff):
+        """
+        Parse the results of a difflib.ndiff into a side-by-side comparision.
+        """
+        aligned = True
+
+        # Contents of the left and right columns
+        leftFile = []
+        rightFile = []
+
+        # Lines that differ between the two files
+        diffedLines = []
+
+        # Line numbers for both files
+        leftLineNums = []
+        rightLineNums = []
+        leftLineCount = 1
+
+        rightLineCount = 1
+
+        for line in diff:
+            key = line[0]
+            if key == '-':
+                if not aligned:
+                    rightFile.append('')
+                    rightLineNums.append('')
+                leftFile.append(line[2:])
+                diffedLines.append(len(leftFile) - 1)
+                leftLineNums.append(leftLineCount)
+                leftLineCount += 1
+                aligned = False
+            elif key == '+':
+                if aligned:
+                    leftFile.append('')
+                    leftLineNums.append('')
+                rightFile.append(line[2:])
+                diffedLines.append(len(rightFile) - 1)
+                rightLineNums.append(rightLineCount)
+                rightLineCount += 1
+                aligned = True
+            elif key == ' ':
+                if not aligned:
+                    rightFile.append('')
+                    rightLineNums.append('')
+                leftFile.append(line[2:])
+                rightFile.append(line[2:])
+                leftLineNums.append(leftLineCount)
+                leftLineCount += 1
+                rightLineNums.append(rightLineCount)
+                rightLineCount += 1
+                aligned = True
+            # Ignore lines starting with ?
+
+        return dict(leftFile=leftFile, rightFile=rightFile, diffedLines=list(set(diffedLines)), leftLineNums=leftLineNums, rightLineNums=rightLineNums)
+
+    
+    @strFields(t=None, v=None, path=None, pathId=None, fileId=None)
+    def diffShadow(self, t, v, path, pathId, fileId, auth):
+        ver = versions.VersionFromString(v)
+        if ver.hasParentVersion():
+            pv = ver.parentVersion()
+        else:
+            return self._write("error", shortError="Trove has no parent",
+                error = "This trove has no parent version.")
+        
+        # Try to load the diff from cache first
+        cacheFileName = fileId + v.replace('/', '_')
+        try:
+            fd = open(os.path.join(self.cfg.diffCacheDir, cacheFileName))
+            res = []
+            for line in fd:
+                res.append(line)
+            fd.close()
+        except IOError:
+            #Otherwise, calculate and cache it
+            fId = sha1helper.sha1FromString(fileId)
+            fc = self.repos.getFileContents([(fId, ver)])[0]
+            newFile = fc.get().read()
+
+            if not checkin.cfgRe.match(path):
+                for char in newFile:
+                    if char not in string.printable:
+                        return self._write('shadow_diff', diffinfo=None,
+                            newV=ver, oldV=pv, path=path, t=t, 
+                            contents=["This file contains unprintable characters."], 
+                            message= "%s contains unprintable characters and cannot be displayed." % path)
+
+            files = self.repos.iterFilesInTrove(t, pv, deps.parseFlavor(''))
+            oldFile = ''
+            for pathId2, path2, fileId2, version2 in files:
+                if path2 == path:
+                    fc = self.repos.getFileContents([(fileId2, version2)])[0]
+                    oldFile = fc.get().read()
+                    break
+
+            if not oldFile:
+                return self._write('shadow_diff', diffinfo=None, newV=ver, oldV=pv, path=path, t=t, contents=newFile.splitlines(), message="%s was created on the current branch.  No version exists on the parent." % path)
+            if oldFile == newFile:
+                return self._write('shadow_diff', diffinfo=None, newV=ver, oldV=pv, path=path, t=t, contents=newFile.splitlines(), message="File contents are identical on both branches.")
+            res = list(difflib.ndiff(oldFile.splitlines(), newFile.splitlines()))
+            try:
+                fd = open(os.path.join(self.cfg.diffCacheDir, cacheFileName), 'w')
+                for line in res:
+                    fd.write(line + '\n')
+                fd.close()
+            except IOError:
+                # We can't create a cache file for some reason
+                pass
+
+        # Format the diff
+        diffinfo = self._calcSideBySide(res)
+
+        return self._write('shadow_diff', diffinfo=diffinfo, newV=ver, oldV=pv, path=path, t=t)
+
+
 
     # FIXME the dependency on conary.repository.netrepos.NetworkRepositoryServer
     # needs to be removed in favor of 
