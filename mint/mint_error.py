@@ -33,6 +33,10 @@ class BuildMissing(MintError):
     def __str__(self):
         return "The referenced build does not exist."
 
+class FileMissing(MintError):
+    def __str__(self):
+        return "The referenced file does not exist."
+
 class BuildFileMissing(MintError):
     def __str__(self):
         return "The referenced build file doesn't exist."

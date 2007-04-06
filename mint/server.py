@@ -2711,9 +2711,7 @@ class MintServer(object):
             filenames = [ (x[3], x[4], x[5]) for x in r ]
             return info[0], info[1], info[2], filenames
         else:
-            # FIXME: find a better error. jobs module is deprecated.
-            raise NotImplementedError
-            raise jobs.FileMissing
+            raise FileMissing
 
     @typeCheck(int, ((str, unicode),))
     @requiresAuth

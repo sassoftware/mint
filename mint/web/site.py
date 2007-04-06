@@ -741,7 +741,7 @@ class SiteHandler(WebHandler):
 
         try:
             buildId, idx, title, fileUrls = self.client.getFileInfo(fileId)
-        except jobs.FileMissing:
+        except mint_error.FileMissing:
             raise HttpNotFound
 
         # Special rules for handling the default case (urltypes.LOCAL):
