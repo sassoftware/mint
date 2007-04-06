@@ -6,7 +6,7 @@
 
 all: subdirs
 
-SUBDIRS=rbalog loadmirror inboundmirror
+SUBDIRS=rbalog loadmirror inboundmirror mcpconsole
 
 python_files = __init__.py
 
