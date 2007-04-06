@@ -68,7 +68,7 @@
 
     <body id="middle">
         <h3>Schedule Outbound Mirroring</h3>
-        <h5>Use this page to schedule syncing of local repositories with 
+        <h5>Use this page to schedule mirroring of local repositories to 
             Update Service appliance(s). 
             To disable automated mirroring, select "Disabled" below
             and click "Save." Mirroring can be performed at any time by clicking "Mirror Now."</h5>
