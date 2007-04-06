@@ -446,10 +446,10 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         for troveName in refNamesRpl1:
             assert troveName in troveNames['conary.rpath.com@rpl:1']
         for troveName in refNamesRaa:
-            assert troveName in troveNames['raa.rpath.org@rpl:1']
+            assert troveName in troveNames['raa.rpath.org@rpath:raa-2']
 
-        self.failIf(messages['conary.rpath.com@rpl:1'] != 'These troves come from rPath Linux on the conary.rpath.com@rpl:1 label')
-        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpl:1']),
+        self.failIf(messages['conary.rpath.com@rpl:1'] != 'These groups come from rPath Linux on the conary.rpath.com@rpl:1 label')
+        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpath:raa-2']),
                     "troveDict doesn't match trove names list")
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
