@@ -18,10 +18,10 @@ labelDict = {baseConaryLabel :
                ('group-xorg', 'The X.org windowing system.')
               ],
 
-             'raa.rpath.org@rpl:1':
+             'raa.rpath.org@rpath:raa-2':
               [('group-raa', 'The rPath Appliance Agent')]
             }
 
-messageDict = {baseConaryLabel: 'These troves come from rPath Linux on the %s label' % baseConaryLabel,
-               'raa.rpath.org@rpl:1': 'The following trove comes from the raa.rpath.org@rpl:1 label'
+messageDict = {baseConaryLabel: 'These groups come from rPath Linux on the %s label' % baseConaryLabel,
+               'raa.rpath.org@rpath:raa-2': 'The following group comes from the raa.rpath.org@rpath:raa-2 label'
               }
