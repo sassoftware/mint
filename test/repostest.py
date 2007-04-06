@@ -551,9 +551,9 @@ class TransientRecipe2(PackageRecipe):
         self.addfile('test.txt')
         self.commit()
         rc = self.openRepository()
-        ver = versions.VersionFromString('/testproject.rpath.local2@rpl:devel//shadow/1.0-1.1')
-        ver2 = versions.VersionFromString('/testproject.rpath.local2@rpl:devel//shadow/1.0-1')
-        ver3 = versions.VersionFromString('/testproject.rpath.local2@rpl:devel/1.0-1')
+        ver = versions.VersionFromString('/testproject.%s@rpl:devel//shadow/1.0-1.1' % MINT_PROJECT_DOMAIN)
+        ver2 = versions.VersionFromString('/testproject.%s@rpl:devel//shadow/1.0-1' % MINT_PROJECT_DOMAIN)
+        ver3 = versions.VersionFromString('/testproject.%s@rpl:devel/1.0-1' % MINT_PROJECT_DOMAIN)
 
         for pathid, path, fileid2, version in rc.iterFilesInTrove('testcase:source', ver2, deps.parseFlavor('')):
             if path == 'testcase.recipe':
