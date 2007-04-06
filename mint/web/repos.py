@@ -130,9 +130,26 @@ class ConaryHandler(WebHandler):
                 withFiles = True,
                 sortByPath = True)
             fileIters.append(files)
+        fileIters = itertools.chain(*fileIters)
+
+        deletedFiles = []
+        if t.endswith(':source'):
+            if parentTrove.version.v.hasParentVersion():
+                parentIters = []
+                tr = self.repos.getTrove(t, parentTrove.version.v.parentVersion(), f)
+                files = self.repos.iterFilesInTrove(
+                    tr.getName(),
+                    tr.getVersion(),
+                    tr.getFlavor(),
+                    withFiles = True,
+                sortByPath = True)
+                parentIters = files
+                
+                fileIters = [x for x in fileIters]
+                deletedFiles = [x for x in parentIters if x[1] not in [y[1] for y in fileIters]]
         return self._write("files",
             troveName = t,
-            fileIters = itertools.chain(*fileIters))
+            fileIters = fileIters, deletedFiles=deletedFiles)
 
     @strFields(t = None, v = "")
     def troveInfo(self, t, v, auth):
