@@ -125,6 +125,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'deleteGroup' in link or 'deletePerm' in link:
             # conary web code deletes using a GET: CNY-963
             return False
+        if 'build?id=' in link:
+            # build pages are currently broken due to lack of MCP stubbing
+            return False
 
         if page is None:
             try:
