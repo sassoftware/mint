@@ -4,9 +4,11 @@
 # All rights reserved
 #
 
+subdirs = static
+
 all: default-all
 
-python_files = __init__.py mcp.py
+python_files = __init__.py mcpweb.py
 
 extra_files = Makefile
 

@@ -8,9 +8,9 @@ all: default-all default-subdirs
 
 SUBDIRS =
 
-python_files =
+python_files = __init__.py
 
-kid_files = index.kid
+kid_files = jobs.kid nodes.kid
 
 extra_files = Makefile
 
