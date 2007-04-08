@@ -80,7 +80,7 @@ def handleImages(mcpCfg, mintCfg):
 
 def redirIO(outputFn, inputFn = os.devnull):
     input = os.open(inputFn, os.O_RDONLY)
-    output = os.open(outputFn, os.O_WRONLY)
+    output = os.open(outputFn, os.O_WRONLY | os.O_CREAT)
     os.dup2(output, sys.stdout.fileno())
     os.dup2(output, sys.stderr.fileno())
     os.dup2(input, sys.stdin.fileno())
