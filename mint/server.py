@@ -941,7 +941,7 @@ class MintServer(object):
                       'Changed':'has had its current access level changed to "%s" on the "%s" project' % (userlevelname, project.getName())
                      }
 
-        helpLink = "\n\nInstructions on how to set up your build environment for this project can be found at %sconaryDevelCfg\n\nIf you would not like to be %s %s of this project, you may resign from this project at %smembers" % (projectUrl, userlevelname == 'Developer' and 'a' or 'an', userlevelname, projectUrl)
+        helpLink = "\n\nInstructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/\n\nIf you would not like to be %s %s of this project, you may resign from this project at %smembers" % (projectUrl, userlevelname == 'Developer' and 'a' or 'an', userlevelname, projectUrl)
 
         closing = 'If you have questions about the project, please contact the project owners.'
 
