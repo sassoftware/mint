@@ -555,6 +555,11 @@ class TransientRecipe2(PackageRecipe):
         ver2 = versions.VersionFromString('/testproject.%s@rpl:devel//shadow/1.0-1' % MINT_PROJECT_DOMAIN)
         ver3 = versions.VersionFromString('/testproject.%s@rpl:devel/1.0-1' % MINT_PROJECT_DOMAIN)
 
+        for pathid, path, fileid, version in rc.iterFilesInTrove('testcase:source', ver, deps.parseFlavor('')):
+            if path == 'testcase.recipe':
+                break
+        fileId = sha1helper.sha1ToString(fileid) 
+
         for pathid, path, fileid2, version in rc.iterFilesInTrove('testcase:source', ver2, deps.parseFlavor('')):
             if path == 'testcase.recipe':
                 break
@@ -565,13 +570,8 @@ class TransientRecipe2(PackageRecipe):
                 break
         fileId3 = sha1helper.sha1ToString(fileid3) 
 
-        for pathid, path, fileid, version in rc.iterFilesInTrove('testcase:source', ver, deps.parseFlavor('')):
-            if path == 'testcase.recipe':
-                break
-        fileId = sha1helper.sha1ToString(fileid) 
-
         for testpathid, testpath, testfileid, testversion in rc.iterFilesInTrove('testcase:source', ver, deps.parseFlavor('')):
-            if testpath == 'text.txt':
+            if testpath == 'test.txt':
                 break
         testfileId = sha1helper.sha1ToString(testfileid) 
 
