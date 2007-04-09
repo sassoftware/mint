@@ -75,7 +75,7 @@ class OutboundMirror(rAAWebPlugin):
 
         repeatings = repeatschedules.getCurrentRepeatingSchedules(self.taskId)
 
-        if 1 >= len(repeatings):
+        if 1 <= len(repeatings):
             for schedId in repeatings.keys():
                 # If we have a repeating schedule, then invalidate it.
                 self.unschedule(schedId)

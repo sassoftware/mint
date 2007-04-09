@@ -71,3 +71,32 @@ class OutboundMirrorTest(raatest.rAATest):
         self.callWithIdent(ibm.doTask, res['schedId'], 1)
         self.assertEquals(sio.getvalue(), 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-outbound http://mintauth:mintpass@localhost/xmlrpc-private/ 2>> /srv/rbuilder/logs/mirror-outbound.log"')
 
+
+    def test_hourly(self):
+        """
+        Thoroughly test hourly scheduling, checking for multiple repeat 
+        schedules.
+        """
+        for hours in (1,2,3,4,5,7,11,30,55,90):
+            for day_month in (1, 2):
+                for day in (4, 5):
+                    for time_hour in (1, 23):
+
+                        self.callWithIdent(raaFramework.pseudoroot.prefsSave, checkFreq='Hourly', timeHour='%s' % time_hour, timeDay='%s' % day, timeDayMonth='%s' % day_month, hours='%s' % hours, status='enabled')
+                        res = self.callWithIdent(raaFramework.pseudoroot.index)
+                        self.assertEquals(res['checkFreq'], 'Hourly')
+                        self.assertEquals(res['hours'], hours)
+                        scheds = raaFramework.pseudoroot.readSchedules()
+                        self.assertEquals(len(scheds), 1)
+                        self.assertEquals(scheds[0].interval, 60*60*hours)
+                        self.assertEquals(scheds[0].type, 3)
+                        self.assertEquals(scheds[0].unit, 2)
+
+        # add a second schedule and make sure it is removed properly
+        import time
+        from raa.db import schedule
+        raaFramework.pseudoroot.schedule(schedule.ScheduleInterval(time.time(), None, 42, schedule.ScheduleInterval.INTERVAL_HOURS))
+        # Disable scheduling
+        self.callWithIdent(raaFramework.pseudoroot.prefsSave, checkFreq='Hourly', timeHour='7', timeDay='6', timeDayMonth='22', hours='42', status='disabled')
+        scheds = raaFramework.pseudoroot.readSchedules()
+        self.assertEquals(len(scheds),0)
