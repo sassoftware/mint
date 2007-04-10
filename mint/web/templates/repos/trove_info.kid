@@ -193,7 +193,15 @@ else:
         <title>${formatTitle('%s Information: %s' % (title, truncateForDisplay(troveName, maxWordLen = 64)))}</title>
         <script type="text/javascript">
             addLoadEvent(function(){hideElement('longVersion')});
+            addLoadEvent(function() {treeInit('treeDiv', ${verList}, ${selectedLabel})});
         </script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" ></script>
+<script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
+<link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/yui/build/treeview/assets/tree.css"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/treeview/treeview-min.js" ></script>
+    <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}" />
+        
+
     </head>
     <body>
         <div id="layout">
@@ -216,14 +224,7 @@ else:
                 </div>
 
                 <h3>All Versions:</h3>
-
-                <ul class="troveallversions">
-                    <li py:for="ver in versionList">
-                        <a href="troveInfo?t=${quote(troveName)};v=${quote(ver.freeze())}"
-                           py:if="ver != reqVer">${splitVersionForDisplay(str(ver))}</a>
-                        <span py:strip="True" py:if="ver == reqVer"><b>${splitVersionForDisplay(str(ver))}</b> (selected)</span>
-                    </li>
-                </ul>
+                    <div id="treeDiv"/>
             </div>
         </div>
     </body>
