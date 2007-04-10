@@ -147,6 +147,22 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                                   content = 'title="test:runtime"',
                                   server = self.getProjectServerHostname())
 
+    def testTroveInfoPageFlavors(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+
+        self.addQuickTestComponent('test:runtime', '3.0-1-1', filePrimer = 3, flavor = "is: x86")
+        self.addQuickTestComponent('test:runtime', '3.0-1-1', filePrimer = 3, flavor = "is: x86_64")
+
+        page = self.fetch('/repos/testproject/troveInfo?t=test:runtime',
+            server = self.getProjectServerHostname())
+
+        # make sure contents links to both flavors show up
+        self.failUnless(';f=1%23x86_64"' in page.body)
+        self.failUnless(';f=1%23x86"' in page.body)
+
     def testReposRSS(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
