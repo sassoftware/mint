@@ -13,6 +13,7 @@ kid_files =			\
 	notice.kid		\
         permission.kid          \
 	pgp_admin.kid		\
+	shadow_diff.kid		\
 	trove_info.kid          \
         user_admin.kid
 
