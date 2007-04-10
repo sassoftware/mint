@@ -193,8 +193,7 @@ class ConaryHandler(WebHandler):
             labels[str(ver.trailingLabel())] = revs
 
         return self._write("trove_info", troveName = t, troves = troves,
-            versionList = versionList, verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())),
-            reqVer = reqVer)
+            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())))
 
     @strFields(char = '')
     def browse(self, char, auth):
