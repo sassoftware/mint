@@ -5,7 +5,8 @@ javascript_files =\
 	mirror.js \
 	rpc.js	\
 	trovepicker.js \
-	rmakebuilder.js
+	rmakebuilder.js \
+	repobrowser.js
 
 generated_files =\
 	buildtypes.js \
