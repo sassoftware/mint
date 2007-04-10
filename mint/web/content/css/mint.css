@@ -1467,3 +1467,7 @@ dl.archOptions dt {
 dl.archOptions dd {
     padding-bottom: 8px;
 }
+
+.bold {
+    font-weight: bold;
+}
