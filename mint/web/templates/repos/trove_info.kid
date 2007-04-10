@@ -147,7 +147,7 @@ else:
                     <span py:if="len(troves) > 1">${flavorWrap(reducedFlavors[trove.getFlavor()])}</span><br/>
                      <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                      <a style="font-weight: normal; text-decoration: underline;"
-                                       href="files?t=${quote(troveName)};v=$frozenVersion;f=$frozenFlavor">Show Contents</a>
+                                       href="files?t=${quote(troveName)};v=$frozenVersion;f=quote($trove.getFlavor().freeze())">Show Contents</a>
                     </div>
                     <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
                         style="text-decoration: none; vertical-align: middle;">
