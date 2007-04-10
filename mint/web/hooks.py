@@ -63,6 +63,7 @@ def post(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
+CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
 def get(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
@@ -73,7 +74,7 @@ def get(port, isSecure, repos, cfg, req):
         uri = uri[:-1]
     cmd = os.path.basename(uri)
 
-    if cmd == "changeset":
+    if cmd in CONARY_GET_COMMANDS:
         return apachemethods.get(port, isSecure, repos, req)
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
