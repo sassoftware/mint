@@ -15,7 +15,9 @@ from mimetypes import guess_type
 
 from mod_python import apache
 
-from urllib import unquote
+from urllib import quote, unquote
+
+import simplejson
 
 
 from mint import database
@@ -184,8 +186,14 @@ class ConaryHandler(WebHandler):
                                %(reqVer, t))
         troves = self.repos.getTroves(query, withFiles = False)
 
+        labels = {}
+        for ver in versionList:
+            revs = labels.get(str(ver.trailingLabel()), [])
+            revs.append([str(ver.trailingRevision()), 'troveInfo?t=%s;v=%s' % (quote(t), quote(ver.freeze())), ver == reqVer])
+            labels[str(ver.trailingLabel())] = revs
+
         return self._write("trove_info", troveName = t, troves = troves,
-            versionList = versionList,
+            versionList = versionList, verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())),
             reqVer = reqVer)
 
     @strFields(char = '')
