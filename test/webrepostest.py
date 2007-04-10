@@ -339,7 +339,24 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # editPermForm
         page = page.fetch('/repos/testproject/editPermForm?group=testuser&writeperm=1&capped=0&admin=1&remove=1')
         self.failIf('Edit Permission' not in page.body, 'Error in editPermForm')
-        
+
+    def testPGPOperations(self):
+        client, userId = self.quickMintAdmin('testuser', 'testpass')
+        page = self.webLogin('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject', MINT_PROJECT_DOMAIN)
+
+        # add archive/key.asc to project
+        project = client.getProject(projectId)
+        repos = client.server._server._getProjectRepo(project)
+        gpgData = file(os.path.join(self.archiveDir, 'key.asc'))
+        repos.addNewAsciiPGPKey("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
+            'testuser', gpgData.read())
+        gpgData.close()
+
+        # make sure we see part of the whole key in the response
+        page = page.fetch("/repos/testproject/getOpenPGPKey?search=F94E405E")
+        self.failUnless('mIsEQwCyngEEAJ3MC9HwzDve2JzvEdhS' in page.body)
+
     def testRepoPermissions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
