@@ -2755,12 +2755,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # group trove by major architecture
         return dictByArch(versionList, trove)
 
-    def _getConaryClient(self):
-        cfg = conarycfg.ConaryConfiguration(readConfigFiles = False)
-        if os.path.exists(os.path.join(self.cfg.dataPath, "config", "conaryrc")):
-            cfg.read(os.path.join(self.cfg.dataPath, "config", "conaryrc"))
-        return conaryclient.ConaryClient(cfg)
-
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     def getAllTroveLabels(self, projectId, serverName, troveName):
         self._filterProjectAccess(projectId)

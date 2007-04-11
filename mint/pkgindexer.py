@@ -188,7 +188,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
             projectIds[hostname] = projectId
 
             ccfg = conarycfg.ConaryConfiguration()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'conaryrc')
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'config',
+                    'conaryrc')
             if os.path.exists(conarycfgFile):
                 ccfg.read(conarycfgFile)
             ccfg.root = ccfg.dbPath = ':memory:'
