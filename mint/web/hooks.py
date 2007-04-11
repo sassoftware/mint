@@ -235,7 +235,23 @@ def conaryHandler(req, cfg, pathInfo):
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
     else:
-        repo = shimRepo = None
+        if secure:
+            if proxy_repository:
+                repo = proxy_repository
+            else:
+                # proxy only works with HTTPS
+                proxycfg = netserver.ServerConfig()
+                proxycfg.proxyContentsDir = cfg.proxyContentsDir
+                proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
+                proxycfg.tmpDir = cfg.proxyTmpDir
+
+                urlBase = "%%(protocol)s://%s:%%(port)d" % \
+                        cfg.proxyHostname
+                repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
+        else:
+            repo = None
+
+        shimRepo = None
 
     if method == "POST":
         return post(port, secure, (repo, shimRepo), cfg, req)
@@ -252,6 +268,7 @@ def mintHandler(req, cfg, pathInfo):
     return webfe._handle(pathInfo)
 
 urls = (
+    (r'^/changeset/',        conaryHandler),
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/xmlrpc/',           rpcHandler),
@@ -377,7 +394,11 @@ def isProjectExternal(db, hostname):
         (SELECT * FROM InboundMirrors WHERE targetProjectId=projectId)
         FROM Projects WHERE hostname=?""", hostname)
     try:
-        external = cu.fetchone()[0]
+        rs = cu.fetchone()
+        if rs:
+            external = bool(rs[0])
+        else:
+            external = True
     except (IndexError, TypeError):
         import traceback
         tb = traceback.format_exc()
@@ -471,3 +492,4 @@ def handler(req):
 conaryDb = None
 repositories = {}
 shim_repositories = {}
+proxy_repository = None
