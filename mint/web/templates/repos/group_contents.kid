@@ -3,12 +3,14 @@
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
-from mint.helperfuncs import truncateForDisplay
+from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
     <head>
+    <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}" />
+        
         <script type="text/javascript">
             function init() {
                 var elems = getElementsByTagAndClassName(null, 'versionLong');
@@ -25,7 +27,7 @@ from mint.helperfuncs import truncateForDisplay
         <table style="width: 100%;">
             <thead>
                 <th>Trove</th>
-                <th>Branch and Version</th>
+                <th>Version</th>
                 <th>Project</th>
             </thead>
             <tbody>
@@ -36,7 +38,8 @@ from mint.helperfuncs import truncateForDisplay
                     url = "files?t=%s;v=%s;f=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
                 ?>
                 <td style="width: 32%;"><a href="${url}">${name}</a></td>
-                <td style="width: 32%;"><a id="${url}_short" href="javascript:void(0);" onclick="hideElement(this); showElement('${url}_long');">${"%s:%s/%s" % (version.trailingLabel().getNamespace(), version.trailingLabel().getLabel(), version.trailingRevision().getVersion())}</a><a id="${url}_long" class="versionLong" href="javascript:void(0);" onclick="hideElement(this); showElement('${url}_short');">${str(version)}</a></td>
+                <td style="width: 32%;"><span class="expand" id="${url}_short" onclick="swapDisplay('${url}_short', '${url}_long');">${"%s:%s/%s" % (version.trailingLabel().getNamespace(), version.trailingLabel().getLabel(), version.trailingRevision().getVersion())}</span>
+                <span id="${url}_long" class="collapse"  style="display: none;" onclick="swapDisplay('${url}_long', '${url}_short');">${splitVersionForDisplay(str(version))}</span></td>
                 <td style="width: 32%;">${"%s" % version.trailingLabel().getHost()}</td>
             </tr>
             </tbody>
