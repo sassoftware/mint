@@ -282,3 +282,16 @@ a.option:hover {
     text-decoration:none;
 }
 
+.expand {
+	background:url(../images/next.gif) no-repeat;
+    padding-right: 18px;
+    background-position: right;
+    cursor: pointer;
+} 
+
+.collapse {
+	background:url(../images/prev.gif) no-repeat;
+    padding-right: 18px;
+    background-position: right;
+    cursor: pointer;
+} 
