@@ -587,7 +587,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         data = dict(title = 'Title', text = 'This is a test.',
             link = 'http://www.example.com/', logo = 'logo.gif',
-            showArchive = '1', startDate = '05/05/2000', endDate = '05/06/2050',
+            showArchive = '1', startDate = '05/05/2000', endDate = '05/06/2030',
             operation = 'preview')
         page = origPage.postForm(1, self.post, data)
         assert('Click for more information.' in page.body)
