@@ -89,6 +89,9 @@ VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
+# XXX do we need to reserve localhost?
+# XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
+#     localhost
 
 dbConnection = None
 callLog = None
@@ -450,9 +453,13 @@ class MintServer(object):
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
 
+            if self.cfg.useProxyInternally:
+                proxy = 'https://%s' % self.cfg.proxyHostname
+            else:
+                proxy = None
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
-                cfg.repositoryMap, cfg.user)
+                cfg.repositoryMap, cfg.user, conaryProxies=proxy)
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -2742,7 +2749,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         flavor = None
 
         cfg = project.getConaryConfig()
-
         nc = conaryclient.ConaryClient(cfg).getRepos()
         versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {trove: None})
 

@@ -193,6 +193,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 ccfg.read(conarycfgFile)
             ccfg.root = ccfg.dbPath = ':memory:'
             ccfg.repositoryMap = repMap
+            if self.cfg.useProxyInternally:
+                ccfg.proxy = 'https://%s' % self.cfg.proxyHostname
             repos = conaryclient.ConaryClient(ccfg).getRepos()
             netclients[hostname] = repos
 
