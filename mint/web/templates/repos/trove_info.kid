@@ -34,11 +34,6 @@ else:
             quotedVersion = quote(trove.getVersion().asString())
             frozenVersion = quote(trove.getVersion().freeze())
             frozenFlavor = quote(trove.getFlavor().freeze())
-            clonedFrom = trove.troveInfo.clonedFrom()
-            clonedFromStr = ''
-            if clonedFrom and '@LOCAL:' not in clonedFrom.asString():
-                clonedLink = "troveInfo?t=%s;v=%s" % (trove.getName(), quote(clonedFrom.asString()))
-                clonedFromStr = clonedFrom.asString()
         ?>
         <tr>
             <th>Package name:</th>
@@ -51,9 +46,9 @@ else:
                     ${truncateForDisplay(trove.getName(), maxWordLen=45)}
                 </td>
         </tr>
-        <tr py:if="clonedFromStr">
-            <th>Cloned from:</th>
-            <td><a href="${clonedLink}">${splitVersionForDisplay(clonedFromStr)}</a></td>
+        <tr py:if="lineage">
+            <th>${lineage}:</th>
+            <td><a py:if="extLink" href="${extLink}">${splitVersionForDisplay(extVer)}</a><span py:if="not extLink">${splitVersionForDisplay(extVer)}</span></td>
         </tr>
         ${referencesLink("Package", trove.getName(), trove.getVersion())}
         <tr><th>Change log:</th>
@@ -109,12 +104,7 @@ else:
             quotedLabel = quote(trove.getVersion().branch().label().asString())
             frozenVersion = quote(trove.getVersion().freeze())
             frozenFlavor = quote(trove.getFlavor().freeze())
-            clonedFrom = trove.troveInfo.clonedFrom()
-            clonedFromStr = ''
-            if clonedFrom and '@LOCAL:' not in clonedFrom.asString():
-                clonedLink = "troveInfo?t=%s;v=%s" % (trove.getName(), quote(clonedFrom.asString()))
-                clonedFromStr = clonedFrom.asString()
-
+            
             flavors = []
             for x in troves:
                 flavors.append(x.getFlavor())
@@ -125,35 +115,39 @@ else:
             <td style="font-weight: bold;" title="${trove.getName()}">${adder(trove, quotedVersion, quotedLabel, quote(req.unparsed_uri))} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
         </tr>
         <tr>
-            <th>Branch and Version:</th>
-            <td><a href="javascript:void(0);" id="shortVersion" onclick="hideElement(this); showElement('longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}</a>
-            <a href="javascript:void(0);" id="longVersion" onclick="hideElement(this); showElement('shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}</a>${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))} </td>
+            <th>Version:</th>
+            <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
         <tr>
             <th>Built from source:</th>
             <td><a href="${sourceLink}" title="${'%s=%s' %(trove.getSourceName(), trove.getVersion())}">
                 ${truncateForDisplay(trove.getSourceName(), maxWordLen = 45)}
-            </a></td>
+            </a> 
+            </td>
         </tr>
-        <tr py:if="clonedFromStr">
-            <th>Cloned from:</th>
-            <td><a href="${clonedLink}">${splitVersionForDisplay(clonedFromStr)}</a></td>
+        <tr py:if="[x for x in trove.iterTroveList(strongRefs=True)] and not trove.name().startswith('group-')">
+            <th>Components:</th>
+            <td>
+            <span style="margin-right: 10px;" py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${component[0]};v=${component[1].freeze()}">${component[0]}</a> </span></td>
+        </tr>
+        <tr py:if="lineage">
+            <th>${lineage}:</th>
+            <td><a py:if="extLink" href="${extLink}">${splitVersionForDisplay(extVer)}</a><span py:if="not extLink">${splitVersionForDisplay(extVer)}</span></td>
         </tr>
         <tr>
-            <th py:if="len(troves) > 1">Flavors:</th>
-            <th py:if="len(troves) == 1">&nbsp;</th>
+            <th>Flavors:</th>
             <td>
                 <div py:for="trove in troves" py:strip="True">
-                    <span py:if="len(troves) > 1">${flavorWrap(reducedFlavors[trove.getFlavor()])}</span><br/>
+                    <div id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or '(click to display flavor string)'}</span></div><div id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
                      <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                      <a style="font-weight: normal; text-decoration: underline;"
                                        href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
                     </div>
-                    <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
-                        style="text-decoration: none; vertical-align: middle;">
+                    <span  onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
+                        style="text-decoration: none; vertical-align: middle; cursor: pointer;">
                         <img id="${trove.getFlavor().freeze()}_items_expander" style="vertical-align: middle;" 
-                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> <u>Details</u>
-                    </a>
+                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> Details
+                    </span>
                     <table>
                         <tbody style="display: none;" id="${trove.getFlavor().freeze()}_items">
                             <tr>
@@ -192,8 +186,7 @@ else:
     <head>
         <title>${formatTitle('%s Information: %s' % (title, truncateForDisplay(troveName, maxWordLen = 64)))}</title>
         <script type="text/javascript">
-            addLoadEvent(function(){hideElement('longVersion')});
-            addLoadEvent(function() {treeInit('treeDiv', ${verList}, ${selectedLabel})});
+            addLoadEvent(function(){treeInit('treeDiv', ${verList}, ${selectedLabel})});
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" ></script>
 <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
