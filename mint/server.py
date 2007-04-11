@@ -453,10 +453,7 @@ class MintServer(object):
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
 
-            if self.cfg.useProxyInternally:
-                proxy = 'https://%s' % self.cfg.proxyHostname
-            else:
-                proxy = None
+            proxy = self._getInternalConaryProxy()
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
                 cfg.repositoryMap, cfg.user, conaryProxies=proxy)
@@ -571,6 +568,14 @@ class MintServer(object):
         except database.ItemNotFound:
             pass
         return False
+
+    def _getInternalConaryProxy(self):
+        # We'll return '' as it is equivalent to None for our
+        # purposes (and we can't marshal None over the wire).
+        if self.cfg.useProxyInternally and self.cfg.proxyHostname:
+            return 'https://%s' % self.cfg.proxyHostname
+        else:
+            return ''
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
@@ -3918,6 +3923,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 code = ioe[1]
 
         return (code in expectedCodes)
+
+    @private
+    def getInternalConaryProxy(self):
+        return self._getInternalConaryProxy()
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
