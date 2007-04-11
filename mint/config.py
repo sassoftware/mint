@@ -158,6 +158,15 @@ class MintConfig(ConfigFile):
 
     diffCacheDir            = '/srv/rbuilder/diffcache'
 
+    proxyHostname           = 'localhost.localdomain'
+    proxyContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'proxy-contents', '')
+    proxyTmpDir             = os.path.join(os.path.sep, 'srv', 'rbuilder', 'tmp', '')
+    proxyChangesetCacheDir  = os.path.join(os.path.sep, 'srv', 'rbuilder', 'cscache', '')
+
+    # XXX: eventually, this will be flipped to true as default;
+    #      this functionality is still very beta --sgp
+    useProxyInternally      = (cfgtypes.CfgBool, False)
+
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
