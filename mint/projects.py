@@ -156,8 +156,7 @@ class Project(database.TableObject):
             cfg.user.addServerGlob(server, auth[0], auth[1])
 
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
-        if self.server._cfg.useProxyInternally:
-            cfg.proxy = 'https://%s' % self.server._cfg.proxyHostname
+        cfg.proxy = self.server.getInternalConaryProxy()
 
         return cfg
 
