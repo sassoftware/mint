@@ -22,3 +22,8 @@ function treeInit(treeDiv, verList, selectedLabel) {
     }
     tree.draw();
 }
+
+function swapDisplay(hideDiv, showDiv) {
+    getElement(hideDiv).style.display = 'none';
+    getElement(showDiv).style.display = '';
+}
