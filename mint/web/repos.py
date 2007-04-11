@@ -186,6 +186,30 @@ class ConaryHandler(WebHandler):
                                %(reqVer, t))
         troves = self.repos.getTroves(query, withFiles = False)
 
+        # Find out if this trove is a clone or a shadow
+        trove = troves[0]
+        lineage = None
+        link = ''
+        extVer = None
+        if trove.troveInfo.clonedFrom() and '@LOCAL:' not in clonedFrom.asString():
+            extVer = clonedFrom
+            lineage = 'Cloned from'
+        elif trove.version.v.hasParentVersion():
+            extVer = trove.version.v.parentVersion()
+            lineage = 'Shadowed from'
+        if lineage:
+            hostname = ''
+            try:
+                proj = self.client.getProjectByFQDN(extVer.getHost())
+                hostname = proj.getHostname()
+            except database.ItemNotFound:
+                for x in self.projectList:
+                    if self.client.translateProjectFQDN(x[0].getFQDN()) == extVer.getHost():
+                        hostname = x[0].getHostname()
+                        break
+            if hostname:
+                link = "../%s/troveInfo?t=%s;v=%s" % (hostname, trove.getName(), quote(extVer.asString()))
+
         labels = {}
         for ver in versionList:
             revs = labels.get(str(ver.trailingLabel()), [])
@@ -193,7 +217,7 @@ class ConaryHandler(WebHandler):
             labels[str(ver.trailingLabel())] = revs
 
         return self._write("trove_info", troveName = t, troves = troves,
-            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())))
+            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())), extLink=link, extVer=str(extVer), lineage=lineage)
 
     @strFields(char = '')
     def browse(self, char, auth):
