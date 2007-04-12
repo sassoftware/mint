@@ -46,6 +46,10 @@ else:
                     ${truncateForDisplay(trove.getName(), maxWordLen=45)}
                 </td>
         </tr>
+        <tr>
+            <th>Version:</th>
+            <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+        </tr>
         <tr py:if="lineage">
             <th>${lineage}:</th>
             <td><a py:if="extLink" href="${extLink}">${splitVersionForDisplay(extVer)}</a><span py:if="not extLink">${splitVersionForDisplay(extVer)}</span></td>
@@ -138,7 +142,8 @@ else:
             <th>Flavors:</th>
             <td>
                 <div py:for="trove in troves" py:strip="True">
-                    <div id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or '(click to display flavor string)'}</span></div><div id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
+                    <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or '(click to display flavor string)'}</span></div>
+                    <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
                      <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                      <a style="font-weight: normal; text-decoration: underline;"
                                        href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
