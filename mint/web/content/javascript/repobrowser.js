@@ -14,10 +14,8 @@ function treeInit(treeDiv, verList, selectedLabel) {
         }
         for (var rev in verList[label]) {
             var revNode = new YAHOO.widget.TextNode(verList[label][rev][0], newNode, false);
-            revNode.href=verList[label][rev][1];
-            if (verList[label][rev][2]) {
-                revNode.labelStyle = 'bold';
-            }
+            revNode.href = verList[label][rev][1];
+            revNode.labelStyle = verList[label][rev][2];
         }
     }
     tree.draw();
