@@ -204,7 +204,7 @@ class ConaryHandler(WebHandler):
                 hostname = proj.getHostname()
             except database.ItemNotFound:
                 for x in self.projectList:
-                    if self.client.translateProjectFQDN(x[0].getFQDN()) == extVer.getHost():
+                    if versions.Label(x[0].getLabel()).getHost() == extVer.getHost():
                         hostname = x[0].getHostname()
                         break
             if hostname:
@@ -213,7 +213,12 @@ class ConaryHandler(WebHandler):
         labels = {}
         for ver in versionList:
             revs = labels.get(str(ver.trailingLabel()), [])
-            revs.append([str(ver.trailingRevision()), 'troveInfo?t=%s;v=%s' % (quote(t), quote(ver.freeze())), ver == reqVer])
+            cssClass = ''
+            if ver == reqVer:
+                cssClass = 'bold'
+            if ver.isShadow():
+                cssClass += 'shadow'
+            revs.append([str(ver.trailingRevision()), 'troveInfo?t=%s;v=%s' % (quote(t), quote(ver.freeze())), cssClass])
             labels[str(ver.trailingLabel())] = revs
 
         return self._write("trove_info", troveName = t, troves = troves,
