@@ -191,8 +191,8 @@ class ConaryHandler(WebHandler):
         lineage = None
         link = ''
         extVer = None
-        if trove.troveInfo.clonedFrom() and '@LOCAL:' not in clonedFrom.asString():
-            extVer = clonedFrom
+        if trove.troveInfo.clonedFrom() and '@LOCAL:' not in trove.troveInfo.clonedFrom().asString():
+            extVer = trove.troveInfo.clonedFrom()
             lineage = 'Cloned from'
         elif trove.version.v.hasParentVersion():
             extVer = trove.version.v.parentVersion()
