@@ -65,6 +65,9 @@ class MirrorOutbound(MirrorScript):
 
                 cfg.configLine('matchTroves ' + ' '.join(matchStrings))
 
+                if mintCfg.useProxyInternally:
+                    cfg.proxy = "https://%s" % mintCfg.proxyHostname
+
                 targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                       cfg.target.user,
                                       entitlementDir = cfg.entitlementDirectory)

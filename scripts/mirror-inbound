@@ -60,6 +60,9 @@ class MirrorInbound(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
+                if mintCfg.useProxyInternally:
+                    cfg.proxy = "https://%s" % mintCfg.proxyHostname
+
                 sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                           cfg.source.user,
                                           entitlementDir = cfg.entitlementDirectory)
