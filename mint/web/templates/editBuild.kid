@@ -147,7 +147,7 @@ allowNone = ['anaconda-custom', 'media-template']
                         </div>
                     </div>
 
-                    <div class="formgroupTitle">Filesystems</div>
+                    <div class="formgroupTitle" style="margin-top: 24px;">Filesystems</div>
                     <div class="formgroup" style="text-align: center;">
                         <table class="fsEditorTable" style="padding-left: 8px;" >
                             <thead><tr>
