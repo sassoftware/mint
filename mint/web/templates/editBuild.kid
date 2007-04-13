@@ -31,13 +31,23 @@ allowNone = ['anaconda-custom', 'media-template']
                     handleBuildTypes("${arch}");
                 else
                     handleBuildTypes(null);
+
+                addPredefinedFilesystem('/', 0, 512, 'ext3');
+                addPredefinedFilesystem('none', 512, 0, 'swap');
             });
         </script>
     </div>
 
     <head>
         <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" ></script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo-dom-event/yahoo-dom-event.js" ></script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/dragdrop/dragdrop-min.js" ></script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/slider/slider.js" ></script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/autocomplete/autocomplete-min.js"></script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js?v=${cacheFakeoutVersion}"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/filesystems.js?v=${cacheFakeoutVersion}"/>
     </head>
     <body>
         <div id="layout">
@@ -137,8 +147,27 @@ allowNone = ['anaconda-custom', 'media-template']
                         </div>
                     </div>
 
+                    <div class="formgroupTitle">Filesystems</div>
+                    <div class="formgroup" style="text-align: center;">
+                        <table class="fsEditorTable" style="padding-left: 8px;" >
+                            <thead><tr>
+                                <td>Mount Point</td>
+                                <td>Free Space (MiB)</td>
+                                <td></td>
+                                <td>Type</td>
+                                <td></td>
+                            </tr></thead>
+
+                            <tbody id="fsEditorBody">
+                            </tbody>
+                        </table>
+                        <button type="button" onclick="javascript:addFilesystem();">Add</button>
+                    </div>
+
                     <p>
-                        <input type="submit" id="submitButton" name="action" value="${buildId and 'Recreate' or 'Create'} Build" py:attrs="{'disabled': not buildId and 'disabled' or None}" />
+                        <input type="submit" id="submitButton" name="action"
+                               value="${buildId and 'Recreate' or 'Create'} Build"
+                               py:attrs="{'disabled': not buildId and 'disabled' or None}" />
                         <input type="submit" name="action" value="Cancel" />
                     </p>
                     <input type="hidden" name="buildId" value="${buildId and buildId or 0}" />

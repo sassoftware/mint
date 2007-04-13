@@ -1041,6 +1041,24 @@ tr.editGroupHeader, .formgroupTitle {
     width: 60%;
 }
 
+.fsTypeDD {
+    width: 100% ! important;
+}
+
+tbody#fsEditorBody tr td button {
+    width: 85%;
+}
+
+.sliderBg {
+    background: url(/conary-static/apps/mint/images/sliderbg.png) no-repeat;
+    background-position: 8px 0px;
+}
+
+table.fsEditorTable thead {
+    font-weight: bold;
+    border-bottom: 1px solid black;
+}
+
 .formgroup label {
     text-align: right;
     width: 30%;
@@ -1471,3 +1489,16 @@ dl.archOptions dd {
 .bold {
     font-weight: bold;
 }
+
+/* .mountPointMod {position:relative;} */
+.mpAutoComplete {position:relative;;margin-bottom:1em;}/* set width of widget here*/
+.mpAutoComplete {z-index:9000} /* for IE z-index of absolute divs inside relative divs issue */
+.MpInput {_position:absolute;width:100%;height:1.4em;z-index:0;} /* abs for ie quirks */
+.MpContainer {position:absolute;top:1.7em;width:100%}
+.MpContainer .yui-ac-content {position:absolute;width:100%;border:1px solid #404040;background:#fff;overflow:hidden;z-index:9050;}
+.MpContainer .yui-ac-shadow {position:absolute;margin:.3em;width:100%;background:#a0a0a0;z-index:9049;}
+.MpContainer ul {padding:5px 0;width:100%;}
+.MpContainer li{padding:0 5px;cursor:default;white-space:nowrap;}
+.MpContainer li.yui-ac-highlight {background:#ff0;}
+.MpContainer li.yui-ac-prehighlight {background:#FFFFCC;}
+
