@@ -7,10 +7,10 @@ import os
 import sys
 
 from mint import client
-from mint import buildtypes 
+from mint import buildtypes
 from mint import urltypes
 from conary import conarycfg
-from conary.conarycfg import ConfigFile
+from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
 
 RBUILDER_CONFIG = "/srv/rbuilder/config/rbuilder.conf"
@@ -158,15 +158,21 @@ class MintConfig(ConfigFile):
 
     diffCacheDir            = '/srv/rbuilder/diffcache'
 
-    proxyHostname           = 'localhost.localdomain'
-    proxyContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'proxy-contents', '')
-    proxyTmpDir             = os.path.join(os.path.sep, 'srv', 'rbuilder', 'tmp', '')
-    proxyChangesetCacheDir  = os.path.join(os.path.sep, 'srv', 'rbuilder', 'cscache', '')
+    # By default this is set to OFF. Default configuration file
+    # shipped with rBuilder will turn this on for rBuilder Appliances
+    internalProxy           = CfgProxy
 
-    # XXX: eventually, this will be flipped to true as default;
-    #      this functionality is still very beta --sgp
-    useProxyInternally      = (cfgtypes.CfgBool, False)
+    # Upstream proxy for all servers to use (i.e. to get beyond
+    # the firewall)
+    upstreamProxy           = CfgProxy
 
+    # Miscellany proxy configuration -- shouldn't ever change
+    proxyContentsDir        = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'proxy-contents', '')
+    proxyTmpDir             = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'tmp', '')
+    proxyChangesetCacheDir  = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'cscache', '')
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

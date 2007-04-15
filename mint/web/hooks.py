@@ -16,6 +16,7 @@ import sys
 import time
 import traceback
 import simplejson
+import urllib
 
 from mint import config
 from mint import mirror
@@ -235,18 +236,23 @@ def conaryHandler(req, cfg, pathInfo):
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
     else:
-        if secure:
+        if cfg.internalProxy:
             if proxy_repository:
                 repo = proxy_repository
             else:
-                # proxy only works with HTTPS
                 proxycfg = netserver.ServerConfig()
                 proxycfg.proxyContentsDir = cfg.proxyContentsDir
                 proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
                 proxycfg.tmpDir = cfg.proxyTmpDir
 
-                urlBase = "%%(protocol)s://%s:%%(port)d" % \
-                        cfg.proxyHostname
+                # set any upstream proxy (if it was configured)
+                proxycfg.proxy = cfg.upstreamProxy
+
+                # ASSUMPTION: we will configure http and https proxy
+                # to be the same for internal proxies
+                proxyhost = urllib.splitport(urllib.splithost(urllib.splittype(cfg.internalProxy['http'])[1])[0])[0]
+
+                urlBase = "%%(protocol)s://%s:%%(port)d" % proxyhost
                 repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
         else:
             repo = None

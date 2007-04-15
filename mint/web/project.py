@@ -161,8 +161,7 @@ class ProjectHandler(WebHandler):
             cfg.read(conarycfgFile)
 
         cfg.dbPath = cfg.root = ":memory:"
-        if self.cfg.useProxyInternally:
-            cfg.proxy = 'https://%s' % self.cfg.proxyHostname
+        cfg.proxy = self.cfg.internalProxy
         repos = conaryclient.ConaryClient(cfg).getRepos()
 
         labels = basictroves.labelDict
@@ -506,8 +505,7 @@ class ProjectHandler(WebHandler):
                     versions.Label(basictroves.baseConaryLabel))
 
                 cfg.dbPath = cfg.root = ":memory:"
-                if self.cfg.useProxyInternally:
-                    cfg.proxy = 'https://%s' % self.cfg.proxyHostname
+                cfg.proxy = self.cfg.internalProxy
                 cclient = conaryclient.ConaryClient(cfg)
 
                 spec = conaryclient.cmdline.parseTroveSpec(trvName)

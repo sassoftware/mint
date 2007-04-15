@@ -453,10 +453,10 @@ class MintServer(object):
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
 
-            proxy = self._getInternalConaryProxy()
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
-                cfg.repositoryMap, cfg.user, conaryProxies=proxy)
+                cfg.repositoryMap, cfg.user,
+                conaryProxies=self._getInternalConaryProxy())
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -570,12 +570,7 @@ class MintServer(object):
         return False
 
     def _getInternalConaryProxy(self):
-        # We'll return '' as it is equivalent to None for our
-        # purposes (and we can't marshal None over the wire).
-        if self.cfg.useProxyInternally and self.cfg.proxyHostname:
-            return 'https://%s' % self.cfg.proxyHostname
-        else:
-            return ''
+        return self.cfg.internalProxy
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:

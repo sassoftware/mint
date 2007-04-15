@@ -623,18 +623,14 @@ class ConaryHandler(WebHandler):
 
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        if self.cfg.useProxyInternally:
-            proxy = 'https://%s' % self.cfg.proxyHostname
-        else:
-            proxy = None
+        cfg.proxy = self.cfg.internalProxy
 
         if 'repServer' not in self.__dict__:
-            cfg.proxy = proxy
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
-                                       cfg.user, conaryProxies=proxy)
+                                       cfg.user, conaryProxies=cfg.proxy)
 
         try:
             method = self.__getattribute__(self.cmd)
