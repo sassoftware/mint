@@ -1,7 +1,7 @@
 var filesystems = new Array();
 
 // some default mount points
-var defaultMountPoints = ['/', '/home', '/srv', '/tmp', '/usr', '/var']
+var defaultMountPoints = ['/', '/home', '/srv', '/tmp', '/usr', '/var'];
 var mountPointsDS = new YAHOO.widget.DS_JSArray(defaultMountPoints);
 
 function FilesystemRow(baseId) {
