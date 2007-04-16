@@ -89,13 +89,7 @@ def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
     nscfg.repositoryDB = dbTuple
-
-    # Conary 1.1.19 switched changeset cache formats
-    if 'cacheDB' in nscfg.keys():
-        nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
-    else:
-        nscfg.changesetCacheDir = os.path.join(cfg.dataPath, 'cscache')
-
+    nscfg.changesetCacheDir = os.path.join(cfg.dataPath, 'cscache')
     nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
 
     nscfg.serverName = [repName]
