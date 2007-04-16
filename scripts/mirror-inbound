@@ -47,11 +47,13 @@ class MirrorInbound(MirrorScript):
                 if mintCfg.SSL and targetUrl.startswith('http:'):
                     targetUrl = "https" + targetUrl[4:]
 
-                cfg.source.repositoryMap = {reposHost: sourceUrl}
+                cfg.source.repositoryMap = client.getFullRepositoryMap()
+                cfg.source.repositoryMap.update({reposHost: sourceUrl})
                 if sourceUser:
                     cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-                cfg.target.repositoryMap = {reposHost: targetUrl}
+                cfg.target.repositoryMap = cfg.source.repositoryMap.copy()
+                cfg.target.repositoryMap.update({reposHost: targetUrl})
                 cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
                 cfg.host = reposHost

@@ -7,7 +7,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import database
 from mint import server
@@ -47,6 +47,21 @@ class LabelsTest(fixtures.FixturedUnitTest):
             self.fail("label should not exist")
         except LabelMissing:
             pass
+
+    @fixtures.fixture("Full")
+    def testFullRepositoryMap(self, db, data):
+        adminClient = self.getClient("admin")
+        project = adminClient.getProject(data['projectId'])
+
+        x = adminClient.getFullRepositoryMap()
+        self.failUnlessEqual({'foo.%s' % MINT_PROJECT_DOMAIN: 'http://%s/repos/foo/' % PFQDN}, x)
+
+        labelId = project.getLabelIdMap().values()[0]
+        project.editLabel(labelId, "foo.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
+            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
+
+        x = adminClient.getFullRepositoryMap()
+        self.failUnlessEqual({'foo.%s' % MINT_PROJECT_DOMAIN: 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN}, x)
 
     @fixtures.fixture("Full")
     def testSSL(self, db, data):

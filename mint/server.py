@@ -649,7 +649,6 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        from conary import versions
         # ensure that the label we were passed is valid
         try:
             versions.Label(label)
@@ -1679,17 +1678,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.labels.removeLabel(projectId, labelId)
 
-    def _generateConaryRcFile(self):
-        if not self.cfg.createConaryRcFile:
-            return False
+    def _getFullRepositoryMap(self):
         cu = self.db.cursor()
         res = cu.execute("""SELECT projectId from Projects
                             WHERE hidden=0 AND disabled=0 AND
                                 (external=0 OR projectId IN (SELECT projectId FROM InboundMirrors))""")
         projs = cu.fetchall()
-        repoMaps = {}
+        repoMap = {}
         for x in projs:
-            repoMaps.update(self.labels.getLabelsForProject(x[0])[1])
+            repoMap.update(self.labels.getLabelsForProject(x[0])[1])
+        return repoMap
+
+    def _generateConaryRcFile(self):
+        if not self.cfg.createConaryRcFile:
+            return False
+
+        repoMaps = self._getFullRepositoryMap()
         fd, fname = tempfile.mkstemp()
         os.close(fd)
         f = open(fname, 'w')
@@ -1700,6 +1704,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         util.copyfile(fname, self.cfg.conaryRcFile)
         os.unlink(fname)
         os.chmod(self.cfg.conaryRcFile, 0644)
+
+    @requiresAuth
+    @private
+    def getFullRepositoryMap(self):
+        return self._getFullRepositoryMap()
 
     #
     # BUILD STUFF

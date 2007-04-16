@@ -50,10 +50,12 @@ class MirrorOutbound(MirrorScript):
                 reposHost = versions.Label(labelStr).getHost()
                 sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
 
-                cfg.target.repositoryMap = {reposHost: targetUrl}
+                cfg.target.repositoryMap = client.getFullRepositoryMap()
+                cfg.target.repositoryMap.update({reposHost: targetUrl})
                 cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
-                cfg.source.repositoryMap = {reposHost: sourceUrl}
+                cfg.source.repositoryMap = cfg.target.repositoryMap.copy()
+                cfg.source.repositoryMap.update({reposHost: sourceUrl})
                 cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
                 cfg.host = reposHost

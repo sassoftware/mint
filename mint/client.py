@@ -655,6 +655,8 @@ class MintClient:
     def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
         return self.server.checkHTTPReturnCode(uri, expectedCodes)
 
+    def getFullRepositoryMap(self):
+        return self.server.getFullRepositoryMap()
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
