@@ -247,7 +247,7 @@ def conaryHandler(req, cfg, pathInfo):
                 proxyhost = urllib.splitport(urllib.splithost(urllib.splittype(cfg.internalProxy['http'])[1])[0])[0]
 
                 urlBase = "%%(protocol)s://%s:%%(port)d" % proxyhost
-                repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
+                repo = proxy_repository = proxy.ProxyRepositoryServer(proxycfg, urlBase)
         else:
             repo = None
 
