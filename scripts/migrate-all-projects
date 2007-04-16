@@ -45,8 +45,11 @@ for fromName, toName in cu.fetchall():
         toName = toName.translate(mysqlTransTable)
     repnamemap[fromName] = toName
 
-# get all projects
-cu.execute("SELECT hostname, domainname FROM Projects")
+# get all projects which are not external OR are external, but are locally mirrored
+cu.execute("""SELECT hostname, domainname, external,
+                 EXISTS(SELECT * FROM InboundMirrors 
+                           WHERE projectId=targetProjectId) as mirrored
+              FROM Projects WHERE external = 0 or mirrored = 1""")
 
 if cfg.reposDBDriver == 'sqlite':
     dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
