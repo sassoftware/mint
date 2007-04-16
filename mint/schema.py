@@ -33,9 +33,9 @@ from conary.lib.tracelog import logMe
 # database schema version
 VERSION = 28 # this needs to be +1 from the CURRENT version in mint/database.py
 
-def _createTrigger(db, table, column = "changed", pinned = False):
+def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
-    retUpdate = db.createTrigger(table, column, "UPDATE", pinned=pinned)
+    retUpdate = db.createTrigger(table, column, "UPDATE")
     return retInsert or retUpdate
 
 def _createUsers(db):
