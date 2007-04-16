@@ -60,7 +60,7 @@ class MirrorInbound(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-                cfg.proxy = mintCfg.internalProxy
+                cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
 
                 sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                           cfg.source.user,

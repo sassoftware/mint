@@ -65,7 +65,7 @@ class MirrorOutbound(MirrorScript):
 
                 cfg.configLine('matchTroves ' + ' '.join(matchStrings))
 
-                cfg.proxy = mintCfg.internalProxy
+                cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
 
                 targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                       cfg.target.user,

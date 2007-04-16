@@ -161,7 +161,7 @@ class ProjectHandler(WebHandler):
             cfg.read(conarycfgFile)
 
         cfg.dbPath = cfg.root = ":memory:"
-        cfg.proxy = self.cfg.internalProxy
+        cfg.proxy = self.cfg.internalProxy or self.cfg.proxy
         repos = conaryclient.ConaryClient(cfg).getRepos()
 
         labels = basictroves.labelDict

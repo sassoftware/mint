@@ -623,7 +623,7 @@ class ConaryHandler(WebHandler):
 
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        cfg.proxy = self.cfg.internalProxy
+        cfg.proxy = self.cfg.internalProxy or self.cfg.proxy
 
         if 'repServer' not in self.__dict__:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()

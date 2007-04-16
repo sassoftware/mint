@@ -456,7 +456,7 @@ class MintServer(object):
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
                 cfg.repositoryMap, cfg.user,
-                conaryProxies=self._getInternalConaryProxy())
+                conaryProxies=self._getHttpProxies())
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -569,8 +569,8 @@ class MintServer(object):
             pass
         return False
 
-    def _getInternalConaryProxy(self):
-        return self.cfg.internalProxy
+    def _getHttpProxies(self):
+        return self.cfg.internalProxy or self.cfg.proxy
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
@@ -3920,8 +3920,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return (code in expectedCodes)
 
     @private
-    def getInternalConaryProxy(self):
-        return self._getInternalConaryProxy()
+    def getHttpProxies(self):
+        return self._getHttpProxies()
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
