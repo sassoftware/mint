@@ -222,7 +222,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             nc.changePassword(self.cfg.buildLabel, 'anonymous', 'anonymous')
 
     def testReposAccessViaStandardPath(self):
-        raise testsuite.SkipTestException("Conary's web interface is currently broken with tip conary")
         client, userId = self.quickMintAdmin("testuser", "testpass")
         projectId = self.newProject(client, "testproject")
 
