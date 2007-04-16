@@ -200,6 +200,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
 
         rows = []
         for host in netclients.keys():
+            newRows = 0
             self.log.info("Retrieving trove list from %s...", host)
             try:
                 names = netclients[host].troveNamesOnServer(host)
@@ -232,9 +233,11 @@ class UpdatePackageIndexExternal(PackageIndexer):
                     row = (projectIds[host], troveName, str(max(packageDict[troveName][label])),
                         serverName, branchName, isSource)
                     rows.append(row)
+                    newRows += 1
 
-            self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
+            self.log.info("Retrieved %d trove%s from %s.", newRows, ((newRows != 1) and 's' or ''), host)
 
+        self.log.info("Completed fetching %d trove%s.", len(rows), ((len(rows) != 1) and 's' or ''))
         self.log.info("Updating database...")
         updates = []
         inserts = []
@@ -259,5 +262,5 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 (pkgId, projectId, name, version, serverName, branchName, isSource)
             VALUES (NULL, ?, ?, ?, ?, ?, ?)""", inserts)
         self.db.commit()
-        self.log.info("Update complete: %.2fs" % (time.time() - st))
+        self.log.info("Database update complete, took %.2fs." % (time.time() - st))
         return 0
