@@ -230,6 +230,7 @@ def conaryHandler(req, cfg, pathInfo):
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
     else:
+        global proxy_repository
         if cfg.internalProxy:
             if proxy_repository:
                 repo = proxy_repository
