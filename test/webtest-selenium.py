@@ -70,6 +70,7 @@ class WebPageTest(SeleniumHelper):
             self.s.get_html_source(), re.MULTILINE))
 
     def testGroupBuilder(self):
+        raise testsuite.SkipTestException("broken due to lack of MCP")
         client, userId = self.quickMintUser("foouser", "foopass")
         self.newProject(client, hostname = 'test')
 

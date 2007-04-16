@@ -363,9 +363,11 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # add archive/key.asc to project
         project = client.getProject(projectId)
-        repos = client.server._server._getProjectRepo(project)
         gpgData = file(os.path.join(self.archiveDir, 'key.asc'))
-        repos.addNewAsciiPGPKey("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
+
+        from conary import conaryclient
+        cclient = conaryclient.ConaryClient(project.getConaryConfig())
+        cclient.getRepos().addNewAsciiPGPKey("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             'testuser', gpgData.read())
         gpgData.close()
 
