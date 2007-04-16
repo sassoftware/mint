@@ -163,8 +163,9 @@ class MintConfig(ConfigFile):
     internalProxy           = CfgProxy
 
     # Upstream proxy for all servers to use (i.e. to get beyond
-    # the firewall)
-    upstreamProxy           = CfgProxy
+    # the firewall -- not to be confused with the internal Conary
+    # caching proxy
+    proxy                   = CfgProxy
 
     # Miscellany proxy configuration -- shouldn't ever change
     proxyContentsDir        = os.path.join(os.path.sep, 'srv', \

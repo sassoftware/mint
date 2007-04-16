@@ -245,8 +245,8 @@ def conaryHandler(req, cfg, pathInfo):
                 proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
                 proxycfg.tmpDir = cfg.proxyTmpDir
 
-                # set any upstream proxy (if it was configured)
-                proxycfg.proxy = cfg.upstreamProxy
+                # set a proxy (if it was configured)
+                proxycfg.proxy = cfg.proxy
 
                 # ASSUMPTION: we will configure http and https proxy
                 # to be the same for internal proxies
