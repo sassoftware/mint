@@ -34,7 +34,7 @@ from mint.web.webhandler import normPath, HttpError, getHttpAuth
 from mint.web.rmakehandler import rMakeHandler
 
 from conary.web import webauth
-from conary import dbstore
+from conary import dbstore, conarycfg
 from conary.dbstore import sqlerrors
 from conary.lib import log
 from conary.lib import coveragehook
@@ -81,6 +81,15 @@ def get(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
+def getRepositoryMap(cfg):
+    conaryrc = os.path.join(cfg.dataPath, 'config', 'conaryrc')
+    if os.path.exists(conaryrc):
+        cc = conarycfg.ConaryConfiguration()
+        cc.read(conaryrc)
+        return cc.repositoryMap
+    else:
+        return {}
+
 def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple, localMirror):
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -97,6 +106,7 @@ def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple, loc
     nscfg.logFile = cfg.reposLog and \
                     os.path.join(cfg.dataPath, 'logs', 'repository.log') \
                     or None
+    nscfg.repositoryMap = getRepositoryMap(cfg)
 
     if os.path.basename(req.uri) == "changeset":
        rest = os.path.dirname(req.uri) + "/"
