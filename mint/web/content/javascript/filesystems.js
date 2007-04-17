@@ -4,6 +4,8 @@ var filesystems = new Array();
 var defaultMountPoints = ['/', '/home', '/srv', '/tmp', '/usr', '/var'];
 var mountPointsDS = new YAHOO.widget.DS_JSArray(defaultMountPoints);
 
+var fsTypes = ['ext3', 'swap'];
+
 function FilesystemRow(baseId) {
     this.baseId = baseId;
     bindMethods(this);
@@ -21,23 +23,28 @@ FilesystemRow.prototype.freeSpaceEl = null;
 FilesystemRow.prototype.fsTypeEl = null;
 
 FilesystemRow.prototype.createEditor = function() {
-    var typeDD = SELECT({'id': this.baseId + 'FsType', 'class': 'fsTypeDD'},
-        OPTION({'value': 'ext3'}, 'ext3'),
-        OPTION({'value': 'swap'}, 'swap')
-    );
-
+    var typeDD = SELECT({'id': this.baseId + 'FsType', 'class': 'fsTypeDD'});
+    for(var i in fsTypes) {
+        var fsType = fsTypes[i];
+        var attribs = {'value': fsType};
+        if(fsType == this.fsType)
+            attribs['selected'] = 'selected';
+        appendChildNodes(typeDD, OPTION(attribs, fsType));
+    }
     saveButton = BUTTON({'type': 'button'}, "Save");
 
     var callback = function() {
         this.saveRow();
     }
 
-    connect(saveButton, "onclick", bind(callback, this));
-
     this.mpInputEl = INPUT({'id': this.baseId + 'MpInput', 'class': 'MpInput', 'size': 6, 'type': 'text', 'value': this.mountPoint});
     this.reqSizeEl = INPUT({'size': 6, 'type': 'text', 'value': this.reqSize});
     this.freeSpaceEl = INPUT({'size': 6, 'type': 'text', 'value': this.freeSpace});
     this.fsTypeEl = typeDD;
+
+    this.fsTypeChosen();
+    connect(saveButton, "onclick", bind(callback, this));
+    connect(typeDD, "onchange", this.fsTypeChosen);
 
     var el = TR({'id': this.baseId + 'Editor'},
         TD(null, DIV({'class': 'mpAutoComplete'}, this.mpInputEl, DIV({'id': this.baseId + 'MpContainer', 'class': 'MpContainer'}))),
@@ -73,6 +80,7 @@ FilesystemRow.prototype.prepareAutoComplete = function() {
     mountPointEl.textboxFocusEvent.subscribe(function(){mountPointEl.sendQuery("");});
     this.mountPointEl = mountPointEl;
 }
+
 FilesystemRow.prototype.editRow = function() {
     var editor = this.createEditor();
     swapDOM($(this.baseId + 'Filesystem'), editor);
@@ -101,10 +109,20 @@ FilesystemRow.prototype.saveRow = function() {
     this.mountPoint = this.mpInputEl.value;
     this.reqSize = this.reqSizeEl.value;
     this.freeSpace = this.freeSpaceEl.value;
-    this.fsType = this.fsTypeEl.value;
+    this.fsType = this.fsTypeEl.options[this.fsTypeEl.selectedIndex].value;
 
     row = this.createStaticRow();
     swapDOM(editor, row);
+}
+
+FilesystemRow.prototype.fsTypeChosen = function() {
+    var curFsType = this.fsTypeEl.options[this.fsTypeEl.selectedIndex].value;
+    if(curFsType == "swap") {
+        this.mpInputEl.value = "none";
+        this.mpInputEl.disabled = true;
+    } else {
+        this.mpInputEl.disabled = false;
+    }
 }
 
 function addFilesystem() {
@@ -112,7 +130,8 @@ function addFilesystem() {
     appendChildNodes($('fsEditorBody'), fs.createEditor());
     fs.prepareAutoComplete();
 
-    filesystems += fs;
+    filesystems = filesystems.concat(fs);
+    logDebug(filesystems);
 }
 
 function addPredefinedFilesystem(mountPoint, reqSize, freeSpace, fsType) {
@@ -123,5 +142,5 @@ function addPredefinedFilesystem(mountPoint, reqSize, freeSpace, fsType) {
     fs.fsType = fsType;
     appendChildNodes($('fsEditorBody'), fs.createStaticRow());
 
-    filesystems += fs;
+    filesystems = filesystems.concat(fs);
 }
