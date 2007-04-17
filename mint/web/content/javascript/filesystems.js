@@ -1,4 +1,10 @@
+/*
+ Copyright (c) 2007 rPath Inc.
+ All rights reserved
+*/
+
 var filesystems = new Array();
+var uniqId = 0;
 
 // some default mount points
 var defaultMountPoints = ['/', '/home', '/srv', '/tmp', '/usr', '/var'];
@@ -7,6 +13,7 @@ var mountPointsDS = new YAHOO.widget.DS_JSArray(defaultMountPoints);
 var fsTypes = ['ext3', 'swap'];
 
 function FilesystemRow(baseId) {
+    logDebug("baseId: " + baseId);
     this.baseId = baseId;
     bindMethods(this);
 }
@@ -31,19 +38,21 @@ FilesystemRow.prototype.createEditor = function() {
             attribs['selected'] = 'selected';
         appendChildNodes(typeDD, OPTION(attribs, fsType));
     }
-    saveButton = BUTTON({'type': 'button'}, "Save");
 
-    var callback = function() {
-        this.saveRow();
-    }
+    // save button
+    saveButton = BUTTON({'type': 'button'}, "Save");
+    connect(saveButton, "onclick", this.saveRow);
+
+    // delete button
+    delButton = BUTTON({'type': 'button'}, "X");
+    connect(delButton, "onclick", this.deleteRow);
 
     this.mpInputEl = INPUT({'id': this.baseId + 'MpInput', 'class': 'MpInput', 'size': 6, 'type': 'text', 'value': this.mountPoint});
     this.reqSizeEl = INPUT({'size': 6, 'type': 'text', 'value': this.reqSize});
-    this.freeSpaceEl = INPUT({'size': 6, 'type': 'text', 'value': this.freeSpace});
+    this.freeSpaceEl = INPUT({'id': this.baseId + 'FreeSpaceEl', 'size': 6, 'type': 'text', 'value': this.freeSpace});
     this.fsTypeEl = typeDD;
 
     this.fsTypeChosen();
-    connect(saveButton, "onclick", bind(callback, this));
     connect(typeDD, "onchange", this.fsTypeChosen);
 
     var el = TR({'id': this.baseId + 'Editor'},
@@ -54,7 +63,8 @@ FilesystemRow.prototype.createEditor = function() {
         ),
         TD(null, this.freeSpaceEl),
         TD(null, typeDD),
-        TD(null, saveButton)
+        TD(null, saveButton),
+        TD(null, delButton)
     );
 
     // free space slider
@@ -62,7 +72,7 @@ FilesystemRow.prototype.createEditor = function() {
     this.freeSpaceSlider.setValue(this.freeSpace/64);
     this.freeSpaceEl.value = this.freeSpace;
 
-    freeSpaceEl = this.freeSpaceEl;
+    var freeSpaceEl = this.freeSpaceEl;
     this.freeSpaceSlider.subscribe("change", function(newVal) {
         freeSpaceEl.value = newVal*64;
     });
@@ -115,8 +125,24 @@ FilesystemRow.prototype.saveRow = function() {
     swapDOM(editor, row);
 }
 
+FilesystemRow.prototype.deleteRow = function() {
+    logDebug("deleting row: " + this);
+    removeElement($(this.baseId + "Editor"));
+
+    var index = -1;
+    for(var i in filesystems)
+        if(filesystems[i] == this)
+            index = i;
+
+    if(index > 0) {
+        filesystems.splice(index, 1);
+    }
+}
+
 FilesystemRow.prototype.fsTypeChosen = function() {
     var curFsType = this.fsTypeEl.options[this.fsTypeEl.selectedIndex].value;
+
+    // swap doesn't need a mount point
     if(curFsType == "swap") {
         this.mpInputEl.value = "none";
         this.mpInputEl.disabled = true;
@@ -126,7 +152,8 @@ FilesystemRow.prototype.fsTypeChosen = function() {
 }
 
 function addFilesystem() {
-    var fs = new FilesystemRow(filesystems.length.toString());
+    uniqId++;
+    var fs = new FilesystemRow("_" + uniqId.toString());
     appendChildNodes($('fsEditorBody'), fs.createEditor());
     fs.prepareAutoComplete();
 
@@ -135,7 +162,8 @@ function addFilesystem() {
 }
 
 function addPredefinedFilesystem(mountPoint, reqSize, freeSpace, fsType) {
-    var fs = new FilesystemRow(filesystems.length.toString());
+    uniqId++;
+    var fs = new FilesystemRow("_" + uniqId.toString());
     fs.mountPoint = mountPoint;
     fs.reqSize = reqSize;
     fs.freeSpace = freeSpace;
