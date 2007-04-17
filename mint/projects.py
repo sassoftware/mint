@@ -153,7 +153,9 @@ class Project(database.TableObject):
         cfg.configLine("installLabelPath %s" % installLabelPath)
 
         for server, auth in userMap.items():
-            cfg.user.addServerGlob(server, auth[0], auth[1])
+            if auth[0] and auth[1]:
+                # only add user/pass if both are set
+                cfg.user.addServerGlob(server, auth[0], auth[1])
 
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
         cfg.proxy = self.server.getHttpProxies()
