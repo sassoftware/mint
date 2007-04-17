@@ -81,7 +81,7 @@ def get(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
-def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
+def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple, localMirror):
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
@@ -121,7 +121,7 @@ def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple):
 
     repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
 
-    if cfg.commitAction:
+    if cfg.commitAction and not localMirror:
         nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                            'buildLabel': buildLabel,
                                            'projectName': projectName,
@@ -179,7 +179,8 @@ def conaryHandler(req, cfg, pathInfo):
         repNameCache = {}
         domainNameCache = {}
 
-    if not isProjectExternal(db, hostName):
+    external, localMirror = _getProjectExternalOrLocalMirror(db, hostName)
+    if localMirror or not external:
         # XXX: we need to nerf the repNameCache because we can now modify
         # RepNameMap and we don't have a clean way to reset the cache.
         # XXX: slate these caches for complete removal--they are no longer
@@ -220,7 +221,7 @@ def conaryHandler(req, cfg, pathInfo):
                 del repositories[repHash]
 
         if not repositories.has_key(repHash):
-            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath))
+            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath), localMirror)
             if repo:
                 repo.dbTuple = (reposDBDriver, reposDBPath)
 
@@ -390,28 +391,29 @@ def getReposDB(db, dbName, hostName, cfg):
     else:
         return cfg.reposDBDriver, cfg.reposDBPath % dbName
 
-
-def isProjectExternal(db, hostname):
+def _getProjectExternalOrLocalMirror(db, hostname):
     cu = db.cursor()
-    cu.execute("""SELECT external AND NOT EXISTS
-        (SELECT * FROM InboundMirrors WHERE targetProjectId=projectId)
+    cu.execute("""SELECT external, EXISTS(SELECT * FROM InboundMirrors
+                                WHERE projectId=targetProjectId) AS localMirror
         FROM Projects WHERE hostname=?""", hostname)
     try:
         rs = cu.fetchone()
         if rs:
-            external = bool(rs[0])
+            external, localMirror = rs
         else:
             external = True
+            localMirror = False
     except (IndexError, TypeError):
         import traceback
         tb = traceback.format_exc()
 
-        apache.log_error("error in isProjectExternal('%s'):" % hostname)
+        apache.log_error("error in _getProjectExternalOrLocalMirror('%s'):" % hostname)
         for line in tb.split("\n"): 
             apache.log_error(line, apache.APLOG_DEBUG)
         external = False
+        localMirror = False
 
-    return external
+    return bool(external), bool(localMirror)
 
 
 def handler(req):
