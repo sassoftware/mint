@@ -1098,9 +1098,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         user = self.getUser(userId)
         if not project.external:
             repos = self._getProjectRepo(project)
-            repos.editAcl(versions.Label(project.getLabel()), user['username'], "ALL", None,
+            label = versions.Label(project.getLabel())
+            repos.editAcl(label, user['username'], "ALL", None,
                           None, None, level in userlevels.WRITERS, False,
                           level == userlevels.OWNER)
+            repos.setUserGroupCanMirror(label, user['username'], int(level == userlevels.OWNER))
 
         #Ok, now update the mint db
         if level in userlevels.WRITERS:

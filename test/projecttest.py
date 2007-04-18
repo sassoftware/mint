@@ -447,6 +447,20 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "Promoted developer does not have write access")
 
     @fixtures.fixture("Full")
+    def testPromotedMirrorAcls(self, db, data):
+        client = self.getClient('owner')
+        project = client.getProject(data['projectId'])
+        self.failIf(self.getMirrorAcl(project, 'developer'),
+                    "Developer has mirror access")
+        project.updateUserLevel(data['developer'], userlevels.OWNER)
+        self.failIf(not self.getMirrorAcl(project, 'developer'),
+                    "Promoted developer -> owner does not have mirror access")
+
+        project.updateUserLevel(data['developer'], userlevels.DEVELOPER)
+        self.failIf(self.getMirrorAcl(project, 'developer'),
+            "Demoted owner -> developer still has mirror access")
+
+    @fixtures.fixture("Full")
     def testAdminAcl(self, db, data):
         client = self.getClient('owner')
         project = client.getProject(data['projectId'])
