@@ -63,6 +63,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=test',
             server = self.getProjectServerHostname())
 
+
         # now try logged-in
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/testproject/browse', code = [200],
@@ -274,6 +275,53 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         self.failUnless(v3 in page.body)
         self.failUnless(("group-dist=%s" % v2) in page.body)
+
+    def testVersions(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        hostname = 'testproject.%s' % MINT_PROJECT_DOMAIN
+
+
+        # copied straight from conary-test-1.1/clonetest.py --sgp
+        os.chdir(self.workDir)
+        self.newpkg("testcase")
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe1)
+        self.addfile("testcase.recipe")
+        self.commit()
+        self.cookFromRepository('testcase')
+
+        self.mkbranch("1.0-1", "%s@rpl:shadow" % hostname, "testcase:source",
+                      shadow = True)
+
+        os.chdir(self.workDir)
+        shutil.rmtree("testcase")
+        self.checkout("testcase", "%s@rpl:shadow" % hostname)
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe2)
+        self.commit()
+
+        self.cfg.buildLabel = versions.Label("%s@rpl:shadow" % hostname)
+        self.cookFromRepository('testcase')
+        self.cfg.buildLabel = versions.Label("%s@rpl:devel" % hostname)
+
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase:source=%s@rpl:shadow' % hostname)
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase=%s@rpl:shadow' % hostname,
+                   fullRecurse=False)
+
+        self.openRepository()
+        page = self.webLogin('testuser', 'testpass')
+        self.assertContent('/repos/testproject/troveInfo?t=testcase', code = [200],
+            content = '"testproject.rpath.local2@rpl:shadow": [["1.1-0.1-1", "troveInfo?t=testcase;v=/testproject.rpath.local2%40rpl%3Adevel',
+            server = self.getProjectServerHostname())
+        self.assertContent('/repos/testproject/troveInfo?t=testcase', code = [200],
+            content = '"shadow"',
+            server = self.getProjectServerHostname())
+
 
     def testClonedFrom(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
