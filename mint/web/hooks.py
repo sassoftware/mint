@@ -90,7 +90,9 @@ def getRepositoryMap(cfg):
     else:
         return {}
 
-def getRepository(projectName, repName, dbName, cfg, req, conaryDb, dbTuple, localMirror):
+def getRepository(projectName, repName, dbName, cfg,
+        req, conaryDb, dbTuple, localMirror):
+
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
@@ -168,46 +170,25 @@ def conaryHandler(req, cfg, pathInfo):
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
-        domainName = getProjectDomainName(db, hostName)
-        repName = hostName + "." + domainName
+        domainName = None
     else:
         parts = req.hostname.split(".")
         hostName = parts[0]
         domainName = ".".join(parts[1:])
-        repName = req.hostname
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
-    # test suite hooks: chop off any port in the repository name and
-    # reset the caches:
-    if ":" in cfg.projectDomainName:
-        repName = repName.split(":")[0]
+    # resolve the conary repository names
+    projectHostName, projectId, actualRepName, external, localMirror = \
+            _resolveProjectRepos(db, hostName, domainName)
 
-        global repNameCache, domainNameCache
-        repNameCache = {}
-        domainNameCache = {}
-
-    external, localMirror = _getProjectExternalOrLocalMirror(db, hostName)
-    if localMirror or not external:
-        # XXX: we need to nerf the repNameCache because we can now modify
-        # RepNameMap and we don't have a clean way to reset the cache.
-        # XXX: slate these caches for complete removal--they are no longer
-        # useful to be cached.
-        repNameCache = {}
-        domainNameCache = {}
-
-        repNameMap = getRepNameMap(db)
-        projectName = repName.split(".")[0]
-        if repName in repNameMap:
-            req.log_error("remapping repository name: %s -> %s" % (repName, repNameMap[repName]), apache.APLOG_INFO)
-            repName = repNameMap[repName]
-
-        repHash = repName + req.hostname
-
-        dbName = repName.translate(transTables[cfg.reposDBDriver])
-        reposDBDriver, reposDBPath = getReposDB(db, dbName, hostName, cfg)
+    if actualRepName and (localMirror or not external):
+        # it's local
+        repHash = actualRepName + req.hostname
+        dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
+        reposDBDriver, reposDBPath = getReposDB(db, dbName, projectId, cfg)
         if reposDBDriver == "sqlite":
             conaryDb = None
         else:
@@ -231,7 +212,9 @@ def conaryHandler(req, cfg, pathInfo):
                 del repositories[repHash]
 
         if not repositories.has_key(repHash):
-            repo, shimRepo = getRepository(projectName, repName, dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath), localMirror)
+            repo, shimRepo = getRepository(projectHostName, actualRepName,
+                    dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath),
+                    localMirror)
             if repo:
                 repo.dbTuple = (reposDBDriver, reposDBPath)
 
@@ -241,6 +224,8 @@ def conaryHandler(req, cfg, pathInfo):
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
     else:
+        # it's completely external
+        # use the Internal Conary Proxy if it's configured
         global proxy_repository
         if cfg.internalProxy:
             if proxy_repository:
@@ -347,53 +332,11 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 cfg = None
 db = None
 
-repNameCache = {}
-def getRepNameMap(db):
-    global repNameCache
-
-    if not repNameCache:
-        # wrap this in a try/except to avoid first-hit problems
-        # before RepNameMap even exists.
-        try:
-            cu = db.cursor()
-            cu.execute("SELECT fromName, toName FROM RepNameMap")
-            for r in cu.fetchall():
-                repNameCache.update({r[0]: r[1]})
-        except Exception, e:
-            apache.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
-
-    return repNameCache
-
-
-domainNameCache = {}
-def getProjectDomainName(db, hostName):
-    global domainNameCache
-
-    if hostName not in domainNameCache:
-        cu = db.cursor()
-        cu.execute('SELECT domainname FROM Projects WHERE hostname=?',
-                   hostName)
-        try:
-            domainNameCache[hostName] = cu.fetchone()[0]
-        except (IndexError, TypeError):
-            import traceback
-            tb = traceback.format_exc()
-
-            apache.log_error("error in getProjectDomainName:")
-            for line in tb.split("\n"):
-                apache.log_error(line, apache.APLOG_DEBUG)
-
-            # assume cfg.projectDomainName on error
-            return cfg.projectDomainName
-
-    return domainNameCache[hostName]
-
-def getReposDB(db, dbName, hostName, cfg):
+def getReposDB(db, dbName, projectId, cfg):
     cu = db.cursor()
     cu.execute("""SELECT driver, path
         FROM ReposDatabases JOIN ProjectDatabase USING (databaseId)
-        WHERE projectId=(SELECT projectId FROM Projects WHERE hostname=?)""", hostName)
-
+        WHERE projectId=?""", projectId)
     r = cu.fetchone()
     if r:
         apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_INFO)
@@ -401,29 +344,74 @@ def getReposDB(db, dbName, hostName, cfg):
     else:
         return cfg.reposDBDriver, cfg.reposDBPath % dbName
 
-def _getProjectExternalOrLocalMirror(db, hostname):
+def _resolveProjectRepos(db, hostname, domainname):
+    # Start with some reasonable assumptions
+    external = True
+    localMirror = False
+    projectHostName = None
+    projectDomainName = None
+    projectId = None
+    actualRepName = possibleRepName = None
+
+    if domainname:
+        extraWhere = "AND domainname = '%s'" % domainname
+    else:
+        extraWhere = ""
+
+    # Determine if the project is local by checking the projects table
     cu = db.cursor()
-    cu.execute("""SELECT external, EXISTS(SELECT * FROM InboundMirrors
-                                WHERE projectId=targetProjectId) AS localMirror
-        FROM Projects WHERE hostname=?""", hostname)
+    cu.execute("""SELECT projectId, domainname, external,
+                     EXISTS(SELECT * FROM InboundMirrors
+                     WHERE projectId=targetProjectId) AS localMirror
+                  FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
     try:
         rs = cu.fetchone()
         if rs:
-            external, localMirror = rs
-        else:
-            external = True
-            localMirror = False
+            projectId, projectDomainName, external, localMirror = rs
+            projectHostName = hostname
+            possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
+
+            # Optionally remap the repository name (forward lookup)
+            cu.execute("SELECT toName FROM RepNameMap WHERE fromName = ?",
+                    possibleRepName)
+            rs = cu.fetchone()
+            if rs:
+                actualRepName = rs[0]
+            else:
+                actualRepName = possibleRepName
+
+        if not actualRepName:
+            # Reverse lookup in repNameMap (ugh)
+            possibleRepName = "%s.%s" % (hostname, domainname)
+            # XXX: This is not guaranteed to be unique, so we'll make it so.
+            #      (not sure that this matters on rBA, actually)
+            cu.execute("""SELECT fromName FROM repNameMap where toName = ? LIMIT 1""",\
+                    possibleRepName)
+            rs = cu.fetchone()
+            if rs:
+                fromName = rs[0]
+                projectHostName = fromName[0:fromName.find('.')]
+                projectDomainName = fromName[fromName.find('.')+1:]
+
+                cu.execute("""SELECT projectId, external,
+                                EXISTS(SELECT * FROM InboundMirrors
+                                            WHERE projectId=targetProjectId) AS localMirror
+                              FROM Projects WHERE hostname=? AND domainname=?""",
+                              projectHostName, projectDomainName)
+                rs = cu.fetchone()
+                if rs:
+                    projectId, external, localMirror = rs
+                    actualRepName = possibleRepName
+
     except (IndexError, TypeError):
         import traceback
         tb = traceback.format_exc()
-
-        apache.log_error("error in _getProjectExternalOrLocalMirror('%s'):" % hostname)
-        for line in tb.split("\n"): 
+        apache.log_error("error in _resolveProjectRepos('%s'):" % hostname)
+        for line in tb.split("\n"):
             apache.log_error(line, apache.APLOG_DEBUG)
-        external = False
-        localMirror = False
+        actualRepName = None
 
-    return bool(external), bool(localMirror)
+    return projectHostName, projectId, actualRepName, external, localMirror
 
 
 def handler(req):

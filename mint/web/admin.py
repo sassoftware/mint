@@ -575,7 +575,7 @@ class AdminHandler(WebHandler):
                                   rPath Mirror is configured properly.""" % \
                 (cleanseUrl('https', e.url), e.errcode, e.errmsg))
         except socket.error, e:
-            self._addErrors("""%s. Please be sure you rPath Mirror
+            self._addErrors("""%s. Please be sure your rPath Mirror
                                is configured properly.""" % str(e))
         else: 
             if not res1 or not passwd:

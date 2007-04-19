@@ -1684,7 +1684,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.cursor()
         res = cu.execute("""SELECT projectId from Projects
                             WHERE hidden=0 AND disabled=0 AND
-                                (external=0 OR projectId IN (SELECT projectId FROM InboundMirrors))""")
+                                (external=0 OR projectId IN (SELECT targetprojectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         repoMap = {}
         for x in projs:
