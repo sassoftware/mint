@@ -426,6 +426,7 @@ class SiteHandler(WebHandler):
     @listFields(str, projects=None)
     @strFields(keydata=None)
     def processKey(self, auth, projects, keydata):
+        added = []
         for project, level in self.projectList:
             if project.getHostname() in projects:
                 try:
@@ -434,7 +435,11 @@ class SiteHandler(WebHandler):
                     self._addErrors('Error uploading key: %s' % str(e))
                     return self._write("uploadKey",
                             kwargs={'projects': projects, 'keydata': keydata})
-        self._setInfo("Added key to project %s" % project.getNameForDisplay())
+                else:
+                    added.append(project)
+
+        c = len(added)
+        self._setInfo("Added key to %d %s" % (c, (c == 1) and "project" or "projects"))
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
