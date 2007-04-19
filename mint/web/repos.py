@@ -23,6 +23,7 @@ import simplejson
 from mint import database
 from mint import mint_error
 from mint import userlevels
+from mint.helperfuncs import splitVersionForDisplay
 from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
@@ -153,6 +154,75 @@ class ConaryHandler(WebHandler):
             troveName = t,
             fileIters = fileIters, deletedFiles=deletedFiles)
 
+    def _recurseLineage(self, troveName, version, lineage):
+        selectedVer = None
+        # If the trove has a parent version, use that
+        if version.hasParentVersion():
+            selectedVer = version.parentVersion()
+        # else use the parent of the source
+        elif version.getSourceVersion().hasParentVersion():
+            selectedVer = version.getSourceVersion().parentVersion()
+        else:
+            # else find the most recent unmodified shadow on this branch wrt 
+            # the current trove and select its parent
+            compBranch = version.getSourceVersion().branch()
+            if not troveName[1]:
+                trSrc = troveName[0]
+            else:
+                trSrc = troveName[1]
+            troveVersions = self.repos.getTroveVersionsByBranch({trSrc: {compBranch: [None]}})
+            if troveVersions.has_key(trSrc):
+                sortedVersions = sorted(troveVersions[trSrc].keys(), reverse=True)
+            else:
+                sortedVersions = []
+
+            troveMatch = False
+            for ver in sortedVersions:
+                if version.getSourceVersion() == ver:
+                    troveMatch = True
+                if not troveMatch:
+                    continue
+                if ver.isUnmodifiedShadow() and ver.hasParentVersion():
+                    selectedVer = ver.parentVersion()
+                    break
+
+        if selectedVer:
+            if selectedVer.isSourceVersion():
+                trName = troveName[1] or troveName[0]
+            else:
+                trName = troveName[0]
+            link = self._calculateLink(selectedVer, trName)
+            formattedVersion, branch = self._formatForDisplay(selectedVer)
+            lineage.append((formattedVersion, branch, link)) 
+            return self._recurseLineage(troveName, selectedVer, lineage)
+        else:
+            return lineage
+
+    def _formatForDisplay(self, version):
+        if versions.Label(self.project.getLabel()).getHost() == version.getHost():
+            shortVersion = '%s:%s/%s' % (version.trailingLabel().getNamespace(),
+                                   version.trailingLabel().getLabel(),
+                                   str(version.trailingRevision().getVersion()))
+        else:
+            shortVersion =  '%s/%s' % (version.trailingLabel(), 
+                                  str(version.trailingRevision().getVersion()))
+        return splitVersionForDisplay(str(version)), shortVersion
+        
+    def _calculateLink(self, extVer, troveName):
+        hostname = ''
+        try:
+            proj = self.client.getProjectByFQDN(extVer.getHost())
+            hostname = proj.getHostname()
+        except database.ItemNotFound:
+            for x in self.projectList:
+                if versions.Label(x[0].getLabel()).getHost() == extVer.getHost():
+                    hostname = x[0].getHostname()
+                    break
+        if hostname:
+            return "../%s/troveInfo?t=%s;v=%s" % (hostname, troveName, quote(extVer.asString()))
+        else:
+            return ''
+            
     @strFields(t = None, v = "")
     def troveInfo(self, t, v, auth):
         t = unquote(t)
@@ -188,28 +258,19 @@ class ConaryHandler(WebHandler):
 
         # Find out if this trove is a clone or a shadow
         trove = troves[0]
-        lineage = None
-        link = ''
-        extVer = None
+        parentType = None
+        lineage = []
         if trove.troveInfo.clonedFrom() and '@LOCAL:' not in trove.troveInfo.clonedFrom().asString():
             extVer = trove.troveInfo.clonedFrom()
-            lineage = 'Cloned from'
-        elif trove.version.v.hasParentVersion():
-            extVer = trove.version.v.parentVersion()
-            lineage = 'Shadowed from'
-        if lineage:
-            hostname = ''
-            try:
-                proj = self.client.getProjectByFQDN(extVer.getHost())
-                hostname = proj.getHostname()
-            except database.ItemNotFound:
-                for x in self.projectList:
-                    if versions.Label(x[0].getLabel()).getHost() == extVer.getHost():
-                        hostname = x[0].getHostname()
-                        break
-            if hostname:
-                link = "../%s/troveInfo?t=%s;v=%s" % (hostname, trove.getName(), quote(extVer.asString()))
+            link = self._calculateLink(extVer, trove.getName())
+            longV, shortV = self._formatForDisplay(extVer)
+            lineage = [(longV, shortV, link)]
+            parentType = 'Cloned from'
+        elif trove.version.v.isShadow():
+            lineage = self._recurseLineage((trove.getName(), trove.getSourceName()), trove.version.v, [])
+            parentType = 'Shadowed from'
 
+        # Build a version list for loading into a treeview
         labels = {}
         for ver in versionList:
             revs = labels.get(str(ver.trailingLabel()), [])
@@ -222,7 +283,7 @@ class ConaryHandler(WebHandler):
             labels[str(ver.trailingLabel())] = revs
 
         return self._write("trove_info", troveName = t, troves = troves,
-            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())), extLink=link, extVer=str(extVer), lineage=lineage)
+            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())), parentType=parentType, lineage=simplejson.dumps(lineage))
 
     @strFields(char = '')
     def browse(self, char, auth):
@@ -503,8 +564,26 @@ class ConaryHandler(WebHandler):
         if ver.hasParentVersion():
             pv = ver.parentVersion()
         else:
-            return self._write("error", shortError="Trove has no parent",
-                error = "This trove has no parent version.")
+            pv = ''
+            compBranch = ver.branch()
+            troveVersions = self.repos.getTroveVersionsByBranch({t: {compBranch: [None]}})
+            if troveVersions.has_key(t):
+                sortedVersions = sorted(troveVersions[t].keys(), reverse=True)
+            else:
+                sortedVersions = []
+
+            matchTrove = False
+            for x in sortedVersions:
+                if x == ver:
+                    matchTrove = True
+                if not matchTrove:
+                    continue
+                if x.isUnmodifiedShadow() and x.hasParentVersion():
+                    pv = x.parentVersion()
+                    break
+            if not pv:
+                return self._write("error", shortError="Trove has no parent",
+                    error = "This trove has no parent version.")
         
         # Try to load the diff from cache first
         cacheFileName = fileId + v.replace('/', '_')
