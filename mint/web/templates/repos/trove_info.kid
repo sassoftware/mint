@@ -45,14 +45,14 @@ else:
                     </a>
                     ${truncateForDisplay(trove.getName(), maxWordLen=45)}
                 </td>
-        </tr>
-        <tr>
+                </tr>
+                <tr>
             <th>Version:</th>
             <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
-        <tr py:if="lineage">
-            <th>${lineage}:</th>
-            <td><a py:if="extLink" href="${extLink}">${splitVersionForDisplay(extVer)}</a><span py:if="not extLink">${splitVersionForDisplay(extVer)}</span></td>
+        <tr py:if="lineage != '[]'">
+            <th>${parentType}:</th>
+            <td><div class="nottroveinfo" id="versionTree" ></div></td>
         </tr>
         ${referencesLink("Package", trove.getName(), trove.getVersion())}
         <tr><th>Change log:</th>
@@ -122,6 +122,10 @@ else:
             <th>Version:</th>
             <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
+        <tr py:if="lineage != '[]'">
+            <th>${parentType}:</th>
+            <td><div class="nottroveinfo" id="versionTree" ></div></td>
+        </tr>
         <tr>
             <th>Built from source:</th>
             <td><a href="${sourceLink}" title="${'%s=%s' %(trove.getSourceName(), trove.getVersion())}">
@@ -134,15 +138,11 @@ else:
             <td>
             <span style="margin-right: 10px;" py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${component[0]};v=${component[1].freeze()}">${component[0]}</a> </span></td>
         </tr>
-        <tr py:if="lineage">
-            <th>${lineage}:</th>
-            <td><a py:if="extLink" href="${extLink}">${splitVersionForDisplay(extVer)}</a><span py:if="not extLink">${splitVersionForDisplay(extVer)}</span></td>
-        </tr>
         <tr>
             <th>Flavors:</th>
             <td>
                 <div py:for="trove in troves" py:strip="True">
-                    <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or '(click to display flavor string)'}</span></div>
+                    <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency][0]}</span></div>
                     <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
                      <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                      <a style="font-weight: normal; text-decoration: underline;"
@@ -192,6 +192,7 @@ else:
         <title>${formatTitle('%s Information: %s' % (title, truncateForDisplay(troveName, maxWordLen = 64)))}</title>
         <script type="text/javascript">
             addLoadEvent(function(){treeInit('treeDiv', ${verList}, ${selectedLabel})});
+            addLoadEvent(function(){initVersionTree(${lineage});})
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" ></script>
 <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
