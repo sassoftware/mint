@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 
+import base64
 import testsuite
 import unittest
 testsuite.setup()
@@ -16,7 +17,7 @@ import time
 from mint import config
 
 from mint import shimclient
-from mint.web import setup
+from mint.web import setup, hooks
 from mint.web.webhandler import HttpForbidden, HttpNotFound, HttpMoved
 
 from conary import versions
@@ -28,11 +29,10 @@ import fixtures
 import mint_rephelp
 
 class FakeRequest(object):
-    __slots__ = [ 'err_headers_out', 'hostname', 'headers_in',
-            'headers_out', 'method', 'error_logged', 'content_type',
-            'options', 'uri']
-
     def __init__(self, hostname, methodname, filename):
+        class Connection:
+            pass
+
         self.method = methodname
         self.hostname = hostname
         self.headers_in = {'host': hostname}
@@ -41,6 +41,7 @@ class FakeRequest(object):
         self.error_logged = False
         self.content_type = 'text/xhtml'
         self.options = {}
+        self.connection = Connection()
         self.uri = '/setup/'
 
     def log_error(self, msg):
@@ -250,6 +251,16 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         func = self.sh.handle(context)
         ret = func(auth = auth, **fields)
         self.failUnless('<h1>rBuilder Configuration</h1>' in ret)
+
+    @fixtures.fixture("Empty")
+    def testBlockedCommit(self, db, data):
+        # make sure anything by mintauth is localhost-only
+        req = FakeRequest('foo.rpath.local', 'POST', '/blah')
+        req.connection.remote_ip = '192.168.1.10'
+        req.headers_in['Authorization'] = "Basic " + base64.encodestring("mintauth:randompass")
+
+        ret = hooks.conaryHandler(req, self.cfg, '/')
+        self.failUnlessEqual(ret, 403) # assert 403, permission denied
 
 
 if __name__ == '__main__':

@@ -36,6 +36,8 @@ configGroups = {
         ('defaultBranch',),
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
+    '(Optional) Miscellaneous':
+        ('requireSigs',),
 }
 
 
@@ -163,6 +165,7 @@ class SetupHandler(WebHandler):
 
         newCfg.postCfg()
         newCfg.SSL = True
+        newCfg.requireSigs = False
         newCfg.secureHost = newCfg.siteHost
         newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
         if not self.cfg.configured:
@@ -178,6 +181,8 @@ class SetupHandler(WebHandler):
             mintClient.promoteUserToAdmin(userId)
             self.req.log_error("promoted %d to admin" % userId)
 
+        if kwargs.get('requireSigs'):
+            newCfg.requireSigs = True
 
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
