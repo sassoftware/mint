@@ -51,7 +51,7 @@ from mint.helperfuncs import truncateForDisplay
                     <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</span>
                 </td>
                 <td py:if="troveName.endswith(':source')">
-                    <a py:if="version.branch().asString() == troveVersion and not binFile and version.hasParentVersion()" href="${'diffShadow?t=%s;v=%s;path=%s;pathId=%s;fileId=%s' % (troveName, quote(version.asString()), os.path.basename(path), sha1helper.md5ToString(pathId), sha1helper.sha1ToString(fileId))}"><button>Calculate Diff</button></a>
+                    <a py:if="version.branch().asString() == troveVersion and not binFile " href="${'diffShadow?t=%s;v=%s;path=%s;pathId=%s;fileId=%s' % (troveName, quote(version.asString()), os.path.basename(path), sha1helper.md5ToString(pathId), sha1helper.sha1ToString(fileId))}"><button>Calculate Diff</button></a>
                 </td>
             </tr>
                 <tr  py:if="deletedFiles" py:for="pathId, path, fileId, version, fObj in deletedFiles">
