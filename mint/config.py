@@ -21,7 +21,8 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'companyName', 'corpSite', 'defaultBranch',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
-                           'externalPasswordURL', 'authCacheTimeout' ]
+                           'externalPasswordURL', 'authCacheTimeout',
+                           'requireSigs' ]
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -174,6 +175,9 @@ class MintConfig(ConfigFile):
             'rbuilder', 'tmp', '')
     proxyChangesetCacheDir  = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'cscache', '')
+    requireSigs             = (cfgtypes.CfgBool, None,
+                               "Require that all commits to local "
+                               "repositories be signed by an OpenPGP key.")
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

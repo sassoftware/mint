@@ -91,11 +91,12 @@ def getRepositoryMap(cfg):
         return {}
 
 def getRepository(projectName, repName, dbName, cfg,
-        req, conaryDb, dbTuple, localMirror):
+        req, conaryDb, dbTuple, localMirror, requireSigs):
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
+    nscfg.requireSigs = requireSigs
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
@@ -166,6 +167,18 @@ def getRepository(projectName, repName, dbName, cfg,
 def conaryHandler(req, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
+    auth = webauth.getAuth(req)
+    if type(auth) is int:
+        return auth
+    requireSigs = cfg.requireSigs
+    if auth[0] == cfg.authUser:
+        # forbid access to the local user from any ip but localhost
+        if req.connection.remote_ip != '127.0.0.1':
+            return apache.HTTP_FORBIDDEN
+        # don't require signatures for the internal user (this would break
+        # group builder)
+        requireSigs = False
+
     global db, conaryDb
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
@@ -184,9 +197,13 @@ def conaryHandler(req, cfg, pathInfo):
     projectHostName, projectId, actualRepName, external, localMirror = \
             _resolveProjectRepos(db, hostName, domainName)
 
+    # do not require signatures when committing to a local mirror
+    if localMirror:
+        requireSigs = False
+
     if actualRepName and (localMirror or not external):
         # it's local
-        repHash = actualRepName + req.hostname
+        repHash = actualRepName + req.hostname + str(requireSigs)
         dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
         reposDBDriver, reposDBPath = getReposDB(db, dbName, projectId, cfg)
         if reposDBDriver == "sqlite":
@@ -214,7 +231,7 @@ def conaryHandler(req, cfg, pathInfo):
         if not repositories.has_key(repHash):
             repo, shimRepo = getRepository(projectHostName, actualRepName,
                     dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath),
-                    localMirror)
+                    localMirror, requireSigs)
             if repo:
                 repo.dbTuple = (reposDBDriver, reposDBPath)
 
