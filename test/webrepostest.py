@@ -322,7 +322,48 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = '"shadow"',
             server = self.getProjectServerHostname())
 
+    def testShadowedFrom(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
 
+        hostname = 'testproject.%s' % MINT_PROJECT_DOMAIN
+
+        os.chdir(self.workDir)
+        self.newpkg("testcase")
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe1)
+        self.addfile("testcase.recipe")
+        self.commit()
+        self.cookFromRepository('testcase')
+
+        self.mkbranch("1.0-1", "%s@rpl:shadow" % hostname, "testcase:source",
+                      shadow = True)
+        os.chdir(self.workDir)
+        shutil.rmtree("testcase")
+        self.checkout("testcase", "%s@rpl:shadow" % hostname)
+        os.chdir("testcase")
+        self.writeFile("testcase.recipe", testTransientRecipe2)
+        self.commit()
+        self.cookFromRepository('testcase', versions.Label("%s@rpl:shadow" % hostname))
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase:source=%s@rpl:shadow' % hostname)
+        self.clone('/%s@rpl:devel' % hostname,
+                   'testcase=%s@rpl:shadow' % hostname,
+                   fullRecurse=False)
+        self.cookFromRepository('testcase', versions.Label("%s@rpl:shadow" % hostname))
+        self.mkbranch('/%s@rpl:devel//shadow/1.1-0.1' % hostname,  "%s@rpl:shadow2" % hostname, "testcase:source", shadow=True)
+        self.cookFromRepository('testcase', versions.Label("%s@rpl:shadow2" % hostname))
+
+        self.openRepository()
+        page = self.fetch('/repos/testproject/troveInfo?t=testcase')
+        self.failIf('/%s@rpl:devel//shadow/1.1-0.1' % hostname not in page.body,
+                    'First shadow not found.')
+        self.failIf('/%s@rpl:devel/1.0-1' % hostname not in page.body,
+                    'Second shadow not found.')
+        self.failIf('Shadowed from' not in page.body,
+                    'Trove does not appear shadowed')
+            
     def testClonedFrom(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -364,6 +405,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch("/repos/testproject/troveInfo?t=testcase")
         self.failUnless("Cloned from:" in page.body,
                 "Missing cloned from information in repos browser")
+        self.failUnless('/%s@rpl:devel//shadow/1.1-0.1-1' % hostname in page.body, "Wrong version displayed as clone")
 
         page = self.fetch("/repos/testproject/troveInfo?t=testcase:source")
         self.failUnless("Cloned from:" in page.body,
