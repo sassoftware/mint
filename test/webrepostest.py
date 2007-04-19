@@ -316,7 +316,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.openRepository()
         page = self.webLogin('testuser', 'testpass')
         self.assertContent('/repos/testproject/troveInfo?t=testcase', code = [200],
-            content = '"testproject.rpath.local2@rpl:shadow": [["1.1-0.1-1", "troveInfo?t=testcase;v=/testproject.rpath.local2%40rpl%3Adevel',
+            content = '"%s@rpl:shadow": [["1.1-0.1-1", "troveInfo?t=testcase;v=/%s%%40rpl%%3Adevel' % (hostname, hostname),
             server = self.getProjectServerHostname())
         self.assertContent('/repos/testproject/troveInfo?t=testcase', code = [200],
             content = '"shadow"',
