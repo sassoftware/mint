@@ -21,6 +21,47 @@ function treeInit(treeDiv, verList, selectedLabel) {
     tree.draw();
 }
 
+function buildHTMLNode (version) {
+    if (version[2]) {
+        var nameShort = '<a href="' + version[2] + '">' + version[1] + '</a>'; 
+        var nameLong = '<a href="' + version[2] + '">' + version[0] + '</a>';
+    }
+    else {
+        var nameShort = '<span>' + version[1] + '</span>';
+        var nameLong = '<span>' + version[0] + '</span>';
+    }
+
+    var node = '<div id="short' + version[0] + '">' +
+               nameShort +
+               '<span class="expand" onclick="swapDisplay(\'short' + 
+               version[0] + '\', \'long' + version[0] + '\');">' + 
+               '</span>' +
+               '</div>' +
+               '<div id="long' + version[0] + '" style="display: none;">' +
+               nameLong +
+               '<span class="collapse" onclick="swapDisplay(\'long' +
+               version[0] + '\', \'short' + version[0] + '\');">' + 
+               '</span>' +
+               '</div>';
+    return node;
+}
+
+function initVersionTree(lineage) {
+    //If this is not a clone or shadow, do nothing
+    if (getElement('versionTree') == null) {
+        return;
+    }
+
+    var verTree = new YAHOO.widget.TreeView('versionTree');
+    var root = verTree.getRoot();
+    for (var i in lineage) {
+        var node = buildHTMLNode(lineage[i]);
+        var newNode = new YAHOO.widget.HTMLNode(node, root, false, true);
+        root = newNode;
+    }
+    verTree.draw();
+}
+
 function swapDisplay(hideDiv, showDiv) {
     getElement(hideDiv).style.display = 'none';
     getElement(showDiv).style.display = '';
