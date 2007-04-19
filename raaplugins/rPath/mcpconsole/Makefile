@@ -10,7 +10,7 @@ SUBDIRS = web templates
 
 python_files = __init__.py
 
-kid_files = index.kid
+kid_files =
 
 extra_files = Makefile
 
