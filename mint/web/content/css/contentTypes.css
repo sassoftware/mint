@@ -208,6 +208,11 @@ table.pager {
 	border-top:1px #e6e6e6 solid;
 }
 
+.nottroveinfo td {
+    border-top-width: 0;
+    padding: 0 0 0 0;
+}
+
 .troveflavor {
         border-style: none;
 }
@@ -260,16 +265,16 @@ a.trove {
 
 .boldshadow {
 	background:url(../images/shadow.gif) no-repeat;
-    padding-right: 25px;
-    background-position: right;
+    padding-left: 25px;
+    background-position: left;
     vertical-align: center;
     font-weight: bold;
 }
 
 .shadow {
 	background:url(../images/shadow.gif) no-repeat;
-    padding-right: 25px;
-    background-position: right;
+    padding-left: 25px;
+    background-position: left;
     vertical-align: center;
 } 
 
