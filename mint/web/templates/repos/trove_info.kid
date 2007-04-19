@@ -138,51 +138,48 @@ else:
             <td>
             <span style="margin-right: 10px;" py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${component[0]};v=${component[1].freeze()}">${component[0]}</a> </span></td>
         </tr>
-        <tr>
-            <th>Flavors:</th>
+        <tr py:for="trove in troves">
+            <th>Flavor:</th>
             <td>
-                <div py:for="trove in troves" py:strip="True">
-                    <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency][0]}</span></div>
-                    <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
-                     <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
-                     <a style="font-weight: normal; text-decoration: underline;"
-                                       href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
-                    </div>
-                    <span  onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
-                        style="text-decoration: none; vertical-align: middle; cursor: pointer;">
-                        <img id="${trove.getFlavor().freeze()}_items_expander" style="vertical-align: middle;" 
-                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> Details
-                    </span>
-                    <table>
-                        <tbody style="display: none;" id="${trove.getFlavor().freeze()}_items">
-                            <tr>
-                                <th>Build time: </th>
-                                <td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td>
-                            </tr>
-                            <tr>
-                                <th>Provides: </th>
-                                <td>
-                                    <div py:for="dep in str(trove.provides.deps).split('\n')" title="${dep}">
-                                        ${truncateForDisplay(dep, maxWordLen = 36)}
-                                    </div>
-                                    <div py:if="not trove.provides.deps">
-                                        $title satisfies no dependencies.
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Requires: </th>
-                                <td>
-                                    <div py:for="dep in str(trove.requires.deps).split('\n')">${dep}</div>
-                                    <div py:if="not trove.requires.deps">
-                                        $title has no requirements.
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div py:if="len(troves) > 1" style="border-bottom:1px #e6e6e6 solid; margin-bottom: 15px; padding-bottom: 5px;" />
+                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency][0]}</span></div>
+                <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
+                 <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
+                 <a style="font-weight: normal; text-decoration: underline;"
+                                   href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
                 </div>
+                <span  onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
+                    style="text-decoration: none; vertical-align: middle; cursor: pointer;">
+                    <img id="${trove.getFlavor().freeze()}_items_expander" style="vertical-align: middle;" 
+                         src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /> Details
+                </span>
+                <table>
+                    <tbody style="display: none;" id="${trove.getFlavor().freeze()}_items">
+                        <tr>
+                            <th>Build time: </th>
+                            <td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td>
+                        </tr>
+                        <tr>
+                            <th>Provides: </th>
+                            <td>
+                                <div py:for="dep in str(trove.provides.deps).split('\n')" title="${dep}">
+                                    ${truncateForDisplay(dep, maxWordLen = 36)}
+                                </div>
+                                <div py:if="not trove.provides.deps">
+                                    $title satisfies no dependencies.
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Requires: </th>
+                            <td>
+                                <div py:for="dep in str(trove.requires.deps).split('\n')">${dep}</div>
+                                <div py:if="not trove.requires.deps">
+                                    $title has no requirements.
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </td>
         </tr>
         ${referencesLink(title, trove.getName(), trove.getVersion())}
