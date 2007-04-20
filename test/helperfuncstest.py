@@ -318,7 +318,7 @@ Much like Powdermilk Biscuits[tm]."""
                     newComment = '\n'.join(['' for x in comment.splitlines()])
                     line = line.replace(comment, newComment)
                 line = line.strip()
-                if line and line[-1] not in [';', '{', '}', '(', '[']:
+                if line and line[-1] not in [';', '{', '}', '(', '[', '+']:
                     broken = True
                     for tok in ('if', 'else', 'for', 'while', 'case',
                                 'default'):
