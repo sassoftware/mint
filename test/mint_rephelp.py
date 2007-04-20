@@ -9,6 +9,7 @@ import mysqlharness
 import rephelp
 import socket
 import sys
+import re
 import testsuite
 import urlparse
 
@@ -219,6 +220,21 @@ class MintApacheServer(rephelp.ApacheServer):
     def getMap(self):
         return { self.name: 'http://localhost:%d/conary/' %self.port }
 
+    def getIpAddresses(self):
+        # get my local IP addresses
+        ifconfig = os.popen('/sbin/ifconfig')
+        x = ifconfig.read()
+        ifconfig.close()
+
+        ips = []
+        addrMatch = re.compile(".*inet addr:([\d\.]+)\s+.*")
+        for l in x.split("\n"):
+            m = addrMatch.match(l)
+            if m:
+                ips.append(m.groups()[0])
+
+        return ips
+
     def getMintCfg(self):
         # write Mint configuration
         conaryPath = os.environ.get("CONARY_PATH", "")
@@ -258,6 +274,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.imagesPath = self.reposDir + '/images/'
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
+        cfg.localAddrs = self.getIpAddresses()
 
 #        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
         cfg.configured = True

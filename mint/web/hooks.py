@@ -173,7 +173,7 @@ def conaryHandler(req, cfg, pathInfo):
     requireSigs = cfg.requireSigs
     if auth[0] == cfg.authUser:
         # forbid access to the local user from any ip but localhost
-        if req.connection.remote_ip != '127.0.0.1':
+        if req.connection.remote_ip not in cfg.localAddrs:
             return apache.HTTP_FORBIDDEN
         # don't require signatures for the internal user (this would break
         # group builder)

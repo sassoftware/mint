@@ -178,6 +178,7 @@ class MintConfig(ConfigFile):
     requireSigs             = (cfgtypes.CfgBool, None,
                                "Require that all commits to local "
                                "repositories be signed by an OpenPGP key.")
+    localAddrs              = (cfgtypes.CfgList(cfgtypes.CfgString), ['127.0.0.1'])
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
