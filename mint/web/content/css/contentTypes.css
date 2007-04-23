@@ -265,16 +265,16 @@ a.trove {
 
 .boldshadow {
 	background:url(../images/shadow.gif) no-repeat;
-    padding-left: 25px;
-    background-position: left;
+    padding-right: 25px;
+    background-position: right;
     vertical-align: center;
     font-weight: bold;
 }
 
 .shadow {
 	background:url(../images/shadow.gif) no-repeat;
-    padding-left: 25px;
-    background-position: left;
+    padding-right: 25px;
+    background-position: right;
     vertical-align: center;
 } 
 
