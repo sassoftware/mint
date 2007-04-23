@@ -144,7 +144,7 @@ else:
                 <?python
                     shortFlavor = flavorWrap(reducedFlavors[trove.getFlavor()])
                     if not shortFlavor:
-                        instList = [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency]
+                        instList =  [x.getName() for x in trove.getFlavor().iterDepsByClass(deps.deps.InstructionSetDependency)]
                         if len(instList):
                             shortFlavor = instList[0]
                 ?>
