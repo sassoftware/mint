@@ -141,7 +141,14 @@ else:
         <tr py:for="trove in troves">
             <th>Flavor:</th>
             <td>
-                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${flavorWrap(reducedFlavors[trove.getFlavor()]) or [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency][0]}</span></div>
+                <?python
+                    shortFlavor = flavorWrap(reducedFlavors[trove.getFlavor()])
+                    if not shortFlavor:
+                        instList = [x for x in trove.getFlavor().getDepClasses().values() if type(x) == deps.deps.InstructionSetDependency]
+                        if len(instList):
+                            shortFlavor = instList[0]
+                ?>
+                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${shortFlavor}</span></div>
                 <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
                  <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                  <a style="font-weight: normal; text-decoration: underline;"
