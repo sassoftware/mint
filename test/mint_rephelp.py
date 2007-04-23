@@ -127,7 +127,7 @@ mintCfg = None
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
             conaryPath, repMap, useCache = False, requireSigs = False,
-            authCheck = None, entCheck = None, readOnlyRepository = False):
+            authCheck = None, entCheck = None, readOnlyRepository = False, serverIdx = 0):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
 
@@ -136,7 +136,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.securePort = testsuite.findPorts(num = 1)[0]
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
-                                      requireSigs, authCheck, entCheck, False)
+                                      requireSigs, authCheck, entCheck, False, serverIdx)
 
         self.needsPGPKey = False
 
