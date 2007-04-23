@@ -82,7 +82,7 @@ from mint.rmakeconstants import supportedApiVersions \
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [1, 2]
+SERVER_VERSIONS = [1, 2, 3]
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
@@ -693,7 +693,13 @@ class MintServer(object):
     @private
     def getProject(self, id):
         self._filterProjectAccess(id)
-        return self.projects.get(id)
+        project = self.projects.get(id)
+
+        if self.clientVer < 3:
+            del project['isAppliance']
+
+        return project
+
 
     @typeCheck(str)
     @private
