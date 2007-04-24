@@ -11,6 +11,7 @@ from mint import constants
 import htmlentitydefs
 import re
 import time
+import urlparse
 
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
@@ -184,3 +185,15 @@ def fromDatabaseTimestamp(timeStamp):
 
     return (time.mktime(time.strptime(timeStamp, '%Y%m%d%H%M%S')) - \
             (time.daylight and time.altzone or time.timezone))
+
+def getUrlHost(url):
+    """
+    Given a URL, pull out the hostname only.
+    """
+    host = urlparse.urlparse(url)[1]
+    if '@' in host:
+        host = host[host.find('@')+1:]
+    if ':' in host:
+        host = host[:host.find(':')]
+    return host
+
