@@ -29,53 +29,63 @@ class MirrorOutbound(MirrorScript):
 
     def action(self):
         client = MintClient(sys.argv[1])
-        cfg = mirror.MirrorConfiguration()
-        cfg.entitlementDirectory = None
 
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
-        mirroredLabels = client.getOutboundMirrors()
+        outboundMirrors = client.getOutboundMirrors()
 
-        for label in mirroredLabels:
-            outboundMirrorId, projectId, sourceLabels, targetUrl, \
-                targetUser, targetPass, mirrorAll, recurse, matchStrings, order = label
-            projectId = int(projectId)
-            sourceProject = client.getProject(projectId)
+        for outboundMirrorId, sourceProjectId, targetLabels, \
+                allLabels, recurse, matchStrings, order in outboundMirrors:
+
+            cfg = mirror.MirrorFileConfiguration()
+            cfg.entitlementDirectory = None
+            cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
+
+            sourceProject = client.getProject(int(sourceProjectId))
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
             self.log.info("Mirroring %s" % sourceProject.name)
+
 
             try:
                 labelStr, _, sourceUser, sourcePass  = \
                           client.getLabel(sourceLabelId)
                 reposHost = versions.Label(labelStr).getHost()
-                sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
-
-                cfg.target.repositoryMap = client.getFullRepositoryMap()
-                cfg.target.repositoryMap.update({reposHost: targetUrl})
-                cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
-
-                cfg.source.repositoryMap = cfg.target.repositoryMap.copy()
-                cfg.source.repositoryMap.update({reposHost: sourceUrl})
-                cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
-
                 cfg.host = reposHost
+                sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
+                repositoryMap = client.getFullRepositoryMap()
 
-                if mirrorAll:
+                if allLabels:
                     cfg.labels = []
                 else:
-                    cfg.labels = [versions.Label(labelStr) for labelStr in sourceLabels.split(" ")]
-
+                    cfg.labels = [versions.Label(labelStr) for labelStr in targetLabels.split(" ")]
                 cfg.configLine('matchTroves ' + ' '.join(matchStrings))
 
-                cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
+                sourceRepos = None
+                targetRepos = []
 
-                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                      cfg.target.user,
-                                      entitlementDir = cfg.entitlementDirectory)
+                sourceCfg = cfg.setSection("source")
+                sourceCfg.repositoryMap = repositoryMap.copy()
+                sourceCfg.repositoryMap.update({reposHost: sourceUrl})
+                sourceCfg.user.addServerGlob(reposHost, sourceUser, sourcePass)
+                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory)
 
-                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                      cfg.source.user,
-                                      entitlementDir = cfg.entitlementDirectory)
+                for _, targetUrl, targetUser, targetPass in \
+                        client.getOutboundMirrorTargets(outboundMirrorId):
+                    if cfg.hasSection("target"):
+                        targetCfg = cfg.setSection("target%d" % targetOrdinal)
+                    else:
+                        targetCfg = cfg.setSection("target")
+                    targetCfg = cfg.setSection("target")
+                    targetCfg.repositoryMap = repositoryMap.copy()
+                    targetCfg.repositoryMap.update({reposHost: targetUrl})
+                    targetCfg.user.addServerGlob(reposHost, targetUser, targetPass)
+                    t = netclient.NetworkRepositoryClient(targetCfg.repositoryMap, targetCfg.user, entitlementDir = cfg.entitlementDirectory)
+                    targetRepos.append(t)
+
+                if not targetRepos:
+                    self.log.warning("Skipping mirror of %s; no targets specified" % \
+                            sourceProject.name)
+                    continue
 
                 tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
                 if os.access(tmpDir, os.W_OK):

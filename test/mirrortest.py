@@ -21,7 +21,7 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
-debug = False
+debug = True
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
@@ -153,15 +153,17 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
         self.db.commit()
 
-        # do the mirror
-        self.inboundMirror()
+        try:
+            # do the mirror
+            self.inboundMirror()
 
-        exclude = re.compile("test[34567]")
+            exclude = re.compile("test[34567]")
 
-        # compare
-        targetRepos = ConaryClient(project.getConaryConfig()).getRepos()
-        self.compareRepositories(sourceRepos, targetRepos, exclude = exclude)
-        self.stopRepository(1)
+            # compare
+            targetRepos = ConaryClient(project.getConaryConfig()).getRepos()
+            self.compareRepositories(sourceRepos, targetRepos, exclude = exclude)
+        finally:
+            self.stopRepository(1)
 
     def testInboundMirrorMultipleLabels(self):
         global runTest
@@ -194,12 +196,14 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.db.commit()
 
         # do the mirror
-        self.inboundMirror()
 
         # compare
-        targetRepos = ConaryClient(project.getConaryConfig()).getRepos()
-        self.compareRepositories(sourceRepos, targetRepos)
-        self.stopRepository(1)
+        try:
+            self.inboundMirror()
+            targetRepos = ConaryClient(project.getConaryConfig()).getRepos()
+            self.compareRepositories(sourceRepos, targetRepos)
+        finally:
+            self.stopRepository(1)
 
     def testOutboundMirror(self):
         global runTest
@@ -219,9 +223,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         projectId = self.newProject(client, "Mirrored Project", "localhost")
         project = client.getProject(projectId)
         outboundMirrorId = client.addOutboundMirror(projectId,
-                ["localhost.rpath.local2@rpl:devel"],
-                "http://localhost:%s/conary/" % targetPort,
-                "mirror", "mirror", allLabels = True)
+                ["localhost.rpath.local2@rpl:devel"], allLabels = True)
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort, "mirror", "mirror")
 
         # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
@@ -235,14 +239,16 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                 ["-test0", '+.*'])
         exclude = re.compile("test0")
 
-        # do the mirror
-        self.outboundMirror()
+        try:
+            # do the mirror
+            self.outboundMirror()
 
-        # compare
-        self.compareRepositories(sourceRepos, targetRepos,
-                                 base = "localhost.rpath.local2",
-                                 exclude = exclude)
-        self.stopRepository(1)
+            # compare
+            self.compareRepositories(sourceRepos, targetRepos,
+                                     base = "localhost.rpath.local2",
+                                     exclude = exclude)
+        finally:
+            self.stopRepository(1)
 
     def testOutboundMirrorAllLabels(self):
         global runTest
@@ -262,9 +268,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         projectId = self.newProject(client, "Mirrored Project", "localhost")
         project = client.getProject(projectId)
         outboundMirrorId = client.addOutboundMirror(projectId,
-                ["localhost.rpath.local2@rpl:devel"],
-                "http://localhost:%s/conary/" % targetPort,
-                "mirror", "mirror", allLabels = False)
+                ["localhost.rpath.local2@rpl:devel"], allLabels = False)
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort, "mirror", "mirror")
 
         # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
@@ -274,14 +280,16 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
         self.createTroves(sourceRepos, 3, 5)
 
-        # do the mirror
-        self.outboundMirror()
+        try:
+            # do the mirror
+            self.outboundMirror()
 
-        # compare -- only troves from rpl:devel should exist on the target
-        self.compareRepositories(sourceRepos, targetRepos,
-                                 base = "localhost.rpath.local2",
-                                 onlyLabel = "localhost.rpath.local2@rpl:devel")
-        self.stopRepository(1)
+            # compare -- only troves from rpl:devel should exist on the target
+            self.compareRepositories(sourceRepos, targetRepos,
+                                     base = "localhost.rpath.local2",
+                                     onlyLabel = "localhost.rpath.local2@rpl:devel")
+        finally:
+            self.stopRepository(1)
 
     def testOutboundMirrorSomeLabels(self):
         global runTest
@@ -301,9 +309,11 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         projectId = self.newProject(client, "Mirrored Project", "localhost")
         project = client.getProject(projectId)
         outboundMirrorId = client.addOutboundMirror(projectId,
-                ["localhost.rpath.local2@rpl:devel", "localhost.rpath.local2@rpl:other"],
-                "http://localhost:%s/conary/" % targetPort,
-                "mirror", "mirror", allLabels = False)
+                ["localhost.rpath.local2@rpl:devel",
+                    "localhost.rpath.local2@rpl:other"],
+                allLabels = False)
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort, "mirror", "mirror")
 
         # create troves on rpl:devel
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
@@ -313,13 +323,15 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
         self.createTroves(sourceRepos, 3, 5)
 
-        # do the mirror
-        self.outboundMirror()
+        try:
+            # do the mirror
+            self.outboundMirror()
 
-        # compare
-        self.compareRepositories(sourceRepos, targetRepos,
-                                 base = "localhost.rpath.local2")
-        self.stopRepository(1)
+            # compare
+            self.compareRepositories(sourceRepos, targetRepos,
+                                     base = "localhost.rpath.local2")
+        finally:
+            self.stopRepository(1)
 
 
     def testMirrorOffline(self):
