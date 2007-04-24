@@ -245,11 +245,16 @@ def conaryHandler(req, cfg, pathInfo):
     else:
         # it's completely external
         # use the Internal Conary Proxy if it's configured
-        if not domainName or domainName == cfg.projectDomainName:
+
+        # don't proxy stuff that should have been caught in the above if block
+        # XXX: if we had a better way to determine if a request has already been
+        # proxied, we could just interrupt here to prevent a proxy loop.
+        if req.hostname.endswith(cfg.projectDomainName.split(":")[0]) and not actualRepName:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         global proxy_repository
         if cfg.internalProxy:
+
             if proxy_repository:
                 repo = proxy_repository
             else:
