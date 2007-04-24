@@ -37,6 +37,8 @@ def enforceBuiltin(result):
     return failure
 
 def filteredCall(self, *args, **kwargs):
+    from mint.client import VERSION_STRING
+    args = [VERSION_STRING] + list(args)
     isException, result = self._server.callWrapper(self._name,
                                                    self._authToken, args)
 
