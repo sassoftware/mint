@@ -122,14 +122,13 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
         labels = adminClient.getOutboundMirrors()
         assert(labels ==
-                [[1, projectId, sourceLabel, 'http://www.example.com/conary/',
-                  'mirror', 'mirrorpass', False, False, [], 0]])
+                [[1, projectId, sourceLabel, False, False, [], 0]])
 
         adminClient.delOutboundMirror(1)
         labels = adminClient.getOutboundMirrors()
@@ -141,23 +140,21 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
-        assert(adminClient.getOutboundMirrors()[0][6] is False)
+        assert(adminClient.getOutboundMirrors()[0][3] is False)
         cu = db.cursor()
         cu.execute("UPDATE OutboundMirrors SET allLabels = 1")
         db.commit()
-        assert(adminClient.getOutboundMirrors()[0][6] is True)
+        assert(adminClient.getOutboundMirrors()[0][3] is True)
 
         cu.execute("DELETE FROM OutboundMirrors")
         db.commit()
 
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
-                "mirror", "mirrorpass", allLabels = True)
-        assert(adminClient.getOutboundMirrors()[0][6] is True)
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel], allLabels = True)
+        assert(adminClient.getOutboundMirrors()[0][3] is True)
 
     @fixtures.fixture("Full")
     def testOutboundMirrorRecurse(self, db, data):
@@ -165,22 +162,20 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-        assert(adminClient.getOutboundMirrors()[0][7] is False)
+        assert(adminClient.getOutboundMirrors()[0][4] is False)
         cu = db.cursor()
         cu.execute("UPDATE OutboundMirrors SET recurse = 1")
         db.commit()
-        assert(adminClient.getOutboundMirrors()[0][7] is True)
+        assert(adminClient.getOutboundMirrors()[0][4] is True)
 
         cu.execute("DELETE FROM OutboundMirrors")
         db.commit()
 
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
-                "mirror", "mirrorpass", recurse = True)
-        assert(adminClient.getOutboundMirrors()[0][7] is True)
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel], recurse = True)
+        assert(adminClient.getOutboundMirrors()[0][4] is True)
 
     @fixtures.fixture("Full")
     def testOutboundMatchInitial(self, db, data):
@@ -188,12 +183,10 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
-                "mirror", "mirrorpass")
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
 
         # ensure this doesn't raise ItemNotFound
-        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1), [],
+        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(omid), [],
                     "Listing empty matchTroves failed")
 
         # however, this should raise
@@ -205,11 +198,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
-                "mirror", "mirrorpass")
-
-        adminClient.setOutboundMirrorMatchTroves(1, ["-.*:source$"])
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.setOutboundMirrorMatchTroves(omid, ["-.*:source$"])
         self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1),
                 ["-.*:source$"])
 
@@ -219,12 +209,11 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-
-        adminClient.setOutboundMirrorMatchTroves(1, ['-.*:source$', '-.*:debuginfo$'])
-        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(1),
+        adminClient.setOutboundMirrorMatchTroves(omid, ['-.*:source$', '-.*:debuginfo$'])
+        self.failUnlessEqual(adminClient.getOutboundMirrorMatchTroves(omid),
                ['-.*:source$', '-.*:debuginfo$'])
 
     @fixtures.fixture("Full")
@@ -233,16 +222,16 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
-        adminClient.setOutboundMirrorMatchTroves(1,
+        adminClient.setOutboundMirrorMatchTroves(omid,
                                            ['-.*:source$', '-.*:debuginfo$'])
-        assert(adminClient.getOutboundMirrorMatchTroves(1) == \
+        assert(adminClient.getOutboundMirrorMatchTroves(omid) == \
                ['-.*:source$', '-.*:debuginfo$'])
 
-        adminClient.setOutboundMirrorMatchTroves(1,
+        adminClient.setOutboundMirrorMatchTroves(omid,
                                            ['-.*:debuginfo$', '-.*:source$' ])
         assert(adminClient.getOutboundMirrorMatchTroves(1) == \
                ['-.*:debuginfo$', '-.*:source$'])
@@ -254,21 +243,21 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient("admin")
         project = adminClient.getProject(projectId)
         sourceLabel = project.getLabel()
-        adminClient.addOutboundMirror(projectId, [sourceLabel],
-                "http://www.example.com/conary/",
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+        adminClient.addOutboundMirrorTarget(omid, "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
 
         self.assertRaises(mint_error.ParameterError,
                           adminClient.setOutboundMirrorMatchTroves,
-                          1, 'wrong')
+                          omid, 'wrong')
 
         self.assertRaises(mint_error.ParameterError,
                           adminClient.setOutboundMirrorMatchTroves,
-                          1, ['also_wrong'])
+                          omid, ['also_wrong'])
 
         for matchStr in ('+right', '-right'):
             # ensure no error is raised for properly formed params
-            adminClient.setOutboundMirrorMatchTroves(1, [matchStr])
+            adminClient.setOutboundMirrorMatchTroves(omid, [matchStr])
 
     @fixtures.fixture("Full")
     def testOutboundMirrorOrdering(self, db, data):
@@ -280,9 +269,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
             for id, order in zip(idList, orderList):
                 cu.execute("""INSERT INTO OutboundMirrors
-                    (outboundMirrorId, mirrorOrder, sourceProjectId, targetLabels,
-                     targetUrl)
-                    VALUES(?, ?, ?, "abcd", "asdf")""", id, order, data['projectId'])
+                    (outboundMirrorId, mirrorOrder, sourceProjectId, targetLabels)
+                    VALUES(?, ?, ?, "abcd")""", id, order, data['projectId'])
             db.commit()
 
         def _getOrder():
@@ -301,10 +289,51 @@ class LabelsTest(fixtures.FixturedUnitTest):
         adminClient.server._server.setOutboundMirrorOrder(3, 3)
         self.failUnlessEqual(_getOrder(), [(2, 0), (0, 1), (3, 2)])
 
-        newId = adminClient.addOutboundMirror(data['projectId'], ['frob'],
-            "http://www.example.com/conary/", "mirror", "mirrorpass")
+        newId = adminClient.addOutboundMirror(data['projectId'], ['frob'])
 
         self.failUnlessEqual(_getOrder(), [(2, 0), (0, 1), (3, 2), (newId, 3)])
+
+    @fixtures.fixture("Full")
+    def testOutboundMirrorTargets(self, db, data):
+        projectId = data['projectId']
+        adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel])
+
+        target1 = ['http://target1.example.com/conary/', 'mirroruser', 'mirrorpass']
+        target2 = ['http://target2.exmample.com/conary/', 'mirroruser2', 'mirrorpass2']
+
+        # add a target
+        target1Id = adminClient.addOutboundMirrorTarget(omid, *target1)
+
+        # verify it got put in
+        self.failUnlessEqual(adminClient.getOutboundMirrorTargets(omid),
+                [ [ target1Id ] + target1 ])
+
+        # add another target
+        target2Id = adminClient.addOutboundMirrorTarget(omid, *target2)
+
+        # verify it got put in, also
+        self.failUnlessEqual(adminClient.getOutboundMirrorTargets(omid),
+                [ [ target1Id ] + target1, [ target2Id ] + target2 ])
+
+        # delete the first target
+        adminClient.delOutboundMirrorTarget(target1Id)
+
+        # verify it got deleted
+        self.failUnlessEqual(adminClient.getOutboundMirrorTargets(omid),
+                [ [ target2Id ] + target2 ])
+
+        # now delete the whole mirror
+        adminClient.delOutboundMirror(omid)
+
+        self.assertRaises(database.ItemNotFound,
+                adminClient.getOutboundMirror, omid)
+
+        self.failIf(adminClient.getOutboundMirrorTargets(omid),
+                "Didn't delete all the mirror targets")
+
 
 
 if __name__ == "__main__":
