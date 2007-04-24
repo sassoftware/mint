@@ -42,6 +42,7 @@ class FakeRequest(object):
         self.content_type = 'text/xhtml'
         self.options = {}
         self.connection = Connection()
+        self.connection.local_ip = '127.0.0.1'
         self.uri = '/setup/'
 
     def log_error(self, msg):
