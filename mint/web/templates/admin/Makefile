@@ -10,6 +10,7 @@ kid_files =			\
 	frontPage.kid		\
 	external.kid		\
 	maintenance.kid		\
+	mirrortarget.kid	\
 	report.kid		\
 	outbound.kid		\
 	newUser.kid		\
