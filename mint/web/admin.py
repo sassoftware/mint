@@ -16,12 +16,15 @@ from mod_python import apache
 from mint import users
 from mint import mint_error
 from mint import maintenance
-from mint.helperfuncs import cleanseUrl
+from mint import mirror
+from mint.helperfuncs import cleanseUrl, getUrlHost
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from kid.pull import XML
 from conary import conarycfg, versions
+
+import simplejson
 
 class AdminHandler(WebHandler):
     def handle(self, context):
@@ -545,21 +548,27 @@ class AdminHandler(WebHandler):
         return orderHtml
 
     def outbound(self, *args, **kwargs):
-        columns = ["Project", "Labels Mirrored", "Target Repository", "Remove", "Order"]
-
         rows = []
         mirrors = self.client.getOutboundMirrors()
         for i, x in enumerate(mirrors):
-            outboundMirrorId, projectId, label, url, user, passwd, \
+            outboundMirrorId, projectId, label, \
                 allLabels, recurse, matchStrings, order = x
             project = self.client.getProject(projectId)
+            mirrorData = {}
+            mirrorData['id'] = outboundMirrorId
+            mirrorData['projectName'] = project.name
+            mirrorData['projectUrl'] = project.getUrl()
+            mirrorData['orderHTML'] = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
+            mirrorData['allLabels'] = allLabels
+            if not allLabels:
+                mirrorData['labels'] = label.split(' ')
+            mirrorData['targets'] = [ (x[0], getUrlHost(x[1])) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
+            mirrorData['ordinal'] = i
+            matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
+            mirrorData['mirrorSources'] = set(matchStrings) != set(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+            rows.append(mirrorData)
 
-            orderHtml = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
-            data = [(project.getUrl(), project.name), allLabels and "All Labels" or label,
-                url, XML('<input type="checkbox" name="remove" value="%d" />' % outboundMirrorId), orderHtml ]
-            rows.append({'columns': data})
-
-        return self._write('admin/outbound', rows = rows, columns = columns)
+        return self._write('admin/outbound', rows = rows)
 
     def addOutbound(self, *args, **kwargs):
         projects = self.client.getProjectsList()
@@ -571,34 +580,66 @@ class AdminHandler(WebHandler):
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
         except xmlrpclib.ProtocolError, e:
-            self._addErrors("""Protocol Error: %s (%d %s). Please be sure your
-                                  rPath Mirror is configured properly.""" % \
-                (cleanseUrl('https', e.url), e.errcode, e.errmsg))
+            safeUrl = cleanseUrl('https', e.url)
+            if e.errcode == 403:
+                self._addErrors("Username and/or password incorrect.")
+            else:
+                self._addErrors("""Protocol error: %s (%d %s). Please be sure your
+                                      rPath Mirror is configured properly.""" % \
+                    (safeUrl, e.errcode, e.errmsg))
         except socket.error, e:
-            self._addErrors("""%s. Please be sure your rPath Mirror
-                               is configured properly.""" % str(e))
-        else: 
+            self._addErrors("""Socket error: %s. Please be sure your rPath Mirror
+                               is configured properly.""" % str(e[1]))
+        else:
             if not res1 or not passwd:
                 self._addErrors("""An error occured configuring your rPath
                                    Mirror.""")
         return passwd
 
     @intFields(projectId = None)
-    @strFields(targetUrl = '', mirrorUser = '', mirrorPass = '')
     @boolFields(mirrorSources = False, allLabels = False)
-    def processAddOutbound(self, projectId, targetUrl, mirrorUser, mirrorPass,
-            mirrorSources, allLabels, *args, **kwargs):
+    def processAddOutbound(self, projectId, mirrorSources, allLabels, *args, **kwargs):
 
-        inputKwargs = {'projectId': projectId, 'targetUrl': targetUrl,
-            'mirrorUser': mirrorUser, 'mirrorPass': mirrorPass,
-            'mirrorSources': mirrorSources, 'allLabels': allLabels}
+        inputKwargs = {'projectId': projectId,
+            'mirrorSources': mirrorSources, 'allLabels': allLabels }
 
+        if not self._getErrors():
+            project =  self.client.getProject(projectId)
+            label = project.getLabel()
+            labelList = [label]
+            outboundMirrorId = self.client.addOutboundMirror(projectId,
+                    labelList, allLabels)
+            if not mirrorSources:
+                    self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                               mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+            self._redirect("http://%s%sadmin/outbound" %
+                (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self.addOutbound(**inputKwargs)
+
+    @intFields(id = -1)
+    def addOutboundMirrorTarget(self, id, *args, **kwargs):
+        om = self.client.getOutboundMirror(id)
+        targets = [ getUrlHost(x[1]) for x in self.client.getOutboundMirrorTargets(id) ]
+        project = self.client.getProject(om['sourceProjectId'])
+        return self._write("admin/mirrortarget",
+                projectName = project.name,
+                targets = targets,
+                outboundMirrorId = id, kwargs = kwargs)
+
+    @intFields(outboundMirrorId = -1)
+    @strFields(targetUrl = '', mirrorUser = '', mirrorPass = '')
+    def processAddOutboundMirrorTarget(self, outboundMirrorId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
         if not mirrorUser:
-            self._addErrors("rAA username must be specified")
+            self._addErrors("Missing Update Service Username")
         if not mirrorPass:
-            self._addErrors("rAA user password must be specified")
+            self._addErrors("Missing Update Service Password")
         if not targetUrl:
-            self._addErrors("Target FQDN must be specified")
+            self._addErrors("Missing Update Service Hostname")
+
+        inputKwargs = {'id': outboundMirrorId,
+                       'targetUrl': targetUrl, 'mirrorUser': mirrorUser,
+                       'mirrorPass': mirrorPass}
 
         urltype, mirrorUrl = urllib.splittype(targetUrl)
         if not urltype:
@@ -606,31 +647,65 @@ class AdminHandler(WebHandler):
         mirrorUrl, ignoreMe = urllib.splithost(mirrorUrl)
 
         if not self._getErrors():
-            project = self.client.getProject(projectId)
+            om = self.client.getOutboundMirror(outboundMirrorId)
+            project = self.client.getProject(om['sourceProjectId'])
+            targetHosts = [ getUrlHost(x[1]) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
+            if mirrorUrl in targetHosts:
+                self._addErrors("This outbound mirror is already configured to mirror to %s" % mirrorUrl)
+
+        if not self._getErrors():
             servername = self.client.translateProjectFQDN(project.getFQDN())
             user = '%s-%s' % (servername, mirrorUrl)
             sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/" % (mirrorUser, mirrorPass, mirrorUrl))
             passwd = self._updateMirror(user, servername, sp)
 
         if not self._getErrors():
-            project = self.client.getProject(projectId)
-            label = project.getLabel()
-            outboundMirrorId = self.client.addOutboundMirror(projectId, [label], 'https://%s/conary/' % mirrorUrl, user, passwd, allLabels)
-            if not mirrorSources:
-                self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                                                   ["-.*:source", "-.*:debuginfo",
-                                                    "+.*"])
+            outboundMirrorTargetId = self.client.addOutboundMirrorTarget(outboundMirrorId, 'https://%s/conary/' % mirrorUrl, user, passwd)
+            self._redirect("http://%s%sadmin/outbound" %
+                (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self.addOutboundMirrorTarget(**inputKwargs)
 
+    @intFields(id = -1)
+    def removeOutboundMirrorTarget(self, id, *args, **kwargs):
+        omt = self.client.getOutboundMirrorTarget(id)
+        om = self.client.getOutboundMirror(omt['outboundMirrorId'])
+        project = self.client.getProject(om['sourceProjectId'])
+        message = 'Delete target %s for outbound mirrored project %s?' % \
+                (getUrlHost(omt['url']), project.name)
+        noLink = 'outbound'
+        yesArgs = {'func': 'processRemoveOutboundMirrorTarget', 'id': id}
+        return self._write('confirm', message=message, noLink=noLink,
+                           yesArgs=yesArgs)
+
+    @intFields(id = -1)
+    def processRemoveOutboundMirrorTarget(self, id, *args, **kwargs):
+        try:
+            self.client.delOutboundMirrorTarget(id)
+        except:
+            self._addErrors("Failed to delete outbound mirror target")
+
+        self._redirect("http://%s%sadmin/outbound" %
+            (self.cfg.siteHost, self.cfg.basePath))
+
+    @listFields(int, remove = [])
+    @boolFields(confirmed = False)
+    def removeOutbound(self, remove, confirmed, **yesArgs):
+        if confirmed:
+            remove = simplejson.loads(yesArgs['removeJSON'])
+            for outboundMirrorId in remove:
+                self.client.delOutboundMirror(int(outboundMirrorId))
             self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
         else:
-            return self.addOutbound(**inputKwargs)
-
-    @listFields(str, remove = [])
-    def removeOutbound(self, remove, *args, **kwargs):
-        outbound = self.client.getOutboundMirrors()
-        for ids in remove:
-            self.client.delOutboundMirror(int(ids))
-        self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+            if not remove:
+                self._addErrors("No outbound mirrors to delete.")
+                self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+            message = 'Are you sure you want to remove the outbound mirror(s)?'
+            noLink = 'outbound'
+            yesArgs = {'func': 'removeOutbound', 'confirmed': 1,
+                    'removeJSON': simplejson.dumps(remove)}
+            return self._write('confirm', message=message, noLink=noLink,
+                               yesArgs=yesArgs)
 
     def maintenance(self, *args, **kwargs):
         return self._write('admin/maintenance', kwargs = kwargs)

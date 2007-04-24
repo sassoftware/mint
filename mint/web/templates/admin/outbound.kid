@@ -18,12 +18,27 @@
                 <h2>Outbound Mirrored Projects</h2>
                 <p class="help">
                     You can select projects in ${cfg.productName} to be mirrored out to
-                    an external Conary repository.
+                    an external Conary repository or Update Service.
                 </p>
 
-                <table cellspacing="0" cellpadding="0" class="results">
-                    ${columnTitles(columns)}
-                    ${searchResults(rows)}
+                <table py:if="rows" cellspacing="0" cellpadding="0" class="results">
+                    <tr>
+                        <th>Project</th>
+                        <th>Targets</th>
+                        <th>Include Sources</th>
+                        <th>Order</th>
+                        <th>Remove</th>
+                    </tr>
+                    <div py:strip="True" py:for="data in rows">
+                        <tr>
+                            <td><a href="${data.get('projectUrl')}">${data.get('projectName')}</a><br /><div style="font-size: smaller;"><span py:if="data.get('allLabels')" py:strip="True">All Labels</span><div py:for="l in data.get('labels', [])" py:strip="True">${l}<br /></div></div></td>
+                            <td style="font-size: smaller;"><div py:if="not data.get('targets', [])" style="color: red;">No targets defined</div><div py:for="tId, tUrl in data.get('targets', [])">${tUrl} <a href="removeOutboundMirrorTarget?id=${tId}">(delete)</a><br /></div><a href="addOutboundMirrorTarget?id=${data.get('id')}">Add target...</a></td>
+                            <td py:content="data.get('mirrorSources') and 'Yes' or 'No'" />
+                            <td py:content="data.get('orderHTML')" />
+                            <td><input type="checkbox" name="remove" value="${data.get('id')}" /></td>
+                        </tr>
+                    </div>
+
                 </table>
                 <button py:if="rows" style="float: right;" type="submit" name="operation" value="remove_outbound">Remove Selected</button>
             </form>

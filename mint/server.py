@@ -240,6 +240,7 @@ def getTables(db, cfg):
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
+    d['outboundMirrorTargets'] = mirror.OutboundMirrorTargetsTable(db)
     d['outboundMirrors'] = mirror.OutboundMirrorsTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
@@ -3590,30 +3591,46 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
     @private
-    @typeCheck(int, (list, str), str, str, str, bool, bool)
+    @typeCheck(int, (list, str), bool, bool)
     @requiresAdmin
-    def addOutboundMirror(self, sourceProjectId, targetLabels, targetUrl,
-            targetUsername, targetPassword, allLabels, recurse):
+    def addOutboundMirror(self, sourceProjectId, targetLabels,
+            allLabels, recurse):
         cu = self.db.cursor()
         cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM OutboundMirrors")
         mirrorOrder = cu.fetchone()[0]
-
         return self.outboundMirrors.new(sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
-                                       targetUrl = targetUrl,
-                                       targetUsername = targetUsername,
-                                       targetPassword = targetPassword,
                                        allLabels = allLabels,
                                        recurse = recurse,
                                        mirrorOrder = mirrorOrder)
 
     @private
+    @typeCheck(int, str, str, str)
+    @requiresAdmin
+    def addOutboundMirrorTarget(self, outboundMirrorId, url, username, password):
+        return self.outboundMirrorTargets.new(outboundMirrorId = outboundMirrorId,
+                                              url = url,
+                                              username = username,
+                                              password = password)
+
+    @private
     @typeCheck(int)
     @requiresAdmin
     def delOutboundMirror(self, outboundMirrorId):
+        # XXX sqlite doesn't obey cascading deletes
+        if self.cfg.dbDriver == 'sqlite':
+            cu = self.db.cursor()
+            cu.execute("""DELETE FROM OutboundMirrorTargets WHERE
+                          outboundMirrorId = ?""", outboundMirrorId)
         self.outboundMirrors.delete(outboundMirrorId)
         self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
         return True
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
+        return self.outboundMirrorTargets.delete(outboundMirrorTargetId)
 
     @private
     @typeCheck(int, (list, str))
@@ -3639,10 +3656,35 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getOutboundMirrors(self):
         cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorId, sourceProjectId, targetLabels,
-                        targetUrl, targetUsername, targetPassword,
-                        allLabels, recurse, matchStrings, mirrorOrder FROM OutboundMirrors ORDER BY mirrorOrder""")
-        return [list(x[:6]) + [bool(x[6]), bool(x[7]), x[8].split(), x[9]] for x in cu.fetchall()]
+        cu.execute("""SELECT outboundMirrorId, sourceProjectId,
+                        targetLabels, allLabels, recurse,
+                        matchStrings, mirrorOrder
+                        FROM OutboundMirrors
+                        ORDER by mirrorOrder""")
+        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), x[6]] \
+                for x in cu.fetchall()]
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getOutboundMirror(self, outboundMirrorId):
+        return self.outboundMirrors.get(outboundMirrorId)
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
+        return self.outboundMirrorTargets.get(outboundMirrorTargetId)
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT outboundMirrorTargetsId, url, username, password
+                        FROM OutboundMirrorTargets
+                        WHERE outboundMirrorId = ?""", outboundMirrorId)
+        return [ list(x) for x in cu.fetchall() ]
 
     @private
     @typeCheck(int)
@@ -3938,7 +3980,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     def getHttpProxies(self):
-        return self._getHttpProxies()
+        return self._getHttpProxies() or {}
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

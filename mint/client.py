@@ -535,10 +535,17 @@ class MintClient:
                 sourceUrl, sourceUsername, sourcePassword, allLabels)
 
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            targetUrl, targetUsername, targetPassword,
             allLabels = False, recurse = False):
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
-                targetUrl, targetUsername, targetPassword, allLabels, recurse)
+                allLabels, recurse)
+
+    def addOutboundMirrorTarget(self, outboundMirrorId, targetUrl,
+            mirroruser, mirrorpass):
+        return self.server.addOutboundMirrorTarget(outboundMirrorId,
+                targetUrl, mirroruser, mirrorpass)
+
+    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
+        return self.server.delOutboundMirrorTarget(outboundMirrorTargetId)
 
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
@@ -559,6 +566,15 @@ class MintClient:
 
     def getOutboundMirrors(self):
         return self.server.getOutboundMirrors()
+
+    def getOutboundMirror(self, outboundMirrorId):
+        return self.server.getOutboundMirror(outboundMirrorId)
+
+    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
+        return self.server.getOutboundMirrorTarget(outboundMirrorTargetId)
+
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        return self.server.getOutboundMirrorTargets(outboundMirrorId)
 
     def getOutboundMirrorMatchTroves(self, outboundMirrorId):
         return self.server.getOutboundMirrorMatchTroves(outboundMirrorId)

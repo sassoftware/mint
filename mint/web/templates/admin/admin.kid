@@ -15,7 +15,7 @@
             <li py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
             <li py:attrs="{'class': (lastchunk in ('newUser', 'processNewUser')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/newUser">Create User Account</a></li>
             <li py:attrs="{'class': (lastchunk in ('external', 'addExternal', 'processAddExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Externally-Managed Projects</a></li>
-            <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
+            <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound', 'addOutboundMirrorTarget')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
             <li py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
             <li py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
