@@ -21,7 +21,7 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
-debug = True
+debug = False
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
@@ -102,7 +102,11 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
             return l
 
-        self.cfg.user.remove(("*", "test", "foo"))
+        try:
+            self.cfg.user.remove(("*", "test", "foo"))
+        except ValueError:
+            pass
+
         troveD1 = repos1.getTroveVersionList(base, { None : None })
 
         troveD2 = repos2.getTroveVersionList(base, { None : None })
@@ -249,6 +253,64 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                                      exclude = exclude)
         finally:
             self.stopRepository(1)
+
+    def testOutboundMirrorMultipleTargets(self):
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        # set up the target repositories
+        targetRepos1 = self.openRepository(1,
+                                          serverName = "localhost.rpath.local2")
+        targetPort1 = self.servers.getServer(1).port
+
+        targetRepos2 = self.openRepository(2,
+                                          serverName = "localhost.rpath.local2")
+        targetPort2 = self.servers.getServer(2).port
+
+        self.createMirrorUser(targetRepos1, "localhost.rpath.local2@rpl:devel")
+        self.createMirrorUser(targetRepos2, "localhost.rpath.local2@rpl:devel")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:devel")
+
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        outboundMirrorId = client.addOutboundMirror(projectId,
+                ["localhost.rpath.local2@rpl:devel"],
+                allLabels = True)
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort1, "mirror", "mirror")
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort2, "mirror", "mirror")
+
+        # create troves on rpl:devel
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 2)
+
+        # create some troves on a different label
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
+        self.createTroves(sourceRepos, 3, 5)
+
+        client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                ["-test0", '+.*'])
+        exclude = re.compile("test0")
+
+        try:
+            # do the mirror
+            self.outboundMirror()
+
+            # compare
+            self.compareRepositories(sourceRepos, targetRepos1,
+                                     base = "localhost.rpath.local2",
+                                     exclude = exclude)
+            self.compareRepositories(sourceRepos, targetRepos2,
+                                     base = "localhost.rpath.local2",
+                                     exclude = exclude)
+        finally:
+            self.stopRepository(1)
+            self.stopRepository(2)
 
     def testOutboundMirrorAllLabels(self):
         global runTest
