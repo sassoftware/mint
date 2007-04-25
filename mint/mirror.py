@@ -9,6 +9,7 @@ from mint import scriptlibrary
 
 import os
 import sys
+import optparse
 import traceback
 
 EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo", "+.*"]
@@ -178,6 +179,8 @@ class RepNameMapTable(database.DatabaseTable):
 class MirrorScript(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = None
+    options = None
+    args = None
 
     def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
         self.cfg = config.MintConfig()
@@ -187,14 +190,63 @@ class MirrorScript(scriptlibrary.SingletonScript):
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
 
     def handle_args(self):
-        if len(sys.argv) < 2:
+        usage = "%prog [options] rbuilder-xml-rpc-url"
+        op = optparse.OptionParser(usage=usage)
+        op.add_option("-v", "--verbose", action = "store_true",
+                dest = "verbose", default = False,
+                help = "show detailed mirroring output")
+        op.add_option("--full-sig-sync", action = "store_true",
+                dest = "syncSigs", default = False,
+                help = "replace all of the trove signatures on the "
+                       "target repository")
+        op.add_option("--full-trove-sync", action = "store_true",
+                dest = "sync", default = False,
+                help = "ignore the last-mirrored timestamp in the "
+                       "target repository")
+        op.add_option("--show-mirror-cfg", action = "store_true",
+                dest = "showConfig", default = False,
+                help = "print generated mirror configs to stdout")
+        (self.options, self.args) = op.parse_args()
+        if len(self.args) < 1:
+            op.error("missing URL to rBuilder XML-RPC interface")
             return False
         return True
-
-    def usage(self):
-        print "usage: %s <url to rBuilder server>" % self.name
-        return 1
 
     def logTraceback(self):
         tb = traceback.format_exc()
         [self.log.error(x) for x in tb.split("\n") if x.strip()]
+
+    def _doMirror(self, mirrorCfg, sourceRepos, targetRepos):
+
+        from conary.conaryclient import mirror
+        from conary.lib import util
+
+        if self.options.showConfig:
+            print >> sys.stdout, "-- Start Mirror Configuration File --"
+            mirrorCfg.display()
+            sys.stdout.flush()
+            print >> sys.stdout, "-- End Mirror Configuration File --"
+
+        # set the correct tmpdir to use
+        tmpDir = os.path.join(self.cfg.dataPath, 'tmp')
+        if os.access(tmpDir, os.W_OK):
+            util.settempdir(tmpDir)
+            self.log.info("Using %s as tmpDir" % tmpDir)
+        else:
+            self.log.warning("Using system temporary directory")
+
+        # first time through, we should pass in sync options;
+        # subsequent passes should use the mirror marks
+        passNumber = 1
+        self.log.info("Beginning pass %d" % passNumber)
+        callAgain = mirror.mirrorRepository(sourceRepos, targetRepos,
+            mirrorCfg, sync = self.options.sync,
+            syncSigs = self.options.syncSigs)
+        self.log.info("Completed pass %d" % passNumber)
+
+        while callAgain:
+            passNumber += 1
+            self.log.info("Beginning pass %d" % passNumber)
+            callAgain = mirror.mirrorRepository(sourceRepos,
+                targetRepos, mirrorCfg)
+            self.log.info("Completed pass %d" % passNumber)

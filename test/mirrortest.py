@@ -21,7 +21,7 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
-debug = False
+debug = True
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
@@ -47,7 +47,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         assert(os.access(mirrorScript, os.X_OK))
 
         if debug:
-            os.system("%s %s" % (mirrorScript, url))
+            os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
         else:
             self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 
@@ -58,7 +58,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
         assert(os.access(mirrorScript, os.X_OK))
         if debug:
-            os.system("%s %s" % (mirrorScript, url))
+            os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
         else:
             self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 

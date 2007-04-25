@@ -28,7 +28,7 @@ class MirrorOutbound(MirrorScript):
     logFileName = "mirror-outbound.log"
 
     def action(self):
-        client = MintClient(sys.argv[1])
+        client = MintClient(self.args[0])
 
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
@@ -89,13 +89,7 @@ class MirrorOutbound(MirrorScript):
                             sourceProject.name)
                     continue
 
-                tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
-                if os.access(tmpDir, os.W_OK):
-                    util.settempdir(tmpDir)
-
-                while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
-                                              False):
-                    pass
+                self._doMirror(cfg, sourceRepos, targetRepos)
 
             except Exception, e:
                 self.log.error("Exception mirroring %s" % sourceProject.name)
