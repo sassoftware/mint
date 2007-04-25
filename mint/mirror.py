@@ -224,8 +224,8 @@ class MirrorScript(scriptlibrary.SingletonScript):
         if self.options.showConfig:
             print >> sys.stdout, "-- Start Mirror Configuration File --"
             mirrorCfg.display()
-            sys.stdout.flush()
             print >> sys.stdout, "-- End Mirror Configuration File --"
+            sys.stdout.flush()
 
         # set the correct tmpdir to use
         tmpDir = os.path.join(self.cfg.dataPath, 'tmp')
