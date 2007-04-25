@@ -77,7 +77,6 @@ class MirrorOutbound(MirrorScript):
                         targetCfg = cfg.setSection("target%d" % targetOrdinal)
                     else:
                         targetCfg = cfg.setSection("target")
-                    targetCfg = cfg.setSection("target")
                     targetCfg.repositoryMap = repositoryMap.copy()
                     targetCfg.repositoryMap.update({reposHost: targetUrl})
                     targetCfg.user.addServerGlob(reposHost, targetUser, targetPass)
