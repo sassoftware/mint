@@ -77,16 +77,17 @@ class MirrorInbound(MirrorScript):
                 if os.access(tmpDir, os.W_OK):
                     util.settempdir(tmpDir)
 
-                count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                         False, False)
-                while count:
-                    count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                             False, False)
+                while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False, False):
+                    pass
+
             except Exception, e:
                 self.log.error("Exception occurred mirroring %s" % targetProject.name)
                 self.logTraceback()
 
         return 0
+
+    def cleanup(self):
+        self.log.info("Inbound mirror script finished")
 
 if __name__ == "__main__":
     mi = MirrorInbound()

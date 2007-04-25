@@ -96,10 +96,14 @@ class MirrorOutbound(MirrorScript):
                 while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
                                               False):
                     pass
+
             except Exception, e:
                 self.log.error("Exception mirroring %s" % sourceProject.name)
                 self.logTraceback()
         return 0
+
+    def cleanup(self):
+        self.log.info("Outbound mirror script finished")
 
 if __name__ == "__main__":
     mo = MirrorOutbound()
