@@ -48,7 +48,8 @@ else:
                 </tr>
                 <tr>
             <th>Version:</th>
-            <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <td><div id="shortVersion"><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
@@ -120,7 +121,8 @@ else:
         </tr>
         <tr>
             <th>Version:</th>
-            <td><div id="shortVersion" ><span class="expand" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}</span></div><div id="longVersion" style="display: none;"><span class="collapse" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}</span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <td><div id="shortVersion" ><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
@@ -148,8 +150,8 @@ else:
                         if len(instList):
                             shortFlavor = instList[0]
                 ?>
-                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span class="expand" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${shortFlavor}</span></div>
-                <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span class="collapse" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}</span></div>
+                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span style="cursor: pointer;" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${shortFlavor}<img style="padding-left: 10px; cursor: pointer;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
+                <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div>
                  <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                  <a style="font-weight: normal; text-decoration: underline;"
                                    href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
