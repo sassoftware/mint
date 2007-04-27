@@ -9,12 +9,13 @@ import sys
 import os
 from os import _exit
 
-from conary.conaryclient import mirror
 from conary import versions
-from conary.repository import netclient
+from conary.conaryclient import mirror, getProxyFromConfig
 from conary.lib import util, log
+from conary.repository import netclient
 
 from mint import config
+from mint import helperfuncs
 from mint.client import MintClient
 from mint.mirror import MirrorScript
 
@@ -31,6 +32,8 @@ class MirrorInbound(MirrorScript):
         client = MintClient(self.args[0])
         cfg = mirror.MirrorConfiguration()
         cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
+
+        proxy = mintCfg.proxy
 
         mirroredLabels = client.getInboundMirrors()
 
@@ -63,15 +66,15 @@ class MirrorInbound(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-                cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
-
                 sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
                                           cfg.source.user,
-                                          entitlementDir = cfg.entitlementDirectory)
+                                          entitlementDir = cfg.entitlementDirectory,
+                                          proxy = proxy)
 
                 targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                           cfg.target.user,
-                                          entitlementDir = cfg.entitlementDirectory)
+                                          entitlementDir = cfg.entitlementDirectory,
+                                          proxy = proxy)
 
 
                 self._doMirror(cfg, sourceRepos, targetRepos)

@@ -13,12 +13,13 @@ import sys
 import os
 from os import _exit
 
-from conary.conaryclient import mirror
+from conary.conaryclient import mirror, getProxyFromConfig
 from conary import versions
 from conary.repository import netclient
 from conary.lib import util, log
 
 from mint import config
+from mint import helperfuncs
 from mint.client import MintClient
 from mint.mirror import MirrorScript
 
@@ -34,17 +35,18 @@ class MirrorOutbound(MirrorScript):
         mintCfg.read(config.RBUILDER_CONFIG)
         outboundMirrors = client.getOutboundMirrors()
 
+        # get proxy configuration here
+        proxy = mintCfg.proxy
+
         for outboundMirrorId, sourceProjectId, targetLabels, \
                 allLabels, recurse, matchStrings, order in outboundMirrors:
 
             cfg = mirror.MirrorFileConfiguration()
             cfg.entitlementDirectory = None
-            cfg.proxy = mintCfg.internalProxy or mintCfg.proxy
 
             sourceProject = client.getProject(int(sourceProjectId))
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
             self.log.info("Mirroring %s" % sourceProject.name)
-
 
             try:
                 labelStr, _, sourceUser, sourcePass  = \
@@ -67,7 +69,8 @@ class MirrorOutbound(MirrorScript):
                 sourceCfg.repositoryMap = repositoryMap.copy()
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
                 sourceCfg.user.addServerGlob(reposHost, sourceUser, sourcePass)
-                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory)
+
+                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory, proxy = proxy)
 
                 targetOrdinal = 0
                 for _, targetUrl, targetUser, targetPass in \
@@ -80,7 +83,7 @@ class MirrorOutbound(MirrorScript):
                     targetCfg.repositoryMap = repositoryMap.copy()
                     targetCfg.repositoryMap.update({reposHost: targetUrl})
                     targetCfg.user.addServerGlob(reposHost, targetUser, targetPass)
-                    t = netclient.NetworkRepositoryClient(targetCfg.repositoryMap, targetCfg.user, entitlementDir = cfg.entitlementDirectory)
+                    t = netclient.NetworkRepositoryClient(targetCfg.repositoryMap, targetCfg.user, entitlementDir = cfg.entitlementDirectory, proxy = proxy)
                     targetRepos.append(t)
 
                 if not targetRepos:
