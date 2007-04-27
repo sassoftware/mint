@@ -656,7 +656,7 @@ class AdminHandler(WebHandler):
         if not self._getErrors():
             servername = self.client.translateProjectFQDN(project.getFQDN())
             user = '%s-%s' % (servername, mirrorUrl)
-            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/" % (mirrorUser, mirrorPass, mirrorUrl))
+            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (mirrorUser, mirrorPass, mirrorUrl))
             passwd = self._updateMirror(user, servername, sp)
 
         if not self._getErrors():
