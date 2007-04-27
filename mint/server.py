@@ -1717,16 +1717,32 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return False
 
         repoMaps = self._getFullRepositoryMap()
-        fd, fname = tempfile.mkstemp()
-        os.close(fd)
-        f = open(fname, 'w')
-        for host, url in repoMaps.iteritems():
-            f.write('repositoryMap %s %s\n' % (host, url))
-        f.close()
-        util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-        util.copyfile(fname, self.cfg.conaryRcFile)
-        os.unlink(fname)
-        os.chmod(self.cfg.conaryRcFile, 0644)
+
+        try:
+            fd, fname = tempfile.mkstemp()
+            os.close(fd)
+            f = open(fname, 'w')
+            for host, url in repoMaps.iteritems():
+                f.write('repositoryMap %s %s\n' % (host, url))
+            f.close()
+            util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
+            util.copyfile(fname, self.cfg.conaryRcFile)
+            os.chmod(self.cfg.conaryRcFile, 0644)
+
+            # add proxy stuff for version 1 config clients
+            v1config = self.cfg.conaryRcFile + "-v1"
+            f = open(fname, 'a+')
+            for proto in ['http', 'https']:
+                stringMap = { 'proto': proto,
+                              'host': self.cfg.hostName,
+                              'domain': self.cfg.siteDomainName }
+                f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+            f.close()
+            util.copyfile(fname, v1config)
+            os.chmod(v1config, 0644)
+
+        finally:
+            os.unlink(fname)
 
     @requiresAuth
     @private
