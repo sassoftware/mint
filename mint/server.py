@@ -56,7 +56,7 @@ from mint.flavors import stockFlavors
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
+from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 
 from mcp import client as mcpClient
 from mcp import mcp_error
@@ -1689,13 +1689,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getFullRepositoryMap(self):
         cu = self.db.cursor()
-        res = cu.execute("""SELECT projectId from Projects
+        cu.execute("""SELECT projectId FROM Projects
                             WHERE hidden=0 AND disabled=0 AND
-                                (external=0 OR projectId IN (SELECT targetprojectId FROM InboundMirrors))""")
+                                (external=0 OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         repoMap = {}
         for x in projs:
             repoMap.update(self.labels.getLabelsForProject(x[0])[1])
+
+        # for external projects where rBuilder isn't using the default
+        # repositoryMap, put this in conaryrc.generated too:
+        cu.execute("""SELECT projectId FROM Projects WHERE external=1
+            AND NOT (projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
+        projs = cu.fetchall()
+        for x in projs:
+            l = self.labels.getLabelsForProject(x[0])
+            label = versions.Label(l[0].keys()[0])
+            host = getUrlHost(l[1].values()[0])
+
+            if label.getHost() != host:
+                repoMap.update(l[1])
+
         return repoMap
 
     def _generateConaryRcFile(self):

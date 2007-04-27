@@ -500,7 +500,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         f.close()
 
         contents = contents.replace("rpath.local2", MINT_PROJECT_DOMAIN)
-        return x == contents
+        self.failUnlessEqual(set(x.split("\n")), set(contents.split("\n")))
 
     @fixtures.fixture("Empty")
     def testConaryRc(self, db, data):
@@ -508,13 +508,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient = self.getClient('admin')
 
         hideProjId = client.newProject('Proj', 'proj', 'rpath.local')
-        assert(self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % PFQDN) )
+        self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % PFQDN)
 
         adminClient.hideProject(hideProjId)
-        assert(self._checkRepoMap(''))
+        self._checkRepoMap('')
 
         client.newProject('Baz', 'baz', 'rpath.local')
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN))
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN)
 
         # one regular project, one hidden project, one external project
         reposUrl = 'http://bar.rpath.local/conary/'
@@ -523,13 +523,24 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                                    'bar.rpath.local@rpl:devel',
                                                     reposUrl)
         # only the regular project will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN))
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN)
+
+        # another external project with a repository map:
+        adminClient.newExternalProject('Wobble', 'wobble',
+                                       'rpath.local',
+                                       'wobble.rpath.com@rpl:devel',
+                                       'http://wobble-commits.rpath.com/conary/')
+
+        # this external project will show up:
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
+                           'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n' % PFQDN)
 
         # two regular projects, one external project, not mirrored
         adminClient.unhideProject(hideProjId)
         # both regular projects will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\nrepositoryMap proj.rpath.local http://%s/repos/proj/\n' %\
-            (PFQDN, PFQDN)))
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
+                           'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n'
+                           'repositoryMap proj.rpath.local http://%s/repos/proj/\n' % (PFQDN, PFQDN))
 
         exProject = client.getProject(exProjectId)
         # two regular projects, one external project, mirrored
@@ -537,10 +548,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
             "http://www.example.com/conary/",
             "mirror", "mirrorpass")
         # all projects will show up
-        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
-                                  'repositoryMap proj.rpath.local http://%s/repos/proj/\n'
-                                  'repositoryMap bar.rpath.local http://bar.rpath.local/conary/\n' % \
-                                  (PFQDN, PFQDN)))
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
+                           'repositoryMap proj.rpath.local http://%s/repos/proj/\n'
+                           'repositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'
+                           'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n' % \
+                           (PFQDN, PFQDN))
 
     @fixtures.fixture('Full')
     def testGenConaryRc(self, db, data):
