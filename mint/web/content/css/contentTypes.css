@@ -201,6 +201,7 @@ table.pager {
 	font-weight:normal; color:#999;
 	border-top:1px #e6e6e6 solid;
 	padding:6px 12px 6px 0px;
+    width: 1%;
 }
 .troveinfo td {
 	font-weight:normal;
@@ -264,17 +265,17 @@ a.trove {
 } 
 
 .boldshadow {
-	background:url(../images/shadow.gif) no-repeat;
+/*	background:url(../images/shadow.gif) no-repeat;
     padding-right: 25px;
-    background-position: right;
+    background-position: right;*/
     vertical-align: center;
     font-weight: bold;
 }
 
 .shadow {
-	background:url(../images/shadow.gif) no-repeat;
+/*	background:url(../images/shadow.gif) no-repeat;
     padding-right: 25px;
-    background-position: right;
+    background-position: right; */
     vertical-align: center;
 } 
 

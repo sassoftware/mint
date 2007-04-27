@@ -35,13 +35,13 @@ function buildHTMLNode (version) {
                nameShort +
                '<span class="expand" onclick="swapDisplay(\'short' + 
                version[0] + '\', \'long' + version[0] + '\');">' + 
-               '</span>' +
+               ' ' + '</span>' +
                '</div>' +
                '<div id="long' + version[0] + '" style="display: none;">' +
                nameLong +
                '<span class="collapse" onclick="swapDisplay(\'long' +
                version[0] + '\', \'short' + version[0] + '\');">' + 
-               '</span>' +
+               ' ' + '</span>' +
                '</div>';
     return node;
 }

@@ -22,12 +22,13 @@ log.setVerbosity(log.DEBUG)
 
 class MirrorInbound(MirrorScript):
     logFileName = "mirror-inbound.log"
+    options = None
 
     def action(self):
         mintCfg = config.MintConfig()
         mintCfg.read(config.RBUILDER_CONFIG)
 
-        client = MintClient(sys.argv[1])
+        client = MintClient(self.args[0])
         cfg = mirror.MirrorConfiguration()
         cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
 
@@ -72,21 +73,17 @@ class MirrorInbound(MirrorScript):
                                           cfg.target.user,
                                           entitlementDir = cfg.entitlementDirectory)
 
-                # set the correct tmpdir to use
-                tmpDir = os.path.join(mintCfg.dataPath, 'tmp')
-                if os.access(tmpDir, os.W_OK):
-                    util.settempdir(tmpDir)
 
-                count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                         False, False)
-                while count:
-                    count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
-                                             False, False)
+                self._doMirror(cfg, sourceRepos, targetRepos)
+
             except Exception, e:
                 self.log.error("Exception occurred mirroring %s" % targetProject.name)
                 self.logTraceback()
 
         return 0
+
+    def cleanup(self):
+        self.log.info("Inbound mirror script finished")
 
 if __name__ == "__main__":
     mi = MirrorInbound()

@@ -214,10 +214,8 @@ class ConaryHandler(WebHandler):
             proj = self.client.getProjectByFQDN(extVer.getHost())
             hostname = proj.getHostname()
         except database.ItemNotFound:
-            for x in self.projectList:
-                if versions.Label(x[0].getLabel()).getHost() == extVer.getHost():
-                    hostname = x[0].getHostname()
-                    break
+            pass
+
         if hostname:
             return "../%s/troveInfo?t=%s;v=%s" % (hostname, troveName, quote(extVer.asString()))
         else:
