@@ -28,6 +28,7 @@ from mint import database
 from mint import dbversion
 from mint import ec2
 from mint import grouptrove
+from mint import helperfuncs
 from mint import jobs
 from mint import jobstatus
 from mint import maintenance
@@ -405,7 +406,7 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
         # use a shimclient for mint-handled repositories; netclient if not
-        if project.external:
+        if project.external and not self.isLocalMirror(project.id):
             cfg = project.getConaryConfig()
             conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
             if os.path.exists(conarycfgFile):
@@ -454,10 +455,12 @@ class MintServer(object):
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
 
+            cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
+
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
                 cfg.repositoryMap, cfg.user,
-                conaryProxies=self._getHttpProxies())
+                conaryProxies=conaryclient.getProxyFromConfig(cfg))
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -570,8 +573,13 @@ class MintServer(object):
             pass
         return False
 
-    def _getHttpProxies(self):
-        return self.cfg.internalProxy or self.cfg.proxy
+    def _getProxies(self):
+        useInternalConaryProxy = self.cfg.useInternalConaryProxy
+        if useInternalConaryProxy:
+            httpProxies = {}
+        else:
+            httpProxies = self.cfg.proxy or {}
+        return [ useInternalConaryProxy, httpProxies ]
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
@@ -4009,8 +4017,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return (code in expectedCodes)
 
     @private
-    def getHttpProxies(self):
-        return self._getHttpProxies() or {}
+    def getProxies(self):
+        return self._getProxies()
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

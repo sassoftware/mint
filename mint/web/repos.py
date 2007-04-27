@@ -23,7 +23,7 @@ import simplejson
 from mint import database
 from mint import mint_error
 from mint import userlevels
-from mint.helperfuncs import splitVersionForDisplay
+from mint import helperfuncs
 from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
@@ -206,7 +206,7 @@ class ConaryHandler(WebHandler):
         else:
             shortVersion =  '%s/%s' % (version.trailingLabel(), 
                                   str(version.trailingRevision().getVersion()))
-        return splitVersionForDisplay(str(version)), shortVersion
+        return helperfuncs.splitVersionForDisplay(str(version)), shortVersion
         
     def _calculateLink(self, extVer, troveName):
         hostname = ''
@@ -700,14 +700,16 @@ class ConaryHandler(WebHandler):
 
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        cfg.proxy = self.cfg.internalProxy or self.cfg.proxy
+        cfg = helperfuncs.configureClientProxies(cfg,
+                self.cfg.useInternalConaryProxy, self.cfg.proxy)
 
         if 'repServer' not in self.__dict__:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
-                                       cfg.user, conaryProxies=cfg.proxy)
+                                       cfg.user,
+                                       conaryProxies=conaryclient.getProxyFromConfig(cfg))
 
         try:
             method = self.__getattribute__(self.cmd)

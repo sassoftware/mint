@@ -253,7 +253,7 @@ def conaryHandler(req, cfg, pathInfo):
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         global proxy_repository
-        if cfg.internalProxy:
+        if cfg.useInternalConaryProxy:
 
             if proxy_repository:
                 repo = proxy_repository
@@ -266,11 +266,7 @@ def conaryHandler(req, cfg, pathInfo):
                 # set a proxy (if it was configured)
                 proxycfg.proxy = cfg.proxy
 
-                # ASSUMPTION: we will configure http and https proxy
-                # to be the same for internal proxies
-                proxyhost = urllib.splitport(urllib.splithost(urllib.splittype(cfg.internalProxy['http'])[1])[0])[0]
-
-                urlBase = "%%(protocol)s://%s:%%(port)d" % proxyhost
+                urlBase = "%(protocol)s://localhost:%(port)d"
                 repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
                 repo.forceSecure = False
                 proxy_repository = repo

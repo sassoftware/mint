@@ -197,3 +197,29 @@ def getUrlHost(url):
         host = host[:host.find(':')]
     return host
 
+LOCAL_CONARY_PROXIES = { 'http': 'http://localhost',
+                         'https': 'https://localhost' }
+def configureClientProxies(conaryCfg, useInternalConaryProxy,
+        httpProxies={}, internalConaryProxies=LOCAL_CONARY_PROXIES):
+
+    from conary import conarycfg
+    from mint import config
+
+    if not conaryCfg:
+        conaryCfg = conarycfg.ConaryConfiguration()
+
+    if useInternalConaryProxy:
+        if 'conaryProxy' in conaryCfg:
+            # >= 1.1.24
+            conaryCfg.conaryProxy = internalConaryProxies
+        elif 'proxy' in conaryCfg:
+            # 1.1.17 <=> 1.1.23
+            conaryCfg.proxy = internalConaryProxies
+        else:
+            # noop
+            pass
+    else:
+        if 'proxy' in conaryCfg:
+            conaryCfg.proxy = httpProxies
+
+    return conaryCfg

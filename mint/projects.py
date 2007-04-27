@@ -11,7 +11,7 @@ import time
 from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse
+        hostPortParse, configureClientProxies
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
@@ -158,8 +158,10 @@ class Project(database.TableObject):
                 cfg.user.addServerGlob(server, auth[0], auth[1])
 
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
-        cfg.proxy = self.server.getHttpProxies()
 
+        useInternalConaryProxy, httpProxies = self.server.getProxies()
+        cfg = helperfuncs.configureClientProxies(cfg, useInternalConaryProxy,
+                httpProxies)
         return cfg
 
     def addLabel(self, label, url, username="", password=""):

@@ -161,11 +161,11 @@ class MintConfig(ConfigFile):
 
     # By default this is set to OFF. Default configuration file
     # shipped with rBuilder will turn this on for rBuilder Appliances
-    internalProxy           = CfgProxy
+    useInternalConaryProxy  = (cfgtypes.CfgBool, False)
 
     # Upstream proxy for all servers to use (i.e. to get beyond
     # the firewall -- not to be confused with the internal Conary
-    # caching proxy
+    # caching proxy)
     proxy                   = CfgProxy
 
     # Miscellany proxy configuration -- shouldn't ever change

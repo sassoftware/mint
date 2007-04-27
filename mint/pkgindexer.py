@@ -5,6 +5,7 @@
 #
 from mint import config
 from mint import database
+from mint import helperfuncs
 from mint import projects
 from mint import scriptlibrary
 from mint import server
@@ -199,7 +200,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
                     # only add user/pass if both are set
                     if auth[0] and auth[1]:
                         ccfg.user.addServerGlob(server, auth[0], auth[1])
-            ccfg.proxy = self.cfg.internalProxy or self.cfg.proxy
+            ccfg = helperfuncs.configureClientProxies(ccfg,
+                    self.cfg.useInternalConaryProxy, self.cfg.proxy)
             repos = conaryclient.ConaryClient(ccfg).getRepos()
             netclients[hostname] = repos
 
