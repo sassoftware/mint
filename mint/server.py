@@ -460,7 +460,7 @@ class MintServer(object):
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
                 cfg.repositoryMap, cfg.user,
-                conaryProxies=conaryclient.getProxyFromConfig(cfg))
+                conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
 
     # unfortunately this function can't be a proper decorator because we

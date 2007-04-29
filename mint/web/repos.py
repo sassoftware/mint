@@ -31,12 +31,13 @@ from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFoun
 from mint.web.decorators import ownerOnly
 
 from conary import checkin
+from conary import conaryclient
 from conary.deps import deps
 from conary.lib import sha1helper
 from conary import versions
 from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
-from conary import conaryclient
+from conary import conarycfg
 from conary import errors as conaryerrors
 
 class ConaryHandler(WebHandler):
@@ -709,7 +710,7 @@ class ConaryHandler(WebHandler):
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
                                        cfg.user,
-                                       conaryProxies=conaryclient.getProxyFromConfig(cfg))
+                                       conaryProxies=conarycfg.getProxyFromConfig(cfg))
 
         try:
             method = self.__getattribute__(self.cmd)
