@@ -1745,6 +1745,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                               'host': self.cfg.hostName,
                               'domain': self.cfg.siteDomainName }
                 f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+            self.cfg.displayKey('proxy', out=f)
             f.close()
             util.copyfile(fname, v1config)
             os.chmod(v1config, 0644)
