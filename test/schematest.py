@@ -12,6 +12,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, server
 from mint import buildtypes
+from mint import mirror
 from conary import dbstore
 from conary import sqlite3
 from conary import versions
@@ -144,6 +145,79 @@ class UpgradePathTest(MintRepositoryHelper):
         build.refresh()
         self.failIf(not build.getDataValue('vmSnapshots'),
                     "vmSnapshots data value behaves incorrectly")
+
+    def testSchemaVersionThirtyFour(self):
+        # create a project and and admin user
+        client, userId = self.quickMintAdmin('admin', 'admin')
+        projectIds = []
+        projectIds.append(self.newProject(client, "test 1", "test1"))
+        projectIds.append(self.newProject(client, "test 2", "test2"))
+
+        # recreate old OutboundMirrors table structure
+        self.forceSchemaVersion(34)
+
+        cu = self.db.cursor()
+        cu.execute("DROP TABLE OutboundMirrorTargets")
+        cu.execute("DROP TABLE OutboundMirrors")
+        cu.execute("""CREATE TABLE OutboundMirrors (
+                outboundMirrorId %(PRIMARYKEY)s,
+                sourceProjectId  INT NOT NULL,
+                targetLabels     VARCHAR(767) NOT NULL,
+                targetUrl        VARCHAR(767) NOT NULL,
+                targetUsername   VARCHAR(254),
+                targetPassword   VARCHAR(254),
+                allLabels        INT NOT NULL DEFAULT 0,
+                recurse          INT NOT NULL DEFAULT 0,
+                matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
+                mirrorOrder      INT DEFAULT 0,
+                CONSTRAINT OutboundMirrors_sourceProjectId_fk
+                    FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
+                    ON DELETE CASCADE ON UPDATE CASCADE
+            ) %(TABLEOPTS)s""" % self.db.keywords)
+
+        cu.execute("""INSERT INTO OutboundMirrors
+            VALUES(1, ?, 'test1.elsewhere.com@rpl:mirror',
+                'http://mirror.elsewhere.com/conary/',
+                'mirrorUser', 'mirrorPassword', 0, 0,
+                '', 0)""", projectIds[0])
+        cu.execute("""INSERT INTO OutboundMirrors
+            VALUES(2, ?, 'test2.elsewhere.com@rpl:mirror',
+                'http://mirror.elsewhere.com/conary/',
+                'mirrorUser', 'mirrorPassword', 1, 0,
+                ?, 1)""", projectIds[1],
+                ' '.join(mirror.EXCLUDE_SOURCE_MATCH_TROVES))
+        self.db.commit()
+
+        # trigger migration
+        newServer = server.MintServer(self.mintCfg, alwaysReload = True)
+        if self.mintCfg.dbDriver == 'sqlite':
+            self.db.dbh.close()
+            self.db = dbstore.connect(self.mintCfg.dbPath,
+                    self.mintCfg.dbDriver)
+        #client.server._server = newServer
+        client = self.openMintClient(('admin', 'admin'))
+
+        om = client.getOutboundMirror(1)
+        omTargets = client.getOutboundMirrorTargets(1)
+
+        self.assertEqual(om['targetLabels'],
+                "test1.elsewhere.com@rpl:mirror")
+        self.assertEqual(om['allLabels'], 0)
+        self.assertEqual(len(omTargets), 1)
+        self.assertEqual(omTargets[0][1],
+                'http://mirror.elsewhere.com/conary/')
+        om = client.getOutboundMirror(2)
+        omTargets = client.getOutboundMirrorTargets(2)
+
+        self.assertEqual(om['targetLabels'],
+                "test2.elsewhere.com@rpl:mirror")
+        self.assertEqual(om['allLabels'], 1)
+        self.assertEqual(len(omTargets), 1)
+        self.assertEqual(omTargets[0][1],
+                'http://mirror.elsewhere.com/conary/')
+        self.assertEqual(client.getOutboundMirrorMatchTroves(1), [])
+        self.assertEqual(client.getOutboundMirrorMatchTroves(2),
+                mirror.EXCLUDE_SOURCE_MATCH_TROVES)
 
     def testDbBumpVersion(self):
         client, userId = self.quickMintAdmin('admin', 'passwd')

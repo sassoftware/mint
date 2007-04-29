@@ -112,7 +112,12 @@ class OutboundMirrorsTable(database.KeyedTable):
                               FROM OutboundMirrors ORDER BY mirrorOrder ASC""")
                 outboundMirrors = cu.fetchall()
                 cu.execute("""DROP TABLE OutboundMirrors""")
+
+                # Create the OutboundMirrors and OutboundMirrorTargets tables
                 cu.execute(self.createSQL % self.db.keywords)
+                omtTable = OutboundMirrorTargetsTable(self.db)
+                del omtTable
+
                 for om in outboundMirrors:
                     cu.execute("""INSERT INTO OutboundMirrors
                         (outboundMirrorId, sourceProjectId, targetLabels,
