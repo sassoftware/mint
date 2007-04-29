@@ -101,11 +101,11 @@ class UsersTable(database.KeyedTable):
                     salt            %(BINARY4)s NOT NULL,
                     passwd          %(BINARY254)s NOT NULL,
                     email           CHAR(128),
-                    displayEmail    TEXT DEFAULT '',
+                    displayEmail    TEXT,
                     timeCreated     DOUBLE,
                     timeAccessed    DOUBLE,
                     active          INT,
-                    blurb           TEXT DEFAULT ''
+                    blurb           TEXT
                     )"""
 
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',

@@ -236,7 +236,7 @@ class ProjectsTable(database.KeyedTable):
                     hostname        varchar(128) UNIQUE,
                     domainname      varchar(128) DEFAULT '' NOT NULL,
                     projecturl      varchar(128) DEFAULT '' NOT NULL,
-                    description     text NOT NULL DEFAULT '',
+                    description     text,
                     disabled        INT DEFAULT 0,
                     hidden          INT DEFAULT 0,
                     external        INT DEFAULT 0,
