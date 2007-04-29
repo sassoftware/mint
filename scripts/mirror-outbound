@@ -13,7 +13,7 @@ import sys
 import os
 from os import _exit
 
-from conary.conaryclient import mirror, getProxyFromConfig
+from conary.conaryclient import mirror
 from conary import versions
 from conary.repository import netclient
 from conary.lib import util, log
