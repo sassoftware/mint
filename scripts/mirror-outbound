@@ -70,7 +70,7 @@ class MirrorOutbound(MirrorScript):
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
                 sourceCfg.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory, proxy = proxy)
+                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory)
 
                 targetOrdinal = 0
                 for _, targetUrl, targetUser, targetPass in \

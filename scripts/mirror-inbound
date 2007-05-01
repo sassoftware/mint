@@ -73,8 +73,7 @@ class MirrorInbound(MirrorScript):
 
                 targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                           cfg.target.user,
-                                          entitlementDir = cfg.entitlementDirectory,
-                                          proxy = proxy)
+                                          entitlementDir = cfg.entitlementDirectory)
 
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
