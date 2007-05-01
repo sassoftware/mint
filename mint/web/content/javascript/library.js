@@ -216,13 +216,6 @@ function processGetCookStatus(aReq) {
     cookStatus = evalJSONRequest(aReq);
     updateStatusArea(cookStatus);
 
-}
-
-function processGetBuildStatus(aReq) {
-
-    logDebug("[JSON] response: ", aReq.responseText);
-    buildStatus = evalJSONRequest(aReq);
-    updateStatusArea(buildStatus);
 
 }
 
@@ -335,22 +328,29 @@ function processListActiveJobs(aReq) {
 function getBuildStatus(buildId) {
     var req = new JsonRpcRequest("jsonrpc/", "getBuildStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetBuildStatus);
-    req.send(false, [buildId]);
-    if (buildStatus != null) {
-        if (oldBuildStatus == STATUS_UNKNOWN) {
+
+    var processGetBuildStatus = function(aReq) {
+        logDebug("[JSON] response: ", aReq.responseText);
+        buildStatus = evalJSONRequest(aReq);
+        updateStatusArea(buildStatus);
+
+        if (buildStatus != null) {
+            if (oldBuildStatus == STATUS_UNKNOWN) {
+                oldBuildStatus = buildStatus.status;
+            }
+            if (buildStatus.status < STATUS_FINISHED) {
+                callLater(buildStatusRefreshTime / 1000, partial(getBuildStatus, buildId));
+            } else {
+                logDebug("oldBuildStatus: " + oldBuildStatus);
+                if (oldBuildStatus < STATUS_FINISHED) {
+                    reloadCallback();
+                }
+            }
             oldBuildStatus = buildStatus.status;
         }
-        if (buildStatus.status < STATUS_FINISHED) {
-            buildStatusId = setTimeout("getBuildStatus("+buildId+")", buildStatusRefreshTime);
-        } else {
-            logDebug("oldBuildStatus: " + oldBuildStatus);
-            if (oldBuildStatus < STATUS_FINISHED) {
-                reloadCallback();
-            }
-        }
-        oldBuildStatus = buildStatus.status;
     }
+    req.setCallback(processGetBuildStatus);
+    req.send(true, [buildId]);
 }
 
 function getCookStatus(jobId) {
