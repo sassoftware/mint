@@ -505,7 +505,7 @@ class ProjectHandler(WebHandler):
                     versions.Label(basictroves.baseConaryLabel))
 
                 cfg.dbPath = cfg.root = ":memory:"
-                cfg.proxy = self.cfg.internalProxy
+                cfg.proxy = self.cfg.proxy
                 cclient = conaryclient.ConaryClient(cfg)
 
                 spec = conaryclient.cmdline.parseTroveSpec(trvName)
