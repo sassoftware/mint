@@ -102,6 +102,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.refresh()
         assert(project.getProjectUrl() == "")
 
+        self.failUnlessEqual(project.commitEmail, "")
+        project.setCommitEmail("commit@email.com")
+        project.refresh()
+        self.failUnlessEqual(project.commitEmail, "commit@email.com")
+
     @fixtures.fixture("Full")
     def testGetProjects(self, db, data):
         client = self.getClient("owner")

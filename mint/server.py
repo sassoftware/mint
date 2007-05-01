@@ -1045,6 +1045,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                     description = desc, name = name,
                                     isAppliance = applianceValue)
 
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def setProjectCommitEmail(self, projectId, commitEmail):
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+
+        return self.projects.update(projectId, commitEmail = commitEmail)
+
     @typeCheck(int)
     @requiresAdmin
     @private

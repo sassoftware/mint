@@ -66,12 +66,6 @@
                         <li><a href="${mailhost + '../pipermail/' + list.name}"
                                  class="option" target="_NEW">Archives</a>
                         </li>
-                        <li py:if="auth.authorized">
-                            <a class="option" href="subscribe?list=${list.name}">Subscribe</a>
-                        </li>
-                        <li py:if="not auth.authorized">
-                            <a class="option" href="${mailhost + 'listinfo/' + list.name}">Subscribe</a>
-                        </li>
                         <li py:if="isOwner">
                             <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
                         </li>
@@ -84,36 +78,6 @@
                     </ul>
                 </div>
                 <div py:if="not (lists or isRPL)">This project has no lists.</div>
-                <h3 py:if="isOwner and not isRPL">Create a New Mailing List</h3>
-
-                <form py:if="isOwner and not isRPL" name="createList" action="$basePath/createList" method="POST">
-                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
-                        <tr>
-                            <th><em class="required">List Name:</em></th>
-                            <td>${hostname}-<input name="listname" type="text" /></td>
-                        </tr>
-                        <tr>
-                            <th>List Description:</th>
-
-                            <td><input name="description" type="text"/></td>
-                        </tr>
-                        <tr>
-                            <th>List Password:</th>
-                            <td><input name="listpw" type="password"/>
-                                <p class="help">
-                                    If you leave both password fields blank, a random password
-                                    will be generated and e-mailed to all project owners.
-                                </p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th>List Password<br/>(again):</th>
-                            <td><input name="listpw2" type="password"/></td>
-                        </tr>
-                    </table>
-                    <p><button type="submit">Create List</button></p>
-                </form>
             </div>
         </div>
     </body>

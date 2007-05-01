@@ -159,6 +159,7 @@ class UpgradePathTest(MintRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("DROP TABLE OutboundMirrorTargets")
         cu.execute("DROP TABLE OutboundMirrors")
+        cu.execute("DROP TABLE Projects")
         cu.execute("""CREATE TABLE OutboundMirrors (
                 outboundMirrorId %(PRIMARYKEY)s,
                 sourceProjectId  INT NOT NULL,

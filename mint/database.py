@@ -10,7 +10,7 @@ from conary.dbstore import sqlerrors
 
 from mint.mint_error import MintError
 
-CURRENT_SCHEMA_VERSION = 35
+CURRENT_SCHEMA_VERSION = 36
 
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):

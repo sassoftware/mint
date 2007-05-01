@@ -65,6 +65,14 @@
                                 <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>
                             </td>
                         </tr>
+                        <tr>
+                            <th>Repository Commits Email</th>
+                            <td>
+                                <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
+                                <p class="help">An email address to which Conary repository commit messages are sent to.</p>
+                            </td>
+                        </tr>
+
                     </table>
 
                     <button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>

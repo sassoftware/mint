@@ -497,12 +497,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'branch' : 'foo:bar'},
+                           'branch' : 'foo:bar',
+                           'commitEmail': 'email@example.com'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
-        assert(project.name == 'Bar')
-        assert(project.getLabel() == 'foo.' + MINT_PROJECT_DOMAIN + '@foo:bar')
+        self.failUnlessEqual(project.name, 'Bar')
+        self.failUnlessEqual(project.getLabel(), 'foo.' + MINT_PROJECT_DOMAIN + '@foo:bar')
+        self.failUnlessEqual(project.commitEmail, 'email@example.com')
 
     def testEditProjectBranch(self):
         client, userId = self.quickMintUser('foouser','foopass')

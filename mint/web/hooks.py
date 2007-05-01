@@ -91,7 +91,7 @@ def getRepositoryMap(cfg):
         return {}
 
 def getRepository(projectName, repName, dbName, cfg,
-        req, conaryDb, dbTuple, localMirror, requireSigs):
+        req, conaryDb, dbTuple, localMirror, requireSigs, commitEmail):
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -135,21 +135,24 @@ def getRepository(projectName, repName, dbName, cfg,
     repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
 
     if cfg.commitAction and not localMirror:
-        nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
-                                           'buildLabel': buildLabel,
-                                           'projectName': projectName,
-                                           'commitEmail': cfg.commitEmail,
-                                           'basePath' : cfg.basePath}
+        actionDict = {'repMap': repName + " " + repMapStr,
+                      'buildLabel': buildLabel,
+                      'projectName': projectName,
+                      'commitFromEmail': cfg.commitEmail,
+                      'commitEmail': commitEmail,
+                      'basePath' : cfg.basePath
+        }
+
+        nscfg.commitAction = cfg.commitAction % actionDict
+        if cfg.commitActionEmail and commitEmail:
+            nscfg.commitAction += " " + cfg.commitActionEmail % actionDict
     else:
         nscfg.commitAction = None
-
-    if req.hostname == "conary.digium.com":
-        nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --config-file /srv/rbuilder/conaryrc --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
 
     repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
         netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
-        
+
         if 'changesetCacheDir' in nscfg.keys():
             repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
         else:
@@ -196,7 +199,7 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     # resolve the conary repository names
-    projectHostName, projectId, actualRepName, external, localMirror = \
+    projectHostName, projectId, actualRepName, external, localMirror, commitEmail = \
             _resolveProjectRepos(db, hostName, domainName)
 
     # do not require signatures when committing to a local mirror
@@ -233,7 +236,7 @@ def conaryHandler(req, cfg, pathInfo):
         if not repositories.has_key(repHash):
             repo, shimRepo = getRepository(projectHostName, actualRepName,
                     dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath),
-                    localMirror, requireSigs)
+                    localMirror, requireSigs, commitEmail)
             if repo:
                 repo.dbTuple = (reposDBDriver, reposDBPath)
 
@@ -375,6 +378,7 @@ def _resolveProjectRepos(db, hostname, domainname):
     projectDomainName = None
     projectId = None
     actualRepName = possibleRepName = None
+    commitEmail = None
 
     if domainname:
         extraWhere = "AND domainname = '%s'" % domainname
@@ -382,15 +386,23 @@ def _resolveProjectRepos(db, hostname, domainname):
         extraWhere = ""
 
     # Determine if the project is local by checking the projects table
-    cu = db.cursor()
-    cu.execute("""SELECT projectId, domainname, external,
-                     EXISTS(SELECT * FROM InboundMirrors
-                     WHERE projectId=targetProjectId) AS localMirror
-                  FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
+    try:
+        cu = db.cursor()
+        cu.execute("""SELECT projectId, domainname, external,
+                         EXISTS(SELECT * FROM InboundMirrors
+                         WHERE projectId=targetProjectId) AS localMirror, commitEmail
+                      FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
+    except sqlerrors.CursorError:
+        # until schema migration hits, we won't have a commitEmail field
+        cu = db.cursor()
+        cu.execute("""SELECT projectId, domainname, external,
+                         EXISTS(SELECT * FROM InboundMirrors
+                         WHERE projectId=targetProjectId) AS localMirror, '' as commitEmail
+                      FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
     try:
         rs = cu.fetchone()
         if rs:
-            projectId, projectDomainName, external, localMirror = rs
+            projectId, projectDomainName, external, localMirror, commitEmail = rs
             projectHostName = hostname
             possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
 
@@ -434,7 +446,7 @@ def _resolveProjectRepos(db, hostname, domainname):
             apache.log_error(line, apache.APLOG_DEBUG)
         actualRepName = None
 
-    return projectHostName, projectId, actualRepName, external, localMirror
+    return projectHostName, projectId, actualRepName, external, localMirror, commitEmail
 
 
 def handler(req):

@@ -87,6 +87,7 @@ class MintConfig(ConfigFile):
     adminMail               = 'mint@rpath.org'
     newsRssFeed             = ''
     commitAction            = None
+    commitActionEmail       = None
     commitEmail             = None
     EnableMailLists         = (cfgtypes.CfgBool, False)
     MailListBaseURL         = 'http://lists.rpath.org/mailman/'

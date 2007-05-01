@@ -920,8 +920,9 @@ class ProjectHandler(WebHandler):
     @strFields(listname=None, description='', listpw='', listpw2='')
     @mailList
     def createList(self, auth, mlists, listname, description, listpw, listpw2):
-        if not self.cfg.EnableMailLists:
-            raise mailinglists.MailingListException("Mail Lists Disabled")
+        # no new lists may be created as of 05/01/2007
+        raise mailinglists.MailingListException("Mail Lists Disabled")
+
         if listpw == listpw2:
             members = self.project.getMembers()
             owners = []
@@ -993,6 +994,7 @@ class ProjectHandler(WebHandler):
     def editProject(self, auth):
         kwargs = {
             'projecturl': self.project.getProjectUrl(),
+            'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
             'desc': self.project.getDesc(),
             'branch': self.project.getLabel().split('@')[1],
@@ -1000,9 +1002,11 @@ class ProjectHandler(WebHandler):
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @strFields(projecturl = '', desc = '', name = '', branch = '', appliance = 'unknown')
+    @strFields(projecturl = '', desc = '', name = '', branch = '',
+               appliance = 'unknown', commitEmail = '')
     @ownerOnly
-    def processEditProject(self, auth, projecturl, desc, name, branch, appliance):
+    def processEditProject(self, auth, projecturl, desc, name,
+                           branch, appliance, commitEmail):
         if not name:
             self._addErrors("You must supply a project title")
         try:
@@ -1015,6 +1019,7 @@ class ProjectHandler(WebHandler):
         if not self._getErrors():
             try:
                 self.project.editProject(projecturl, desc, name, appliance)
+                self.project.setCommitEmail(commitEmail)
 
                 # this is a little bit nasty because the label API
                 # needs some work.
@@ -1029,7 +1034,7 @@ class ProjectHandler(WebHandler):
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
                       'branch': self.project.getLabel().split('@')[1],
-                      'appliance': appliance }
+                      'appliance': appliance, 'commitEmail': commitEmail}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated project %s" % name)
@@ -1250,7 +1255,9 @@ class ProjectHandler(WebHandler):
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
                 for build in builds:
-                    item['content'] += "<li><a href=\"http://%s%sproject/%s/build?id=%ld\">%s (%s %s)</a></li>" % (self.cfg.siteHost, self.cfg.basePath, hostname, build.id, build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
+                    item['content'] += "<li><a href=\"http://%s%sproject/%s/build?id=%ld\">%s (%s %s)</a></li>" % \
+                        (self.cfg.siteHost, self.cfg.basePath, hostname, build.id, build.getName(),
+                         build.getArch(), buildtypes.typeNamesShort[build.buildType])
                 item['content'] += "</ul>"
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)

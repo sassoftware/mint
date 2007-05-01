@@ -61,7 +61,7 @@ class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified')
+                 'timeCreated', 'timeModified', 'commitEmail')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -133,6 +133,9 @@ class Project(database.TableObject):
 
     def editProject(self, projecturl, desc, name, appliance="unknown"):
         return self.server.editProject(self.id, projecturl, desc, name, appliance)
+
+    def setCommitEmail(self, commitEmail):
+        return self.server.setProjectCommitEmail(self.id, commitEmail)
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
@@ -242,12 +245,14 @@ class ProjectsTable(database.KeyedTable):
                     external        INT DEFAULT 0,
                     isAppliance     INT,
                     timeCreated     INT,
-                    timeModified    INT DEFAULT 0
+                    timeModified    INT DEFAULT 0,
+                    commitEmail     varchar(128) DEFAULT ''
                 )"""
 
     # XXX: disabled is slated for removal next schema upgrade --sgp
-    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated', 'timeModified']
+    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
+              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
+              'timeModified', 'commitEmail']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
                 "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
                 "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
@@ -331,7 +336,10 @@ class ProjectsTable(database.KeyedTable):
             if dbversion == 33 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Projects ADD COLUMN isAppliance INT")
-            return dbversion >= 33
+            if dbversion == 35 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Projects ADD COLUMN commitEmail varchar(128) DEFAULT ''")
+            return dbversion >= 35
         return True
 
     def new(self, **kwargs):
