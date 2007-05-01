@@ -26,7 +26,7 @@
                         <td>
                             <input type="text" autocomplete="off" name="hostname" value="${kwargs['hostname']}" maxlength="16"/>&nbsp;.${kwargs['domainname']}
 
-                            <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://&lt;project-name&gt;.${kwargs['domainname']}/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
+                            <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://&lt;project-name&gt;.${kwargs['domainname']}/). It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
                         </td>
                     </tr>
 
@@ -60,29 +60,6 @@
                         <td>
                             <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
                             <p class="help">Please enter the URL for an externally-hosted web page that will be linked from your project's main page.</p>
-                        </td>
-                    </tr>
-
-                    <?python
-                        from mint import mailinglists
-                    ?>
-                    <tr py:if="cfg.EnableMailLists">
-                        <th>Mailing Lists:</th>
-                        <td>
-                            <p>By default, your project will be created with two mailing lists:</p>
-                                <ul>
-                                    <li>&lt;project-name&gt;</li>
-                                    <li>&lt;project-name&gt;-commits</li>
-                                </ul>
-
-                            <p>You can also select the following lists to be created along with your project:</p>
-                            <span py:for="listid in mailinglists.optionallists" style="margin-right: 1em;">
-                                <input class="check" type="checkbox"
-                                       name="optlists" value="${listid}" py:attrs="{'checked': (kwargs['optlists'] and listid in kwargs['optlists']) and 'checked' or None}" />
-                                    ${mailinglists.listnames[listid]%'projectname'}
-                            </span>
-                            <p class="help">Note that, once your project has been created, you can create new lists at any time from your
-                                project's administration page.</p>
                         </td>
                     </tr>
                 </table>

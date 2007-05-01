@@ -11,7 +11,7 @@ from mint.mint_error import MintError
 
 (PROJECT, PROJECT_COMMITS, PROJECT_DEVEL, PROJECT_BUGS) = range(0, 4)
 
-defaultlists = [ PROJECT, PROJECT_COMMITS, ]
+defaultlists = [ ]
 
 optionallists = [ PROJECT_DEVEL, PROJECT_BUGS, ]
 
