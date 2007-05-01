@@ -148,7 +148,7 @@ class MailmanTest(unittest.TestCase):
         self.failUnlessEqual(r.keys(), ['project-bugs', 'project-devel'])
 
         r = mailinglists.DefaultLists('project')
-        self.failUnlessEqual(r.keys(), ['project', 'project-commits'])
+        self.failUnlessEqual(r.keys(), [])
 
     def testException(self):
         m = MailingListException("string")
