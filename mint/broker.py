@@ -17,7 +17,7 @@ from mcp import queue
 from mcp import jobstatus
 
 from mint import config as mint_config
-from mint import shimclient
+from mint.client import MintClient
 from mint import database
 
 from conary.lib import util
@@ -25,9 +25,8 @@ from conary.lib import util
 timestamp = lambda x: '%s: %s' % (time.strftime(time.ctime()), x)
 
 def handleImages(mcpCfg, mintCfg):
-    # ensure schema is upgraded
-    mintClient = shimclient.ShimMintClient(mintCfg, (mintCfg.authUser,
-                                                     mintCfg.authPass))
+    mintClient = MintClient('http://%s:%s@localhost/xmlrpc-private/' % \
+        (mintCfg.authUser, mintCfg.authPass))
     mcpClient = mcp_client.MCPClient(mcpCfg)
 
     queueName = '%s.%s' % (mintCfg.hostName, mintCfg.externalDomainName)
@@ -59,6 +58,8 @@ def handleImages(mcpCfg, mintCfg):
             finalDir = \
                 os.path.join(mintCfg.imagesPath, project.hostname, str(buildId))
             util.mkdirChain(finalDir)
+
+            newUrlMap = []
             try:
                 for url, fileDesc in urlMap:
                     filePath = os.path.join( \
@@ -66,11 +67,12 @@ def handleImages(mcpCfg, mintCfg):
                     print timestamp("downloading %s to %s" % (url, filePath))
                     util.execute('curl --create-dirs -o %s %s' % \
                                      (filePath, url))
+                    newUrlMap.append([filePath, fileDesc])
             except RuntimeError:
                 print timestamp("Curl couldn't download images. skipping")
                 continue
             print timestamp('setting build metadata for %s' % uuid)
-            build.setFiles(urlMap)
+            build.setFiles(newUrlMap)
             print timestamp('Stopping job %s' % uuid)
             mcpClient.stopJob(uuid)
             print timestamp('Completed handling of %s' % uuid)
@@ -80,7 +82,7 @@ def handleImages(mcpCfg, mintCfg):
 
 def redirIO(outputFn, inputFn = os.devnull):
     input = os.open(inputFn, os.O_RDONLY)
-    output = os.open(outputFn, os.O_WRONLY | os.O_CREAT)
+    output = os.open(outputFn, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     os.dup2(output, sys.stdout.fileno())
     os.dup2(output, sys.stderr.fileno())
     os.dup2(input, sys.stdin.fileno())
