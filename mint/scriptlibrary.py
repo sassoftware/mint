@@ -122,6 +122,7 @@ class SingletonScript(GenericScript):
             if e.errno == 11:
                 print >> sys.stderr, \
                       "Looks like we're already running; exiting"
+                sys.stderr.flush()
                 return False
             raise
         # placing the PID into this file is simply for readability since the
@@ -152,6 +153,7 @@ class SingletonScript(GenericScript):
         except:
             print >> sys.stderr, "Failed to create lockfile %s" % \
                     self.lockFileName
+            sys.stderr.flush()
             return exitcode
 
         try:
@@ -162,9 +164,11 @@ class SingletonScript(GenericScript):
                 # handle KeyboardInterrupt
                 except KeyboardInterrupt:
                     print >> sys.stderr, "Interrupted by user"
+                    sys.stderr.flush()
                 except Exception, e:
                     exc = traceback.format_exc()
                     print >> sys.stderr, exc
+                    sys.stderr.flush()
             finally:
                 self.cleanup()
 
@@ -200,6 +204,7 @@ class TriggerScript(GenericScript):
 
     def _printApiVersion(self):
         print >> sys.stdout, self.getApiVersion()
+        sys.stdout.flush()
         sys.exit(0)
 
     def getApiVersion(self):
@@ -212,6 +217,7 @@ class TriggerScript(GenericScript):
     def usage(self):
         print >> sys.stderr, "USAGE: %s obj_type action obj_id"
         print >> sys.stderr, "       %s --apiVersion"
+        sys.stderr.flush()
 
     def handle_args(self):
         if len(sys.argv) == 2:
