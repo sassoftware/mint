@@ -45,7 +45,10 @@ install: install-subdirs
 
 	mkdir -p $(DESTDIR)/etc/raa/backup.d
 	install -m 755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
+
+»·······mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
 	install -m 755 image-broker.init $(DESTDIR)/$(sysconfdir)/init.d/image-broker
+
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
 	mkdir -p $(DESTDIR)/$(libdir)/rbuilder/

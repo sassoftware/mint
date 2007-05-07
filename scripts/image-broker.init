@@ -19,10 +19,11 @@
 LONGNAME="rBuilder Image Broker"
 PIDFILE='/var/run/image-broker.pid'
 DAEMON='/usr/share/rbuilder/scripts/image-broker'
+RUNAS=apache
 
 start() {
     echo -n "Starting $LONGNAME:"
-    daemon $DAEMON
+    daemon $DAEMON -u apache
     echo ""
 }
 
