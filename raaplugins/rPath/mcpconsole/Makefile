@@ -22,16 +22,9 @@ generated_files = *.pyo *.pyc
 
 subdirs: default-subdirs
 
-install: all install-subdirs raaplugins-install kidfiles-install
+install: all install-subdirs raaplugins-install
 	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(raapluginsdir)', ddir='$(raapluginsdir)', quiet=1)"
 	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(raapluginsdir)', ddir='$(raapluginsdir)', quiet=1)"
-
-kidfiles-install:
-	kidc --strip-dest-dir $$(pwd) $(kid_files)
-	mkdir -p $(DESTDIR)$(raapluginsdir)$(DIR)/../../
-	for f in $(kid_files) *.pyc; do \
-		cp -a $$f $(DESTDIR)$(raapluginsdir)`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"` ;\
-	done
 
 dist: default-dist dist-subdirs
 
