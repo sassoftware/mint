@@ -2,7 +2,7 @@
 #
 # mcp:  Starts the rBuilder Image Broker.
 #
-# chkconfig: - 26 15
+# chkconfig: 345 26 15
 # description: Retrieves completed images from job slave.
 # processname: broker
 # config: /usr/bin
