@@ -7,7 +7,7 @@ all: subdirs
 product=rbuilder
 export DESTDIR=
 installdir=
-export VERSION=3.9.0
+export VERSION=4.0.0
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
 export prefix = /usr
