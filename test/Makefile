@@ -10,21 +10,17 @@ python_files = \
                accounttest.py \
                acltest.py \
                authtest.py \
-	       bootabletest.py \
                cachetest.py \
 	       cmdlinetest.py \
                configtest.py \
                coverage.py \
                coveragewrapper.py \
-               distrotest.py \
 	       ec2test.py \
                fixtures.py \
                grouptrovetest.py \
                helperfuncstest.py \
                htmltest.py \
                injectiontest.py \
-               jobstest.py \
-	       jobservertest.py \
                jobserverharness.py \
                joinrequesttest.py \
                labelstest.py \
@@ -45,7 +41,6 @@ python_files = \
                searchtest.py \
                sessionstest.py \
                spidertest.py \
-               splitdistrotest.py \
                testsuite.py \
                usertest.py \
                xmltest.py \
