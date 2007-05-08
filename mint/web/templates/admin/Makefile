@@ -15,7 +15,6 @@ kid_files =			\
 	outbound.kid		\
 	newUser.kid		\
 	jobs.kid		\
-	primeMirror.kid		\
 	admin.kid	\
 	spotlight.kid		\
 	preview.kid	\
