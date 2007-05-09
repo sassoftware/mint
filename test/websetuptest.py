@@ -209,6 +209,9 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
         self.assertEqual(newCfg.defaultBranch, 'foo:bar')
+        self.assertTrue(len(newCfg.authPass) == 32)
+        for x in newCfg.authPass:
+            self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 
     @testsuite.context("more_cowbell")
