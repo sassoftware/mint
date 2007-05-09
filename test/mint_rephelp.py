@@ -130,6 +130,7 @@ class MintApacheServer(rephelp.ApacheServer):
             authCheck = None, entCheck = None, readOnlyRepository = False, serverIdx = 0):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
+        self.name = name
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
