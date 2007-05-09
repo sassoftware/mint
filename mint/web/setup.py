@@ -9,6 +9,8 @@ from copy import deepcopy
 import kid
 import sys
 import os
+import random
+random = random.SystemRandom()
 import time
 
 from mod_python import apache
@@ -184,6 +186,11 @@ class SetupHandler(WebHandler):
         if kwargs.get('requireSigs'):
             newCfg.requireSigs = True
 
+        mintPass = ''
+        passwdLength = 32
+        for x in range(passwdLength):
+            mintPass += random.choice('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        newCfg.authPass = mintPass
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 
