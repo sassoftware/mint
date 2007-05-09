@@ -3,12 +3,19 @@
 # All rights reserved.
 #
 
-from raa.modules.raasrvplugin import rAASrvPlugin
 import os
 
+from mint import config
+
+from raa.modules.raasrvplugin import rAASrvPlugin
 
 class InboundMirror(rAASrvPlugin):
-    MIRROR_INBOUND_CMD = 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://mintauth:mintpass@localhost/xmlrpc-private/ 2>> /srv/rbuilder/logs/mirror-inbound.log"'
 
     def doTask(self, schedId, execId):
-        os.system(self.MIRROR_INBOUND_CMD)
+        mc = config.MintConfig()
+        mc.read(config.RBUILDER_CONFIG)
+        mintauth = mc.authUser
+        mintpass = mc.authPass
+        MIRROR_INBOUND_CMD = 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://%s:%s@localhost/xmlrpc-private/ 2>> /srv/rbuilder/logs/mirror-inbound.log"' % (mintauth, mintpass)
+        os.system(MIRROR_INBOUND_CMD)
+
