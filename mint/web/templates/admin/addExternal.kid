@@ -144,15 +144,14 @@
                     <input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
                            py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" />
                     <label for="useMirror_none">
-                        Mirror this respository via a mirror pre-load disk. (This project will
-                        continue to operate as a non-mirrored external project if a pre-load
-                        disk is unavailable.)
+                        Cache contents of this repository locally as needed.
+                        (Choose this option if you have a mirror preload disk supplied by rPath.)
                     </label>
                 </div>
                 <div>
                     <input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
                             py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" />
-                    <label for="useMirror_net">Mirror this repository over a network connection only. (requires authentication)</label>
+                    <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication)</label>
                 </div>
             </p>
             <table class="mainformhorizontal" id="mirrorSettings">

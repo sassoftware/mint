@@ -69,7 +69,7 @@
                             <th>Repository Commits Email</th>
                             <td>
                                 <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
-                                <p class="help">An email address to which Conary repository commit messages are sent to.</p>
+                                <p class="help">An email address to which Conary repository commit messages are sent.</p>
                             </td>
                         </tr>
 
