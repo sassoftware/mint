@@ -36,6 +36,7 @@ if missing:
     raise AssertionError('Please ensure PYTHONPATH contains %s' %
                          ' and '.join(missing))
 
+from mint import config
 from mint import client
 
 import unittest
@@ -45,8 +46,10 @@ import threading
 import random
 import time
 
-mc = client.MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private" % \
-                     (RBO_SERVER, RBO_PORT))
+cfg = config.MintConfig()
+cfg.read(config.RBUILDER_CONFIG)
+mc = client.MintClient("http://%s:%s@%s:%s/xmlrpc-private" % \
+                     (cfg.authUser, cfg.authPass, RBO_SERVER, RBO_PORT))
 
 pgpKey = """
 -----BEGIN PGP PUBLIC KEY BLOCK-----
