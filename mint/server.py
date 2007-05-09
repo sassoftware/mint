@@ -1935,6 +1935,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, buildDict['projectId'])
 
         cc = project.getConaryConfig()
+
+        # Ignore conaryProxy set by getConaryConfig; it's bound
+        # to be localhost, as getConaryConfig() generates
+        # config objects intended to be used by NetClient /
+        # ConaryClient objects internal to rBuilder (i.e. not the
+        # jobslaves)
+        cc.conaryProxy = None
+
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue()
@@ -3118,6 +3126,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, groupTrove.projectId)
 
         cc = project.getConaryConfig()
+
+        # Ignore conaryProxy set by getConaryConfig; it's bound
+        # to be localhost, as getConaryConfig() generates
+        # config objects intended to be used by NetClient /
+        # ConaryClient objects internal to rBuilder (i.e. not the
+        # jobslaves)
+        cc.conaryProxy = None
+
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue()
