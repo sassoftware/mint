@@ -39,7 +39,7 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
             WHERE userGroupId IN 
             (SELECT userGroupId 
                 FROM UserGroups 
-                WHERE userGroup != 'mintauth')""")
+                WHERE userGroup != '?')""", cfg.authUser)
         reposDb.commit()
 
         cu.execute("SELECT * from Users WHERE userName='anonymous'")
