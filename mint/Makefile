@@ -11,6 +11,7 @@ python_files =			\
 	accesscontrol.py	\
 	backup.py		\
 	broker.py		\
+	buildxml.py             \
 	spotlight.py		\
 	checkhtml.py		\
 	client.py		\
