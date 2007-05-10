@@ -21,6 +21,7 @@ from urlparse import urlparse
 import StringIO
 
 from mint import buildtypes
+from mint import buildxml
 from mint import charts
 from mint import communityids
 from mint import data
@@ -1853,6 +1854,76 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                     str(mc.getJSVersion()),
                                     data.RDT_STRING)
         return buildId
+
+    @typeCheck(int, str)
+    @requiresAuth
+    def newBuildsFromXml(self, projectId, buildXml):
+        self._filterProjectAccess(projectId)
+        project = projects.Project(self, projectId)
+        cc = self._getProjectRepo(project)
+
+        mc = self._getMcpClient()
+        jsVersion = mc.getJSVersion()
+
+        buildDicts = buildxml.buildsFromXml(buildXml)
+
+        buildIds = []
+
+        # validate the input all at once to ensure this operation is atomic
+        for buildDict in buildDicts:
+            if 'type' not in buildDict:
+                raise ParameterError('XML build is missing type')
+            template = buildtemplates.getDataTemplate(buildDict['type'])
+            for name in buildDict.get('data', {}):
+                option = buildtemplates.__dict__.get(name)
+                if not(option and option.__base__.__base__ == \
+                           buildtemplates.BuildOption):
+                    raise ParameterError('illegal data value: %s' % name)
+
+        troveNameCache = {}
+
+        for buildDict in buildDicts:
+            troveName = buildDict['troveName']
+            baseFlavor = deps.parseFlavor(buildDict.get('baseFlavor', ''))
+            if troveName not in troveNameCache:
+                troveList = \
+                    cc.findTrove(None, (troveName, project.getLabel(), None))
+                troveNameCache[troveName] = troveList
+            else:
+                troveList = troveNameCache[troveName]
+            NVF = sorted([x for x in troveList \
+                              if x[2].stronglySatisfies(baseFlavor)],
+                         key = lambda x: x[1])
+            if NVF:
+                NVF = NVF[-1]
+            else:
+                raise conary_errors.TroveNotFound(\
+                    "Trove '%s' has no matching flavors for '%s'" % \
+                        (troveName, baseFlavor))
+
+            buildId = self.builds.new( \
+                projectId = projectId,
+                name = buildDict.get('name', ''),
+                timeCreated = time.time(),
+                description = buildDict.get('description', ''),
+                buildType = buildDict['type'],
+                troveName = NVF[0],
+                troveVersion = NVF[1].freeze(),
+                troveFlavor = NVF[2].freeze())
+            buildIds.append(buildId)
+
+            template = buildtemplates.getDataTemplate(buildDict['type'])
+            data = dict([(x[0], x[1][1]) for x in template.iteritems()])
+            # the template is the set of all legal names for settings for this
+            # type, so we must be careful not to set new values.
+            for name, value in buildDict.get('data', {}).iteritems():
+                if name in data:
+                    data[name] = value
+            for name, value in data.iteritems():
+                dataType = template[name][0]
+                self.buildData.setDataValue(buildId, name, value, dataType)
+
+        return buildIds
 
     @typeCheck(int)
     @requiresAuth
