@@ -143,3 +143,9 @@ class InvalidClientVersion(MessageException):
 
 class InvalidServerVersion(MessageException):
     pass
+
+class BuildXmlInvalid(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "Invalid Build XML"):
+        self.reason = reason
