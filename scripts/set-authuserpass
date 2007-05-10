@@ -1,0 +1,90 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2007 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+import os
+import random
+import sys
+
+from mint import config
+from mint import shimclient
+
+from conary import dbstore
+
+def updatePassword(newPass):
+    cfg = config.MintConfig()
+    cfg.read(config.RBUILDER_CONFIG)
+
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    cu = db.cursor()
+    cu.execute("""SELECT projectId FROM Projects WHERE external=0 OR 
+                  EXISTS(SELECT * FROM InboundMirrors WHERE 
+                  projectId=targetProjectId)""")
+    projIds = cu.fetchall_dict()
+
+    authToken = (cfg.authUser, cfg.authPass)
+    mintclient = shimclient.ShimMintClient(cfg, authToken)
+
+    for x in projIds:
+        proj = mintclient.getProject(x['projectId'])
+        print "Updating project '%s'" % proj.getHostname()
+        repo = mintclient.server._server._getProjectRepo(proj)
+        repo.changePassword(proj.getLabel(), cfg.authUser, newPass)
+        cu.execute("""UPDATE Labels SET password=? WHERE ProjectId=? AND
+                      username=?""", newPass, x['projectId'], cfg.authUser)
+
+    db.commit()
+
+    print "\nUpdating rBuilder configuration"
+    genCfg = config.MintConfig()
+    genCfg.read(config.RBUILDER_GENERATED_CONFIG)
+    genCfg.authPass = newPass
+    displayKeys = [x for x in genCfg.keys() if not genCfg.isDefault(x) or x == 'authPass']
+    genFile = open(config.RBUILDER_GENERATED_CONFIG, 'w')
+    for x in displayKeys:
+        genCfg.displayKey(x, out=genFile)
+    genFile.close()
+
+    os.system('killall -USR1 httpd')
+
+
+
+if os.getuid():
+    print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
+    sys.stderr.flush()
+    sys.exit(1)
+
+cfg = config.MintConfig()
+cfg.read(config.RBUILDER_CONFIG)
+
+if not sys.argv[1:]:
+    print "Executing this script will change the %s password to a randomly" %\
+           cfg.authUser
+    print "generated value.  Continue? [yes/N]"
+    answer = sys.stdin.readline()[:-1]
+    if answer.upper() != 'YES':
+        if answer.upper() not in ('', 'N', 'NO'):
+            print >> sys.stderr, "you must type 'yes' to continue"
+        print >> sys.stderr, "aborting."
+        sys.exit(1)
+    mintPass = ''
+    passwdLength = 32
+    random = random.SystemRandom()
+    for x in range(passwdLength):
+        mintPass += random.choice('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+
+    updatePassword(mintPass)
+else:
+    print "Executing this script will change the %s password to '%s'" %\
+           (cfg.authUser, sys.argv[1])
+    print "Continue? [yes/N]"
+    answer = sys.stdin.readline()[:-1]
+    if answer.upper() != 'YES':
+        if answer.upper() not in ('', 'N', 'NO'):
+            print >> sys.stderr, "you must type 'yes' to continue"
+        print >> sys.stderr, "aborting."
+        sys.exit(1)
+    updatePassword(sys.argv[1])
