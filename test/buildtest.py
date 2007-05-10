@@ -27,6 +27,8 @@ from mint import urltypes
 
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
+from conary import versions
+from conary.deps import deps
 
 import fixtures
 
@@ -770,6 +772,35 @@ class BuildTest(fixtures.FixturedUnitTest):
              'troveVersion', 'type']
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
+
+    def getBuildXml(self):
+        f = open('archive/build.xml')
+        return f.read()
+
+    @fixtures.fixture('Full')
+    def testBuildsFromXml(self, db, data):
+        class DummyRepo(object):
+            def findTrove(*args, **kwargs):
+                return [('group-dummy', \
+                             versions.VersionFromString( \
+                            '/test.rpath.local@rpl:devel/1-1-1'),
+                         deps.parseFlavor('domU,xen is: x86'))]
+        client = self.getClient('admin')
+        getProjectRepo = client.server._server._getProjectRepo
+        try:
+            client.server._server._getProjectRepo = \
+                lambda *args, **kwargs: DummyRepo()
+
+            buildXml = self.getBuildXml()
+
+            builds = client.newBuildsFromXml(data['projectId'], buildXml)
+        finally:
+            pass
+
+        assert len(builds) == 5
+        for build in builds:
+            self.failIf(builds[0].troveName != 'group-dummy',
+                        "trove name was not assigned")
 
 
 if __name__ == "__main__":
