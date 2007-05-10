@@ -18,11 +18,11 @@ SERIAL_VERSION = 1
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):
-        return "Bad name for Group Trove"
+        return "Invalid name for group: letters, numbers, hyphens allowed."
 
 class GroupTroveVersionError(mint_error.MintError):
     def __str__(self):
-        return "Bad version for Group Trove"
+        return "Invalid version for group: letters, numbers, periods allowed."
 
 ############ Server Side ##############
 

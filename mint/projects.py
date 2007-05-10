@@ -29,7 +29,7 @@ from conary.conarycfg import ConaryConfiguration
 
 class InvalidHostname(MintError):
     def __str__(self):
-        return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
+        return "Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
 class DuplicateHostname(MintError):
     def __str__(self):

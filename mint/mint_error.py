@@ -43,11 +43,11 @@ class BuildFileMissing(MintError):
 
 class BuildFileUrlMissing(MintError):
     def __str__(self):
-        return "The referenced build file location (URL) doesn't exist."
+        return "The referenced build file doesn't exist."
 
 class DeleteLocalUrlError(MintError):
     def __str__(self):
-        return "Deleting a local Build File URL is not supported via this interface."
+        return "Deleting a local build file is not supported via this interface."
 
 class BuildPublished(MintError):
     def __str__(self):
@@ -59,7 +59,7 @@ class BuildEmpty(MintError):
 
 class PublishedReleaseEmpty(MintError):
     def __str__(self):
-        return "The referenced published releases has no builds and cannot be published."
+        return "The referenced release has no builds and cannot be published."
 
 class PublishedReleasePublished(MintError):
     def __str__(self):
@@ -95,7 +95,7 @@ class LastAdmin(MintError):
      def __str__(self):
          return self.msg
 
-     def __init__(self, msg = "You cannot close your account."):
+     def __init__(self, msg = "You cannot close your account since you are the only owner of a project."):
          self.msg = msg
 
 class MaintenanceMode(MintError):
@@ -108,13 +108,13 @@ class MaintenanceMode(MintError):
 class ParameterError(MintError):
     def __str__(self):
         return self.reason
-    def __init__(self, reason = "A required Parameter had an incorrect type"):
+    def __init__(self, reason = "A required parameter had an incorrect data type."):
         self.reason = reason
 
 class GroupTroveEmpty(MintError):
     def __str__(self):
         return self.reason
-    def __init__(self, reason = "Group Trove cannot be empty"):
+    def __init__(self, reason = "Group cannot be empty"):
         self.reason = reason
 
 class rMakeBuildEmpty(MintError):

@@ -25,11 +25,11 @@ SERIAL_VERSION = 1
 
 class TroveNotSet(MintError):
     def __str__(self):
-        return "this build needs a be associated with a group or fileset trove."
+        return "This build is not associated with a group."
 
 class BuildMissing(MintError):
     def __str__(self):
-        return "the requested build does not exist."
+        return "The requested build does not exist."
 
 class BuildDataNameError(MintError):
     def __str__(self):

@@ -9,11 +9,11 @@ from mint.mint_error import MintError
 
 class FileMissing(MintError):
     def __str__(self):
-        return "the requested file does not exist"
+        return "The requested file does not exist"
 
 class DuplicateJob(MintError):
     def __str__(self):
-        return "a conflicting job is already in progress"
+        return "A conflicting job is already in progress"
 
 class JobsTable(database.KeyedTable):
     name = 'Jobs'

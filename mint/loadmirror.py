@@ -59,7 +59,7 @@ class Callback:
 
 class NoMirrorLoadDiskFound(Exception):
     def __str__(self):
-        return "No mirror-load disk was found attached to your appliance."
+        return "No mirror preload disk was found attached to your appliance."
 
 class UnmountFailed(Exception):
     def __init__(self, dev):

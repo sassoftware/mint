@@ -41,19 +41,19 @@ class MailError(MintError):
 
 class ConfirmError(MintError):
     def __str__(self):
-        return "your registration could not be confirmed"
+        return "Your registration could not be confirmed"
 
 class AlreadyConfirmed(MintError):
     def __str__(self):
-        return "registration already confirmed"
+        return "Your registration has already been confirmed"
 
 class UserAlreadyExists(MintError):
     def __str__(self):
-        return "user already exists"
+        return "User already exists"
 
 class GroupAlreadyExists(MintError):
     def __str__(self):
-        return "group already exists"
+        return "Group already exists"
 
 class InvalidUsername(MintError):
     def __str__(self):
@@ -61,7 +61,7 @@ class InvalidUsername(MintError):
 
 class LastOwner(MintError):
     def __str__(self):
-        return "attempted to orphan a project with developers"
+        return "Attempted to orphan a project with developers"
 
 class UserInduction(MintError):
     def __str__(self):
@@ -69,7 +69,7 @@ class UserInduction(MintError):
 
 class AuthRepoError(MintError):
     def __str__(self):
-        return "Authentication Token could not be manipulated."
+        return "Authentication token could not be manipulated."
 
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
