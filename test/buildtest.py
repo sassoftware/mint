@@ -793,7 +793,9 @@ class BuildTest(fixtures.FixturedUnitTest):
 
             buildXml = self.getBuildXml()
 
-            builds = client.newBuildsFromXml(data['projectId'], buildXml)
+            builds = client.newBuildsFromXml(data['projectId'],
+                                             'test.rpath.local@rpl:devel',
+                                             buildXml)
         finally:
             pass
 
