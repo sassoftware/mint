@@ -1855,9 +1855,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                     data.RDT_STRING)
         return buildId
 
-    @typeCheck(int, str)
+    @typeCheck(int, str, str)
     @requiresAuth
-    def newBuildsFromXml(self, projectId, buildXml):
+    def newBuildsFromXml(self, projectId, label, buildXml):
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
         cc = self._getProjectRepo(project)
@@ -1887,7 +1887,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             baseFlavor = deps.parseFlavor(buildDict.get('baseFlavor', ''))
             if troveName not in troveNameCache:
                 troveList = \
-                    cc.findTrove(None, (troveName, project.getLabel(), None))
+                    cc.findTrove(None, (troveName, label, None))
                 troveNameCache[troveName] = troveList
             else:
                 troveList = troveNameCache[troveName]

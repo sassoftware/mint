@@ -323,14 +323,14 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
-    def newBuildsFromXml(self, projectId, buildXml):
+    def newBuildsFromXml(self, projectId, label, buildXml):
         """
         Create a series of new builds from xml input.
         @param projectId: the project to be associated with the new build.
         @param buildXml: xml data describing the builds
         @returns: a list of objects representing the new builds
         """
-        buildIds = self.server.newBuildsFromXml(projectId, buildXml)
+        buildIds = self.server.newBuildsFromXml(projectId, label, buildXml)
         return [self.getBuild(x) for x in buildIds]
 
     def getBuildFilenames(self, buildId):
