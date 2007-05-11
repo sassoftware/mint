@@ -118,5 +118,63 @@ class BuildXmlTest(testsuite.TestCase):
                           buildxml.buildsFromXml,
                           buildXml.replace('version', 'missing'))
 
+    def testDataToXml(self):
+        buildList = [{'troveName': 'group-test'},
+                     {'baseFlavor': 'is: x86',
+                      'type': buildtypes.RAW_FS_IMAGE},
+                     {'data': {'swapSize': 128,
+                               'freespace': 512},
+                      'type': buildtypes.VMWARE_IMAGE},
+                     {'type': buildtypes.RAW_HD_IMAGE,
+                      'baseFlavor': 'xen,domU is:x86',
+                      'troveName': 'group-xen'}]
+
+        ref = [{'baseFlavor': 'is: x86',
+                'troveName': 'group-test',
+                'type': buildtypes.RAW_FS_IMAGE},
+               {'data': {'freespace': '512', 'swapSize': '128'},
+                'troveName': 'group-test',
+                'type': buildtypes.VMWARE_IMAGE},
+               {'baseFlavor': 'xen,domU is:x86',
+                'troveName': 'group-xen',
+                'type': buildtypes.RAW_HD_IMAGE}]
+
+        xml = buildxml.xmlFromData(buildList)
+
+        refXml = \
+"""<buildDefinition version="1.0">
+    <build type="default">
+        <troveName>group-test</troveName>
+    </build>
+    <build type="RAW_FS_IMAGE">
+        <baseFlavor>is: x86</baseFlavor>
+    </build>
+    <build type="VMWARE_IMAGE">
+        <buildValue name="freespace">512</buildValue>
+        <buildValue name="swapSize">128</buildValue>
+    </build>
+    <build type="RAW_HD_IMAGE">
+        <baseFlavor>xen,domU is:x86</baseFlavor>
+        <troveName>group-xen</troveName>
+    </build>
+</buildDefinition>
+"""
+        self.failIf(xml != refXml, "Expected:\n%s\nbut got:\n%s" % \
+                        (refXml, xml))
+        res = buildxml.buildsFromXml(xml)
+        self.failIf(ref != res, "Expected %s but got %s" % (ref, res))
+
+
+    def testBuildToXmlVer(self):
+        self.assertRaises(AssertionError, buildxml.xmlFromData, [], '-1.0')
+
+    def testDoubleDefault(self):
+        buildList = [{'troveName': 'group-test'},
+                     {'troveName': 'group-test'}]
+
+        self.assertRaises(mint_error.BuildXmlInvalid,
+                          buildxml.xmlFromData, buildList)
+
+
 if __name__ == "__main__":
     testsuite.main()
