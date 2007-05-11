@@ -247,7 +247,7 @@ def conaryHandler(req, cfg, pathInfo):
         # don't proxy stuff that should have been caught in the above if block
         # XXX: if we had a better way to determine if a request has already been
         # proxied, we could just interrupt here to prevent a proxy loop.
-        if req.hostname.endswith(cfg.projectDomainName.split(":")[0]) and not actualRepName:
+        if req.hostname.endswith(cfg.projectDomainName.split(":")[0]) and not actualRepName and 'changeset' not in pathInfo:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         global proxy_repository
@@ -264,7 +264,8 @@ def conaryHandler(req, cfg, pathInfo):
                 # set a proxy (if it was configured)
                 proxycfg.proxy = cfg.proxy
 
-                urlBase = "%(protocol)s://localhost:%(port)d"
+                urlBase = "%%(protocol)s://%s.%s:%%(port)d/" % \
+                        (cfg.hostName, cfg.siteDomainName)
                 repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
                 repo.forceSecure = False
                 proxy_repository = repo
