@@ -65,3 +65,70 @@ def buildsFromXml(xmlData):
         raise mint_error.BuildXmlInvalid( \
             'Unable to determine buildDefinition version')
     return res
+
+def validateResults(func):
+    def wrapper(*args, **kwargs):
+        res = func(*args, **kwargs)
+        # call buildsFromXml to ensure output is useable
+        buildsFromXml(res)
+        return res
+    return wrapper
+
+@validateResults
+def xmlFromData(buildList, version = '1.0'):
+    """Build an XML build description tree from a list of builds
+
+    @param buildlist a list of dictionaries describing a build. Each dict can
+    have any of the following:
+    {'type': index from buildtemplates.validBuildTypes, Note this is an enum,
+                 so should be an INT. Omitting it means 'default'
+     'name': name of the build,
+     'troveName':
+     'baseFlavor':
+     'data': a dict containing entries for the buildData table
+     }
+
+    the data dict will contain keys which match names of build options from
+    buildtemplates.py and values as they would be stored in the buildData tbale
+    eg. 0 and 1 for boolean values."""
+    if version == '1.0':
+        root = elementtree.ElementTree.Element('buildDefinition')
+        root.set('version', version)
+        root.tail = '\n'
+        prevBuild = None
+        for buildDict in buildList:
+            root.text = '\n    '
+            elem = elementtree.ElementTree.SubElement(root, 'build')
+            elem.tail = '\n'
+            buildType = buildDict.get('type')
+            assert buildType in buildtypes.TYPES or buildType is None, \
+                "'%s' is not a valid build type" % str(buildType)
+            typeList = [x[0] for x in buildtypes.validBuildTypes.iteritems() \
+                            if x[1] == buildType]
+            buildType = typeList and typeList[0] or 'default'
+            elem.set('type', buildType)
+            prevElem = None
+            for name, value in sorted([x for x in buildDict.iteritems() \
+                                    if x[0] not in ('type', 'data')]):
+                elem.text = '\n        '
+                subElem = elementtree.ElementTree.SubElement(elem, name)
+                subElem.text = value
+                subElem.tail = '\n    '
+                if prevElem is not None:
+                    prevElem.tail = '\n        '
+                prevElem = subElem
+            for name, value in sorted(buildDict.get('data', {}).iteritems()):
+                elem.text = '\n        '
+                subElem = elementtree.ElementTree.SubElement(elem, 'buildValue')
+                subElem.set('name', name)
+                subElem.text = str(value)
+                subElem.tail = '\n    '
+                if prevElem is not None:
+                    prevElem.tail = '\n        '
+                prevElem = subElem
+            if prevBuild:
+                prevBuild.tail = '\n    '
+            prevBuild = elem
+        return elementtree.ElementTree.tostring(root)
+    else:
+        raise AssertionError("Unknown xml version %s" % version)
