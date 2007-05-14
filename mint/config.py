@@ -158,7 +158,7 @@ class MintConfig(ConfigFile):
     VAMUser                 = ''
     VAMPassword             = ''
 
-    diffCacheDir            = '/srv/rbuilder/diffcache'
+    diffCacheDir            = os.path.join(dataPath, 'diffcache', '')
 
     # By default this is set to OFF. Default configuration file
     # shipped with rBuilder will turn this on for rBuilder Appliances
@@ -170,12 +170,9 @@ class MintConfig(ConfigFile):
     proxy                   = CfgProxy
 
     # Miscellany proxy configuration -- shouldn't ever change
-    proxyContentsDir        = os.path.join(os.path.sep, 'srv', \
-            'rbuilder', 'proxy-contents', '')
-    proxyTmpDir             = os.path.join(os.path.sep, 'srv', \
-            'rbuilder', 'tmp', '')
-    proxyChangesetCacheDir  = os.path.join(os.path.sep, 'srv', \
-            'rbuilder', 'cscache', '')
+    proxyContentsDir        = os.path.join(dataPath, 'proxy-contents', '')
+    proxyTmpDir             = os.path.join(dataPath, 'tmp', '')
+    proxyChangesetCacheDir  = os.path.join(dataPath, 'cscache', '')
     requireSigs             = (cfgtypes.CfgBool, None,
                                "Require that all commits to local "
                                "repositories be signed by an OpenPGP key.")
