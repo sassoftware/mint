@@ -42,7 +42,8 @@ class FakeRequest(object):
         self.content_type = 'text/xhtml'
         self.options = {}
         self.connection = Connection()
-        self.connection.local_ip = '127.0.0.1'
+        self.connection.local_addr = (0, '127.0.0.1')
+        self.subprocess_env = {}
         self.uri = '/setup/'
 
     def log_error(self, msg):
@@ -259,6 +260,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testBlockedCommit(self, db, data):
         # make sure anything by mintauth is localhost-only
+        raise testsuite.SkipTestException("test skipped because commits aren't blocked anymore: needed for external group builder jobslaves")
         req = FakeRequest('foo.rpath.local', 'POST', '/blah')
         req.connection.remote_ip = '192.168.1.10'
         req.headers_in['Authorization'] = "Basic " + base64.encodestring("mintauth:randompass")
