@@ -327,11 +327,31 @@ class MintClient:
         """
         Create a series of new builds from xml input.
         @param projectId: the project to be associated with the new build.
+        @param label: the label to associate the builds with
         @param buildXml: xml data describing the builds
         @returns: a list of objects representing the new builds
         """
         buildIds = self.server.newBuildsFromXml(projectId, label, buildXml)
         return [self.getBuild(x) for x in buildIds]
+
+    def commitBuildXml(self, projectId, label, buildXml):
+        """
+        Commit a source trove to the given label, storing the xml input.
+        @param projectId: the project to be associated with the new build.
+        @param label: the label to store the trove on.
+        @param buildXml: xml data describing the builds
+        """
+        return self.server.commitBuildXml(projectId, label, buildXml)
+
+    def checkoutBuildXml(self, projectId, label):
+        """
+        Check out a source trove from the given label, returning the build xml.
+        @param projectId: the project to be associated with the new build.
+        @param label: the label to store the trove on.
+        @returns: a string containing xml
+        """
+        return self.server.checkoutBuildXml(projectId, label)
+
 
     def getBuildFilenames(self, buildId):
         """
