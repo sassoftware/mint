@@ -45,7 +45,7 @@ def dictFromElem(elem):
             res[child.tag] = child.text.strip()
     return res
 
-def buildsFromXml(xmlData):
+def buildsFromXml(xmlData, splitDefault = False):
     xmlStringIO = StringIO.StringIO(xmlData)
     tree = elementtree.ElementTree.ElementTree(file = xmlStringIO)
     root = tree.getroot()
@@ -58,9 +58,14 @@ def buildsFromXml(xmlData):
             raise mint_error.BuildXmlInvalid( \
                 'Only one defaults section is allowed')
         default = dictFromElem(defaults[0])
+        if splitDefault:
+            res.append(default)
         for elem in [x for x in root.getchildren() if x not in defaults]:
-            res.append(dictAggregate(copy.deepcopy(default),
-                                     dictFromElem(elem)))
+            if splitDefault:
+                res.append(dictFromElem(elem))
+            else:
+                res.append(dictAggregate(copy.deepcopy(default),
+                                         dictFromElem(elem)))
     else:
         raise mint_error.BuildXmlInvalid( \
             'Unable to determine buildDefinition version')
