@@ -77,6 +77,10 @@ class BuildXmlTest(testsuite.TestCase):
         res = buildxml.buildsFromXml(buildXml)
         assert len(res) == 5
 
+    def testOrigBuildsFromXml(self):
+        res = buildxml.buildsFromXml(buildXml, splitDefault = True)
+        assert len(res) == 6
+
     def testDictFromElem(self):
         sData = StringIO.StringIO(buildXml)
         tree = elementtree.ElementTree.ElementTree(file = sData)

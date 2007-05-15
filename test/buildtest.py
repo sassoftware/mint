@@ -29,6 +29,7 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary import versions
 from conary.deps import deps
+from conary import conaryclient
 
 import fixtures
 
@@ -804,6 +805,86 @@ class BuildTest(fixtures.FixturedUnitTest):
             self.failIf(builds[0].troveName != 'group-dummy',
                         "trove name was not assigned")
 
+    @fixtures.fixture('Full')
+    def testCommitBuildXml(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+
+        from conary import checkin
+        fork = os.fork
+        os.fork = lambda *args, **kwargs: 0
+
+        _exit = os._exit
+        os._exit = lambda *args, **kwargs: None
+
+        waitpid = os.waitpid
+        os.waitpid = lambda *args, **kwargs: (0, 0)
+
+        chdir = os.chdir
+        os.chdir = lambda *args, **kwargs: None
+
+        checkout = checkin.checkout
+        checkin.checkout = lambda *args, **kwargs: None
+
+        addFiles = checkin.addFiles
+        checkin.addFiles = lambda *args, **kwargs: None
+
+        commit = checkin.commit
+        checkin.commit = lambda *args, **kwargs: None
+
+        newTrove = checkin.newTrove
+        checkin.newTrove = lambda *args, **kwargs: None
+
+        class DummyClient(object):
+            def __init__(self, *args, **kwargs):
+                pass
+            def getRepos(self):
+                return self
+            def getTroveLeavesByLabel(self, *args, **kwargs):
+                return {}
+
+        ConaryClient = conaryclient.ConaryClient
+        conaryclient.ConaryClient = DummyClient
+
+        try:
+            client.commitBuildXml( \
+                data['projectId'], project.getLabel(),
+                '<buildDefinition version="1.0"></buildDefinition>\n')
+        finally:
+            os.fork = fork
+            os._exit = _exit
+            os.waitpid = waitpid
+            os.chdir = chdir
+            checkin.checkout = checkout
+            checkin.addFiles = addFiles
+            checkin.commit = commit
+            checkin.newTrove = newTrove
+            conaryclient.ConaryClient = ConaryClient
+
+    @fixtures.fixture('Full')
+    def testCheckoutBuildXml(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+
+        class DummyClient(object):
+            def __init__(self, *args, **kwargs):
+                pass
+            def getRepos(self):
+                return self
+            def getTroveLeavesByLabel(self, *args, **kwargs):
+                return {}
+
+        ConaryClient = conaryclient.ConaryClient
+        conaryclient.ConaryClient = DummyClient
+
+        try:
+            data = client.checkoutBuildXml( \
+                data['projectId'], project.getLabel())
+        finally:
+            conaryclient.ConaryClient = ConaryClient
+
+        self.failIf(data != '<buildDefinition version="1.0"/>\n',
+                    "unexpected data from checkoutBuildXml: %s" % data)
 
 if __name__ == "__main__":
     testsuite.main()
