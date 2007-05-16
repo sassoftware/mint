@@ -359,7 +359,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/admin/addOutbound",
             content = "Project to mirror:")
 
-        def fakeUpdateMirror(user, servername, sp):
+        def fakeUpdateMirror(user, servername, host, sp):
             return 'totallyfakepassword'
 
         ad = admin.AdminHandler()
@@ -370,6 +370,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         ad.req = rogueReq()
         self.assertRaises(HttpMoved, ad.processAddOutbound,
                               projectId=projectId)
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId,
+                              mirrorSources=1,
+                              mirrorBy='group',
+                              groups='group-test')
 
         ad = admin.AdminHandler()
         ad._updateMirror = fakeUpdateMirror
@@ -380,18 +385,27 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=1,
                 targetUrl='https://www.example.com/conary/', mirrorUser='foo',
                 mirrorPass='bar')
+        self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=2,
+                targetUrl='https://www.example.com/conary/', mirrorUser='foo',
+                mirrorPass='bar')
+
 
         label = "testproject." + 'fake.project.domain' + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)
         fqdn = client.translateProjectFQDN(client.getProject(projectId).getFQDN())
         assert(client.getOutboundMirrors() == \
-            [[1, 1, label, False, False,
-            ['-.*:source', '-.*:debuginfo', '+.*'], 0]])
+            [[1, 1, 'testproject.fake.project.domain@rpl:devel', False, False, ['-.*:source', '-.*:debuginfo', '+.*'], 0], [2, 1, 'testproject.fake.project.domain@rpl:devel', False, True, ['+group-test'], 1]])
+
         assert(client.getOutboundMirrorTargets(1) == \
                         [[1, 'https://www.example.com/conary/',
                     '%s-www.example.com' % fqdn, 'totallyfakepassword']])
+        assert(client.getOutboundMirrorTargets(2) == \
+            [[2, 'https://www.example.com/conary/', 'group-test-testproject.fake.project.domain-www.example.com', 'totallyfakepassword']])
         assert(client.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
+
+        assert(client.getOutboundMirrorMatchTroves(2) == \
+               ['+group-test'])
 
         page = self.fetch("/admin/outbound")
         page = page.postForm(1, self.post,
@@ -399,6 +413,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'operation':   'remove_outbound'})
         page = page.postForm(1, self.post,
                 {'yesArgs': {'func': 'removeOutbound', 'removeJSON': "['1']", 'confirmed': "1" }})
+
+        page = self.fetch("/admin/outbound")
+        page = page.postForm(1, self.post,
+            {'remove':      ['2'],
+             'operation':   'remove_outbound'})
+        page = page.postForm(1, self.post,
+                {'yesArgs': {'func': 'removeOutbound', 'removeJSON': "['2']", 'confirmed': "1" }})
 
         assert(client.getOutboundMirrors() == [])
 
@@ -432,6 +453,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         #assert(client.getOutboundMirrorTargets(1) == \
                 #    [ [ 'https://www.example.com/conary/', '%s-www.example.com' % fqdn, 'totallyfakepassword' ] ])
         assert(client.getOutboundMirrorMatchTroves(1) == [])
+
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId,
+                              mirrorSources=0,
+                              mirrorBy='group',
+                              groups='group-test')
+        assert(client.getOutboundMirrors()[1][5] == ['-.*:source', '-.*:debuginfo', '+group-test'])
+        import epdb
+        epdb.st()
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
