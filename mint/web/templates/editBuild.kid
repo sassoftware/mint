@@ -75,15 +75,6 @@ allowNone = ['anaconda-custom', 'media-template']
 
                     </div>
 
-                    <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
-                    <div class="formgroup">
-                        <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
-                        <div py:if="buildId" style="margin: 4px;">
-                            ${troveName}=${str(version)} [${str(flavor).replace(",", ", ")}]
-                            <input type="hidden" name="distTroveSpec" value="${troveName}=${version.freeze()}[${str(flavor)}]" />
-                        </div>
-                    </div>
-
                     <div class="formgroupTitle">Build Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in visibleTypes">
@@ -146,6 +137,17 @@ allowNone = ['anaconda-custom', 'media-template']
                             </div>
                         </div>
                     </div>
+                    <br/>
+
+                    <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
+                    <div class="formgroup">
+                        <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
+                        <div py:if="buildId" style="margin: 4px;">
+                            ${troveName}=${str(version)} [${str(flavor).replace(",", ", ")}]
+                            <input type="hidden" name="distTroveSpec" value="${troveName}=${version.freeze()}[${str(flavor)}]" />
+                        </div>
+                    </div>
+
 
                     <div class="formgroupTitle" style="margin-top: 24px;">Filesystems</div>
                     <div class="formgroup" style="text-align: center;">
