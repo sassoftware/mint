@@ -5,6 +5,7 @@
 # All rights reserved
 #
 
+import mock
 import re
 import os
 import testsuite
@@ -16,6 +17,7 @@ import rephelp, sigtest
 import mint_rephelp
 
 from conary import versions
+from conary import deps
 from conary.conaryclient import ConaryClient
 from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
@@ -52,15 +54,21 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
             self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 
     def outboundMirror(self):
-        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
-              self.port
+        import xmlrpclib
+        oldxmlrpclib = xmlrpclib
+        xmlrpclib = mock.MockInstance(xmlrpclib)
+        try:
+            url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
+                  self.port
 
-        mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
-        assert(os.access(mirrorScript, os.X_OK))
-        if debug:
-            os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
-        else:
-            self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+            mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
+            assert(os.access(mirrorScript, os.X_OK))
+            if debug:
+                os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
+            else:
+                self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+        finally:
+            xmlrpclib = oldxmlrpclib
 
     def mirrorOffline(self):
         if self.mintCfg.SSL:
@@ -432,6 +440,84 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                 f.close()
             except:
                 pass
+
+    def testMirrorByGroup(self):
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        # set up the target repositories
+        targetRepos1 = self.openRepository(1,
+                                          serverName = "localhost.rpath.local2")
+        targetRepos2 = self.openRepository(2,
+                                          serverName = "localhost.rpath.local2")
+        targetPort1 = self.servers.getServer(1).port
+        targetPort2 = self.servers.getServer(2).port
+
+        self.createMirrorUser(targetRepos1, "localhost.rpath.local2@rpl:devel")
+        self.createMirrorUser(targetRepos2, "localhost.rpath.local2@rpl:devel")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:devel")
+
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        outboundMirrorId = client.addOutboundMirror(projectId,
+                ["localhost.rpath.local2@rpl:devel"],
+                recurse = True)
+        outboundMirrorId2 = client.addOutboundMirror(projectId,
+                ["localhost.rpath.local2@rpl:devel"],
+                recurse = True)
+        client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                               ['+group-test'])
+        client.setOutboundMirrorMatchTroves(outboundMirrorId2,
+                               ['+group-test2'])
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort1, "mirror", "mirror")
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId,
+                "http://localhost:%s/conary/" % targetPort2, "mirror", "mirror")
+
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId2,
+                "http://localhost:%s/conary/" % targetPort1, "mirror", "mirror")
+        outboundMirrorTargetId = client.addOutboundMirrorTarget(outboundMirrorId2,
+                "http://localhost:%s/conary/" % targetPort2, "mirror", "mirror")
+
+        # create troves on rpl:devel
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 3)
+
+        # create some troves on a different label
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
+        self.createTroves(sourceRepos, 3, 5)
+        self.addQuickTestCollection("group-test", "/localhost.rpath.local2@rpl:devel/1.0-1-1",
+                                    [ ("test1:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                      ("test2:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                      ("test3:runtime", "/localhost.rpath.local2@rpl:other/1.0-1-1"),
+                                      ("test4:runtime", "/localhost.rpath.local2@rpl:other/1.0-1-1"),
+                                    ], repos=sourceRepos)
+
+
+        self.addQuickTestCollection("group-test2", "/localhost.rpath.local2@rpl:devel/1.0-1-1",
+                                    [ ("test3:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                      ("test4:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                      ("test5:runtime", "/localhost.rpath.local2@rpl:other/1.0-1-1"),
+                                      ("test6:runtime", "/localhost.rpath.local2@rpl:other/1.0-1-1"),
+                                    ], repos=sourceRepos)
+
+        try:
+            # do the mirror
+            self.outboundMirror()
+            # compare
+            self.compareRepositories(targetRepos1, targetRepos2,
+                                     base='localhost.rpath.local2')
+
+            troves = targetRepos1.getTroveVersionList('localhost.rpath.local2', {None:None})
+            expectedTroves = {'group-test2': {versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test1:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test2:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test3:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:other/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test5:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:other/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'group-test': {versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test6:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:other/1.0-1-1'): [deps.deps.parseFlavor('')]}, 'test4:runtime': {versions.VersionFromString('/localhost.rpath.local2@rpl:other/1.0-1-1'): [deps.deps.parseFlavor('')]}}
+            assert(troves == expectedTroves)
+
+        finally:
+            self.stopRepository(1)
 
 
 if __name__ == "__main__":
