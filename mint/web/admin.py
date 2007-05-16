@@ -11,6 +11,10 @@ import xmlrpclib
 import urllib
 import socket
 
+from conary import conarycfg
+from conary import conaryclient
+from conary.repository import errors
+
 from mod_python import apache
 
 from mint import users
@@ -565,7 +569,10 @@ class AdminHandler(WebHandler):
             mirrorData['targets'] = [ (x[0], getUrlHost(x[1])) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
-            mirrorData['mirrorSources'] = set(matchStrings) != set(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+            for x in matchStrings:
+                if x.startswith('+group'):
+                    mirrorData['group'] = x[1:]
+            mirrorData['mirrorSources'] = "-.*:source" not in matchStrings
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -574,11 +581,38 @@ class AdminHandler(WebHandler):
         projects = self.client.getProjectsList()
         return self._write('admin/add_outbound', projects = projects, kwargs = kwargs)
 
-    def _updateMirror(self, user, servername, sp):
+    def _genPasswd(self):
+        import random
+        random = random.SystemRandom()
+        allowed = "abcdefghijklmnopqrstuvwxyz0123456789"
+        len = 128
+        chars = ''
+        for x in range(len):
+            chars += random.choice(allowed)
+        return chars
+
+    def _updateMirror(self, user, servername, host, sp):
         passwd = ''
         try:
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
+            
+            rapa_passwd = self._genPasswd()
+            passData = self.client.getrAPAPassword(host, 'serverNames')
+            server_user = host.replace('.', '_')
+            # Create serverName group if it doesn't exist
+            users = sp.usermanagement.UserInterface.users()
+            if 'serverNames' not in users['all_groups']:
+                sp.usermanagement.UserInterface.addGroup('serverNames', 
+                                                     ['serverNames'])
+            # Recreate the user if it arleady exists
+            for x in users['items']:
+                if x['username'] == server_user:
+                    sp.usermanagement.UserInterface.deleteUser(server_user)
+                    break
+            sp.usermanagement.UserInterface.addUser(server_user, rapa_passwd, rapa_passwd, ['serverNames'])
+            # Update the password in our database
+            self.client.setrAPAPassword(host, server_user, rapa_passwd, 'serverNames')
         except xmlrpclib.ProtocolError, e:
             safeUrl = cleanseUrl('https', e.url)
             if e.errcode == 403:
@@ -594,24 +628,43 @@ class AdminHandler(WebHandler):
             if not res1 or not passwd:
                 self._addErrors("""An error occured configuring your rPath
                                    Mirror.""")
+        # Clear the mirror mark for this server name
+        ccfg = conarycfg.ConaryConfiguration()
+        ccfg.user.addServerGlob(servername, user, passwd)
+        ccfg.repositoryMap.update({servername:'https://%s/conary/' % host})
+        cc = conaryclient.ConaryClient(ccfg)
+        try:
+            cc.repos.setMirrorMark(servername, -1)
+        except errors.OpenError:
+            # This servername is not configured yet, so ignore
+            pass
+
         return passwd
 
     @intFields(projectId = None)
     @boolFields(mirrorSources = False, allLabels = False)
-    def processAddOutbound(self, projectId, mirrorSources, allLabels, *args, **kwargs):
-
+    @strFields(mirrorBy = 'label')
+    def processAddOutbound(self, projectId, mirrorSources, allLabels, mirrorBy, *args, **kwargs):
         inputKwargs = {'projectId': projectId,
-            'mirrorSources': mirrorSources, 'allLabels': allLabels }
+            'mirrorSources': mirrorSources, 'allLabels': allLabels}
 
         if not self._getErrors():
             project =  self.client.getProject(projectId)
             label = project.getLabel()
             labelList = [label]
+            recurse = mirrorBy == 'group'
             outboundMirrorId = self.client.addOutboundMirror(projectId,
-                    labelList, allLabels)
-            if not mirrorSources:
-                    self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                               mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+                    labelList, allLabels, recurse)
+            matchTroveList = []
+            if mirrorBy == 'group':
+                if not mirrorSources:
+                    matchTroveList = ["-.*:source", "-.*:debuginfo", '+%s' % kwargs['groups']]
+                else:
+                    matchTroveList = ['+%s' % kwargs['groups']]
+            elif not mirrorSources:
+                matchTroveList = mirror.EXCLUDE_SOURCE_MATCH_TROVES
+            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                               matchTroveList)
             self._redirect("http://%s%sadmin/outbound" %
                 (self.cfg.siteHost, self.cfg.basePath))
         else:
@@ -655,9 +708,16 @@ class AdminHandler(WebHandler):
 
         if not self._getErrors():
             servername = self.client.translateProjectFQDN(project.getFQDN())
-            user = '%s-%s' % (servername, mirrorUrl)
+            group = None
+            for x in om['matchStrings'].split(' '):
+                if x.startswith('+group'):
+                    group = x.lstrip('+')
+            if group:
+                user = '%s-%s-%s' % (group, servername, mirrorUrl)
+            else:
+                user = '%s-%s' % (servername, mirrorUrl)
             sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (mirrorUser, mirrorPass, mirrorUrl))
-            passwd = self._updateMirror(user, servername, sp)
+            passwd = self._updateMirror(user, servername, mirrorUrl, sp)
 
         if not self._getErrors():
             outboundMirrorTargetId = self.client.addOutboundMirrorTarget(outboundMirrorId, 'https://%s/conary/' % mirrorUrl, user, passwd)
