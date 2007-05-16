@@ -65,6 +65,10 @@ TrovePicker.prototype.flavorCache = null;
 TrovePicker.prototype.domCache = {};
 TrovePicker.prototype.allowNameChoice = true;
 TrovePicker.prototype.aloowNone = false;
+TrovePicker.prototype.archFilter = Array();
+TrovePicker.prototype.flavFilter = Array();
+TrovePicker.prototype.buildChange = null;
+TrovePicker.prototype.stage = null;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -82,6 +86,7 @@ TrovePicker.prototype.working = function(isWorking) {
 // begin retrieving all leaves for a given
 // trove name on a server.
 TrovePicker.prototype.buildTrovePicker = function() {
+    this.stage = 'group';
     oldEl = $(this.elId);
     picker = DIV({'id': this.elId, 'class': 'trovePicker'});
     spinner = UL({'id': this.elId + 'spinnerList'},
@@ -104,6 +109,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
 
 // A flavor has been chosen--continue on
 TrovePicker.prototype.pickFlavor = function(e) {
+    this.stage = 'finish';
     var n = e.src().name;
     var v = e.src().version;
     var shortv = trailingRevision(v);
@@ -154,15 +160,28 @@ TrovePicker.prototype.pickNoTrove = function(e) {
     replaceChildNodes($(this.elId + 'return'), returnLink);
 }
 
-// Show all flavors available for a given trove and version
-TrovePicker.prototype.showTroveFlavors = function(e) {
-    this.version = e.src().version;
-    this.label = e.src().label;
-
+// Display flavors in the dom
+TrovePicker.prototype.displayFlavors = function() {
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
 
     for(var i in this.flavorCache[this.version]) {
+        var omitFlavor = false;
+        // Filter by arch
+        for (var j in this.archFilter) {
+            if (String(this.flavorCache[this.version][i]).match(this.archFilter[j]) != null) {
+                omitFlavor = true;;
+            }
+        }
+        // Filter by flavor
+        for (var j in this.flavFilter) {
+            if (String(this.flavorCache[this.version][i]).split(',').indexOf(this.flavFilter[j]) != -1) {
+                omitFlavor = true;
+            }
+        }
+        if (omitFlavor) {
+            continue;
+        }
         flavor = this.flavorCache[this.version][i];
         var myId = "flavorId" + i;
         link = forwardLink({'id': myId}, flavor[0]);
@@ -174,19 +193,30 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
         connect(link, "onclick", this, "pickFlavor");
         appendChildNodes(ul, link);
     }
+    swapDOM(oldList, ul);
+}
+
+// Show all flavors available for a given trove and version
+TrovePicker.prototype.showTroveFlavors = function(e) {
+    this.stage = 'flavor';
+    this.version = e.src().version;
+    this.label = e.src().label;
+
+    this.displayFlavors();
     // return to getTroveVersions
     returnLink = A(null, returnImg(), " Back");
     returnLink.label = this.label;
     connect(returnLink, "onclick", this, "getTroveVersions");
     replaceChildNodes($(this.elId + 'return'), returnLink);
 
-    swapDOM(oldList, ul);
     this.working(false);
     replaceChildNodes($(this.elId + 'prompt'), "Please choose a flavor:");
+    enableAllBuildTypes();
 }
 
 // Show all versions of a trove on a given label
 TrovePicker.prototype.getTroveVersions = function(e) {
+    this.stage = 'version';
     this.label = e.src().label;
     var par = this;
     var key = this.label + "=" + this.troveName;
@@ -198,7 +228,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 
         par.flavorCache = versionDict;
 
-        if(!par.domCache[key]) {
+        if(!par.domCache[key] || par.buildChange) {
             ul = UL({ 'id': par.elId + 'selectionList' });
             for(var i in versionList) {
                 link = forwardLink(null, trailingRevision(versionList[i]));
@@ -208,6 +238,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
                 appendChildNodes(ul, link);
             }
             par.domCache[key] = ul;
+            par.buildChange = 'false';
         }
         swapDOM(oldList, par.domCache[key]);
 
@@ -242,6 +273,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 
 // Fetch all labels a trove exists on a given server
 TrovePicker.prototype.getAllTroveLabels = function(e) {
+    this.stage = 'label';
     if(e) {
         this.troveName = e.src().troveName;
     }
@@ -301,6 +333,7 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
 }
 
 TrovePicker.prototype.getGroupTroves = function() {
+    this.stage = 'group';
     var par = this;
 
     var setupList = function(troveList) {
@@ -343,6 +376,27 @@ TrovePicker.prototype.handleError = function() {
     swapDOM(oldList, ul);
 }
 
+TrovePicker.prototype.filterFlavors = function(t) {
+    if (x86_64Types.indexOf(t) == -1) {
+        this.archFilter = Array('x86_64');
+    }
+    else {
+        this.archFilter = Array();
+    }
+
+    if (xenTypes.indexOf(t) == -1) {
+        this.flavFilter = Array('domU');
+    }
+    else {
+        this.flavFilter = Array();
+    }
+    this.buildChange = true;
+    if (this.stage == 'flavor') {
+        this.displayFlavors();
+    }
+        
+}
+
 var allTypes = map(parseInt, keys(buildTypeNames));
 
 var defaultType = INSTALLABLE_ISO;
@@ -362,23 +416,20 @@ function handleBuildTypes(flavor) {
             el.disabled = false;
             setOpacity(elLabel, 1.0);
         }
-        if(x == defaultType) {
-            el.checked = true;
-            onBuildTypeChange("formgroup_" + x);
-        }
     });
 
     if(flavor) {
         // bootableTypes are not currently compatible with x86_64
         // so, if that arch was selected, disable it:
-        selectiveDisable(flavor, "x86_64", x86_64Types);
+        selectiveDisableArch(flavor, "x86_64", x86_64Types);
 
         // only allow a few build types to be built from a xen flavor:
-        selectiveDisable(flavor, ",domU", xenTypes);
+        selectiveDisable(flavor, "domU", xenTypes);
     }
 }
 
-function selectiveDisable(flavor, flavorMatch, allowed) {
+
+function selectiveDisableArch(flavor, flavorMatch, allowed) {
     if(flavor.match(flavorMatch)) {
         one = iter(allTypes);
         forEach(one, function (x) {
@@ -392,4 +443,35 @@ function selectiveDisable(flavor, flavorMatch, allowed) {
             }
         });
     }
+}
+
+function selectiveDisable(flavor, flavorMatch, allowed) {
+    var flavors = flavor.split(',');
+    if(flavors.indexOf(flavorMatch) != -1) {
+        one = iter(allTypes);
+        forEach(one, function (x) {
+            var el = $('buildtype_'+x);
+            var elLabel = $('buildtype_' + x + '_label');
+            if(el) {
+                if (findValue(allowed, x) == -1) {
+                    el.disabled = true;
+                    setOpacity(elLabel, 0.5);
+                }
+            }
+        });
+    }
+}
+
+function enableAllBuildTypes() {
+    one = iter(allTypes);
+    forEach(one, function (x) {
+        var el = $('buildtype_'+x);
+        var elLabel = $('buildtype_' + x + '_label');
+        if(el) {
+            el.disabled = false;
+            setOpacity(elLabel, 1.0);
+        }
+    });
+    var sb = $('submitButton');
+    sb.disabled = true;
 }
