@@ -31,7 +31,7 @@
                     </tr>
                     <div py:strip="True" py:for="data in rows">
                         <tr>
-                            <td><a href="${data.get('projectUrl')}">${data.get('projectName')}</a><br /><div style="font-size: smaller;"><span py:if="data.get('allLabels')" py:strip="True">All Labels</span><div py:for="l in data.get('labels', [])" py:strip="True">${l}<br /></div></div></td>
+                            <td><a href="${data.get('projectUrl')}">${data.get('projectName')}</a><br /><div style="font-size: smaller;"><span py:if="data.get('group')" py:strip="True">${data.get('group')}</span><span py:if="data.get('allLabels') and not data.get('group')" py:strip="True">All Labels</span><div py:for="l in data.get('labels', [])" py:strip="True" py:if="not data.get('group')">${l}<br /></div></div></td>
                             <td style="font-size: smaller;"><div py:if="not data.get('targets', [])" style="color: red;">No targets defined</div><div py:for="tId, tUrl in data.get('targets', [])">${tUrl} <a href="removeOutboundMirrorTarget?id=${tId}">(delete)</a><br /></div><a href="addOutboundMirrorTarget?id=${data.get('id')}">Add target...</a></td>
                             <td py:content="data.get('mirrorSources') and 'Yes' or 'No'" />
                             <td py:content="data.get('orderHTML')" />
