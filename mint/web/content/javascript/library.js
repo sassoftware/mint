@@ -206,9 +206,38 @@ function killJob(jobId) {
     req.send(false, [jobId]);
 }
 
+function getGroups(projId) {
+    if (!getElement('mirrorByGroup').checked) {
+        return;
+    }
+    replaceChildNodes('groups');
+    getElement('projectId').disabled = true;
+    getElement('mirrorByGroup').disabled = true;
+    getElement('submitButton').style.display = 'none';
+    getElement('spinner').style.display = '';
+    var req = new JsonRpcRequest("jsonrpc/", "getGroupTroves");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(processShowGroups);
+    req.send(true, [parseInt(projId)]);
+}
+
 function callbackVoid() {}
     
 // RPC callbacks ------------------------------------------------------------
+
+function processShowGroups(aReq) {
+    logDebug(aReq.responseText);
+    troveList = evalJSONRequest(aReq);
+    for (var i in troveList) {
+        var opt = OPTION({'name':'mirrorGroup', 'value':troveList[i]}, troveList[i]);
+        appendChildNodes('groups', opt);
+    }
+
+    getElement('submitButton').style.display = '';
+    getElement('spinner').style.display = 'none';
+    getElement('projectId').disabled = false;
+    getElement('mirrorByGroup').disabled = false;
+}
 
 function processGetCookStatus(aReq) {
 
