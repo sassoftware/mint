@@ -54,6 +54,7 @@ from mint import selections
 from mint import urltypes
 from mint import useit
 from mint import rmakebuild
+from mint import rapapasswords
 from mint.flavors import stockFlavors
 from mint.mint_error import *
 from mint.reports import MintReport
@@ -257,6 +258,7 @@ def getTables(db, cfg):
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
+    d['rapapasswords'] = rapapasswords.rAPAPasswords(db)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -2292,12 +2294,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setCommunityId(self, projectId, communityType, communityId):
         return self.communityIds.setCommunityId(projectId, communityType,
                                                 communityId)
-
     @typeCheck(int, int)
     @private
     @requiresAuth
     def deleteCommunityId(self, projectId, communityType):
         return self.communityIds.deleteCommunityId(projectId, communityType)
+
+    @typeCheck(str, str)
+    @private
+    @requiresAdmin
+    def getrAPAPassword(self, host, role):
+        return self.rapapasswords.getrAPAPassword(host, role)
+
+    @typeCheck(str, str, str, str)
+    @private
+    @requiresAdmin
+    def setrAPAPassword(self, host, user, password, role):
+        return self.rapapasswords.setrAPAPassword(host, user, password, role)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
