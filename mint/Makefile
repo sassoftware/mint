@@ -46,6 +46,7 @@ python_files =			\
 	buildtypes.py		\
 	buildtemplates.py	\
 	pubreleases.py		\
+	rapapasswords.py \
 	requests.py		\
 	rmakebuild.py		\
 	rmakeconstants.py	\
