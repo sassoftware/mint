@@ -13,7 +13,7 @@
     <head>
         <title>${formatTitle('Add Outbound Mirror')}</title>
     </head>
-    <body>
+    <body onload="hideElement('groupTD');">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
@@ -23,12 +23,38 @@
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
-                        <th><em class="required">Project to mirror:</em></th>
+                        <th style="width: 1%;"><em class="required">Project to mirror:</em></th>
                         <td>
-                            <select name="projectId">
+                            <select id="projectId" name="projectId" onchange="getGroups(this.value);">
                                 <option py:attrs="{'selected': kwargs['projectId'] == project[0] and 'selected' or None}"
                                         py:for="project in projects" value="${project[0]}">${project[2]}</option>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><em class="required">Mirror by:</em></th>
+                        <td>
+                            <input value="label" style="width:auto;" type="radio" name="mirrorBy" checked="true" onclick="hideElement('groupTD'); showElement('submitButton');"/>Label
+                            <input id="mirrorByGroup" value="group" style="width:auto;" type="radio" name="mirrorBy" onclick="showElement('groupTD'); getGroups(getElement('projectId').value);"/>Group<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <td>
+                        <div id="groupTD">
+                        <table>
+                        <th>Select group to mirror</th>
+                        <td>
+                            <select name="groups" id="groups">
+                            </select>
+                        </td>
+                <td>
+                <div id="spinner" style="display: none;">
+                    <img src="${cfg.staticPath}/apps/mint/images/circle-ball-dark-antialiased.gif"/>
+                </div>
+                </td>
+                        </table>
+                        </div>
                         </td>
                     </tr>
                     <tr>
@@ -47,7 +73,7 @@
                         </td>
                     </tr>
                 </table>
-                <button class="img" type="submit">
+                <button class="img" type="submit" id="submitButton">
                     <img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" />
                 </button>
             </form>
