@@ -447,6 +447,7 @@ function onBuildTypeChange(img) {
             if (targImg == img) {
                 elem.style.display = "";
                 setDisabledByElem(elem, false);
+                picker.filterFlavors(t);
             }
             else {
                 elem.style.display = "none";
