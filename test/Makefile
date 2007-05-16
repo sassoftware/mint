@@ -32,6 +32,7 @@ python_files = \
                buildtest.py \
                projecttest.py \
                pubreleasetest.py \
+			   rapapasswordtests.py \
                recipes.py \
                repostest.py \
                reportstest.py \
