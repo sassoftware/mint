@@ -410,6 +410,12 @@ class MintClient:
     def deleteCommunityId(self, projectId, communityType):
         return self.server.deleteCommunityId(projectId, communityType)
 
+    def getrAPAPassword(self, host, role):
+        return self.server.getrAPAPassword(host, role)
+
+    def setrAPAPassword(self, host, user, password, role):
+        return self.server.setrAPAPassword(host, user, password, role)
+
     def startImageJob(self, buildId):
         """
         Start a new image generation job.
