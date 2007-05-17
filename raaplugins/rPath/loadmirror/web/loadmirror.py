@@ -11,6 +11,7 @@ import time
 from mint import loadmirror
 from mint import config
 
+from raa.db import schedule
 from raa.modules.raawebplugin import rAAWebPlugin
 from raa.modules.raawebplugin import immedTask
 from raa.localhostonly import localhostOnly
@@ -64,9 +65,16 @@ class LoadMirror(rAAWebPlugin):
     @turbogears.expose(html="rPath.loadmirror.index")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def index(self):
-        schedId = self._setCommand("mount")
+        sids = cherrypy.root.execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId)
+        if not sids:
+            schedId = self._setCommand("mount")
+            schedId = schedId['schedId']
+            inProgress = False
+        else:
+            schedId = sids[0]
+            inProgress = True
+        return dict(schedId = schedId, inProgress=inProgress)
 
-        return dict(schedId = schedId['schedId'])
 
     @immedTask
     def _setCommand(self, command, done = False, error = ''):
@@ -80,7 +88,6 @@ class LoadMirror(rAAWebPlugin):
     def callGetPreloads(self, schedId):
         _, done = self.table.getCommand(schedId)
         errors = self.table.getError(schedId)
-
         if done:
             projects, preloadErrors = self._getProjects()
         else:
