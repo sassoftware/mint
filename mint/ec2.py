@@ -4,9 +4,14 @@
 # All Rights Reserved
 #
 
+global _boto_present
 
-import boto
-from boto.exception import EC2ResponseError
+try:
+    import boto
+    from boto.exception import EC2ResponseError
+    _boto_present = True
+except ImportError:
+    _boto_present = False
 
 
 from mint import database
