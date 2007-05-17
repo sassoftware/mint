@@ -4,7 +4,14 @@
 # All Rights Reserved
 #
 
-import dns.resolver
+global _dnspython_present
+
+try:
+    import dns.resolver
+    _dnspython_present = True
+except ImportError:
+    _dnspython_present = False
+
 import md5
 import os
 import random
