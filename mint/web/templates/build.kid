@@ -54,51 +54,6 @@ from mint import urltypes
                     </div>
                 </div>
 
-                <h3>Details</h3>
-
-                <table class="troveinfo">
-                    <tr py:if="amiId and not buildInProgress">
-                        <th>AMI ID</th>
-                        <td>${amiId}</td>
-                    </tr>
-                    <tr py:if="amiS3Manifest and not buildInProgress">
-                        <th>AMI Bundle Manifest</th>
-                        <td>${amiS3Manifest}</td>
-                    </tr>
-                    <tr>
-                        <th>Group</th>
-                        <td>${build.getTroveName()}</td>
-                    </tr>
-                    <tr>
-                        <th>Version</th>
-                        <td>${str(version.trailingRevision())}</td>
-                    </tr>
-                    <tr>
-                        <th>Flavor</th>
-                        <td>${str(build.getTroveFlavor()).replace(',', ', ')}</td>
-                    </tr>
-                    <tr>
-                        <th>Architecture</th>
-                        <td>${build.getArch()}</td>
-                    </tr>
-                    <tr>
-                        <th>Type</th>
-                        <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
-                    </tr>
-                </table>
-
-                <h3>Notes</h3>
-                <div py:for="note in notes.splitlines()" py:content="truncateForDisplay(note, 10000000, 70)" />
-                <div py:if="not notes">This build has no notes.</div>
-
-                <div py:def="xenHelp">
-                    <p py:if="'Xen Virtual Appliance' in extraFlags">
-                        This file can be installed as a Xen&trade; DomU. See rPath's
-                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide" target="_blank">Xen DomU Guide</a>
-                        for information and instructions.
-                    </p>
-                </div>
-
                 <div py:strip="True" py:if="not buildInProgress">
                     <h3>Downloads</h3>
                     <div py:if="files" py:strip="True">
@@ -234,6 +189,51 @@ from mint import urltypes
                         </div>
                     </div>
                     <p py:if="not files">Build contains no downloadable files.</p>
+                <h3>Details</h3>
+
+                <table class="troveinfo">
+                    <tr py:if="amiId and not buildInProgress">
+                        <th>AMI ID</th>
+                        <td>${amiId}</td>
+                    </tr>
+                    <tr py:if="amiS3Manifest and not buildInProgress">
+                        <th>AMI Bundle Manifest</th>
+                        <td>${amiS3Manifest}</td>
+                    </tr>
+                    <tr>
+                        <th>Group</th>
+                        <td>${build.getTroveName()}</td>
+                    </tr>
+                    <tr>
+                        <th>Version</th>
+                        <td>${str(version.trailingRevision())}</td>
+                    </tr>
+                    <tr>
+                        <th>Flavor</th>
+                        <td>${str(build.getTroveFlavor()).replace(',', ', ')}</td>
+                    </tr>
+                    <tr>
+                        <th>Architecture</th>
+                        <td>${build.getArch()}</td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
+                    </tr>
+                </table>
+
+                <h3>Notes</h3>
+                <div py:for="note in notes.splitlines()" py:content="truncateForDisplay(note, 10000000, 70)" />
+                <div py:if="not notes">This build has no notes.</div>
+
+                <div py:def="xenHelp">
+                    <p py:if="'Xen Virtual Appliance' in extraFlags">
+                        This file can be installed as a Xen&trade; DomU. See rPath's
+                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide" target="_blank">Xen DomU Guide</a>
+                        for information and instructions.
+                    </p>
+                </div>
+
                 </div>
             </div>
         </div>
