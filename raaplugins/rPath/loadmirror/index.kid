@@ -32,6 +32,7 @@
                     }
                     swapDOM($('preloadProjects'), projList);
                     replaceChildNodes($('preloadCount'), "Projects eligible for mirror pre-loading: " + candidates);
+                    getElement('preloadPrompt').style.display = ''; 
 
                     if(candidates > 0)
                         showElement($('startButton'));
@@ -84,9 +85,14 @@
     <body id="middleWide">
         <div>
             <h3>Mirror Pre-Load:</h3>
-            <p id="preloadPrompt">The mirror pre-load process will convert the following external projects into mirrored repositories:</p>
+            <p id="preloadPrompt" style="display: ${inProgress and 'none' or ''}">The mirror pre-load process will convert the following external projects into mirrored repositories:</p>
             <p id="preloadProjects">
-                Please wait while the list of projects available to pre-load is retrieved...
+                <div py:strip="True" py:if="inProgress">
+                    A pre-loading operation is in progress.  Please see the activity log for details.
+                </div>
+                <div py:strip="True" py:if="not inProgress">
+                    Please wait while the list of projects available to pre-load is retrieved...
+                </div>
             </p>
             <p id="preloadCount"></p>
             <button onclick="javascript:startPreload();" style="display: none;" id="startButton">Start Preloading</button>
