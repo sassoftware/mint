@@ -882,21 +882,44 @@ class ProjectHandler(WebHandler):
                     noLink = "releases")
 
     @intFields(id = None)
-    def release(self, auth, id):
+    @listFields(int, buildType = [])
+    def release(self, auth, id, buildType):
         try:
             release = self.client.getPublishedRelease(id)
             builds = [self.client.getBuild(x) for x in release.getBuilds()]
+            flaggedBuilds = set([buildtypes.flavorFlagsFromId[x] \
+                                     for x in buildType \
+                                     if x in buildtypes.FLAG_TYPES])
+            builds = (not buildType) and  builds or \
+                ([x for x in builds if x.buildType in buildType or \
+                      flaggedBuilds.intersection(x.getDataDict())])
         except database.ItemNotFound:
             self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
         else:
             return self._write("pubrelease", release = release, builds = builds)
 
-    def latestRelease(self, auth):
+    @listFields(str, buildType = [])
+    def latestRelease(self, auth, buildType):
+        buildType = [buildtypes.validBuildTypes.get(x) or \
+                         buildtypes.deprecatedBuildTypes.get(x) \
+                         or buildtypes.flavorFlags.get(x) for x in buildType]
+        if None in buildType:
+            self._addErrors("Invalid build type")
+            self._predirect(temporary = True)
+            return
         if not self.latestPublishedRelease:
             self._addErrors("This project does not have any published releases.")
             self._predirect(temporary = True)
         else:
-            self._predirect('release?id=%d' % (self.latestPublishedRelease.id), temporary = True)
+            if buildType:
+                queryStr = '&'.join(['buildType=%d' % x for x in buildType])
+                self._predirect('release?id=%d&%s' % \
+                                    (self.latestPublishedRelease.id, queryStr),
+                                temporary = True)
+            else:
+                self._predirect('release?id=%d' % \
+                                    (self.latestPublishedRelease.id),
+                                temporary = True)
 
     @writersOnly
     @intFields(buildId = None)
