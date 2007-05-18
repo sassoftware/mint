@@ -460,8 +460,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               mirrorBy='group',
                               groups='group-test')
         assert(client.getOutboundMirrors()[1][5] == ['-.*:source', '-.*:debuginfo', '+group-test'])
-        import epdb
-        epdb.st()
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
