@@ -1186,6 +1186,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 del res[key]
         return res
 
+    @private
+    @typeCheck(str, str)
+    def pwCheck(self, user, password):
+        return self.users.checkAuth((user, password))['authorized']
+
     @typeCheck(int)
     @requiresAuth
     @private

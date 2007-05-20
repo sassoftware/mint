@@ -84,6 +84,9 @@ class MintClient:
         authTuple = self.server.checkAuth()
         return users.Authorization(**authTuple)
 
+    def pwCheck(self, user, password):
+        return self.server.pwCheck(user, password)
+
     def updateAccessedTime(self, userId):
         return self.server.updateAccessedTime(userId)
 

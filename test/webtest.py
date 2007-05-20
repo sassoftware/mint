@@ -1706,6 +1706,23 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # check unicode
         self.failUnless(client.checkHTTPReturnCode(u'http://%s.%s:%d/' % (MINT_HOST, MINT_DOMAIN, self.port)))
 
+    def testPwCheck(self):
+        client, userid = self.quickMintUser('testuser', 'testpass')
+        from conary.repository.netrepos.netauth import PasswordCheckParser
+
+        x = PasswordCheckParser()
+        x.parse(self.fetch('/pwCheck?user=testuser;password=testpass').body)
+        assert x.valid
+
+        x.parse(self.fetch('/pwCheck?user=baduser;password=testpass').body)
+        assert not x.validPassword()
+
+        x.parse(self.fetch('/pwCheck?user=testuser;password=badpw').body)
+        assert not x.validPassword()
+
+        x.parse(self.fetch('/pwCheck?user=').body)
+        assert not x.validPassword()
+
 
 if __name__ == "__main__":
     testsuite.main()

@@ -102,6 +102,12 @@ class SiteHandler(WebHandler):
             publishedReleases = publishedReleases, table1Data = table1Data,
             table2Data = table2Data)
 
+    @strFields(user = '', password = '')
+    @requiresHttps
+    def pwCheck(self, auth, user, password):
+        return """<auth valid="%s">\n""" % \
+            str(bool(self.client.pwCheck(user, password))).lower()
+
     @intFields(pageId=1)
     def applianceSpotlight(self, pageId, *args, **kwargs):
         spotlightData = self.client.getSpotlightAll()
