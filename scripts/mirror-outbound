@@ -47,7 +47,7 @@ class MirrorOutbound(MirrorScript):
                 allLabels, recurse, matchStrings, order in outboundMirrors:
 
             cfg = mirror.MirrorFileConfiguration()
-            fg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
+            cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
 
             sourceProject = client.getProject(int(sourceProjectId))
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
