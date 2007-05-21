@@ -205,13 +205,14 @@ def conaryHandler(req, cfg, pathInfo):
         # it's local
         repHash = actualRepName + req.hostname + str(requireSigs)
         dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
-        reposDBDriver, reposDBPath = getReposDB(db, dbName, projectId, cfg)
+        reposDBDriver, reposDBPath, isDefault = getReposDB(db, dbName, projectId, cfg)
         if reposDBDriver == "sqlite":
             conaryDb = None
+            reposDb = None
         else:
             try:
-                if not conaryDb:
-                    conaryDb = dbstore.connect(reposDBPath, reposDBDriver)
+                if not conaryDb or not isDefault:
+                    reposDb = dbstore.connect(reposDBPath, reposDBDriver)
                 else:
                     if conaryDb.reopen():
                         req.log_error("reopened a dead database connection in hooks.py")
@@ -219,6 +220,7 @@ def conaryHandler(req, cfg, pathInfo):
                     conaryDb.rollback() # roll back any hanging transactions
                     if conaryDb.dbName != dbName:
                         conaryDb.use(dbName)
+                    reposDb = conaryDb
             except sqlerrors.DatabaseError, e:
                 req.log_error("Error opening database %s: %s" % (dbName, str(e)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
@@ -230,7 +232,7 @@ def conaryHandler(req, cfg, pathInfo):
 
         if not repositories.has_key(repHash):
             repo, shimRepo = getRepository(projectHostName, actualRepName,
-                    dbName, cfg, req, conaryDb, (reposDBDriver, reposDBPath),
+                    dbName, cfg, req, reposDb, (reposDBDriver, reposDBPath),
                     localMirror, requireSigs, commitEmail)
             if repo:
                 repo.dbTuple = (reposDBDriver, reposDBPath)
@@ -362,9 +364,9 @@ def getReposDB(db, dbName, projectId, cfg):
     r = cu.fetchone()
     if r:
         apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_INFO)
-        return r[0], r[1]
+        return r[0], r[1], False
     else:
-        return cfg.reposDBDriver, cfg.reposDBPath % dbName
+        return cfg.reposDBDriver, cfg.reposDBPath % dbName, True
 
 def _resolveProjectRepos(db, hostname, domainname):
     # Start with some reasonable assumptions
