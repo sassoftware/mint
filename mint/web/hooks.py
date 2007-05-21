@@ -213,6 +213,8 @@ def conaryHandler(req, cfg, pathInfo):
             try:
                 if not conaryDb or not isDefault:
                     reposDb = dbstore.connect(reposDBPath, reposDBDriver)
+                    if isDefault:
+                        conaryDb = reposDb
                 else:
                     if conaryDb.reopen():
                         req.log_error("reopened a dead database connection in hooks.py")
