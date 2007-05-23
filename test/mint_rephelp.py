@@ -127,7 +127,7 @@ mintCfg = None
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
             conaryPath, repMap, useCache = False, requireSigs = False,
-            authCheck = None, entCheck = None, readOnlyRepository = False, serverIdx = 0):
+            authCheck = None, entCheck = None, readOnlyRepository = False, serverIdx = 0, **kwargs):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
         self.name = name
