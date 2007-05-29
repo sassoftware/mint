@@ -6,6 +6,8 @@ import turbogears
 
 import raa
 
+from conary.lib.cfgtypes import CfgEnvironmentError
+
 from raa.modules.raawebplugin import rAAWebPlugin
 from raa.db.database import writeOp, readOp
 
@@ -40,7 +42,10 @@ class MCPConsole(rAAWebPlugin):
     def __init__(self, *args, **kwargs):
         rAAWebPlugin.__init__(self, *args, **kwargs)
         cfg = mcpclient.MCPClientConfig()
-        cfg.read('/srv/rbuilder/config/mcp-client.conf')
+        try:
+            cfg.read('/srv/rbuilder/config/mcp-client.conf')
+        except CfgEnvironmentError:
+            cfg.queueHost = 'localhost'
         self.c = mcpclient.MCPClient(cfg)
         cherrypy.server.on_stop_thread_list.append(self.disconnect)
         self.messages = []
