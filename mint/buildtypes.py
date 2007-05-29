@@ -22,6 +22,7 @@ validBuildTypes = {
     'VIRTUAL_IRON'      : 12,
     'PARALLELS'         : 13,
     'AMI'               : 14,
+    'UPDATE_ISO'        : 15,
 }
 
 TYPES = validBuildTypes.values()
@@ -81,6 +82,7 @@ typeNames = {
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
     AMI:                "Amazon Machine Image",
+    UPDATE_ISO:         "Update CD/DVD",
 }
 
 typeNamesShort = {
@@ -98,6 +100,7 @@ typeNamesShort = {
     VIRTUAL_IRON:       "Virtual Iron",
     PARALLELS:          "Parallels",
     AMI:                "AMI",
+    UPDATE_ISO:         "Update CD/DVD",
 }
 
 typeNamesMarketing = {
@@ -115,6 +118,7 @@ typeNamesMarketing = {
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
     AMI:                "Amazon Machine Image",
+    UPDATE_ISO:         "Update CD/DVD",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
