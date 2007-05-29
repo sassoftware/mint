@@ -245,21 +245,22 @@
             <ul style="list-style-type: none;">
                 <div py:for="build in builds">
                     <?python
-                        # fetch the first file and the first URL we have for a build
-                        file = build.getFiles()[0]
-                        title = file['title'] or ("Disc %d" % (file['idx'], ))
-                        fileUrl = cfg.basePath + 'downloadImage?fileId=%d' % file['fileId']
-                        extraFlags = getExtraFlags(build.troveFlavor)
+                        buildFiles = [x for x in build.getFiles() if x['title'] not in ('diskboot.img', 'boot.iso')]
                     ?>
-                    <li>
-                        <a href="$fileUrl">${build.getArch()} ${buildtypes.typeNamesMarketing[build.buildType]}</a>
+                    <li py:for="file in buildFiles">
+                        <?python
+                            title = file['title'] or ("Disc %d" % (file['idx'] + 1, ))
+                            fileUrl = cfg.basePath + 'downloadImage?fileId=%d' % file['fileId']
+                            extraFlags = getExtraFlags(build.troveFlavor)
+                        ?>
+                        <a href="$fileUrl">${build.getArch()} ${buildtypes.typeNamesMarketing[build.buildType].replace('CD/DVD', max(734003200, file['size']) == 734003200 and 'CD' or 'DVD')}: ${title}</a>
                         <span py:omit="True" py:if="extraFlags">(${", ".join(extraFlags)})</span>
                     </li>
                 </div>
             </ul>
 
             <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types" target="_blank"><b>Which one do I want?</b></a></span>
-            <span><a href="${project.getUrl()}latestRelease"><b>More Information...</b></a></span>
+            <span><a href="${project.getUrl()}latestRelease"><b>Additional Options...</b></a></span>
         </div>
       </div>
     </div>
