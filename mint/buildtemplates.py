@@ -201,6 +201,11 @@ class InstallableIsoTemplate(Template):
                  'anacondaTemplatesTrove', 'mirrorUrl']
     id = buildtypes.INSTALLABLE_ISO
 
+class UpdateIsoTemplate(Template):
+    __slots__ = ['maxIsoSize', 'baseFileName', 'mediaTemplateTrove']
+    id = buildtypes.UPDATE_ISO
+
+
 class NetbootTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'mirrorUrl']
     id = buildtypes.NETBOOT_IMAGE
