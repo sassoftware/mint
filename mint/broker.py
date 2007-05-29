@@ -21,6 +21,7 @@ from mint.client import MintClient
 from mint import database
 
 from conary.lib import util
+from conary.lib.cfgtypes import CfgEnvironmentError
 
 timestamp = lambda x: '%s: %s' % (time.strftime(time.ctime()), x)
 
@@ -139,7 +140,10 @@ def main(envArgs = sys.argv[1:]):
         mintCfg.read(options.config)
 
     mcpCfg = mcp_client.MCPClientConfig()
-    mcpCfg.read(options.mcp_config)
+    try:
+        mcpCfg.read(options.mcp_config)
+    except CfgEnvironmentError:
+        mcpCfg.queueHost = 'localhost'
 
     if options.daemon:
         redirIO(os.path.join(mintCfg.dataPath, 'logs', 'image-broker.log'))
