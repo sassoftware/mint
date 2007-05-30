@@ -4190,7 +4190,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # attempt to boot it up
         ec2Wrapper = ec2.EC2Wrapper(self.cfg)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
-                userData=userData)
+                userData=userData,
+                useNATAddressing=self.cfg.ec2UseNATAddressing)
 
         if not ec2InstanceId:
             raise ec2.FailedToLaunchAMIInstance()

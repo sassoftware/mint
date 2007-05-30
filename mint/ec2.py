@@ -133,10 +133,16 @@ class EC2Wrapper(object):
     def __init__(self, cfg):
         self.ec2conn = boto.connect_ec2(cfg.awsPublicKey, cfg.awsPrivateKey)
 
-    def launchInstance(self, ec2AMIId, userData=None):
+    def launchInstance(self, ec2AMIId, userData=None, useNATAddressing=False):
+
+        # Get the appropriate addressing type to pass into the
+        # Amazon API; 'public' uses NAT, 'direct' is bridged.
+        # The latter method is deprecated and may go away in the
+        # future.
+        addressingType = useNATAddressing and 'public' or 'direct'
         try:
             ec2Reservation = self.ec2conn.run_instances(ec2AMIId,
-                    user_data=userData)
+                    user_data=userData, addressing_type=addressingType)
             ec2Instance = ec2Reservation.instances[0]
             return str(ec2Instance.id)
         except EC2ResponseError:

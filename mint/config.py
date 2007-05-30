@@ -154,6 +154,7 @@ class MintConfig(ConfigFile):
     ec2MaxInstancesPerIP    = 10
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
+    ec2UseNATAddressing     = (cfgtypes.CfgBool, False)
 
     VAMUser                 = ''
     VAMPassword             = ''
