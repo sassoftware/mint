@@ -37,7 +37,7 @@ class FakeEC2Connection(object):
                 self.awsPrivateKey != FAKE_PRIVATE_KEY:
             raise EC2ResponseError()
 
-    def run_instances(self, amiId, user_data=None):
+    def run_instances(self, amiId, user_data=None, addressing_type = 'public'):
         self._checkKeys()
         return FakeEC2Reservation(amiId)
 
