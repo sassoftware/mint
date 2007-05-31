@@ -155,6 +155,7 @@ def main(envArgs = sys.argv[1:]):
         mcpCfg.queueHost = 'localhost'
 
     if options.daemon:
+        redirIO(os.devnull)
         logging.basicConfig(level=logging.DEBUG,
             format ='%(asctime)s %(levelname)s %(message)s',
             filename = os.path.join(mintCfg.dataPath, 'logs', 'image-broker.log'),
