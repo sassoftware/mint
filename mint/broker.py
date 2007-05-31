@@ -11,6 +11,9 @@ import optparse
 import pwd
 import simplejson
 import time
+import traceback
+import logging
+log = logging
 
 from mcp import client as mcp_client
 from mcp import queue
@@ -23,7 +26,6 @@ from mint import database
 from conary.lib import util
 from conary.lib.cfgtypes import CfgEnvironmentError
 
-timestamp = lambda x: '%s: %s' % (time.strftime(time.ctime()), x)
 
 def handleImages(mcpCfg, mintCfg):
     mintClient = MintClient('http://%s:%s@localhost/xmlrpc-private/' % \
@@ -35,26 +37,26 @@ def handleImages(mcpCfg, mintCfg):
     postQueue = queue.Queue(mcpCfg.queueHost, mcpCfg.queuePort,
                             queueName, timeOut = None)
 
-    print  timestamp("Subscribed to %s on %s:%s" % (queueName,
-                     mcpCfg.queueHost, mcpCfg.queuePort))
+    log.info("Subscribed to %s on %s:%s" % (queueName,
+        mcpCfg.queueHost, mcpCfg.queuePort))
 
     try:
         while True:
             data = simplejson.loads(postQueue.read())
             uuid = data.get('uuid')
             urlMap = data.get('urls')
-            print timestamp("Received: %s, %s" % (str(uuid), str(urlMap)))
+            log.info("Incoming build: %s" % str(uuid))
+            log.debug("URL Map: %s" % str(urlMap))
             buildId = int(uuid.split('-')[-1])
             try:
                 build = mintClient.getBuild(buildId)
             except database.ItemNotFound:
-                print timestamp("Build ID: %s not found. skipping" % buildId)
+                log.warning("Build ID: %s not found. Skipping." % buildId)
                 continue
             try:
                 project = mintClient.getProject(build.projectId)
             except database.ItemNotFound:
-                print timestamp("Project ID: %s not found. skipping" % \
-                                    build.projectId)
+                log.warning("Project ID: %s not found. skipping" % build.projectId)
                 continue
             finalDir = \
                 os.path.join(mintCfg.imagesPath, project.hostname, str(buildId))
@@ -65,18 +67,18 @@ def handleImages(mcpCfg, mintCfg):
                 for url, fileDesc in urlMap:
                     filePath = os.path.join( \
                         finalDir, httplib.urlsplit(url)[2].split('/')[-1])
-                    print timestamp("downloading %s to %s" % (url, filePath))
+                    log.info("Downloading %s to %s" % (url, filePath))
                     util.execute('curl --create-dirs -o %s %s' % \
                                      (filePath, url))
                     newUrlMap.append([filePath, fileDesc])
             except RuntimeError:
-                print timestamp("Curl couldn't download images. skipping")
+                log.error("Curl couldn't download images: skipping.")
                 continue
-            print timestamp('setting build metadata for %s' % uuid)
+            log.debug('setting build metadata for %s' % uuid)
             build.setFiles(newUrlMap)
-            print timestamp('Stopping job %s' % uuid)
+            log.debug('Stopping job %s' % uuid)
             mcpClient.stopJob(uuid)
-            print timestamp('Completed handling of %s' % uuid)
+            log.debug('Completed handling of %s' % uuid)
     finally:
         mcpClient.disconnect()
         postQueue.disconnect()
@@ -90,13 +92,20 @@ def redirIO(outputFn, inputFn = os.devnull):
     os.close(input)
     os.close(output)
 
+
 def daemon(func, *args, **kwargs):
     pid = os.fork()
     if not pid:
         os.setsid()
         pid = os.fork()
         if not pid:
-            func(*args, **kwargs)
+            try:
+                func(*args, **kwargs)
+            except Exception, e:
+                exc, e, tb = sys.exc_info()
+                log.error(''.join(traceback.format_tb(tb)))
+                log.error(e)
+
 
 def main(envArgs = sys.argv[1:]):
     parser = optparse.OptionParser()
@@ -146,10 +155,12 @@ def main(envArgs = sys.argv[1:]):
         mcpCfg.queueHost = 'localhost'
 
     if options.daemon:
-        redirIO(os.path.join(mintCfg.dataPath, 'logs', 'image-broker.log'))
+        logging.basicConfig(level=logging.DEBUG,
+            format ='%(asctime)s %(levelname)s %(message)s',
+            filename = os.path.join(mintCfg.dataPath, 'logs', 'image-broker.log'),
+            filemode='a')
         daemon(handleImages, mcpCfg, mintCfg)
     else:
+        logging.basicConfig(level=logging.DEBUG,
+            format ='%(asctime)s %(levelname)s %(message)s')
         handleImages(mcpCfg, mintCfg)
-
-if __name__ == '__main__':
-    main()
