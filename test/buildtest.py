@@ -767,10 +767,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(buildDict['serialVersion'] != 1,
                     "Serial Version 1 was not honored")
 
-        assert sorted(buildDict.keys()) == \
-            ['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
+        self.failUnlessEqual(set(buildDict.keys()),
+            set(['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
              'project', 'serialVersion', 'troveFlavor', 'troveName',
-             'troveVersion', 'type']
+             'troveVersion', 'type', 'entitlements']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 

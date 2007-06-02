@@ -2135,6 +2135,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r['serialVersion'] = builds.SERIAL_VERSION
         r['type'] = 'build'
 
+        # inject rBuilder's entitlements into the serialized build
+        r['entitlements'] = {}
+        if os.path.isdir(os.path.join(self.cfg.dataPath, 'entitlements')):
+            for serverName in os.listdir(os.path.join(self.cfg.dataPath, 'entitlements')):
+                fn = os.path.join(self.cfg.dataPath, 'entitlements', servername)
+                if os.isfile(fn):
+                    f = open(fn)
+                    ent = conarycfg.loadEntitlementFromString(fn.read(), serverName, fn)
+                    r['entitlements'][serverName] = ent
+
         for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
                       'description', 'buildType'):
             r[key] = buildDict[key]
