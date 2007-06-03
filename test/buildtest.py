@@ -30,6 +30,7 @@ from conary.repository.errors import TroveNotFound
 from conary import versions
 from conary.deps import deps
 from conary import conaryclient
+from conary import conarycfg
 
 import fixtures
 
@@ -757,6 +758,11 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testSerializeBuild(self, db, data):
         client = self.getClient('admin')
+
+        util.mkdirChain(self.cfg.dataPath + "/entitlements")
+        f = open(self.cfg.dataPath + "/entitlements/server.com", "w")
+        f.write(conarycfg.emitEntitlement('server.com', 'class', 'key'))
+        f.close()
 
         build = client.getBuild(data['pubReleaseFinalId'])
 
