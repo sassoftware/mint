@@ -518,7 +518,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         finally:
             self.stopRepository(1)
-
+            self.stopRepository(2)
 
 if __name__ == "__main__":
     runTest = True
