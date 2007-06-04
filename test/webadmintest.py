@@ -119,50 +119,73 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent("/project/rpath2/",
             "To preload this external project as a local mirror")
 
+    def setupUser(self, repos, reposLabel, user, pw, troves, label):
+        repos.addUser(reposLabel, user, pw)
+        repos.addAcl(reposLabel, user, troves, label, False, False, False)
+        repos.setUserGroupCanMirror(reposLabel, user, True)
+
+        return self.getRepositoryClient(user = user, password = pw)
+
     def testCreateExternalProjectEntitlement(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
+
+        entClass = 'entitlementclass'
+        entKey = 'entitlementkey'
+        repos = self.openRepository(1)
+        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
+
+        repos.addEntitlementGroup('localhost1', entClass, 'user')
+        repos.addEntitlements('localhost1', entClass, [entKey])
 
         util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
         # ensure "first time" content appears on page
         page = self.fetch("/admin/addExternal")
         page = page.postForm(1, self.post,
-            {'hostname':        'rpath',
-             'name':            'rPath Linux',
-             'label':           'conary.rpath.com@rpl:devel',
-             'url':             '',
+            {'hostname':        'external',
+             'name':            'External Project',
+             'label':           'localhost1@rpl:devel',
+             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
              'authType':        'entitlement',
-             'externalEntKey':  'entitlementkey',
-             'externalEntClass':'entitlementclass',
+             'externalEntKey':  entKey,
+             'externalEntClass':entClass,
             }
         )
 
-        assert(os.path.exists(self.mintCfg.dataPath + "/entitlements/conary.rpath.com"))
+        assert(os.path.exists(self.mintCfg.dataPath + "/entitlements/localhost1"))
 
     def testCreateExternalProjectEntitlementExtraWhitespace(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
+        entClass = 'entitlementclass'
+        entKey = 'entitlementkey'
+        repos = self.openRepository(1)
+        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
+
+        repos.addEntitlementGroup('localhost1', entClass, 'user')
+        repos.addEntitlements('localhost1', entClass, [entKey])
+
         util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
         # ensure "first time" content appears on page
         page = self.fetch("/admin/addExternal")
         page = page.postForm(1, self.post,
-            {'hostname':        'rpath',
-             'name':            'rPath Linux',
-             'label':           'conary.rpath.com@rpl:devel',
-             'url':             '',
+            {'hostname':        'external',
+             'name':            'External Project',
+             'label':           'localhost1@rpl:devel',
+             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
              'authType':        'entitlement',
-             'externalEntKey':  'entitlementkey  \n',
-             'externalEntClass':'  entitlementclass',
+             'externalEntKey':  '%s    \n' % entKey,
+             'externalEntClass':'  %s' % entClass,
             }
         )
 
         from conary.conarycfg import loadEntitlementFromString
 
-        entPath = self.mintCfg.dataPath + "/entitlements/conary.rpath.com"
+        entPath = self.mintCfg.dataPath + "/entitlements/localhost1"
         xmlContent = open(entPath).read()
-        ent = loadEntitlementFromString(xmlContent, "conary.rpath.com", entPath)
-        self.failUnlessEqual(ent, ('entitlementclass', 'entitlementkey'))
+        ent = loadEntitlementFromString(xmlContent, "localhost1", entPath)
+        self.failUnlessEqual(ent, (entClass, entKey))
 
     def testExternalProjectMirrorAllLabels(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -176,12 +199,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'name':                    'rPath Linux',
              'label':                   'conary.rpath.com@rpl:devel',
              'url':                     '',
-             'authType':                'entitlement',
-             'externalEntKey':          'entitlementkey',
-             'externalEntClass':        'entitlementclass',
-             'allLabels':                   '1',
+             'authType':                'userpass',
+             'externalUser':            'test',
+             'externalPass':            'pass',
+             'allLabels':               '1',
              'additionalLabelsToMirror':'',
-             'useMirror':              'net',
+             'useMirror':               'net',
             }
         )
 
