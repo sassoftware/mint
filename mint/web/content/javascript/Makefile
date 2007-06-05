@@ -11,7 +11,8 @@ javascript_files =\
 
 generated_files =\
 	buildtypes.js \
-	jobstatus.js
+	jobstatus.js  \
+	buildtemplates.js
 
 dist_files = $(javascript_files) $(generated_files) Makefile
 
@@ -22,6 +23,9 @@ buildtypes.js: ../../../buildtypes.py
 
 jobstatus.js: ../../../jobstatus.py
 	python ../../../jobstatus.py --genjs > jobstatus.js
+
+buildtemplates.js: ../../../buildtemplates.py
+	PYTHONPATH=../../../../ python ../../../buildtemplates.py --genjs > buildtemplates.js
 
 install:
 	mkdir -p $(DESTDIR)$(contentdir)/javascript
