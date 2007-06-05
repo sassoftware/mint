@@ -57,7 +57,10 @@ def buildsFromXml(xmlData, splitDefault = False):
         if len(defaults) > 1:
             raise mint_error.BuildXmlInvalid( \
                 'Only one defaults section is allowed')
-        default = dictFromElem(defaults[0])
+        elif len(defaults) < 1:
+            default = {}
+        else:
+            default = dictFromElem(defaults[0])
         if splitDefault:
             res.append(default)
         for elem in [x for x in root.getchildren() if x not in defaults]:

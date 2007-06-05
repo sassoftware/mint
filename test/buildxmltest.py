@@ -168,6 +168,9 @@ class BuildXmlTest(testsuite.TestCase):
         res = buildxml.buildsFromXml(xml)
         self.failIf(ref != res, "Expected %s but got %s" % (ref, res))
 
+    def testDefaultXMLToBuilds(self):
+        defaultXml = '<buildDefinition version="1.0"/>\n'
+        self.failUnlessEqual(buildxml.buildsFromXml(defaultXml), [])
 
     def testBuildToXmlVer(self):
         self.assertRaises(AssertionError, buildxml.xmlFromData, [], '-1.0')
