@@ -78,6 +78,9 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 from conary.dbstore import sqlerrors, sqllib
+from conary import checkin
+from conary.build import use
+
 
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
@@ -1956,8 +1959,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         pid = os.fork()
         if not pid:
-            from conary import checkin
-            from conary.build import use
             try:
                 path = tempfile.mkdtemp( \
                     dir = os.path.join(self.cfg.dataPath, 'tmp'))
