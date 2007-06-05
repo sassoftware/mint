@@ -76,8 +76,8 @@ def handleImages(mcpCfg, mintCfg):
                 continue
             log.debug('setting build metadata for %s' % uuid)
             build.setFiles(newUrlMap)
-            log.debug('Stopping job %s' % uuid)
-            mcpClient.stopJob(uuid)
+            log.debug('Acknowledging job %s' % uuid)
+            mcpClient.ackJob(uuid)
             log.debug('Completed handling of %s' % uuid)
     finally:
         mcpClient.disconnect()
