@@ -1502,3 +1502,25 @@ dl.archOptions dd {
 .MpContainer li.yui-ac-highlight {background:#ff0;}
 .MpContainer li.yui-ac-prehighlight {background:#FFFFCC;}
 
+table.buildDefs {
+    font-size: smaller;
+    background: #fcfcfc;
+    border: 2px solid #f0f0f0;
+    margin-bottom: 2em;
+    padding: 10px;
+}
+table.buildDefs tr td input, table.buildDefs tr td select {
+    font-size: smaller;
+}
+
+table.buildDefs tr td:first-child {
+    width: 50%;
+}
+
+table.buildDefs tr td select, table.buildDefs tr td input.text {
+    width: 80%;
+}
+
+table.buildDefs tr.dialogButtons td button {
+    float: right;
+}

@@ -11,6 +11,7 @@ import tempfile
 import time
 from mod_python import apache
 
+from mint import buildxml
 from mint.web import basictroves
 from mint import communitytypes
 from mint import database
@@ -622,6 +623,21 @@ class ProjectHandler(WebHandler):
                 extraFlags = extraFlags,
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
+
+
+    @ownerOnly
+    @strFields(label = None)
+    def buildDefs(self, auth, label):
+        buildsXml = self.client.checkoutBuildXml(self.project.id, label)
+        builds = buildxml.buildsFromXml(buildsXml, splitDefault = False)
+
+        visibleTypes = self.client.getAvailableBuildTypes()
+
+        # FIXME: generate a cacheable javascript file from this.
+        defaultBuildOpts = dict((x[0], x[2]) for x in buildtemplates.getDisplayTemplates())
+
+        return self._write("buildDefs", builds = builds, label = label, visibleTypes = visibleTypes,
+            defaultBuildOpts = simplejson.dumps(defaultBuildOpts))
 
     @ownerOnly
     def newRelease(self, auth):
