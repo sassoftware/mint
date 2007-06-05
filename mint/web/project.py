@@ -633,11 +633,7 @@ class ProjectHandler(WebHandler):
 
         visibleTypes = self.client.getAvailableBuildTypes()
 
-        # FIXME: generate a cacheable javascript file from this.
-        defaultBuildOpts = dict((x[0], x[2]) for x in buildtemplates.getDisplayTemplates())
-
-        return self._write("buildDefs", builds = builds, label = label, visibleTypes = visibleTypes,
-            defaultBuildOpts = simplejson.dumps(defaultBuildOpts))
+        return self._write("buildDefs", builds = builds, label = label, visibleTypes = visibleTypes)
 
     @ownerOnly
     def newRelease(self, auth):
