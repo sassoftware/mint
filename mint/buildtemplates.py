@@ -202,7 +202,7 @@ class InstallableIsoTemplate(Template):
     id = buildtypes.INSTALLABLE_ISO
 
 class UpdateIsoTemplate(Template):
-    __slots__ = ['maxIsoSize', 'baseFileName', 'mediaTemplateTrove']
+    __slots__ = ['baseFileName', 'mediaTemplateTrove']
     id = buildtypes.UPDATE_ISO
 
 
