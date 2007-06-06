@@ -103,10 +103,11 @@ class SiteHandler(WebHandler):
             table2Data = table2Data)
 
     @strFields(user = '', password = '')
-    @requiresHttps
     def pwCheck(self, auth, user, password):
-        return """<auth valid="%s">\n""" % \
-            str(bool(self.client.pwCheck(user, password))).lower()
+        ret = 'false'
+        if not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off':
+            ret = str(bool(self.client.pwCheck(user, password))).lower()
+        return """<auth valid="%s">\n""" % ret
 
     @intFields(pageId=1)
     def applianceSpotlight(self, pageId, *args, **kwargs):
