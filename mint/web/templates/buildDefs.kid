@@ -10,6 +10,15 @@
         <title>Project Build Definitions</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtemplates.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/builddefs.js?v=${cacheFakeoutVersion}"/>
+        <script type="text/javascript">
+            addLoadEvent(function() {
+                var inputBuilds = ${buildsJson};
+                for(var i in inputBuilds) {
+                    var build = inputBuilds[i];
+                    addExisting(i, build);
+                }
+            });
+        </script>
     </head>
 
     <body>
@@ -27,11 +36,14 @@
                         <td colspan="2">Options</td>
                     </tr>
 
-                    <tr py:for="build in builds">
-                        <td>${buildtypes.typeNames[build['type']]}</td>
-                        <td><a href="blarg"><b>Edit</b></a></td>
-                        <td><a href="flarp"><b>Delete</b></a></td>
-                    </tr>
+                    <div py:omit="True" py:for="i, build in enumerate(builds)">
+                        <tr>
+                            <td>${buildtypes.typeNames[build['type']]}</td>
+                            <td><a onclick="javascript:showEdit('edit_${i}');" href="#"><b>Edit</b></a></td>
+                            <td><a href="#"><b>Delete</b></a></td>
+                        </tr>
+                        <tr><td colspan="3"><div id="edit_${i}"/></td></tr>
+                    </div>
                 </table>
 
                 <div style="padding: 1em 1em 1em 2px;">

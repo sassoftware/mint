@@ -633,7 +633,9 @@ class ProjectHandler(WebHandler):
 
         visibleTypes = self.client.getAvailableBuildTypes()
 
-        return self._write("buildDefs", builds = builds, label = label, visibleTypes = visibleTypes)
+        return self._write("buildDefs", builds = builds,
+            buildsJson = simplejson.dumps(builds),
+            label = label, visibleTypes = visibleTypes)
 
     @ownerOnly
     def newRelease(self, auth):
@@ -757,8 +759,6 @@ class ProjectHandler(WebHandler):
         else:
             return None
 
-    
-    
     def _getPreviewData(self, pubrelease, latestBuild):
         dataDict = {} 
         # Title
