@@ -159,7 +159,10 @@ class UpgradePathTest(MintRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("DROP TABLE OutboundMirrorTargets")
         cu.execute("DROP TABLE OutboundMirrors")
-        cu.execute("DROP TABLE Projects")
+        if self.db.driver == 'sqlite':
+            cu.execute("DROP TABLE Projects")
+        else:
+            cu.execute("ALTER TABLE Projects DROP COLUMN commitEmail")
         cu.execute("""CREATE TABLE OutboundMirrors (
                 outboundMirrorId %(PRIMARYKEY)s,
                 sourceProjectId  INT NOT NULL,
