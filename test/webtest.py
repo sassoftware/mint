@@ -1710,17 +1710,22 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userid = self.quickMintUser('testuser', 'testpass')
         from conary.repository.netrepos.netauth import PasswordCheckParser
 
+        if self.mintCfg.SSL:
+            serverName = self.getServerData()[0]
+            url = 'https://%s:%s' % (serverName, self.securePort)
+        else:
+            url = ''
         x = PasswordCheckParser()
-        x.parse(self.fetch('/pwCheck?user=testuser;password=testpass').body)
+        x.parse(self.fetch('%s/pwCheck?user=testuser;password=testpass' %url).body)
         assert x.valid
 
-        x.parse(self.fetch('/pwCheck?user=baduser;password=testpass').body)
+        x.parse(self.fetch('%s/pwCheck?user=baduser;password=testpass' %url).body)
         assert not x.validPassword()
 
-        x.parse(self.fetch('/pwCheck?user=testuser;password=badpw').body)
+        x.parse(self.fetch('%s/pwCheck?user=testuser;password=badpw' %url).body)
         assert not x.validPassword()
 
-        x.parse(self.fetch('/pwCheck?user=').body)
+        x.parse(self.fetch('%s/pwCheck?user=' %url).body)
         assert not x.validPassword()
 
 
