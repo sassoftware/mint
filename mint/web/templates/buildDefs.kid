@@ -20,6 +20,7 @@
                         addExisting(i, build);
                     }
                 }
+                setupRows();
             });
         </script>
     </head>
@@ -34,19 +35,14 @@
                 <h2>Default Builds for ${label}</h2>
 
                 <table>
-                    <tr style="font-size: larger; font-weight: bold; color: #293D82;">
-                        <td style="padding-bottom: 8px;">Build type</td>
-                        <td colspan="2">Options</td>
-                    </tr>
-
-                    <div py:omit="True" py:for="i, build in enumerate(builds)">
-                        <tr>
-                            <td>${buildtypes.typeNames[build['type']]}</td>
-                            <td><a onclick="javascript:showEdit('edit_${i}');" href="#"><b>Edit</b></a></td>
-                            <td><a href="#"><b>Delete</b></a></td>
+                    <thead>
+                        <tr style="font-size: larger; font-weight: bold; color: #293D82;">
+                            <td style="padding-bottom: 8px;">Build type</td>
+                            <td colspan="2">Options</td>
                         </tr>
-                        <tr><td colspan="3"><div id="edit_${i}"/></td></tr>
-                    </div>
+                    </thead>
+
+                    <tbody id="buildRowsBody" />
                 </table>
 
                 <div style="padding: 1em 1em 1em 2px;">
@@ -55,8 +51,6 @@
                     </select>
                     <button id="newBuildButton" onclick="javascript:addNew();">Add</button>
                 </div>
-
-                <div id="newType"/>
 
                 <div id="showJson"/>
 
