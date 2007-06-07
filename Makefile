@@ -25,7 +25,7 @@ export httpddir = $(sysconfdir)/httpd/conf.d/
 export maillistdir = /var/mailman
 export raapluginsdir = $(libdir)/raa/rPath/
 
-.PHONY: doc
+.PHONY: doc test
 
 SUBDIRS = mint test scripts raaplugins commands etc doc locales
 
@@ -62,6 +62,9 @@ dist: productqualifier=-online
 dist: main-dist strip-raa tarball version-file
 
 product: main-dist product-dist tarball version-file
+
+test:
+	hg archive -t tbz2 -I test $(DISTDIR)-test.tar.bz2
 
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/rbuilder/
