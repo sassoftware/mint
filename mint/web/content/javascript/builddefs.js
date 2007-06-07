@@ -27,23 +27,25 @@ Build.prototype.createRow = function(key, dataRow) {
     var tr = TR();
 
     var name = this.baseId + key;
+    var input;
     switch(dataRow[0]) {
 
     case RDT_STRING:
     case RDT_INT:
+        input = INPUT({'class': 'text', 'type': 'text', 'name': name, 'id': name, 'value': dataRow[1]});
         appendChildNodes(tr, TD({}, LABEL({'for': name}, dataRow[2])));
-        appendChildNodes(tr, TD({}, INPUT({'class': 'text', 'type': 'text', 'name': name, 'id': name, 'value': dataRow[1]})));
+        appendChildNodes(tr, TD({}, input));
         break;
     case RDT_BOOL:
         var td = TD();
-        appendChildNodes(td, INPUT({'class': 'reversed', 'value': '1', 'id': name, 'name': name, 'type': 'checkbox'}));
+        input = INPUT({'class': 'reversed', 'value': '1', 'id': name, 'name': name, 'type': 'checkbox'});
+        appendChildNodes(td, input);
         appendChildNodes(td, LABEL({'for': name}, dataRow[2]));
         appendChildNodes(tr, TD({}), td);
         break;
     case RDT_ENUM:
         appendChildNodes(tr, TD({}, LABEL({'for': name}, dataRow[2])));
         var select = SELECT({'name': name, 'id': name});
-        logDebug(dataRow[3]);
         for(enumPrompt in dataRow[3]) {
             var optionDict = {'value': dataRow[3][enumPrompt]};
             if(dataRow[1] == dataRow[3][enumPrompt]) {
@@ -51,11 +53,13 @@ Build.prototype.createRow = function(key, dataRow) {
             }
             appendChildNodes(select, OPTION(optionDict, enumPrompt));
         }
-
+        input = select;
         appendChildNodes(tr, TD({}, select));
         break;
     default:
     }
+    logDebug("setting input to settings: " + key);
+    this.settings[key] = input;
     return tr;
 }
 
@@ -107,20 +111,27 @@ Build.prototype.hide = function() {
 Build.prototype.save = function() {
     var buildSettings = new Array();
 
-    // this is much harder than it should be
-    // in python, it would look like this:
-    // buildSettings = [dict([(d[0], d[1][1]) for d in build.data.items()]) for build in builds]
-    //
-    dataArray = map(function(x) { return x.data }, builds);
-    for(i in dataArray) {
-        if(dataArray.hasOwnProperty(i)) {
-            d = {};
-            for(j in dataArray[i]) {
-                if(dataArray[i].hasOwnProperty(j)) {
-                    d[j] = dataArray[i][j][1];
+    for(buildId in builds) {
+        if(builds.hasOwnProperty(buildId)) {
+            var dataArray = builds[buildId].data;
+
+            var buildInfo = {};
+            buildInfo['data'] = {};
+            for(settingKey in dataArray) {
+                if(dataArray.hasOwnProperty(settingKey)) {
+                    var el = this.settings[settingKey];
+                    if(el) { // editor exists, pull value from the editor field
+                        if(el.type == "checkbox")
+                            buildInfo['data'][settingKey] = el.checked;
+                        else
+                            buildInfo['data'][settingKey] = el.value;
+                    } else { // editor not opened yet, just take the default
+                        buildInfo['data'][settingKey] = builds[buildId]['data'][settingKey][1];
+                    }
                 }
             }
-            buildSettings = buildSettings.concat(d);
+            buildInfo['type'] = builds[buildId].buildType;
+            buildSettings = buildSettings.concat(buildInfo);
         }
     }
 
