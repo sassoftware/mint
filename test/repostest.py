@@ -19,6 +19,7 @@ from mint import pkgindexer
 from mint.web.repos import ConaryHandler
 import recipes
 
+from conary import trove
 from conary import repository
 from conary.repository import errors
 from conary import versions
@@ -684,5 +685,56 @@ That is all."""
             'Output of difflib.ndiff not parsed correctly.')
 
 
+    def testLicenseAndCrypto(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        projectId = self.newProject(client, "Test Project", "localhost")
+        project = client.getProject(projectId)
+        repos = ConaryClient(project.getConaryConfig()).getRepos()
+
+        # Add some troves and a group
+        for i in range(0, 3):
+            self.addComponent('test%d:runtime' % i, '1.0', filePrimer = i,
+                              repos = repos)
+            self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
+                               repos = repos)
+        self.addQuickTestCollection("group-test", "/localhost.rpath.local2@rpl:devel/1.0-1-1",
+                                    [ ("test1:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                      ("test2:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+                                    ], repos=repos)
+
+        # Add some metadata
+        mi = trove.MetadataItem()
+        mi.licenses.set('Test License')
+        mi.crypto.set('Test Crypto')
+        ver = versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1')
+        fl = deps.parseFlavor('')
+        repos.addMetadataItems([(('test0:runtime',ver,fl), mi)])
+        mi = trove.MetadataItem()
+        mi.licenses.set('Different Test License')
+        mi.licenses.set('Different Test License part 2')
+        mi.crypto.set('Different Test Crypto')
+        repos.addMetadataItems([(('test1:runtime',ver,fl), mi)])
+
+        mi = trove.MetadataItem()
+        mi.licenses.set('Another license')
+        repos.addMetadataItems([(('test2:runtime',ver,fl), mi)])
+        
+        # test
+        ch = ConaryHandler(None, None)
+        ch.__dict__.update(repos=repos)
+        ch._write = lambda *args, **kwargs: (args, kwargs)
+        res = ch.licenseCryptoReport(t='group-test', v=ver, f=fl, auth=None)
+        self.failIf(res[0][0] != 'lic_crypto_report')
+        self.failIf(res[1]['troveName'] != 'group-test')
+        expected = {'test0:runtime': (['Test License'], ['Test Crypto']),
+                    'test1:runtime': (['Different Test License',
+                                      'Different Test License part 2'], 
+                                      ['Different Test Crypto']),
+                    'test2:runtime': (['Another license'], None),
+                    'group-test': (None, None)}
+        for x in res[1]['troves']:
+            print "%s %s %s" % (x[3], x[4], expected[x[0]])
+            self.failIf((x[3], x[4]) != expected[x[0]])
+        
 if __name__ == "__main__":
     testsuite.main()
