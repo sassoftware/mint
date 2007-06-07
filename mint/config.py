@@ -161,6 +161,8 @@ class MintConfig(ConfigFile):
 
     diffCacheDir            = os.path.join(dataPath, 'diffcache', '')
 
+    licenseCryptoReports    = (cfgtypes.CfgBool, True)
+
     # By default this is set to OFF. Default configuration file
     # shipped with rBuilder will turn this on for rBuilder Appliances
     useInternalConaryProxy  = (cfgtypes.CfgBool, False)
