@@ -12,17 +12,13 @@ var RDT_TROVE = 4;
 var builds = new Array();
 var uniqId = 0;
 
-function Build(baseId, data, buildType, existing) {
+function Build(baseId, buildType) {
+    logDebug("new build of type " + buildType);
     this.baseId = baseId;
-    this.data = data;
+    this.data = defaultBuildOpts[buildType];
     this.buildType = buildType;
-    this.existing = existing;
+    this.editor = null;
     bindMethods(this);
-
-    for(key in this.data) {
-        if(this.data.hasOwnProperty(key))
-            this.settings[key] = this.data[key][1];
-    }
 }
 
 Build.prototype.settings = new Array();
@@ -64,6 +60,7 @@ Build.prototype.createRow = function(key, dataRow) {
 }
 
 Build.prototype.createEditor = function() {
+    logDebug("creating editor");
     var table = TABLE({'class': 'buildDefs', 'id': 'edit_' + this.baseId});
     hideElement(table);
     for(var key in this.data) {
@@ -84,23 +81,31 @@ Build.prototype.createEditor = function() {
 }
 
 Build.prototype.cancel = function() {
-    if(this.existing) {
-        hideElement(this.editor);
-    } else {
-        templateDiv = DIV({'id': 'newType'});
-        $("newBuildType").disabled = false;
-        $("newBuildButton").disabled = false;
-
-        swapDOM(this.editor, templateDiv);
-    }
+    hideElement(this.editor);
 }
+
+Build.prototype.showBuild = function() {
+    if(!this.editor) {
+        this.createEditor();
+        swapDOM($('edit_' + this.baseId), this.editor);
+    }
+    logDebug("showing: edit_" + this.baseId);
+    showElement("edit_" + this.baseId);
+}
+
+Build.prototype.deleteBuild = function() {
+    var idx = builds.indexOf(this);
+    builds.splice(idx, 1);
+    setupRows();
+}
+
+Build.prototype.hide = function() {
+    hideElement("edit_" + this.baseId);
+}
+
 
 Build.prototype.save = function() {
     var buildSettings = new Array();
-
-    if(!this.existing) {
-        builds = builds.concat(this);
-    }
 
     // this is much harder than it should be
     // in python, it would look like this:
@@ -119,32 +124,56 @@ Build.prototype.save = function() {
         }
     }
 
+    setupRows();
     replaceChildNodes($('showJson'), buildSettings.toJSONString());
-    this.cancel();
+    this.hide();
+}
+
+function setupRows() {
+    var oldBody = $('buildRowsBody');
+    var newBody = TBODY({'id': 'buildRowsBody'});
+    for(var i in builds) {
+        if(builds.hasOwnProperty(i)) {
+            var build = builds[i];
+
+            var editLink = A({'href': '#'}, "Settings");
+            var deleteLink = A({'href': '#'}, "Delete");
+
+            connect(editLink, "onclick", build.showBuild);
+            connect(deleteLink, "onclick", build.deleteBuild);
+
+            var editor;
+            if(build.editor) {
+                editor = build.editor;
+            } else {
+                editor = DIV({'id': 'edit_' + build.baseId});
+            }
+
+            appendChildNodes(newBody,
+                TR({},
+                    TD({}, buildTypeNames[build.buildType]),
+                    TD({}, editLink),
+                    TD({}, deleteLink)),
+                TR({},
+                    TD({'colspan': '3'}, editor))
+            );
+        }
+    }
+    swapDOM(oldBody, newBody);
 }
 
 function addNew() {
     uniqId++;
 
-    x = $("newBuildType");
-    buildType = x.options[x.selectedIndex].value;
-    newBuild = new Build(uniqId, defaultBuildOpts[buildType], false);
-    $("newBuildType").disabled = true;
-    $("newBuildButton").disabled = true;
-
-    newBuild.createEditor();
-    showElement(newBuild.editor);
-    swapDOM($("newType"), newBuild.editor);
-}
-
-function showEdit(baseId) {
-    showElement($(baseId));
+    var x = $("newBuildType");
+    var buildType = x.options[x.selectedIndex].value;
+    var newBuild = new Build(uniqId, buildType);
+    builds = builds.concat(newBuild);
+    setupRows();
 }
 
 function addExisting(baseId, data) {
-    newBuild = new Build(baseId, defaultBuildOpts[data['type']], true);
-    newBuild.createEditor();
-    swapDOM($('edit_' + baseId), newBuild.editor);
+    var newBuild = new Build(baseId, data['type']);
     builds = builds.concat(newBuild);
     uniqId = baseId;
 }
