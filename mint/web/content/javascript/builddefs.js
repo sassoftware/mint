@@ -142,13 +142,20 @@ function setupRows() {
             connect(editLink, "onclick", build.showBuild);
             connect(deleteLink, "onclick", build.deleteBuild);
 
+            var editor;
+            if(build.editor) {
+                editor = build.editor;
+            } else {
+                editor = DIV({'id': 'edit_' + build.baseId});
+            }
+
             appendChildNodes(newBody,
                 TR({},
                     TD({}, buildTypeNames[build.buildType]),
                     TD({}, editLink),
                     TD({}, deleteLink)),
                 TR({},
-                    TD({'colspan': '3'}, DIV({'id': 'edit_' + build.baseId})))
+                    TD({'colspan': '3'}, editor))
             );
         }
     }
