@@ -10,6 +10,7 @@ kid_files =			\
 	error.kid		\
 	files.kid		\
 	group_contents.kid	\
+	lic_crypto_report.kid		\
 	notice.kid		\
         permission.kid          \
 	pgp_admin.kid		\
