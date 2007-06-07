@@ -15,6 +15,7 @@ from mimetypes import guess_type
 from mod_python import apache
 
 from mint import buildtypes
+from mint import constants
 from mint import urltypes
 from mint import database
 from mint import data
@@ -220,10 +221,10 @@ class SiteHandler(WebHandler):
     @intFields(step = 1)
     def help(self, auth, page, step):
         if page == 'lm-project-naming':
-            self._redirect("http://wiki.rpath.com/wiki/rBuilder:Create_a_Project")
+            self._redirect("http://wiki.rpath.com/wiki/rBuilder:Create_a_Project?version=${constants.mintVersion}")
         if not helpDocument(page):
             # Redirect to the main rbuilder wiki
-            self._redirect("http://wiki.rpath.com/wiki/rBuilder")
+            self._redirect("http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}")
         return self._write("docs/" + page, step = step)
 
     @redirectHttps

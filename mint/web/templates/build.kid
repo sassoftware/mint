@@ -10,6 +10,7 @@ from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import downloadTracker
 from mint.builds import getExtraFlags
 from mint import urltypes
+from mint import constants
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -229,7 +230,7 @@ from mint import urltypes
                 <div py:def="xenHelp">
                     <p py:if="'Xen Virtual Appliance' in extraFlags">
                         This file can be installed as a Xen&trade; DomU. See rPath's
-                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide" target="_blank">Xen DomU Guide</a>
+                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide?version=${constants.mintVersion}" target="_blank">Xen DomU Guide</a>
                         for information and instructions.
                     </p>
                 </div>

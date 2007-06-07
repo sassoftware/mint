@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python from mint import constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -34,7 +35,7 @@
                                 <input type="text" name="branch" value="${kwargs['branch']}" />
                                 <p class="help">The default Conary branch name for your project.
                                     A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. Refer to
-                                    <a href="http://wiki.rpath.com/wiki/Conary:Concepts">Conary Concepts</a>
+                                    <a href="http://wiki.rpath.com/wiki/Conary:Concepts?version=${constants.mintVersion}">Conary Concepts</a>
                                         for more information about branch names.
                                 </p>
                             </td>

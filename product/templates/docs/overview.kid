@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python from mint import userlevels ?>
+<?python from mint import userlevels, constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
@@ -39,7 +39,7 @@
             to support the development of:</p>
 
             <ul>
-                <li><a href="http://wiki.rpath.com/wiki/Conary">Conary</a>-based
+                <li><a href="http://wiki.rpath.com/wiki/Conary?version=${constants.mintVersion}">Conary</a>-based
                 Linux distributions</li>
 
                 <li>Open source software packaged with Conary</li>

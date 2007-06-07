@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python from mint import userlevels ?>
+<?python from mint import userlevels, constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
@@ -72,7 +72,7 @@
             <p>
                 Click the linked package name in the <i>Repository Browser</i> to view
                 package information, and locate the project <a
-                href="http://wiki.rpath.com/wiki/Glossary#label">label</a> as
+                href="http://wiki.rpath.com/wiki/Glossary?version=${constants.mintVersion}#label">label</a> as
                 part of the <i>Version</i> string listed in this information.  The project
                 label for a package with a version of
                 <i>/projectname.rpath.org@rpl:devel/1.1-1-1</i> is
@@ -96,7 +96,7 @@
 
             <p>Use this command to update your entire system at one time:</p>
             <pre class="cmd">[user@host ~]# conary updateall</pre>
-            <p>Use the <a href="http://wiki.rpath.com/wiki/Conary:QuickReference">Conary
+            <p>Use the <a href="http://wiki.rpath.com/wiki/Conary:QuickReference?version=${constants.mintVersion}">Conary
             QuickReference</a> to reference this and other tasks used to maintain your
             Conary-based system.  </p>
 
@@ -109,13 +109,13 @@
             feeds for the project.  </p>
 
             <ul>
-                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists">Subscribe to a project mailing list</a> from a projects <i>Mailing Lists</i> page</li>
+                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists?version=${constants.mintVersion}">Subscribe to a project mailing list</a> from a projects <i>Mailing Lists</i> page</li>
                 <li> Subscribe to an RSS feed for project release news using the RSS link on a project's main page</li>
-                <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project">Watch a project</a> to bookmark it in your rBuilder watch list</li>
+                <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project?version=${constants.mintVersion}">Watch a project</a> to bookmark it in your rBuilder watch list</li>
             </ul>
 
             <p>As an rBuilder user, you may also wish to <a
-            href="http://wiki.rpath.com/wiki/rBuilder:Join_a_Project">join
+            href="http://wiki.rpath.com/wiki/rBuilder:Join_a_Project?version=${constants.mintVersion}">join
             a project</a> to help out with testing, documentation, design, or to
             participate as a developer.</p>
 
@@ -124,13 +124,13 @@
             your project to develop your own distributions using existing rBuilder packages
             or for incorporating new packaged software.  Instructions for joining,
             participating in, and creating an rBuilder project is available in <a
-            href="http://wiki.rpath.com/wiki/rBuilder">rBuilder's online documentation</a>,
+            href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}">rBuilder's online documentation</a>,
             and an introduction to packaging your own software for a project is available
-            in the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial">New
+            in the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial?version=${constants.mintVersion}">New
             Package Tutorial</a>.</p>
 
             <p>For detailed instructions on these rBuilder operations and more, see the <a
-            href="http://wiki.rpath.com/wiki/rBuilder">rBuilder documentation at
+            href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}">rBuilder documentation at
             wiki.rpath.com</a>.</p>
 
         </div>

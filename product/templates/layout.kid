@@ -113,7 +113,7 @@ onload = "javascript:;"
                     <ul class="footerLinks">
                         <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBA" target="_blank">Help</a></li>
+                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBA?version=${constants.mintVersion}" target="_blank">Help</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">

@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python from mint import constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -111,7 +112,7 @@
                   using the integrated rMake features here in rBuilder.</p>
 
                 <p>For additional instructions, see rPath's <a
-                  href="http://wiki.rpath.com/wiki/rBuilder:rMake">rMake
+                  href="http://wiki.rpath.com/wiki/rBuilder:rMake?version=${constants.mintVersion}">rMake
                   documentation for rBuilder</a>.</p>
             </div>
         </div>

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python from mint import userlevels ?>
+<?python from mint import userlevels, constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
@@ -71,14 +71,14 @@
 
                 <p>
                     For detailed instructions on these rBuilder operations and more, see the 
-                    <a href="http://wiki.rpath.com/wiki/rBuilder">rBuilder documentation at wiki.rpath.com</a>.
+                    <a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}">rBuilder documentation at wiki.rpath.com</a>.
                 </p>
 
                 <p>To extend rBuilder functions, you might also choose to:</p>
                 <ul>
-                    <li><a href="http://wiki.rpath.com/wiki/Conary:Packager">Create your own packages</a> for your project on a local Conary-based system</li>
-                    <li>Step through an introduction to packaging using the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial">New Package Tutorial</a>, including the steps to package your own software for rBuilder Online</li>
-                    <li><a href="http://wiki.rpath.com/wiki/Application-to-Appliance">Make your application into an appliance</a> by incorporating rBuilder and other rPath technologies in the <a href="http://wiki.rpath.com/wiki/Appliance_Build_Instructions">appliance build process</a></li>
+                    <li><a href="http://wiki.rpath.com/wiki/Conary:Packager?version=${constants.mintVersion}">Create your own packages</a> for your project on a local Conary-based system</li>
+                    <li>Step through an introduction to packaging using the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial?version=${constants.mintVersion}">New Package Tutorial</a>, including the steps to package your own software for rBuilder Online</li>
+                    <li><a href="http://wiki.rpath.com/wiki/Application-to-Appliance?version=${constants.mintVersion}">Make your application into an appliance</a> by incorporating rBuilder and other rPath technologies in the <a href="http://wiki.rpath.com/wiki/Appliance_Build_Instructions?version=${constants.mintVersion}">appliance build process</a></li>
                 </ul>
             </div>
         </div>
