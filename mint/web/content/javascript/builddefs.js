@@ -22,6 +22,7 @@ function Build(baseId, buildType) {
 }
 
 Build.prototype.settings = new Array();
+Build.prototype.enumEls = new Array();
 
 Build.prototype.createRow = function(key, dataRow) {
     var tr = TR();
@@ -46,19 +47,21 @@ Build.prototype.createRow = function(key, dataRow) {
     case RDT_ENUM:
         appendChildNodes(tr, TD({}, LABEL({'for': name}, dataRow[2])));
         var select = SELECT({'name': name, 'id': name});
+        this.enumEls[key] = new Array();
         for(enumPrompt in dataRow[3]) {
             var optionDict = {'value': dataRow[3][enumPrompt]};
             if(dataRow[1] == dataRow[3][enumPrompt]) {
                 optionDict['selected'] = 'selected';
             }
-            appendChildNodes(select, OPTION(optionDict, enumPrompt));
+            var option = OPTION(optionDict, enumPrompt);
+            this.enumEls[key] = this.enumEls[key].concat(option);
+            appendChildNodes(select, option);
         }
         input = select;
         appendChildNodes(tr, TD({}, select));
         break;
     default:
     }
-    logDebug("setting input to settings: " + key);
     this.settings[key] = input;
     return tr;
 }
@@ -119,12 +122,24 @@ Build.prototype.save = function() {
             buildInfo['data'] = {};
             for(settingKey in dataArray) {
                 if(dataArray.hasOwnProperty(settingKey)) {
+                    var settingType = builds[buildId]['data'][settingKey][0];
                     var el = this.settings[settingKey];
                     if(el) { // editor exists, pull value from the editor field
-                        if(el.type == "checkbox")
-                            buildInfo['data'][settingKey] = el.checked;
-                        else
-                            buildInfo['data'][settingKey] = el.value;
+                        switch(settingType) {
+                            case RDT_STRING:
+                            case RDT_INT:
+                                buildInfo['data'][settingKey] = el.checked;
+                                break;
+                            case RDT_BOOL:
+                                buildInfo['data'][settingKey] = el.value;
+                                break;
+                            case RDT_ENUM:
+                                var optionEl = this.enumEls[settingKey][el.selectedIndex]
+                                buildInfo['data'][settingKey] = optionEl.value;
+                                break;
+                            default:
+                                logDebug("unknown setting datatype: " + settingType);
+                        }
                     } else { // editor not opened yet, just take the default
                         buildInfo['data'][settingKey] = builds[buildId]['data'][settingKey][1];
                     }
