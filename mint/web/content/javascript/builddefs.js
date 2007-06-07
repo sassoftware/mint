@@ -12,10 +12,11 @@ var RDT_TROVE = 4;
 var builds = new Array();
 var uniqId = 0;
 
-function Build(baseId, data, hideOnCancel) {
+function Build(baseId, data, buildType, existing) {
     this.baseId = baseId;
     this.data = data;
-    this.hideOnCancel = hideOnCancel;
+    this.buildType = buildType;
+    this.existing = existing;
     bindMethods(this);
 
     for(key in this.data) {
@@ -83,7 +84,7 @@ Build.prototype.createEditor = function() {
 }
 
 Build.prototype.cancel = function() {
-    if(this.hideOnCancel) {
+    if(this.existing) {
         hideElement(this.editor);
     } else {
         templateDiv = DIV({'id': 'newType'});
@@ -96,6 +97,10 @@ Build.prototype.cancel = function() {
 
 Build.prototype.save = function() {
     var buildSettings = new Array();
+
+    if(!this.existing) {
+        builds = builds.concat(this);
+    }
 
     // this is much harder than it should be
     // in python, it would look like this:
@@ -142,5 +147,4 @@ function addExisting(baseId, data) {
     swapDOM($('edit_' + baseId), newBuild.editor);
     builds = builds.concat(newBuild);
     uniqId = baseId;
-1;3B
 }
