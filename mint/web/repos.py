@@ -39,6 +39,7 @@ from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conarycfg
 from conary import errors as conaryerrors
+from conary.trove import Trove
 
 class ConaryHandler(WebHandler):
     def _filterAuth(self, **kwargs):
@@ -154,6 +155,28 @@ class ConaryHandler(WebHandler):
         return self._write("files",
             troveName = t,
             fileIters = fileIters, deletedFiles=deletedFiles)
+
+    @strFields(t=None, v='', f='')
+    def licenseCryptoReport(self, t, v, f, auth):
+        tr = unquote(t)
+        ver = versions.VersionFromString(unquote(v))
+        fl = deps.parseFlavor(unquote(f))
+        data = self._getLicenseAndCrypto(tr, ver, fl)
+        return self._write('lic_crypto_report', troves=data, troveName=t)
+
+    def _getLicenseAndCrypto(self, tr, ver, fl):
+        groupCs = self.repos.createChangeSet([(tr, (None, None), (ver, fl),
+                                              True)], withFiles=False,
+                                             withFileContents=False, 
+                                             recurse=True)
+        data = []
+        for cs in groupCs.iterNewTroveList():
+            tr = Trove(cs, skipIntegrityChecks=True)
+            md = tr.getMetadata()
+            data.append((tr.getName(), tr.getVersion(), tr.getFlavor(), md['licenses'], md['crypto']))
+
+        data.sort(cmp=lambda x,y: cmp(x[0], y[0]))
+        return data
 
     def _recurseLineage(self, troveName, version, lineage):
         selectedVer = None
@@ -553,6 +576,9 @@ class ConaryHandler(WebHandler):
                 rightLineCount += 1
                 aligned = True
             # Ignore lines starting with ?
+        if not aligned:
+            rightFile.append('')
+            rightLineNums.append('')
 
         return dict(leftFile=leftFile, rightFile=rightFile, diffedLines=list(set(diffedLines)), leftLineNums=leftLineNums, rightLineNums=rightLineNums)
 
