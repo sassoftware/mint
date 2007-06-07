@@ -693,13 +693,12 @@ That is all."""
 
         # Add some troves and a group
         for i in range(0, 3):
-            self.addComponent('test%d:runtime' % i, '1.0', filePrimer = i,
-                              repos = repos)
+            self.addComponent('test%d:runtime' % i, '1.0', repos = repos)
             self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
                                repos = repos)
-        self.addQuickTestCollection("group-test", "/localhost.rpath.local2@rpl:devel/1.0-1-1",
-                                    [ ("test1:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
-                                      ("test2:runtime", "/localhost.rpath.local2@rpl:devel/1.0-1-1"),
+        self.addCollection("group-test", "1.0",
+                                    [ ("test1:runtime"),
+                                      ("test2:runtime"),
                                     ], repos=repos)
 
         # Add some metadata
@@ -733,7 +732,6 @@ That is all."""
                     'test2:runtime': (['Another license'], None),
                     'group-test': (None, None)}
         for x in res[1]['troves']:
-            print "%s %s %s" % (x[3], x[4], expected[x[0]])
             self.failIf((x[3], x[4]) != expected[x[0]])
         
 if __name__ == "__main__":
