@@ -1764,11 +1764,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # add proxy stuff for version 1 config clients
             v1config = self.cfg.conaryRcFile + "-v1"
             f = open(fname, 'a+')
-            for proto in ['http', 'https']:
-                stringMap = { 'proto': proto,
-                              'host': self.cfg.hostName,
-                              'domain': self.cfg.siteDomainName }
-                f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+            
+            # add conaryProxy if we have it enabled
+            if self.cfg.useInternalConaryProxy:
+                for proto in ['http', 'https']:
+                    stringMap = { 'proto': proto,
+                                  'host': self.cfg.hostName,
+                                  'domain': self.cfg.siteDomainName }
+                    f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+
             self.cfg.displayKey('proxy', out=f)
             f.close()
             util.copyfile(fname, v1config)
