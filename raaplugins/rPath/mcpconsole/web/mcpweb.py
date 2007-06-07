@@ -46,8 +46,11 @@ class MCPConsole(rAAWebPlugin):
             cfg.read('/srv/rbuilder/config/mcp-client.conf')
         except CfgEnvironmentError:
             cfg.queueHost = 'localhost'
-        self.c = mcpclient.MCPClient(cfg)
-        cherrypy.server.on_stop_thread_list.append(self.disconnect)
+        try:
+            self.c = mcpclient.MCPClient(cfg)
+            cherrypy.server.on_stop_thread_list.append(self.disconnect)
+        except:
+            self.c = None
         self.messages = []
         self.errors = []
 
