@@ -8,14 +8,17 @@
 -->
     <head>
         <title>Project Build Definitions</title>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/json.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtemplates.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/builddefs.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript">
             addLoadEvent(function() {
                 var inputBuilds = ${buildsJson};
-                for(var i in inputBuilds) {
-                    var build = inputBuilds[i];
-                    addExisting(i, build);
+                for(i in inputBuilds) {
+                    if(inputBuilds.hasOwnProperty(i)) {
+                        var build = inputBuilds[i];
+                        addExisting(i, build);
+                    }
                 }
             });
         </script>
@@ -53,7 +56,9 @@
                     <button id="newBuildButton" onclick="javascript:addNew();">Add</button>
                 </div>
 
-                <div id="newType" />
+                <div id="newType"/>
+
+                <div id="showJson"/>
 
             </div>
         </div>

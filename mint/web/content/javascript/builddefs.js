@@ -17,6 +17,11 @@ function Build(baseId, data, hideOnCancel) {
     this.data = data;
     this.hideOnCancel = hideOnCancel;
     bindMethods(this);
+
+    for(key in this.data) {
+        if(this.data.hasOwnProperty(key))
+            this.settings[key] = this.data[key][1];
+    }
 }
 
 Build.prototype.settings = new Array();
@@ -61,14 +66,15 @@ Build.prototype.createEditor = function() {
     var table = TABLE({'class': 'buildDefs', 'id': 'edit_' + this.baseId});
     hideElement(table);
     for(var key in this.data) {
-        appendChildNodes(table, this.createRow(key, this.data[key]));
+        if(this.data.hasOwnProperty(key))
+            appendChildNodes(table, this.createRow(key, this.data[key]));
     }
 
     var cancel = BUTTON({'style':'margin-right: 24px;'}, "Cancel");
     var save = BUTTON({}, "Save");
 
     connect(cancel, "onclick", this.cancel);
-    connect(save, "onclick", function (){});
+    connect(save, "onclick", this.save);
 
     appendChildNodes(table, TR({'class': 'dialogButtons'}, TD({'colspan':'2'},
         save, cancel)));
@@ -86,6 +92,30 @@ Build.prototype.cancel = function() {
 
         swapDOM(this.editor, templateDiv);
     }
+}
+
+Build.prototype.save = function() {
+    var buildSettings = new Array();
+
+    // this is much harder than it should be
+    // in python, it would look like this:
+    // buildSettings = [dict([(d[0], d[1][1]) for d in build.data.items()]) for build in builds]
+    //
+    dataArray = map(function(x) { return x.data }, builds);
+    for(i in dataArray) {
+        if(dataArray.hasOwnProperty(i)) {
+            d = {};
+            for(j in dataArray[i]) {
+                if(dataArray[i].hasOwnProperty(j)) {
+                    d[j] = dataArray[i][j][1];
+                }
+            }
+            buildSettings = buildSettings.concat(d);
+        }
+    }
+
+    replaceChildNodes($('showJson'), buildSettings.toJSONString());
+    this.cancel();
 }
 
 function addNew() {
@@ -107,10 +137,10 @@ function showEdit(baseId) {
 }
 
 function addExisting(baseId, data) {
-    uniqId++;
-
-    newBuild = new Build(uniqId, defaultBuildOpts[data['type']], true);
+    newBuild = new Build(baseId, defaultBuildOpts[data['type']], true);
     newBuild.createEditor();
     swapDOM($('edit_' + baseId), newBuild.editor);
-    // don't save this into the main array until "Saved"
+    builds = builds.concat(newBuild);
+    uniqId = baseId;
+1;3B
 }
