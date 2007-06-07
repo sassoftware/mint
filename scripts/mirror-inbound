@@ -26,14 +26,11 @@ class MirrorInbound(MirrorScript):
     options = None
 
     def action(self):
-        mintCfg = config.MintConfig()
-        mintCfg.read(config.RBUILDER_CONFIG)
-
         client = MintClient(self.args[0])
         cfg = mirror.MirrorConfiguration()
-        cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
+        cfg.entitlementDirectory = self.cfg.dataPath + '/entitlements/'
 
-        proxy = mintCfg.proxy
+        proxy = self.cfg.proxy
 
         mirroredLabels = client.getInboundMirrors()
 
@@ -48,7 +45,7 @@ class MirrorInbound(MirrorScript):
                 targetLabelStr, targetUrl, targetUser, targetPass = client.getLabel(targetLabelId)
                 reposHost = versions.Label(targetLabelStr).getHost()
 
-                if mintCfg.SSL and targetUrl.startswith('http:'):
+                if self.cfg.SSL and targetUrl.startswith('http:'):
                     targetUrl = "https" + targetUrl[4:]
 
                 cfg.source.repositoryMap = client.getFullRepositoryMap()

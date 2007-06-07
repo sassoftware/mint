@@ -34,12 +34,10 @@ class MirrorOutbound(MirrorScript):
     def action(self):
         client = MintClient(self.args[0])
 
-        mintCfg = config.MintConfig()
-        mintCfg.read(config.RBUILDER_CONFIG)
         outboundMirrors = client.getOutboundMirrors()
 
         # get proxy configuration here
-        proxy = mintCfg.proxy
+        proxy = self.cfg.proxy
 
         mirrorMarks = {}
 
@@ -47,7 +45,7 @@ class MirrorOutbound(MirrorScript):
                 allLabels, recurse, matchStrings, order in outboundMirrors:
 
             cfg = mirror.MirrorFileConfiguration()
-            cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
+            cfg.entitlementDirectory = self.cfg.dataPath + '/entitlements/'
 
             sourceProject = client.getProject(int(sourceProjectId))
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
@@ -71,8 +69,7 @@ class MirrorOutbound(MirrorScript):
                 sourceRepos = None
                 targetRepos = []
 
-
-                db = dbstore.connect(mintCfg.dbPath, mintCfg.dbDriver)
+                db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
                 cu = db.cursor()
                 cu.execute("SELECT label, username, password FROM Labels")
                 userData = cu.fetchall_dict()

@@ -188,15 +188,14 @@ class MirrorScript(scriptlibrary.SingletonScript):
     args = None
 
     def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
-        self.cfg = config.MintConfig()
-        self.cfg.read(self.cfgPath)
-        if self.logFileName:
-            self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
 
     def handle_args(self):
         usage = "%prog [options] rbuilder-xml-rpc-url"
         op = optparse.OptionParser(usage=usage)
+        op.add_option("-c", "--rbuilder-config",
+                dest = "cfgPath", default = None,
+                help = "show detailed mirroring output")
         op.add_option("-v", "--verbose", action = "store_true",
                 dest = "verbose", default = False,
                 help = "show detailed mirroring output")
@@ -215,6 +214,14 @@ class MirrorScript(scriptlibrary.SingletonScript):
         if len(self.args) < 1:
             op.error("missing URL to rBuilder XML-RPC interface")
             return False
+        # read the configuration
+        self.cfg = config.MintConfig()
+        if self.options.cfgPath:
+            self.cfg.read(self.options.cfgPath)
+        else:
+            self.cfg.read(self.cfgPath)
+        if self.logFileName:
+            self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
         return True
 
     def logTraceback(self):

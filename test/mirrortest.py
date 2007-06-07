@@ -47,11 +47,12 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
         assert(os.access(mirrorScript, os.X_OK))
-
+        cfg = self.servers.getServer(0).serverRoot + '/rbuilder.conf'
+        cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
         if debug:
-            os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
+            os.system(cmd + ' --show-mirror-cfg')
         else:
-            self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+            self.captureAllOutput( os.system, cmd)
 
     def outboundMirror(self):
         import xmlrpclib
@@ -60,13 +61,14 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         try:
             url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
                   self.port
-
+            cfg = self.servers.getServer(0).serverRoot + '/rbuilder.conf'
             mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
             assert(os.access(mirrorScript, os.X_OK))
+            cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
             if debug:
-                os.system("%s %s %s" % (mirrorScript, '--show-mirror-cfg', url))
+                os.system(cmd + ' --show-mirror-cfg')
             else:
-                self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+                self.captureAllOutput( os.system, cmd)
         finally:
             xmlrpclib = oldxmlrpclib
 
