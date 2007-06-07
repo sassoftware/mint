@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python from mint import constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -51,7 +52,7 @@
                         </dt>
                         <dd class="help">
                             Check this box to add Xen guest domain (DomU)
-                            support to this group. See the <a href="http://wiki.rpath.com/">rPath Wiki</a> for more
+                            support to this group. See the <a href="http://wiki.rpath.com/?version=${constants.mintVersion}">rPath Wiki</a> for more
                             information about Xen and rBuilder.
                         </dd>
                         <dt py:if="False">

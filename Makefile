@@ -108,6 +108,9 @@ clean: clean-subdirs default-clean
 
 subdirs: default-subdirs
 
+INSTALL: INSTALL.in
+	sed -e s,@version@,$(VERSION),g $< > $@
+
 include Make.rules
 
 # vim: set sts=8 sw=8 noexpandtab :

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-    from mint import userlevels, buildtypes
+    from mint import userlevels, buildtypes, constants
     from mint.client import timeDelta
     from mint.client import upstream
     from mint.helperfuncs import truncateForDisplay
@@ -44,7 +44,7 @@
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
             <li py:if="isWriter"><a href="${projectUrl}downloads">Download Statistics</a></li>
-            <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config">Help</a></li>
+            <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config?version=${constants.mintVersion}">Help</a></li>
         </ul>
     </div>
 
@@ -259,7 +259,7 @@
                 </div>
             </ul>
 
-            <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types" target="_blank"><b>Which one do I want?</b></a></span>
+            <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types?version=${constants.mintVersion}" target="_blank"><b>Which one do I want?</b></a></span>
             <span><a href="${project.getUrl()}latestRelease"><b>Additional Options...</b></a></span>
         </div>
       </div>

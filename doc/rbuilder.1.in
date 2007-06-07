@@ -83,9 +83,9 @@ The options listed are further defined as follows:
 
 \fB--option='autoResolve <value>'\fR -- Automatically install required dependencies during updates (values: True or False; default: False)
 
-\fB--option='anaconda-custom <value>'\fR -- Version of the anaconda-custom trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-custom
+\fB--option='anaconda-custom <value>'\fR -- Version of the anaconda-custom trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-custom?version=@version@
 
-\fB--option='anaconda-templates <value>'\fR -- Version of the anaconda-templates trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-templates
+\fB--option='anaconda-templates <value>'\fR -- Version of the anaconda-templates trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/anaconda-templates?version=@version@
 
 \fB--option='baseFileName <value>'\fR -- Custom prefix for filenames output from the build (default: \fIname-version-architecture\fR)
 
@@ -101,7 +101,7 @@ The options listed are further defined as follows:
 
 \fB--option='maxIsoSize <value>'\fR -- ISO size (default: 681574400)
 
-\fB--option='media-template <value>'\fR -- Version of the media-template trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/media-template
+\fB--option='media-template <value>'\fR -- Version of the media-template trove to use; for more details, see http://wiki.rpath.com/wiki/rPath_Linux:Installer_Customization/media-template?version=@version@
 
 \fB--option='mirrorUrl <value>'\fR -- rPath Mirror URL from which the appliance will obtain Conary configuration settings (default is blank)
 
@@ -111,7 +111,7 @@ The options listed are further defined as follows:
 
 \fB--option='swapSize <value>'\fR -- Swap space in MB that should be reserved in this image (default: 128)
 
-\fB--option='unionfs <value>'\fR -- Enable UnionFS for the entire filesystem (requires the UnionFS kernel module; values: True or False; default: False); for more details, see http://wiki.rpath.com/wiki/rBuilder:Demo_CD
+\fB--option='unionfs <value>'\fR -- Enable UnionFS for the entire filesystem (requires the UnionFS kernel module; values: True or False; default: False); for more details, see http://wiki.rpath.com/wiki/rBuilder:Demo_CD?version=@version@
 
 \fB--option='vhdDiskType <value>'\fR -- VHD hard disk type (values: dynamic, fixed, difference; default: dynamic)
 
@@ -209,4 +209,4 @@ Please report bugs via http://issues.rpath.com/
 .SH "SEE ALSO"
 http://www.rpath.com/
 .br
-http://wiki.rpath.com/
+http://wiki.rpath.com/?version=@version@

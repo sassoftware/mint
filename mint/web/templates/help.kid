@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-from mint import userlevels
+from mint import userlevels, constants
 from mint.helperfuncs import truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -31,9 +31,9 @@ from mint.helperfuncs import truncateForDisplay
                 <h3>Help Topics</h3>
                 <ul>
                     <li py:if="isWriter">
-                        <a href="http://wiki.rpath.com/wiki/rBuilder:rBO_Appliance-Building_Tutorial">Setting up ${isOwner and "your" or "the"} project build environment</a>
+                        <a href="http://wiki.rpath.com/wiki/rBuilder:rBO_Appliance-Building_Tutorial?version=${constants.mintVersion}">Setting up ${isOwner and "your" or "the"} project build environment</a>
                     </li>
-                    <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config">Installing packages from ${isOwner and "your" or "this"} project</a></li>
+                    <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config?version=${constants.mintVersion}">Installing packages from ${isOwner and "your" or "this"} project</a></li>
                 </ul>
             </div>
         </div>

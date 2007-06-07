@@ -18,5 +18,8 @@ dist: default-dist
 
 clean: default-clean
 
+rbuilder.1: rbuilder.1.in ../Makefile
+	sed -e s,@version@,$(VERSION),g $< > $@
+
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

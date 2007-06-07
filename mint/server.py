@@ -55,6 +55,7 @@ from mint import urltypes
 from mint import useit
 from mint import rmakebuild
 from mint import rapapasswords
+from mint import constants
 from mint.flavors import stockFlavors
 from mint.mint_error import *
 from mint.reports import MintReport
@@ -974,7 +975,7 @@ class MintServer(object):
 
         helpLink = """
 
-Instructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/
+Instructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/?version=${constants.mintVersion}
 
 If you would not like to be %s %s of this project, you may resign from this project at %smembers""" % \
         (userlevelname == 'Developer' and 'a' or 'an', userlevelname, projectUrl)
