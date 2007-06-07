@@ -155,6 +155,9 @@ else:
                  <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                  <a style="font-weight: normal; text-decoration: underline;"
                                    href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
+    <div py:if="cfg.licenseCryptoReports" style="margin-top: 4px;">
+            <a href="licenseCryptoReport?t=${quote(trove.getName())};v=${quote(str(trove.getVersion()))};f=${quote(str(trove.getFlavor()))}">License and Crypto</a>
+    </div>
                 </div>
                 <span  onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;"
                     style="text-decoration: none; vertical-align: middle; cursor: pointer;">
