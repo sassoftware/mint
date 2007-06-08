@@ -1941,7 +1941,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildIds
 
-    @typeCheck(int, str, str)
+    @typeCheck(int, ((str, unicode),), ((str, unicode),))
+    @requiresAuth
+    def commitBuildJson(self, projectId, labelStr, buildJson):
+        xml = buildxml.xmlFromData(simplejson.loads(buildJson))
+        return self.commitBuildXml(projectId, labelStr, xml)
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def commitBuildXml(self, projectId, labelStr, buildXml):
         self._filterProjectAccess(projectId)
@@ -3071,6 +3077,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
             versionDict[v] = [(not diffDict[x].isEmpty() and str(diffDict[x]) or strFlavor(x), str(x)) for x in fList]
 
         return [versionDict, versionList]
+
+    @typeCheck(int)
+    @requiresAdmin
+    def getAllProjectLabels(self, projectId):
+        defaultLabel = projects.Project(self, projectId).getLabel()
+        serverName = versions.Label(defaultLabel).getHost()
+        cu = self.db.cursor()
+        cu.execute("""SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?
+                      AND serverName=?""" % database.concat(self.db,
+                            'serverName', '"@"',  'branchName'),
+                      projectId, serverName)
+        labels = cu.fetchall()
+        return [x[0] for x in labels] or [defaultLabel]
 
     @typeCheck(int)
     @requiresAuth

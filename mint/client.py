@@ -713,6 +713,9 @@ class MintClient:
     def getFullRepositoryMap(self):
         return self.server.getFullRepositoryMap()
 
+    def getAllProjectLabels(self, projectId):
+        return self.server.getAllProjectLabels(projectId)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
