@@ -1524,3 +1524,5 @@ table.buildDefs tr td select, table.buildDefs tr td input.text {
 table.buildDefs tr.dialogButtons td button {
     float: right;
 }
+
+.invisible { display: none; }

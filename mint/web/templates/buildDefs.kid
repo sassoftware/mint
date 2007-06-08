@@ -12,6 +12,8 @@
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtemplates.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/builddefs.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript">
+            ProjectId = ${project.id};
+            LabelStr = "${label}";
             addLoadEvent(function() {
                 var inputBuilds = ${buildsJson};
                 for(i in inputBuilds) {
@@ -32,6 +34,8 @@
         ?>
         <div id="layout">
             <div id="spanboth">
+                <div style="width: 100%; float: right;" id="alert" />
+
                 <h2>Default Builds for ${label}</h2>
 
                 <table>
@@ -52,8 +56,19 @@
                     <button id="newBuildButton" onclick="javascript:addNew();">Add</button>
                 </div>
 
-                <div id="showJson"/>
 
+                <button onclick="javascript:saveChanges();" id="saveChangesButton">
+                    <img id="saveChangesSpinner" class="invisible"
+                        src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
+                    Save All Changes
+                </button>
+                <button onclick="javascript:buildAll();" id="buildAllButton">
+                    <img id="buildAllSpinner" class="invisible"
+                        src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
+                    Build All
+                </button>
+
+                <p><a href="builds"><img src="${cfg.staticPath}apps/mint/images/prev.gif" /><b>Return to Builds</b></a></p>
             </div>
         </div>
     </body>

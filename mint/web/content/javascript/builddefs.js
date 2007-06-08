@@ -16,7 +16,7 @@ function Build(baseId, buildType) {
     logDebug("new build of type " + buildType);
     this.baseId = baseId;
     this.data = defaultBuildOpts[buildType];
-    this.buildType = buildType;
+    this.buildType = Number(buildType);
     this.editor = null;
     bindMethods(this);
 }
@@ -110,9 +110,10 @@ Build.prototype.hide = function() {
     hideElement("edit_" + this.baseId);
 }
 
-
-Build.prototype.save = function() {
+function getSettings() {
     var buildSettings = new Array();
+
+    buildSettings[0] = {'troveName': 'group-dist', 'name': 'Test Build'};
 
     for(buildId in builds) {
         if(builds.hasOwnProperty(buildId)) {
@@ -123,7 +124,7 @@ Build.prototype.save = function() {
             for(settingKey in dataArray) {
                 if(dataArray.hasOwnProperty(settingKey)) {
                     var settingType = builds[buildId]['data'][settingKey][0];
-                    var el = this.settings[settingKey];
+                    var el = builds[buildId].settings[settingKey];
                     if(el) { // editor exists, pull value from the editor field
                         switch(settingType) {
                             case RDT_STRING:
@@ -149,9 +150,10 @@ Build.prototype.save = function() {
             buildSettings = buildSettings.concat(buildInfo);
         }
     }
+    return buildSettings;
+}
 
-    setupRows();
-    replaceChildNodes($('showJson'), buildSettings.toJSONString());
+Build.prototype.save = function() {
     this.hide();
 }
 
@@ -202,4 +204,41 @@ function addExisting(baseId, data) {
     var newBuild = new Build(baseId, data['type']);
     builds = builds.concat(newBuild);
     uniqId = baseId;
+}
+
+function setAlert(text) {
+    var newAlert = DIV({'id': 'alert', 'style': 'float: right; color: red;'}, text);
+    swapDOM($('alert'), newAlert);
+
+    callLater(2, function() {
+        swapDOM($('alert'), DIV({'id': 'alert'}));
+    });
+}
+
+function saveChanges() {
+    removeElementClass($("saveChangesSpinner"), "invisible");
+    $("saveChangesButton").disabled = true;
+
+    var callback = function(r) {
+        if(r.responseText != "false") // error occurred
+            setAlert("error"); // TODO: give more information
+        else
+            setAlert("saved");
+    }
+
+    var errback = function() {
+        setAlert("error");
+    }
+
+    var finalize = function() {
+        addElementClass($("saveChangesSpinner"), "invisible");
+        $("saveChangesButton").disabled = false;
+    }
+
+    var req = new JsonRpcRequest(BaseUrl + "jsonrpc/", "commitBuildJson");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(bind(callback, this));
+    req.setErrback(bind(errback, this));
+    req.setFinalizer(bind(finalize, this));
+    req.send(true, [ProjectId, LabelStr, getSettings().toJSONString()]);
 }

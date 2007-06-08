@@ -68,7 +68,22 @@ from mint.web.templatesupport import downloadTracker
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
-                <h2>Builds</h2>
+                <h2>Build Sets</h2>
+                <div>
+
+                    <form method="get" action="buildDefs">
+                        <div>Choose a label to edit the default set of builds:</div>
+                        <div>
+                            <select name="label">
+                                <option py:for="label in projectLabels" py:content="label" value="$label" />
+                            </select>
+                            <button>Edit</button>
+                            <button><b>Splart now!</b></button>
+                        </div>
+                    </form>
+                </div>
+
+                <h2>Individual Builds</h2>
                 <p py:if="isWriter"><strong><a href="newBuild">Create a new build</a></strong></p>
                 ${buildsTable(builds)}
             </div>
