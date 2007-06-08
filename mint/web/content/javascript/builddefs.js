@@ -217,9 +217,19 @@ function setAlert(text, color, timeout) {
     });
 }
 
-function saveChanges() {
-    removeElementClass($("saveChangesSpinner"), "invisible");
-    $("saveChangesButton").disabled = true;
+function saveChanges(buildAll) {
+    var prefix;
+    var func;
+    if(buildAll) {
+        prefix = "buildAll";
+        func = "commitAndBuild";
+    } else {
+        prefix = "saveChanges";
+        func = "commitBuildJson";
+    }
+
+    removeElementClass($(prefix + "Spinner"), "invisible");
+    $(prefix + "Button").disabled = true;
 
     var callback = function(r) {
         if(r.responseText != "false") { // error occurred
@@ -234,11 +244,11 @@ function saveChanges() {
     }
 
     var finalize = function() {
-        addElementClass($("saveChangesSpinner"), "invisible");
-        $("saveChangesButton").disabled = false;
+        addElementClass($(prefix + "Spinner"), "invisible");
+        $(prefix + "Button").disabled = false;
     }
 
-    var req = new JsonRpcRequest(BaseUrl + "jsonrpc/", "commitBuildJson");
+    var req = new JsonRpcRequest(BaseUrl + "jsonrpc/", func);
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(bind(callback, this));
     req.setErrback(bind(errback, this));

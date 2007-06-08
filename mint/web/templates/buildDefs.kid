@@ -50,12 +50,12 @@
 
                 <div style="padding: 1em 1em 1em 2px;">
                     <span style="float: right">
-                        <button onclick="javascript:saveChanges();" id="saveChangesButton">
+                        <button onclick="javascript:saveChanges(false);" id="saveChangesButton">
                             <img id="saveChangesSpinner" class="invisible"
                                 src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
                             Save All Changes
                         </button>
-                        <button onclick="javascript:buildAll();" id="buildAllButton">
+                        <button onclick="javascript:saveChanges(true);" id="buildAllButton">
                             <img id="buildAllSpinner" class="invisible"
                                 src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
                             Build All
