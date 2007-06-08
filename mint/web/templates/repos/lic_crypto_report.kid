@@ -64,7 +64,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
     <body>
         <div id="layout">
             <h2>License and Crypto for ${troveName}</h2>
-            <p class="help">This is placeholder disclaimer text.</p>
+            <p class="help">Although rPath believes the information provided related to the licenses and cryptography is accurate, such information may be out of date and anyone using this software should rely only on its own review of this information.</p>
 
             ${troveList(troves)}
         </div>
