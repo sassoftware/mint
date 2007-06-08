@@ -49,13 +49,15 @@ Build.prototype.createRow = function(key, dataRow) {
         var select = SELECT({'name': name, 'id': name});
         this.enumEls[key] = new Array();
         for(enumPrompt in dataRow[3]) {
-            var optionDict = {'value': dataRow[3][enumPrompt]};
-            if(dataRow[1] == dataRow[3][enumPrompt]) {
-                optionDict['selected'] = 'selected';
+            if(dataRow[3].hasOwnProperty(enumPrompt)) {
+                var optionDict = {'value': dataRow[3][enumPrompt]};
+                if(dataRow[1] == dataRow[3][enumPrompt]) {
+                    optionDict['selected'] = 'selected';
+                }
+                var option = OPTION(optionDict, enumPrompt);
+                this.enumEls[key] = this.enumEls[key].concat(option);
+                appendChildNodes(select, option);
             }
-            var option = OPTION(optionDict, enumPrompt);
-            this.enumEls[key] = this.enumEls[key].concat(option);
-            appendChildNodes(select, option);
         }
         input = select;
         appendChildNodes(tr, TD({}, select));
@@ -206,12 +208,12 @@ function addExisting(baseId, data) {
     uniqId = baseId;
 }
 
-function setAlert(text) {
-    var newAlert = DIV({'id': 'alert', 'style': 'float: right; color: red;'}, text);
+function setAlert(text, color, timeout) {
+    var newAlert = SPAN({'id': 'alert', 'style': 'padding-left: 1em; color: '+ color + ';'}, text);
     swapDOM($('alert'), newAlert);
 
-    callLater(2, function() {
-        swapDOM($('alert'), DIV({'id': 'alert'}));
+    callLater(timeout, function() {
+        swapDOM($('alert'), SPAN({'id': 'alert'}));
     });
 }
 
@@ -221,13 +223,13 @@ function saveChanges() {
 
     var callback = function(r) {
         if(r.responseText != "false") // error occurred
-            setAlert("error"); // TODO: give more information
+            setAlert("Error", "red", 5); // TODO: give more information
         else
-            setAlert("saved");
+            setAlert("Saved", "green", 2);
     }
 
     var errback = function() {
-        setAlert("error");
+        setAlert("Error", "red", 5);
     }
 
     var finalize = function() {

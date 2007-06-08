@@ -34,7 +34,6 @@
         ?>
         <div id="layout">
             <div id="spanboth">
-                <div style="width: 100%; float: right;" id="alert" />
 
                 <h2>Default Builds for ${label}</h2>
 
@@ -67,6 +66,7 @@
                         src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
                     Build All
                 </button>
+                <span id="alert" />
 
                 <p><a href="builds"><img src="${cfg.staticPath}apps/mint/images/prev.gif" /><b>Return to Builds</b></a></p>
             </div>
