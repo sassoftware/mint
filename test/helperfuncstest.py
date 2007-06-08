@@ -269,11 +269,12 @@ Much like Powdermilk Biscuits[tm]."""
                 'http://vault.fortknox.gov:20000/')
 
     def testJavascript(self):
+        whiteList = ['json.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
         for library in \
-                [x for x in os.listdir(scriptPath) if x.endswith('.js')]:
+                [x for x in os.listdir(scriptPath) if x.endswith('.js') and x not in whiteList]:
             libraryPath = os.path.join(scriptPath, library)
             f = open(libraryPath)
             docu = f.read()
