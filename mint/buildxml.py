@@ -39,8 +39,10 @@ def dictFromElem(elem):
 
     for child in elem.getchildren():
         if child.tag == 'buildValue':
+            if child.text:
+                child.text = child.text.strip()
             res.setdefault('data', {})[child.attrib.get('name')] = \
-                child.text.strip()
+                child.text
         else:
             res[child.tag] = child.text.strip()
     return res
