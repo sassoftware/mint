@@ -134,7 +134,7 @@ Build.prototype.save = function() {
                                 buildInfo['data'][settingKey] = el.value;
                                 break;
                             case RDT_ENUM:
-                                var optionEl = this.enumEls[settingKey][el.selectedIndex]
+                                var optionEl = this.enumEls[settingKey][el.selectedIndex];
                                 buildInfo['data'][settingKey] = optionEl.value;
                                 break;
                             default:
