@@ -705,7 +705,7 @@ That is all."""
         mi = trove.MetadataItem()
         mi.licenses.set('Test License')
         mi.crypto.set('Test Crypto')
-        ver = versions.VersionFromString('/localhost.rpath.local2@rpl:devel/1.0-1-1')
+        ver = versions.VersionFromString('/localhost.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1')
         fl = deps.parseFlavor('')
         repos.addMetadataItems([(('test0:runtime',ver,fl), mi)])
         mi = trove.MetadataItem()
