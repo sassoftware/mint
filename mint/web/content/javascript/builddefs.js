@@ -182,8 +182,8 @@ function setupRows() {
             appendChildNodes(newBody,
                 TR({},
                     TD({}, buildTypeNames[build.buildType]),
-                    TD({}, editLink),
-                    TD({}, deleteLink)),
+                    TD({'style': 'text-align: right;'}, editLink),
+                    TD({'style': 'text-align: right; margin-left: 2em;'}, deleteLink)),
                 TR({},
                     TD({'colspan': '3'}, editor))
             );
@@ -209,11 +209,11 @@ function addExisting(baseId, data) {
 }
 
 function setAlert(text, color, timeout) {
-    var newAlert = SPAN({'id': 'alert', 'style': 'padding-left: 1em; color: '+ color + ';'}, text);
+    var newAlert = SPAN({'id': 'alert', 'style': 'padding-right: 1em; float: right; color: '+ color + ';'}, text);
     swapDOM($('alert'), newAlert);
 
     callLater(timeout, function() {
-        swapDOM($('alert'), SPAN({'id': 'alert'}));
+        swapDOM($('alert'), SPAN({'id': 'alert', 'style': 'float: right;'}));
     });
 }
 
@@ -222,10 +222,11 @@ function saveChanges() {
     $("saveChangesButton").disabled = true;
 
     var callback = function(r) {
-        if(r.responseText != "false") // error occurred
+        if(r.responseText != "false") { // error occurred
             setAlert("Error", "red", 5); // TODO: give more information
-        else
+        } else {
             setAlert("Saved", "green", 2);
+        }
     }
 
     var errback = function() {

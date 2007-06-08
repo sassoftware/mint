@@ -41,7 +41,7 @@
                     <thead>
                         <tr style="font-size: larger; font-weight: bold; color: #293D82;">
                             <td style="padding-bottom: 8px;">Build type</td>
-                            <td colspan="2">Options</td>
+                            <td colspan="2" style="text-align: right;">Options</td>
                         </tr>
                     </thead>
 
@@ -49,24 +49,25 @@
                 </table>
 
                 <div style="padding: 1em 1em 1em 2px;">
+                    <span style="float: right">
+                        <button onclick="javascript:saveChanges();" id="saveChangesButton">
+                            <img id="saveChangesSpinner" class="invisible"
+                                src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
+                            Save All Changes
+                        </button>
+                        <button onclick="javascript:buildAll();" id="buildAllButton">
+                            <img id="buildAllSpinner" class="invisible"
+                                src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
+                            Build All
+                        </button>
+                    </span>
+
                     <span style="font-size: larger; font-weight: bold; color: #293D82; padding-right: 1em;">Add a new build:</span> <select id="newBuildType">
                         <option py:for="buildType in visibleTypes" py:content="buildtypes.typeNames[buildType]" value="${buildType}" />
                     </select>
                     <button id="newBuildButton" onclick="javascript:addNew();">Add</button>
                 </div>
-
-
-                <button onclick="javascript:saveChanges();" id="saveChangesButton">
-                    <img id="saveChangesSpinner" class="invisible"
-                        src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
-                    Save All Changes
-                </button>
-                <button onclick="javascript:buildAll();" id="buildAllButton">
-                    <img id="buildAllSpinner" class="invisible"
-                        src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
-                    Build All
-                </button>
-                <span id="alert" />
+                <div id="alert" />
 
                 <p><a href="builds"><img src="${cfg.staticPath}apps/mint/images/prev.gif" /><b>Return to Builds</b></a></p>
             </div>
