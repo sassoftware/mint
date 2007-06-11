@@ -429,8 +429,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                     MINT_PROJECT_DOMAIN, port, self.mintCfg.basePath, hostname)})
 
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
-                              client.server._authToken[0],
-                              client.server._authToken[1]))
+                              (client.server._authToken[0],
+                               client.server._authToken[1])))
 
     def newProject(self, client, name = "Test Project",
                    hostname = "testproject",
