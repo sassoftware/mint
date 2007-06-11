@@ -715,8 +715,8 @@ class ConaryHandler(WebHandler):
         else:
             # try as a specified user, if fails, fall back to anonymous
             overrideAuth = True
-            if not self.repServer.auth.check((self.authToken[0], self.authToken[1], None, None)):
-                self.authToken = ('anonymous', 'anonymous', None, None)
+            if not self.repServer.auth.check((self.authToken[0], self.authToken[1], [])):
+                self.authToken = ('anonymous', 'anonymous', [])
 
         cfg = self.project.getConaryConfig(overrideAuth = overrideAuth,
                                            newUser = self.authToken[0],
@@ -725,7 +725,7 @@ class ConaryHandler(WebHandler):
         if os.path.exists(conarycfgFile):
             cfg.read(conarycfgFile)
 
-        self.authToken = (self.authToken[0], self.authToken[1], None, None)
+        self.authToken = (self.authToken[0], self.authToken[1], [])
 
         cfg = helperfuncs.configureClientProxies(cfg,
                 self.cfg.useInternalConaryProxy, self.cfg.proxy)
@@ -751,7 +751,7 @@ class ConaryHandler(WebHandler):
             # particular repo might not know our credentials (not a project
             # member)... so use the auth user.
             saveToken = self.authToken
-            self.authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
+            self.authToken = (self.cfg.authUser, self.cfg.authPass, [])
         try:
             d['auth'] = self.authToken
             try:
