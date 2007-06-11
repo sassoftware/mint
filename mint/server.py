@@ -2161,7 +2161,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 fn = os.path.join(self.cfg.dataPath, 'entitlements', serverName)
                 if os.path.isfile(fn):
                     f = open(fn)
-                    ent = conarycfg.loadEntitlementFromString(f.read(), serverName, fn)
+                    ent = conarycfg.loadEntitlementFromString(f.read())
                     r['entitlements'][serverName] = ent
 
         for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
