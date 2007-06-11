@@ -24,6 +24,7 @@ from conary import repository
 from conary.repository import errors
 from conary import versions
 from conary.conarycfg import ConaryConfiguration, UserInformation
+from conary import conarycfg
 from conary.conaryclient import ConaryClient
 from conary.deps import deps
 from conary.lib import sha1helper, util
@@ -161,7 +162,7 @@ class RepositoryTest(MintRepositoryHelper):
         projectId = self.newProject(client)
 
         project = client.getProject(projectId)
-        self.cfg.user.remove(('testproject.' + MINT_PROJECT_DOMAIN, 'testuser', 'testpass'))
+        self.cfg.user.remove(('testproject.' + MINT_PROJECT_DOMAIN, ('testuser', 'testpass')))
         self.cfg.user.addServerGlob('testproject.rpath.' + MINT_PROJECT_DOMAIN, 'testuser', 'badpass')
         self.assertRaises(errors.InsufficientPermission,
             self.makeSourceTrove, "testcase", testRecipe)
@@ -251,7 +252,7 @@ class RepositoryTest(MintRepositoryHelper):
 
         # try as a user with a bad pw
         cfg.user.remove(("testproject." + MINT_PROJECT_DOMAIN,
-                "nosuchuser", "nonexist"))
+                ("nosuchuser", "nonexist")))
         cfg.user.addServerGlob("testproject." + MINT_PROJECT_DOMAIN,
                 "testuser", "badpass")
 
@@ -349,17 +350,16 @@ class RepositoryTest(MintRepositoryHelper):
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
 
-        entcfg = ConaryConfiguration()
-        entcfg.root = cfg.dbPath = ":memory:"
-        entcfg.repositoryMap = cfg.repositoryMap
-        entcfg.entitlementDirectory = self.workDir
-        entcfg.installLabelPath = cfg.installLabelPath
-
         server = self.cfg.buildLabel.getHost()
         open(self.workDir + "/%s" % server, "w").write(
-            "<server>%s</server>\n"
-            "<class>%s</class>\n"
-            "<key>%s</key>\n" % (server, entclass, entkey))
+            conarycfg.emitEntitlement(server, entclass, entkey))
+
+        entcfg = ConaryConfiguration()
+        entcfg.entitlementDirectory = self.workDir
+        entcfg.readEntitlementDirectory()
+        entcfg.root = cfg.dbPath = ":memory:"
+        entcfg.repositoryMap = cfg.repositoryMap
+        entcfg.installLabelPath = cfg.installLabelPath
 
         entclient = ConaryClient(entcfg)
         entnc = entclient.getRepos()
