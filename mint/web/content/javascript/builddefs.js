@@ -12,10 +12,17 @@ var RDT_TROVE = 4;
 var builds = new Array();
 var uniqId = 0;
 
-function Build(baseId, buildType) {
+function Build(baseId, buildType, data) {
     logDebug("new build of type " + buildType);
     this.baseId = baseId;
     this.data = defaultBuildOpts[buildType];
+
+    for(var key in data['data']) {
+        this.data[key][1] = data['data'][key];
+    }
+    if(data['groupFlavor'])
+        this.groupFlavor = data['groupFlavor'];
+
     this.buildType = Number(buildType);
     this.editor = null;
     bindMethods(this);
@@ -23,6 +30,8 @@ function Build(baseId, buildType) {
 
 Build.prototype.settings = new Array();
 Build.prototype.enumEls = new Array();
+Build.prototype.groupFlavor = null;
+Build.prototype.groupFlavorEl = null;
 
 Build.prototype.createRow = function(key, dataRow) {
     var tr = TR();
@@ -72,9 +81,57 @@ Build.prototype.createEditor = function() {
     logDebug("creating editor");
     var table = TABLE({'class': 'buildDefs', 'id': 'edit_' + this.baseId});
     hideElement(table);
+
+    // group flavor picker
+    var name = '_' + this.baseId + '_groupFlavor';
+
+    var selector = SELECT({'id': name, 'name': name});
+    for(var flavor in Flavors) {
+        if(Flavors.hasOwnProperty(flavor)) {
+            appendChildNodes(selector, OPTION({'value': Flavors[flavor]}, flavor));
+        }
+    }
+
+    connect(selector, 'onchange', function() {
+        var el = $(name);
+        var input = $(name + 'Other');
+        if(el.options[el.selectedIndex].value == "") {
+            input.disabled = false;
+            input.value = "";
+        } else {
+            input.disabled = true;
+            input.value = values(Flavors)[el.selectedIndex];
+        }
+    });
+
+    appendChildNodes(table, TR({},
+        TD({}, LABEL({'for': name}, "Group Flavor:")),
+        TD({}, selector))
+    );
+
+    var other = INPUT({'style': 'width: 80%;', 'id': name + 'Other'});
+    other.disabled = true;
+    this.groupFlavorEl = other;
+    appendChildNodes(table, TR({'id': name + 'Row'},
+        TD({}), TD({}, other))
+    );
+
+    // place the right flavor in the dropdown, or fill the 'Other' field
+    other.value = this.data['groupFlavor'];
+    var loc = values(Flavors).indexOf(this.data['groupFlavor']);
+    logDebug(this.data['groupFlavor']);
+    if(loc > 0) {
+        selector.selectedIndex = loc;
+    } else {
+        selector.selectedIndex = Flavors.length-1;
+    }
+
+    // other data settings
     for(var key in this.data) {
-        if(this.data.hasOwnProperty(key))
+        if(this.data.hasOwnProperty(key)) {
+            logDebug(key);
             appendChildNodes(table, this.createRow(key, this.data[key]));
+        }
     }
 
     var cancel = BUTTON({'style':'margin-right: 24px;'}, "Cancel");
@@ -131,10 +188,10 @@ function getSettings() {
                         switch(settingType) {
                             case RDT_STRING:
                             case RDT_INT:
-                                buildInfo['data'][settingKey] = el.checked;
+                                buildInfo['data'][settingKey] = el.value;
                                 break;
                             case RDT_BOOL:
-                                buildInfo['data'][settingKey] = el.value;
+                                buildInfo['data'][settingKey] = el.checked;
                                 break;
                             case RDT_ENUM:
                                 var optionEl = this.enumEls[settingKey][el.selectedIndex];
@@ -149,6 +206,10 @@ function getSettings() {
                 }
             }
             buildInfo['type'] = builds[buildId].buildType;
+            if(builds[buildId].groupFlavorEl)
+                buildInfo['groupFlavor'] = builds[buildId].groupFlavorEl.value;
+            else
+                buildInfo['groupFlavor'] = builds[buildId].groupFlavor;
             buildSettings = buildSettings.concat(buildInfo);
         }
     }
@@ -197,13 +258,13 @@ function addNew() {
 
     var x = $("newBuildType");
     var buildType = x.options[x.selectedIndex].value;
-    var newBuild = new Build(uniqId, buildType);
+    var newBuild = new Build(uniqId, buildType, {});
     builds = builds.concat(newBuild);
     setupRows();
 }
 
 function addExisting(baseId, data) {
-    var newBuild = new Build(baseId, data['type']);
+    var newBuild = new Build(baseId, data['type'], data);
     builds = builds.concat(newBuild);
     uniqId = baseId;
 }
