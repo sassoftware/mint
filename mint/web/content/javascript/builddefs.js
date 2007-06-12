@@ -134,20 +134,14 @@ Build.prototype.createEditor = function() {
         }
     }
 
-    var cancel = BUTTON({'style':'margin-right: 24px;'}, "Cancel");
-    var save = BUTTON({}, "Save");
+    var save = BUTTON({}, "Close");
 
-    connect(cancel, "onclick", this.cancel);
     connect(save, "onclick", this.save);
 
     appendChildNodes(table, TR({'class': 'dialogButtons'}, TD({'colspan':'2'},
-        save, cancel)));
+        save)));
 
     this.editor = table;
-}
-
-Build.prototype.cancel = function() {
-    hideElement(this.editor);
 }
 
 Build.prototype.showBuild = function() {
