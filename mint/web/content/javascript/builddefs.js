@@ -117,13 +117,14 @@ Build.prototype.createEditor = function() {
     );
 
     // place the right flavor in the dropdown, or fill the 'Other' field
-    other.value = this.data['groupFlavor'];
-    var loc = values(Flavors).indexOf(this.data['groupFlavor']);
-    logDebug(this.data['groupFlavor']);
+    other.value = this.groupFlavor;
+    var loc = values(Flavors).indexOf(this.groupFlavor);
+    logDebug(keys(Flavors).length-1);
     if(loc > 0) {
         selector.selectedIndex = loc;
     } else {
-        selector.selectedIndex = Flavors.length-1;
+        selector.selectedIndex = selector.options.length-1;
+        other.disabled = false;
     }
 
     // other data settings
