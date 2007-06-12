@@ -23,7 +23,7 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
-debug = True
+debug = False
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):

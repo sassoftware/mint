@@ -16,9 +16,10 @@ import urllib
 import xmlrpclib
 
 from conary.conaryclient import mirror
+from conary import conaryclient, conarycfg
 from conary import dbstore
 from conary import versions
-from conary.repository import netclient, errors
+from conary.repository import errors
 from conary.lib import util, log
 
 from mint import config
@@ -74,14 +75,20 @@ class MirrorOutbound(MirrorScript):
                 cu.execute("SELECT label, username, password FROM Labels")
                 userData = cu.fetchall_dict()
                 sourceCfg = cfg.setSection("source")
-                sourceCfg.repositoryMap = repositoryMap.copy()
+                sourceCfg.repositoryMap.update(repositoryMap.copy())
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
                 for glob in userData:
-                    sourceCfg.user.addServerGlob(versions.Label(glob['label']).getHost(), 
+                    sourceCfg.user.addServerGlob(versions.Label(glob['label']).getHost(),
                                         glob['username'], glob['password'])
                 sourceCfg.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-                sourceRepos = netclient.NetworkRepositoryClient(sourceCfg.repositoryMap, sourceCfg.user, entitlementDir = cfg.entitlementDirectory)
+                sourceCCfg = conarycfg.ConaryConfiguration()
+                sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
+                sourceCCfg.user = sourceCfg.user
+                sourceCCfg.entitlementDirectory = cfg.entitlementDirectory
+                sourceCCfg.readEntitlementDirectory()
+                sourceCCfg.proxy = proxy
+                sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
 
                 serverNames = []
                 if recurse:
@@ -126,14 +133,20 @@ class MirrorOutbound(MirrorScript):
                         targetCfg = cfg.setSection("target%d" % targetOrdinal)
                     else:
                         targetCfg = cfg.setSection("target")
-                    targetCfg.repositoryMap = repositoryMap.copy()
+                    targetCfg.repositoryMap.update(repositoryMap)
                     for x in serverNames:
                         targetCfg.repositoryMap.update({x:targetUrl})
                     targetCfg.user.addServerGlob('*', targetUser, targetPass)
                     for k in targetCfg.repositoryMap.keys():
                         targetCfg.repositoryMap[k] = targetUrl
 
-                    t = netclient.NetworkRepositoryClient(targetCfg.repositoryMap, targetCfg.user, entitlementDir = cfg.entitlementDirectory, proxy = proxy)
+                    targetCCfg = conarycfg.ConaryConfiguration()
+                    targetCCfg.repositoryMap.update(targetCfg.repositoryMap)
+                    targetCCfg.user = targetCfg.user
+                    targetCCfg.entitlementDirectory = cfg.entitlementDirectory
+                    targetCCfg.readEntitlementDirectory()
+                    targetCCfg.proxy = proxy
+                    t = conaryclient.ConaryClient(targetCCfg).getRepos()
                     targetRepos.append(t)
 
                     # If we have multiple sources for the same host,

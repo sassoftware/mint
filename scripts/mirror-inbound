@@ -10,9 +10,10 @@ import os
 from os import _exit
 
 from conary import versions
+from conary import conarycfg
 from conary.conaryclient import mirror
 from conary.lib import util, log
-from conary.repository import netclient
+from conary import conaryclient
 
 from mint import config
 from mint import helperfuncs
@@ -48,12 +49,12 @@ class MirrorInbound(MirrorScript):
                 if self.cfg.SSL and targetUrl.startswith('http:'):
                     targetUrl = "https" + targetUrl[4:]
 
-                cfg.source.repositoryMap = client.getFullRepositoryMap()
+                cfg.source.repositoryMap.update(client.getFullRepositoryMap())
                 cfg.source.repositoryMap.update({reposHost: sourceUrl})
                 if sourceUser:
                     cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-                cfg.target.repositoryMap = cfg.source.repositoryMap.copy()
+                cfg.target.repositoryMap.update(cfg.source.repositoryMap)
                 cfg.target.repositoryMap.update({reposHost: targetUrl})
                 cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
@@ -63,15 +64,21 @@ class MirrorInbound(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                          cfg.source.user,
-                                          entitlementDir = cfg.entitlementDirectory,
-                                          proxy = proxy)
+                sourceCfg = conarycfg.ConaryConfiguration()
+                sourceCfg.repositoryMap.update(cfg.source.repositoryMap)
+                sourceCfg.user = cfg.source.user
+                sourceCfg.entitlementDirectory = cfg.entitlementDirectory
+                sourceCfg.readEntitlementDirectory()
+                sourceCfg.proxy = proxy
+                sourceRepos = conaryclient.ConaryClient(sourceCfg).getRepos()
 
-                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                          cfg.target.user,
-                                          entitlementDir = cfg.entitlementDirectory)
-
+                targetCfg = conarycfg.ConaryConfiguration()
+                targetCfg.repositoryMap.update(cfg.target.repositoryMap)
+                targetCfg.user = cfg.target.user
+                targetCfg.entitlementDirectory = cfg.entitlementDirectory
+                targetCfg.readEntitlementDirectory()
+                targetCfg.proxy = proxy
+                targetRepos = conaryclient.ConaryClient(targetCfg).getRepos()
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
 
