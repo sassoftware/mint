@@ -34,8 +34,6 @@
                 }
                 setupRows();
             });
-
-
         </script>
     </head>
 

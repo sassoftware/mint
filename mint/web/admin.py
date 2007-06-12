@@ -153,10 +153,8 @@ class AdminHandler(WebHandler):
                         cfg.configLine('repositoryMap %s %s' % (extLabel.host,
                                                                 url))
 
-                    nc = netclient.NetworkRepositoryClient( \
-                        cfg.repositoryMap, cfg.user,
-                        entitlements = {extLabel.host :
-                                            (externalEntClass, externalEntKey)})
+                    cfg.configLine('entitlement %s %s' % (extLabel.host, externalEntKey))
+                    nc = conaryclient.ConaryClient(cfg).getRepos()
                     try:
                         # use 2**64 to ensure we won't make the server do much
                         nc.getNewTroveList(extLabel.host, '4611686018427387904')
