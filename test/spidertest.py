@@ -110,7 +110,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
     def spiderLink(self, link, page = None):
         self.checked.append(link)
-        #print "link:", link
+        # print "link:", link
 
         # skipped links:
         if link.endswith('logout'):
@@ -127,6 +127,10 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             return False
         if 'build?id=' in link:
             # build pages are currently broken due to lack of MCP stubbing
+            return False
+        if 'buildDefs' in link:
+            return False
+        if 'builds' in link:
             return False
 
         if page is None:
