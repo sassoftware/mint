@@ -44,7 +44,7 @@ def dictFromElem(elem):
             res.setdefault('data', {})[child.attrib.get('name')] = \
                 child.text
         else:
-            res[child.tag] = child.text.strip()
+            res[child.tag] = child.text and child.text.strip() or child.text
     return res
 
 def buildsFromXml(xmlData, splitDefault = False):

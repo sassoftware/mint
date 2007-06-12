@@ -30,7 +30,7 @@ function Build(baseId, buildType, data) {
 
 Build.prototype.settings = new Array();
 Build.prototype.enumEls = new Array();
-Build.prototype.groupFlavor = null;
+Build.prototype.groupFlavor = "";
 Build.prototype.groupFlavorEl = null;
 
 Build.prototype.createRow = function(key, dataRow) {
@@ -119,8 +119,7 @@ Build.prototype.createEditor = function() {
     // place the right flavor in the dropdown, or fill the 'Other' field
     other.value = this.groupFlavor;
     var loc = values(Flavors).indexOf(this.groupFlavor);
-    logDebug(keys(Flavors).length-1);
-    if(loc > 0) {
+    if(other.value != "") {
         selector.selectedIndex = loc;
     } else {
         selector.selectedIndex = selector.options.length-1;
@@ -195,8 +194,10 @@ function getSettings() {
                                 buildInfo['data'][settingKey] = el.checked;
                                 break;
                             case RDT_ENUM:
-                                var optionEl = this.enumEls[settingKey][el.selectedIndex];
-                                buildInfo['data'][settingKey] = optionEl.value;
+                                if(this.enumEls) {
+                                    var optionEl = this.enumEls[settingKey][el.selectedIndex];
+                                    buildInfo['data'][settingKey] = optionEl.value;
+                                }
                                 break;
                             default:
                                 logDebug("unknown setting datatype: " + settingType);
