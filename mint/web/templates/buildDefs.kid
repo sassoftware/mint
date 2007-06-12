@@ -26,8 +26,9 @@
 
             addLoadEvent(function() {
                 var inputBuilds = ${buildsJson};
+                $('troveName').value = inputBuilds[0]['troveName'];
                 for(i in inputBuilds) {
-                    if(inputBuilds.hasOwnProperty(i)) {
+                    if(inputBuilds.hasOwnProperty(i) &amp;&amp; i > 0) {
                         var build = inputBuilds[i];
                         addExisting(i, build);
                     }
@@ -46,6 +47,8 @@
             <div id="spanboth">
 
                 <h2>Default Builds for ${label}</h2>
+
+                <p>Group name: <input type="text" id="troveName" name="troveName" /></p>
 
                 <table>
                     <thead>

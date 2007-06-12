@@ -173,7 +173,7 @@ Build.prototype.hide = function() {
 function getSettings() {
     var buildSettings = new Array();
 
-    buildSettings[0] = {'troveName': 'group-dist', 'name': 'Test Build'};
+    buildSettings[0] = {'name': 'Test Build', 'troveName': $('troveName').value};
 
     for(buildId in builds) {
         if(builds.hasOwnProperty(buildId)) {

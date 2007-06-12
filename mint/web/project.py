@@ -630,7 +630,7 @@ class ProjectHandler(WebHandler):
     @strFields(label = None)
     def buildDefs(self, auth, label):
         buildsXml = self.client.checkoutBuildXml(self.project.id, label)
-        builds = buildxml.buildsFromXml(buildsXml, splitDefault = False)
+        builds = buildxml.buildsFromXml(buildsXml, splitDefault = True)
 
         visibleTypes = self.client.getAvailableBuildTypes()
 
