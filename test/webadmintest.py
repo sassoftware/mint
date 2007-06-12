@@ -184,8 +184,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         entPath = self.mintCfg.dataPath + "/entitlements/localhost1"
         xmlContent = open(entPath).read()
-        ent = loadEntitlementFromString(xmlContent, "localhost1", entPath)
-        self.failUnlessEqual(ent, (entClass, entKey))
+        ent = loadEntitlementFromString(xmlContent)
+        self.failUnlessEqual(ent, ('localhost1', entClass, entKey))
 
     def testExternalProjectMirrorAllLabels(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
