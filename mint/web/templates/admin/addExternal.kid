@@ -100,37 +100,37 @@
             <h2>Authentication</h2>
             <table class="mainformhorizontal" id="authSettings">
                 <tr>
-                    <td><input id="authTypeNone" type="radio" class="check" name="authType" value="none"
+                    <td colspan="2"><input id="authTypeNone" type="radio" class="check" name="authType" value="none"
                         py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/>
                         <label for="authTypeNone">Anonymous access only</label>
                     </td>
                 </tr>
                 <tr>
-                    <td><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
+                    <td colspan="2"><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
                     </td>
                 </tr>
                 <tr>
-                    <th style="padding-left: 3em;">Username:</th>
+                    <th style="padding-left: 3em; width: 25%;">Username:</th>
                     <td><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" value="${kwargs['externalUser']}" /></td>
                 </tr>
                 <tr>
-                    <th style="padding-left: 3em;">Password:</th>
+                    <th style="padding-left: 3em; width: 25%;">Password:</th>
                     <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" value="${kwargs['externalPass']}" /></td>
                 </tr>
                 <tr>
-                    <td><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
+                    <td colspan="2"><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
                         py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" />
                         <label for="authTypeEnt">Use an entitlement</label>
                     </td>
                 </tr>
                 <tr>
-                    <th style="padding-left: 3em;">Entitlement Class:</th>
+                    <th style="padding-left: 3em; width: 25%;">Entitlement Class:</th>
                     <td>
                         <input type="text" autocompelete="off" name="externalEntClass" value="${kwargs['externalEntClass']}" />
                     </td>
                 </tr>
                 <tr>
-                    <th style="padding-left: 3em;">Entitlement Key:</th>
+                    <th style="padding-left: 3em; width: 25%;">Entitlement Key:</th>
                     <td>
                         <textarea rows="5" cols="50" name="externalEntKey"  py:content="kwargs['externalEntKey']" />
                     </td>
