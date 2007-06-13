@@ -49,7 +49,6 @@ Build.prototype.createRow = function(key, dataRow) {
     case RDT_BOOL:
         var td = TD();
         input = INPUT({'class': 'reversed', 'value': '1', 'id': name, 'name': name, 'type': 'checkbox'});
-        logDebug(dataRow[1]);
         input.checked = dataRow[1];
         appendChildNodes(td, input);
         appendChildNodes(td, LABEL({'for': name}, dataRow[2]));
@@ -121,8 +120,6 @@ Build.prototype.createEditor = function() {
     // place the right flavor in the dropdown, or fill the 'Other' field
     other.value = this.groupFlavor;
     var loc = values(Flavors).indexOf(this.groupFlavor);
-    logDebug(this.groupFlavor);
-    logDebug(loc);
     if(other.value != "" && loc != -1) {
         selector.selectedIndex = loc;
     } else {
@@ -133,7 +130,6 @@ Build.prototype.createEditor = function() {
     // other data settings
     for(var key in this.data) {
         if(this.data.hasOwnProperty(key)) {
-            logDebug(key);
             appendChildNodes(table, this.createRow(key, this.data[key]));
         }
     }
