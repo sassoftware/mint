@@ -79,8 +79,7 @@ from mint.web.templatesupport import downloadTracker
                                 <select name="label">
                                     <option py:for="label in projectLabels" py:content="label" value="$label" />
                                 </select>
-                                <button>Edit</button>
-                                <button><b>Splart now!</b></button>
+                                <button>Manage</button>
                             </div>
                         </form>
                     </div>
