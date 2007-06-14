@@ -10,6 +10,7 @@ testsuite.setup()
 
 import os
 from conary.lib import util
+import StringIO
 
 import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
@@ -408,9 +409,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=1,
                 targetUrl='https://www.example.com/conary/', mirrorUser='foo',
                 mirrorPass='bar')
-        self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=2,
+        ad.cfg.proxy.update({'https':'https://fake.proxy.setting:1234'})
+        oldTrans = admin.ProxiedTransport.__init__
+        try:
+            sio = StringIO.StringIO()
+            admin.ProxiedTransport.__init__ = lambda x,y: sio.write(y)
+            self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=2,
                 targetUrl='https://www.example.com/conary/', mirrorUser='foo',
                 mirrorPass='bar')
+            assert(sio.getvalue() == 'https://fake.proxy.setting:1234')
+        finally:
+            admin.ProxiedTransport.__init__ = oldTrans
+            sio.close()
 
 
         label = "testproject." + 'fake.project.domain' + "@rpl:devel"
