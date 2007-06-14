@@ -146,25 +146,24 @@ class AdminHandler(WebHandler):
                 if not externalEntClass:
                     self._addErrors('Missing entitlement key for local mirror authentication')
                 if externalEntKey and externalEntClass:
-                    from conary.repository import netclient
                     # Test that the entitlement is valid
                     cfg = conarycfg.ConaryConfiguration()
                     if url:
                         cfg.configLine('repositoryMap %s %s' % (extLabel.host,
                                                                 url))
 
-                    cfg.configLine('entitlement %s %s' % (extLabel.host, externalEntKey))
+                    cfg.entitlement.addEntitlement(extLabel.host, externalEntKey, externalEntClass)
                     nc = conaryclient.ConaryClient(cfg).getRepos()
                     try:
                         # use 2**64 to ensure we won't make the server do much
                         nc.getNewTroveList(extLabel.host, '4611686018427387904')
                     except errors.InsufficientPermission:
                         self._addErrors("Entitlement does not grant mirror access to external repository")
-                    except errors.OpenError:
+                    except errors.OpenError, e:
                         if url:
-                            self._addErrors("Error contacting remote repository. Please ensure entitlement and repository URL are correct.")
+                            self._addErrors("Error contacting remote repository. Please ensure entitlement and repository URL are correct. (%s)" % str(e))
                         else:
-                            self._addErrors("Error contacting remote repository. Please ensure entitlement is correct.")
+                            self._addErrors("Error contacting remote repository. Please ensure entitlement is correct. (%s)" % str(e) )
 
         if additionalLabelsToMirror and allLabels:
             self._addErrors("Do not request additional labels and all labels to be mirrored: these options are exclusive.")
