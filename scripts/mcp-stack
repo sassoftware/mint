@@ -14,6 +14,7 @@
 #
 
 start() {
+    rm -f /var/lib/stompserver/*
     /sbin/service stompserver start
     /sbin/service mcp start
     /sbin/service jobmaster start
