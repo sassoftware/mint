@@ -286,7 +286,7 @@ class RepositoryTest(MintRepositoryHelper):
 
         # test bad anon access. We probably want a permission denied vice
         # openerror
-        self.assertRaises(repository.errors.OpenError,
+        self.assertRaises(repository.errors.InsufficientPermission,
                           nc.troveNames, self.cfg.buildLabel)
 
     def testReposNameMap(self):

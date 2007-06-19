@@ -95,7 +95,7 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.setMaintenanceMode(maintenance.LOCKED_MODE)
 
         # ensure commit fails in maintenance mode.
-        self.assertRaises(errors.OpenError, self.addComponent,
+        self.assertRaises(errors.InsufficientPermission, self.addComponent,
                           'test:data',
                           '/testproject.' + MINT_PROJECT_DOMAIN + \
                           '@rpl:devel/1.0-1-1')
