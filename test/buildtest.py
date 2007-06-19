@@ -892,5 +892,24 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(data != '<buildDefinition version="1.0"/>\n',
                     "unexpected data from checkoutBuildXml: %s" % data)
 
+
+class BuildTestConaryRepository(MintRepositoryHelper):
+    def testBuildTroves(self):
+        client, userid = self.quickMintUser("test", "testpass")
+
+        projectId = self.newProject(client)
+        build = client.newBuild(projectId, "build 1")
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+
+        build.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+
+        self.addComponent("anaconda-templates:runtime", "1.0")
+        self.addCollection("anaconda-templates", "1.0", [(":runtime", "1.0")])
+
+        x = build.resolveExtraTrove("anaconda-templates", None, None,
+            [versions.Label("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)])
+        self.failUnlessEqual(x, "anaconda-templates=/testproject.rdu.rpath.com@rpl:devel/1.0-1-1[]")
+
+
 if __name__ == "__main__":
     testsuite.main()

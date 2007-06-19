@@ -452,3 +452,6 @@ class Build(database.TableObject):
 
     def deleteBuild(self):
         return self.server.deleteBuild(self.getId())
+
+    def resolveExtraTrove(self, trvName, trvVersion = None, trvFlavor = None, searchPath = []):
+        return self.server.resolveExtraBuildTrove(self.id, trvName, trvVersion, trvFlavor, searchPath)

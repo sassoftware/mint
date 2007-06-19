@@ -56,7 +56,7 @@ from mint import useit
 from mint import rmakebuild
 from mint import rapapasswords
 from mint import constants
-from mint.flavors import stockFlavors
+from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
@@ -2112,6 +2112,39 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
+
+    @private
+    @requiresAuth
+    def resolveExtraBuildTrove(self, buildId, trvName, trvVersion, trvFlavor, searchPath):
+        build = builds.Build(self, buildId)
+        project = projects.Project(self, build.id)
+
+        arch = build.getArchFlavor()
+        cfg = project.getConaryConfig()
+        cfg.installLabelPath += searchPath
+        cfg.buildFlavor = getStockFlavor(arch)
+        cfg.flavor = getStockFlavorPath(arch)
+        cfg.initializeFlavors()
+
+        cfg.dbPath = cfg.root = ":memory:"
+        cfg.proxy = self.cfg.proxy
+        cclient = conaryclient.ConaryClient(cfg)
+
+        spec = conaryclient.cmdline.parseTroveSpec(trvName)
+        itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+        try:
+            uJob, suggMap = cclient.updateChangeSet(itemList,
+                                                    resolveDeps = False)
+
+            job = [x for x in uJob.getPrimaryJobs()][0]
+            strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
+                                     str(job[2][1]))
+
+            build.setDataValue(trvName, strSpec, validate = True)
+        except TroveNotFound:
+            return None
+
+        return strSpec
 
     @typeCheck(int, str)
     @private
