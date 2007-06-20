@@ -908,7 +908,7 @@ class BuildTestConaryRepository(MintRepositoryHelper):
 
         x = build.resolveExtraTrove("anaconda-templates", None, None,
             [versions.Label("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)])
-        self.failUnlessEqual(x, "anaconda-templates=/testproject.rdu.rpath.com@rpl:devel/1.0-1-1[]")
+        self.failUnlessEqual(x, "anaconda-templates=/testproject.%s@rpl:devel/1.0-1-1[]" % MINT_PROJECT_DOMAIN)
 
 
 if __name__ == "__main__":
