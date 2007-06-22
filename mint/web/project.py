@@ -471,6 +471,9 @@ class ProjectHandler(WebHandler):
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
         template = build.getDataTemplate()
+        searchPath = [build.getTroveVersion().branch().label(),
+            versions.Label(basictroves.baseConaryLabel)]
+
         for name in list(template):
             try:
                 val = kwargs[name]
@@ -484,12 +487,12 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
-                        searchPath = [build.getTroveVersion().label(),
-                                      versions.Label(basictroves.baseConaryLabel)]
                         val = build.resolveExtraTrove(n, v, f, searchPath)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
+                elif template[name][0] == RDT_TROVE:
+                    val = build.resolveExtraTrove(name, searchPath = searchPath)
                 else:
                     val = template[name][1]
             build.setDataValue(name, val)

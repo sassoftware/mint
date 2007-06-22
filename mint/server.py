@@ -2117,7 +2117,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def resolveExtraBuildTrove(self, buildId, trvName, trvVersion, trvFlavor, searchPath):
         build = builds.Build(self, buildId)
-        project = projects.Project(self, build.id)
+        project = projects.Project(self, build.projectId)
 
         arch = build.getArchFlavor()
         cfg = project.getConaryConfig()
@@ -2177,7 +2177,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
-        cfgData = cfgBuffer.getvalue()
+        cfgData = cfgBuffer.getvalue().split("\n")
+
+        # hack to remove entitlements for old slaves
+        allowedOptions = ['repositoryMap', 'user']
+        cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
+        print >> sys.stderr, cfgData
+        sys.stderr.flush()
 
         if self.cfg.createConaryRcFile:
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
@@ -2195,7 +2201,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if os.path.isfile(fn):
                     f = open(fn)
                     ent = conarycfg.loadEntitlementFromString(f.read())
-                    r['entitlements'][serverName] = ent
+                    r['entitlements'][serverName] = ent[1:]
 
         for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
                       'description', 'buildType'):
