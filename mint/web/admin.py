@@ -331,8 +331,8 @@ class AdminHandler(WebHandler):
         ent = conarycfg.loadEntitlement(os.path.join(self.cfg.dataPath, "entitlements"), fqdn)
         if ent:
             initialKwargs['authType'] = 'entitlement'
-            initialKwargs['externalEntClass'] = ent[0]
-            initialKwargs['externalEntKey'] = ent[1]
+            initialKwargs['externalEntClass'] = ent[-2]
+            initialKwargs['externalEntKey'] = ent[-1]
         else:
             initialKwargs['externalUser'] = userMap[0]
             initialKwargs['externalPass'] = userMap[1]
