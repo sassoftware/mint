@@ -153,7 +153,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             }
         )
 
-        assert(os.path.exists(self.mintCfg.dataPath + "/entitlements/localhost1"))
+        self.failUnless(os.path.exists(self.mintCfg.dataPath + "/entitlements/localhost1"))
+
+        # re-edit page
+        page = self.fetch("/admin/editExternal?projectId=1")
+        formData = page.getFormData(1)[0]
+        self.assertEqual(formData.get('externalEntKey'), entKey)
+        self.assertEqual(formData.get('externalEntClass'), entClass)
+
 
     def testCreateExternalProjectEntitlementExtraWhitespace(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -180,6 +187,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'externalEntClass':'  %s' % entClass,
             }
         )
+
+        # re-edit page
+        page = self.fetch("/admin/editExternal?projectId=1")
+        formData = page.getFormData(1)[0]
+        self.assertEqual(formData.get('externalEntKey'), entKey)
+        self.assertEqual(formData.get('externalEntClass'), entClass)
 
         from conary.conarycfg import loadEntitlementFromString
 
