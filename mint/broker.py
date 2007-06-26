@@ -135,8 +135,8 @@ def main(envArgs = sys.argv[1:]):
         newUid, newGid = curUid, os.getegid()
 
     if (newUid != curUid):
-        os.setuid(newUid)
         os.setgid(newGid)
+        os.setuid(newUid)
     if not os.getuid():
         parser.error("Don't run this daemon as superuser.")
 
