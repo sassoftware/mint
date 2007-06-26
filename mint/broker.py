@@ -130,7 +130,7 @@ def main(envArgs = sys.argv[1:]):
     # drop privileges as early as possible
     curUid = os.geteuid()
     if options.user:
-        newUid, newGid = pwd.getpwnam(options.user)[2:3]
+        newUid, newGid = pwd.getpwnam(options.user)[2:4]
     else:
         newUid, newGid = curUid, os.getegid()
 

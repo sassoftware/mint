@@ -14,7 +14,7 @@ install-mkdirs:
 install: install-mkdirs
 	install -m 644 rbuilder.1 $(DESTDIR)$(mandir)/man1
 
-dist: default-dist
+dist: rbuilder.1 default-dist
 
 clean: default-clean
 
