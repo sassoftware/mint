@@ -74,12 +74,12 @@ class GroupTroveTable(database.KeyedTable):
                 else:
                     cu.execute("""ALTER TABLE GroupTroves
                                       MODIFY COLUMN recipeName VARCHAR(200)""")
-            if dbversion == 32 and not self.initialCreation:
+            if dbversion == 37 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("""ALTER TABLE GroupTroves
                                   ADD COLUMN cookCount INT""")
                 cu.execute("UPDATE GroupTroves SET cookCount=0")
-            return dbversion >= 32
+            return dbversion >= 37
         return True
 
     def listGroupTrovesByProject(self, projectId):
