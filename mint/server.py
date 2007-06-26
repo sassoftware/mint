@@ -2180,7 +2180,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfgData = cfgBuffer.getvalue().split("\n")
 
         # hack to remove entitlements for old slaves
-        allowedOptions = ['repositoryMap', 'user']
+        allowedOptions = ['repositoryMap', 'user', 'conaryProxy']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
         print >> sys.stderr, cfgData
         sys.stderr.flush()
