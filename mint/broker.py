@@ -130,12 +130,13 @@ def main(envArgs = sys.argv[1:]):
     # drop privileges as early as possible
     curUid = os.geteuid()
     if options.user:
-        newUid = pwd.getpwnam(options.user)[2]
+        newUid, newGid = pwd.getpwnam(options.user)[2:3]
     else:
-        newUid = curUid
+        newUid, newGid = curUid, os.getegid()
 
     if (newUid != curUid):
         os.setuid(newUid)
+        os.setgid(newGid)
     if not os.getuid():
         parser.error("Don't run this daemon as superuser.")
 
