@@ -7,11 +7,13 @@ import inspect
 import unittest
 import tempfile
 import mysqlharness
+import pgsqlharness
 import random
 import string
 import subprocess
 import os
 import sys
+import time
 import pwd
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
@@ -588,6 +590,151 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         self.stop()
         FixtureCache.__del__(self)
 
+class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
+    keepDbs = ['postgres', 'testdb', 'template1', 'template0']
+    db = None
+
+    def __init__(self):
+        pgsqlharness.PgSqlHarness.__init__(self)
+        self.start()
+        os.system('createlang -U %s -p %s plpgsql template1' % (self.user, self.port))
+
+    def _randomName(self):
+        return "".join(random.sample(string.lowercase, 5))
+
+    def _getConnectStringForDb(self, dbName = None):
+        if dbName:
+            return "%s@localhost.localdomain:%d/%s" % (self.user, self.port, dbName.lower())
+        else:
+            return "%s@localhost.localdomain:%d/%%s" % (self.user, self.port)
+
+    def _connect(self):
+        if not self.db:
+            self.db = dbstore.connect(self._getConnectStringForDb('postgres'), 'postgresql')
+
+    def _newDb(self, name):
+        self._connect()
+        cu = self.db.cursor()
+        try:
+            self._dropDb(name)
+        except:
+            pass
+        cu.execute("CREATE DATABASE %s" % name)
+
+    def _dropDb(self, name):
+        cu = self.db.cursor()
+        for x in range(20):
+            cu.execute("SELECT COUNT(*) FROM pg_database WHERE datname=?", name)
+            # If this database exists, get the pids of all open connections to
+            # it and kill them.
+            if (cu.fetchone()[0]):
+                try:
+                    cu.execute("SELECT procpid FROM pg_stat_activity WHERE datname=?",
+                                name)
+                    for x in cu.fetchall():
+                        os.system('pg_ctl kill TERM %s 2>/dev/null' % x[0])
+                    cu.execute("DROP DATABASE %s" % name)
+                except:
+                    # Unable to drop database, wait and try again
+                    time.sleep(0.1)
+            else:
+                break
+
+    def _dupDb(self, srcDb, destDb):
+        self._newDb(destDb)
+        output = ["pg_dump", "-U", self.user, '-c', '-O', 
+                  '-p', str(self.port), '-d', srcDb]
+        input = ["psql", '-p', str(self.port), "-U", self.user, destDb.lower()]
+        dump = subprocess.Popen(output, stdout = subprocess.PIPE)
+        fd = open('/dev/null', 'w')
+        load = subprocess.Popen(input, stdin = dump.stdout, stdout=fd, 
+            stderr=fd)
+        load.communicate()
+        fd.close()
+
+    def newMintCfg(self, name):
+        cfg = FixtureCache.newMintCfg(self, name)
+        cfg.reposDBDriver = 'postgresql'
+        cfg.dbDriver = 'sqlite'
+        cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
+        cfg.reposDBPath = self._getConnectStringForDb()
+
+        return cfg
+
+    def loadFixture(self, name):
+        ret = FixtureCache.loadFixture(self, name)
+
+        # save repos tables off for later
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("SELECT datname FROM pg_database")
+        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            if '_' in table and not table.startswith('cr'):
+                newName = "cr%s%s" % (name, table)
+                self._dupDb(table, newName)
+                #db2 = dbstore.connect(self._getConnectStringForDb(table), 'postgresql')
+                self._dropDb(table)
+                #db2.loadSchema()
+                #cu2 = db2.cursor()
+                #for t in db2.tempTables:
+                 #   cu.execute("DROP TABLE %s" % (t,))
+                #for t in db2.tables:
+                 #   cu.execute("DROP TABLE %s CASCADE" % (t,))
+                #db2.close()
+                self.keepDbs.append(newName.lower())
+        return ret
+
+    def load(self, name):
+        cfg, data = self.loadFixture(name)
+
+        # get a random name for this particular instance of the fixture
+        # in order to create unique copies
+        randomDbName = self._randomName()
+
+        # make a copy of the data directory and update the cfg
+        testDataPath = tempfile.mkdtemp(prefix = "fixture%s" % name, suffix = '.copy')
+        util.copytree(os.path.join(cfg.dataPath,'*'), testDataPath)
+        testCfg = copy.deepcopy(cfg)
+        testCfg.dataPath = testDataPath
+        testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
+        testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
+        testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
+        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
+        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
+        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+
+        f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
+        testCfg.display(out=f)
+        f.close()
+
+        # restore the repos dbs
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("""SELECT datname FROM pg_database 
+                      WHERE datname LIKE 'cr%s%%'""" % name.lower())
+        for table in [x[0] for x in cu.fetchall()]:
+            fixtureCopyReposDbName = table[2+len(name):]
+            self._dupDb(table, fixtureCopyReposDbName)
+
+        f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
+        testCfg.display(out=f)
+        f.close()
+
+        return testCfg, data
+
+    def delRepos(self):
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("SELECT datname FROM pg_database")
+        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+           if '_' in table and not table.startswith('cr'):
+               self._dropDb(table)
+
+    def __del__(self):
+        self.stop()
+        FixtureCache.__del__(self)
+
 
 class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
     adminClient = None
@@ -715,6 +862,8 @@ if driver == "sqlite":
     fixtureCache = SqliteFixtureCache()
 elif driver == "mysql":
     fixtureCache = MySqlFixtureCache()
+elif driver == "postgresql":
+    fixtureCache = PostgreSqlFixtureCache()
 else:
     raise RuntimeError, "Invalid database driver specified"
 

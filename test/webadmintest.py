@@ -422,9 +422,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=1,
                 targetUrl='https://www.example.com/conary/', mirrorUser='foo',
                 mirrorPass='bar')
-        ad.cfg.proxy.update({'https':'https://fake.proxy.setting:1234'})
         oldTrans = admin.ProxiedTransport.__init__
+        oldProxy = ad.cfg.proxy.copy()
         try:
+            ad.cfg.proxy.update({'https':'https://fake.proxy.setting:1234'})
             sio = StringIO.StringIO()
             admin.ProxiedTransport.__init__ = lambda x,y: sio.write(y)
             self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=2,
@@ -433,8 +434,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             assert(sio.getvalue() == 'https://fake.proxy.setting:1234')
         finally:
             admin.ProxiedTransport.__init__ = oldTrans
+            ad.cfg.proxy = oldProxy
             sio.close()
-
 
         label = "testproject." + 'fake.project.domain' + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)

@@ -137,24 +137,9 @@ class ConaryHandler(WebHandler):
             fileIters.append(files)
         fileIters = itertools.chain(*fileIters)
 
-        deletedFiles = []
-        if t.endswith(':source'):
-            if parentTrove.version.v.hasParentVersion():
-                parentIters = []
-                tr = self.repos.getTrove(t, parentTrove.version.v.parentVersion(), f)
-                files = self.repos.iterFilesInTrove(
-                    tr.getName(),
-                    tr.getVersion(),
-                    tr.getFlavor(),
-                    withFiles = True,
-                sortByPath = True)
-                parentIters = files
-                
-                fileIters = [x for x in fileIters]
-                deletedFiles = [x for x in parentIters if x[1] not in [y[1] for y in fileIters]]
         return self._write("files",
             troveName = t,
-            fileIters = fileIters, deletedFiles=deletedFiles)
+            fileIters = fileIters)
 
     @strFields(t=None, v='', f='')
     def licenseCryptoReport(self, t, v, f, auth):
@@ -771,6 +756,10 @@ class ConaryHandler(WebHandler):
             # outside of mod-python environments.
             if self.auth.admin:
                 self.authToken = saveToken
+            # roll back any hanging transaction
+            if self.cfg.debugMode:
+                if self.__dict__.has_key('repServer'):
+                    self.repServer.db.rollback()
         return output
 
     def _write(self, templateName, **values):

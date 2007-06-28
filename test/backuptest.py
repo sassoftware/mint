@@ -27,7 +27,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testBackup(self, db, data):
 
-        if self.cfg.dbDriver != 'sqlite':
+        if self.cfg.dbDriver != 'sqlite' or self.cfg.reposDBDriver != 'sqlite':
             raise testsuite.SkipTestException("Test only works on sqlite")
 
         client = self.getClient("admin")
@@ -74,7 +74,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testRestore(self, db, data):
 
-        if self.cfg.dbDriver != 'sqlite':
+        if self.cfg.dbDriver != 'sqlite' or self.cfg.reposDBDriver != 'sqlite':
             raise testsuite.SkipTestException("Test only works on sqlite")
 
         client = self.getClient("admin")

@@ -1475,10 +1475,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         repos = self.openRepository()
 
-        self.addQuickTestComponent('foo:source',
+        self.addComponent('foo:source',
                                    '/testproject.' + MINT_PROJECT_DOMAIN + \
                                    '@rpl:devel/1.0-1',
                                    repos = repos)
+        
 
         groupTrove = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
                                              'no desc', False)
@@ -1499,7 +1500,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # now add a trove that should show up for troveInfo. this couldn't
         # be added sooner or it would confuse browsing check
-        self.addQuickTestComponent('foo:data',
+        self.addComponent('foo:data',
                                    '/testproject.' + MINT_PROJECT_DOMAIN + \
                                    '@rpl:devel/1.0-1', repos = repos)
 

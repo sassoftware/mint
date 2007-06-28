@@ -36,7 +36,7 @@ class UpToDateException(MintError):
 def concat(db, *items):
     if db.driver == "mysql":
         return "CONCAT(%s)" % ", ".join(items)
-    elif db.driver == "sqlite":
+    elif db.driver == "sqlite" or db.driver == 'postgresql':
         return " || ".join(items)
     raise Exception("Unsupported database")
 

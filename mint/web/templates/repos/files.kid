@@ -54,14 +54,6 @@ from mint.helperfuncs import truncateForDisplay
                     <a py:if="version.branch().asString() == troveVersion and not binFile " href="${'diffShadow?t=%s;v=%s;path=%s;pathId=%s;fileId=%s' % (troveName, quote(version.asString()), os.path.basename(path), sha1helper.md5ToString(pathId), sha1helper.sha1ToString(fileId))}"><button>Calculate Diff</button></a>
                 </td>
             </tr>
-                <tr  py:if="deletedFiles" py:for="pathId, path, fileId, version, fObj in deletedFiles">
-                        <td style="text-decoration: line-through;">${fObj.modeString()}</td>
-                        <td style="text-decoration: line-through;">${fObj.inode.owner()}</td>
-                        <td  style="text-decoration: line-through;">${fObj.inode.group()}</td>
-                        <td  style="text-decoration: line-through;">${fObj.sizeString()}</td>
-                        <td  style="text-decoration: line-through;">${fObj.timeString()}</td>
-                        <td  style="text-decoration: line-through;">${truncateForDisplay(path, maxWordLen = 70)}</td>
-                    </tr>
         </table>
     </div>
 
@@ -72,7 +64,6 @@ from mint.helperfuncs import truncateForDisplay
         <div id="layout">
             <h2>Files in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
             <p class="help">Shadowed files that have been modified on the current branch are displayed in <span class="modified">blue</span>.</p>
-            <p py:if="deletedFiles" class="help">Shadowed files that have been deleted on the current branch are displayed in <span style="text-decoration: line-through;">strike-through</span>.</p>
 
             ${fileList(fileIters)}
             <hr/>

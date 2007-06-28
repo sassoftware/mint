@@ -6,6 +6,8 @@
 import os
 import shutil
 import mysqlharness
+import pgsqlharness
+import pwd
 import rephelp
 import socket
 import sys
@@ -143,7 +145,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
 
         mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if mintDb == "sqlite":
+        if mintDb == "sqlite" or mintDb == 'postgresql':
             self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
         elif mintDb == "mysql":
             self.mintDb = MySqlMintDatabase(reposDB.path)
@@ -201,10 +203,40 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintCfg.display(f)
         f.close()
 
-    def start(self):
-        rephelp.ApacheServer.start(self)
-        self.mintDb.start()
+    def start(self, resetDir=True):
+        if resetDir:
+            if os.path.exists(self.reposDir):
+                shutil.rmtree(self.reposDir)
+            os.mkdir(self.reposDir)
+            self.createConfig()
+        if self.reposDB:
+            self.reposDB.start()
+            self.reposDB.createSchema()
+            self.reposDB.createUsers()
+            if self.reposDB.driver == 'postgresql':
+                os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
+        if self.serverpid != -1:
+            return
 
+        # HACK
+        os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
+        self.serverpid = os.fork()
+        if self.serverpid == 0:
+            os.chdir('/')
+            #print "starting server in %s" % self.serverRoot
+	    args = ("/usr/sbin/httpd",
+		    "-X",
+		    "-d", self.serverRoot,
+		    "-f", "httpd.conf",
+		    "-C", 'DocumentRoot "%s"' % self.serverRoot)
+            rephelp.osExec(args)
+        else:
+            pass
+
+        os.mkdir(os.path.join(self.serverRoot, 'cscache'))
+
+        self.mintDb.start()
+    
     def reset(self):
         if os.path.exists(self.reposDir + "/repos/"):
             util.rmtree(self.reposDir + "/repos/")
@@ -212,6 +244,9 @@ class MintApacheServer(rephelp.ApacheServer):
             util.rmtree(self.reposDir + "/entitlements/")
 
         rephelp.ApacheServer.reset(self)
+        shutil.rmtree(os.path.join(self.serverRoot, 'cscache'))
+        os.mkdir(os.path.join(self.serverRoot, 'cscache'))
+
         self.needsPGPKey = False
         self.mintDb.reset()
 
@@ -251,21 +286,25 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.basePath = '/'
 
         sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if sqldriver == 'sqlite':
+        if sqldriver == 'sqlite' or sqldriver == 'postgresql':
             cfg.dbPath = self.reposDir + '/mintdb'
         elif sqldriver == 'mysql':
             cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
-        elif sqldriver == 'postgresql':
-            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
         else:
             raise AssertionError("Invalid database type")
-        cfg.dbDriver = sqldriver
+
+        if sqldriver == 'postgresql':
+            cfg.dbDriver = 'sqlite'
+        else:
+            cfg.dbDriver = sqldriver
 
         reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if reposdriver == 'sqlite':
             cfg.reposDBPath = self.reposDir + "/repos/%s/sqldb"
         elif reposdriver == 'mysql':
             cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % self.reposDB.port
+        elif sqldriver == 'postgresql':
+            cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], self.reposDB.port)
         cfg.reposDBDriver = reposdriver
         cfg.reposPath = self.reposDir + "/repos/"
         cfg.reposContentsDir = " ".join([self.reposDir + "/contents1/%s/", self.reposDir + "/contents2/%s/"])
@@ -474,7 +513,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def tearDown(self):
         self.db.close()
-
         rephelp.RepositoryHelper.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
@@ -583,6 +621,14 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def verifyContentsInFile(self, fileName, contents):
         f = file(fileName)
         assert(contents in f.read())
+
+    def __del__(self):
+        try:
+            self.stop()
+        except:
+            pass
+        # HACK
+        os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
 
 
 class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):

@@ -150,8 +150,9 @@ class RepositoryTest(MintRepositoryHelper):
 
         troveNames = nc.troveNames(versions.Label("testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel"))
-        assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
-                              'group-test:source', 'testcase:source'])
+        troveNames.sort()
+        assert(troveNames == ['group-test', 'group-test:source',
+                   'testcase', 'testcase:runtime', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == ['group-test'])

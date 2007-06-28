@@ -53,6 +53,7 @@ class DuplicateLabel(MintError):
 transTables = {
     'sqlite': string.maketrans("", ""),
     'mysql': string.maketrans("-.:", "___"),
+    'postgresql': string.maketrans("-.:", "___")
 }
 
 
@@ -264,6 +265,7 @@ class ProjectsTable(database.KeyedTable):
         # poor excuse for a switch statement
         self.reposDB = {'sqlite': SqliteRepositoryDatabase,
                         'mysql':  MySqlRepositoryDatabase,
+                        'postgresql':  PostgreSqlRepositoryDatabase
                        }[self.cfg.reposDBDriver](cfg)
         # call init last so that we can use reposDB during schema upgrades
         database.DatabaseTable.__init__(self, db)
@@ -297,7 +299,8 @@ class ProjectsTable(database.KeyedTable):
                 for projectId, FQDN in projList:
                     dbCon = self.reposDB.getRepositoryDB(FQDN)
                     try:
-                        if self.cfg.reposDBDriver == 'sqlite' or needDb:
+                        if self.cfg.reposDBDriver == 'sqlite' or needDb \
+                           or self.cfg.reposDBDriver == 'postgresql':
                             rDb = dbstore.connect(dbCon[1], dbCon[0])
                             needDb = False
                         else:
@@ -329,7 +332,8 @@ class ProjectsTable(database.KeyedTable):
                                        WHERE userGroupId IN %s""" % \
                                 str(tuple(userGroups)).replace(",)", ")"))
                     rDb.commit()
-                    if self.cfg.reposDBDriver == 'sqlite':
+                    if self.cfg.reposDBDriver == 'sqlite' or \
+                        self.cfg.reposDBDriver == 'postgresql':
                         rDb.close()
                 if rDb:
                     rDb.close()
@@ -808,6 +812,52 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
         util.mkdirChain(os.path.dirname(self.cfg.reposDBPath % name))
         RepositoryDatabase.create(self, name)
 
+
+class PostgreSqlRepositoryDatabase(RepositoryDatabase):
+    tableOpts = "ENCODING 'UTF8'"
+    driver = 'postgresql'
+
+    def translate(self, x):
+        return x.translate(transTables['postgresql'].lower())
+
+    def create(self, name):
+        path = self.cfg.reposDBPath % 'postgres'
+        db = dbstore.connect(path, 'postgresql')
+
+        dbName = self.translate(name)
+
+        cu = db.cursor()
+        # this check should never be required outside of the test suite,
+        # and it could be kind of dangerous being called in production.
+        cu.execute("SELECT datname FROM pg_database")
+        createDb = True
+        if dbName in [x[0] for x in cu.fetchall()]:
+            createDb = False
+            db.close()
+            if self.cfg.debugMode:
+                import gc
+                while gc.collect():
+                    pass
+
+                reposDb = dbstore.connect(self.cfg.reposDBPath % dbName.lower(),
+                                          'postgresql')
+                reposDb.loadSchema()
+                reposCu = reposDb.cursor()
+                tableList = []
+                for t in reposDb.tempTables:
+                    reposCu.execute("DROP TABLE %s" % (t,))
+                for t in reposDb.tables:
+                    reposCu.execute("DROP TABLE %s CASCADE" % (t,))
+                reposDb.close()
+            else:
+                # raise an error that alomst certainly won't be trapped,
+                # so that a traceback will be generated.
+                raise AssertionError( \
+                    "Attempted to delete an existing project database.")
+        if createDb:
+            cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
+        db.close()
+        RepositoryDatabase.create(self, name)
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
     tableOpts = "character set latin1 collate latin1_bin"

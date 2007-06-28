@@ -205,6 +205,7 @@ def conaryHandler(req, cfg, pathInfo):
         # it's local
         repHash = actualRepName + req.hostname + str(requireSigs)
         dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
+        database = cfg.reposDBPath % dbName
         reposDBDriver, reposDBPath, isDefault = getReposDB(db, dbName, projectId, cfg)
         if reposDBDriver == "sqlite":
             conaryDb = None
@@ -220,9 +221,18 @@ def conaryHandler(req, cfg, pathInfo):
                         req.log_error("reopened a dead database connection in hooks.py")
 
                     conaryDb.rollback() # roll back any hanging transactions
-                    if conaryDb.dbName != dbName:
+
+                    if reposDBDriver == 'postgresql' and \
+                       conaryDb.database != database:
+                        # use is not implemented for pg
+                        reposDb = dbstore.connect(reposDBPath, reposDBDriver)
+                        conaryDb = reposDb
+                    elif reposDBDriver == 'mysql' and \
+                         conaryDb.dbName != dbName:
                         conaryDb.use(dbName)
-                    reposDb = conaryDb
+                        reposDb = conaryDb
+                    else:
+                        reposDb = conaryDb
             except sqlerrors.DatabaseError, e:
                 req.log_error("Error opening database %s: %s" % (dbName, str(e)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
