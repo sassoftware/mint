@@ -14,6 +14,7 @@ from mint.database import DuplicateItem, ItemNotFound
 from mint.mint_error import PermissionDenied, UserAlreadyAdmin, \
      AdminSelfDemotion, LastAdmin
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
+from mint import users
 
 from conary import versions
 from conary.conaryclient import ConaryClient
@@ -83,8 +84,15 @@ class AccountTest(MintRepositoryHelper):
 
         client.server.updateAccessedTime(userId)
         try:
+            oldChecks = users.sendMailWithChecks
+            users.sendMailWithChecks = lambda *args, **kwargs: True
+
             client.server.validateNewEmail(userId, eMail)
-            self.fail("Email address was definitely bogus")
+        finally:
+            users.sendMailWithChecks = oldChecks
+        try:
+            users.validateEmailDomain(eMail)
+            self.fail('Did not catch bad e-mail domain')
         except MailError:
             pass
 

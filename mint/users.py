@@ -251,6 +251,7 @@ class UsersTable(database.KeyedTable):
         sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
                 "Your %s account's email address must be confirmed" % self.cfg.productName, message)
         self.invalidateUser(userId, confirm)
+        return True
 
     def invalidateUser(self, userId, confirm = None):
         if not confirm:
