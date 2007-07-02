@@ -2179,11 +2179,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue().split("\n")
 
-        # hack to remove entitlements for old slaves
-        allowedOptions = ['repositoryMap', 'user', 'conaryProxy']
+        allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
-        print >> sys.stderr, cfgData
-        sys.stderr.flush()
 
         if self.cfg.createConaryRcFile:
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
@@ -2192,16 +2189,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r = {}
         r['serialVersion'] = builds.SERIAL_VERSION
         r['type'] = 'build'
-
-        # inject rBuilder's entitlements into the serialized build
-        r['entitlements'] = {}
-        if os.path.isdir(os.path.join(self.cfg.dataPath, 'entitlements')):
-            for serverName in os.listdir(os.path.join(self.cfg.dataPath, 'entitlements')):
-                fn = os.path.join(self.cfg.dataPath, 'entitlements', serverName)
-                if os.path.isfile(fn):
-                    f = open(fn)
-                    ent = conarycfg.loadEntitlementFromString(f.read())
-                    r['entitlements'][serverName] = ent[1:]
 
         for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
                       'description', 'buildType'):
