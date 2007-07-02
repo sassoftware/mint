@@ -495,7 +495,8 @@ class ProjectHandler(WebHandler):
                     val = build.resolveExtraTrove(name, searchPath = searchPath)
                 else:
                     val = template[name][1]
-            build.setDataValue(name, val)
+            if val:
+                build.setDataValue(name, val)
 
         try:
             self.client.startImageJob(buildId)
