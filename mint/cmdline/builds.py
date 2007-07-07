@@ -21,13 +21,13 @@ from conary.conaryclient.cmdline import parseTroveSpec
 
 def waitForBuild(client, buildId, interval = 5):
     build = client.getBuild(buildId)
-    job = build.getJob()
+    jobStatus = build.getStatus()
 
-    while job.status in (jobstatus.WAITING, jobstatus.RUNNING):
+    while jobStatus['status'] in (jobstatus.WAITING, jobstatus.RUNNING):
         time.sleep(interval)
-        job.refresh()
+        jobStatus = build.getStatus()
 
-    log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
+    log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
 
 bootableTypes = [buildtypes.RAW_FS_IMAGE,
                  buildtypes.TARBALL,
