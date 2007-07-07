@@ -4321,6 +4321,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.req = req
         schemaLock = None
         self.mcpClient = None
+
+        global callLog
         if self.cfg.xmlrpcLogFile:
             if not callLog:
                 callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
