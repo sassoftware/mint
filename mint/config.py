@@ -22,7 +22,8 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
-                           'requireSigs', 'authPass' ]
+                           'requireSigs', 'authPass', 'reposDBDriver', 
+                           'reposDBPath']
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
