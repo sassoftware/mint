@@ -1,0 +1,108 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2005-2007 rPath, Inc.
+#
+# All rights reserved
+#
+
+import os, sys
+import time
+
+from mint import config
+from mint import maintenance
+from mint.projects import transTables
+from conary import dbstore
+from conary.lib import util
+from conary.server import schema
+
+    
+MIGRATION_SCRIPT = os.environ['CONARY_PATH'] + '/scripts/migration/sqlite2pgsql.py'
+PSQL_USER = 'rbuilder'
+LOGFILE = '/srv/rbuilder/logs/sqlite2psql.log'
+
+cfg = config.MintConfig()
+cfg.read(config.RBUILDER_CONFIG)
+
+# check a few important things
+ec = os.system('/sbin/service httpd status > /dev/null')
+isRunningHttpd = bool((ec >> 8) == 0)
+isRunningInMaintenanceMode = (maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE)
+
+if isRunningHttpd and not isRunningInMaintenanceMode:
+    print >> sys.stderr, """
+rBuilder repositories are not locked. You must place the site in
+maintenance mode or shut down the Apache Web Server (httpd) before
+continuing."""
+    sys.exit(1)
+
+
+if cfg.reposDBDriver != 'sqlite':
+    print >> sys.stderr, """
+Repository database driver "%s" not supported by this script.""" % cfg.reposDBDriver
+    sys.exit(1)
+
+db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+cu = db.cursor()
+
+print "Migrating sqlite conary repository databases to psql..."
+# get repname map used to help find the local Conary repository
+# for external locally-mirrored projects
+repnamemap = {}
+cu.execute("SELECT fromname, toname FROM RepNameMap")
+for fromName, toName in cu.fetchall():
+    repnamemap[fromName] = toName
+
+# get all projects which are not external OR are external, but are locally mirrored
+cu.execute("""SELECT hostname, domainname, external,
+                 EXISTS(SELECT * FROM InboundMirrors 
+                           WHERE projectId=targetProjectId) as mirrored
+              FROM Projects WHERE external = 0 or mirrored = 1""")
+
+dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
+
+error = False
+databases = []
+for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
+    # lookup things in the repnamemap to resolve external local
+    # mirrors
+    actualDbName = repnamemap.get(dbName, dbName)
+    pgDbName = actualDbName.translate(transTables['postgresql'])
+    fd = open(LOGFILE, 'a')
+    fd.write('%s migrating %s\n' % (time.asctime(), actualDbName))
+    fd.close()
+    try:
+        # Create the db
+        util.execute('psql -U %s -d postgres -c "CREATE DATABASE %s ENCODING \'UTF8\';" >> %s' % (PSQL_USER, pgDbName, LOGFILE))
+
+        databases.append(pgDbName)
+        # Run the script
+        util.execute('%s %s %s >> %s' % (MIGRATION_SCRIPT,
+                                     cfg.reposDBPath % actualDbName,
+                                     '%s@localhost.localdomain/%s' %\
+                                     (PSQL_USER, pgDbName), LOGFILE))
+    except:
+        print "error migrating database: %s" % dbName
+        error = True
+        break
+
+    print "Completed %d of %d" % (count, len(dbNames)), chr(13),
+    sys.stdout.flush()
+
+
+if error:
+    print "\nConary pgsql repository migration aborted due to errors."
+    # Delete pg databases on error
+    for x in databases:
+        util.execute('psql -U %s -d postgres -c "DROP DATABASE %s;" >> %s' % (PSQL_USER, x, LOGFILE))
+    sys.exit(1)
+
+cfg.setValue('reposDBDriver', 'postgresql')
+cfg.setValue('reposDBPath', '%s@localhost.localdomain/%%s' % PSQL_USER)
+
+fd = open(config.RBUILDER_GENERATED_CONFIG, 'w')
+for k in config.keysForGeneratedConfig:
+    cfg.displayKey(k, out=fd)
+fd.close()
+
+print "\nConary pgsql repository migration complete."
+sys.exit(0)
