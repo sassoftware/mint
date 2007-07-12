@@ -103,7 +103,7 @@ typeNamesShort = {
     PARALLELS:          "Parallels",
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
-    APPLIANCE_ISO:      "Appliance Inst",·
+    APPLIANCE_ISO:      "Appliance Inst",
 }
 
 typeNamesMarketing = {
