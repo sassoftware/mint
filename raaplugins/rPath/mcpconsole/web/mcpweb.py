@@ -63,17 +63,21 @@ class MCPConsole(rAAWebPlugin):
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     @marshallMessages
     def index(self):
-        jobStatus = self.c.jobStatus()
-
-        return {'jobStatus' : jobStatus}
+        if self.c:
+            jobStatus = self.c.jobStatus()
+            return {'jobStatus' : jobStatus, 'disabled' : False}
+        else:
+            return {'disabled' : True}
 
     @raa.expose(html="rPath.mcpconsole.templates.nodes")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     @marshallMessages
     def nodes(self):
-        nodeStatus = self.c.nodeStatus()
-
-        return {'nodeStatus' : nodeStatus}
+        if self.c:
+            nodeStatus = self.c.nodeStatus()
+            return {'nodeStatus' : nodeStatus, 'disabled' : False}
+        else:
+            return {'disabled' : True}
 
     # rpc interface for javascript
     @raa.expose()
@@ -86,7 +90,6 @@ class MCPConsole(rAAWebPlugin):
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def getNodeStatus(self):
         return self.c.nodeStatus()
-
 
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
