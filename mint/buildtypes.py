@@ -23,6 +23,7 @@ validBuildTypes = {
     'PARALLELS'         : 13,
     'AMI'               : 14,
     'UPDATE_ISO'        : 15,
+    'APPLIANCE_ISO'     : 16,
 }
 
 TYPES = validBuildTypes.values()
@@ -83,6 +84,7 @@ typeNames = {
     PARALLELS:          "Parallels Virtual Appliance",
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
+    APPLIANCE_ISO:      "Appliance Installable ISO",
 }
 
 typeNamesShort = {
@@ -101,6 +103,7 @@ typeNamesShort = {
     PARALLELS:          "Parallels",
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
+    APPLIANCE_ISO:      "Appliance Inst",·
 }
 
 typeNamesMarketing = {
@@ -119,6 +122,7 @@ typeNamesMarketing = {
     PARALLELS:          "Parallels Virtual Appliance",
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
+    APPLIANCE_ISO:      "Appliance Installable ISO",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
