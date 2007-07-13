@@ -240,6 +240,13 @@ class AMITemplate(Template):
                  'amiHugeDiskMountpoint', 'installLabelPath', 'mirrorUrl']
     id = buildtypes.AMI
 
+class ApplianceISOTemplate(Template):
+    __slots__ = ['autoResolve', 'baseFileName', 'bugsUrl',
+                 'installLabelPath', 'showMediaCheck', 'betaNag',
+                 'mediaTemplateTrove', 'anacondaCustomTrove',
+                 'anacondaTemplatesTrove', 'mirrorUrl']
+    id = buildtypes.APPLIANCE_ISO
+
 ########################
 
 dataHeadings = {}
