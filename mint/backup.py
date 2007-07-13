@@ -8,6 +8,7 @@
 import os, sys
 import pwd
 from mint import config
+from mint import projects
 from conary.lib import util
 from conary import dbstore
 import conary.server.schema
@@ -37,6 +38,25 @@ def backup(cfg, out):
                 util.execute("echo '.dump' | sqlite3 %s > %s" % \
                               (reposDBPath, dumpPath))
                 print >> out, reposContentsDir[0] % reposDir
+    elif cfg.reposDBDriver == 'postgresql':
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        cu = db.cursor()
+        cu.execute("""SELECT hostname, domainname
+                          FROM Projects WHERE NOT external""")
+        for reposDir in ['.'.join(x) for x in cu.fetchall()]:
+            reposDbName = reposDir.translate(projects.transTables['postgresql'])
+            dbUser = cfg.reposDBPath.split('@')[0]
+            dumpPath = os.path.join(backupPath, '%s.dump' % reposDbName)
+            rdb = dbstore.connect(cfg.reposDBPath % 'postgres', 'postgresql')
+            rcu = rdb.cursor()
+            rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
+                         reposDbName)
+            if rcu.fetchone():
+                util.execute("pg_dump -U %s -c -O -d %s > %s" %\
+                             (dbUser, reposDbName, dumpPath))
+                print >> out, reposContentsDir[0] % reposDir
+            rdb.close()
+
     for d in staticPaths:
         path = os.path.join(cfg.dataPath, d)
         if os.path.exists(path):
@@ -58,15 +78,30 @@ def restore(cfg):
         r = cu.fetchone()
         if r:
             repo = r[0]
-        dumpPath =  os.path.join(backupPath, repo + '.dump')
+        dumpPath =  os.path.join(backupPath, repo).translate(projects.transTables[cfg.reposDBDriver]) + '.dump'
         reposPath = os.path.join(cfg.reposPath, repo)
         if os.path.exists(dumpPath):
             util.mkdirChain(os.path.join(reposPath, 'tmp'))
-            if cfg.dbDriver == 'sqlite':
+            if cfg.reposDBDriver == 'sqlite':
                 dbPath = cfg.reposDBPath % repo
                 if os.path.exists(dbPath):
                     os.unlink(dbPath)
                 util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
+            elif cfg.reposDBDriver == 'postgresql':
+                pgRepo = repo.translate(projects.transTables['postgresql'])
+                dbPath = cfg.reposDBPath % pgRepo
+                rdb = dbstore.connect('%s' % (cfg.reposDBPath % 'postgres'),
+                                      cfg.reposDBDriver)
+                rcu = rdb.cursor()
+                rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
+                             pgRepo)
+                if rcu.fetchone():
+                    rcu.execute("DROP DATABASE %s" % pgRepo)
+                    rcu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % pgRepo)
+                rdb.close()
+
+                dbUser = cfg.reposDBPath.split('@')[0]
+                util.execute('cat %s | psql -U %s %s'% (dumpPath, dbUser, pgRepo))
         else:
             cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
             localMirror = cu.fetchone_dict()
@@ -75,9 +110,10 @@ def restore(cfg):
                 util.rmtree(reposPath, ignore_errors = True)
 
                 # revert Labels table to pre-mirror settings
-                cu.execute("UPDATE Labels SET url=?, username=?, password=?",
+                cu.execute("""UPDATE Labels SET url=?, username=?, password=?
+                              WHERE projectId=?""",
                     localMirror['sourceUrl'], localMirror['sourceUsername'],
-                    localMirror['sourcePassword'])
+                    localMirror['sourcePassword'], projectId)
 
                 cu.execute("DELETE FROM RepNameMap WHERE toName=?", repo)
                 cu.execute("DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
