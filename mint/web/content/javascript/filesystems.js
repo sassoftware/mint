@@ -55,18 +55,6 @@ FilesystemRow.prototype.createEditor = function() {
     this.fsTypeChosen();
     connect(typeDD, "onchange", this.fsTypeChosen);
 
-                        <table class="fsEditorTable" style="padding-left: 8px;" >
-                            <thead><tr>
-                                <td>Mount Point</td>
-                                <td>Free Space (MiB)</td>
-                                <td>Type</td>
-                                <td></td>
-                            </tr></thead>
-
-                            <tbody id="fsEditorBody">
-                            </tbody>
-                        </table>
-
     var table = TABLE({'class': 'fsEditorTable'},
         THEAD(TR(
             TD('Mount point'),
