@@ -16,6 +16,10 @@ Changes in @NEW@
 * Upon backup restore, all external mirrored projects are reverted to external
   projects only. This prevents a race condition where the repository is
   unusable while the mirror update proceeds. (RBL-1291)
+* Entitlement and user/password information from external projects is
+  now injected into the proxy repository server, so unauthorized clients
+  using rBuilder as a proxy will gain all of the access that rBuilder
+  is entitled to. (RBL-1886)
 
 Changes in 3.0.0
 ================

@@ -35,6 +35,7 @@ from mint.web.rmakehandler import rMakeHandler
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
+from conary import versions
 from conary.dbstore import sqlerrors
 from conary.lib import log
 from conary.lib import coveragehook
@@ -283,6 +284,21 @@ def conaryHandler(req, cfg, pathInfo):
                 repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
                 repo.forceSecure = False
                 proxy_repository = repo
+
+            # inject our set of known entitlements into the proxy config
+            repo.cfg.entitlement = conarycfg.EntitlementList()
+            entDir = os.path.join(cfg.dataPath, 'entitlements')
+            if os.path.isdir(entDir):
+                for basename in os.listdir(entDir):
+                    if os.path.isfile(os.path.join(entDir, basename)):
+                        ent = conarycfg.loadEntitlement(entDir, basename)
+                        if not ent:
+                            continue
+                        repo.cfg.entitlement.addEntitlement(ent[0], ent[2], entClass = ent[1])
+
+            # inject the users we know about
+            repo.cfg.user = conarycfg.UserInformation()
+            _updateUserSet(db, proxy_repository.cfg)
         else:
             repo = None
 
@@ -379,6 +395,15 @@ def getReposDB(db, dbName, projectId, cfg):
         return r[0], r[1], False
     else:
         return cfg.reposDBDriver, cfg.reposDBPath % dbName, True
+
+
+def _updateUserSet(db, cfgObj):
+    cu = db.cursor()
+    cu.execute("""SELECT label, username, password FROM Labels""")
+
+    for x in cu.fetchall():
+        cfgObj.user.addServerGlob(versions.Label(x[0]).getHost(), (x[1], x[2]))
+
 
 def _resolveProjectRepos(db, hostname, domainname):
     # Start with some reasonable assumptions
