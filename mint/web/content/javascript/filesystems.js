@@ -44,7 +44,7 @@ FilesystemRow.prototype.createEditor = function() {
     connect(saveButton, "onclick", this.saveRow);
 
     // delete button
-    delButton = BUTTON({'type': 'button'}, "X");
+    delButton = BUTTON({'type': 'button'}, "Del");
     connect(delButton, "onclick", this.deleteRow);
 
     this.mpInputEl = INPUT({'id': this.baseId + 'MpInput', 'class': 'MpInput', 'size': 6, 'type': 'text', 'value': this.mountPoint});
@@ -55,27 +55,36 @@ FilesystemRow.prototype.createEditor = function() {
     this.fsTypeChosen();
     connect(typeDD, "onchange", this.fsTypeChosen);
 
+                        <table class="fsEditorTable" style="padding-left: 8px;" >
+                            <thead><tr>
+                                <td>Mount Point</td>
+                                <td>Free Space (MiB)</td>
+                                <td>Type</td>
+                                <td></td>
+                            </tr></thead>
+
+                            <tbody id="fsEditorBody">
+                            </tbody>
+                        </table>
+
+    var table = TABLE({'class': 'fsEditorTable'},
+        THEAD(TR(
+            TD('Mount point'),
+            TD('Free Space (MiB)'),
+            TD('Type'),
+            TD())),
+        TBODY({'id': 'fsEditorBody'}));
+
     var el = TR({'id': this.baseId + 'Editor'},
         TD(null, DIV({'class': 'mpAutoComplete'}, this.mpInputEl, DIV({'id': this.baseId + 'MpContainer', 'class': 'MpContainer'}))),
-        TD(null, DIV({'id': this.baseId + 'sliderBg', 'class': 'sliderBg'},
-                 DIV({'id': this.baseId + 'sliderThumb'},
-                 IMG({'src': 'http://developer.yahoo.com/yui/examples/slider/img/horizSlider.png'})))
-        ),
         TD(null, this.freeSpaceEl),
         TD(null, typeDD),
         TD(null, saveButton),
         TD(null, delButton)
     );
 
-    // free space slider
-    this.freeSpaceSlider = YAHOO.widget.Slider.getHorizSlider(this.baseId + 'sliderBg', this.baseId + 'sliderThumb', 0, 120);
-    this.freeSpaceSlider.setValue(this.freeSpace/64);
     this.freeSpaceEl.value = this.freeSpace;
-
     var freeSpaceEl = this.freeSpaceEl;
-    this.freeSpaceSlider.subscribe("change", function(newVal) {
-        freeSpaceEl.value = newVal*64;
-    });
 
     return el;
 }
@@ -106,7 +115,7 @@ FilesystemRow.prototype.createStaticRow = function() {
 
     var row = TR({'id': this.baseId + 'Filesystem'},
         TD(null, this.mountPoint),
-        TD({'colspan': 2}, this.freeSpace),
+        TD(null, this.freeSpace),
         TD(null, this.fsType),
         TD(null, editButton)
     );
@@ -126,7 +135,6 @@ FilesystemRow.prototype.saveRow = function() {
 }
 
 FilesystemRow.prototype.deleteRow = function() {
-    logDebug("deleting row: " + this);
     removeElement($(this.baseId + "Editor"));
 
     var index = -1;
