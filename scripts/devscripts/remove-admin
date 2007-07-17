@@ -22,8 +22,10 @@ cu.execute("SELECT hostname, domainname FROM Projects WHERE external=0")
 
 if cfg.reposDBDriver == 'sqlite':
     repos = projects.SqliteRepositoryDatabase(cfg)
-else:
+elif cfg.reposDBDriver == 'mysql':
     repos = projects.MySqlRepositoryDatabase(cfg)
+elif cfg.reposDBDriver == 'postgresql':
+    repos = projects.PostgreSqlRepositoryDatabase(cfg)
 
 dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
 for dbName, count in zip(dbNames, range(len(dbNames))):
@@ -39,7 +41,7 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
             WHERE userGroupId IN 
             (SELECT userGroupId 
                 FROM UserGroups 
-                WHERE userGroup != '?')""", cfg.authUser)
+                WHERE userGroup != ?)""", cfg.authUser)
         reposDb.commit()
 
         cu.execute("SELECT * from Users WHERE userName='anonymous'")
