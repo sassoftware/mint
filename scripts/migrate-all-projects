@@ -13,8 +13,6 @@ from mint.projects import transTables
 from conary import dbstore
 from conary.server import schema
 
-mysqlTransTable = transTables['mysql']
-
 cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
 
@@ -40,21 +38,16 @@ cu = db.cursor()
 repnamemap = {}
 cu.execute("SELECT fromname, toname FROM RepNameMap")
 for fromName, toName in cu.fetchall():
-    if cfg.reposDBDriver == 'mysql':
-        fromName = fromName.translate(mysqlTransTable)
-        toName = toName.translate(mysqlTransTable)
+    fromName = fromName.translate(transTables[cfg.reposDBDriver])
+    toName = toName.translate(transTables[cfg.reposDBDriver])
     repnamemap[fromName] = toName
 
 # get all projects which are not external OR are external, but are locally mirrored
-cu.execute("""SELECT hostname, domainname, external,
-                 EXISTS(SELECT * FROM InboundMirrors 
-                           WHERE projectId=targetProjectId) as mirrored
-              FROM Projects WHERE external = 0 or mirrored = 1""")
+cu.execute("""SELECT hostname, domainname FROM Projects WHERE
+              external = 0 or EXISTS(SELECT * FROM InboundMirrors 
+              WHERE Projects.projectId=InboundMirrors.targetProjectId)""")
 
-if cfg.reposDBDriver == 'sqlite':
-    dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
-else:
-    dbNames = [x[0] + "_" + x[1].translate(mysqlTransTable) for x in cu.fetchall()]
+dbNames = [(x[0] + "." + x[1]).translate(transTables[cfg.reposDBDriver]) for x in cu.fetchall()]
 
 errors = 0
 for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
