@@ -71,10 +71,9 @@ def deleteProject(cfg, projectName):
 
             status("Deleting Conary Repository: " + reposName)
 
-            # check for mysql
-            if cfg.reposDBDriver == 'mysql':
-                dbName = reposName.translate(transTables['mysql'])
+            dbName = reposName.translate(transTables[cfg.reposDBDriver])
 
+            if cfg.reposDBDriver == 'mysql':
                 # we need to delete the database manually with a drop database
                 try:
                     cu.execute("DROP DATABASE %s" % dbName)
@@ -82,6 +81,16 @@ def deleteProject(cfg, projectName):
                     # ignore unless it's a "Can't drop database error"
                     if e.args[0][1] != 1008:
                         raise
+            elif cfg.reposDBDriver == 'postgresql':
+                pdb = dbstore.connect('postgres@localhost/postgres', 'postgresql')
+                pcu = pdb.cursor()
+                try:
+                    pcu.execute("DROP DATABASE %s" % dbName)
+                except dbstore.sqlerrors.DatabaseError, e:
+                    # ignore unless it's a "Can't drop database error"
+                    if e.args[0][1] != 1008:
+                        raise
+                pdb.close()
 
             # delete the actual repos directory
             rmtree(cfg.reposPath + reposName)
