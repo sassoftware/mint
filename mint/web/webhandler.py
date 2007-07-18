@@ -339,3 +339,6 @@ class HttpOK(HttpError): #pragma: no cover
 
 class HttpPartialContent(HttpError): #pragma: no cover
     code = 206
+
+class HttpMethodNotAllowed(HttpError): #pragma: no cover
+    code = 405
