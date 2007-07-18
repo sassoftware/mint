@@ -10,6 +10,7 @@ testsuite.setup()
 import unittest
 
 from mint.web import webhandler
+from mint_rephelp import FakeRequest
 
 class FakeConfig(object):
     __slots__ = [ 'basePath', 'hostname', 'externalDomainName' ]
@@ -18,22 +19,6 @@ class FakeConfig(object):
         self.basePath = basepath
         self.hostname = hostname
         self.externalDomainName = extdomainname
-
-
-class FakeRequest(object):
-    __slots__ = [ 'err_headers_out', 'hostname', 'headers_in',
-            'headers_out', 'method', 'error_logged' ]
-
-    def __init__(self, hostname, methodname, filename):
-        self.method = methodname
-        self.hostname = hostname
-        self.headers_in = {'host': hostname}
-        self.headers_out = {}
-        self.err_headers_out = {}
-        self.error_logged = False
-
-    def log_error(self, msg):
-        self.error_logged = True
 
 class WebHandlerTestWithPort(unittest.TestCase):
 

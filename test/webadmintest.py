@@ -682,6 +682,5 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             postdata = {'itemId': str(x[0]['itemId'])})
         self.failUnlessEqual(client.getSpotlightAll(), False)
 
-
 if __name__ == "__main__":
     testsuite.main()

@@ -27,30 +27,8 @@ from repostest import testRecipe
 
 import fixtures
 import mint_rephelp
+from mint_rephelp import FakeRequest
 
-class FakeRequest(object):
-    def __init__(self, hostname, methodname, filename):
-        class Connection:
-            pass
-
-        self.method = methodname
-        self.hostname = hostname
-        self.headers_in = {'host': hostname}
-        self.headers_out = {}
-        self.err_headers_out = {}
-        self.error_logged = False
-        self.content_type = 'text/xhtml'
-        self.options = {}
-        self.connection = Connection()
-        self.connection.local_addr = (0, '127.0.0.1')
-        self.subprocess_env = {}
-        self.uri = '/setup/'
-
-    def log_error(self, msg):
-        self.error_logged = True
-
-    def get_options(self):
-        return self.options
 
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testFirstTimeSetupRedirect(self):

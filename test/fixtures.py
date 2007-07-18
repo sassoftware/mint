@@ -74,6 +74,7 @@ class FixtureCache(object):
         cfg.hostName = MINT_HOST
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.externalDomainName = MINT_DOMAIN
+        cfg.siteDomainName = MINT_DOMAIN
         cfg.secureHostName = "%s.%s" % (MINT_HOST, MINT_PROJECT_DOMAIN)
         cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)
         cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
@@ -845,6 +846,12 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
             os.dup2(oldOut, sys.stdout.fileno())
 
     def setUp(self):
+        for dir in sys.path:
+            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
+            if os.path.isdir(thisdir):
+                self.archiveDir = thisdir
+                break
+
         unittest.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 

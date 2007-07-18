@@ -747,3 +747,33 @@ class WebRepositoryHelper(BaseWebHelper):
                      'password': password})
         self.failUnless('/logout' in page.body)
         return page
+
+
+class FakeRequest(object):
+    def __init__(self, hostname, methodname, filename):
+        class Connection:
+            pass
+
+        self.method = methodname
+        self.hostname = hostname
+        self.headers_in = {'host': hostname}
+        self.headers_out = {}
+        self.err_headers_out = {}
+        self.error_logged = False
+        self.content_type = 'text/xhtml'
+        self.options = {}
+        self.connection = Connection()
+        self.connection.local_addr = (0, '127.0.0.1')
+        self.subprocess_env = {}
+        self.uri = '/setup/'
+        self.unparsed_uri = 'http://%s/%s' % (FQDN, filename)
+
+        self.cmd = filename.split("/")[-1]
+        self.apache_log = lambda x: sys.stdout.write(x + '\n')
+
+    def log_error(self, msg):
+        self.error_logged = True
+
+    def get_options(self):
+        return self.options
+
