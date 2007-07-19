@@ -802,6 +802,8 @@ class _Method(xmlrpclib._Method):
             raise users.LastOwner(exceptionArgs[0])
         elif exceptionName == "ParameterError":
             raise ParameterError(exceptionArgs[0])
+        elif exceptionName == "AMIBuildNotConfigured":
+            raise AMIBuildNotConfigured(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

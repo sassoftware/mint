@@ -460,6 +460,24 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
         testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
+        # AMI testing
+        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
+        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2AccountId   = '000000000000'
+        testCfg.ec2S3Bucket    = 'extracrispychicken'
+        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.pem')
+        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.key')
+        testCfg.configLine("ec2LaunchUsers 000000001111")
+        testCfg.configLine("ec2LaunchUsers 000000002222")
+        testCfg.configLine("ec2LaunchGroups group1")
+        testCfg.configLine("ec2LaunchGroups group2")
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
+
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
         f.close()
@@ -558,6 +576,24 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
         testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
         testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+
+        # AMI testing
+        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
+        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2AccountId   = '000000000000'
+        testCfg.ec2S3Bucket    = 'extracrispychicken'
+        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.pem')
+        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.key')
+        testCfg.configLine("ec2LaunchUsers 000000001111")
+        testCfg.configLine("ec2LaunchUsers 000000002222")
+        testCfg.configLine("ec2LaunchGroups group1")
+        testCfg.configLine("ec2LaunchGroups group2")
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
 
         # restore the mint db into a unique copy
         fixtureMintDbName = "mf%s" % name
@@ -704,6 +740,24 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
         testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
         testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+
+        # AMI testing
+        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
+        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2AccountId   = '000000000000'
+        testCfg.ec2S3Bucket    = 'extracrispychicken'
+        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.pem')
+        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
+                'config', 'ec2.key')
+        testCfg.configLine("ec2LaunchUsers 000000001111")
+        testCfg.configLine("ec2LaunchUsers 000000002222")
+        testCfg.configLine("ec2LaunchGroups group1")
+        testCfg.configLine("ec2LaunchGroups group2")
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
+        util.copyfile(os.path.join(os.path.dirname(__file__),
+            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
