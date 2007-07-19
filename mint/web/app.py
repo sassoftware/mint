@@ -87,7 +87,7 @@ class MintApp(WebHandler):
 
     def _handle(self, pathInfo):
         method = self.req.method.upper()
-        if method not in ('GET', 'POST'):
+        if method not in ('GET', 'POST', 'PUT'):
             return apache.HTTP_METHOD_NOT_ALLOWED
 
         anonToken = ('anonymous', 'anonymous')

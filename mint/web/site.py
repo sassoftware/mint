@@ -11,6 +11,7 @@ import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
 from mimetypes import guess_type
+import simplejson
 
 from mod_python import apache
 
@@ -36,7 +37,7 @@ from mint.web.fields import boolFields, dictFields, intFields, listFields, strFi
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpPartialContent, HttpOK
+     HttpPartialContent, HttpOK, HttpMethodNotAllowed
 
 from conary.lib import util
 from conary import versions
@@ -46,6 +47,8 @@ from conary import conarycfg, conaryclient
 from mint.rmakeconstants import buildjob
 from mint.rmakeconstants import supportedApiVersions \
      as supportedrMakeApiVersions
+
+BUFFER=1024 * 256
 
 class SiteHandler(WebHandler):
     def handle(self, context):
@@ -1154,6 +1157,43 @@ class SiteHandler(WebHandler):
                 buildId = bami.buildId,
                 shortDescription = bami.shortDescription,
                 helptext = bami.helptext)
+
+    @requiresAuth
+    def uploadBuild(self, auth):
+        method = self.req.method.upper()
+        if method != "PUT":
+            raise HttpMethodNotAllowed
+        if self.auth.username != self.cfg.authUser:
+            raise HttpForbidden
+
+        buildId = int(self.req.headers_in['X-rBuilder-BuildId'])
+        # [(filename, size, desc), ...]
+        urlMap = simplejson.loads(self.req.headers_in['X-rBuilder-UrlMap'])
+
+        build = self.client.getBuild(buildId)
+        project = self.client.getProject(build.projectId)
+
+        newUrlMap = []
+        for fileName, size, fileDesc in urlMap:
+            targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
+            util.mkdirChain(os.path.dirname(targetFn))
+            targetF = open(targetFn, 'w+')
+
+            try:
+                bytesRead = 0
+
+                while bytesRead < size:
+                    # read up to the next buffer or to the end of the file
+                    d = self.req.read(min(size - bytesRead, BUFFER))
+                    bytesRead += len(d)
+                    targetF.write(d)
+            finally:
+                self.req.apache_log("wrote %d bytes of %s" % (size, fileName))
+                targetF.close()
+            newUrlMap.append([targetFn, fileDesc])
+
+        build.setFiles(newUrlMap)
+
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
