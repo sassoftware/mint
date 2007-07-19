@@ -776,7 +776,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(set(buildDict.keys()),
             set(['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
              'project', 'serialVersion', 'troveFlavor', 'troveName',
-             'troveVersion', 'type', 'buildId']))
+             'troveVersion', 'type', 'buildId', 'outputUrl']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 
