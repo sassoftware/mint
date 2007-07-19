@@ -2210,6 +2210,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
 
+            amiData = {}
+
             def _readX509File(filepath):
                 if os.path.exists(filepath):
                     f = None
@@ -2222,18 +2224,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 else:
                     raise AMIBuildNotConfigured
 
-            amiData = {}
             for k in ( 'ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups'):
                 amiData[k] = self.cfg[k]
-                if not amiData[k]:
+                if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
                     raise AMIBuildNotConfigured
 
             amiData['ec2CertificateKey'] = \
                     _readX509File(self.cfg.ec2CertificateKeyFile)
             amiData['ec2Certificate'] = \
                     _readX509File(self.cfg.ec2CertificateFile)
-        r['amiData'] = amiData
+
+            r['amiData'] = amiData
 
         r['outputUrl'] = 'http://%s.%s%suploadBuild' % \
             (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
