@@ -148,9 +148,18 @@ class MintConfig(ConfigFile):
     addonsHost              = None
     awsPublicKey            = None
     awsPrivateKey           = None
+
+    # AMI configuration data
+    ec2PublicKey            = None
+    ec2PrivateKey           = None
     ec2AccountId            = None
     ec2S3Bucket             = None
-    ec2MakeAMIsPublic       = (cfgtypes.CfgBool, False)
+    ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
+    ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
+    ec2LaunchUsers          = (cfgtypes.CfgList(cfgtypes.CfgString),)
+    ec2LaunchGroups         = (cfgtypes.CfgList(cfgtypes.CfgString),)
+
+    # Try it now stuff (dark content)
     ec2ExposeTryItLink      = (cfgtypes.CfgBool, False)
     ec2MaxInstancesPerIP    = 10
     ec2DefaultInstanceTTL   = 600

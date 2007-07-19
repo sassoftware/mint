@@ -776,9 +776,36 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(set(buildDict.keys()),
             set(['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
              'project', 'serialVersion', 'troveFlavor', 'troveName',
-             'troveVersion', 'type']))
+             'troveVersion', 'type', 'buildId']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
+
+    @fixtures.fixture('Full')
+    def testSerializeBuildAMI(self, db, data):
+        client = self.getClient('admin')
+        # create a build for the "foo" project called "Test Build"
+        # and add it to an unpublished (not final) release
+        build = client.newBuild(data['projectId'], "Test Build")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        fixtures.stockBuildFlavor(db, build.id, "x86")
+
+        util.mkdirChain(self.cfg.dataPath + "/entitlements")
+        f = open(self.cfg.dataPath + "/entitlements/server.com", "w")
+        f.write(conarycfg.emitEntitlement('server.com', 'class', 'key'))
+        f.close()
+
+        serialized = build.serialize()
+        buildDict = simplejson.loads(serialized)
+
+        self.failUnless('amiData' in buildDict.keys())
+
+        amiData = buildDict['amiData']
+        self.failUnlessEqual(set(amiData.keys()),
+            set(['ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId', 'ec2S3Bucket',
+                 'ec2Certificate', 'ec2CertificateKey',
+                 'ec2LaunchUsers', 'ec2LaunchGroups']))
 
     def getBuildXml(self):
         f = open('archive/build.xml')

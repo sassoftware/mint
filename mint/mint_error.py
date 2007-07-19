@@ -135,6 +135,14 @@ class rMakeBuildOrder(MintError):
     def __init__(self, reason = "rMake build commands submitted out of order"):
         self.reason = reason
 
+class AMIBuildNotConfigured(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = \
+            "This rBuilder is missing information necessary to build " \
+            "Amazon Machine Images. Please consult your site administrator."):
+        self.reason = reason
+
 class InvalidReport(MessageException):
     pass
 

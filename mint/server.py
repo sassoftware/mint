@@ -2192,8 +2192,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r['serialVersion'] = builds.SERIAL_VERSION
         r['type'] = 'build'
 
-        for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',
-                      'description', 'buildType'):
+        for key in ('buildId', 'name', 'troveName', 'troveVersion',
+                    'troveFlavor', 'description', 'buildType'):
             r[key] = buildDict[key]
 
         r['data'] = self.buildData.getDataDict(buildId)
@@ -2205,6 +2205,35 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.externalDomainName)
         r['UUID'] = '%s-build-%d' % (hostBase, buildId)
+        r['outputQueue'] = hostBase
+
+        # Serialize AMI configuration data (if AMI build)
+        if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
+
+            def _readX509File(filepath):
+                if os.path.exists(filepath):
+                    f = None
+                    try:
+                        f = open(filepath, 'r')
+                        return f.read()
+                    finally:
+                        if f:
+                            f.close()
+                else:
+                    raise AMIBuildNotConfigured
+
+            amiData = {}
+            for k in ( 'ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
+                       'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups'):
+                amiData[k] = self.cfg[k]
+                if not amiData[k]:
+                    raise AMIBuildNotConfigured
+
+            amiData['ec2CertificateKey'] = \
+                    _readX509File(self.cfg.ec2CertificateKeyFile)
+            amiData['ec2Certificate'] = \
+                    _readX509File(self.cfg.ec2CertificateFile)
+        r['amiData'] = amiData
 
         r['outputUrl'] = 'http://%s.%s%suploadBuild' % \
             (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
