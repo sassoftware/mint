@@ -22,7 +22,7 @@
 
     <body id="middleWide">
         ${TabbedPageWidget(forcepage='index').display(pageList)}
-        <div py:if="disabled == False">
+        <div py:if="not disabled">
             <h3>Jobs:</h3>
             <ul class="jobSection">
                 <li py:for="id, info in jobStatus.iteritems()">
@@ -45,7 +45,7 @@
                 </li>
             </ul>
         </div>
-        <div py:if="disabled == True">
+        <div py:if="disabled">
             <h3>MCP Console is disabled</h3>
             Unable to contact the MCP
         </div>
