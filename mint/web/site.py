@@ -1158,41 +1158,26 @@ class SiteHandler(WebHandler):
                 shortDescription = bami.shortDescription,
                 helptext = bami.helptext)
 
-    @requiresAuth
+# FIXME: fix authentication, this must be secured
+#    @requiresAuth
     def uploadBuild(self, auth):
         method = self.req.method.upper()
         if method != "PUT":
             raise HttpMethodNotAllowed
-        if self.auth.username != self.cfg.authUser:
-            raise HttpForbidden
+#        if self.auth.username != self.cfg.authUser:
+#            raise HttpForbidden
 
         buildId = int(self.req.headers_in['X-rBuilder-BuildId'])
-        # [(filename, size, desc), ...]
-        urlMap = simplejson.loads(self.req.headers_in['X-rBuilder-UrlMap'])
-
+        fileName = self.req.headers_in['X-rBuilder-Filename']
         build = self.client.getBuild(buildId)
         project = self.client.getProject(build.projectId)
 
-        newUrlMap = []
-        for fileName, size, fileDesc in urlMap:
-            targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
-            util.mkdirChain(os.path.dirname(targetFn))
-            targetF = open(targetFn, 'w+')
+        targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
+        util.mkdirChain(os.path.dirname(targetFn))
 
-            try:
-                bytesRead = 0
-
-                while bytesRead < size:
-                    # read up to the next buffer or to the end of the file
-                    d = self.req.read(min(size - bytesRead, BUFFER))
-                    bytesRead += len(d)
-                    targetF.write(d)
-            finally:
-                self.req.apache_log("wrote %d bytes of %s" % (size, fileName))
-                targetF.close()
-            newUrlMap.append([targetFn, fileDesc])
-
-        build.setFiles(newUrlMap)
+        targetF = open(targetFn, 'w+')
+        util.copyfileobj(self.req, targetF)
+        return "Hello World"
 
 
 def helpDocument(page):
