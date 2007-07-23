@@ -2121,7 +2121,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         arch = build.getArchFlavor()
         cfg = project.getConaryConfig()
-        cfg.installLabelPath += searchPath
+        cfg.installLabelPath = searchPath + cfg.installLabelPath
         cfg.buildFlavor = getStockFlavor(arch)
         cfg.flavor = getStockFlavorPath(arch)
         cfg.initializeFlavors()
