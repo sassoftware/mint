@@ -18,11 +18,9 @@ start() {
     /sbin/service stompserver start
     /sbin/service mcp start
     /sbin/service jobmaster start
-    /sbin/service image-broker start
 }
 
 stop() {
-    /sbin/service image-broker stop
     /sbin/service jobmaster stop
     /sbin/service mcp stop
     /sbin/service stompserver stop
