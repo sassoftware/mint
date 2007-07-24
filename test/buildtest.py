@@ -742,13 +742,15 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(files[0]['sha1'], '')
         self.failUnlessEqual(files[0]['size'], 100000)
         self.failUnlessEqual(files[0]['fileUrls'][0][1], urltypes.LOCAL)
-        self.failUnlessEqual(files[0]['fileUrls'][0][2], "file")
+        self.failUnless(files[0]['fileUrls'][0][2],
+            os.path.join(self.cfg.imagesPath, "foo", "1", "file"))
 
         self.failUnlessEqual(files[1]['title'], "big!")
         self.failUnlessEqual(files[1]['sha1'], '0123456789012345678901234567890123456789')
         self.failUnlessEqual(files[1]['size'], 1024*1024*5000)
         self.failUnlessEqual(files[1]['fileUrls'][0][1], urltypes.LOCAL)
-        self.failUnlessEqual(files[1]['fileUrls'][0][2], "hyoogefile")
+        self.failUnlessEqual(files[1]['fileUrls'][0][2],
+            os.path.join(self.cfg.imagesPath, "foo", "1", "hyoogefile"))
         self.failUnlessEqual(len(files), 2)
 
         build.setFiles([])
