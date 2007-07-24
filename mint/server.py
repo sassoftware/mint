@@ -2915,6 +2915,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
 
+        build = builds.Build(self, buildId)
+        project = projects.Project(self, build.projectId)
+
         cu = self.db.transaction()
         try:
             # sqlite doesn't do delete cascade
@@ -2930,6 +2933,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     size = 0
                 elif len(file) == 4:
                     fileName, title, size, sha1 = file
+
+                    # sanitize filename based on configuration
+                    fileName = os.path.join(self.cfg.imagesPath, project.hostname,
+                        str(buildId), os.path.basename(fileName))
                 else:
                     self.db.rollback()
                     raise ValueError

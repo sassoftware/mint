@@ -1176,7 +1176,7 @@ class SiteHandler(WebHandler):
 
         targetF = open(targetFn, 'w+')
         util.copyfileobj(self.req, targetF)
-        return "Hello World"
+        return ''
 
 
 def helpDocument(page):
