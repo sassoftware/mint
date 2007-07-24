@@ -10,7 +10,6 @@ python_files =			\
 	__init__.py		\
 	accesscontrol.py	\
 	backup.py		\
-	broker.py		\
 	buildxml.py             \
 	spotlight.py		\
 	checkhtml.py		\
