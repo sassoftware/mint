@@ -765,7 +765,7 @@ class FakeRequest(object):
         self.connection = Connection()
         self.connection.local_addr = (0, '127.0.0.1')
         self.subprocess_env = {}
-        self.uri = '/setup/'
+        self.uri = filename
         self.unparsed_uri = 'http://%s/%s' % (FQDN, filename)
 
         self.cmd = filename.split("/")[-1]

@@ -1167,9 +1167,8 @@ class SiteHandler(WebHandler):
 #        if self.auth.username != self.cfg.authUser:
 #            raise HttpForbidden
 
-        buildId = int(self.req.headers_in['X-rBuilder-BuildId'])
-        fileName = self.req.headers_in['X-rBuilder-Filename']
-        build = self.client.getBuild(buildId)
+        buildId, fileName = self.req.uri.split("/")[2:4]
+        build = self.client.getBuild(int(buildId))
         project = self.client.getProject(build.projectId)
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
