@@ -78,6 +78,7 @@ def serializeBuild(buildId):
     r['UUID'] = '%s-build-%d' % (hostBase, buildId)
 
     r['outputUrl'] = 'FIXME'
+    r['outputToken'] = sha.new(os.urandom(20)).hexdigest()
 
     return simplejson.dumps(r)
 
