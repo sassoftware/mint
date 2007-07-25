@@ -14,6 +14,7 @@ import sha
 import mint
 import mint.builds
 import mint.config
+import sha
 
 import mcp
 import mcp.client
@@ -29,8 +30,6 @@ cfg.read(mint.config.RBUILDER_CONFIG)
 cfg.read(mint.config.RBUILDER_GENERATED_CONFIG)
 
 mc = mint.client.MintClient("http://%s:%s@%s.%s/xmlrpc-private/" % (cfg.authUser, cfg.authPass, cfg.hostName, cfg.siteDomainName))
-
-db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
 mcpConfig = mcp.client.MCPClientConfig()
 mcpConfig.read('/srv/rbuilder/config/mcp-client.conf')
@@ -71,6 +70,7 @@ def serializeBuild(buildId):
         r[key] = build.__getattribute__(key)
 
     r['data'] = build.getDataDict()
+    r['data']['jsversion'] = mcpClient.getJSVersion()
 
     r['project'] = {'name' : project.name,
                     'hostname' : project.hostname,
@@ -86,12 +86,14 @@ def serializeBuild(buildId):
     r['outputUrl'] = 'http://%s:31337/' % hostname
     r['outputToken'] = sha.new(os.urandom(20)).hexdigest()
 
+    print r
     return simplejson.dumps(r)
 
 def processBuild(buildId):
     try:
         data = serializeBuild(buildId)
         jobId = mcpClient.submitJob(data)
+        print "jobId:", jobId
         done = False
         while not done:
             status, statusMessage = mcpClient.jobStatus(jobId)
@@ -102,13 +104,16 @@ def processBuild(buildId):
         print exc
 
 def getBuilds(cutoff):
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     cu = db.cursor()
-    cu.execute("SELECT timeSubmitted, Jobs.buildId FROM Jobs INNER JOIN BuildsView ON BuildsView.buildId=Jobs.buildId WHERE timeSubmitted>?", cutoff)
+    cu.execute("SELECT timeSubmitted, buildId FROM Jobs WHERE buildId IS NOT NULL AND timeSubmitted > %d" % int(cutoff))
     res = cu.fetchall()
+    db.close()
     if res:
         return max(x[0] for x in res), [x[1] for x in res]
     else:
         return cutoff, []
+
 
 def main():
     cutoff = epoch
