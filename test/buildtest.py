@@ -610,7 +610,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         nobodyClient = self.getClient('anonymous')
 
         build = ownerClient.getBuild(data['buildId'])
-        build.setDataValue('outputHash', 'thisisasecretstring',
+        build.setDataValue('outputToken', 'thisisasecretstring',
                            RDT_STRING, False)
 
         self.assertRaises(PermissionDenied,
@@ -626,8 +626,8 @@ class BuildTest(fixtures.FixturedUnitTest):
               'fileUrls': [(4, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 4, 'size': 10}]
         )
 
-        # make sure the outputHash gets removed from the build data
-        self.failUnlessEqual(build.getDataValue('outputHash', validate = False), 0)
+        # make sure the outputTokengets removed from the build data
+        self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
 
     @fixtures.fixture('Full')
     def testSetImageFilenamesCompat(self, db, data):
@@ -800,7 +800,7 @@ class BuildTest(fixtures.FixturedUnitTest):
                     "Serial Version 1 was not honored")
 
         self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
-            set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputHash',
+            set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputToken',
              'project', 'serialVersion', 'troveFlavor', 'troveName', 'outputUrl',
              'troveVersion', 'type', 'buildId', 'outputUrl']))
 

@@ -43,13 +43,13 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient("developer")
         p = client.getProject(data['projectId'])
         b = client.getBuild(data['anotherBuildId'])
-        b.setDataValue('outputHash', 'thisisasecret',
+        b.setDataValue('outputToken', 'thisisasecret',
             RDT_STRING, False)
 
         self.sh.cfg = self.cfg
         self.sh.client = client
         self.sh.req = FakeRequest(FQDN, 'PUT', '/uploadBuild/%d/testChunkedFile' % data['anotherBuildId'])
-        self.sh.req.headers_in['X-rBuilder-OutputHash'] = 'thisisasecret'
+        self.sh.req.headers_in['X-rBuilder-OutputToken'] = 'thisisasecret'
         self.sh.auth = users.Authorization(admin = True, authorized = True)
 
         testFile = open(self.archiveDir + "/testChunkedFile")
