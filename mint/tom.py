@@ -13,12 +13,25 @@ import mint
 import mint.builds
 import mint.config
 
+import mcp
+import mcp.client
+
+import time
+epoch = time.time()
+
+from conary import dbstore
+
 cfg = mint.config.MintConfig()
 cfg.read(mint.config.RBUILDER_CONFIG)
 cfg.read(mint.config.RBUILDER_GENERATED_CONFIG)
 
 mc = mint.client.MintClient("http://%s:%s@%s.%s/xmlrpc-private/" % (cfg.authUser, cfg.authPass, cfg.hostName, cfg.siteDomainName))
 
+db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+
+mcpConfig = mcp.client.MCPClientConfig()
+mcpConfig.read('/srv/rbuilder/config/mcp-client.conf')
+mcpClient = mcp.client.MCPClient(mcpConfig)
 
 def serializeBuild(buildId):
     build = mc.getBuild(buildId)
@@ -68,3 +81,30 @@ def serializeBuild(buildId):
 
     return simplejson.dumps(r)
 
+def processBuild(buildId):
+    data = serializeBuild(buildId)
+    mcpClient.submitJob(data)
+
+def getBuilds(cutoff):
+    cu = db.cursor()
+    cu.execute("SELECT timeSubmitted, Jobs.buildId FROM Jobs INNER JOIN BuildsView ON BuildsView.buildId=Jobs.buildId WHERE timeSubmitted>?", cutoff)
+    res = cu.fetchall()
+    if res:
+        return max(x[0] for x in res), [x[1] for x in res]
+    else:
+        return cutoff, []
+
+def main():
+    cutoff = epoch
+    while True:
+        cutoff, builds = getBuilds(cutoff)
+        print "new cutoff timestamp %i" % cutoff
+        for buildId in builds:
+            print "processing %i" % buildId
+            processBuild(buildId)
+        if not builds:
+            print "no builds to process"
+            time.sleep(5)
+
+if __name__ == '__main__':
+    main()
