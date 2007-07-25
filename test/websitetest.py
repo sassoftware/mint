@@ -12,6 +12,7 @@ import os
 import mint_rephelp
 import fixtures
 from mint.web import site
+from mint.data import RDT_STRING
 from mint import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
 from mint import jobstatus
@@ -41,10 +42,14 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
     def testUploadBuild(self, db, data):
         client = self.getClient("developer")
         p = client.getProject(data['projectId'])
+        b = client.getBuild(data['anotherBuildId'])
+        b.setDataValue('outputToken', 'thisisasecret',
+            RDT_STRING, False)
 
         self.sh.cfg = self.cfg
         self.sh.client = client
         self.sh.req = FakeRequest(FQDN, 'PUT', '/uploadBuild/%d/testChunkedFile' % data['anotherBuildId'])
+        self.sh.req.headers_in['X-rBuilder-OutputToken'] = 'thisisasecret'
         self.sh.auth = users.Authorization(admin = True, authorized = True)
 
         testFile = open(self.archiveDir + "/testChunkedFile")

@@ -2238,9 +2238,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['outputUrl'] = 'http://%s.%s%suploadBuild' % \
             (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
-        r['outputHash'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
-        self.buildData.setDataValue(buildId, 'outputHash',
-            r['outputHash'], data.RDT_STRING)
+        r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
+        self.buildData.setDataValue(buildId, 'outputToken',
+            r['outputToken'], data.RDT_STRING)
 
         return simplejson.dumps(r)
 
@@ -2882,19 +2882,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
 
     @typeCheck(int, str, list, (list, str, int))
-    def setBuildFilenamesSafe(self, buildId, outputHash, filenames):
+    def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
         """
-        This call validates the outputHash against one stored in the
+        This call validates the outputToken against one stored in the
         build data for buildId, and allows those filenames to be 
         rewritten without any other access. This is so the job slave
         doesn't have to have any knowledge of the authuser or authpass,
         just the output hash given to it in the serialized job.
         """
-        if outputHash != self.buildData.getDataValue(buildId, 'outputHash')[1]:
+        if outputToken != self.buildData.getDataValue(buildId, 'outputToken')[1]:
             raise PermissionDenied
 
         ret = self._setBuildFilenames(buildId, filenames, normalize = True)
-        self.buildData.removeDataValue(buildId, 'outputHash')
+        self.buildData.removeDataValue(buildId, 'outputToken')
 
         return ret
 

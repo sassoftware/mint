@@ -1171,8 +1171,8 @@ class SiteHandler(WebHandler):
         # the hash we gave the slave in the first place.
         # this prevents slaves from overwriting arbitrary files
         # in the finished images directory.
-        outputHash = self.req.headers_in.get('X-rBuilder-OutputHash')
-        if outputHash != build.getDataValue('outputHash', validate = False):
+        outputToken = self.req.headers_in.get('X-rBuilder-OutputToken')
+        if outputToken != build.getDataValue('outputToken', validate = False):
             raise HttpForbidden
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
