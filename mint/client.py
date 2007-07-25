@@ -720,6 +720,10 @@ class MintClient:
     def getAllProjectLabels(self, projectId):
         return self.server.getAllProjectLabels(projectId)
 
+    def setBuildFilenamesSafe(self, buildId, outputHash, filenames):
+        return self.server.setBuildFilenamesSafe(buildId, outputHash, filenames)
+
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

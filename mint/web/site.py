@@ -1158,18 +1158,22 @@ class SiteHandler(WebHandler):
                 shortDescription = bami.shortDescription,
                 helptext = bami.helptext)
 
-# FIXME: fix authentication, this must be secured
-#    @requiresAuth
     def uploadBuild(self, auth):
         method = self.req.method.upper()
         if method != "PUT":
             raise HttpMethodNotAllowed
-#        if self.auth.username != self.cfg.authUser:
-#            raise HttpForbidden
 
         buildId, fileName = self.req.uri.split("/")[2:4]
         build = self.client.getBuild(int(buildId))
         project = self.client.getProject(build.projectId)
+
+        # make sure the hash we receive from the slave matches
+        # the hash we gave the slave in the first place.
+        # this prevents slaves from overwriting arbitrary files
+        # in the finished images directory.
+        outputHash = self.req.headers_in.get('X-rBuilder-OutputHash')
+        if outputHash != build.getDataValue('outputHash', validate = False):
+            raise HttpForbidden
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
         util.mkdirChain(os.path.dirname(targetFn))

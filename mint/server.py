@@ -2205,7 +2205,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.externalDomainName)
         r['UUID'] = '%s-build-%d' % (hostBase, buildId)
-        r['outputQueue'] = hostBase
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
@@ -2239,7 +2238,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['outputUrl'] = 'http://%s.%s%suploadBuild' % \
             (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
-        r['outputQueue'] = hostBase
+        r['outputHash'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
+        self.buildData.setDataValue(buildId, 'outputHash',
+            r['outputHash'], data.RDT_STRING)
 
         return simplejson.dumps(r)
 
@@ -2880,20 +2881,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
         return True
 
-    @typeCheck()
-    @private
-    @requiresAdmin
-    def getJobServerStatus(self):
-        # this function needs to be deleted. we should use a rAA plugin to
-        # communicate with the MCP for status
+    @typeCheck(int, str, list, (list, str, int))
+    def setBuildFilenamesSafe(self, buildId, outputHash, filenames):
+        """
+        This call validates the outputHash against one stored in the
+        build data for buildId, and allows those filenames to be 
+        rewritten without any other access. This is so the job slave
+        doesn't have to have any knowledge of the authuser or authpass,
+        just the output hash given to it in the serialized job.
+        """
+        if outputHash != self.buildData.getDataValue(buildId, 'outputHash')[1]:
+            raise PermissionDenied
 
-        raise NotImplementedError
-        # Handling the job server in this manner is temporary
-        # This is only useful in an appliance context at this time.
-        pipeFD = os.popen("sudo /sbin/service multi-jobserver status")
-        res = pipeFD.read()
-        pipeFD.close()
-        return res
+        ret = self._setBuildFilenames(buildId, filenames, normalize = True)
+        self.buildData.removeDataValue(buildId, 'outputHash')
+
+        return ret
 
     @typeCheck(int, list, (list, str, int))
     @requiresAuth
@@ -2915,6 +2918,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
 
+        return self._setBuildFilenames(buildId, filenames)
+
+    def _setBuildFilenames(self, buildId, filenames, normalize = False):
         build = builds.Build(self, buildId)
         project = projects.Project(self, build.projectId)
 
@@ -2934,9 +2940,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 elif len(file) == 4:
                     fileName, title, size, sha1 = file
 
-                    # sanitize filename based on configuration
-                    fileName = os.path.join(self.cfg.imagesPath, project.hostname,
-                        str(buildId), os.path.basename(fileName))
+                    if normalize:
+                        # sanitize filename based on configuration
+                        fileName = os.path.join(self.cfg.imagesPath, project.hostname,
+                            str(buildId), os.path.basename(fileName))
                 else:
                     self.db.rollback()
                     raise ValueError
@@ -3181,18 +3188,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
              trove.startswith('fileset-')) and
             not trove.endswith(':source'))
         return troves
-
-    @typeCheck(int)
-    @requiresAdmin
-    def killJob(self, jobId):
-        # refactor to use MCP
-
-        raise NotImplementedError
-        KILL_COMMAND = '/usr/share/rbuilder/scripts/killjob'
-        SUDO = '/usr/bin/sudo'
-        pid = os.fork()
-        if pid == 0:
-            os.execv(SUDO, [SUDO, KILL_COMMAND, str(jobId)])
 
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)

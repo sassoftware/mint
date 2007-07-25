@@ -20,7 +20,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.database import ItemNotFound
 from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
      PublishedReleaseMissing, PublishedReleasePublished, \
-     JobserverVersionMismatch
+     JobserverVersionMismatch, PermissionDenied
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
@@ -605,6 +605,31 @@ class BuildTest(fixtures.FixturedUnitTest):
                           [['not right at all']])
 
     @fixtures.fixture('Full')
+    def testSetBuildFilenamesSafe(self, db, data):
+        ownerClient = self.getClient('owner')
+        nobodyClient = self.getClient('anonymous')
+
+        build = ownerClient.getBuild(data['buildId'])
+        build.setDataValue('outputHash', 'thisisasecretstring',
+                           RDT_STRING, False)
+
+        self.assertRaises(PermissionDenied,
+            nobodyClient.server._server.setBuildFilenamesSafe, build.id,
+            'thisisthewrongsecret', [['foo', 'bar']])
+
+        nobodyClient.setBuildFilenamesSafe(build.id,
+            'thisisasecretstring', [['foo', 'bar', 10, 'abcd']])
+
+        build.refresh()
+        self.failUnlessEqual(build.getFiles(),
+            [{'sha1': 'abcd', 'idx': 0, 'title': 'bar', 
+              'fileUrls': [(4, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 4, 'size': 10}]
+        )
+
+        # make sure the outputHash gets removed from the build data
+        self.failUnlessEqual(build.getDataValue('outputHash', validate = False), 0)
+
+    @fixtures.fixture('Full')
     def testSetImageFilenamesCompat(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
@@ -749,8 +774,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(files[1]['sha1'], '0123456789012345678901234567890123456789')
         self.failUnlessEqual(files[1]['size'], 1024*1024*5000)
         self.failUnlessEqual(files[1]['fileUrls'][0][1], urltypes.LOCAL)
-        self.failUnlessEqual(files[1]['fileUrls'][0][2],
-            os.path.join(self.cfg.imagesPath, "foo", "1", "hyoogefile"))
+        self.failUnlessEqual(files[1]['fileUrls'][0][2], "hyoogefile")
         self.failUnlessEqual(len(files), 2)
 
         build.setFiles([])
@@ -775,9 +799,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(buildDict['serialVersion'] != 1,
                     "Serial Version 1 was not honored")
 
-        self.failUnlessEqual(set(buildDict.keys()),
-            set(['UUID', 'buildType', 'data', 'description', 'name', 'outputQueue',
-             'project', 'serialVersion', 'troveFlavor', 'troveName',
+        self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
+            set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputHash',
+             'project', 'serialVersion', 'troveFlavor', 'troveName', 'outputUrl',
              'troveVersion', 'type', 'buildId', 'outputUrl']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
