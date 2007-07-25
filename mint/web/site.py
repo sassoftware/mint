@@ -37,7 +37,7 @@ from mint.web.fields import boolFields, dictFields, intFields, listFields, strFi
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpPartialContent, HttpOK, HttpMethodNotAllowed
+     HttpPartialContent, HttpOK, HttpMethodNotAllowed, HttpForbidden
 
 from conary.lib import util
 from conary import versions
