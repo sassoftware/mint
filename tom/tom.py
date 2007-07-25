@@ -7,14 +7,17 @@
 # once MCP code is on rBO, this module should be removed.
 
 import StringIO
-import os
+import os, sys
 import simplejson
+import sha
+
 import mint
 import mint.builds
 import mint.config
 
 import mcp
 import mcp.client
+import mcp.jobstatus
 
 import time
 epoch = time.time()
@@ -86,8 +89,17 @@ def serializeBuild(buildId):
     return simplejson.dumps(r)
 
 def processBuild(buildId):
-    data = serializeBuild(buildId)
-    mcpClient.submitJob(data)
+    try:
+        data = serializeBuild(buildId)
+        jobId = mcpClient.submitJob(data)
+        done = False
+        while not done:
+            status, statusMessage = mcpClient.jobStatus(jobId)
+            print "status:", statusMessage + chr(13),
+            done = status in (mcp.jobstatus.FINISHED, mcp.jobstatus.FAILED)
+    except:
+        exc_cl, exc, bt = sys.exc_info()
+        print exc
 
 def getBuilds(cutoff):
     cu = db.cursor()
