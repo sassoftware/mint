@@ -59,7 +59,6 @@ python_files =			\
 	shimclient.py		\
 	rbuilderaction.py	\
 	stats.py		\
-	tom.py			\
 	urltypes.py		\
 	userlevels.py		\
 	userlisting.py		\
