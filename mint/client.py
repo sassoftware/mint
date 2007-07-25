@@ -58,8 +58,6 @@ class MintClient:
                a software appliance ('yes', 'no', 'unknown')
         @return: primary key of newly created project.
         """
-        # Remove unwanted whitespace characters from name.
-        name = ' '.join(name.split())
         return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
@@ -73,8 +71,6 @@ class MintClient:
         @param mirror: this repository is a mirror of an external repository
         @return: primary key of newly created project.
         """
-        # Remove unwanted whitespace characters from name.
-        name = ' '.join(name.split())
         return self.server.newExternalProject(name, hostname, domainname,
                                               label, url, mirror)
 
