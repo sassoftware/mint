@@ -77,7 +77,10 @@ def serializeBuild(buildId):
     hostBase = '%s.%s' % (cfg.hostName, cfg.externalDomainName)
     r['UUID'] = '%s-build-%d' % (hostBase, buildId)
 
-    r['outputUrl'] = 'FIXME'
+    p = os.popen('hostname')
+    hostname = p.read().strip()
+
+    r['outputUrl'] = 'http://%s:31337/' % hostname
     r['outputToken'] = sha.new(os.urandom(20)).hexdigest()
 
     return simplejson.dumps(r)
@@ -108,4 +111,11 @@ def main():
             time.sleep(5)
 
 if __name__ == '__main__':
-    main()
+    pid = os.fork()
+    if not pid:
+        os.execlp('make', 'make', 'run')
+    try:
+        main()
+    finally:
+        import signal
+        os.kill(pid, signal.SIGINT)
