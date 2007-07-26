@@ -14,6 +14,7 @@ import sha
 import mint
 import mint.builds
 import mint.config
+from mint.users import sendMailWithChecks
 import sha
 
 import mcp
@@ -99,6 +100,13 @@ def processBuild(buildId):
             status, statusMessage = mcpClient.jobStatus(jobId)
             print "status:", statusMessage + chr(13),
             done = status in (mcp.jobstatus.FINISHED, mcp.jobstatus.FAILED)
+        if status == mcp.jobstatus.FAILED:
+            sendMailWithChecks('rbuilder@rpath.com', 'Tom',
+                    'rbuilder@rpath.com', 'Tom saw UR failure!',
+                    '\n'.join(('Dear rBuilder team,', '',
+                        'Tom has detected a failure of the MCP build system.',
+                        'The build ID was %s.' % buildId,
+                        '', statusMessage, 'cheers!', 'Tom'))
     except:
         exc_cl, exc, bt = sys.exc_info()
         print exc
