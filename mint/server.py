@@ -2236,7 +2236,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             r['amiData'] = amiData
 
-        r['outputUrl'] = 'http://%s.%s%suploadBuild' % \
+        r['outputUrl'] = 'http://%s.%s%s' % \
             (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
