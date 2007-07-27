@@ -57,7 +57,9 @@
                             <button type="submit">Stop</button>
                         </form>
                    </li>
-                   <li py:for="x in range(info['limit'] - len(info['slaves']))" class="jobSlave offlineSlave"/>
+                   <div py:if="info.get('limit')" strip="true">
+                       <li py:for="x in range(info['limit'] - len(info['slaves']))" class="jobSlave offlineSlave"/>
+                   </div>
                </ul>
                <form action="setSlaveLimit" method="POST">
                    <input type="hidden" name="masterId" value="${id}"/>
