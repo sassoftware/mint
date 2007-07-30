@@ -106,7 +106,7 @@ def processBuild(buildId):
                     '\n'.join(('Dear rBuilder team,', '',
                         'Tom has detected a failure of the MCP build system.',
                         'The build ID was %s.' % buildId,
-                        '', statusMessage, 'cheers!', 'Tom'))
+                        '', statusMessage, 'cheers!', 'Tom')))
     except:
         exc_cl, exc, bt = sys.exc_info()
         print exc
@@ -114,7 +114,7 @@ def processBuild(buildId):
 def getBuilds(cutoff):
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     cu = db.cursor()
-    cu.execute("SELECT timeSubmitted, buildId FROM Jobs WHERE buildId IS NOT NULL AND timeSubmitted > %d" % int(cutoff))
+    cu.execute("SELECT timeSubmitted, buildId FROM Jobs WHERE buildId IS NOT NULL AND timeSubmitted > ?", cutoff)
     res = cu.fetchall()
     db.close()
     if res:
