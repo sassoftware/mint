@@ -139,7 +139,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.securePort = testsuite.findPorts(num = 1)[0]
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
-                                      requireSigs, authCheck, entCheck, False, serverIdx)
+                                      requireSigs, authCheck = authCheck, entCheck = entCheck, serverIdx = serverIdx)
 
         self.needsPGPKey = False
 
