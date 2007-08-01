@@ -123,7 +123,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
-        timeout = argSet.pop('timeout', 0)
+        timeout = int(argSet.pop('timeout', 0))
         args = args[1:]
         if len(args) < 3:
             return self.usage()
@@ -165,7 +165,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
         print "BUILD_ID=%d" % (build.id)
         sys.stdout.flush()
         if wait:
-            waitForBuild(client, build.id, timeout)
+            waitForBuild(client, build.id, timeout = timeout)
         return build.id
 commands.register(BuildCreateCommand)
 
