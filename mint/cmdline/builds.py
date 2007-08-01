@@ -19,15 +19,26 @@ from conary.lib import options, log
 from conary.conaryclient.cmdline import parseTroveSpec
 
 
-def waitForBuild(client, buildId, interval = 5):
+def waitForBuild(client, buildId, interval = 5, timeout = 0):
     build = client.getBuild(buildId)
     jobStatus = build.getStatus()
 
+    st = time.time()
+    timedOut = False
     while jobStatus['status'] in (jobstatus.WAITING, jobstatus.RUNNING):
+        if timeout and time.time() - st > timeout:
+            timedOut = True
+            break
+
         time.sleep(interval)
         jobStatus = build.getStatus()
 
-    log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+    if timedOut:
+        log.info("Job timed out (%d seconds)" % timeout)
+        log.info("Last status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+    else:
+        log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+
 
 bootableTypes = [buildtypes.RAW_FS_IMAGE,
                  buildtypes.TARBALL,
@@ -160,13 +171,25 @@ class BuildWaitCommand(commands.RBuilderCommand):
     commands = ['build-wait']
     paramHelp = "<build id>"
 
+    docs = {'timeout' : 'time to wait before ending, even if the job is now done',
+    }
+
+    def addParameters(self, argDef):
+         commands.RBuilderCommand.addParameters(self, argDef)
+         argDef["timeout"] = options.ONE_PARAM
+
     def runCommand(self, client, cfg, argSet, args):
         args = args[1:]
         if len(args) < 1:
             return self.usage()
 
+        if 'timeout' not in argSet:
+            argSet['timeout'] = 0
+
+        timeout = int(argSet['timeout'])
+
         buildId = int(args[0])
-        waitForBuild(client, buildId)
+        waitForBuild(client, buildId, timeout = timeout)
 commands.register(BuildWaitCommand)
 
 
