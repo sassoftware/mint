@@ -110,17 +110,20 @@ class BuildCreateCommand(commands.RBuilderCommand):
     commands = ['build-create']
     paramHelp = genHelp()
 
-    docs = {'wait' : 'wait until a build job finishes',
-            'option': ('set a build option', '\'KEY VALUE\''),
+    docs = {'wait' :    'wait until a build job finishes',
+            'option':   ('set a build option', '\'KEY VALUE\''),
+            'timeout' : ('time to wait before ending, even if the job is not done', 'seconds'),
     }
 
     def addParameters(self, argDef):
          commands.RBuilderCommand.addParameters(self, argDef)
          argDef["wait"] = options.NO_PARAM
          argDef["option"] = options.MULT_PARAM
+         argDef["timeout"] = options.ONE_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
+        timeout = argSet.pop('timeout', 0)
         args = args[1:]
         if len(args) < 3:
             return self.usage()
@@ -162,7 +165,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
         print "BUILD_ID=%d" % (build.id)
         sys.stdout.flush()
         if wait:
-            waitForBuild(client, build.id)
+            waitForBuild(client, build.id, timeout)
         return build.id
 commands.register(BuildCreateCommand)
 
@@ -171,7 +174,8 @@ class BuildWaitCommand(commands.RBuilderCommand):
     commands = ['build-wait']
     paramHelp = "<build id>"
 
-    docs = {'timeout' : 'time to wait before ending, even if the job is now done',
+    docs = {
+        'timeout' : ('time to wait before ending, even if the job is not done', 'seconds'),
     }
 
     def addParameters(self, argDef):
@@ -179,14 +183,10 @@ class BuildWaitCommand(commands.RBuilderCommand):
          argDef["timeout"] = options.ONE_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
+        timeout = int(argSet.pop('timeout', 0))
         args = args[1:]
         if len(args) < 1:
             return self.usage()
-
-        if 'timeout' not in argSet:
-            argSet['timeout'] = 0
-
-        timeout = int(argSet['timeout'])
 
         buildId = int(args[0])
         waitForBuild(client, buildId, timeout = timeout)
