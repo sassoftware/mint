@@ -16,16 +16,19 @@ from mint.cmdline import commands
 
 from conary import versions
 from conary.lib import options, log
-from conary.conaryclient.cmdline import parseTroveSpec
+from conary.conaryclient import cmdline
+from conary import conarycfg
+from conary import conaryclient
 
-
-def waitForBuild(client, buildId, interval = 5, timeout = 0):
+def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     build = client.getBuild(buildId)
     jobStatus = build.getStatus()
 
     st = time.time()
     timedOut = False
     while jobStatus['status'] in (jobstatus.WAITING, jobstatus.RUNNING):
+        if not quiet:
+            log.info("Job status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
         if timeout and time.time() - st > timeout:
             timedOut = True
             break
@@ -113,6 +116,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
     docs = {'wait' :    'wait until a build job finishes',
             'option':   ('set a build option', '\'KEY VALUE\''),
             'timeout' : ('time to wait before ending, even if the job is not done', 'seconds'),
+            'quiet':    'suppress job status output',
     }
 
     def addParameters(self, argDef):
@@ -120,10 +124,12 @@ class BuildCreateCommand(commands.RBuilderCommand):
          argDef["wait"] = options.NO_PARAM
          argDef["option"] = options.MULT_PARAM
          argDef["timeout"] = options.ONE_PARAM
+         argDef["quiet"] = options.NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
         timeout = int(argSet.pop('timeout', 0))
+        quiet = argSet.pop('quiet', False)
         args = args[1:]
         if len(args) < 3:
             return self.usage()
@@ -146,7 +152,15 @@ class BuildCreateCommand(commands.RBuilderCommand):
         project = client.getProjectByHostname(projectName)
         build = client.newBuild(project.id, project.name)
 
-        n, v, f = parseTroveSpec(troveSpec)
+        # resolve a trovespec
+        cfg = conarycfg.ConaryConfiguration(True)
+        cfg.initializeFlavors()
+
+        cc = conaryclient.ConaryClient(cfg)
+        nc = cc.getRepos()
+
+        n, v, f = nc.findTrove(None, cmdline.parseTroveSpec(troveSpec), cc.cfg.flavor)[0]
+
         if not (n and v and f is not None):
             raise RuntimeError, "Please specify a full trove spec in the form: <trove name>=<version>[<flavor>]\n" \
                 "All parts must be fully specified. Use conary rq --full-versions --flavors <trove name>\n" \
@@ -154,8 +168,8 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
         v = versions.VersionFromString(v, timeStamps = [0.0])
         v.resetTimeStamps([0.0])
-        build.setTrove(n, v.freeze(), f.freeze())
 
+        build.setTrove(n, v.freeze(), f.freeze())
         build.setBuildType(buildTypeId)
 
         for name, val in buildOptions.iteritems():
@@ -165,7 +179,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
         print "BUILD_ID=%d" % (build.id)
         sys.stdout.flush()
         if wait:
-            waitForBuild(client, build.id, timeout = timeout)
+            waitForBuild(client, build.id, timeout = timeout, quiet = quiet)
         return build.id
 commands.register(BuildCreateCommand)
 
