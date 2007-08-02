@@ -14,7 +14,7 @@ from mint import mint_error
 from conary import versions
 from conary.deps import deps
 
-SERIAL_VERSION = 1
+PROTOCOL_VERSION = 1
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):

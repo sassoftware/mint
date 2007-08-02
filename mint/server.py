@@ -2189,7 +2189,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
-        r['serialVersion'] = builds.SERIAL_VERSION
+        r['protocolVersion'] = builds.PROTOCOL_VERSION
         r['type'] = 'build'
 
         for key in ('buildId', 'name', 'troveName', 'troveVersion',
@@ -3441,7 +3441,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
-        r['serialVersion'] = grouptrove.SERIAL_VERSION
+        r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
         r['type'] = 'cook'
 
         r['recipeName'] = groupTrove.recipeName

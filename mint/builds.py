@@ -21,7 +21,7 @@ from mint.mint_error import MintError, ParameterError
 from conary import versions
 from conary.deps import deps
 
-SERIAL_VERSION = 1
+PROTOCOL_VERSION = 1
 
 class TroveNotSet(MintError):
     def __str__(self):

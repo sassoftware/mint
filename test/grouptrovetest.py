@@ -1304,7 +1304,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
 
         assert sorted(groupTroveDict.keys()) == \
             ['UUID', 'description', 'jobData', 'labelPath', 'project',
-             'recipe', 'recipeName', 'serialVersion', 'troveItems', 'type',
+             'recipe', 'recipeName', 'protocolVersion', 'troveItems', 'type',
              'upstreamVersion']
         assert groupTroveDict['project'].keys() == ['hostname', 'name', 'label']
 

@@ -796,12 +796,12 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         buildDict = simplejson.loads(serialized)
 
-        self.failIf(buildDict['serialVersion'] != 1,
+        self.failIf(buildDict['protocolVersion'] != 1,
                     "Serial Version 1 was not honored")
 
         self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
             set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputToken',
-             'project', 'serialVersion', 'troveFlavor', 'troveName', 'outputUrl',
+             'project', 'protocolVersion', 'troveFlavor', 'troveName', 'outputUrl',
              'troveVersion', 'type', 'buildId', 'outputUrl']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
