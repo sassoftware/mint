@@ -26,8 +26,8 @@ Creates a build based on the following information:
 
 \fI<project-name>\fR -- the desired project's hostname
 
-\fI<trove-spec>\fR -- a group trove specification in the format returned
-by the command \fBconary rq --full-versions --flavors \fI<trove>\fR\fB
+\fI<trove-spec>\fR -- a group trove specification containing at least
+a group name and a label. For example: group-dist=conary.rpath.com@rpl:1.
 
 \fI<image-type>\fR -- use \fBrbuilder --help\fR to display the list of supported
 image types
