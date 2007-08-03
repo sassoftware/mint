@@ -12,6 +12,7 @@ from mint import buildtemplates
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
+from mint import data
 from mint.cmdline import commands
 
 from conary import versions
@@ -19,6 +20,10 @@ from conary.lib import options, log
 from conary.conaryclient import cmdline
 from conary import conarycfg
 from conary import conaryclient
+from conary import errors
+
+# Fallback in case we have no other choice
+RPL = versions.Label("conary.rpath.com@rpl:1")
 
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     build = client.getBuild(buildId)
@@ -109,6 +114,29 @@ def genHelp():
     return h
 
 
+def resolveExtraTrove(cclient, trvName, trvVersion = None, trvFlavor = None, searchPath = []):
+    spec = cmdline.parseTroveSpec(trvName)
+    itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+    try:
+        uJob, suggMap = cclient.updateChangeSet(itemList,
+                                                resolveDeps = False)
+
+        job = [x for x in uJob.getPrimaryJobs()][0]
+        strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
+                                 str(job[2][1]))
+
+        return strSpec
+    except errors.TroveNotFound:
+        log.warning("Trove not found for %s" % trvName)
+        return None
+
+def getLabelPath(cclient, trove):
+    """Retrieve label path from group for anaconda-templates resolution."""
+    repos = cclient.getRepos()
+    trv = repos.getTroves([trove])
+    return [versions.Label(x) for x in trv[0].getTroveInfo().labelPath]
+
+
 class BuildCreateCommand(commands.RBuilderCommand):
     commands = ['build-create']
     paramHelp = genHelp()
@@ -168,6 +196,33 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
         build.setTrove(n, v.freeze(), f.freeze())
         build.setBuildType(buildTypeId)
+
+        # resolve extra troves
+        searchPath = [build.getTroveVersion().branch().label()]
+        template = buildtemplates.dataTemplates[buildTypeId]
+        for name in list(template):
+            if template[name][0] == data.RDT_TROVE:
+
+                # we have to handle anaconda-templates differently because
+                # it's not likely that they will have a build on the group's
+                # label, but we don't want to accidently pull in any other
+                # extra troves from different labels.
+                if name == "anaconda-templates":
+                    cc.cfg.installLabelPath = getLabelPath(cc, (n, v, f)) + [RPL]
+                else:
+                    cc.cfg.installLabelPath = searchPath
+                # set on the command line, perhaps partially
+                if name in buildOptions:
+                    val = buildOptions[name]
+                    if val != "NONE":
+                        n, v, f = parseTroveSpec(str(val))
+                        val = resolveExtraTrove(cc, v, f, searchPath)
+                else:
+                    # not specified at all, resolve it ourselves from just the name
+                    val = resolveExtraTrove(cc, name, searchPath = searchPath)
+                if val:
+                    print "Setting %s to %s" % (name, val)
+                    buildOptions[name] = val
 
         for name, val in buildOptions.iteritems():
             build.setDataValue(name, val)
