@@ -31,9 +31,14 @@ def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
 
     st = time.time()
     timedOut = False
+    lastMessage = ''
+    lastStatus = -1
     while jobStatus['status'] in (jobstatus.WAITING, jobstatus.RUNNING):
         if not quiet:
-            log.info("Job status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+            if lastMessage != jobStatus['message'] or lastStatus != jobStatus['status']:
+                log.info("Job status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+                lastMessage = jobStatus['message']
+                lastStatus = jobStatus['status']
         if timeout and time.time() - st > timeout:
             timedOut = True
             break
