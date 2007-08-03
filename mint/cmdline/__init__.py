@@ -90,6 +90,7 @@ class RBuilderMain(options.MainHandler):
         print '  user-create <username> <email> [--password <password>]       - create a new user'
         print '  project-add <username> <project hostname> <owner|developer>  - add a user to a project'
         print '  config                                                       - dump configuration'
+        return rc
 
     def runCommand(self, thisCommand, cfg, argSet, args):
         if not cfg.serverUrl:
@@ -97,17 +98,18 @@ class RBuilderMain(options.MainHandler):
                 'Please set the serverUrl configuration option in ~/.rbuilderrc')
         client = RBuilderClient(cfg)
         try:
-            options.MainHandler.runCommand(self,
+            ret = options.MainHandler.runCommand(self,
                 thisCommand, client, cfg, argSet, args[1:])
         except MintError, e:
             log.error("response from rBuilder server: %s" % str(e))
-            sys.exit(0)
+            sys.exit(3)
         except RuntimeError, e:
             log.error(str(e))
-            sys.exit(0)
+            sys.exit(3)
         except errors.ConaryError, e:
             log.error(str(e))
-            sys.exit(0)
+            sys.exit(3)
+        return ret
 
 def main():
     log.setVerbosity(log.INFO)

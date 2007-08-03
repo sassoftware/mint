@@ -49,8 +49,10 @@ def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     if timedOut:
         log.info("Job timed out (%d seconds)" % timeout)
         log.info("Last status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+        return 2
     else:
         log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
+        return jobStatus['status'] != jobstatus.FINISHED
 
 
 bootableTypes = [buildtypes.RAW_FS_IMAGE,
@@ -236,8 +238,9 @@ class BuildCreateCommand(commands.RBuilderCommand):
         print "BUILD_ID=%d" % (build.id)
         sys.stdout.flush()
         if wait:
-            waitForBuild(client, build.id, timeout = timeout, quiet = quiet)
-        return build.id
+            return waitForBuild(client, build.id, timeout = timeout, quiet = quiet)
+        return 0 # success
+
 commands.register(BuildCreateCommand)
 
 
@@ -260,7 +263,7 @@ class BuildWaitCommand(commands.RBuilderCommand):
             return self.usage()
 
         buildId = int(args[0])
-        waitForBuild(client, buildId, timeout = timeout)
+        return waitForBuild(client, buildId, timeout = timeout)
 commands.register(BuildWaitCommand)
 
 
@@ -288,4 +291,5 @@ class BuildUrlCommand(commands.RBuilderCommand):
                     urlBase = "http://%s/%s/downloadImage?fileId=%%d" % \
                         (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
                 print urlBase % (file['fileId'])
+        return 0
 commands.register(BuildUrlCommand)

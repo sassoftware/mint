@@ -126,6 +126,21 @@ access to the desired project
 \fI<rbuilder>\fR is the fully-qualified domain name of the rBuilder
 instance
 
+.SH RETURN CODES
+
+The exit status codes of the rbuilder command are defined as follows:
+.RS
+.IP 0
+normal; no errors or warnings detected.
+.IP 1
+build being monitored by build-create --wait or build-wait exited with an 
+error status.
+.IP 2
+build timed out
+.IP 3
+Conary-related error, such as 'trove not found'.
+.RE
+
 .SH BUGS
 Please report bugs via http://issues.rpath.com/
 .\"

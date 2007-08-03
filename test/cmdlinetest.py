@@ -131,8 +131,6 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cmd = users.UserCreateCommand()
         userId = cmd.runCommand(client, None, {'password': 'testpass'},
             ['user-create', 'testuser', 'test@example.com'])
-        user = client.getUser(userId)
-        assert(user.email == 'test@example.com')
 
     def testUserMembershipCMD(self):
         adminClient, userId = self.quickMintAdmin("adminuser", "adminpass")

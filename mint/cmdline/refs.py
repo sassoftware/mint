@@ -80,5 +80,6 @@ class FindRefsCommand(commands.RBuilderCommand):
             print "\nProjects that derive %s=%s[%s]:\n" % (str(nvf[0]), str(nvf[1]), str(queryFlavor))
         d = client.getTroveDescendants(nvf[0], str(nvf[1].branch()), nvf[2].freeze())
         self._output(nvf, flatList, client, d)
+        return 0
 
 commands.register(FindRefsCommand)

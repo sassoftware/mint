@@ -52,7 +52,7 @@ class UserCreateCommand(commands.RBuilderCommand):
             email, "", "", active=True)
 
         log.info("User %s created (id %d)" % (username, userId))
-        return userId
+        return 0
 commands.register(UserCreateCommand)
 
 
@@ -83,5 +83,6 @@ class UserMembershipCommand(commands.RBuilderCommand):
         else:
             project.updateUserLevel(userId, levelId)
             log.info("User %s changed to %s on project %s" % (username, level,projectName))
+        return 0
 
 commands.register(UserMembershipCommand)
