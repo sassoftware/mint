@@ -9,6 +9,7 @@ import sys
 
 from conary.lib import options, util, log, cfgtypes
 from conary.lib.cfg import ConfigFile
+from conary import errors
 
 from mint import constants
 from mint.client import MintClient
@@ -102,6 +103,9 @@ class RBuilderMain(options.MainHandler):
             log.error("response from rBuilder server: %s" % str(e))
             sys.exit(0)
         except RuntimeError, e:
+            log.error(str(e))
+            sys.exit(0)
+        except errors.ConaryError, e:
             log.error(str(e))
             sys.exit(0)
 
