@@ -63,6 +63,12 @@ dist: main-dist strip-raa tarball version-file
 
 product: main-dist product-dist tarball version-file
 
+dist-build:
+		make -C $(DISTDIR) || exit 1
+
+dist-install:
+		make -C $(DISTDIR) install || exit 1
+
 test:
 	hg archive -t tbz2 -I test $(DISTDIR)-test.tar.bz2
 
@@ -81,7 +87,7 @@ doc:
 version-file:
 	if [ -f VERSION ]; then rm -f VERSION; fi
 	echo "This is rBuilder $(VERSION)" > VERSION
-	echo "(Changeset $(shell hg parents -v | grep changeset | cut -c14-))" >> VERSION
+	echo "(Changeset $(shell hg parents --template '#rev#:#node|short#'))" >> VERSION
 
 BASEPATH=mintdoc
 REMOTEPATH=public_html/
