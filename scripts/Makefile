@@ -20,20 +20,13 @@ script_dist =				\
 
 extra_dist = \
 	Makefile		\
-	raw2vmdk.c		\
         backup
 
 SUBDIRS = mailman
 
-CFLAGS=-Wall -s -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
-LDFLAGS=
-CC=gcc
-
 dist_files = $(script_dist) $(extra_dist)
 
-all: default-all bin
-
-bin: raw2vmdk
+all: default-all
 
 install: install-subdirs
 	mkdir -p $(DESTDIR)/$(datadir)/rbuilder/scripts/
@@ -44,17 +37,11 @@ install: install-subdirs
 	mkdir -p $(DESTDIR)/etc/raa/backup.d
 	install -m 755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 
-	mkdir -p $(DESTDIR)/$(bindir)/
-	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
 	mkdir -p $(DESTDIR)/$(libdir)/rbuilder/
 
 dist: default-dist
 
 clean: default-clean
-	rm -f raw2vmdk
-
-raw2vmdk: raw2vmdk.c
-	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
