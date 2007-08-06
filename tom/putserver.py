@@ -1,10 +1,12 @@
 from mod_python import apache
 import os, sys
 from conary.lib import util
+import xmlrpclib
 
 def handler(req):
     if req.method.upper() != "PUT":
-        return apache.METHOD_NOT_ALLOWED
+	req.write(xmlrpclib.dumps((0, '')))
+        return apache.OK
 
     fn = os.path.normpath('output/' + req.parsed_uri[6])
 
