@@ -2,6 +2,7 @@
 # All rights reserved
 
 import cherrypy
+import logging
 import sys
 import turbogears
 import traceback
@@ -15,10 +16,12 @@ from raa.db.database import writeOp, readOp
 
 from mcp import client as mcpclient
 
+log = logging.getLogger('raa.web')
+
 def print_error():
     exc_cl, exc, bt = sys.exc_info()
-    traceback.print_tb(bt, sys.stderr)
-    print >> sys.stderr, exc
+    log.error(''.join(traceback.format_tb(bt)))
+    log.error(str(exc))
 
 def marshallMessages(func):
     def wrapper(self, *args, **kwargs):
@@ -60,8 +63,8 @@ class MCPConsole(rAAWebPlugin):
             c = mcpclient.MCPClient(cfg)
         except:
             exc_cl, exc, bt = sys.exc_info()
-            traceback.print_tb(bt, sys.stderr)
-            print >> sys.stderr, exc
+            log.error(''.join(traceback.format_tb(bt)))
+            log.error(exc)
             c = None
         return c
 
