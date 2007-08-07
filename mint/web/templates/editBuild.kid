@@ -33,7 +33,6 @@ allowNone = ['anaconda-custom', 'media-template']
                     handleBuildTypes(null);
 
                 addPredefinedFilesystem('/', 0, 512, 'ext3');
-                addPredefinedFilesystem('none', 512, 0, 'swap');
             });
         </script>
     </div>
