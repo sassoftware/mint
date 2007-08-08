@@ -2885,18 +2885,34 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
         """
         This call validates the outputToken against one stored in the
-        build data for buildId, and allows those filenames to be 
+        build data for buildId, and allows those filenames to be
         rewritten without any other access. This is so the job slave
         doesn't have to have any knowledge of the authuser or authpass,
         just the output hash given to it in the serialized job.
         """
-        if outputToken != self.buildData.getDataValue(buildId, 'outputToken')[1]:
+        if outputToken != \
+                self.buildData.getDataValue(buildId, 'outputToken')[1]:
             raise PermissionDenied
 
         ret = self._setBuildFilenames(buildId, filenames, normalize = True)
         self.buildData.removeDataValue(buildId, 'outputToken')
 
         return ret
+
+    @typeCheck(int, str, str, str)
+    def setBuildAmiDataSafe(self, buildId, outputToken, amiId, amiManifestName):
+        """
+        This call validates the outputToken as above.
+        """
+        if outputToken != \
+                self.buildData.getDataValue(buildId, 'outputToken')[1]:
+            raise PermissionDenied
+
+        self.buildData.setDataValue(buildId, 'amiId', amiId, data.RDT_STRING)
+        self.buildData.setDataValue(buildId, 'amiManifestName,',
+                amiManifestName, data.RDT_STRING)
+        self.buildData.removeDataValue(buildId, 'outputToken')
+        return True
 
     @typeCheck(int, list, (list, str, int))
     @requiresAuth
