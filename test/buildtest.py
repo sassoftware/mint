@@ -630,6 +630,36 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
 
     @fixtures.fixture('Full')
+    def testSetBuildAmiDataSafe(self, db, data):
+        ownerClient = self.getClient('owner')
+        nobodyClient = self.getClient('anonymous')
+
+        build = ownerClient.getBuild(data['buildId'])
+        build.setDataValue('outputToken', 'thisisasecretstring',
+                           RDT_STRING, False)
+
+        self.assertRaises(PermissionDenied,
+            nobodyClient.server._server.setBuildAmiDataSafe, build.id,
+            'thisisthewrongsecret', 'bogusAmiId', 'bogusManifestName')
+
+        nobodyClient.setBuildAmiDataSafe(build.id,
+            'thisisasecretstring', 'bogusAmiId', 'bogusManifestName')
+
+        build.refresh()
+
+        self.failUnlessEqual(build.getDataDict(),
+                {'amiId': 'bogusAmiId',
+                    'enumArg': '2',
+                    'boolArg': False,
+                    'mirrorUrl': '',
+                    'jsversion': 'None',
+                    'amiManifestName,': 'bogusManifestName',
+                    'stringArg': '', 'intArg': 0})
+
+        # make sure the outputTokengets removed from the build data
+        self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
+
+    @fixtures.fixture('Full')
     def testSetImageFilenamesCompat(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])

@@ -719,6 +719,9 @@ class MintClient:
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
         return self.server.setBuildFilenamesSafe(buildId, outputToken, filenames)
 
+    def setBuildAmiDataSafe(self, buildId, outputToken, amiId, amiManifestName):
+        return self.server.setBuildAmiDataSafe(buildId, outputToken,
+                amiId, amiManifestName)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
