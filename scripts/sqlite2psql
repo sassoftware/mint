@@ -16,7 +16,7 @@ from conary.lib import util
 from conary.server import schema
 
     
-MIGRATION_SCRIPT = os.environ['CONARY_PATH'] + '/scripts/migration/sqlite2pgsql.py'
+MIGRATION_SCRIPT = os.environ['CONARY_PATH'] + '/scripts/migration/db2db.py'
 PSQL_USER = 'rbuilder'
 LOGFILE = '/srv/rbuilder/logs/sqlite2psql.log'
 
@@ -76,9 +76,9 @@ for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
 
         databases.append(pgDbName)
         # Run the script
-        util.execute('%s %s %s >> %s' % (MIGRATION_SCRIPT,
-                                     cfg.reposDBPath % actualDbName,
-                                     '%s@localhost.localdomain/%s' %\
+        util.execute('%s %s %s >> %s' % (MIGRATION_SCRIPT, 
+                                '--sqlite=' + cfg.reposDBPath % actualDbName,
+                                '--postgresql=%s@localhost.localdomain/%s' %\
                                      (PSQL_USER, pgDbName), LOGFILE))
     except:
         print "error migrating database: %s" % dbName
