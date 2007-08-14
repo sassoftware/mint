@@ -36,7 +36,7 @@ def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     dropped = 0
     lastMessage = ''
     lastStatus = -1
-    jobStatus = {'status': jobstatus.WAITING}
+    jobStatus = {}
 
     while True:
         try:
@@ -48,6 +48,8 @@ def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
                 log.info("Connection timed out (3 attempts)")
                 return 2
             log.info("Status request timed out, trying again")
+            time.sleep(interval)
+            continue
 
         if lastMessage != jobStatus['message'] or lastStatus != jobStatus['status']:
             if not quiet:
