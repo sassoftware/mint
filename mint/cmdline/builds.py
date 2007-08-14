@@ -7,6 +7,7 @@ import os, sys
 import time
 import textwrap
 import urlparse
+import socket
 
 from mint import buildtemplates
 from mint import buildtypes
@@ -26,14 +27,28 @@ from conary import errors
 RPL = versions.Label("conary.rpath.com@rpl:1")
 
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
+    socket.setdefaulttimeout(15.0)
+
     build = client.getBuild(buildId)
-    jobStatus = build.getStatus()
 
     st = time.time()
     timedOut = False
+    dropped = 0
     lastMessage = ''
     lastStatus = -1
-    while jobStatus['status'] in (jobstatus.WAITING, jobstatus.RUNNING):
+    jobStatus = {'status': jobstatus.WAITING}
+
+    while True:
+        try:
+            jobStatus = build.getStatus()
+            dropped = 0
+        except socket.timeout:
+            dropped += 1
+            if dropped >= 3:
+                log.info("Connection timed out (3 attempts)")
+                return 2
+            log.info("Status request timed out, trying again")
+
         if lastMessage != jobStatus['message'] or lastStatus != jobStatus['status']:
             if not quiet:
                 log.info("Job status: %s (%s)" % (jobstatus.statusNames[jobStatus['status']], jobStatus['message']))
@@ -45,8 +60,10 @@ def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
             timedOut = True
             break
 
+        if jobStatus['status'] not in (jobstatus.WAITING, jobstatus.RUNNING):
+            break
+
         time.sleep(interval)
-        jobStatus = build.getStatus()
 
     if timedOut:
         log.info("Job timed out (%d seconds)" % timeout)
