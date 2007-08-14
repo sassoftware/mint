@@ -35,6 +35,7 @@ python_files =			\
 	maintenance.py		\
 	mailinglists.py		\
 	mint_error.py		\
+	mint_update.py		\
 	mirror.py		\
 	news.py			\
 	pkgindex.py		\
