@@ -29,7 +29,11 @@ RPL = versions.Label("conary.rpath.com@rpl:1")
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     socket.setdefaulttimeout(15.0)
 
-    build = client.getBuild(buildId)
+    try:
+        build = client.getBuild(buildId)
+    except socket.timeout:
+        log.info("Timeout while creating build")
+        return 2
 
     st = time.time()
     timedOut = False
