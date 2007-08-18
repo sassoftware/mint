@@ -13,13 +13,6 @@ def migrateAllRepositories():
 def migrateTo_1():
     migrateAllRepositories()
 
-def migrateTo_2():
-    import time
-    for i in range(1000):
-        print "spinloop for %i/1000 seconds" % i
-        sys.stdout.flush()
-        time.sleep(1)
-
 def commonPostCommands():
     util.execute('/sbin/service sendmail start')
 
