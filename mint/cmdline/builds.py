@@ -27,8 +27,6 @@ from conary import errors
 RPL = versions.Label("conary.rpath.com@rpl:1")
 
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
-    socket.setdefaulttimeout(60.0)
-
     try:
         build = client.getBuild(buildId)
     except socket.timeout:

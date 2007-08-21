@@ -6,6 +6,7 @@
 #
 import os
 import sys
+import socket
 
 from conary.lib import options, util, log, cfgtypes
 from conary.lib.cfg import ConfigFile
@@ -113,6 +114,8 @@ class RBuilderMain(options.MainHandler):
 
 def main():
     log.setVerbosity(log.INFO)
+    socket.setdefaulttimeout(60.0)
+
     rb = RBuilderMain()
     try:
         return rb.main()
