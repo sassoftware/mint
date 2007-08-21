@@ -63,7 +63,7 @@ def serializeBuild(buildId):
             (cfg.siteHost, cfg.basePath)
 
     r = {}
-    r['serialVersion'] = mint.builds.SERIAL_VERSION
+    r['protocolVersion'] = mint.builds.PROTOCOL_VERSION
     r['type'] = 'build'
 
     for key in ('name', 'troveName', 'troveVersion', 'troveFlavor',

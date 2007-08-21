@@ -448,6 +448,7 @@ class SqliteFixtureCache(FixtureCache):
 
         # make a copy of the data directory and update the cfg
         testDataPath = tempfile.mkdtemp(prefix = "fixture%s" % name, suffix = '.copy')
+        self.testDataPath = testDataPath
         util.copytree(os.path.join(cfg.dataPath,'*'), testDataPath)
         testCfg = copy.deepcopy(cfg)
         testCfg.dataPath = testDataPath
@@ -485,7 +486,7 @@ class SqliteFixtureCache(FixtureCache):
         return testCfg, data
 
     def delRepos(self):
-        pass # this space left intentionally blank
+        util.rmtree(self.testDataPath)
 
 
 class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
