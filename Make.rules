@@ -8,20 +8,7 @@ PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /u
 PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
 
-raaplugins-install:
-	mkdir -p $(DESTDIR)$(raapluginsdir)
-	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"\`/$$f"`; \
-		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`/$$f; \
-	done
-
-pyfiles-install:
-	mkdir -p $(DESTDIR)$(mintdir)
-	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname $(DESTDIR)/$(mintdir)/$(DIR)/$$f`; \
-		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)/$$f; \
-	done
-
+## Default rules
 default-dist: dist-subdirs
 	for f in $(dist_files); do \
 		mkdir -p $(DISTDIR)/$(DIR)/`dirname $$f`; \
@@ -40,8 +27,12 @@ default-clean: clean-subdirs
 default-test:
 	$(TESTSUITE) *.py
 
+
+## Subdirectory rules
 default-subdirs:
+ifdef SUBDIRS
 	for d in $(SUBDIRS); do make -C $$d DIR=$$d || exit 1; done
+endif
 
 clean-subdirs:
 ifdef SUBDIRS
@@ -57,4 +48,24 @@ dist-subdirs:
 ifdef SUBDIRS
 	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d dist || exit 1; done
 endif
-# vim: set sts=8 sw=8 noexpandtab :
+
+
+### TODO: confirm that these are all used
+raaplugins-install:
+	mkdir -p $(DESTDIR)$(raapluginsdir)
+	for f in $(python_files) $(bin_files) $(extra_inst); do \
+		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"\`/$$f"`; \
+		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`/$$f; \
+	done
+
+
+pyfiles-install:
+	mkdir -p $(DESTDIR)$(mintdir)
+	for f in $(python_files) $(bin_files) $(extra_inst); do \
+		mkdir -p `dirname $(DESTDIR)/$(mintdir)/$(DIR)/$$f`; \
+		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)/$$f; \
+	done
+
+
+
+# vim: set sts=8 sw=8 noexpandtab filetype=make :
