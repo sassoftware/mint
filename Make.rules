@@ -15,11 +15,9 @@ default-dist: dist-subdirs
 		cp -a $$f $(DISTDIR)/$(DIR)/$$f; \
 	done
 
-default-install:
-	echo "nothing to install"
+default-install: install-subdirs
 
-default-all:
-	@echo "nothing to build"
+default-all: default-subdirs
 
 default-clean: clean-subdirs
 	rm -f *~ .#* *.pyo *.pyc *.orig *.o *.rej $(generated_files)
