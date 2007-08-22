@@ -46,7 +46,7 @@ class CoverageWrapper(object):
             cmd = '%s %s' % (interp, argv)
         else:
             cmd = [interp] + argv
-        retval = subprocess.call(cmd, env=self.environ)
+        retval = subprocess.call(cmd.split(" "), env=self.environ)
         return retval
 
     def getCoverage(self):
