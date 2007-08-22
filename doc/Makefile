@@ -4,22 +4,22 @@
 # All Rights Reserved
 #
 
-dist_files = Makefile rbuilder.1
+.PHONY: rbuilder.1
 
-all: default-all
+dist_files = Makefile rbuilder.1.in
 
-install-mkdirs:
-	mkdir -p $(DESTDIR)$(mandir)/man1
+all: default-all rbuilder.1
 
-install: install-mkdirs
-	install -m 644 rbuilder.1 $(DESTDIR)$(mandir)/man1
+dist: default-dist
 
-dist: rbuilder.1 default-dist
+install: all default-install
+	install -D -m 644 rbuilder.1 $(DESTDIR)$(mandir)/man1/rbuilder.1
 
 clean: default-clean
+	rm rbuilder.1
 
-rbuilder.1: rbuilder.1.in ../Makefile
-	sed -e s,@version@,$(VERSION),g $< > $@
+rbuilder.1: rbuilder.1.in
+	sed -e s,@version@,$(SHORTVER),g $< > $@
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

@@ -9,12 +9,6 @@ PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
 
 ## Default rules
-default-dist: dist-subdirs
-	for f in $(dist_files); do \
-		mkdir -p $(DISTDIR)/$(DIR)/`dirname $$f`; \
-		cp -a $$f $(DISTDIR)/$(DIR)/$$f; \
-	done
-
 default-install: install-subdirs
 
 default-all: default-subdirs
