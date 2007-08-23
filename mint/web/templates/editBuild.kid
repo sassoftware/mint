@@ -126,7 +126,7 @@ allowNone = ['anaconda-custom', 'media-template']
                                             <span py:if="buildId and dataValue">${shortTroveSpec(dataValue)}</span>
                                             (<a onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
-                                                '${name}_${key}', '${name}_${key}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
+                                                '${name}', '${name}_${key}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
                                             <input py:if="buildId and dataValue" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataValue}" />
                                         </div>
                                     </div>
