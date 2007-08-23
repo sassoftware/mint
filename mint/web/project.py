@@ -463,7 +463,7 @@ class ProjectHandler(WebHandler):
 
         # convert any python variable-name-safe trove spec parameters to the
         # real data value name (they end in Spec, and have - translated to _)
-        specRe = re.compile("([a-zA-Z_]+)(\d)+Spec")
+        specRe = re.compile("([a-zA-Z\-]+)_(\d+)Spec")
         for key in kwargs.keys()[:]:
             m = specRe.match(key)
             if not m:
@@ -475,11 +475,6 @@ class ProjectHandler(WebHandler):
             if buildType == int(kwBuildType):
                 kwargs.update({newKey: str(kwargs[key])})
                 del kwargs[key]
-
-        for key in [x for x in kwargs if x.endswith('Spec')]:
-            newKey = key[:-4].replace("_", "-")
-            kwargs.update({newKey: str(kwargs[key])})
-            del kwargs[key]
 
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
@@ -500,7 +495,8 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
-                        val = build.resolveExtraTrove(n, v, f, searchPath)
+                        if not n or not v or (f is None):
+                            val = build.resolveExtraTrove(n, v, f, searchPath)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
