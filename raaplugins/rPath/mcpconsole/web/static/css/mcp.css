@@ -42,3 +42,34 @@ body {
 .offlineSlave {
     background-color: #808080;
 }
+
+/* Job status page */
+
+.mcpJobs {
+    border: 1px solid black;
+}
+
+.mcpJobs td {
+    margin: 0;
+    padding: 0 0.2em;
+}
+
+.mcpJobSummary td {
+    background-color: #f0f;
+    border-top: 1px solid black;
+}
+
+.mcpJobDetails td {
+}
+
+.jobEntry {
+    margin: 0;
+}
+
+.mcpJobColorWaiting td {  background-color: #dd4; color: black; }
+.mcpJobColorRunning td {  background-color: #259; color: white; }
+.mcpJobColorBuilt td {    background-color: #259; color: white; }
+.mcpJobColorFinished td { background-color: #cec; color: black; }
+.mcpJobColorError td {    background-color: #ecc; color: black; }
+.mcpJobColorNo td {       background-color: #ddd; color: black; } /* no job */
+
