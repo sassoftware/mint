@@ -463,6 +463,19 @@ class ProjectHandler(WebHandler):
 
         # convert any python variable-name-safe trove spec parameters to the
         # real data value name (they end in Spec, and have - translated to _)
+        specRe = re.compile("([a-zA-Z_]+)(\d)+Spec")
+        for key in kwargs.keys()[:]:
+            m = specRe.match(key)
+            if not m:
+                continue
+
+            newKey, kwBuildType = m.groups()
+
+            # only match values for this build type
+            if buildType == int(kwBuildType):
+                kwargs.update({newKey: str(kwargs[key])})
+                del kwargs[key]
+
         for key in [x for x in kwargs if x.endswith('Spec')]:
             newKey = key[:-4].replace("_", "-")
             kwargs.update({newKey: str(kwargs[key])})
