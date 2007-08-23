@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-subdirs = static
+SUBDIRS = static
 
 all: default-all
 

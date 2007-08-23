@@ -15,6 +15,7 @@ from raa.modules.raawebplugin import rAAWebPlugin
 from raa.db.database import writeOp, readOp
 
 from mcp import client as mcpclient
+import mint.jobstatus
 
 log = logging.getLogger('raa.web')
 
@@ -84,10 +85,25 @@ class MCPConsole(rAAWebPlugin):
     def index(self):
         if not self.c:
             self.c = self.getMcpClient()
-        if self.c:
+        if True or self.c:
             try:
                 jobStatus = self.c.jobStatus()
-                return {'jobStatus' : jobStatus, 'disabled' : False}
+
+                # sort helpers
+                sortOrder = ['-', '1', '2', '0', '3', '4']
+                cmpKey = lambda x: sortOrder.index(str(x[1]['status'][0])[0])
+
+                # get all the jobs into a list and sort by status then name,
+                # with the jobid descending
+                jobs = [(k, jobStatus[k]) for k in jobStatus]
+                jobs.sort(lambda a, b: cmp(cmpKey(a), cmpKey(b)) or cmp(b[0], a[0]))
+
+                # truncate the list to 10 stopped jobs
+                running = [x for x in jobs if x[1]['status'][0] <  mint.jobstatus.FINISHED]
+                stopped = [x for x in jobs if x[1]['status'][0] >= mint.jobstatus.FINISHED][0:10]
+                jobs = running + stopped
+                
+                return {'jobStatus' : jobs, 'disabled' : False}
             except:
                 print_error()
                 self.disconnect()

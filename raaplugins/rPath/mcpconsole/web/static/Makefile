@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = css
+SUBDIRS = css javascript
 
 all: default-all default-subdirs
 
