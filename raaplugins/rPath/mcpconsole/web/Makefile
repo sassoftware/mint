@@ -18,7 +18,7 @@ generated_files = *.pyo *.pyc
 
 .PHONY: clean dist install
 
-install: all raaplugins-install
+install: raaplugins-install install-subdirs
 
 dist: default-dist
 
