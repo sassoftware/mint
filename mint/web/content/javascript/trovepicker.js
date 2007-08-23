@@ -87,9 +87,9 @@ TrovePicker.prototype.working = function(isWorking) {
 // trove name on a server.
 TrovePicker.prototype.buildTrovePicker = function() {
     this.stage = 'group';
-    oldEl = $(this.elId);
-    picker = DIV({'id': this.elId, 'class': 'trovePicker'});
-    spinner = UL({'id': this.elId + 'spinnerList'},
+    var oldEl = $(this.elId);
+    var picker = DIV({'id': this.elId, 'class': 'trovePicker'});
+    var spinner = UL({'id': this.elId + 'spinnerList'},
         LI(null, "Loading...", IMG({'src': staticPath + spinnerImg}))
     );
     appendChildNodes(picker, SPAN({'id': this.elId + 'prompt', 'class': 'prompt'}),
@@ -403,7 +403,7 @@ var defaultType = INSTALLABLE_ISO;
 if(x86_64)
     var x86_64Types = [INSTALLABLE_ISO, VMWARE_IMAGE, VMWARE_ESX_IMAGE, RAW_FS_IMAGE, RAW_HD_IMAGE, XEN_OVA, VIRTUAL_PC_IMAGE, VIRTUAL_IRON];
 else
-    var x86_64Types = [INSTALLABLE_ISO];
+    var x86_64Types = [INSTALLABLE_ISO, APPLIANCE_ISO];
 
 var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA,
                 AMI];
