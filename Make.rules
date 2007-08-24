@@ -45,10 +45,13 @@ kid-build:
 
 
 raaplugins-install:
-	mkdir -p $(DESTDIR)$(raapluginsdir)
-	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"\`/$$f"`; \
-		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`/$$f; \
+	for f in $(python_files); do \
+		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
+	done
+	for f in $(kid_files); do \
+		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
+		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
+		install -Dv -m0644 $$pyf $(DESTDIR)$(STATICDEST)/$$pyf; \
 	done
 
 pyfiles-install:
@@ -59,6 +62,7 @@ pyfiles-install:
 kid-install:
 	for f in $(kid_files); do \
 		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
+		install -Dv -m0644 $$f $(DESTDIR)$(PYDIR)/$(PYDEST)/$$f; \
 		install -Dv -m0644 $$pyf $(DESTDIR)$(PYDIR)/$(PYDEST)/$$pyf; \
 	done
 

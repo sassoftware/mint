@@ -6,23 +6,11 @@
 
 SUBDIRS = css
 
-all: default-all default-subdirs
+all: default-all
 
-extra_files = Makefile
+install: default-install
 
-dist_files = $(python_files) $(extra_files)
-
-generated_files = *.pyo *.pyc
-
-.PHONY: clean dist install
-
-install: all install-subdirs
-
-dist: default-dist dist-subdirs
-
-clean: default-clean clean-subdirs
-
-subdirs: default-subdirs
+clean: default-clean
 
 
 include ../../../../../Make.rules

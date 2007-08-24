@@ -3,7 +3,7 @@
 #
 
 # may be adjusted by recipe (via make commandline)
-export DESTDIR =	/
+DESTDIR =	/
 export PRODUCT =	rbuilder
 export VERSION =	4.0
 export SHORTVER =	$(VERSION)
@@ -12,22 +12,7 @@ export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
 
-# generally not touched
-export sysconfdir =	/etc
-export servicedir =	/srv
-export confdir =	$(servicedir)/rbuilder
-export datadir =	$(PREFIX)/share
-export mandir =		$(datadir)/man
-export contentdir =	$(datadir)/conary/web-common/apps/mint
-export libdir =		$(PREFIX)/lib
-export bindir =		$(PREFIX)/bin
-export localedir =	$(datadir)/locale
-export mintdir =	$(libdir)/python$(PYVERSION)/site-packages
-export httpddir =	$(sysconfdir)/httpd/conf.d
-export maillistdir =	/var/mailman
-export raapluginsdir =	$(libdir)/raa/rPath
-
-SUBDIRS = mint $(PRODUCT_SUBDIRS) scripts raaplugins commands doc distro
+SUBDIRS = mint scripts raaplugins commands doc distro $(PRODUCT_SUBDIRS)
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

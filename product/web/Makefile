@@ -4,16 +4,16 @@
 # All Rights Reserved
 #
 
-SUBDIRS = rPath
+SUBDIRS = content templates
 
-override STATICDEST = /usr/lib/raa
+python_files = basictroves.py
 
 all: default-all
 
-install: default-install
+install: pyfiles-install default-install
 
 clean: default-clean
 
 
-include ../Make.rules
+include ../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
