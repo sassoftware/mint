@@ -9,6 +9,7 @@ script_dist =				\
 	check-repository		\
 	deleteproject			\
 	load-offline-mirror		\
+	mcp-stack			\
 	migrate-all-projects		\
 	migrate-config			\
 	mirror-inbound			\
