@@ -60,11 +60,7 @@ pyfiles-install:
 	done
 
 kid-install:
-	for f in $(kid_files); do \
-		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
-		install -Dv -m0644 $$f $(DESTDIR)$(PYDIR)/$(PYDEST)/$$f; \
-		install -Dv -m0644 $$pyf $(DESTDIR)$(PYDIR)/$(PYDEST)/$$pyf; \
-	done
+	install -Dv -m0644 $(kid_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/; \
 
 static-install:
 	for f in $(static_files); do \
