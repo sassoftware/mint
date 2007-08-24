@@ -12,6 +12,9 @@ export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
 
+# clear this (from commandline) to build rBO
+PRODUCT_SUBDIRS = product
+
 SUBDIRS = mint scripts raaplugins commands doc distro $(PRODUCT_SUBDIRS)
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
