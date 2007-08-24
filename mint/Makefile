@@ -4,22 +4,24 @@
 # All Rights Reserved
 #
 
-SUBDIRS = web reports templates cmdline
+SUBDIRS = cmdline reports templates web
 
 python_files =			\
 	__init__.py		\
 	accesscontrol.py	\
 	backup.py		\
+	builds.py		\
+	buildtemplates.py	\
+	buildtypes.py		\
 	buildxml.py             \
-	spotlight.py		\
+	charts.py		\
 	checkhtml.py		\
 	client.py		\
-	charts.py		\
-	communityids.py \
-	communitytypes.py \
+	communityids.py		\
+	communitytypes.py	\
 	config.py		\
-	constants.py		\
 	cooktypes.py		\
+	constants.py		\
 	copyutils.py		\
 	data.py			\
 	database.py		\
@@ -30,10 +32,9 @@ python_files =			\
 	helperfuncs.py		\
 	jobs.py			\
 	jobstatus.py		\
-	jsversion.py		\
 	loadmirror.py		\
-	maintenance.py		\
 	mailinglists.py		\
+	maintenance.py		\
 	mint_error.py		\
 	mint_update.py		\
 	mirror.py		\
@@ -41,12 +42,10 @@ python_files =			\
 	pkgindex.py		\
 	pkgindexer.py		\
 	profile.py		\
-	builds.py		\
 	projects.py		\
-	buildtypes.py		\
-	buildtemplates.py	\
 	pubreleases.py		\
-	rapapasswords.py \
+	rapapasswords.py	\
+	rbuilderaction.py	\
 	requests.py		\
 	rmakebuild.py		\
 	rmakeconstants.py	\
@@ -58,43 +57,37 @@ python_files =			\
 	session.py		\
 	sessiondb.py		\
 	shimclient.py		\
-	rbuilderaction.py	\
+	spotlight.py		\
 	stats.py		\
 	urltypes.py		\
+	useit.py		\
 	userlevels.py		\
 	userlisting.py		\
 	users.py		\
-	usertemplates.py	\
-	useit.py
+	usertemplates.py
 
-extra_dist = Makefile constants.py.in rmakeconstants.py.in
+extra_dist = rmakeconstants.py.in.py
 
-dist_files = $(python_files) $(extra_dist)
+override PYDEST = mint
 
-all: default-all default-subdirs constants.py rmakeconstants.py
+generated_files = constants.py rmakeconstants.py
 
-generated_files = *.pyo *.pyc constants.py rmakeconstants.py
 
-.PHONY: clean dist install subdirs rmakeconstants.py
+.PHONY: clean install $(generated_files)
 
-subdir: default-subdirs
+all: $(generated_files) default-all
 
-constants.py: constants.py.in ../Makefile
-	sed -e s,@version@,$(VERSION),g -e s,@changeset@,$(shell hg parents -v | grep -E '^changeset:' | cut -c14-),g $< > $@
-
-rmakeconstants.py: rmakeconstants.py.in
-	rm -f rmakeconstants.py
-	cp rmakeconstants.py.in rmakeconstants.py
-	python -c "from rmake.build.buildjob import jobStates; print 'buildjob = Constants(' + ',\n'.join(str(jobStates).split(',')) + ')'; print ''" >> rmakeconstants.py
-	python -c "from rmake.build.buildtrove import troveStates; print 'buildtrove = Constants(' + ',\n'.join(str(troveStates).split(',')) + ')'" >> rmakeconstants.py
-
-install: all install-subdirs pyfiles-install
-	python -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
-	python -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
-
-dist: default-dist
+install: all pyfiles-install default-install
 
 clean: default-clean
+
+
+constants.py: constants.py.in
+	sed -e s,@version@,$(VERSION),g $< > $@
+
+rmakeconstants.py: rmakeconstants.py.in.py
+	python rmakeconstants.py.in.py
+
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

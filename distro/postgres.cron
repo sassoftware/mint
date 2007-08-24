@@ -1,0 +1,2 @@
+0 0 * * * postgres /usr/bin/vacuumdb -az -U rbuilder >& /dev/null
+

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# tmpwatch for rBuilder appliance
+
+# dump stale cached changesets after two weeks
+/usr/sbin/tmpwatch 336 /srv/rbuilder/changesets
+/usr/sbin/tmpwatch 336 /srv/rbuilder/cscache
+
+# clean outdated cache files on the Conary repositories
+find /srv/rbuilder/repos -maxdepth 2 -name tmp -type d -exec /usr/sbin/tmpwatch 720 {} \;
+
+# clean outdated diffs
+/usr/sbin/tmpwatch 720 /srv/rbuilder/diffcache
+
+# catch any stragglers in rbuilder's tmpdir
+/usr/sbin/tmpwatch 336 /srv/rbuilder/tmp
+
+# clean up proxy contents dir after a month of non-access
+/usr/sbin/tmpwatch 720 /srv/rbuilder/proxy-contents

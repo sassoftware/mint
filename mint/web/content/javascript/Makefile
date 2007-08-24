@@ -14,9 +14,14 @@ generated_files =\
 	jobstatus.js  \
 	buildtemplates.js
 
-dist_files = $(javascript_files) $(generated_files) Makefile
+static_files = $(javascript_files) $(generated_files)
 
-all: $(javascript_files) $(generated_files)
+all: $(generated_files) default-all
+
+install: all static-install default-install
+
+clean: default-clean
+	rm -f $(generated_files)
 
 buildtypes.js: ../../../buildtypes.py
 	python ../../../buildtypes.py --genjs > buildtypes.js
@@ -27,15 +32,6 @@ jobstatus.js: ../../../jobstatus.py
 buildtemplates.js: ../../../buildtemplates.py
 	PYTHONPATH=../../../../ python ../../../buildtemplates.py --genjs > buildtemplates.js
 
-install:
-	mkdir -p $(DESTDIR)$(contentdir)/javascript
-	for f in $(javascript_files) $(generated_files); do \
-		install -m 644 $$f $(DESTDIR)$(contentdir)/javascript/$$f; \
-	done
-
-dist: default-dist
-
-clean: default-clean
 
 include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

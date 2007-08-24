@@ -1,0 +1,2 @@
+*/12 * * * * apache /usr/share/rbuilder/scripts/update-package-index >& /dev/null
+*/30 * * * * apache /usr/share/rbuilder/scripts/update-package-index-external >& /dev/null
