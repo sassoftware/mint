@@ -27,7 +27,7 @@ export httpddir =	$(sysconfdir)/httpd/conf.d
 export maillistdir =	/var/mailman
 export raapluginsdir =	$(libdir)/raa/rPath
 
-SUBDIRS = mint product test scripts raaplugins commands etc doc locales distro
+SUBDIRS = mint $(PRODUCT_SUBDIRS) scripts raaplugins commands doc distro
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

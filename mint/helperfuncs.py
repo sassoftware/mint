@@ -133,10 +133,7 @@ def getVersionForCacheFakeout():
     """ This version string is used in our webpages where we want to 
         force the Javascript or CSS to reload upon updating rBuilder.
         See mint/web/templates/layout.kid for example usage. """
-    if ':' in constants.hgChangeset:
-        return constants.hgChangeset.split(':')[0]
-    else:
-        return '0'
+    return constants.mintVersion
 
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))

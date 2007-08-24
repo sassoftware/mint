@@ -6,17 +6,14 @@
 
 SUBDIRS = css javascript images
 
-dist_files = Makefile
+override STATICDEST = /usr/share/conary/web-common/apps/mint
 
-all: default-subdirs
+all: default-all
 
-install: install-subdirs
+install: default-install
 
-subdirs: default-subdirs
+clean: default-clean
 
-dist: default-dist dist-subdirs
-
-clean: default-clean clean-subdirs
 
 include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

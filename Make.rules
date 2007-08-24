@@ -7,6 +7,7 @@
 PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /usr/lib/conary/python/bin/python2.4)
 PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
+PYDIR = /usr/lib/python$(PYVERSION)/site-packages
 
 ## Default rules
 default-install: install-subdirs
@@ -33,16 +34,16 @@ endif
 
 install-subdirs:
 ifdef SUBDIRS
-	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d install || exit 1; done
+	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d \
+		PYDEST=$(PYDEST)/$$d STATICDEST=$(STATICDEST)/$$d install || exit 1; done
 endif
 
-dist-subdirs:
-ifdef SUBDIRS
-	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d dist || exit 1; done
-endif
+kid-build:
+	for f in $(kid_files); do \
+		kidc -s $$f; \
+	done
 
 
-### TODO: confirm that these are all used
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(raapluginsdir)
 	for f in $(python_files) $(bin_files) $(extra_inst); do \
@@ -50,14 +51,27 @@ raaplugins-install:
 		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`/$$f; \
 	done
 
-
 pyfiles-install:
-	mkdir -p $(DESTDIR)$(mintdir)
-	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname $(DESTDIR)/$(mintdir)/$(DIR)/$$f`; \
-		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)/$$f; \
+	for f in $(python_files); do \
+		install -Dv -m0644 $$f $(DESTDIR)$(PYDIR)/$(PYDEST)/$$f; \
+	done
+
+kid-install:
+	for f in $(kid_files); do \
+		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
+		install -Dv -m0644 $$pyf $(DESTDIR)$(PYDIR)/$(PYDEST)/$$pyf; \
+	done
+
+static-install:
+	for f in $(static_files); do \
+		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
 	done
 
 
+kid-clean:
+	for f in $(kid_files); do \
+		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
+		rm -f $$pyf; \
+	done
 
 # vim: set sts=8 sw=8 noexpandtab filetype=make :

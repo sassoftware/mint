@@ -1,18 +1,11 @@
-css_files = *.css
+static_files = *.css
 
-dist_files = $(css_files) Makefile
+all: default-all
 
-all:
-
-install:
-	mkdir -p $(DESTDIR)$(contentdir)/css
-	for f in $(css_files); do \
-		install -m 644 $$f $(DESTDIR)$(contentdir)/css/$$f; \
-	done
-
-dist: default-dist
+install: static-install default-install
 
 clean: default-clean 
+
 
 include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

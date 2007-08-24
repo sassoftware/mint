@@ -6,17 +6,13 @@
 
 .PHONY: rbuilder.1
 
-dist_files = Makefile rbuilder.1.in
-
 all: default-all rbuilder.1
 
-dist: default-dist
-
 install: all default-install
-	install -D -m 644 rbuilder.1 $(DESTDIR)$(mandir)/man1/rbuilder.1
+	install -D -m 644 rbuilder.1 $(DESTDIR)/usr/share/man/man1/rbuilder.1
 
 clean: default-clean
-	rm rbuilder.1
+	rm -f rbuilder.1
 
 rbuilder.1: rbuilder.1.in
 	sed -e s,@version@,$(SHORTVER),g $< > $@
