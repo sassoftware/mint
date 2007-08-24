@@ -23,7 +23,7 @@ kid_files =			\
 
 all: kid-build default-all
 
-install: kid-install default-install
+install: all kid-install default-install
 
 clean: kid-clean default-clean
 
