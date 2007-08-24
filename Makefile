@@ -2,123 +2,70 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-all: subdirs
+# may be adjusted by recipe (via make commandline)
+DESTDIR =	/
+export PRODUCT =	rbuilder
+export VERSION =	4.0
+export SHORTVER =	$(VERSION)
+export TOPDIR =		$(shell pwd)
+export DISTNAME =	$(PRODUCT)-$(SHORTVER)
+export DISTDIR =	$(TOPDIR)/$(DISTNAME)
+export PREFIX =		/usr
 
-product=rbuilder
-export DESTDIR=
-installdir=
-export VERSION=4.0.0
-export TOPDIR = $(shell pwd)
-export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
-export prefix = /usr
-export sysconfdir = /etc
-export servicedir= /srv
-export confdir = $(servicedir)/rbuilder/
-export datadir = $(prefix)/share
-export mandir = $(datadir)/man
-export contentdir = $(datadir)/conary/web-common/apps/mint/
-export libdir = $(prefix)/lib
-export bindir = $(prefix)/bin
-export localedir = $(datadir)/locale
-export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
-export httpddir = $(sysconfdir)/httpd/conf.d/
-export maillistdir = /var/mailman
-export raapluginsdir = $(libdir)/raa/rPath/
+SUBDIRS = mint scripts raaplugins commands doc distro $(PRODUCT_SUBDIRS)
 
-.PHONY: doc test
+dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 
-SUBDIRS = mint test scripts raaplugins commands etc doc locales
+generated_files = VERSION INSTALL
 
-extra_files = Makefile Make.rules rbuilder.conf httpd.conf
+.PHONY: doc test $(generated_files)
 
-doc_files = NEWS
+## Standard rules
+all: $(generated_files) default-subdirs
 
-dist_files = $(extra_files) $(doc_files)
+dist: dist-archive dist-tarball
 
-generated_files = VERSION *.tar.bz2
+install: all install-subdirs
 
-tarball:
-	tar cjf $(DISTDIR).tar.bz2 `basename $(DISTDIR)`
+doc:
+	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
+
+clean: clean-subdirs default-clean
+
+
+## Tarball generation
+
+dist-archive:
+	@if [ ! -d .hg ]; then \
+		echo "make dist" must be run from a mercurial checkout.; \
+		exit 1; \
+	fi
+	rm -rf $(DISTDIR)
+	hg archive $(DISTDIR)
+	rm $(DISTDIR)/.hgtags
+
+dist-tarball:
+	tar -cjf $(DISTNAME).tar.bz2 $(DISTNAME)/
 	rm -rf $(DISTDIR)
 
-product-dist:
-	make -C product DIR=mint/web dist || exit 1;
 
+## Generated files
+INSTALL: INSTALL.in
+	sed -e s,@version@,$(VERSION),g $< > $@
+
+VERSION:
+	echo "This is rBuilder $(VERSION)" > VERSION
+
+
+## Dist-specific rules
 strip-raa:
 	rm -rf $(DISTDIR)/raaplugins/*
 	echo "all: " > $(DISTDIR)/raaplugins/Makefile
 	echo "install: " >> $(DISTDIR)/raaplugins/Makefile
 
-main-dist: $(dist_files)
-	rm -rf $(DISTDIR)
-	mkdir $(DISTDIR)
-	for d in $(SUBDIRS); do make -C $$d DIR=$$d dist || exit 1; done
-	for f in $(dist_files); do \
-                mkdir -p $(DISTDIR)/`dirname $$f`; \
-                cp -a $$f $(DISTDIR)/$$f; \
-	done;
-
-dist: productqualifier=-online
-dist: main-dist strip-raa tarball version-file
-
-product: main-dist product-dist tarball version-file
-
-dist-build:
-		make -C $(DISTDIR) || exit 1
-
-dist-install:
-		make -C $(DISTDIR) install || exit 1
-
-test:
-	hg archive -t tbz2 -I test $(DISTDIR)-test.tar.bz2
-
-install: all install-subdirs
-	mkdir -p $(DESTDIR)$(datadir)/rbuilder/
-	mkdir -p $(DESTDIR)$(confdir)
-	mkdir -p $(DESTDIR)$(httpddir)
-	install httpd.conf $(DESTDIR)$(httpddir)/rbuilder.conf.dist
-	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
-	python -c "from mint import database; print database.DatabaseTable.schemaVersion" > $(DESTDIR)$(datadir)/rbuilder/schema
-
-doc:
-	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
-
-version-file:
-	if [ -f VERSION ]; then rm -f VERSION; fi
-	echo "This is rBuilder $(VERSION)" > VERSION
-	echo "(Changeset $(shell hg parents --template '#rev#:#node|short#'))" >> VERSION
-
-BASEPATH=mintdoc
-REMOTEPATH=public_html/
-REMOTEHOST=lambchop
-
-sync: doc
-	rsync  -a --rsh="ssh" $(BASEPATH) $(REMOTEHOST):$(REMOTEPATH)
-
-msgcat:
-	tg-admin i18n collect
-
-ccs: product
-	cvc co --dir rbuilder-$(VERSION) rbuilder=products.rpath.com@rpath:rba-devel
-	sed -i 's,version = ".*",version = "$(VERSION)",' \
-		rbuilder-$(VERSION)/rbuilder.recipe;
-	sed -i 's,version = '.*',version = "$(VERSION)",' \
-		rbuilder-$(VERSION)/rbuilder.recipe;
-	sed -i 's,r.addArchive(.*),r.addArchive("rbuilder-$(VERSION).tar.bz2"),' \
-		rbuilder-$(VERSION)/rbuilder.recipe;
-	cp rbuilder-$(VERSION).tar.bz2 rbuilder-$(VERSION)
-	# This is just to prime the cache for the cook from a recipe
-	cvc cook --build-label products.rpath.com@rpath:rba-devel --prep rbuilder=products.rpath.com@rpath:rba-devel
-	cvc cook --build-label products.rpath.com@rpath:rba-devel rbuilder-$(VERSION)/rbuilder.recipe
-	rm -rf rbuilder-$(VERSION)
-
-clean: clean-subdirs default-clean
-
-subdirs: default-subdirs
-
-INSTALL: INSTALL.in
-	sed -e s,@version@,$(VERSION),g $< > $@
+dummy:
+	echo VERSION: $(VERSION)
+	echo DISTDIR: $(DISTDIR)
 
 include Make.rules
 

@@ -1,10 +1,10 @@
-static_files = *.css
+static_files = *.gif *.jpg *.ico
 
 all: default-all
 
 install: static-install default-install
 
-clean: default-clean 
+clean: default-clean
 
 
 include ../../../../Make.rules

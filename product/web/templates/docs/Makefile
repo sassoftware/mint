@@ -5,19 +5,15 @@
 #
 
 kid_files =			\
-	dev-tutorial.kid	\
         feedback.kid            \
-        minihelp.kid            \
+        overview.kid            \
         privacy.kid             \
         tos.kid                 \
-	user-tutorial.kid	\
-	legal.kid		
-
-python_files = __init__.py
+	legal.kid
 
 all: kid-build default-all
 
-install: kid-install pyfiles-install default-install
+install: kid-install default-install
 
 clean: kid-clean default-clean
 

@@ -22,20 +22,15 @@ python_files = \
 	site.py		\
 	webhandler.py	\
 	templatesupport.py \
-	basictroves.py		\
+	basictroves.py	\
 	vmtn.py
 
-extra_dist = Makefile
+all: default-all
 
-dist_files = $(python_files) $(extra_dist)
-
-all: default-all default-subdirs
-
-install: pyfiles-install install-subdirs
-
-dist: default-dist
+install: pyfiles-install default-install
 
 clean: default-clean
+
 
 include ../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

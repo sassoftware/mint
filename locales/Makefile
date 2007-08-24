@@ -4,8 +4,6 @@
 # All Rights Reserved
 #
 
-TOPDIR=..
-
 mo_files = $(wildcard */LC_MESSAGES/*.mo)
 
 po_files = $(wildcard */LC_MESSAGES/*.po)
@@ -28,4 +26,4 @@ dist: default-dist
 
 clean: default-clean
 
-include $(TOPDIR)/Make.rules
+include ../Make.rules

@@ -4,39 +4,20 @@
 # All Rights Reserved
 #
 
-SUBDIRS = content templates datatemplates
+SUBDIRS = web
 
-python_files = basictroves.py
+python_files = \
+	urltypes.py		\
+	usertemplates.py
 
-dist_files = rbuilder.conf httpd.conf
+override PYDEST = mint
 
-all: default-subdirs
+all: default-all
 
-install: install-subdirs pyfiles-install
+install: pyfiles-install default-install
 
-subdirs: default-subdirs
+clean: default-clean
 
-dist: defaultdist dist-subdirs pyfiles-dist
-
-defaultdist: $(dist_files)
-	mkdir -p $(DISTDIR)
-	for f in $(dist_files); do \
-		cp -a $$f $(DISTDIR); \
-	done
-
-pyfiles-dist:
-	mkdir -p $(DISTDIR)/$(DIR)
-	for f in $(python_files); do \
-		cp -a $$f $(DISTDIR)/$(DIR)/$$f; \
-	done
-
-pyfiles-install:
-	mkdir -p $(DESTDIR)$(mintdir)$(DIR)
-	for f in $(python_files); do \
-                cp -a $$f $(DESTDIR)$(mintdir)$(DIR)/$$f; \
-        done
-
-clean: default-clean clean-subdirs
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

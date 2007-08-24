@@ -4,14 +4,12 @@
 # All Rights Reserved
 #
 
-kid_files =			\
-	dev-tutorial.kid	\
-        feedback.kid            \
-        minihelp.kid            \
-        privacy.kid             \
-        tos.kid                 \
-	user-tutorial.kid	\
-	legal.kid		
+SUBDIRS = docs admin
+
+kid_files = \
+	layout.kid	\
+	newProject.kid	\
+	editProject.kid
 
 python_files = __init__.py
 
@@ -22,5 +20,5 @@ install: kid-install pyfiles-install default-install
 clean: kid-clean default-clean
 
 
-include ../../../../Make.rules
+include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

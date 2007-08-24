@@ -5,18 +5,16 @@
 #
 
 kid_files = \
-	joinRequest.kid		\
-	registerNewUser.kid	\
-	validateNewEmail.kid
-
-python_files = __init__.py
+	jobs.kid		\
+	admin.kid		\
+	frontPage.kid
 
 all: kid-build default-all
 
-install: kid-install pyfiles-install default-install
+install: kid-install default-install
 
 clean: kid-clean default-clean
 
 
-include ../../Make.rules
+include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

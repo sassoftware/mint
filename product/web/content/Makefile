@@ -4,9 +4,9 @@
 # All Rights Reserved
 #
 
-SUBDIRS = rPath
+SUBDIRS = css images
 
-override STATICDEST = /usr/lib/raa
+override STATICDEST = /usr/share/conary/web-common/apps/mint
 
 all: default-all
 
@@ -15,5 +15,5 @@ install: default-install
 clean: default-clean
 
 
-include ../Make.rules
+include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

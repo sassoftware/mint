@@ -10,26 +10,14 @@ kid_files =			\
 	setup.kid		\
 	error.kid
 
-python_files =
+python_files = __init__.py
 
-extra_dist = Makefile
+all: kid-build default-all
 
-dist_files = $(extra_dist) $(kid_files) $(python_files)
+install: kid-install pyfiles-install default-install
 
-all: default-all
+clean: kid-clean default-clean
 
-install: kidfiles-install pyfiles-install
-
-kidfiles-install:
-	kidc --strip-dest-dir $$(pwd) $$(pwd)
-	mkdir -p $(DESTDIR)$(mintdir)$(DIR)
-	for f in $(kid_files) *.pyc; do \
-                cp -a $$f $(DESTDIR)$(mintdir)$(DIR)/$$f; \
-        done
-
-dist: default-dist 
-
-clean: default-clean
 
 include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
