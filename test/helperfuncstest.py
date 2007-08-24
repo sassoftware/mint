@@ -69,7 +69,10 @@ class HelperFunctionsTest(unittest.TestCase):
 
         fileList = set()
         for line in newData:
-            if line.startswith('python_files') or line.startswith('kid_files') or line.startswith('script_dist'):
+            if line.startswith('python_files') or \
+                    line.startswith('kid_files') or \
+                    line.startswith('static_files') or \
+                    line.startswith('extra_dist'):
                 fileList |= set(''.join(x.strip().split('\\')) for x in \
                              ' '.join((line.split('=')[1] \
                                        ).split('\t')).split(' ') \
@@ -452,7 +455,7 @@ Much like Powdermilk Biscuits[tm]."""
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
     def testProductUserTemplates(self):
-        sys.path.insert(0, "../product/datatemplates/")
+        sys.path.insert(0, "../product/")
         import usertemplates
         self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
         sys.path.pop(0)

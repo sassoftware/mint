@@ -40,7 +40,7 @@ endif
 
 kid-build:
 	for f in $(kid_files); do \
-		kidc -s $$f; \
+		kidc $$f; \
 	done
 
 

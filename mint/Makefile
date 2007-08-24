@@ -66,6 +66,8 @@ python_files =			\
 	users.py		\
 	usertemplates.py
 
+extra_dist = rmakeconstants.py.in.py
+
 override PYDEST = mint
 
 generated_files = constants.py rmakeconstants.py

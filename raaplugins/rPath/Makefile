@@ -6,6 +6,7 @@
 
 SUBDIRS = rbalog inboundmirror outboundmirror loadmirror mcpconsole
 
+extra_dist = __init__.py
 
 all: default-all
 

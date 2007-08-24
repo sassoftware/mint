@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+extra_dist = schema.in.py
+
 .PHONY: all install
 
 all: default-all schema
