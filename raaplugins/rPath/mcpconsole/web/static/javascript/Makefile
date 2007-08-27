@@ -4,31 +4,13 @@
 # All rights reserved
 #
 
-all: default-all default-subdirs
+static_files = mcpconsole.js
 
-extra_files = Makefile
+all: default-all
 
-content_files = mcpconsole.js
+install: static-install default-install
 
-dist_files = $(python_files) $(extra_files) $(content_files)
-
-generated_files = *.pyo *.pyc
-
-.PHONY: clean dist install
-
-install: all content-install
-
-content-install:
-	mkdir -p $(DESTDIR)$(raapluginsdir)`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"`
-	for f in $(content_files); do \
-		cp -a $$f $(DESTDIR)$(raapluginsdir)`echo "$(DIR)" | sed "s|/raaplugins\/rPath||"` ;\
-	done
-
-dist: default-dist
-
-clean: default-clean clean-subdirs
-
-subdirs: default-subdirs
+clean: default-clean
 
 
 include ../../../../../../Make.rules
