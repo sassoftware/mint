@@ -57,7 +57,10 @@ pyfiles-install:
 
 kid-install:
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
-	cp -v $(kid_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+	for kidfile in $(kid_files); do \
+		pycfile=`echo $$kidfile | sed -e s,kid$$,pyc,` ; \
+		cp -v $$kidfile $$pycfile $(DESTDIR)$(PYDIR)/$(PYDEST)/ ; \
+	done
 
 static-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
