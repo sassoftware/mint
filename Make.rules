@@ -39,39 +39,31 @@ ifdef SUBDIRS
 endif
 
 kid-build:
-	for f in $(kid_files); do \
-		kidc $$f; \
-	done
+	kidc $(kid_files)
 
 
 raaplugins-install:
-	for f in $(python_files); do \
-		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
-	done
-	for f in $(kid_files); do \
-		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
-		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
-		install -Dv -m0644 $$pyf $(DESTDIR)$(STATICDEST)/$$pyf; \
-	done
+	mkdir -p $(DESTDIR)$(STATICDEST)
+ifdef python_files
+	cp -v $(python_files) $(DESTDIR)$(STATICDEST)/
+endif
+ifdef kid_files
+	cp -v $(kid_files) $(DESTDIR)$(STATICDEST)/
+endif
 
 pyfiles-install:
-	for f in $(python_files); do \
-		install -Dv -m0644 $$f $(DESTDIR)$(PYDIR)/$(PYDEST)/$$f; \
-	done
+	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
+	cp -v $(python_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 kid-install:
-	install -Dv -m0644 $(kid_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/; \
+	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
+	cp -v $(kid_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 static-install:
-	for f in $(static_files); do \
-		install -Dv -m0644 $$f $(DESTDIR)$(STATICDEST)/$$f; \
-	done
+	mkdir -p $(DESTDIR)$(STATICDEST)
+	cp -v $(static_files) $(DESTDIR)$(STATICDEST)/
 
 
 kid-clean:
-	for f in $(kid_files); do \
-		pyf=`echo $$f |sed -e s,\.kid$$,\.py,`; \
-		rm -f $$pyf; \
-	done
 
 # vim: set sts=8 sw=8 noexpandtab filetype=make :

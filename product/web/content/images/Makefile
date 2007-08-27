@@ -1,4 +1,4 @@
-static_files = *.gif *.jpg *.ico
+static_files = favicon.ico prodlogo.gif
 
 all: default-all
 

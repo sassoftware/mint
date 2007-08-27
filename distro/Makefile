@@ -29,6 +29,7 @@ install: default-install all
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	# chkconfig overrides
+	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
