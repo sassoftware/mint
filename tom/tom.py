@@ -33,7 +33,7 @@ cfg.read(mint.config.RBUILDER_GENERATED_CONFIG)
 mc = mint.client.MintClient("http://%s:%s@%s.%s/xmlrpc-private/" % (cfg.authUser, cfg.authPass, cfg.hostName, cfg.siteDomainName))
 
 mcpConfig = mcp.client.MCPClientConfig()
-mcpConfig.read('/srv/rbuilder/config/mcp-client.conf')
+mcpConfig.read('/srv/rbuilder/mcp/client-config')
 mcpClient = mcp.client.MCPClient(mcpConfig)
 
 def serializeBuild(buildId):

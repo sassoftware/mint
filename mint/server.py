@@ -4225,10 +4225,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             try:
                 mcpClientCfg.read(os.path.join(self.cfg.dataPath,
-                                               'config', 'mcp-client.conf'))
+                                               'mcp', 'client-config'))
             except CfgEnvironmentError:
-                # If there is no mcp-client.conf, default to localhost
-                mcpClientCfg.queueHost = 'localhost'
+                # If there is no client-config, default to localhost
+                pass
 
             self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
         return self.mcpClient

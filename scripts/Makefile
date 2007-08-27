@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist =				\
+static_files =				\
 	amazon-s3-processor		\
 	check-repository		\
 	deleteproject			\
@@ -19,28 +19,11 @@ script_dist =				\
 	update-top-projects		\
 	set-password		
 
-extra_dist = \
-	Makefile		\
-        backup
-
-SUBDIRS = mailman
-
-dist_files = $(script_dist) $(extra_dist)
+override STATICDEST = /usr/share/rbuilder/scripts
 
 all: default-all
 
-install: install-subdirs
-	mkdir -p $(DESTDIR)/$(datadir)/rbuilder/scripts/
-	for f in $(script_dist); do \
-		install -m 755 $$f $(DESTDIR)/$(datadir)/rbuilder/scripts/$$f; \
-	done;
-
-	mkdir -p $(DESTDIR)/etc/raa/backup.d
-	install -m 755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
-
-	mkdir -p $(DESTDIR)/$(libdir)/rbuilder/
-
-dist: default-dist
+install: static-install default-install
 
 clean: default-clean
 

@@ -60,7 +60,7 @@ class MCPConsole(rAAWebPlugin):
     def getMcpClient(self):
         cfg = mcpclient.MCPClientConfig()
         try:
-            cfg.read('/srv/rbuilder/config/mcp-client.conf')
+            cfg.read('/srv/rbuilder/mcp/client-config')
             c = mcpclient.MCPClient(cfg)
         except:
             exc_cl, exc, bt = sys.exc_info()
