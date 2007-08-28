@@ -497,6 +497,8 @@ class ProjectHandler(WebHandler):
                         n, v, f = parseTroveSpec(str(val))
                         if not n or not v or (f is None):
                             val = build.resolveExtraTrove(n, v, f, searchPath)
+                        else:
+                            val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
