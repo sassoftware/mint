@@ -2583,41 +2583,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         data = self.serializeGroupTrove(groupTroveId, arch)
         return mc.submitJob(data)
 
-        # all code past this exception is for old style jobs and
-        # must be refactored.
-
-        cu = self.db.cursor()
-        cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE groupTroveId=? AND buildId IS NULL""",
-                   groupTroveId)
-        r = cu.fetchall()
-        if len(r) == 0:
-            retval = self.jobs.new(groupTroveId = groupTroveId,
-                                   userId = self.auth.userId,
-                                   status = jobstatus.WAITING,
-                                   statusMessage = self.getJobWaitMessage(0),
-                                   timeSubmitted = time.time(),
-                                   timeStarted = 0,
-                                   timeFinished = 0)
-        else:
-            jobId, status = r[0]
-            if status in (jobstatus.WAITING, jobstatus.RUNNING):
-                raise jobs.DuplicateJob
-            else:
-                # getJobWaitMessage orders by timeStarted, so update must
-                # occur in two steps
-                self.jobs.update(jobId, status = jobstatus.WAITING,
-                                 timeSubmitted = time.time(),
-                                 timeStarted = 0,
-                                 timeFinished = 0,
-                                 owner = None)
-                msg = self.getJobWaitMessage(jobId)
-                self.jobs.update(jobId, statusMessage = msg)
-                retval = jobId
-
-        self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
-        return retval
-
     @typeCheck()
     @requiresAuth
     @private

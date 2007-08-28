@@ -1287,7 +1287,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
                     "group recipe did not reflect proper conflict resolution.")
 
     def testSerializeGroupTrove(self):
-        raise testsuite.SkipTestException("startCookJob NOT YET IMPLEMENTED")
+        #raise testsuite.SkipTestException("startCookJob NOT YET IMPLEMENTED")
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -1296,17 +1296,30 @@ class GroupTroveTestConary(MintRepositoryHelper):
         groupTrove = self.createTestGroupTrove(client, projectId)
 
         addTestTrove(groupTrove, 'test-trove')
+        groupTrove.server._server.mcpClient.post.incoming = \
+                [simplejson.dumps((False, 'test.rpath.local-cook-1-0')),
+                        simplejson.dumps((False, "4.0.0"))]
         job = groupTrove.startCookJob('1#x86')
 
-        serialized = groupTrove.serialize()
+        serialized = groupTrove.serialize('x86')
 
         groupTroveDict = simplejson.loads(serialized)
 
-        assert sorted(groupTroveDict.keys()) == \
-            ['UUID', 'description', 'jobData', 'labelPath', 'project',
-             'recipe', 'recipeName', 'protocolVersion', 'troveItems', 'type',
-             'upstreamVersion']
-        assert groupTroveDict['project'].keys() == ['hostname', 'name', 'label']
+        ref = set(['autoResolve', 'description', 'troveItems', 'data',
+            'upstreamVersion', 'label', 'project', 'removedComponents',
+            'repositoryMap', 'recipeName', 'protocolVersion', 'type',
+            'labelPath', 'UUID'])
+
+        self.failIf(set(groupTroveDict.keys()) != ref,
+                "groupTroveDict does not match expected values: check %s" % \
+                        str(ref.symmetric_difference(groupTroveDict.keys())))
+
+        ref = set(['conaryCfg', 'hostname', 'name', 'label'])
+        res = set(groupTroveDict['project'].keys())
+
+        self.failIf(ref != res,
+                "project entry does not match expected values: check %s" % \
+                        (str(ref.symmetric_difference(res))))
 
 
 if __name__ == "__main__":

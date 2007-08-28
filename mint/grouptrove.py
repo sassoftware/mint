@@ -557,5 +557,5 @@ class GroupTrove(database.TableObject):
     def setRemovedComponents(self, components):
         return self.server.setGroupTroveRemovedComponents(self.id, components)
 
-    def serialize(self):
-        return self.server.serializeGroupTrove(self.id)
+    def serialize(self, arch):
+        return self.server.serializeGroupTrove(self.id, arch)
