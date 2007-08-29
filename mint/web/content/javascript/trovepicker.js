@@ -394,17 +394,12 @@ TrovePicker.prototype.filterFlavors = function(t) {
     if (this.stage == 'flavor') {
         this.displayFlavors();
     }
-        
 }
 
 var allTypes = map(parseInt, keys(buildTypeNames));
 
 var defaultType = INSTALLABLE_ISO;
-if(x86_64)
-    var x86_64Types = [INSTALLABLE_ISO, VMWARE_IMAGE, VMWARE_ESX_IMAGE, RAW_FS_IMAGE, RAW_HD_IMAGE, XEN_OVA, VIRTUAL_PC_IMAGE, VIRTUAL_IRON];
-else
-    var x86_64Types = [INSTALLABLE_ISO, APPLIANCE_ISO];
-
+var x86_64Types = allTypes;
 var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA,
                 AMI];
 
