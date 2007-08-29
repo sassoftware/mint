@@ -6,9 +6,9 @@
 
 extra_dist = schema.in.py
 
-.PHONY: all install
+.PHONY: all install schema custom.cfg
 
-all: default-all schema
+all: default-all schema custom.cfg
 
 install: default-install all
 	# rBuilder config
@@ -21,6 +21,9 @@ install: default-install all
 		> $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
 	# rBuilder misc
 	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
+	# rAPA bits
+	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
+	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	# system dist (data)
 	install -D -m0644 iptables_appliance.conf $(DESTDIR)/etc/firewall
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
@@ -40,6 +43,9 @@ clean: default-clean
 
 schema: schema.in.py
 	python schema.in.py > schema
+
+custom.cfg: custom.cfg.in
+	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
