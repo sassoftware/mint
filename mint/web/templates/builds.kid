@@ -69,7 +69,7 @@ from mint.web.templatesupport import downloadTracker
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
 
-                <div py:omit="True" py:if="isWriter">
+                <div py:omit="True" py:if="False and isWriter"> <!-- disable until build definitions are complete (RBL-1911) -->
                     <h2>Build Sets</h2>
                     <div>
 

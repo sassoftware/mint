@@ -612,6 +612,9 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     @strFields(label = None)
     def buildDefs(self, auth, label):
+        # this is not the method you are looking for (RBL-1911)
+        raise HttpNotFound
+
         buildsXml = self.client.checkoutBuildXml(self.project.id, label)
         builds = buildxml.buildsFromXml(buildsXml, splitDefault = True)
 
