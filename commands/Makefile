@@ -15,7 +15,7 @@ all: default-all
 
 install: default-install
 	for f in $(bin_files); do \
-		install -D -m 755 rbuilder-wrapper $(DESTDIR)/usr/bin/$$f; \
+		install -D -m 755 $$f $(DESTDIR)/usr/bin/$$f; \
 	done
 
 clean: default-clean
