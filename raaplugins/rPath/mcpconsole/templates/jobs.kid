@@ -47,7 +47,7 @@
                         </td>
                     </tr>
                     <tr class="mcpJobDetails mcpJobColor${status}">
-                        <td colspan="4" class="hidden">
+                        <td colspan="4" class="${status != 'Running' and 'hidden' or ''}">
                           <ul class="jobEntry">
                             <li><b>jobId:</b> ${id}</li>
                             <li><b>Status:</b> ${status}</li>
