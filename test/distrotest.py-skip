@@ -378,18 +378,6 @@ class DistroTest(MintRepositoryHelper):
             util.rmtree(d1)
             util.rmtree(d2)
 
-    def testBuildStamp(self):
-        ii = self.getInstallableIso()
-
-        d = tempfile.mkdtemp()
-        try:
-            ii.writeBuildStamp(d)
-            self.verifyContentsInFile(os.path.join(d, ".buildstamp"),
-                "group-dist /testproject." + MINT_PROJECT_DOMAIN + 
-                "@rpl:devel/1.0-1-1 1#x86")
-        finally:
-            util.rmtree(d)
-
     def testLinkRecurse(self):
         d1 = tempfile.mkdtemp()
         d2 = tempfile.mkdtemp()
