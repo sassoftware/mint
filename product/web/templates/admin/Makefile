@@ -5,7 +5,6 @@
 #
 
 kid_files = \
-	jobs.kid		\
 	admin.kid		\
 	frontPage.kid
 

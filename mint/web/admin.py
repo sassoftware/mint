@@ -396,36 +396,6 @@ class AdminHandler(WebHandler):
             regColumns = regColumns, regRows = regRows,
             mirrorColumns = mirrorColumns, mirrorRows = mirrorRows)
 
-    def jobs(self, *args, **kwargs):
-        try:
-            enableToggle = True
-            jobServerStatus = self.client.getJobServerStatus()
-        except:
-            enableToggle = False
-            jobServerStatus = "Job server status is unknown."
-
-        return self._write('admin/jobs', kwargs = kwargs,
-                jobServerStatus = jobServerStatus, enableToggle = enableToggle)
-
-    @strFields(operation = None)
-    def jobserverOperation(self, operation, *args, **kwargs):
-        if operation == 'Start Job Server':
-            op = 'start'
-        elif operation == 'Stop Job Server':
-            op = 'stop'
-        elif operation == 'Restart Job Server':
-            op = 'restart'
-        else:
-            raise HttpNotFound
-
-        try:
-            pipeFD = os.popen("sudo /sbin/service multi-jobserver %s" % op)
-            self._setInfo(pipeFD.read())
-            pipeFD.close()
-        except:
-            self._setInfo("Failed to %s the job server" % op)
-        return self.jobs(*args, **kwargs)
-
     def selections(self, *args, **kwargs):
         return self._write('admin/selections',
                            selectionData=self.client.getFrontPageSelection())

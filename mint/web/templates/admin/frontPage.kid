@@ -20,7 +20,6 @@
                 the menu to the left, you can:</p>
 
                 <ul>
-                    <li>View currently-running and recently-completed jobs</li>
                     <li>View ${cfg.productName} usage reports</li>
                     <li>Create ${cfg.productName} user accounts</li>
                     <li>Send email to all registered ${cfg.productName} users</li>

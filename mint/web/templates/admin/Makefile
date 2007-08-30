@@ -14,7 +14,6 @@ kid_files =			\
 	report.kid		\
 	outbound.kid		\
 	newUser.kid		\
-	jobs.kid		\
 	admin.kid	\
 	spotlight.kid		\
 	preview.kid	\
