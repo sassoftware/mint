@@ -354,7 +354,7 @@ function processListActiveJobs(aReq) {
 
 // RPC calls ----------------------------------------------------------------
 
-function getBuildStatus(buildId) {
+function getBuildStatus(buildId, hasFiles) {
     var req = new JsonRpcRequest("jsonrpc/", "getBuildStatus");
     req.setAuth(getCookieValue("pysid"));
 
@@ -368,12 +368,15 @@ function getBuildStatus(buildId) {
                 oldBuildStatus = buildStatus.status;
             }
             if (buildStatus.status < STATUS_FINISHED) {
-                callLater(buildStatusRefreshTime / 1000, partial(getBuildStatus, buildId));
+                callLater(buildStatusRefreshTime / 1000, partial(getBuildStatus, buildId, hasFiles));
             } else {
                 logDebug("oldBuildStatus: " + oldBuildStatus);
                 if (oldBuildStatus < STATUS_FINISHED) {
                     reloadCallback();
                 }
+            }
+            if(buildStatus == STATUS_NOJOB && hasFiles) {
+                buildStatus = STATUS_FINISHED;
             }
             oldBuildStatus = buildStatus.status;
         }

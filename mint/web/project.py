@@ -579,14 +579,14 @@ class ProjectHandler(WebHandler):
         build = self.client.getBuild(id)
         extraFlags = builds.getExtraFlags(build.troveFlavor)
         buildInProgress = False
-        # FIXME: refactor all this to not use a job object...
-        # MCP_WORK
+
         if auth.authorized:
             buildInProgress = \
                 (build.getStatus()['status'] <= jobstatus.RUNNING)
         try:
             trove, version, flavor = build.getTrove()
             files = build.getFiles()
+
             fileIds = list(set([x['fileId'] for x in files]))
             amiId = build.getDataValue('amiId', validate = False)
             amiS3Manifest = build.getDataValue('amiS3Manifest', validate=False)

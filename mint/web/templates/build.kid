@@ -23,7 +23,7 @@ from mint import constants
                     addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
                 ]]>
                 <![CDATA[
-                    addLoadEvent(function() {getBuildStatus(${build.id})});
+                    addLoadEvent(function() {getBuildStatus(${build.id}, ${int(len(files))})});
                 ]]>
             </div>
         </script>
