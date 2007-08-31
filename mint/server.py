@@ -3232,51 +3232,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.groupTroves.cleanup()
         return True
 
-    def _resolveRedirects(self, groupTroveId, trvName, trvVersion, trvFlavor):
-        # get the repo object
-        projectId = self.getGroupTrove(groupTroveId)['projectId']
-        project = projects.Project(self, projectId)
-
-        # external projects follow what's in the labels table,
-        # internal projects follow the configuration:
-        cfg = project.getConaryConfig()
-
-        res = {}
-        for arch, flavor in stockFlavors.items():
-            flavor = deps.ThawFlavor(arch)
-
-            cfg.flavor = [flavor]
-            cfg.buildFlavor = flavor
-
-            cfg.root = cfg.dbPath = ":memory:"
-            cfg.initializeFlavors()
-
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-            if os.path.exists(conarycfgFile):
-                cfg.read(conarycfgFile)
-
-            cclient = conaryclient.ConaryClient(cfg)
-            repos = cclient.getRepos()
-
-            try:
-                trvList = repos.findTrove(\
-                    None, (trvName, trvVersion, deps.parseFlavor(trvFlavor)),
-                    cfg.buildFlavor, bestFlavor=True)
-
-                res[arch] = []
-                for lName, lVer, lFlav in trvList:
-                    trv = repos.getTrove(lName, lVer, lFlav)
-
-                    if trv.isRedirect():
-                        uJob = cclient.updateChangeSet(\
-                            [(lName, (None, None),
-                              (lVer, lFlav), True)], resolveDeps = False)[0]
-                        res[arch].extend([(x[0], str(x[2][0]), str(x[2][1])) \
-                                    for x in uJob.getJobs()[0]])
-            except TroveNotFound:
-                pass
-        return res
-
     @typeCheck(int)
     @private
     @requiresAuth
