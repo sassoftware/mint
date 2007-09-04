@@ -620,7 +620,7 @@ class AdminHandler(WebHandler):
             users = sp.usermanagement.UserInterface.users()
             if 'serverNames' not in users['all_groups']:
                 sp.usermanagement.UserInterface.addGroup('serverNames', 
-                                                     ['serverNames'])
+                                                     ['mirror'])
             # Recreate the user if it arleady exists
             for x in users['items']:
                 if x['username'] == server_user:
