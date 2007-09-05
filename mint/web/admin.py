@@ -491,7 +491,7 @@ class AdminHandler(WebHandler):
         return self.spotlight()
 
     @intFields(itemId=None)
-    @strFields(title=None)
+    @strFields(title='')
     def deleteSpotlightItem(self, itemId, title, *args, **kwargs):
         message = 'Delete Appliance Spotlight Entry "%s"?' % title
         noLink = os.path.join(self.cfg.basePath, 'admin', 'spotlight') 
