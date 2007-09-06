@@ -361,6 +361,10 @@ function getBuildStatus(buildId, hasFiles) {
     var processGetBuildStatus = function(aReq) {
         logDebug("[JSON] response: ", aReq.responseText);
         buildStatus = evalJSONRequest(aReq);
+        if(buildStatus.status == STATUS_NOJOB && hasFiles) {
+            buildStatus.status = STATUS_FINISHED;
+        }
+
         updateStatusArea(buildStatus);
 
         if (buildStatus != null) {
@@ -374,9 +378,6 @@ function getBuildStatus(buildId, hasFiles) {
                 if (oldBuildStatus < STATUS_FINISHED) {
                     reloadCallback();
                 }
-            }
-            if(buildStatus == STATUS_NOJOB && hasFiles) {
-                buildStatus = STATUS_FINISHED;
             }
             oldBuildStatus = buildStatus.status;
         }
