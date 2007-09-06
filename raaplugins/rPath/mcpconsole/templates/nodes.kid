@@ -47,15 +47,9 @@
                                <dd>${str(data['jobId'])}</dd>
                        </dl>
                        <form action="stopSlave" method="POST">
-                            <input type="hidden" name="slaveId" value="${slaveId}"/>
-                            <input type="hidden" name="delayed" value="0"/>
-                            <button type="submit">Kill</button>
-                        </form>
-                       <form action="stopSlave" method="POST">
-                            <input type="hidden" name="slaveId" value="${slaveId}"/>
-                            <input type="hidden" name="delayed" value="1"/>
-                            <button type="submit">Stop</button>
-                        </form>
+                           <input type="hidden" name="slaveId" value="${slaveId}"/>
+                           <button type="submit">Kill</button>
+                       </form>
                    </li>
                    <div py:if="info.get('limit')" strip="true">
                        <li py:for="x in range(info['limit'] - len(info['slaves']))" class="jobSlave offlineSlave"/>

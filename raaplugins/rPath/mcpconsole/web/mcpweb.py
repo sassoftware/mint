@@ -19,11 +19,6 @@ import mint.jobstatus
 
 log = logging.getLogger('raa.web')
 
-def print_error():
-    exc_cl, exc, bt = sys.exc_info()
-    log.error(''.join(traceback.format_tb(bt)))
-    log.error(str(exc))
-
 def marshallMessages(func):
     def wrapper(self, *args, **kwargs):
         res = func(self, *args, **kwargs)
@@ -54,8 +49,6 @@ class MCPConsole(rAAWebPlugin):
         rAAWebPlugin.__init__(self, *args, **kwargs)
         self.messages = []
         self.errors = []
-        self.c = None
-        cherrypy.server.on_stop_thread_list.append(self.disconnect)
 
     def getMcpClient(self):
         cfg = mcpclient.MCPClientConfig()
@@ -69,25 +62,14 @@ class MCPConsole(rAAWebPlugin):
             c = None
         return c
 
-    def disconnect(self):
-        if self.c:
-            try:
-                self.c.disconnect()
-            except:
-                print_error()
-        self.c = None
-
-    #mcpConsoleLogPath = '/srv/rbuilder/logs/mcp-console.log'
-
     @raa.expose(html="rPath.mcpconsole.templates.jobs")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     @marshallMessages
     def index(self):
-        if not self.c:
-            self.c = self.getMcpClient()
-        if True or self.c:
+        mcpClient = self.getMcpClient()
+        if mcpClient:
             try:
-                jobStatus = self.c.jobStatus()
+                jobStatus = mcpClient.jobStatus()
 
                 # sort helpers
                 sortOrder = ['-', '1', '2', '0', '3', '4']
@@ -102,95 +84,110 @@ class MCPConsole(rAAWebPlugin):
                 running = [x for x in jobs if x[1]['status'][0] <  mint.jobstatus.FINISHED]
                 stopped = [x for x in jobs if x[1]['status'][0] >= mint.jobstatus.FINISHED][0:10]
                 jobs = running + stopped
-                
+
                 return {'jobStatus' : jobs, 'disabled' : False}
-            except:
-                print_error()
-                self.disconnect()
+            finally:
+                mcpClient.disconnect()
         return {'disabled' : True}
 
     @raa.expose(html="rPath.mcpconsole.templates.nodes")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     @marshallMessages
     def nodes(self):
-        if not self.c:
-            self.c = self.getMcpClient()
-        if self.c:
+        mcpClient = self.getMcpClient()
+        if mcpClient:
             try:
-                nodeStatus = self.c.nodeStatus()
+                nodeStatus = mcpClient.nodeStatus()
                 return {'nodeStatus' : nodeStatus, 'disabled' : False}
-            except:
-                print_error()
-                self.disconnect()
+            finally:
+                mcpClient.disconnect()
         return {'disabled' : True}
 
     # rpc interface for javascript
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def getJobStatus(self):
-        while not self.c:
-            self.c = self.getMcpClient()
-            if not self.c:
+        mcpClient = None
+        while not mcpClient:
+            mcpClient = self.getMcpClient()
+            if not mcpClient:
                 time.sleep(1)
             else:
                 try:
-                    return self.c.jobStatus()
-                except:
-                    print_error()
-                    self.disconnect()
+                    return mcpClient.jobStatus()
+                finally:
+                    mcpClient.disconnect()
 
     # rpc interface for javascript
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def getNodeStatus(self):
-        while not self.c:
-            self.c = self.getMcpClient()
-            if not self.c:
+        while not mcpClient:
+            mcpClient = self.getMcpClient()
+            if not mcpClient:
                 time.sleep(1)
             else:
                 try:
-                    return self.c.nodeStatus()
-                except:
-                    print_error()
-                    self.disconnect()
+                    return mcpClient.nodeStatus()
+                finally:
+                    mcpClient.disconnect()
 
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def killJob(self, jobId):
-        try:
-            self.c.stopJob(jobId)
-        except Exception, e:
-            self.errors.append(str(e))
-            self.disconnect()
+        mcpClient = self.getMcpClient()
+        if mcpClient:
+            try:
+                try:
+                    mcpClient.stopJob(jobId)
+                except Exception, e:
+                    self.errors.append(str(e))
+                else:
+                    self.messages.append('Sent kill request for job: %s' % jobId)
+            finally:
+                mcpClient.disconnect()
         else:
-            self.messages.append('Sent kill request for job: %s' % jobId)
+            self.errors.append("Could not connect to MCP")
         raise cherrypy.HTTPRedirect('index', 302)
 
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
-    def stopSlave(self, slaveId, delayed = '1'):
-        delayed = bool(int(delayed))
-        try:
-            self.c.stopSlave(slaveId, delayed)
-        except Exception, e:
-            self.errors.append(str(e))
-            self.disconnect()
+    def stopSlave(self, slaveId):
+        mcpClient = self.getMcpClient()
+        if mcpClient:
+            try:
+                try:
+                    mcpClient.stopSlave(slaveId)
+                except Exception, e:
+                    self.errors.append(str(e))
+                else:
+                    self.messages.append('Sent kill request for %s' %  slaveId)
+            finally:
+                mcpClient.disconnect()
         else:
-            self.messages.append('Sent %s kill request for %s' % \
-                                     (delayed and 'deferred' or 'immediate',
-                                      slaveId))
+            self.errors.append("Could not connect to MCP")
         raise cherrypy.HTTPRedirect('nodes', 302)
 
     @raa.expose()
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def setSlaveLimit(self, masterId, limit):
-        limit = int(limit)
-        try:
-            self.c.setSlaveLimit(masterId, limit)
-        except Exception, e:
-            self.errors.append(str(e))
-            self.disconnect()
+        if limit.isdigit():
+            limit = max(0, int(limit))
+            mcpClient = self.getMcpClient()
+            if mcpClient:
+                try:
+                    try:
+                        mcpClient.setSlaveLimit(masterId, limit)
+                    except Exception, e:
+                        self.errors.append(str(e))
+                    else:
+                        self.messages.append('Sent slave limit for %s to %d' % \
+                                                 (masterId, limit))
+                finally:
+                    mcpClient.disconnect()
+            else:
+                self.errors.append("Could not connect to MCP")
         else:
-            self.messages.append('Sent slave limit for %s to %d' % \
-                                     (masterId, limit))
+            self.errors.append("Limit must be an integer")
         raise cherrypy.HTTPRedirect('nodes', 302)
+
