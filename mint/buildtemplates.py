@@ -101,7 +101,7 @@ class swapSize(IntegerOption):
 
 class vmMemory(IntegerOption):
     default = 256
-    prompt = 'How much memory should VMware use when running this image?'
+    prompt = 'How much memory should be used when running this image?'
 
 class vmSnapshots(BooleanOption):
     default = False
