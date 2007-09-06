@@ -148,8 +148,9 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
 
 
-                    <div class="formgroupTitle" style="margin-top: 24px;">Filesystems</div>
-                    <div class="formgroup" style="text-align: center;">
+                    <?python # disable filesystem editor until RBL-1911 is resolved ?>
+                    <div py:if="False" class="formgroupTitle" style="margin-top: 24px;">Filesystems</div>
+                    <div py:if="False" class="formgroup" style="text-align: center;">
                         <table class="fsEditorTable" style="padding-left: 8px;" >
                             <thead><tr>
                                 <td>Mount Point</td>
