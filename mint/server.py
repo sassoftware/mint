@@ -3358,6 +3358,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, groupTrove.projectId)
 
         cc = project.getConaryConfig()
+        cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
+        cc.readEntitlementDirectory()
 
         # Ignore conaryProxy set by getConaryConfig; it's bound
         # to be localhost, as getConaryConfig() generates
@@ -3368,13 +3370,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
-        cfgData = cfgBuffer.getvalue()
+        cfgData = cfgBuffer.getvalue().split("\n")
 
-        mc = self._getMcpClient()
+        allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
+        cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
 
         if self.cfg.createConaryRcFile:
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
                 (self.cfg.siteHost, self.cfg.basePath)
+
+        mc = self._getMcpClient()
 
         r = {}
         r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
