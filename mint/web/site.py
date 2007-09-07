@@ -425,8 +425,9 @@ class SiteHandler(WebHandler):
     @listFields(str, projects=[])
     @strFields(keydata = '')
     def uploadKey(self, auth, projects, keydata):
+        projects = sorted((x for x in self.projectList if not x[0].external), key = lambda x: x[0].getName())
         if self.projectList:
-            return self._write("uploadKey", kwargs={})
+            return self._write("uploadKey", kwargs={}, projects = projects)
         else:
             return self._write("error", shortError="Not a project member",
                 error = "You may not upload a key as you are not a member of any projects. "

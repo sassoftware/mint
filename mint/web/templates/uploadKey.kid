@@ -28,7 +28,7 @@ from mint import userlevels
                         <th><em class="required">Project or Projects:</em></th>
                         <td>
                              <select class="wide" multiple="multiple" size="10" name="projects">
-                                <option py:for="project, level in [(x[0], x[1]) for x in projectList if x[1] in userlevels.WRITERS]"
+                                <option py:for="project, level in [(x[0], x[1]) for x in projects if x[1] in userlevels.WRITERS]"
                                     py:content="project.getName()"
                                     value="${project.getHostname()}"/>
                              </select>
