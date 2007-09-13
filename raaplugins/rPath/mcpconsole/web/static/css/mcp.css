@@ -71,5 +71,5 @@ body {
 .mcpJobColorBuilt td {    background-color: #259; color: white; }
 .mcpJobColorFinished td { background-color: #cec; color: black; }
 .mcpJobColorError td {    background-color: #ecc; color: black; }
+.mcpJobColorKilled td {   background-color: #ddd; color: black; }
 .mcpJobColorNo td {       background-color: #ddd; color: black; } /* no job */
-
