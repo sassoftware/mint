@@ -245,7 +245,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
                 if name in buildOptions:
                     val = buildOptions[name]
                     if val != "NONE":
-                        n, v, f = parseTroveSpec(str(val))
+                        n, v, f = cmdline.parseTroveSpec(str(val))
                         val = resolveExtraTrove(cc, v, f, searchPath)
                 else:
                     # not specified at all, resolve it ourselves from just the name
