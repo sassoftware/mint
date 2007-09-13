@@ -6,13 +6,16 @@
 
 extra_dist = schema.in.py
 
-.PHONY: all install schema custom.cfg
+generated_files = schema jobslave_set custom.cfg
 
-all: default-all schema custom.cfg
+.PHONY: all install $(generated_files)
+
+
+all: default-all $(generated_files)
 
 install: default-install all
 	# rBuilder config
-	install -D -m0644 conaryrc $(DESTDIR)/srv/rbuilder/config/conaryrc
+	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
 	echo '# This file will be overwritten by rBuilder first-time setup' \
@@ -37,15 +40,26 @@ install: default-install all
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
+	# freeze jobslave set
+	[ -f jobslave_set] && install -D -m0644 jobslave_set $(DESTDIR)/srv/rbuilder/mcp/config.d/jobslave_set
 
 clean: default-clean
-	rm -f schema
 
 schema: schema.in.py
 	python schema.in.py > schema
 
 custom.cfg: custom.cfg.in
 	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
+
+jobslave_set:
+	if [ -n "$$JOBSLAVE_SET_LABEL" ]; then \
+		echo -n 'slaveSetVersion ' >jobslave_set ; \
+		conary rq --all-flavors \
+			group-jobslave-set=$$JOBSLAVE_SET_LABEL \
+			|cut -d = -f 2 |cut -d - -f 1 \
+			>>jobslave_set ; \
+	fi
+
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

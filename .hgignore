@@ -7,7 +7,12 @@
 ^mint/constants\.py$
 ^mint/rmakeconstants\.py$
 ^mint/web/content/javascript/(buildtypes|buildtemplates|jobstatus)\.js$
+
+^doc/rbuilder.1$
+
 ^distro/schema$
+^distro/custom.cfg$
+^distro/jobslave_set$
 
 ^\.times
 ^test/\.(times|coverage)$

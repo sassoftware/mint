@@ -19,5 +19,9 @@ install: default-install
 	done
 
 clean: default-clean
+	rm -f $(TOPDIR)/bin/rbuilder-wrapper
+	for f in $(bin_files); do \
+		rm -f $(TOPDIR)/bin/$$f ; \
+	done
 
 include $(TOPDIR)/Make.rules
