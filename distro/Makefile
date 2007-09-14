@@ -57,7 +57,7 @@ jobslave_set:
 		conary rq --all-flavors --full-versions \
 			group-jobslave-set=$$JOBSLAVE_SET_LABEL \
 			|tail -n 1 \
-			|perl -pe 's{^.*/(.*?)-.*$}{$1}' \
+			|perl -pe 's{^.*/(.*?)-.*$$}{$$1}' \
 			>>jobslave_set ; \
 	fi
 
