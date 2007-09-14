@@ -54,9 +54,10 @@ custom.cfg: custom.cfg.in
 jobslave_set:
 	if [ -n "$$JOBSLAVE_SET_LABEL" ]; then \
 		echo -n 'slaveSetVersion ' >jobslave_set ; \
-		conary rq --all-flavors \
+		conary rq --all-flavors --full-versions \
 			group-jobslave-set=$$JOBSLAVE_SET_LABEL \
-			|cut -d = -f 2 |cut -d - -f 1 \
+			|tail -n 1 \
+			|perl -pe 's{^.*/(.*?)-.*$}{$1}' \
 			>>jobslave_set ; \
 	fi
 
