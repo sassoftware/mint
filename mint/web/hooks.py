@@ -108,7 +108,7 @@ def getRepository(projectName, repName, dbName, cfg,
     nscfg.serverName = [repName]
     nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
     nscfg.logFile = cfg.reposLog and \
-                    os.path.join(cfg.dataPath, 'logs', 'repository.log') \
+                    os.path.join(cfg.logPath, 'repository.log') \
                     or None
     nscfg.repositoryMap = getRepositoryMap(cfg)
 

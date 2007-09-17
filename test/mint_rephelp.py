@@ -310,6 +310,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.reposContentsDir = " ".join([self.reposDir + "/contents1/%s/", self.reposDir + "/contents2/%s/"])
 
         cfg.dataPath = self.reposDir
+        cfg.logPath = self.reposDir + '/logs'
         cfg.authDbPath = None
         cfg.imagesPath = self.reposDir + '/images/'
         cfg.authUser = 'mintauth'
@@ -350,6 +351,8 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
+
+        util.mkdirChain(cfg.logPath)
 
         cfg.reposLog = False
 

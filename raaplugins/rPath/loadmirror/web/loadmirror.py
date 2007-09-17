@@ -60,7 +60,7 @@ class LoadMirror(rAAWebPlugin):
     displayName = _("Pre-load Mirrored Repositories")
 
     tableClass = LoadMirrorTable
-    preloadLogPath = '/srv/rbuilder/logs/load-mirror.log'
+    preloadLogPath = '/var/log/rbuilder/load-mirror.log'
 
     @turbogears.expose(html="rPath.loadmirror.index")
     @turbogears.identity.require(turbogears.identity.not_anonymous())

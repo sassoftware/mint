@@ -35,7 +35,7 @@ class PackageIndexer(scriptlibrary.SingletonScript):
         self.cfg = config.MintConfig()
         self.cfg.read(self.cfgPath)
         if self.logFileName:
-            self.logPath = os.path.join(self.cfg.dataPath, 'logs', self.logFileName)
+            self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
         # throwaway server to update database tables if needed (RBL-1434)
         # note: need to allow a mintserver to be passed in to satify the 
         # testsuite, which already has a properly configured mint server

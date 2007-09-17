@@ -69,6 +69,7 @@ class MintConfig(ConfigFile):
     authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
+    logPath                 = os.path.join(os.path.sep, 'var', 'log', 'rbuilder')
     reposPath               = None
     reposContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'repos', '%s', 'contents', '')
     dbPath                  = None

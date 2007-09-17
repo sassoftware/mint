@@ -204,8 +204,6 @@ class Profile(AbstractProfile):
         Opens the log file if it isn't already open.
         """
         if not Profile._logfile:
-            if 'logs' not in os.listdir(self.cfg.dataPath):
-                os.mkdir(self._logPath())
             Profile._logfile = open(self._logfileName(), 'a')
 
     def _closeLog(self):
@@ -237,7 +235,7 @@ class Profile(AbstractProfile):
         """
         Returns the current log path to be used by profiling.
         """
-        return os.path.join(self.cfg.dataPath, 'logs')
+        return self.cfg.logPath
 
     def _logfileName(self):
         """

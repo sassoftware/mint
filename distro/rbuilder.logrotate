@@ -1,9 +1,9 @@
-/srv/rbuilder/logs/package-index.log
-/srv/rbuilder/logs/package-index-external.log
-/srv/rbuilder/logs/mirror-inbound.log
-/srv/rbuilder/logs/mirror-outbound.log
-/srv/rbuilder/logs/load-mirror.log
-/srv/rbuilder/logs/profiling {
+/var/log/rbuilder/package-index.log
+/var/log/rbuilder/package-index-external.log
+/var/log/rbuilder/mirror-inbound.log
+/var/log/rbuilder/mirror-outbound.log
+/var/log/rbuilder/load-mirror.log
+/var/log/rbuilder/profiling {
     missingok
     notifempty
     compress
@@ -11,7 +11,7 @@
     size 10M
 }
 
-/srv/rbuilder/logs/repository.log {
+/var/log/rbuilder/repository.log {
     rotate 12
     weekly
     missingok

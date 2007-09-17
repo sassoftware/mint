@@ -89,11 +89,14 @@ def setup():
     if not os.environ.has_key('CONARY_PATH'):
 	print "please set CONARY_PATH"
 	sys.exit(1)
-    paths = (os.environ['MINT_PATH'], os.environ['MINT_PATH'] + '/test',
-             os.environ['CONARY_PATH'],
-             os.path.normpath(os.environ['CONARY_PATH'] + "/../rmake"),
-             os.path.normpath(os.environ['CONARY_PATH'] + "/../conary-test"),
-             os.path.normpath(os.environ['CONARY_PATH'] + "/../mcp"),)
+    
+    mintTestPath    = os.path.join(mintPath, 'test')
+    conaryPath      = os.getenv('CONARY_PATH')
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test'))
+    rmakePath       = os.getenv('RMAKE_PATH', os.path.join(conaryPath, '..', 'rmake'))
+    mcpPath         = os.getenv('MCP_PATH', os.path.join(conaryPath, '..', 'mcp'))
+    paths = (mintPath, mintTestPath, conaryPath, conaryTestPath, rmakePath, mcpPath)
+
     pythonPath = os.getenv('PYTHONPATH') or ""
     for p in reversed(paths):
         if p in sys.path:
