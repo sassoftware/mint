@@ -77,7 +77,7 @@ generated_files = constants.py rmakeconstants.py
 
 all: $(generated_files) default-all
 
-install: all pyfiles-install default-install
+install: pyfiles-install default-install
 
 clean: default-clean
 

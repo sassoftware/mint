@@ -28,7 +28,7 @@ all: $(generated_files) default-subdirs
 
 dist: dist-archive dist-tarball
 
-install: all install-subdirs
+install: install-subdirs
 
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint

@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+.SILENT:
+
 PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /usr/lib/conary/python/bin/python2.4)
 PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
@@ -11,11 +13,13 @@ PYDIR = /usr/lib/python$(PYVERSION)/site-packages
 
 ## Default rules
 default-install: install-subdirs
+	echo Installing in $(DIR)
 
 default-all: default-subdirs
+	echo Building in $(DIR)
 
 default-clean: clean-subdirs
-	rm -f *~ .#* *.pyo *.pyc *.orig *.o *.rej $(generated_files)
+	rm -f *~ .#* .kiderror *.pyo *.pyc *.orig *.o *.rej $(generated_files)
 
 default-test:
 	$(TESTSUITE) *.py
@@ -24,7 +28,9 @@ default-test:
 ## Subdirectory rules
 default-subdirs:
 ifdef SUBDIRS
-	for d in $(SUBDIRS); do make -C $$d DIR=$$d || exit 1; done
+	for d in $(SUBDIRS); do \
+		make -C $$d DIR=$(DIR)/$$d || exit 1; \
+	done
 endif
 
 clean-subdirs:
@@ -34,37 +40,42 @@ endif
 
 install-subdirs:
 ifdef SUBDIRS
-	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d \
-		PYDEST=$(PYDEST)/$$d STATICDEST=$(STATICDEST)/$$d install || exit 1; done
+	for d in $(SUBDIRS); do \
+		make -C $$d DIR=$(DIR)/$$d \
+			PYDEST=$(PYDEST)/$$d STATICDEST=$(STATICDEST)/$$d \
+			install || exit 1; \
+	done
 endif
 
 kid-build:
-	kidc $(kid_files)
+	printf "%10s    %s\n" KIDC "$(kid_files)"
+	kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
+	rm .kiderror
 
 
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
 ifdef python_files
-	cp -v $(python_files) $(DESTDIR)$(STATICDEST)/
+	cp $(python_files) $(DESTDIR)$(STATICDEST)/
 endif
 ifdef kid_files
-	cp -v $(kid_files) $(DESTDIR)$(STATICDEST)/
+	cp $(kid_files) $(DESTDIR)$(STATICDEST)/
 endif
 
 pyfiles-install:
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
-	cp -v $(python_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+	cp $(python_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 kid-install:
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
 	for kidfile in $(kid_files); do \
 		pycfile=`echo $$kidfile | sed -e s,kid$$,pyc,` ; \
-		cp -v $$kidfile $$pycfile $(DESTDIR)$(PYDIR)/$(PYDEST)/ ; \
+		cp $$kidfile $$pycfile $(DESTDIR)$(PYDIR)/$(PYDEST)/ ; \
 	done
 
 static-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
-	cp -v $(static_files) $(DESTDIR)$(STATICDEST)/
+	cp $(static_files) $(DESTDIR)$(STATICDEST)/
 
 
 kid-clean:

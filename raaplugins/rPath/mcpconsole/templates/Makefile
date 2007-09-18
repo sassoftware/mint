@@ -10,7 +10,7 @@ kid_files = jobs.kid nodes.kid
 
 all: kid-build default-all
 
-install: all raaplugins-install default-install
+install: raaplugins-install default-install
 
 clean: kid-clean default-clean
 

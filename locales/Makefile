@@ -16,7 +16,7 @@ all:
 	$(cd ..; tg-admin i18n collect)
 	$(cd ..; tg-admin i18n compile)
 
-install: all
+install:
 	for f in $(mo_files); do \
 		mkdir -p `dirname $(DESTDIR)$(localedir)/$$f`; \
 		install -m755 $$f $(DESTDIR)$(localedir)/$$f; \

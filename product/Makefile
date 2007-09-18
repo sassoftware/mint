@@ -6,7 +6,7 @@
 
 SUBDIRS = web
 
-python_files = \
+python_files =			\
 	urltypes.py		\
 	usertemplates.py
 

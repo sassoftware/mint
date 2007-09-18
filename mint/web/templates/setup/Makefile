@@ -14,7 +14,7 @@ python_files = __init__.py
 
 all: kid-build default-all
 
-install: all kid-install pyfiles-install default-install
+install: kid-install pyfiles-install default-install
 
 clean: kid-clean default-clean
 

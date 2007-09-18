@@ -8,7 +8,7 @@
 
 all: default-all rbuilder.1
 
-install: all default-install
+install: default-install
 	install -D -m 644 rbuilder.1 $(DESTDIR)/usr/share/man/man1/rbuilder.1
 
 clean: default-clean

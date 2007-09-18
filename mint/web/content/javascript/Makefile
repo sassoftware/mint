@@ -18,7 +18,7 @@ static_files = $(javascript_files) $(generated_files)
 
 all: $(generated_files) default-all
 
-install: all static-install default-install
+install: static-install default-install
 
 clean: default-clean
 	rm -f $(generated_files)
