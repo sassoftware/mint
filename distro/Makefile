@@ -40,7 +40,7 @@ install: default-install all
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 	# freeze jobslave set
-	if [ -f jobslave_set ]; then install -D -m0644 jobslave_set $(DESTDIR)/srv/rbuilder/mcp/config.d/jobslave_set; fi
+	if [ -f jobslave_set ]; then install -D -m0644 jobslave_set $(DESTDIR)/srv/rbuilder/mcp/config.d/05_jobslave_set; fi
 
 clean: default-clean
 
