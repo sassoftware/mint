@@ -13,7 +13,7 @@ generated_files = schema jobslave_set custom.cfg
 
 all: default-all $(generated_files)
 
-install: default-install all
+install: default-install
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf

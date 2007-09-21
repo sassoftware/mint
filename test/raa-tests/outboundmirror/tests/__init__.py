@@ -69,7 +69,7 @@ class OutboundMirrorTest(raatest.rAATest):
         sio = StringIO.StringIO()
         os.system = lambda st: sio.write(st)
         self.callWithIdent(ibm.doTask, res['schedId'], 1)
-        self.assertEquals(sio.getvalue(), 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-outbound http://None:None@localhost/xmlrpc-private/ 2>> /srv/rbuilder/logs/mirror-outbound.log"')
+        self.assertEquals(sio.getvalue(), 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-outbound http://None:None@localhost/xmlrpc-private/ 2>> /var/log/rbuilder/mirror-outbound.log"')
 
 
     def test_hourly(self):
