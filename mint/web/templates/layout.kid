@@ -43,6 +43,7 @@ onload = "javascript:;"
 
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
+        <div py:if="bulletin" id="bulletin">${XML(bulletin)}</div>
         <div id="main">
             <a name="top" />
             <div id="top">

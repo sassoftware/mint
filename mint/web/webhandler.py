@@ -51,6 +51,13 @@ class WebHandler(object):
         context.update(values)
         context.update({'cacheFakeoutVersion': helperfuncs.getVersionForCacheFakeout()})
 
+        # Check for a bulletin file
+        if os.path.exists(self.cfg.bulletinPath):
+            bulletin = open(self.cfg.bulletinPath).read()
+        else:
+            bulletin = ''
+        context.update({'bulletin': bulletin})
+
         # write out the template
         t = template.Template(**context)
 

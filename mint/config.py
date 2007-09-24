@@ -192,6 +192,10 @@ class MintConfig(ConfigFile):
                                "repositories be signed by an OpenPGP key.")
     localAddrs              = (cfgtypes.CfgList(cfgtypes.CfgString), ['127.0.0.1'])
 
+    # bulletin file
+    bulletinPath            = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'config', 'bulletin.txt')
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

@@ -1526,3 +1526,22 @@ table.buildDefs tr.dialogButtons td button {
 }
 
 .invisible { display: none; }
+
+#bulletin {
+    width: auto;
+    background-color: #FFFFCC;
+    border-bottom: 2px solid #999999;
+    text-align: center;
+    margin: 0 -8px !important;
+    padding: 0.5em 0;
+    font-size: smaller;
+}
+
+#bulletin a,
+#bulletin a:hover,
+#bulletin a:visited,
+#bulletin a:active {
+    color: inherit;
+    text-decoration: underline;
+    background-color: transparent;
+}
