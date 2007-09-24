@@ -901,7 +901,7 @@ class MintServer(object):
         if self.auth.admin:
             return True
         repositoryDB = self.projects.reposDB.getRepositoryDB( \
-            self._translateProjectFQDN(project.getFQDN()))
+            self._translateProjectFQDN(project.getFQDN()), db = self.db)
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         cu = db.cursor()
         # id's guaranteed by schema definition.
