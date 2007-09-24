@@ -1732,6 +1732,40 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         x.parse(self.fetch('%s/pwCheck?user=' %url).body)
         assert not x.validPassword()
 
+    def testBulletin(self):
+        bulletinContent = """rBuilder Online will be down for maintenance"""
+        XMLbulletinContent = """<div>rBuilder Online will be down for maintenance, see <a href="http://blogs.conary.com/">Conary Blogs</a> for announcements</div>"""
+
+        # gotta be logged in, otherwise frontPage caching will kill us
+        self.quickMintUser('foouser','foopass')
+        self.webLogin('foouser', 'foopass')
+
+        # Sanity check
+        self.assertCode('/', code=[200])
+
+        # Make sure bulletin text not there
+        page = self.fetch('/')
+        self.failIf(bulletinContent in page.body)
+
+        # Put bulletin text in a file
+        bf = open(self.mintCfg.bulletinPath, 'w')
+        bf.write(bulletinContent)
+        bf.close()
+
+        # Make sure it shows up on the home page
+        page = self.fetch('/')
+        self.assertContent('/', content=bulletinContent)
+
+        # Remove file; make sure it goes away
+        os.unlink(self.mintCfg.bulletinPath)
+        page = self.fetch('/')
+        self.failIf(bulletinContent in page.body)
+
+        # Put XML bulletin text in a file and make sure it works
+        bf = open(self.mintCfg.bulletinPath, 'w')
+        bf.write(XMLbulletinContent)
+        bf.close()
+        self.assertContent('/', content=XMLbulletinContent)
 
 if __name__ == "__main__":
     testsuite.main()

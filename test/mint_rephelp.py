@@ -356,6 +356,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.reposLog = False
 
+        cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
+
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         self.mintCfg = cfg
