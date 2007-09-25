@@ -630,7 +630,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
 
     @fixtures.fixture('Full')
-    def testSetBuildAmiDataSafe(self, db, data):
+    def testSetBuildAMIDataSafe(self, db, data):
         ownerClient = self.getClient('owner')
         nobodyClient = self.getClient('anonymous')
 
@@ -639,16 +639,16 @@ class BuildTest(fixtures.FixturedUnitTest):
                            RDT_STRING, False)
 
         self.assertRaises(PermissionDenied,
-            nobodyClient.server._server.setBuildAmiDataSafe, build.id,
-            'thisisthewrongsecret', 'bogusAmiId', 'bogusManifestName')
+            nobodyClient.server._server.setBuildAMIDataSafe, build.id,
+            'thisisthewrongsecret', 'bogusAMIId', 'bogusManifestName')
 
-        nobodyClient.setBuildAmiDataSafe(build.id,
-            'thisisasecretstring', 'bogusAmiId', 'bogusManifestName')
+        nobodyClient.setBuildAMIDataSafe(build.id,
+            'thisisasecretstring', 'bogusAMIId', 'bogusManifestName')
 
         build.refresh()
 
         self.failUnlessEqual(build.getDataDict(),
-                {'amiId': 'bogusAmiId',
+                {'amiId': 'bogusAMIId',
                     'enumArg': '2',
                     'boolArg': False,
                     'mirrorUrl': '',

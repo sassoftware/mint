@@ -2865,7 +2865,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return ret
 
     @typeCheck(int, str, str, str)
-    def setBuildAmiDataSafe(self, buildId, outputToken, amiId, amiManifestName):
+    def setBuildAMIDataSafe(self, buildId, outputToken, amiId, amiManifestName):
         """
         This call validates the outputToken as above.
         """
