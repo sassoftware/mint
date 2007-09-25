@@ -15,7 +15,7 @@ import string
 import sys
 import time
 import tempfile
-import fcntl
+#import fcntl
 import urllib
 from urlparse import urlparse
 import StringIO
@@ -4344,9 +4344,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             global tables
             if not tables or alwaysReload:
                 # use file locks to ensure we have a multi-process mutex
-                schemaLock = open( \
-                    os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
-                fcntl.lockf(schemaLock.fileno(), fcntl.LOCK_EX)
+                # XXX this is slated to be killed off real soon now;
+                # until then, DO NOT TRY TO USE IN PROCESS MIGRATION
+                #schemaLock = open( \
+                #    os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
+                #fcntl.lockf(schemaLock.fileno(), fcntl.LOCK_EX)
 
                 self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
@@ -4372,11 +4374,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except:
             #An error occurred during db creation or upgrading
             self.db.rollback()
-            if schemaLock:
-                schemaLock.close()
+            #if schemaLock:
+            #    schemaLock.close()
             raise
-        else:
-            if schemaLock:
-                schemaLock.close()
+        #else:
+        #    if schemaLock:
+        #        schemaLock.close()
 
         self.newsCache.refresh()

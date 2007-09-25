@@ -137,7 +137,9 @@ class DatabaseTable(object):
         # created in the upgrade procedures.
 
         if self.upToDate:
-            self.db.loadSchema()
+            # XXX This is just plain silly, really, so we're killing it off
+            #     for now.
+            #self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
             missingIndexes = set(self.indexes.keys()) - indexes
 
