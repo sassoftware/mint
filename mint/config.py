@@ -196,6 +196,11 @@ class MintConfig(ConfigFile):
     bulletinPath            = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'config', 'bulletin.txt')
 
+    # colo workarounds
+    injectUserAuth          = (cfgtypes.CfgBool, True,
+                                'Inject user authentication into proxy '
+                                'requests')
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
