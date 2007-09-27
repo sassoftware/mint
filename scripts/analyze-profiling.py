@@ -5,11 +5,11 @@ import time
 calldict = {}
 firstline = True
 
-if not os.path.exists('/srv/rbuilder/logs/profiling'):
+if not os.path.exists('/var/logs/rbuilder/profiling'):
     print "Profiling data file does not exist."
     os.exit(1)
 
-f = file('/srv/rbuilder/logs/profiling','r')
+f = file('/var/logs/rbuilder/profiling','r')
 
 for l in f:
     if l.startswith('#'):

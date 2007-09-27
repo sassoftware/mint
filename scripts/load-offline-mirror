@@ -16,7 +16,7 @@ if os.getuid():
     sys.exit(1)
 
 scriptlibrary.setupScriptLogger(consoleLevel = logging.INFO,
-    logfile = os.path.join(cfg.dataPath, 'logs', 'load-mirror.log'))
+    logfile = os.path.join(cfg.logPath, 'load-mirror.log'))
 
 source = "/mnt/mirror/"
 statusFile = os.path.join(cfg.dataPath, 'run', 'load-status.txt')

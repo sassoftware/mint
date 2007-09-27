@@ -62,7 +62,7 @@ class AmazonS3Processor(scriptlibrary.SingletonScript):
     # setup logging
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
-    logPath = os.path.join(cfg.dataPath, 'logs', 'amazon-s3-processor.log')
+    logPath = os.path.join(cfg.logPath, 'amazon-s3-processor.log')
     del cfg
 
     def _hashIt(self, path):

@@ -15,7 +15,7 @@ class EC2Terminator(scriptlibrary.SingletonScript):
 
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
-    logPath = os.path.join(cfg.dataPath, 'logs', 'ec2-terminator.log')
+    logPath = os.path.join(cfg.logPath, 'ec2-terminator.log')
     del cfg
 
     def handle_args(self):
