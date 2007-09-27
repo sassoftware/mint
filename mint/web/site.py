@@ -1164,7 +1164,7 @@ class SiteHandler(WebHandler):
         if method != "PUT":
             raise HttpMethodNotAllowed
 
-        buildId, fileName = self.req.uri.split("/")[2:4]
+        buildId, fileName = self.req.uri.split("/")[-2:]
         build = self.client.getBuild(int(buildId))
         project = self.client.getProject(build.projectId)
 
