@@ -8,6 +8,7 @@ static_files =				\
 	amazon-s3-processor		\
 	check-repository		\
 	deleteproject			\
+	ec2-terminator			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
