@@ -180,7 +180,7 @@ def conaryHandler(req, cfg, pathInfo):
         # group builder)
         requireSigs = False
 
-    global db, conaryDb, altConaryDbs
+    global db, conaryDb
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
@@ -213,15 +213,11 @@ def conaryHandler(req, cfg, pathInfo):
             reposDb = None
         else:
             try:
-                if not isDefault:
-                    reposDb = altReposDbs.get('reposDBPath')
-                    if not reposDb:
-                        reposDb = dbstore.connect(reposDBPath, reposDBDriver)
-                        altReposDbs['reposDBPath'] = reposDb
+                if not conaryDb or not isDefault:
+                    reposDb = dbstore.connect(reposDBPath, reposDBDriver)
+                    if isDefault:
+                        conaryDb = reposDb
                 else:
-                    if not conaryDb:
-                        conaryDb = dbstore.connect(reposDBPath, reposDBDriver)
-
                     if conaryDb.reopen():
                         req.log_error("reopened a dead database connection in hooks.py")
 
@@ -230,7 +226,6 @@ def conaryHandler(req, cfg, pathInfo):
                     if reposDBDriver == 'postgresql' and \
                        conaryDb.database != database:
                         # use is not implemented for pg
-                        conaryDb.close()
                         reposDb = dbstore.connect(reposDBPath, reposDBDriver)
                         conaryDb = reposDb
                     elif reposDBDriver == 'mysql' and \
@@ -569,7 +564,6 @@ def handler(req):
     return ret
 
 conaryDb = None
-altConaryDbs = {}
 repositories = {}
 shim_repositories = {}
 proxy_repository = None
