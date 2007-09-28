@@ -135,40 +135,16 @@ class FrontPageSelectionsTable(database.KeyedTable):
 def calculateTopProjects(db, daysBack = 7):
     cu = db.cursor()
 
-    if db.driver == "sqlite":
-        # brute-force method since sqlite doesn't
-        # handle subselects the way MySQL can
-        counts = {}
-        cu.execute("SELECT urlId FROM UrlDownloads WHERE timeDownloaded > ?",
-            toDatabaseTimestamp(time.time() - (daysBack * 86400)))
-        for x in cu.fetchall():
-            # fetch projectId
-            cu.execute("""SELECT projectId FROM Builds
-                            JOIN BuildFiles USING(buildId)
-                            JOIN BuildFilesUrlsMap USING(fileId)
-                            JOIN FilesUrls USING (urlId)
-                          WHERE urlId = ?""", x[0])
-            projectId = cu.fetchone()
-            if not projectId:
-                continue
-
-            c = counts.setdefault(projectId[0], [0])
-            c[0] += 1
-
-        counts = counts.items()
-        counts.sort(key = lambda x: x[1][0], reverse = True)
-
-        return [x[0] for x in counts]
-    else:
-        cu.execute("""SELECT COUNT(urlId) AS downloads, urlId AS outerUrlId,
-            (SELECT DISTINCT projectid From Builds
-                JOIN Buildfiles USING(buildId)
-                JOIN BuildFilesUrlsMap USING(fileId)
-                JOIN FilesUrls USING (urlId) WHERE urlId=outerUrlId) AS projectId
-                FROM UrlDownloads WHERE timeDownloaded > ?
-                GROUP BY projectId
-                ORDER BY downloads DESC""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
-        return [int(x['projectId']) for x in cu.fetchall_dict() if x['projectId'] != None]
+    cu.execute("""SELECT COUNT(UrlDownloads.urlId) AS downloads,
+          Builds.projectId AS projectId
+          FROM UrlDownloads JOIN FilesUrls USING (urlId)
+                            JOIN BuildFilesUrlsMap USING (urlId)
+                            JOIN BuildFiles USING (fileId)
+                            JOIN Builds USING (buildId)
+          WHERE timeDownloaded > ?
+          GROUP BY projectId
+          ORDER BY downloads DESC""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
+    return [int(x[1]) for x in cu.fetchall() if x[1] != None]
 
 class UpdateProjectLists(scriptlibrary.SingletonScript):
     db = None
