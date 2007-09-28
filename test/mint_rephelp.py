@@ -364,7 +364,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
 
 class MintServerCache(rephelp.ServerCache):
-    def getServerClass(self, envname):
+    def getServerClass(self, envname, useSSL):
         name = "mint." + MINT_DOMAIN
         server = None
         serverDir = os.environ.get('CONARY_PATH') + '/conary/server'
