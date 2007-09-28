@@ -479,8 +479,9 @@ class ProjectHandler(WebHandler):
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
         template = build.getDataTemplate()
-        searchPath = [build.getTroveVersion().branch().label(),
-            versions.Label(basictroves.baseConaryLabel)]
+        searchPath = [build.getTroveVersion().branch().label()]
+        fallbackPath = [versions.Label(basictroves.baseConaryLabel)]
+        fallbackTroves = basictroves.fallbackTroves
 
         for name in list(template):
             try:
@@ -495,15 +496,19 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
+                        thisSearchPath = searchPath + fallbackPath
                         if not n or not v or (f is None):
-                            val = build.resolveExtraTrove(n, v, f, searchPath)
+                            val = build.resolveExtraTrove(n, v, f, thisSearchPath)
                         else:
                             val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
                 elif template[name][0] == RDT_TROVE:
-                    val = build.resolveExtraTrove(name, searchPath = searchPath)
+                    thisSearchPath = list(searchPath)
+                    if name in fallbackTroves:
+                        thisSearchPath += fallbackPath
+                    val = build.resolveExtraTrove(name, searchPath = thisSearchPath)
                 else:
                     val = template[name][1]
             if val:
