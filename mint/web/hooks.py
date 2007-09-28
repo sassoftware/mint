@@ -302,7 +302,7 @@ def conaryHandler(req, cfg, pathInfo):
                         repo.cfg.entitlement.addEntitlement(ent[0], ent[2], entClass = ent[1])
 
             # inject the users we know about
-            if cfg.injectUserAuthentication:
+            if cfg.injectUserAuth:
                 repo.cfg.user = conarycfg.UserInformation()
                 _updateUserSet(db, proxy_repository.cfg)
         else:
