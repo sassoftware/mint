@@ -2,7 +2,7 @@
 
 <?python
 from mint import buildtypes
-from mint.buildtypes import typeNames
+from mint.buildtypes import typeNames, buildTypeExtra
 from mint.web.templatesupport import shortTroveSpec
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 
@@ -81,7 +81,9 @@ allowNone = ['anaconda-custom', 'media-template']
                                 name="buildtype" value="${key}" 
                                 onclick="javascript:onBuildTypeChange('formgroup_${key}');"
                                 type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
-                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
+                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}</label>
+                            <div py:if="buildTypeExtra.has_key(key)" class="clearleft" style="font-size: smaller;margin-left: 6em">${buildTypeExtra[key]}</div>
+                            <div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
 

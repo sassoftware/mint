@@ -129,6 +129,11 @@ typeNamesMarketing = {
     APPLIANCE:          "Appliance",
 }
 
+buildTypeExtra = {
+    APPLIANCE_ISO:      "This build type will not work without special "
+                        "anaconda templates. Its use is not recommended.",
+}
+
 # sizes are listed in bytes...
 discSizes = {
     'CD: 650 MB'  : '681574400',
