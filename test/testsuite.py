@@ -20,6 +20,7 @@ import unittest
 import __builtin__
 
 testPath = None
+archivePath = None
 
 #from pychecker import checker
 
@@ -59,6 +60,7 @@ def setup():
     if _setupPath:
         return _setupPath
     global testPath
+    global archivePath
 
     if not os.environ.has_key('MCP_PATH'):
         print "please set MCP_PATH"
@@ -70,18 +72,21 @@ def setup():
     conaryPath      = os.getenv('CONARY_PATH')
     conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test'))
     mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
+    mcpTestPath     = os.getenv('MCP_TEST_PATH',    '../../mcp/test')
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   '../../jobslave')
     mintPath        = os.getenv('MINT_PATH',        '..')
     mintTestPath    = os.getenv('MINT_TEST_PATH',   '.')
 
-    sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath, mcpPath,
+    sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath, mcpPath, mcpTestPath,
         jobslavePath, conaryPath, conaryTestPath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath, CONARY_TEST_PATH=conaryTestPath,
-        MCP_PATH=mcpPath, MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
+        MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
+        MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
         JOB_SLAVE_PATH=jobslavePath, PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
     testPath = testhelp.getTestPath()
+    archivePath = testPath + '/' + "archive"
 
     global conaryDir
     conaryDir = os.environ['CONARY_PATH']
