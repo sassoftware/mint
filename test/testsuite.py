@@ -19,7 +19,6 @@ import types
 import unittest
 import __builtin__
 
-archivePath = None
 testPath = None
 
 #from pychecker import checker
@@ -60,62 +59,29 @@ def setup():
     if _setupPath:
         return _setupPath
     global testPath
-    global archivePath
 
-    # set default CONARY_POLICY_PATH if it was not set.
-    conaryPolicy = os.getenv('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
-    os.environ['CONARY_POLICY_PATH'] = conaryPolicy
-
-    # set default MCP_PATH if it was not set.
-    # assume mcp code tree is in same dir as mint code tree if all else fails
-    parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
-    mcpPath = os.getenv('MCP_PATH', os.path.join(os.path.split(parDir)[0],
-                                                 'mcp' ))
-    os.environ['MCP_PATH'] = mcpPath
-    if mcpPath not in sys.path:
-        sys.path.insert(0, mcpPath)
-    mcpTestPath = os.path.join(mcpPath, 'test')
-    if mcpTestPath not in sys.path:
-        sys.path.insert(0, mcpTestPath)
-
-    # set default MINT_PATH, if it was not set.
-    mintPath = os.getenv('MINT_PATH', parDir)
-    os.environ['MINT_PATH'] = mintPath
-
-    if mintPath not in sys.path:
-        sys.path.insert(0, mintPath)
-    # end setting default MINT_PATH/CONARY_POLICY_PATH
-
+    if not os.environ.has_key('MCP_PATH'):
+        print "please set MCP_PATH"
+        sys.exit(1)
     if not os.environ.has_key('CONARY_PATH'):
-	print "please set CONARY_PATH"
-	sys.exit(1)
-    
-    mintTestPath    = os.path.join(mintPath, 'test')
+        print "please set CONARY_PATH"
+        sys.exit(1)
+
     conaryPath      = os.getenv('CONARY_PATH')
     conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test'))
-    rmakePath       = os.getenv('RMAKE_PATH', os.path.join(conaryPath, '..', 'rmake'))
-    mcpPath         = os.getenv('MCP_PATH', os.path.join(conaryPath, '..', 'mcp'))
-    paths = (mintPath, mintTestPath, conaryPath, conaryTestPath, rmakePath, mcpPath)
+    mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
+    jobslavePath    = os.getenv('JOB_SLAVE_PATH',   '../../jobslave')
+    mintPath        = os.getenv('MINT_PATH',        '..')
+    mintTestPath    = os.getenv('MINT_TEST_PATH',   '.')
 
-    pythonPath = os.getenv('PYTHONPATH') or ""
-    for p in reversed(paths):
-        if p in sys.path:
-            sys.path.remove(p)
-        sys.path.insert(0, p)
-    for p in paths:
-        if p not in pythonPath:
-            pythonPath = os.pathsep.join((pythonPath, p))
-    os.environ['PYTHONPATH'] = pythonPath
+    sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath, mcpPath,
+        jobslavePath, conaryPath, conaryTestPath)] + sys.path
+    os.environ.update(dict(CONARY_PATH=conaryPath, CONARY_TEST_PATH=conaryTestPath,
+        MCP_PATH=mcpPath, MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
+        JOB_SLAVE_PATH=jobslavePath, PYTHONPATH=(':'.join(sys.path))))
 
-    if isIndividual():
-        serverDir = '/tmp/conary-server'
-        if os.path.exists(serverDir) and not os.path.access(serverDir, os.W_OK):
-            serverDir = serverDir + '-' + pwd.getpwuid(os.getuid())[0]
-        os.environ['SERVER_FILE_PATH'] = serverDir
     import testhelp
     testPath = testhelp.getTestPath()
-    archivePath = testPath + '/' + "archive"
-    parent = os.path.dirname(testPath)
 
     global conaryDir
     conaryDir = os.environ['CONARY_PATH']
