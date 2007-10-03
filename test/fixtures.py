@@ -486,7 +486,10 @@ class SqliteFixtureCache(FixtureCache):
         return testCfg, data
 
     def delRepos(self):
-        util.rmtree(self.testDataPath)
+        try:
+            util.rmtree(self.testDataPath)
+        except AttributeError:
+            pass
 
 
 class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
