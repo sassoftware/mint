@@ -201,6 +201,10 @@ class MintConfig(ConfigFile):
                                 'Inject user authentication into proxy '
                                 'requests')
 
+    # whether or not to generate a scrambled password for the guided tour
+    # currently this is set to false (see WEB-354) until further notice
+    ec2GenerateTourPassword = (cfgtypes.CfgBool, False)
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

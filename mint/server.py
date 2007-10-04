@@ -4229,9 +4229,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
            raise ec2.TooManyAMIInstancesPerIP()
 
         # generate the rAA Password
-        from mint.users import newPassword
-        raaPassword = newPassword(length=8)
-        userData = "[rpath]\nrap-password=%s" % raaPassword
+        if self.cfg.ec2GenerateTourPassword:
+            from mint.users import newPassword
+            raaPassword = newPassword(length=8)
+            userData = "[rpath]\nrap-password=%s" % raaPassword
+        else:
+            raaPassword = 'password'
+            userData = None
 
         # attempt to boot it up
         ec2Wrapper = ec2.EC2Wrapper(self.cfg)
