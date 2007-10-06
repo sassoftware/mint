@@ -6,7 +6,7 @@
 
 SUBDIRS = rPath
 
-override STATICDEST = /usr/lib/raa
+override STATICDEST = $(LIBDIR)/raa
 
 all: default-all
 

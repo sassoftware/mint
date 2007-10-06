@@ -11,9 +11,15 @@ export TOPDIR =		$(shell pwd)
 export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
+export LIBDIR =		$(PREFIX)/lib
 
 # clear this (from commandline) to build rBO
 PRODUCT_SUBDIRS = product
+
+# from here on shouldn't need overriding
+export PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /usr/lib/conary/python/bin/python2.4)
+export PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
+export PYDIR = $(LIBDIR)/python$(PYVERSION)/site-packages
 
 SUBDIRS = mint scripts raaplugins commands doc distro $(PRODUCT_SUBDIRS)
 
