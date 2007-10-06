@@ -13,7 +13,7 @@ testsuite.setup()
 
 import tempfile
 
-import rephelp, sigtest
+import rephelp
 import mint_rephelp
 
 from conary import versions
