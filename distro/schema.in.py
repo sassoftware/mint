@@ -2,6 +2,6 @@
 import sys
 sys.path.append('..')
 
-from mint import database
-print database.DatabaseTable.schemaVersion
+from mint import schema
+print schema.VERSION
 
