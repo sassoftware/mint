@@ -10,17 +10,7 @@ from mint import database
 class ApplianceSpotlightTable(database.KeyedTable):
     name = 'ApplianceSpotlight'
     key = 'itemId'
-    createSQL = """CREATE TABLE ApplianceSpotlight (
-                    itemId          %(PRIMARYKEY)s,
-                    title           CHAR(255),
-                    text            CHAR(255),
-                    link            CHAR(255),
-                    logo            CHAR(255),
-                    showArchive     INT,
-                    startDate       INT,
-                    endDate         INT
-                );
-                """
+
     fields = ['itemId', 'title', 'text', 'link', 'logo', 'showArchive', 
               'startDate', 'endDate']
 

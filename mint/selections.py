@@ -16,20 +16,8 @@ from mint.helperfuncs import toDatabaseTimestamp
 # of each project in rBuilder's database:
 class LatestCommitTable(database.DatabaseTable):
     name = "LatestCommit"
+
     fields = ['projectId', 'commitTime']
-
-    createSQL = """
-        CREATE TABLE LatestCommit (
-            projectId   INTEGER NOT NULL,
-            commitTime  INTEGER NOT NULL,
-            CONSTRAINT LatestCommit_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                    ON DELETE CASCADE
-        )"""
-
-    indexes = {'LatestCommitTimestamp':
-        'CREATE INDEX LatestCommitTimestamp ON LatestCommit(projectId, commitTime)'}
-
 
     def calculate(self):
         cu = self.db.cursor()
@@ -48,15 +36,6 @@ class RankedProjectListTable(database.DatabaseTable):
     def __init__(self, db):
         if self.name is None:
             raise NotImplementedError
-
-        self.createSQL = """
-            CREATE TABLE %s (
-                projectId   INTEGER NOT NULL,
-                rank        INTEGER NOT NULL,
-                CONSTRAINT %s_projectId_fk
-                    FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                        ON DELETE CASCADE
-            )""" % (self.name, self.name)
 
         return database.DatabaseTable.__init__(self, db)
 
@@ -100,13 +79,7 @@ class PopularProjectsTable(RankedProjectListTable):
 class FrontPageSelectionsTable(database.KeyedTable):
     name = 'FrontPageSelections'
     key = 'itemId'
-    createSQL = """CREATE TABLE FrontPageSelections (
-                    itemId          %(PRIMARYKEY)s,
-                    name            CHAR(255),
-                    link            CHAR(255),
-                    rank            INT
-                );
-                """
+
     fields = ['itemId', 'name', 'link', 'rank' ] 
 
     def __init__(self, db, cfg):

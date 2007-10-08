@@ -81,12 +81,6 @@ class AuthRepoError(MintError):
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
     key = 'userId'
-    createSQL = """
-                CREATE TABLE Confirmations (
-                    userId          %(PRIMARYKEY)s,
-                    timeRequested   INT,
-                    confirmation    CHAR(255)
-                )"""
     fields = ['userId', 'timeRequested', 'confirmation']
 
 def digMX(hostname):
@@ -100,29 +94,9 @@ class UsersTable(database.KeyedTable):
     name = 'Users'
     key = 'userId'
 
-    createSQL = """
-                CREATE TABLE Users (
-                    userId          %(PRIMARYKEY)s,
-                    username        CHAR(128) UNIQUE,
-                    fullName        CHAR(128),
-                    salt            %(BINARY4)s NOT NULL,
-                    passwd          %(BINARY254)s NOT NULL,
-                    email           CHAR(128),
-                    displayEmail    TEXT,
-                    timeCreated     DOUBLE,
-                    timeAccessed    DOUBLE,
-                    active          INT,
-                    blurb           TEXT
-                    )"""
-
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'blurb']
-
-    indexes = {"UsersUsernameIdx": """CREATE INDEX UsersUsernameIdx
-                                          ON Users(username)""",
-               "UsersActiveIdx":   """CREATE INDEX UsersActiveIdx
-                                          ON Users(username, active)"""}
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -135,34 +109,6 @@ class UsersTable(database.KeyedTable):
         self._userAuth = repository.netrepos.netauth.UserAuthorization(
             db = None, pwCheckUrl = self.cfg.externalPasswordURL,
             cacheTimeout = self.cfg.authCacheTimeout)
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 8:
-                # add the necessary columns to the Users table
-                cu = self.db.cursor()
-                aCu = self.authDb.cursor()
-                # add the mintauth user
-                for userName in ('mintauth',):
-                    cu.execute("""INSERT INTO Users (username, active)
-                                  VALUES('%s', 1)""" % userName)
-                if self.cfg.dbDriver == 'sqlite':
-                    cu.execute("ALTER TABLE Users ADD COLUMN salt BINARY")
-                    cu.execute("ALTER TABLE Users ADD COLUMN passwd STR")
-                else:
-                    cu.execute("""ALTER TABLE Users ADD COLUMN salt BINARY(4)""")
-                    cu.execute("""ALTER TABLE Users ADD COLUMN passwd VARCHAR(255)""")
-
-                cu = self.db.cursor()
-                # now go get each user's salt and pass from the authRepo
-                aCu.execute('SELECT user, salt, password FROM Users')
-                for username, salt, passwd in aCu.fetchall():
-                    cu.execute("""UPDATE Users SET salt=?, passwd=?
-                                      WHERE username=?""",
-                               salt, passwd, username)
-            return dbversion >= 8
-        return True
 
     def changePassword(self, username, password):
         salt, passwd = self._mungePassword(password)
@@ -558,17 +504,6 @@ class User(database.TableObject):
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId", "level"]
-    indexes = {'ProjectUsersIdx': "CREATE UNIQUE INDEX ProjectUsersIdx ON ProjectUsers(projectId, userId)",
-               'ProjectUsersProjectIdx': "CREATE INDEX ProjectUsersProjectIdx ON ProjectUsers(projectId)",
-               'ProjectUsersUserIdx': "CREATE INDEX ProjectUsersUserIdx ON ProjectUsers(userId)",
-              }
-
-    createSQL = """
-                CREATE TABLE ProjectUsers (
-                    projectId   INT,
-                    userId      INT,
-                    level       INT
-                );"""
 
     def getOwnersByProjectName(self, projectname):
         cu = self.db.cursor()
@@ -694,14 +629,6 @@ class Authorization(object):
 class UserGroupsTable(database.KeyedTable):
     name = "UserGroups"
     key = "userGroupId"
-
-    createSQL = """CREATE TABLE UserGroups (
-                       userGroupId     %(PRIMARYKEY)s,
-                       userGroup       CHAR(128) UNIQUE)"""
-
-    indexes = {"UserGroupsIndex" : """CREATE UNIQUE INDEX UserGroupsIndex
-                                         ON UserGroups(userGroupId)"""}
-
     fields = ['userGroupId', 'userGroup']
 
     def __init__(self, db, cfg):
@@ -714,21 +641,6 @@ class UserGroupsTable(database.KeyedTable):
                           WHERE userGroup='public'""")
         if not cu.fetchall():
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 9:
-                # this schema version lineal is used to stock the
-                # user groups table from the authrepo
-                cu = self.db.cursor()
-                aCu = self.authDb.cursor()
-                aCu.execute('SELECT * FROM UserGroups')
-                for userId, userName in aCu.fetchall():
-                    cu.execute("""INSERT INTO UserGroups (userGroup)
-                                      VALUES('%s')""" % userName)
-            return dbversion >= 9
-        return True
 
     def getMintAdminId(self):
         """
@@ -748,23 +660,6 @@ class UserGroupsTable(database.KeyedTable):
 
 class UserGroupMembersTable(database.DatabaseTable):
     name = "UserGroupMembers"
-
-    createSQL = """CREATE TABLE UserGroupMembers (
-                        userGroupId     INTEGER,
-                        userId          INTEGER)"""
-
-    indexes = {"UserGroupMembers_userId_fk":
-                   """CREATE INDEX UserGroupMembers_userId_fk
-                          FOREIGN KEY (userId) REFERENCES Users(userId)
-                          ON DELETE CASCADE ON UPDATE CASCADE""",
-               "UserGroupMembers_userGroupId_fk":
-                   """CREATE INDEX UserGroupMembers_userGroupId_fk
-                          FOREIGN KEY (userGroupId) REFERENCES
-                          UserGroups(userGroupId)
-                          ON DELETE RESTRICT ON UPDATE CASCADE"""}
-
-    indexes = {}
-
     fields = ['userGroupId', 'userId']
 
     def __init__(self, db, cfg):
@@ -772,54 +667,6 @@ class UserGroupMembersTable(database.DatabaseTable):
         if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 10:
-                # this schema version lineal is used to stock the
-                # user group members table from the authrepo. it must happen
-                # subsequent to user groups table being stocked.
-                cu = self.db.cursor()
-                aCu = self.authDb.cursor()
-                cu.execute("DELETE FROM UserGroupMembers")
-                aCu.execute("""SELECT Users.user, UserGroups.usergroup
-                                   FROM UserGroupMembers
-                                   LEFT JOIN Users
-                                       ON Users.userId=UserGroupMembers.userId
-                                   LEFT JOIN UserGroups
-                                   ON UserGroups.userGroupId=
-                                           UserGroupMembers.userGroupId""")
-                for username, groupname in [(x[0], x[1]) for x in \
-                                            aCu.fetchall() if x[0]]:
-
-                    cu.execute("SELECT userId from Users WHERE username=?",
-                               username)
-                    # Type errors indicate a user in authrepo that's not
-                    # in mintdb. there shouldn't be any but that's no reason
-                    # to fail horribly, so we'll just ignore them.
-                    try:
-                        userId = cu.fetchone()[0]
-                    except TypeError:
-                        continue
-                    cu.execute("""SELECT userGroupId from UserGroups
-                                      WHERE userGroup=?""", groupname)
-                    try:
-                        userGroupId = cu.fetchone()[0]
-                    except TypeError:
-                        continue
-                    cu.execute("""INSERT INTO UserGroupMembers
-                                      VALUES(%d, '%s')""" % (userGroupId,
-                                                             userId))
-                cu.execute("""SELECT userGroupId FROM UserGroups
-                                  WHERE userGroup='public'""")
-                groupId = cu.fetchone()[0]
-                cu.execute("SELECT userId from Users")
-                for userId in [x[0] for x in cu.fetchall()]:
-                    cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
-                               groupId, userId)
-            return dbversion >= 10
-        return True
 
     def getGroupsForUser(self, userId):
         cu = self.db.cursor()

@@ -232,32 +232,9 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
-    # XXX: disabled is slated for removal next schema upgrade --sgp
-    createSQL= """CREATE TABLE Projects (
-                    projectId       %(PRIMARYKEY)s,
-                    creatorId       INT,
-                    name            varchar(128) UNIQUE,
-                    hostname        varchar(128) UNIQUE,
-                    domainname      varchar(128) DEFAULT '' NOT NULL,
-                    projecturl      varchar(128) DEFAULT '' NOT NULL,
-                    description     text,
-                    disabled        INT DEFAULT 0,
-                    hidden          INT DEFAULT 0,
-                    external        INT DEFAULT 0,
-                    isAppliance     INT,
-                    timeCreated     INT,
-                    timeModified    INT DEFAULT 0,
-                    commitEmail     varchar(128) DEFAULT ''
-                )"""
-
-    # XXX: disabled is slated for removal next schema upgrade --sgp
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
               'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
               'timeModified', 'commitEmail']
-    indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
-                "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
-                "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
-              }
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -269,82 +246,6 @@ class ProjectsTable(database.KeyedTable):
                        }[self.cfg.reposDBDriver](cfg)
         # call init last so that we can use reposDB during schema upgrades
         database.DatabaseTable.__init__(self, db)
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            cu = self.db.cursor()
-            if dbversion == 0 and not self.initialCreation:
-                cu.execute("""ALTER TABLE Projects
-                             ADD COLUMN hidden INT DEFAULT 0""")
-            if dbversion == 2 and not self.initialCreation:
-                cu.execute("""ALTER TABLE Projects
-                                ADD COLUMN external INT DEFAULT 0""")
-                cu.execute("UPDATE Projects SET external=0")
-            if dbversion == 4 and not self.initialCreation:
-                cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
-                cu.execute("UPDATE Projects SET description=desc")
-            if dbversion == 15:
-                # logic to upgrade mirror ACLs in project repos
-                cu = self.db.cursor()
-                cu.execute("""SELECT projectId, hostname, domainName, external
-                                  FROM Projects""")
-                projList = [(x[0], x[1] + '.' + x[2]) for x in cu.fetchall() \
-                            if not x[3]]
-                rDb = None
-                if self.cfg.reposDBDriver != 'sqlite':
-                    needDb = True
-                else:
-                    needDb = False
-                for projectId, FQDN in projList:
-                    dbCon = self.reposDB.getRepositoryDB(FQDN)
-                    try:
-                        if self.cfg.reposDBDriver == 'sqlite' or needDb \
-                           or self.cfg.reposDBDriver == 'postgresql':
-                            rDb = dbstore.connect(dbCon[1], dbCon[0])
-                            needDb = False
-                        else:
-                            rDb.use(dbCon[1].split('/')[1])
-                    except:
-                        from conary.lib import log
-                        log.warning('could not connect to: %s' % FQDN)
-                        # skip missing repo DB's
-                        continue
-                    rCu = rDb.cursor()
-                    cu.execute("""SELECT userName
-                                      FROM ProjectUsers
-                                      LEFT JOIN Users ON
-                                          Users.userId=ProjectUsers.userId
-                                      WHERE projectId=? AND level=?""",
-                               projectId, userlevels.OWNER)
-                    userList = [x[0] for x in cu.fetchall()] + \
-                               [self.cfg.authUser]
-                    rCu.execute("""SELECT userGroupId
-                                       FROM Users
-                                       LEFT JOIN UserGroupMembers
-                                       ON UserGroupMembers.userId =
-                                              Users.userId
-                                       WHERE username IN %s""" % \
-                                str(tuple(userList)).replace(",)", ")"))
-                    userGroups = [int(x[0]) for x in rCu.fetchall()]
-                    rCu.execute("""UPDATE UserGroups
-                                       SET canMirror=1
-                                       WHERE userGroupId IN %s""" % \
-                                str(tuple(userGroups)).replace(",)", ")"))
-                    rDb.commit()
-                    if self.cfg.reposDBDriver == 'sqlite' or \
-                        self.cfg.reposDBDriver == 'postgresql':
-                        rDb.close()
-                if rDb:
-                    rDb.close()
-            if dbversion == 33 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Projects ADD COLUMN isAppliance INT")
-            if dbversion == 35 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Projects ADD COLUMN commitEmail varchar(128) DEFAULT ''")
-            return dbversion >= 35
-        return True
 
     def new(self, **kwargs):
         try:
@@ -641,20 +542,7 @@ class ProjectsTable(database.KeyedTable):
 class LabelsTable(database.KeyedTable):
     name = 'Labels'
     key = 'labelId'
-
-    createSQL = """CREATE TABLE Labels (
-                    labelId         %(PRIMARYKEY)s,
-                    projectId       INT,
-                    label           VARCHAR(255),
-                    url             VARCHAR(255),
-                    username        VARCHAR(255),
-                    password        VARCHAR(255)
-                )"""
-
     fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
-
-    indexes = {"LabelsPackageIdx": """CREATE INDEX LabelsPackageIdx
-                                          ON Labels(projectId)"""}
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
@@ -752,24 +640,12 @@ class LabelsTable(database.KeyedTable):
 class Databases(database.KeyedTable):
     name = "ReposDatabases"
     key = "databaseId"
-    createSQL = """
-        CREATE TABLE ReposDatabases (
-            databaseId      %(PRIMARYKEY)s,
-            driver          VARCHAR(64),
-            path            VARCHAR(255)
-        )"""
 
     fields = ['databaseId', 'driver', 'path']
 
 
 class ProjectDatabase(database.DatabaseTable):
     name = "ProjectDatabase"
-    createSQL = """
-        CREATE TABLE ProjectDatabase (
-            projectId       INT NOT NULL,
-            databaseId      INT NOT NULL
-        )"""
-
     fields = ['projectId', 'databaseId']
 
 

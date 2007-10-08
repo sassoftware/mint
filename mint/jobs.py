@@ -18,53 +18,10 @@ class DuplicateJob(MintError):
 class JobsTable(database.KeyedTable):
     name = 'Jobs'
     key = 'jobId'
-    createSQL = """
-                CREATE TABLE Jobs (
-                    jobId           %(PRIMARYKEY)s,
-                    buildId         INT,
-                    groupTroveId    INT,
-                    owner           BIGINT,
-                    userId          INT,
-                    status          INT,
-                    statusMessage   TEXT,
-                    timeSubmitted   DOUBLE,
-                    timeStarted     DOUBLE,
-                    timeFinished    DOUBLE)"""
 
     fields = ['jobId', 'buildId', 'groupTroveId', 'owner', 'userId',
               'status', 'statusMessage', 'timeSubmitted',
               'timeStarted', 'timeFinished']
-
-    indexes = {"JobsBuildIdx": """CREATE INDEX JobsBuildIdx
-                                        ON Jobs(buildId)""",
-               "JobsGroupTroveIdx": """CREATE INDEX JobsGroupTroveIdx
-                                           ON Jobs(groupTroveId)""",
-               "JobsUserIdx": "CREATE INDEX JobsUserIdx ON Jobs(userId)"}
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 5 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
-            if dbversion == 11 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN owner BIGINT")
-            if dbversion == 12 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
-            if dbversion == 19:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN buildId INT")
-                cu.execute('UPDATE Jobs SET buildId = releaseId')
-                if self.db.driver == 'mysql':
-                    cu.execute("ALTER TABLE Jobs DROP COLUMN releaseId")
-                else:
-                    cu.execute("DROP TABLE Jobs")
-                    cu.execute(self.createSQL % self.db.keywords)
-                    cu.execute('DELETE FROM JobData')
-            return dbversion >= 19
-        return True
 
     def get(self, id):
         res = database.KeyedTable.get(self, id)
@@ -125,80 +82,14 @@ class Job(database.TableObject):
 class BuildFilesTable(database.KeyedTable):
     name = 'BuildFiles'
     key = 'fileId'
-    # Nota Bummer: the filename column is deprecated, so don't use it.
-    # We need to get rid of it once we adopt a migration scheme that 
-    # doesn't produce different results from InitialCreation vs. Migration.
-    createSQL = """
-                CREATE TABLE BuildFiles (
-                    fileId       %(PRIMARYKEY)s,
-                    buildId      INT,
-                    idx          INT,
-                    filename     VARCHAR(255),
-                    title        CHAR(255) DEFAULT '',
-                    size         BIGINT,
-                    sha1         CHAR(40)
-                );"""
     fields = ['fileId', 'buildId', 'idx', 'title', 'size', 'sha1' ]
-
-    indexes = {"BuildFilesBuildIdx": """CREATE INDEX BuildFilesBuildIdx
-                                              ON BuildFiles(buildId)"""}
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 1 and not self.initialCreation:
-                sql = """ALTER TABLE BuildFiles ADD COLUMN title STR DEFAULT ''"""
-                cu = self.db.cursor()
-                cu.execute(sql)
-
-            if dbversion == 21 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE BuildFiles ADD COLUMN size BIGINT")
-                cu.execute("ALTER TABLE BuildFiles ADD COLUMN sha1 CHAR(40)")
-
-            if dbversion == 22 and not self.initialCreation:
-                cu = self.db.cursor()
-
-                # migrate data over to FilesUrls
-                cu.execute("SELECT fileId, filename FROM BuildFiles ORDER BY fileId")
-                results = cu.fetchall()
-
-                for row in results:
-                    fileId = row[0]
-                    if not row[1]:
-                        continue
-                    cu.execute("INSERT INTO FilesUrls VALUES(NULL,?,?)",
-                            urltypes.LOCAL, row[1])
-                    urlId = cu.lastrowid
-                    cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?,?)",
-                            fileId, urlId)
-                    cu.execute("UPDATE BuildFiles SET filename = NULL WHERE fileId = ?", fileId)
-
-            return dbversion >= 22
-
-        return True
 
 class BuildFilesUrlsMapTable(database.KeyedTable):
     name = 'BuildFilesUrlsMap'
     key = 'fileId'
-    createSQL = """
-                CREATE TABLE BuildFilesUrlsMap (
-                    fileId  INT,
-                    urlId   INT,
-                CONSTRAINT bfum_f_fk FOREIGN KEY(fileId)
-                    REFERENCES BuildFiles (fileId) ON DELETE CASCADE,
-                CONSTRAINT bfum_u_fk FOREIGN KEY(urlId)
-                    REFERENCES FilesUrls(urlId) ON DELETE CASCADE
-                );"""
     fields = ['fileId', 'urlId']
 
 class FilesUrlsTable(database.KeyedTable):
     name = 'FilesUrls'
     key = 'urlId'
-    createSQL = """
-                CREATE TABLE FilesUrls (
-                    urlId       %(PRIMARYKEY)s,
-                    urlType     SMALLINT,
-                    url         VARCHAR(255)
-                );"""
     fields = ['urlId', 'urlType', 'url']

@@ -807,6 +807,10 @@ class _Method(xmlrpclib._Method):
             raise ParameterError(exceptionArgs[0])
         elif exceptionName == "AMIBuildNotConfigured":
             raise AMIBuildNotConfigured(exceptionArgs[0])
+        elif exceptionName == "DatabaseTableMissing":
+            raise DatabaseTableMissing(exceptionArgs[0])
+        elif exceptionName == "DatabaseVersionMismatch":
+            raise DatabaseVersionMismatch(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

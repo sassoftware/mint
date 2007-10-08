@@ -15,7 +15,6 @@ import string
 import sys
 import time
 import tempfile
-#import fcntl
 import urllib
 from urlparse import urlparse
 import StringIO
@@ -269,15 +268,6 @@ def getTables(db, cfg):
     d['projectDatabase'] = projects.ProjectDatabase(db)
     d['databases'] = projects.Databases(db)
 
-    outDatedTables = [x for x in d.values() if not x.upToDate]
-    while outDatedTables[:]:
-        d['version'].bumpVersion()
-        for table in outDatedTables:
-            upToDate = table.versionCheck()
-            if upToDate:
-                outDatedTables.remove(table)
-    if d['version'].getDBVersion() != d['version'].schemaVersion:
-        d['version'].bumpVersion()
     return d
 
 class MintServer(object):
@@ -4299,7 +4289,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
-        schemaLock = None
         self.mcpClient = None
 
         global callLog
@@ -4340,49 +4329,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
             print >> sys.stderr, "reopened dead database connection in mint server"
             sys.stderr.flush()
 
-        try:
-            #The database version object has a dummy check so that it always passes.
-            #At the end of all database object creation, fix the version
+        genConaryRc = False
+        global tables
+        if not tables or alwaysReload:
+            tables = getTables(self.db, self.cfg)
+            genConaryRc = True
 
-            genConaryRc = False
-            global tables
-            if not tables or alwaysReload:
-                # use file locks to ensure we have a multi-process mutex
-                # XXX this is slated to be killed off real soon now;
-                # until then, DO NOT TRY TO USE IN PROCESS MIGRATION
-                #schemaLock = open( \
-                #    os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
-                #fcntl.lockf(schemaLock.fileno(), fcntl.LOCK_EX)
+        for table in tables:
+            tables[table].db = self.db
+            tables[table].cfg = self.cfg
+            self.__dict__[table] = tables[table]
 
-                self.db.loadSchema()
-                tables = getTables(self.db, self.cfg)
-                genConaryRc = True
-            for table in tables:
-                tables[table].db = self.db
-                tables[table].cfg = self.cfg
-                self.__dict__[table] = tables[table]
+        self.users.confirm_table.db = self.db
+        self.newsCache.ageTable.db = self.db
+        self.projects.reposDB.cfg = self.cfg
 
-            self.users.confirm_table.db = self.db
-            self.newsCache.ageTable.db = self.db
-            self.projects.reposDB.cfg = self.cfg
+        if genConaryRc:
+            self._generateConaryRcFile()
 
-            #Now it's safe to commit
-            self.db.commit()
+            # do these only on table reloads too
+            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
+            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
 
-            if genConaryRc:
-                self._generateConaryRcFile()
-
-                # do these only on table reloads too
-                self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
-                self._normalizeOrder("InboundMirrors", "inboundMirrorId")
-        except:
-            #An error occurred during db creation or upgrading
-            self.db.rollback()
-            #if schemaLock:
-            #    schemaLock.close()
-            raise
-        #else:
-        #    if schemaLock:
-        #        schemaLock.close()
 
         self.newsCache.refresh()

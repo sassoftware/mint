@@ -9,13 +9,7 @@ from mint import database
 class UseItTable(database.KeyedTable):
     name = 'UseIt'
     key = 'itemId'
-    createSQL = """CREATE TABLE UseIt (
-                    itemId          %(PRIMARYKEY)s,
-                    name            CHAR(255),
-                    link            CHAR(255)
-                );
-                """
-    fields = ['itemId', 'name', 'link'] 
+    fields = ['itemId', 'name', 'link']
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)

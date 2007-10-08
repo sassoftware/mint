@@ -10,7 +10,16 @@ from conary.dbstore import sqlerrors
 
 from mint.mint_error import MintError
 
-CURRENT_SCHEMA_VERSION = 38
+from mint import schema
+
+class DatabaseVersionMismatch(MintError):
+    def __init__(self, currentVersion):
+        self.currentVersion = currentVersion
+        self.wantedVersion = schema.VERSION
+
+    def __str__(self):
+        return "Database version mismatch (current version = %d, wanted version %d)" % (self.currentVersion, self.wantedVersion)
+
 
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):
@@ -95,61 +104,26 @@ class DatabaseTable(object):
     """
     @cvar name: The name of the table as created by the createSQL string.
     @cvar fields: List of SQL fields as created by the createSQL string.
-    @cvar createSQL: SQL statement to create the table for this object.
-    @cvar indexes: A dictionary of indeces mapped to the SQL queries to create
-    those indeces
     """
 
-    schemaVersion = CURRENT_SCHEMA_VERSION
     name = "Table"
     fields = []
-    createSQL = "CREATE TABLE Table ();"
-    createSQL_mysql = None
-    indexes = {}
-    views = {}
 
     def __init__(self, db):
         """@param db: database connection object. database object will be
         stored by weak reference only. an instance of it must exist outside
         of DatabaseTable objects at all times. This is normally not an issue,
         since MintServer object holds the db and all DatabaseTables objects."""
-        assert(self.name and self.fields and self.createSQL)
+        assert(self.name and self.fields)
         self.db = db
 
         cu = self.db.cursor()
 
-        # create missing tables
-        if self.name not in self.db.tables:
-            cu.execute(self.createSQL % self.db.keywords)
-            self.initialCreation = True
-        else:
-            self.initialCreation = False
+        # Check database version
+        dbversion = self.getDBVersion(self)
+        if dbversion != schema.VERSION:
+            raise DatabaseVersionMismatch(dbversion)
 
-        # Don't commit here.  Commits must be handled up stream to enable
-        # upgrading
-        self.upToDate = self.versionCheck()
-
-        # create missing indexes, but only after upgrading.  Missing indeces
-        # may be created through the regular index routines instead of being
-        # explicitly created in the upgrade code.  If indeces are created
-        # before the upgrade check is done, a column not found exception
-        # could be raised if a new index is created referencing a new column
-        # created in the upgrade procedures.
-
-        if self.upToDate:
-            # XXX This is just plain silly, really, so we're killing it off
-            #     for now.
-            #self.db.loadSchema()
-            indexes = set(self.db.tables[self.name])
-            missingIndexes = set(self.indexes.keys()) - indexes
-
-            for index in missingIndexes:
-                cu.execute(self.indexes[index])
-
-            if self.schemaVersion == self.getDBVersion():
-                for view in self.views.keys():
-                    if view.lower() not in [x.lower() for x in self.db.views.keys()]:
-                        cu.execute("CREATE VIEW %s AS %s" % (view, self.views[view]))
 
     def __getattribute__(self, name):
         if name == 'db':
@@ -163,28 +137,9 @@ class DatabaseTable(object):
 
     def getDBVersion(self):
         cu = self.db.cursor()
-
-        cu.execute("SELECT COALESCE(MAX(version), 0) FROM DatabaseVersion")
-        version = cu.fetchone()[0]
-
-        if not version:
-            cu.execute("""INSERT INTO DatabaseVersion(version, timestamp)
-                              VALUES(?,?)""", self.schemaVersion, time.time())
-            version = self.schemaVersion
-        return version
-
-    def versionCheck(self):
-        """
-        Override this function in tables needing to be modified.  Don't
-        forget to increment the schemaVersion when an update happens.
-        """
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 0:
-                # Do version specific updating in this section
-                # do NOT mask exceptions.
-                return dbversion >= 0
-        return True
+        cu.execute("SELECT COALESCE(MAX(version), 0) "
+                   "FROM DatabaseVersion")
+        return cu.fetchone()[0]
 
 class KeyedTable(DatabaseTable):
     """

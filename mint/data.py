@@ -13,34 +13,7 @@ from mint import database
  RDT_TROVE)= range(5)
 
 class GenericDataTable(database.DatabaseTable):
-    '''
-        This class crates a simple database table allowing for arbitrary data storage associated
-        with a primary key of another table.
-    '''
     name = None
-    '''
-        Note that this should contain the name of the "other" table followed by the word "Data"
-    '''
-
-    def __init__(self, db):
-        if self.name is None:
-            raise NotImplementedError
-        self.lowered = self.name[0].lower() + self.name[1:]
-        self.front = self.lowered.replace('Data', '')
-        self.createSQL = """
-            CREATE TABLE %s (
-                                 %sId INTEGER,
-                                 name CHAR(32),
-                                 value TEXT,
-                                 dataType INTEGER,
-                                 PRIMARY KEY(%sId, name)
-                                 );
-        """ % (self.name, self.front, self.front)
-        self.fields = ['%sId' % self.front, 'name', 'value', 'dataType']
-        self.indexes = {self.name + "Idx" : "CREATE INDEX %s ON %s(%sId)" \
-                                % (self.name + "Idx", self.name, self.front)}
-
-        return database.DatabaseTable.__init__(self, db)
 
     def setDataValue(self, id, name, value, dataType):
         # do any data conversions necessary to safely store value as a string
@@ -101,29 +74,6 @@ class GenericDataTable(database.DatabaseTable):
 class JobDataTable(GenericDataTable):
     name = "JobData"
 
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 7 and not self.initialCreation:
-                cu = self.db.cursor()
-                #Need to drop the JobData Table.  It's not compatible
-                #with the new genericdatatable
-                cu.execute('DROP TABLE JobData')
-                cu.execute(self.createSQL)
-            if dbversion == 13:
-                cu = self.db.cursor()
-                # replace all skipMediaCheck calls with showMediaCheck
-                # use modular math since sqlite does not support XOR.
-                cu.execute("""INSERT INTO ReleaseData
-                                  SELECT releaseId, 'showMediaCheck',
-                                          (value + 1) % 2, datatype
-                                   FROM ReleaseData
-                                   WHERE name='skipMediaCheck'""")
-                cu.execute("""DELETE FROM ReleaseData
-                                  WHERE name='skipMediaCheck'""")
-            return dbversion >= 13
-        return True
-
 class UserDataTable(GenericDataTable):
     name = "UserData"
 
@@ -134,26 +84,3 @@ class ReleaseDataTable(GenericDataTable):
 class BuildDataTable(GenericDataTable):
     name = "BuildData"
 
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 23:
-                from mint import buildtypes
-                cu = self.db.cursor()
-                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
-                           buildtypes.VMWARE_IMAGE)
-                for (buildId,) in cu.fetchall():
-                    cu.execute("""INSERT INTO BuildData
-                                      VALUES(?, 'diskAdapter', 'ide', ?)""",
-                               buildId, RDT_STRING)
-            if dbversion == 25:
-                from mint import buildtypes
-                cu = self.db.cursor()
-                cu.execute('SELECT buildId FROM Builds WHERE buildType=?',
-                           buildtypes.VMWARE_IMAGE)
-                for (buildId,) in cu.fetchall():
-                    cu.execute("""INSERT INTO BuildData
-                                      VALUES(?, 'vmSnapshots', '1', ?)""",
-                               buildId, RDT_BOOL)
-            return dbversion >= 25
-        return True

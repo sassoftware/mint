@@ -18,8 +18,6 @@ class NewsCacheInfoTable(database.DatabaseTable):
     name = 'NewsCacheInfo'
     fields = ['age', 'feedLink']
 
-    createSQL = "CREATE TABLE NewsCacheInfo (age INT, feedLink CHAR(255));"
-
     def getAge(self):
         cu = self.db.cursor()
         cu.execute("SELECT age FROM NewsCacheInfo")
@@ -44,15 +42,7 @@ class NewsCacheInfoTable(database.DatabaseTable):
 class NewsCacheTable(database.KeyedTable):
     name = 'NewsCache'
     key = 'itemId'
-    createSQL = """CREATE TABLE NewsCache (
-                    itemId          %(PRIMARYKEY)s,
-                    title           CHAR(255),
-                    pubDate         INT,
-                    content         TEXT,
-                    link            CHAR(255),
-                    category        CHAR(255)
-                );
-                """
+
     fields = ['itemId', 'title', 'pubDate', 'content', 'link', 'category']
 
     def __init__(self, db, cfg):
