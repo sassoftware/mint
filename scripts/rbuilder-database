@@ -1,0 +1,61 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2005-2007 rPath, Inc.
+#
+
+from conary import dbstore
+from conary.lib.tracelog import logMe
+
+from mint import config
+from mint import scriptlibrary
+
+import optparse
+import os
+
+class RBuilderDatabase(scriptlibrary.SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+    logFileName = None
+    options = None
+    args = None
+
+    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
+        scriptlibrary.SingletonScript.__init__(self, aLockPath)
+
+    def handle_args(self):
+        usage = "%prog [options] "
+        op = optparse.OptionParser(usage=usage)
+        op.add_option("--migrate", action = "store_true",
+                dest = "should_migrate", default = False,
+                help = "Migrate the schema to the latest version")
+        op.add_option("-c", "--rbuilder-config",
+                dest = "cfgPath", default = None,
+                help = "use a different configuration file")
+
+        (self.options, self.args) = op.parse_args()
+        # read the configuration
+        self.cfg = config.MintConfig()
+        if self.options.cfgPath:
+            self.cfg.read(self.options.cfgPath)
+        else:
+            self.cfg.read(self.cfgPath)
+        if self.logFileName:
+            self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
+        return True
+
+    def logTraceback(self):
+        tb = traceback.format_exc()
+        [self.log.error(x) for x in tb.split("\n") if x.strip()]
+
+    def action(self):
+        from mint import schema
+        from conary.lib.tracelog import logMe
+        logMe(1, "Connecting to database %s (%s)" % (self.cfg.dbPath,
+            self.cfg.dbDriver))
+        db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        schema.loadSchema(db, self.options.should_migrate)
+        return True
+
+if __name__ == '__main__':
+    rd = RBuilderDatabase()
+    os._exit(rd.run())
+
