@@ -16,23 +16,8 @@ class rMakeBuildTable(database.KeyedTable):
     name = "rMakeBuild"
     key = "rMakeBuildId"
 
-    createSQL = """CREATE TABLE rMakeBuild(
-                                    rMakeBuildId %(PRIMARYKEY)s,
-                                    userId INT,
-                                    title VARCHAR(128),
-                                    UUID CHAR(32),
-                                    jobId INT,
-                                    status INT DEFAULT 0,
-                                    statusMessage TEXT
-                                    )"""
-
     fields = ['rMakeBuildId', 'userId', 'title', 'UUID', 'jobId', 'status',
               'statusMessage']
-
-    indexes = {'rMakeBuildIdx' : \
-               "CREATE INDEX rMakeBuildIdx ON rMakeBuild(userId)",
-               'rMakeBuildTitleIdx' : \
-               "CREATE UNIQUE INDEX rMakeBuildTitleIdx ON rMakeBuild(userId, title)"}
 
     def listTrovesById(self, rMakeBuildId):
         cu = self.db.cursor()
@@ -130,23 +115,8 @@ class rMakeBuildItemsTable(database.KeyedTable):
     name = "rMakeBuildItems"
     key = "rMakeBuildItemId"
 
-    createSQL = """CREATE TABLE rMakeBuildItems(
-                       rMakeBuildItemId %(PRIMARYKEY)s,
-                       rMakeBuildId INT,
-                       trvName VARCHAR(128),
-                       trvLabel VARCHAR(128),
-                       status INT DEFAULT 0,
-                       statusMessage TEXT
-                       )"""
-
     fields = ['rMakeBuildItemId', 'rMakeBuildId', 'trvName', 'trvLabel',
               'status', 'statusMessage']
-
-    indexes = {'rMakeBuildItemIdx' : """CREATE INDEX rMakeBuildItemIdx
-                                           ON rMakeBuildItems(rMakeBuildId)""",
-               'rMakeBuildItemNameIdx' : \
-               """CREATE UNIQUE INDEX rMakeBuildItemNameIdx
-               ON rMakeBuildItems(rMakeBuildId, trvName, trvLabel)"""}
 
     def delete(self, rMakeBuildItemId):
         cu = self.db.cursor()

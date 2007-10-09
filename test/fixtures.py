@@ -436,11 +436,15 @@ class FixtureCache(object):
 
 
 class SqliteFixtureCache(FixtureCache):
+
     def newMintCfg(self, name):
         cfg = FixtureCache.newMintCfg(self, name)
         cfg.dbDriver = cfg.reposDBDriver = 'sqlite'
         cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
         cfg.reposDBPath = os.path.join(cfg.dataPath, 'repos', '%s', 'sqldb')
+        from mint import schema
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        schema.loadSchema(db)
         return cfg
 
     def load(self, name):
@@ -522,6 +526,8 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
             pass
         cu.execute("CREATE DATABASE %s" % name)
         self.db.commit()
+        from mint import schema
+        schema.loadSchema(self.db)
 
     def _dropDb(self, name):
         self._connect()
@@ -542,6 +548,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         dbName = "mf%s" % name
         self.keepDbs.append(dbName.lower())
         self._newDb(dbName)
+        schema.loadSchema(self.db)
         cfg.dbDriver = cfg.reposDBDriver = "mysql"
         cfg.dbPath = self._getConnectStringForDb(dbName)
         cfg.reposDBPath = self._getConnectStringForDb()
@@ -661,6 +668,8 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         except:
             pass
         cu.execute("CREATE DATABASE %s" % name)
+        from mint import schema
+        schema.loadSchema(self.db)
 
     def _dropDb(self, name):
         cu = self.db.cursor()

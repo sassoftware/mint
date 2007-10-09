@@ -7,16 +7,6 @@ from mint import database
 
 class MembershipRequestTable(database.DatabaseTable):
     name = "MembershipRequests"
-    
-    createSQL = """
-        CREATE TABLE MembershipRequests(
-                                        projectId INTEGER,
-                                        userId INTEGER,
-                                        comments TEXT,
-                                        PRIMARY KEY(projectId, userId)
-                                        );
-    """
-    
     fields = ['projectId', 'userId', 'comments']
 
     def setComments(self, projectId, userId, comments):

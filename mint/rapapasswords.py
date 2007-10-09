@@ -9,17 +9,7 @@ from mint import database
 class rAPAPasswords(database.DatabaseTable):
 
     name = "rAPAPasswords"
-
-    createSQL = """
-                CREATE TABLE rAPAPasswords (
-                    host                VARCHAR(255),
-                    user                VARCHAR(255),
-                    password            VARCHAR(255),
-                    role                VARCHAR(255)
-                )"""
-
     fields = [ 'host', 'user', 'password', 'role']
-
 
     def setrAPAPassword(self, host, user, password, role):
         cu = self.db.cursor()

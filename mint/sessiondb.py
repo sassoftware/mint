@@ -10,34 +10,8 @@ from mint.database import DatabaseTable
 
 class SessionsTable(DatabaseTable):
     name = "Sessions"
-    createSQL = """
-        CREATE TABLE Sessions (
-            sessIdx     %(PRIMARYKEY)s,
-            sid         CHAR(64),
-            data        TEXT
-        );
-    """
 
     fields = ['sessIdx', 'sid', 'data']
-
-    indexes = {'sessionSidIdx': 'CREATE INDEX sessionSidIdx ON Sessions(sid)'}
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 6 and not self.initialCreation:
-                cu = self.db.cursor()
-                # dropping and re-making is by far the best choice.
-                cu.execute("DROP TABLE Sessions")
-                if self.db.driver== "mysql":
-                    cu.execute(self.createSQL_mysql)
-                if self.db.driver == 'sqlite':
-                    cu.execute(self.createSQL)
-                else:
-                    raise AssertionError("INVALID DATABASE TYPE: " + \
-                                         self.db.driver)
-            return dbversion >= 6
-        return True
 
     def load(self, sid):
         cu = self.db.cursor()

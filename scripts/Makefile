@@ -15,6 +15,7 @@ static_files =				\
 	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
+	rbuilder-database		\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\

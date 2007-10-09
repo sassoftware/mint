@@ -43,14 +43,6 @@ class BuildDataNameError(MintError):
 
 class UrlDownloadsTable(database.DatabaseTable):
     name = "UrlDownloads"
-
-    createSQL = """
-        CREATE TABLE UrlDownloads (
-            urlId               INTEGER NOT NULL,
-            timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
-            ip                  CHAR(15)
-        )"""
-
     fields = ['urlId', 'timeDownloaded', 'ip']
 
     def add(self, urlId, ip):
@@ -66,128 +58,10 @@ class BuildsTable(database.KeyedTable):
     name = "Builds"
     key  = "buildId"
 
-    createSQL = """
-                CREATE TABLE Builds (
-                    buildId              %(PRIMARYKEY)s,
-                    projectId            INTEGER NOT NULL,
-                    pubReleaseId         INTEGER,
-                    buildType            INTEGER,
-                    name                 VARCHAR(255),
-                    description          TEXT,
-                    troveName            VARCHAR(128),
-                    troveVersion         VARCHAR(255),
-                    troveFlavor          VARCHAR(4096),
-                    troveLastChanged     INTEGER,
-                    timeCreated          DOUBLE,
-                    createdBy            INTEGER,
-                    timeUpdated          DOUBLE,
-                    updatedBy            INTEGER,
-                    deleted              INTEGER DEFAULT '0'
-                )"""
-
     fields = ['buildId', 'projectId', 'pubReleaseId',
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy', 'deleted']
-
-    indexes = {"BuildProjectIdIdx":\
-                 """CREATE INDEX BuildProjectIdIdx
-                        ON Builds(projectId)""",
-               "BuildPubReleaseIdIdx":\
-                 """CREATE INDEX BuildPubReleaseIdIdx
-                        ON Builds(pubReleaseId)"""}
-
-    views = {"BuildsView": "SELECT * FROM Builds WHERE deleted=0"}
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 3 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("""ALTER TABLE Releases
-                                 ADD COLUMN timePublished INT DEFAULT 0""")
-                cu.execute("UPDATE Releases SET timePublished=0")
-            if dbversion == 4 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
-                cu.execute("UPDATE Releases SET description=desc")
-            if dbversion == 14:
-                # jsversion is being removed entirely. this test needs to be
-                # reworked--tho I'm not sure anybody is on schema 13 or less
-                pass
-            if dbversion == 20:
-                cu = self.db.cursor()
-                cu.execute("""DELETE FROM Releases
-                                  WHERE troveName IS NULL
-                                  OR troveVersion IS NULL""")
-                cu.execute("""INSERT INTO Builds
-                                  SELECT Releases.releaseId AS buildId,
-                                      projectId,
-                                      NULL AS pubReleaseId,
-                                      ReleaseImageTypes.imageType AS buildType,
-                                      name, description,
-                                      troveName, troveVersion, troveFlavor,
-                                      troveLastChanged, NULL AS timeCreated,
-                                      NULL AS createdBy, NULL AS timeUpdated,
-                                      NULL AS updatedBy, 0 AS deleted
-                                  FROM Releases
-                                  LEFT JOIN ReleaseImageTypes
-                                  ON ReleaseImageTypes.releaseId=
-                                       Releases.releaseId""")
-                cu.execute("""INSERT INTO PublishedReleases
-                                  SELECT releaseId AS pubReleaseId,
-                                      projectId, name, NULL AS version,
-                                      description, NULL AS timeCreated,
-                                      NULL AS createdBy, NULL AS timeUpdated,
-                                      NULL AS updatedBy, timePublished,
-                                      NULL AS publishedBy
-                                  FROM Releases WHERE published=1""")
-                cu.execute("""UPDATE Builds set pubReleaseId=buildId
-                                  WHERE buildId IN
-                                      (SELECT releaseId
-                                       FROM Releases
-                                       WHERE published=1)""")
-                cu.execute("SELECT releaseId, troveVersion FROM Releases")
-                for releaseId, troveVersion in cu.fetchall():
-                    try:
-                        ver = versions.ThawVersion(troveVersion)
-                        ver = ver.trailingRevision().getVersion()
-                    except:
-                        ver = '0'
-                    cu.execute("""UPDATE PublishedReleases
-                                      SET version=?
-                                      WHERE pubReleaseId=?""",
-                               ver, releaseId)
-                cu.execute("INSERT INTO BuildData SELECT * FROM ReleaseData")
-                cu.execute("""INSERT INTO BuildFiles
-                    SELECT fileId, releaseId AS buildId, idx, filename, title, NULL, NULL
-                    FROM ImageFiles""")
-                cu.execute("DROP TABLE ReleaseImageTypes")
-                cu.execute("DROP TABLE Releases")
-                cu.execute("DROP TABLE ReleaseData")
-                cu.execute("DROP TABLE ImageFiles")
-            if dbversion == 26 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("ALTER TABLE Builds ADD COLUMN deleted INTEGER DEFAULT '0'")
-            if dbversion == 27 and not self.initialCreation:
-                if "BuildsView" not in self.db.views:
-                    cu = self.db.cursor()
-                    cu.execute("""
-                        CREATE VIEW
-                            BuildsView AS
-                        SELECT * FROM Builds WHERE deleted=0
-                    """)
-            if dbversion == 29 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("SELECT buildId, troveFlavor FROM Builds")
-                inserts = []
-                for x in cu.fetchall():
-                    for flavor in getImportantFlavors(x[1]):
-                        inserts.append((x[0], flavor, RDT_INT))
-
-                cu.executemany("INSERT INTO BuildData VALUES (?, ?, 1, ?)", inserts)
-            return dbversion >= 29
-        return True
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given

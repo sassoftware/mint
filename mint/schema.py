@@ -13,25 +13,11 @@
 #
 
 from conary import dbstore
-from conary.dbstore import migration, sqlerrors, idtable
+from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
-# XXX THIS IS NOT THE SCHEMA FOR RBUILDER -- YET!
-# XXX THIS IS A *PROPOSED* SCHEMA FOR RBUILDER!
-# XXX THIS IS MERELY BEING CHECKED IN FOR REVIEW!
-#
-# TODO
-# 0. Review changes
-# 1. Sync rbuilder code to use new schema.
-#    a. new timestamp handling (YYYYMMDDhhmmss)
-#    b. update renamed columns
-#    c. sessions table is now outside the main schema (new connection)
-#    d. anything else I forgot
-# 2. Remove old table creation code from existing DatabaseTable objects
-# 3. Port migration code from mint/*.py (DatabaseTable objects)
-
 # database schema version
-VERSION = 28 # this needs to be +1 from the CURRENT version in mint/database.py
+VERSION = sqllib.DBversion(38)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -42,338 +28,297 @@ def _createUsers(db):
     cu = db.cursor()
     commit = False
 
-    # users
     if 'Users' not in db.tables:
         cu.execute("""
         CREATE TABLE Users (
             userId          %(PRIMARYKEY)s,
-            username        VARCHAR(128) NOT NULL,
-            password        %(BINARY254)s,
+            username        CHAR(128) UNIQUE,
+            fullName        CHAR(128),
             salt            %(BINARY4)s NOT NULL,
-            fullname        VARCHAR(128),
-            email           VARCHAR(128) NOT NULL,
-            confirmation    VARCHAR(254),
-            contactInfo     TEXT,
-            additionalInfo  TEXT,
-            active          INTEGER NOT NULL DEFAULT 0,
-            timeCreated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            timeUpdated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            timeAccessed    NUMERIC(14,0) NOT NULL DEFAULT 0
+            passwd          %(BINARY254)s NOT NULL,
+            email           CHAR(128),
+            displayEmail    TEXT,
+            timeCreated     DOUBLE,
+            timeAccessed    DOUBLE,
+            active          INT,
+            blurb           TEXT
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
         commit = True
-    db.createIndex('Users', 'Users_uq', 'username', unique = True)
-    # need to check to see if we need an index on username, active
-    if db.createTrigger('Users', 'timeCreated', 'INSERT'):
-        commit = True
-    if _createTrigger(db, 'Users', 'timeUpdated'):
-        commit = True
+    # XXX this index seems redundant
+    db.createIndex('Users', 'UsersUsernameIdx', 'username', unique=True)
+    # XXX need to check to see if we need an index on username, active
+    db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
-    # userData
     if 'UserData' not in db.tables:
         cu.execute("""
         CREATE TABLE UserData (
-            userId          INTEGER NOT NULL,
-            name            VARCHAR(32) NOT NULL,
+            userId          INTEGER,
+            name            CHAR(32),
             value           TEXT,
-            valueType       INTEGER NOT NULL,
-            CONSTRAINT UserData_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                    ON DELETE CASCADE ON UPDATE CASCADE
+            dataType        INTEGER
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
         commit = True
-    db.createIndex('UserData', 'UserData_uq', 'userId, name', unique = True)
+    db.createIndex('UserData', 'UserDataIdx', 'userId')
 
-    # userGroups
     if 'UserGroups' not in db.tables:
         cu.execute("""
         CREATE TABLE UserGroups (
             userGroupId     %(PRIMARYKEY)s,
-            userGroup       VARCHAR(128) NOT NULL
+            userGroup       CHAR(128) UNIQUE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroups'] = []
         commit = True
-    db.createIndex('UserGroups', 'UserGroups_uq', 'userGroup', unique = True)
+    db.createIndex('UserGroups', 'UserGroupsIndex', 'userGroup',
+            unique = True)
 
-    # userGroupMembers
     if 'UserGroupMembers' not in db.tables:
         cu.execute("""
         CREATE TABLE UserGroupMembers (
-            userGroupId     INTEGER NOT NULL,
-            userId          INTEGER NOT NULL,
-            CONSTRAINT UserGroupMembers_userGroupId_fk
-                FOREIGN KEY (userGroupId) REFERENCES UserGroups(userGroupId)
-                ON DELETE RESTRICT ON UPDATE CASCADE,
-            CONSTRAINT UserGroupMembers_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            userGroupId     INTEGER,
+            userId          INTEGER
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
         commit = True
-    db.createIndex('UserGroupMembers', 'UserGroupMembers_uq',
-                   'userGroupId, userId', unique = True)
-    db.createIndex('UserGroupMembers', 'UserGroupMembersUserIdx', 'userId')
+
+    if 'Confirmations' not in db.tables:
+        cu.execute("""
+        CREATE TABLE Confirmations (
+            userId          %(PRIMARYKEY)s,
+            timeRequested   INT,
+            confirmation    CHAR(255)
+        ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Confirmations'] = []
+        commit = True
 
     if commit:
         db.commit()
         db.loadSchema()
-
 
 def _createLabels(db):
     cu = db.cursor()
     commit = False
 
-    # labels
     if 'Labels' not in db.tables:
         cu.execute("""
         CREATE TABLE Labels (
             labelId         %(PRIMARYKEY)s,
-            label           VARCHAR(767) NOT NULL,
-            url             VARCHAR(767) NOT NULL,
-            username        VARCHAR(254),
-            password        VARCHAR(254)
+            projectId       INT,
+            label           VARCHAR(255),
+            url             VARCHAR(255),
+            username        VARCHAR(255),
+            password        VARCHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
         commit = True
+    db.createIndex('Labels', 'LabelsPackageIdx', 'projectId')
 
     if commit:
         db.commit()
         db.loadSchema()
-
 
 def _createProjects(db):
     cu = db.cursor()
     commit = False
 
-    # projects
     if 'Projects' not in db.tables:
         cu.execute("""
         CREATE TABLE Projects (
             projectId       %(PRIMARYKEY)s,
-            name            VARCHAR(128) NOT NULL,
-            hostname        VARCHAR(128) NOT NULL,
-            domainname      VARCHAR(128) NOT NULL,
-            projectUrl      VARCHAR(767) NOT NULL DEFAULT '',
-            description     TEXT NOT NULL DEFAULT '',
-            hidden          INTEGER NOT NULL DEFAULT 0,
-            external        INTEGER NOT NULL DEFAULT 0,
-            timeCreated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            createdBy       INTEGER,
-            timeUpdated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            CONSTRAINT Projects_createdBy_fk
-                FOREIGN KEY (createdBy) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            creatorId       INT,
+            name            varchar(128) UNIQUE,
+            hostname        varchar(128) UNIQUE,
+            domainname      varchar(128) DEFAULT '' NOT NULL,
+            projecturl      varchar(128) DEFAULT '' NOT NULL,
+            description     text,
+            disabled        INT DEFAULT 0,
+            hidden          INT DEFAULT 0,
+            external        INT DEFAULT 0,
+            isAppliance     INT,
+            timeCreated     INT,
+            timeModified    INT DEFAULT 0,
+            commitEmail     varchar(128) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True
-    db.createIndex('Projects', 'ProjectsName_uq', 'name',
-            unique = True)
-    db.createIndex('Projects', 'ProjectsHostname_uq', 'hostname',
-            unique = True)
-    db.createIndex('Projects', 'ProjectsNameHiddenExternalIdx',
-            'name, hidden, external')
-    if db.createTrigger('Projects', 'timeCreated', 'INSERT'):
-        commit = True
-    if _createTrigger(db,'Projects', 'timeUpdated'):
-        commit = True
+    db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
+    db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 
-    # projectLabels
-    if 'ProjectLabels' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ProjectLabels (
-            projectId       INTEGER NOT NULL,
-            labelId         INTEGER NOT NULL,
-            CONSTRAINT ProjectLabels_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE,
-            CONSTRAINT ProjectLabels_labelId_fk
-                FOREIGN KEY (labelId) REFERENCES Labels(labelId)
-                ON DELETE RESTRICT ON UPDATE CASCADE
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ProjectLabels'] = []
-    db.createIndex('ProjectLabels', 'ProjectLabels_uq',
-            'projectId, labelId', unique = True)
-
-    # projectUsers
     if 'ProjectUsers' not in db.tables:
         cu.execute("""
         CREATE TABLE ProjectUsers (
-            projectId       INTEGER NOT NULL,
-            userId          INTEGER NOT NULL,
-            level           INTEGER,
-            CONSTRAINT ProjectUsers_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT ProjectUsers_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            projectId       INT,
+            userId          INT,
+            level           INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProjectUsers'] = []
         commit = True
-    db.createIndex('ProjectUsers', 'ProjectUsers_uq', 'projectId, userId',
+    db.createIndex('ProjectUsers', 'ProjectUsersIdx', 'projectId, userId',
             unique = True)
+    db.createIndex('ProjectUsers', 'ProjectUsersProjectIdx', 'projectId')
+    db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
 
-    # membershipRequests
     if 'MembershipRequests' not in db.tables:
         cu.execute("""
         CREATE TABLE MembershipRequests (
-            projectId       INTEGER NOT NULL,
-            userId          INTEGER NOT NULL,
+            projectId       INTEGER,
+            userId          INTEGER,
             comments        TEXT,
-            CONSTRAINT MembershipRequests_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT MembershipRequests_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            PRIMARY KEY(projectId, userId)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['MembershipRequests'] = []
         commit = True
-    db.createIndex('MembershipRequests',
-            'MembershipRequests_uq',
-            'projectId, userId', unique = True)
+
+    if 'ReposDatabases' not in db.tables:
+        cu.execute("""
+        CREATE TABLE ReposDatabases (
+            databaseId      %(PRIMARYKEY)s,
+            driver          VARCHAR(64),
+            path            VARCHAR(255)
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['ReposDatabases'] = []
+        commit = True
+
+    if 'ReposDatabases' not in db.tables:
+        cu.execute("""
+        CREATE TABLE ReposDatabases (
+            databaseId      %(PRIMARYKEY)s,
+            driver          VARCHAR(64),
+            path            VARCHAR(255)
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['ReposDatabases'] = []
+        commit = True
+
+    if 'ProjectDatabase' not in db.tables:
+        cu.execute("""
+        CREATE TABLE ProjectDatabase (
+            projectId       INT NOT NULL,
+            databaseId      INT NOT NULL
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['ProjectDatabase'] = []
+        commit = True
+
+    if 'CommunityIds' not in db.tables:
+        cu.execute("""
+        CREATE TABLE CommunityIds (
+            projectId           INTEGER,
+            communityType       INTEGER,
+            communityId         VARCHAR(255)
+        ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['CommunityIds'] = []
+        commit = True
 
     if commit:
         db.commit()
         db.loadSchema()
 
-
 def _createBuilds(db):
     cu = db.cursor()
     commit = False
 
-    # publishedReleases
     if 'PublishedReleases' not in db.tables:
         cu.execute("""
         CREATE TABLE PublishedReleases (
-            pubReleaseId    %(PRIMARYKEY)s,
-            projectId       INTEGER,
-            name            VARCHAR(254),
-            version         VARCHAR(254),
-            description     TEXT,
-            timeCreated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            createdBy       INTEGER,
-            timeUpdated     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            updatedBy       INTEGER,
-            timePublished   NUMERIC(14,0),
-            publishedBy     INTEGER,
-            CONSTRAINT PublishedReleases_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE RESTRICT,
-            CONSTRAINT PublishedReleases_createdBy_fk
-                FOREIGN KEY (createdBy) REFERENCES Users(userId)
-                ON DELETE SET NULL,
-            CONSTRAINT PublishedReleases_updatedBy_fk
-                FOREIGN KEY (updatedBy) REFERENCES Users(userId)
-                ON DELETE SET NULL,
-            CONSTRAINT PublishedReleases_publishedBy_fk
-                FOREIGN KEY (publishedBy) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            pubReleaseId        %(PRIMARYKEY)s,
+            projectId           INTEGER,
+            name                VARCHAR(255),
+            version             VARCHAR(32),
+            description         TEXT,
+            timeCreated         DOUBLE,
+            createdBy           INTEGER,
+            timeUpdated         DOUBLE,
+            updatedBy           INTEGER,
+            timePublished       DOUBLE,
+            publishedBy         INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         commit = True
-    if db.createTrigger('PublishedReleases', 'timeCreated', 'INSERT'):
-        commit = True
-    if _createTrigger(db, 'PublishedReleases', 'timeUpdated'):
-        commit = True
+    db.createIndex('PublishedReleases', 'PubReleasesProjectIdIdx',
+            'projectId')
 
-    # builds
     if 'Builds' not in db.tables:
         cu.execute("""
         CREATE TABLE Builds (
             buildId              %(PRIMARYKEY)s,
             projectId            INTEGER NOT NULL,
             pubReleaseId         INTEGER,
-            buildType            INTEGER NOT NULL,
-            name                 VARCHAR(254),
+            buildType            INTEGER,
+            name                 VARCHAR(255),
             description          TEXT,
-            troveName            VARCHAR(767),
-            troveVersion         VARCHAR(767),
-            troveFlavor          VARCHAR(767),
+            troveName            VARCHAR(128),
+            troveVersion         VARCHAR(255),
+            troveFlavor          VARCHAR(4096),
             troveLastChanged     INTEGER,
-            timeCreated          NUMERIC(14,0) NOT NULL DEFAULT 0,
+            timeCreated          DOUBLE,
             createdBy            INTEGER,
-            timeUpdated          NUMERIC(14,0) NOT NULL DEFAULT 0,
+            timeUpdated          DOUBLE,
             updatedBy            INTEGER,
-            CONSTRAINT Builds_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE,
-            CONSTRAINT Builds_pubReleaseId_fk
-                FOREIGN KEY (pubReleaseId)
-                    REFERENCES PublishedReleases(pubReleaseId)
-                ON DELETE SET NULL,
-            CONSTRAINT Builds_createdBy_fk
-                FOREIGN KEY (createdBy) REFERENCES Users(userId)
-                ON DELETE SET NULL,
-            CONSTRAINT Builds_updatedBy_fk
-                FOREIGN KEY (updatedBy) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            deleted              INTEGER DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         commit = True
-    if db.createTrigger('Builds', 'timeCreated', 'INSERT'):
-        commit = True
-    if _createTrigger(db, 'Builds', 'timeUpdated'):
+
+    db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
+    db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
+
+    if 'BuildsView' not in db.views:
+        cu.execute("""
+        CREATE VIEW BuildsView AS
+            SELECT * FROM Builds WHERE deleted = 0
+        """)
         commit = True
 
-    # buildData
     if 'BuildData' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildData (
-            buildId         INTEGER NOT NULL,
-            name            VARCHAR(32),
+            buildId         INTEGER,
+            name            CHAR(32),
             value           TEXT,
-            valueType       INTEGER NOT NULL,
-            CONSTRAINT BuildData_buildId_fk
-                FOREIGN KEY (buildId) REFERENCES Builds(buildId)
-                ON DELETE CASCADE
+            dataType        INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
         commit = True
-    db.createIndex('BuildData', 'BuildData_uq', 'buildId, name', unique = True)
+    db.createIndex('BuildData', 'BuildDataIdx', 'buildId, name',
+        unique = True)
 
-    # buildFiles
+    # Nota Bummer: the filename column is deprecated, so don't use it.
+    # We need to get rid of it once we adopt a migration scheme that 
+    # doesn't produce different results from InitialCreation vs. Migration.
     if 'BuildFiles' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFiles (
-            fileId          %(PRIMARYKEY)s,
-            buildId         INTEGER NOT NULL,
-            idx             INTEGER NOT NULL,
-            filename        VARCHAR(254) NOT NULL,
-            title           VARCHAR(254) DEFAULT '',
-            size            BIGINT,
-            sha1            CHAR(40),
-            CONSTRAINT BuildFiles_buildId_fk
-                FOREIGN KEY (buildId) REFERENCES Builds(buildId)
-                ON DELETE CASCADE
+            fileId       %(PRIMARYKEY)s,
+            buildId      INT,
+            idx          INT,
+            filename     VARCHAR(255),
+            title        CHAR(255) DEFAULT '',
+            size         BIGINT,
+            sha1         CHAR(40)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
         commit = True
 
-    # filesUrls
     if 'FilesUrls' not in db.tables:
         cu.execute("""
         CREATE TABLE FilesUrls (
-            urlId           %(PRIMARYKEY)s,
-            urlType         INTEGER NOT NULL,
-            url             VARCHAR(254) NOT NULL
+            urlId       %(PRIMARYKEY)s,
+            urlType     SMALLINT,
+            url         VARCHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
         commit = True
 
-    # buildFilesUrlsMap
     if 'BuildFilesUrlsMap' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFilesUrlsMap (
-            fileId  INTEGER NOT NULL,
-            urlId   INTEGER NOT NULL,
-            CONSTRAINT BuildFilesUrlsMap_fileId_fk FOREIGN KEY(fileId)
-                REFERENCES BuildFiles (fileId)
-                ON DELETE CASCADE,
-            CONSTRAINT BuildFilesUrlsMap_urlId_fk FOREIGN KEY(urlId)
-                REFERENCES FilesUrls(urlId)
-                ON DELETE CASCADE
+            fileId  INT,
+            urlId   INT,
+            CONSTRAINT bfum_f_fk FOREIGN KEY(fileId)
+                REFERENCES BuildFiles (fileId) ON DELETE CASCADE,
+            CONSTRAINT bfum_u_fk FOREIGN KEY(urlId)
+                REFERENCES FilesUrls(urlId) ON DELETE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
         commit = True
@@ -382,12 +327,11 @@ def _createBuilds(db):
 
     if 'UrlDownloads' not in db.tables:
         cu.execute("""
-            CREATE TABLE UrlDownloads (
-                urlId               INTEGER NOT NULL,
-                url                 VARCHAR(255),
-                timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
-                ip                  CHAR(15)
-            )""" % db.keywords)
+        CREATE TABLE UrlDownloads (
+            urlId               INTEGER NOT NULL,
+            timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
+            ip                  CHAR(15)
+        )""" % db.keywords)
         db.tables['UrlDownloads'] = []
         commit = True
 
@@ -399,29 +343,18 @@ def _createCommits(db):
     cu = db.cursor()
     commit = False
 
-    # commits
     if 'Commits' not in db.tables:
         cu.execute("""
         CREATE TABLE Commits (
-            projectId       INTEGER NOT NULL,
-            timestamp       INTEGER,
-            troveName       VARCHAR(767),
+            projectId       INT,
+            timestamp       INT,
+            troveName       CHAR(255),
             version         TEXT,
-            userId          INTEGER,
-            CONSTRAINT Commits_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE,
-            CONSTRAINT Commits_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            userId          INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Commits'] = []
         commit = True
-    db.createIndex('Commits', 'CommitsProjectTimestampIdx',
-            'projectId, timestamp')
-    db.createIndex('Commits', 'CommitsTroveProjectIdx', 'troveName, projectId')
-    db.createIndex('Commits', 'CommitsProjectTroveIdx', 'projectId, troveName')
-    db.createIndex('Commits', 'CommitsProjectUserIdx', 'projectId, userId')
+    db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
 
     if commit:
         db.commit()
@@ -431,159 +364,124 @@ def _createGroupTroves(db):
     cu = db.cursor()
     commit = False
 
-    # groupTroves
     if 'GroupTroves' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroves(
             groupTroveId    %(PRIMARYKEY)s,
-            projectId       INTEGER NOT NULL,
-            recipeName      VARCHAR(200),
-            upstreamVersion VARCHAR(128),
+            projectId       INT,
+            creatorId       INT,
+            recipeName      CHAR(200),
+            upstreamVersion CHAR(128),
             description     TEXT,
-            autoResolve     INTEGER,
-            timeCreated     INTEGER,
-            createdBy       INTEGER,
-            timeModified    INTEGER,
-            CONSTRAINT GroupTroves_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE,
-            CONSTRAINT GroupTroves_createdBy_fk
-                FOREIGN KEY (createdBy) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            timeCreated     INT,
+            timeModified    INT,
+            autoResolve     INT,
+            cookCount       INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroves'] = []
         commit = True
-    if db.createTrigger('GroupTroves', 'timeCreated', 'INSERT'):
-        commit = True
-    if _createTrigger(db, 'GroupTroves', 'timeModified'):
-        commit = True
+    db.createIndex('GroupTroves', 'GroupTrovesProjectIdx', 'projectId')
+    db.createIndex('GroupTroves', 'GroupTrovesUserIdx', 'creatorId')
 
-    # groupTroves
     if 'GroupTroveItems' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroveItems(
             groupTroveItemId    %(PRIMARYKEY)s,
-            groupTroveId        INTEGER NOT NULL,
-            createdBy           INTEGER,
-            troveName           VARCHAR(767),
-            troveVersion        VARCHAR(767),
-            troveFlavor         VARCHAR(767),
-            subGroup            VARCHAR(128),
-            versionLock         INTEGER NOT NULL DEFAULT 0,
-            useLock             INTEGER NOT NULL DEFAULT 0,
-            instSetLock         INTEGER NOT NULL DEFAULT 0,
-            CONSTRAINT GroupTroveItems_groupTroveId_fk
-                FOREIGN KEY (groupTroveId) REFERENCES GroupTroves(groupTroveId)
-                ON DELETE CASCADE,
-            CONSTRAINT GroupTroveItems_createdBy_fk
-                FOREIGN KEY (createdBy) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            groupTroveId        INT,
+            creatorId           INT,
+            trvName             CHAR(128),
+            trvVersion          TEXT,
+            trvFlavor           TEXT,
+            subGroup            CHAR(128),
+            versionLock         INT,
+            useLock             INT,
+            instSetLock         INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroveItems'] = []
         commit = True
+    db.createIndex('GroupTroveItems', 'GroupTroveItemsUserIdx', 'creatorId')
 
-    # conaryComponents
     if 'ConaryComponents' not in db.tables:
         cu.execute("""
         CREATE TABLE ConaryComponents(
              componentId    %(PRIMARYKEY)s,
-             component      VARCHAR(128)
+             component      CHAR(128)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ConaryComponents'] = []
         commit = True
-    db.createIndex('ConaryComponents', 'ConaryComponents_uq',
+    db.createIndex('ConaryComponents', 'ConaryComponentsIdx',
             'component', unique = True)
 
-    # groupTroveRemovedComponents
     if 'GroupTroveRemovedComponents' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroveRemovedComponents(
-             groupTroveId   INTEGER NOT NULL,
-             componentId    INTEGER NOT NULL,
-             CONSTRAINT GroupTroveRemovedComponents_groupTroveId_fk
-                FOREIGN KEY (groupTroveId) REFERENCES GroupTroves(groupTroveId)
-                ON DELETE CASCADE ON UPDATE CASCADE,
-             CONSTRAINT GroupTroveRemovedComponents_componentId_fk
-                FOREIGN KEY (componentId) REFERENCES ConaryComponents(componentId)
-                ON DELETE RESTRICT ON UPDATE CASCADE
+             groupTroveId   INT,
+             componentId    INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroveRemovedComponents'] = []
         commit = True
+    db.createIndex('GroupTroveRemovedComponents',
+            'GroupTroveRemovedComponentIdx', 'groupTroveId, componentId',
+            unique = True)
 
     if commit:
         db.commit()
         db.loadSchema()
-
-
 
 def _createJobs(db):
     cu = db.cursor()
     commit = False
 
-    # jobs
     if 'Jobs' not in db.tables:
         cu.execute("""
         CREATE TABLE Jobs (
             jobId           %(PRIMARYKEY)s,
-            buildId         INTEGER,
-            groupTroveId    INTEGER,
+            buildId         INT,
+            groupTroveId    INT,
             owner           BIGINT,
-            userId          INTEGER,
-            status          INTEGER NOT NULL DEFAULT 0,
+            userId          INT,
+            status          INT,
             statusMessage   TEXT,
-            timeSubmitted   NUMERIC(14,0) NOT NULL DEFAULT 0,
-            timeStarted     NUMERIC(14,0) NOT NULL DEFAULT 0,
-            timeFinished    NUMERIC(14,0) NOT NULL DEFAULT 0,
-            CONSTRAINT Jobs_buildId_fk
-                FOREIGN KEY (buildId) REFERENCES Builds(buildId),
-            CONSTRAINT Jobs_groupTroveId_fk
-                FOREIGN KEY (groupTroveId) REFERENCES GroupTroves(groupTroveId),
-            CONSTRAINT Jobs_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE SET NULL
+            timeSubmitted   DOUBLE,
+            timeStarted     DOUBLE,
+            timeFinished    DOUBLE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Jobs'] = []
         commit = True
+    db.createIndex('Jobs', 'JobsBuildIdx', 'buildId')
+    db.createIndex('Jobs', 'JobsGroupTroveIdx', 'groupTroveId')
+    db.createIndex('Jobs', 'JobsUserIdx', 'userId')
 
-    # jobData
     if 'JobData' not in db.tables:
         cu.execute("""
         CREATE TABLE JobData (
-            jobId           INTEGER NOT NULL,
-            name            VARCHAR(32),
+            jobId           INTEGER,
+            name            CHAR(32),
             value           TEXT,
-            valueType       INTEGER NOT NULL,
-            CONSTRAINT JobData_jobId_fk
-                FOREIGN KEY (jobId) REFERENCES Jobs(jobId)
-                ON DELETE CASCADE
+            valueType       INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['JobData'] = []
         commit = True
-    db.createIndex('JobData', 'JobData_uq', 'jobId, name', unique = True)
+    db.createIndex('JobData', 'JobDataIdx', 'jobId, name', unique = True)
 
     if commit:
         db.commit()
         db.loadSchema()
 
-
 def _createPackageIndex(db):
     cu = db.cursor()
     commit = False
 
-    # packageIndex
     if 'PackageIndex' not in db.tables:
         cu.execute("""
         CREATE TABLE PackageIndex (
-            pkgId           %(PRIMARYKEY)s,
-            projectId       INTEGER NOT NULL,
-            name            VARCHAR(254) NOT NULL,
-            version         VARCHAR(254) NOT NULL,
-            serverName      VARCHAR(254) NOT NULL,
-            branchName      VARCHAR(254) NOT NULL,
-            isSource        INT DEFAULT '0',
-            CONSTRAINT PackageIndex_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE
+            pkgId       %(PRIMARYKEY)s,
+            projectId   INT,
+            name        CHAR(255),
+            version     CHAR(255),
+            serverName  VARCHAR(254) NOT NULL,
+            branchName  VARCHAR(254) NOT NULL,
+            isSource    INT DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
         commit = True
@@ -591,13 +489,13 @@ def _createPackageIndex(db):
     db.createIndex("PackageIndex", "PackageIndexProjectIdx", "projectId")
     db.createIndex("PackageIndex", "PackageIndexServerBranchName", "serverName, branchName")
 
-    # packageIndexMark
     if 'PackageIndexMark' not in db.tables:
         cu.execute("""
         CREATE TABLE PackageIndexMark (
             mark            INTEGER NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndexMark'] = []
+        cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
         commit = True
 
     if commit:
@@ -608,28 +506,24 @@ def _createNewsCache(db):
     cu = db.cursor()
     commit = False
 
-    # newsCache
     if 'NewsCache' not in db.tables:
         cu.execute("""
         CREATE TABLE NewsCache (
             itemId          %(PRIMARYKEY)s,
-            title           VARCHAR(254) NOT NULL DEFAULT '',
-            pubDate         NUMERIC(14,0) NOT NULL DEFAULT 0,
+            title           CHAR(255),
+            pubDate         INT,
             content         TEXT,
-            link            VARCHAR(254),
-            category        VARCHAR(254)
+            link            CHAR(255),
+            category        CHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCache'] = []
         commit = True
-    db.createIndex('NewsCache', 'NewsCachePubDateIdx', 'pubDate')
 
-    # newsCacheInfo
     if 'NewsCacheInfo' not in db.tables:
-        # create table
         cu.execute("""
         CREATE TABLE NewsCacheInfo (
-            age             INTEGER NOT NULL,
-            feedLink        VARCHAR(254) NOT NULL
+            age             INT,
+            feedLink        CHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCacheInfo'] = []
         commit = True
@@ -642,51 +536,47 @@ def _createRMakeBuilds(db):
     cu = db.cursor()
     commit = False
 
-    # rMakeBuild
     if 'rMakeBuild' not in db.tables:
         cu.execute("""
         CREATE TABLE rMakeBuild(
             rMakeBuildId    %(PRIMARYKEY)s,
-            userId          INTEGER NOT NULL,
+            userId          INT,
             title           VARCHAR(128),
             UUID            CHAR(32),
-            jobId           INTEGER,
-            status          INTEGER NOT NULL DEFAULT 0,
-            statusMessage   TEXT,
-            CONSTRAINT rMakeBuilds_userId_fk
-                FOREIGN KEY (userId) REFERENCES Users(userId)
-                ON DELETE CASCADE
+            jobId           INT,
+            status          INT DEFAULT 0,
+            statusMessage   TEXT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rMakeBuild'] = []
         commit = True
+    db.createIndex('rMakeBuild', 'rMakeBuildIdx', 'userId')
+    db.createIndex('rMakeBuild', 'rMakeBuildTitleIdx', 'userId, title',
+            unique = True)
 
-    # rMakeBuildItems
     if 'rMakeBuildItems' not in db.tables:
         cu.execute("""
         CREATE TABLE rMakeBuildItems(
             rMakeBuildItemId    %(PRIMARYKEY)s,
-            rMakeBuildId        INTEGER,
-            troveName           VARCHAR(767),
-            troveLabel          VARCHAR(767),
-            status              INTEGER NOT NULL DEFAULT 0,
-            statusMessage       TEXT,
-            CONSTRAINT rMakeBuildItems_rMakeBuildId_fk
-                FOREIGN KEY (rMakeBuildId) REFERENCES rMakeBuild(rMakeBuildId)
-                ON DELETE CASCADE
+            rMakeBuildId        INT,
+            trvName           VARCHAR(128),
+            trvLabel          VARCHAR(128),
+            status              INT DEFAULT 0,
+            statusMessage       TEXT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rMakeBuildItems'] = []
         commit = True
+    db.createIndex('rMakeBuildItems', 'rMakeBuildItemIdx', 'rMakeBuildId')
+    db.createIndex('rMakeBuildItems', 'rMakeBuildItemNameIdx',
+            'rMakeBuildId, trvName, trvLabel', unique = True)
 
     if commit:
         db.commit()
         db.loadSchema()
 
-
 def _createMirrorInfo(db):
     cu = db.cursor()
     commit = False
 
-    # inboundMirrors
     if 'InboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE InboundMirrors (
             inboundMirrorId %(PRIMARYKEY)s,
@@ -695,50 +585,82 @@ def _createMirrorInfo(db):
             sourceUrl       VARCHAR(767) NOT NULL,
             sourceUsername  VARCHAR(254),
             sourcePassword  VARCHAR(254),
+            mirrorOrder     INT DEFAULT 0,
+            allLabels       INT DEFAULT 0,
             CONSTRAINT InboundMirrors_targetProjectId_fk
                 FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE ON UPDATE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['InboundMirrors'] = []
         commit = True
+    db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
+            'targetProjectId')
 
-    # outboundMirrors
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
-        outboundMirrorId %(PRIMARYKEY)s,
-        sourceProjectId  INT NOT NULL,
-        targetLabels     VARCHAR(767) NOT NULL,
-        targetUrl        VARCHAR(767) NOT NULL,
-        targetUsername   VARCHAR(254),
-        targetPassword   VARCHAR(254),
-        allLabels        INT NOT NULL DEFAULT 0,
-        recurse          INT NOT NULL DEFAULT 0,
-        matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
-        CONSTRAINT OutboundMirrors_sourceProjectId_fk
-            FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
-            ON DELETE CASCADE ON UPDATE CASCADE
-        ) %(TABLEOPTS)s""" % db.keywords)
+            outboundMirrorId %(PRIMARYKEY)s,
+            sourceProjectId  INT NOT NULL,
+            targetLabels     VARCHAR(767) NOT NULL,
+            allLabels        INT NOT NULL DEFAULT 0,
+            recurse          INT NOT NULL DEFAULT 0,
+            matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
+            mirrorOrder      INT DEFAULT 0,
+            CONSTRAINT OutboundMirrors_sourceProjectId_fk
+                FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrors'] = []
+        commit = True
+    db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
+            'sourceProjectId')
+
+    if 'OutboundMirrorTargets' not in db.tables:
+        cu.execute("""
+        CREATE TABLE OutboundMirrorTargets (
+            outboundMirrorTargetsId %(PRIMARYKEY)s,
+            outboundMirrorId        INT NOT NULL,
+            url                     VARCHAR(767) NOT NULL,
+            username                VARCHAR(254) NOT NULL,
+            password                VARCHAR(254) NOT NULL,
+            CONSTRAINT OutboundMirrorTargets_omi_fk
+                FOREIGN KEY (outboundMirrorId)
+                    REFERENCES OutboundMirrors(outboundMirrorId)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['OutboundMirrorTargets'] = []
+        commit = True
+    db.createIndex('OutboundMirrorTargets',
+            'outboundMirrorTargets_outboundMirrorIdIdx', 'outboundMirrorId')
+
+    if 'rAPAPasswords' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rAPAPasswords (
+            host            VARCHAR(255),
+            user            VARCHAR(255),
+            password        VARCHAR(255),
+            role            VARCHAR(255)
+        ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['rAPAPasswords'] = []
         commit = True
 
     if commit:
         db.commit()
         db.loadSchema()
 
-
 def _createRepNameMap(db):
     cu = db.cursor()
     commit = False
 
-    # repNameMap
     if 'RepNameMap' not in db.tables:
         cu.execute("""
         CREATE TABLE RepNameMap (
-            fromName        VARCHAR(254) NOT NULL,
-            toName          VARCHAR(254) NOT NULL
+            fromName        VARCHAR(254),
+            toName          VARCHAR(254),
+            PRIMARY KEY(fromName, toName)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['RepNameMap'] = []
         commit = True
+    db.createIndex('RepNameMap', 'RepNameMap_fromName_idx', 'fromName')
 
     if commit:
         db.commit()
@@ -748,48 +670,157 @@ def _createApplianceSpotlight(db):
     cu = db.cursor()
     commit = False
 
-    # applianceSpotlight
     if 'ApplianceSpotlight' not in db.tables:
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
-            appSpotlightId  %(PRIMARYKEY)s,
-            title           VARCHAR(254) NOT NULL,
-            text            VARCHAR(254) NOT NULL,
-            link            VARCHAR(254) NOT NULL,
-            logo            VARCHAR(254) NOT NULL,
-            showArchive     INTEGER NOT NULL DEFAULT 0,
-            startDate       NUMERIC(14,0) NOT NULL DEFAULT 0,
-            endDate         NUMERIC(14,0) NOT NULL DEFAULT 0
+            itemId          %(PRIMARYKEY)s,
+            title           CHAR(255),
+            text            CHAR(255),
+            link            CHAR(255),
+            logo            CHAR(255),
+            showArchive     INT,
+            startDate       INT,
+            endDate         INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ApplianceSpotlight'] = []
         commit = True
 
-    # frontPageSelections
     if 'FrontPageSelections' not in db.tables:
         cu.execute("""
         CREATE TABLE FrontPageSelections (
-            frontPageSelId  %(PRIMARYKEY)s,
-            name            VARCHAR(254),
-            link            VARCHAR(254),
-            rank            INTEGER NOT NULL
+            itemId          %(PRIMARYKEY)s,
+            name            CHAR(255),
+            link            CHAR(255),
+            rank            INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FrontPageSelections'] = []
         commit = True
 
-    # useIt
     if 'UseIt' not in db.tables:
         cu.execute("""
         CREATE TABLE UseIt (
-            useItId         %(PRIMARYKEY)s,
-            name            VARCHAR(254),
-            link            VARCHAR(254)
+            itemId         %(PRIMARYKEY)s,
+            name            CHAR(255),
+            link            CHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UseIt'] = []
+        commit = True
 
     if commit:
         db.commit()
         db.loadSchema()
 
+def _createFrontPageStats(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'LatestCommit' not in db.tables:
+        cu.execute("""
+        CREATE TABLE LatestCommit (
+            projectId   INTEGER NOT NULL,
+            commitTime  INTEGER NOT NULL,
+            CONSTRAINT LatestCommit_projectId_fk
+                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                    ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['LatestCommit'] = []
+        commit = True
+    db.createIndex('LatestCommit', 'LatestCommitTimestamp',
+            'projectId, commitTime')
+
+    if 'PopularProjects' not in db.tables:
+        cu.execute("""
+        CREATE TABLE PopularProjects (
+            projectId   INTEGER NOT NULL,
+            rank        INTEGER NOT NULL,
+            CONSTRAINT PopularProjects_projectId_fk
+                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                    ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PopularProjects'] = []
+        commit = True
+
+    if 'TopProjects' not in db.tables:
+        cu.execute("""
+        CREATE TABLE TopProjects (
+            projectId   INTEGER NOT NULL,
+            rank        INTEGER NOT NULL,
+            CONSTRAINT TopProjects_projectId_fk
+                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+                    ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['TopProjects'] = []
+        commit = True
+
+    if commit:
+        db.commit()
+        db.loadSchema()
+
+def _createEC2Data(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'BlessedAMIs' not in db.tables:
+        cu.execute("""
+        CREATE TABLE BlessedAMIs (
+            blessedAMIId        %(PRIMARYKEY)s,
+            ec2AMIId            CHAR(12) NOT NULL,
+            buildId             INTEGER,
+            shortDescription    VARCHAR(128),
+            helptext            TEXT,
+            instanceTTL         INTEGER NOT NULL,
+            mayExtendTTLBy      INTEGER,
+            isAvailable         INTEGER NOT NULL DEFAULT 1,
+            CONSTRAINT ba_fk_b FOREIGN KEY (buildId)
+                REFERENCES Builds(buildId) ON DELETE SET NULL
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['BlessedAMIs'] = []
+        commit = True
+    db.createIndex('BlessedAMIs', 'BlessedAMIEc2AMIIdIdx', 'ec2AMIId')
+
+    if 'LaunchedAMIs' not in db.tables:
+        cu.execute("""
+        CREATE Table LaunchedAMIs (
+            launchedAMIId       %(PRIMARYKEY)s,
+            blessedAMIId        INTEGER NOT NULL,
+            launchedFromIP      CHAR(15) NOT NULL,
+            ec2InstanceId       CHAR(10) NOT NULL,
+            raaPassword         CHAR(8) NOT NULL,
+            launchedAt          NUMERIC(14,0) NOT NULL,
+            expiresAfter        NUMERIC(14,0) NOT NULL,
+            isActive            INTEGER NOT NULL DEFAULT 1,
+            CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
+                REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['LaunchedAMIs'] = []
+        commit = True
+    db.createIndex('LaunchedAMIs', 'LaunchedAMIsExpiresActive',
+            'isActive,expiresAfter')
+    db.createIndex('LaunchedAMIs', 'LaunchedAMIsIPsActive',
+            'isActive,launchedFromIP')
+
+    if commit:
+        db.commit()
+        db.loadSchema()
+
+def _createSessions(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'Sessions' not in db.tables:
+        cu.execute("""
+        CREATE TABLE Sessions (
+            sessIdx     %(PRIMARYKEY)s,
+            sid         CHAR(64),
+            data        TEXT
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['Sessions'] = []
+        commit = True
+    db.createIndex('Sessions', 'sessionSidIdx', 'sid')
+
+    if commit:
+        db.commit()
+        db.loadSchema
 
 # create the (permanent) server repository schema
 def createSchema(db):
@@ -808,218 +839,109 @@ def createSchema(db):
     _createMirrorInfo(db)
     _createRepNameMap(db)
     _createApplianceSpotlight(db)
+    _createFrontPageStats(db)
+    _createEC2Data(db)
+    _createSessions(db)
 
-##################### SCHEMA MIGRATION CODE FOLLOWS #########################
+#############################################################################
+# The following code was adapted from Conary's Database Migration schema
+# bits (see conary/server/{migrate,schema}.py for updates).
 
-class SchemaMigration(migration.SchemaMigration):
-    def message(self, msg = None):
-        if msg is None:
-            msg = self.msg
-        if msg == "":
-            msg = "Finished migration to schema version %d" % (self.Version,)
-        logMe(1, msg)
-        self.msg = msg
+# this should only check for the proper schema version. This function
+# is called usually from the multithreaded setup, so schema operations
+# should be avoided here
 
+def checkVersion(db):
+    global VERSION
+    version = db.getVersion()
+    logMe(2, "current =", version, "required =", VERSION)
 
-class MigrateTo_2(SchemaMigration):
-    Version = 2
-    def migrate(self):
-        # TODO port migration code
-        pass
+    # test for no version
+    if version == 0:
+        # TODO: Better message
+        raise sqlerrors.SchemaVersionError("""
+        Your database schema is not initalized or it is too old.  Please
+        run the standalone server with the --migrate argument to
+        upgrade/initialize the database schema for the Conary Repository.
 
+        Current schema version is %s; Required schema version is %s.
+        """ % (version, VERSION), version)
 
-class MigrateTo_3(SchemaMigration):
-    Version = 3
-    def migrate(self):
-        # TODO port migration code
-        pass
+    # the major versions must match
+    if version.major != VERSION.major:
+        # XXX better message
+        raise sqlerrors.SchemaVersionError("""
+        This code schema version does not match the Conary repository
+        database schema that you are running.
 
-
-class MigrateTo_4(SchemaMigration):
-    Version = 4
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_5(SchemaMigration):
-    Version = 5
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_6(SchemaMigration):
-    Version = 6
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_7(SchemaMigration):
-    Version = 7
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_8(SchemaMigration):
-    Version = 8
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_9(SchemaMigration):
-    Version = 9
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_10(SchemaMigration):
-    Version = 10
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_11(SchemaMigration):
-    Version = 11
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_12(SchemaMigration):
-    Version = 12
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_13(SchemaMigration):
-    Version = 13
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_14(SchemaMigration):
-    Version = 14
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_15(SchemaMigration):
-    Version = 15
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_16(SchemaMigration):
-    Version = 16
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_17(SchemaMigration):
-    Version = 17
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_18(SchemaMigration):
-    Version = 18
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_19(SchemaMigration):
-    Version = 19
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_20(SchemaMigration):
-    Version = 20
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_21(SchemaMigration):
-    Version = 21
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_22(SchemaMigration):
-    Version = 22
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_23(SchemaMigration):
-    Version = 23
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-
-class MigrateTo_24(SchemaMigration):
-    Version = 24
-    def migrate(self):
-        # TODO port migration code
-        pass
-
-##################### END OF SCHEMA MIGRATION CODE  #########################
+        Current schema version is %s; Required schema version is %s.
+        """ % (version, VERSION), version)
+    # the minor numbers are considered compatible up and down across a major
+    return version
 
 # run through the schema creation and migration (if required)
-def loadSchema(db):
+def loadSchema(db, migrate=False):
     global VERSION
-    currentVersion = db.getVersion()
-
+    try:
+        version =  checkVersion(db)
+    except sqlerrors.SchemaVersionError, e:
+        version = e.args[0]
+    logMe(1, "current =", version, "required =", VERSION)
     # load the current schema object list
     db.loadSchema()
 
-    # instantiate and call appropriate migration objects in succession.
-    while currentVersion and currentVersion < VERSION:
-        currentVersion = (lambda x : sys.modules[__name__].__dict__[ \
-            'MigrateTo_' + str(x + 1)])(version)(db)()
+    # avoid a recursive import by importing just what we need
+    from mint import migrate
 
-    if currentVersion:
+    # expedite the initial repo creation
+    if version == 0:
+        createSchema(db)
         db.loadSchema()
+        setVer = migrate.majorMinor(VERSION)
+        return db.setVersion(setVer)
+    # test if  the repo schema is newer than what we understand
+    # (by major schema number)
+    if version.major > VERSION.major:
+        # XXX better message
+        raise sqlerrors.SchemaVersionError("""
+        The repository schema version is newer and incompatible with
+        this code base. You need to update conary code to a version
+        that undersand repo schema %s""" % version, version)
+    # now we need to perform a schema migration
+    if version.major < VERSION.major and not migrate:
+        # XXX better message
+        raise sqlerrors.SchemaVersionError("""
+        Repository schema needs to have a major schema update performed.
+        Please run server.py with --migrate option to perform this upgrade.
+        """, version, VERSION)
+    # now the version.major is smaller than VERSION.major - but is it too small?
+    # we only support migrations from schema 13 on
+        # XXX better message
+    if version < 13:
+        raise sqlerrors.SchemaVersionError("""
+        Repository schemas from Conary versions older than 1.0 are not
+        supported. Contact rPath for help converting your repository to
+        a supported version.""", version)
+    # compatible schema versions have the same major
+    if version.major == VERSION.major and not migrate:
+        return version
+    # if we reach here, a schema migration is needed/requested
+    version = migrate.migrateSchema(db)
+    db.loadSchema()
     # run through the schema creation to create any missing objects
+    logMe(2, "checking for/initializing missing schema elements...")
     createSchema(db)
-
-    if currentVersion > 0 and currentVersion != VERSION:
+    if version > 0 and version.major != VERSION.major:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
+        # XXX better message
         raise sqlerrors.SchemaVersionError("""
         Schema migration process has failed to bring the database
         schema version up to date. Please report this error at
         http://issues.rpath.com/.
 
         Current schema version is %s; Required schema version is %s.
-        """ % (currentVersion, VERSION))
+        """ % (version, VERSION))
     db.loadSchema()
-
-    if currentVersion != VERSION:
-        return db.setVersion(VERSION)
-
     return VERSION
 
-# testing 
-#if __name__ == '__main__':
-#    from conary import dbstore
-#    #db = dbstore.connect('/tmp/test', 'sqlite')
-#    loadSchema(db)
 

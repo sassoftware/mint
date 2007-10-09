@@ -14,21 +14,6 @@ class PublishedReleasesTable(database.KeyedTable):
     name = "PublishedReleases"
     key  = "pubReleaseId"
 
-    createSQL = """
-                CREATE TABLE PublishedReleases (
-                    pubReleaseId        %(PRIMARYKEY)s,
-                    projectId           INTEGER,
-                    name                VARCHAR(255),
-                    version             VARCHAR(32),
-                    description         TEXT,
-                    timeCreated         DOUBLE,
-                    createdBy           INTEGER,
-                    timeUpdated         DOUBLE,
-                    updatedBy           INTEGER,
-                    timePublished       DOUBLE,
-                    publishedBy         INTEGER
-                )"""
-
     fields = [ 'pubReleaseId', 'projectId', 'name', 'version', 'description',
                'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
                'timePublished', 'publishedBy' ]

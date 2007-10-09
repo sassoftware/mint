@@ -30,57 +30,13 @@ class GroupTroveTable(database.KeyedTable):
     name = "GroupTroves"
     key = "groupTroveId"
 
-    createSQL = """
-        CREATE TABLE GroupTroves(
-                                 groupTroveId %(PRIMARYKEY)s,
-                                 projectId INT,
-                                 creatorId INT,
-                                 recipeName CHAR(200),
-                                 upstreamVersion CHAR(128),
-                                 description TEXT,
-                                 timeCreated INT,
-                                 timeModified INT,
-                                 autoResolve INT,
-                                 cookCount INT
-                                 )
-    """
-
     fields = ['groupTroveId', 'projectId', 'creatorId', 'recipeName',
               'upstreamVersion', 'description', 'timeCreated', 'timeModified',
               'autoResolve', 'cookCount']
 
-    indexes = {"GroupTrovesProjectIdx": """CREATE INDEX GroupTrovesProjectIdx
-                                               ON GroupTroves(projectId)""",
-               "GroupTrovesUserIdx": """CREATE INDEX GroupTrovesUserIdx
-                                            ON GroupTroves(creatorId)"""}
-
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
-
-    def versionCheck(self):
-        dbversion = self.getDBVersion()
-        if dbversion != self.schemaVersion:
-            if dbversion == 16 and not self.initialCreation:
-                cu = self.db.cursor()
-                if self.cfg.dbDriver == 'sqlite':
-                    cu.execute("""CREATE TABLE %s_backup AS
-                                      SELECT * FROM %s""" % \
-                               (self.name, self.name))
-                    cu.execute('DROP TABLE %s' % self.name)
-                    cu.execute(self.createSQL % self.db.keywords)
-                    cu.execute("""INSERT INTO GroupTroves
-                                      SELECT * FROM %s_backup""" % self.name)
-                else:
-                    cu.execute("""ALTER TABLE GroupTroves
-                                      MODIFY COLUMN recipeName VARCHAR(200)""")
-            if dbversion == 37 and not self.initialCreation:
-                cu = self.db.cursor()
-                cu.execute("""ALTER TABLE GroupTroves
-                                  ADD COLUMN cookCount INT""")
-                cu.execute("UPDATE GroupTroves SET cookCount=0")
-            return dbversion >= 37
-        return True
 
     def listGroupTrovesByProject(self, projectId):
         cu = self.db.cursor()
@@ -181,26 +137,9 @@ class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
     key = "groupTroveItemId"
 
-    createSQL = """
-        CREATE TABLE GroupTroveItems(
-             groupTroveItemId %(PRIMARYKEY)s,
-             groupTroveId INT,
-             creatorId INT,
-             trvName CHAR(128),
-             trvVersion TEXT,
-             trvFlavor TEXT,
-             subGroup CHAR(128),
-             versionLock INT,
-             useLock INT,
-             instSetLock INT
-         )"""
-
     fields = [ 'groupTroveItemId', 'groupTroveId', 'creatorId', 'trvName',
                'trvVersion', 'trvFlavor', 'subGroup', 'versionLock', 'useLock',
                'instSetLock' ]
-
-    indexes = {"GroupTroveItemsUserIdx": """CREATE INDEX GroupTroveItemsUserIdx
-                                              ON GroupTroveItems(creatorId)"""}
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -380,33 +319,12 @@ class ConaryComponentsTable(database.KeyedTable):
     name = "ConaryComponents"
     key = "componentId"
 
-    createSQL = """
-        CREATE TABLE ConaryComponents(
-             componentId %(PRIMARYKEY)s,
-             component CHAR(128)
-         )"""
-
     fields = [ 'componentId', 'component']
-
-    indexes = {'ConaryComponentsIdx': """CREATE UNIQUE INDEX
-                                             ConaryComponentsIdx
-                                             ON ConaryComponents(component)"""}
 
 class GroupTroveRemovedComponentsTable(database.DatabaseTable):
     name = "GroupTroveRemovedComponents"
 
-    createSQL = """
-        CREATE TABLE GroupTroveRemovedComponents(
-             groupTroveId INT,
-             componentId INT
-         )"""
-
     fields = [ 'groupTroveId', 'componentId']
-
-    indexes = {'GroupTroveRemovedComponentIdx':
-               """CREATE UNIQUE INDEX GroupTroveRemovedComponentIdx
-                      ON GroupTroveRemovedComponents
-                          (groupTroveId, componentId)"""}
 
     def list(self, groupTroveId):
         cu = self.db.cursor()

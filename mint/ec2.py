@@ -30,26 +30,9 @@ class FailedToLaunchAMIInstance(MintError):
 class BlessedAMIsTable(database.KeyedTable):
     name = 'BlessedAMIs'
     key = 'blessedAMIId'
-    createSQL = """
-        CREATE TABLE BlessedAMIs (
-            blessedAMIId        %(PRIMARYKEY)s,
-            ec2AMIId            CHAR(12) NOT NULL,
-            buildId             INTEGER,
-            shortDescription    VARCHAR(128),
-            helptext            TEXT,
-            instanceTTL         INTEGER NOT NULL,
-            mayExtendTTLBy      INTEGER,
-            isAvailable         INTEGER NOT NULL DEFAULT 1,
-            CONSTRAINT ba_fk_b FOREIGN KEY (buildId)
-                REFERENCES Builds(buildId) ON DELETE SET NULL
-        )"""
 
     fields = ( 'blessedAMIId', 'ec2AMIId', 'buildId', 'shortDescription',
                'helptext', 'instanceTTL', 'mayExtendTTLBy',  'isAvailable' )
-
-    indexes = { "BlessedAMIEc2AMIIdIdx":\
-                    """CREATE INDEX BlessedAMIEc2AMIIdIdx
-                            ON BlessedAMIs(ec2AMIId)""" }
 
     def getAvailable(self):
         cu = self.db.cursor()
@@ -60,29 +43,9 @@ class BlessedAMIsTable(database.KeyedTable):
 class LaunchedAMIsTable(database.KeyedTable):
     name = 'LaunchedAMIs'
     key = 'launchedAMIId'
-    createSQL = """
-        CREATE Table LaunchedAMIs (
-            launchedAMIId       %(PRIMARYKEY)s,
-            blessedAMIId        INTEGER NOT NULL,
-            launchedFromIP      CHAR(15) NOT NULL,
-            ec2InstanceId       CHAR(10) NOT NULL,
-            raaPassword         CHAR(8) NOT NULL,
-            launchedAt          NUMERIC(14,0) NOT NULL,
-            expiresAfter        NUMERIC(14,0) NOT NULL,
-            isActive            INTEGER NOT NULL DEFAULT 1,
-            CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
-                REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
-        )"""
 
     fields = ( 'launchedAMIId', 'blessedAMIId', 'launchedFromIP',
                'ec2InstanceId', 'raaPassword', 'launchedAt', 'expiresAfter', 'isActive' )
-
-    indexes = { 'LaunchedAMIsExpiresActive':
-                    """CREATE INDEX LaunchedAMIsExpiresActive
-                             ON LaunchedAMIs(isActive,expiresAfter)""",
-                'LaunchedAMIsIPActive':
-                    """CREATE INDEX LaunchedAMIsIPActive
-                             ON LaunchedAMIs(isActive,launchedFromIP)"""}
 
     def getActive(self):
         cu = self.db.cursor()

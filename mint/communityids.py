@@ -3,14 +3,6 @@ from mint import database
 class CommunityIdsTable(database.DatabaseTable):
 
     name = "CommunityIds"
-
-    createSQL = """
-                CREATE TABLE CommunityIds (
-                    projectId           INTEGER,
-                    communityType       INTEGER,
-                    communityId         VARCHAR(255)
-                )"""
-
     fields = [ 'projectId', 'communityType', 'communityId' ]
 
     def getCommunityId(self, projectId, communityType):

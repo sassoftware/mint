@@ -12,18 +12,6 @@ class CommitsTable(database.DatabaseTable):
     name = "Commits"
     fields = ['projectId', 'timestamp', 'troveName', 'version', 'userId']
 
-    createSQL = """
-        CREATE TABLE Commits (
-            projectId   INT,
-            timestamp   INT,
-            troveName   CHAR(255),
-            version     TEXT,
-            userId      INT
-        );"""
-
-    indexes = {'CommitsProjectIdx' : """CREATE INDEX CommitsProjectIdx
-                                            ON Commits(projectId)"""}
-
     def new(self, projectId, timestamp, troveName, troveVersion, userId):
         cu = self.db.cursor()
         cu.execute("INSERT INTO Commits VALUES (?, ?, ?, ?, ?)",

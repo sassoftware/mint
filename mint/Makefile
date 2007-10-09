@@ -8,7 +8,6 @@ SUBDIRS = cmdline reports templates web
 
 python_files =			\
 	__init__.py		\
-	accesscontrol.py	\
 	backup.py		\
 	builds.py		\
 	buildtemplates.py	\
@@ -25,7 +24,6 @@ python_files =			\
 	copyutils.py		\
 	data.py			\
 	database.py		\
-	dbversion.py		\
 	ec2.py			\
 	flavors.py		\
 	grouptrove.py		\
@@ -35,6 +33,7 @@ python_files =			\
 	loadmirror.py		\
 	mailinglists.py		\
 	maintenance.py		\
+	migrate.py		\
 	mint_error.py		\
 	mint_update.py		\
 	mirror.py		\
