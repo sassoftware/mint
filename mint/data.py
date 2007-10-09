@@ -15,6 +15,14 @@ from mint import database
 class GenericDataTable(database.DatabaseTable):
     name = None
 
+    def __init__(self, db):
+        if not self.name:
+            return NotImplementedError
+        self.lowered = self.name[0].lower() + self.name[1:]
+        self.front = self.lowered.replace('Data', '')
+        self.fields = ['%sId' % self.front, 'name', 'value', 'dataType']
+        return database.DatabaseTable.__init__(self, db)
+
     def setDataValue(self, id, name, value, dataType):
         # do any data conversions necessary to safely store value as a string
         if dataType == RDT_BOOL:
