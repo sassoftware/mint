@@ -24,7 +24,6 @@ from webunit import webunittest
 from mint.web import hooks
 from mint import config
 from mint import cooktypes, buildtypes
-from mint import dbversion
 from mint import server
 from mint import shimclient
 from mint import buildtypes
@@ -78,51 +77,72 @@ class EmptyCallback(UpdateCallback, ChangesetCallback):
 class MintDatabase:
     def __init__(self, path):
         self.path = path
+        self.driver = None
 
-    def start(self):
-        pass
+    def connect(self):
+        db = dbstore.connect(self.path, driver = self.driver)
+        assert(db)
+        return db
+
+    def createSchema(self):
+        db = self.connect()
+        from mint import schema
+        schema.loadSchema(db)
+        db.commit()
+
+    def _reset(self):
+        # there will often be better ways of implementing this
+        db = self.connect()
+        cu = db.cursor()
+        for table in db.tables.keys():
+            cu.execute("DROP TABLE %s" % table)
+        return db
 
     def reset(self):
+        db = self._reset()
+        self.createSchema()
+        db.commit()
+
+    def start(self):
         pass
 
 
 class SqliteMintDatabase(MintDatabase):
-    def reset(self):
+
+    def __init__(self, path):
+        MintDatabase.__init__(self, path)
+        self.driver = 'sqlite'
+
+    def _reset(self):
+        # this is faster than dropping tables, and forces a reopen
+        # which avoids sqlite problems with changing the schema
         if os.path.exists(self.path):
             os.unlink(self.path)
+        return self.connect()
 
     def start(self):
-        if os.path.exists(self.path):
-            os.unlink(self.path)
+        self.reset()
 
 
 class MySqlMintDatabase(MintDatabase):
     keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
 
-    def connect(self):
-        return dbstore.connect(self.path, "mysql")
+    def __init__(self, path):
+        MintDatabase.__init__(self, path)
+        self.driver = 'mysql'
 
-    def dropAndCreate(self, dbName, create = True):
+    def _reset(self):
         db = self.connect()
-        cu = db.cursor()
-        cu.execute("SHOW DATABASES")
-        if dbName in [x[0] for x in cu.fetchall()]:
-            cu.execute("DROP DATABASE %s" % dbName)
-        if create:
-            cu.execute("CREATE DATABASE %s" % dbName)
-        db.close()
+        cu = db.transaction()
+        dbName = self.path.split('/')[1]
+        cu.execute("DROP DATABASE %s" % dbName)
+        cu.execute("CREATE DATABASE %s" % dbName)
+        db.commit()
+        return db
 
     def start(self):
-        self.dropAndCreate("minttest")
+        self.reset()
 
-    def reset(self):
-        db = self.connect()
-        cu = db.cursor()
-        cu.execute("SHOW DATABASES")
-        for dbName in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-            cu.execute("DROP DATABASE %s" % dbName)
-        self.dropAndCreate("minttest")
-        db.close()
 
 mintCfg = None
 
