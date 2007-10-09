@@ -191,13 +191,13 @@ def _createProjects(db):
         db.tables['ReposDatabases'] = []
         commit = True
 
-    if 'ProjectDatabases' not in db.tables:
+    if 'ProjectDatabase' not in db.tables:
         cu.execute("""
-        CREATE TABLE ProjectDatabases (
+        CREATE TABLE ProjectDatabase (
             projectId       INT NOT NULL,
             databaseId      INT NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ProjectDatabases'] = []
+        db.tables['ProjectDatabase'] = []
         commit = True
 
     if 'CommunityIds' not in db.tables:
@@ -262,10 +262,6 @@ def _createBuilds(db):
 
     db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
     db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
-    if db.createTrigger('Builds', 'BuildProjectIdIdx', 'INSERT'):
-        commit = True
-    if _createTrigger(db, 'Builds', 'timeUpdated'):
-        commit = True
 
     if 'BuildsView' not in db.views:
         cu.execute("""
@@ -554,7 +550,8 @@ def _createRMakeBuilds(db):
         db.tables['rMakeBuild'] = []
         commit = True
     db.createIndex('rMakeBuild', 'rMakeBuildIdx', 'userId')
-    db.createIndex('rMakeBuild', 'rMakeBuildTitleIdx', 'userId, title')
+    db.createIndex('rMakeBuild', 'rMakeBuildTitleIdx', 'userId, title',
+            unique = True)
 
     if 'rMakeBuildItems' not in db.tables:
         cu.execute("""
@@ -604,9 +601,6 @@ def _createMirrorInfo(db):
             outboundMirrorId %(PRIMARYKEY)s,
             sourceProjectId  INT NOT NULL,
             targetLabels     VARCHAR(767) NOT NULL,
-            targetUrl        VARCHAR(767) NOT NULL,
-            targetUsername   VARCHAR(254),
-            targetPassword   VARCHAR(254),
             allLabels        INT NOT NULL DEFAULT 0,
             recurse          INT NOT NULL DEFAULT 0,
             matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
@@ -679,7 +673,7 @@ def _createApplianceSpotlight(db):
     if 'ApplianceSpotlight' not in db.tables:
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
-            appSpotlightId  %(PRIMARYKEY)s,
+            itemId          %(PRIMARYKEY)s,
             title           CHAR(255),
             text            CHAR(255),
             link            CHAR(255),
@@ -694,7 +688,7 @@ def _createApplianceSpotlight(db):
     if 'FrontPageSelections' not in db.tables:
         cu.execute("""
         CREATE TABLE FrontPageSelections (
-            frontPageSelId  %(PRIMARYKEY)s,
+            itemId          %(PRIMARYKEY)s,
             name            CHAR(255),
             link            CHAR(255),
             rank            INT
@@ -705,7 +699,7 @@ def _createApplianceSpotlight(db):
     if 'UseIt' not in db.tables:
         cu.execute("""
         CREATE TABLE UseIt (
-            useItId         %(PRIMARYKEY)s,
+            itemId         %(PRIMARYKEY)s,
             name            CHAR(255),
             link            CHAR(255)
         ) %(TABLEOPTS)s """ % db.keywords)
