@@ -24,7 +24,6 @@ python_files =			\
 	copyutils.py		\
 	data.py			\
 	database.py		\
-	dbversion.py		\
 	ec2.py			\
 	flavors.py		\
 	grouptrove.py		\

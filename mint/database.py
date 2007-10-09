@@ -116,14 +116,7 @@ class DatabaseTable(object):
         since MintServer object holds the db and all DatabaseTables objects."""
         assert(self.name and self.fields)
         self.db = db
-
         cu = self.db.cursor()
-
-        # Check database version
-        dbversion = self.getDBVersion(self)
-        if dbversion != schema.VERSION:
-            raise DatabaseVersionMismatch(dbversion)
-
 
     def __getattribute__(self, name):
         if name == 'db':
@@ -135,11 +128,6 @@ class DatabaseTable(object):
             return object.__setattr__(self, name, weakref.ref(val))
         return object.__setattr__(self, name, val)
 
-    def getDBVersion(self):
-        cu = self.db.cursor()
-        cu.execute("SELECT COALESCE(MAX(version), 0) "
-                   "FROM DatabaseVersion")
-        return cu.fetchone()[0]
 
 class KeyedTable(DatabaseTable):
     """

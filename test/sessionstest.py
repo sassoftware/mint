@@ -11,7 +11,6 @@ import time
 import rephelp
 import fixtures
 
-from mint import dbversion
 from mint import sessiondb
 
 class SessionTest(fixtures.FixturedUnitTest):

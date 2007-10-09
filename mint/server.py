@@ -25,7 +25,6 @@ from mint import charts
 from mint import communityids
 from mint import data
 from mint import database
-from mint import dbversion
 from mint import ec2
 from mint import grouptrove
 from mint import helperfuncs
@@ -221,7 +220,6 @@ def typeCheck(*paramTypes):
 tables = {}
 def getTables(db, cfg):
     d = {}
-    d['version'] = dbversion.VersionTable(db)
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
