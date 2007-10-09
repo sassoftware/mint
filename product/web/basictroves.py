@@ -6,6 +6,8 @@
 
 baseConaryLabel = 'conary.rpath.com@rpl:1'
 
+fallbackTroves = ['anaconda-templates']
+
 labelDict = {baseConaryLabel :
               [('group-core',
                 'A basic set of packages required for a functional system.'),
