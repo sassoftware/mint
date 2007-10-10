@@ -40,6 +40,17 @@ class MigrateTo_38(SchemaMigration):
         cu.execute("UPDATE GroupTroves SET cookCount=0")
         return True
 
+# SCHEMA VERSION 39
+class MigrateTo_39(SchemaMigration):
+    Version = (39, 0)
+
+    # 39.0
+    # - Move to Conary-style database versions
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("DROP TABLE DatabaseVersion")
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
