@@ -4,7 +4,7 @@
 #
 
 from conary import dbstore
-from conary.lib.tracelog import logMe
+from conary.lib.tracelog import logMe, initLog
 
 from mint import config
 from mint import scriptlibrary
@@ -20,6 +20,7 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
 
     def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
         scriptlibrary.SingletonScript.__init__(self, aLockPath)
+        initLog(level=2)
 
     def handle_args(self):
         usage = "%prog [options] "

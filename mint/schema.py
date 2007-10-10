@@ -880,7 +880,7 @@ def checkVersion(db):
     return version
 
 # run through the schema creation and migration (if required)
-def loadSchema(db, migrate=False):
+def loadSchema(db, should_migrate=False):
     global RBUILDER_DB_VERSION
     try:
         version =  checkVersion(db)
@@ -907,7 +907,7 @@ def loadSchema(db, migrate=False):
         this code base. You need to update rBuilder to a version
         that understands schema %s""" % version, version)
     # now we need to perform a schema migration
-    if version.major < RBUILDER_DB_VERSION.major and not migrate:
+    if version.major < RBUILDER_DB_VERSION.major and not should_migrate:
         raise sqlerrors.SchemaVersionError("""
         The rBuilder database schema needs to have a major schema update
         performed.  Please run rbuilder-database with the --migrate option to
@@ -922,7 +922,7 @@ def loadSchema(db, migrate=False):
         version are longer supported. Please contact rPath for help 
         converting the rBuilder database to a supported version.""", version)
     # compatible schema versions have the same major
-    if version.major == RBUILDER_DB_VERSION.major and not migrate:
+    if version.major == RBUILDER_DB_VERSION.major and not should_migrate:
         return version
     # if we reach here, a schema migration is needed/requested
     version = migrate.migrateSchema(db)
