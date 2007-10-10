@@ -71,7 +71,7 @@ def majorMinor(major):
 def migrateSchema(db):
     version = db.getVersion()
     assert(version >= 13) # minimum version we support
-    if version.major > schema.VERSION.major:
+    if version.major > schema.RBUILDER_DB_VERSION.major:
         return version # noop, should not have been called.
     logMe(2, "migrating from version", version)
     # first, we need to make sure that for the current major we're up
@@ -85,7 +85,7 @@ def migrateSchema(db):
     migrateFunc(db)()
     version = db.getVersion()
     # migrate to the latest major
-    while version.major < schema.VERSION.major:
+    while version.major < schema.RBUILDER_DB_VERSION.major:
         migrateFunc = _getMigration(version.major+1)
         newVersion = migrateFunc(db)()
         assert(newVersion.major == version.major+1)

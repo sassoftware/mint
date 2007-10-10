@@ -3,5 +3,5 @@ import sys
 sys.path.append('..')
 
 from mint import schema
-print schema.VERSION
+print schema.RBUILDER_DB_VERSION
 

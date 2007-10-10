@@ -526,8 +526,6 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
             pass
         cu.execute("CREATE DATABASE %s" % name)
         self.db.commit()
-        from mint import schema
-        schema.loadSchema(self.db)
 
     def _dropDb(self, name):
         self._connect()
@@ -548,11 +546,13 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         dbName = "mf%s" % name
         self.keepDbs.append(dbName.lower())
         self._newDb(dbName)
-        from mint import schema
-        schema.loadSchema(self.db)
         cfg.dbDriver = cfg.reposDBDriver = "mysql"
         cfg.dbPath = self._getConnectStringForDb(dbName)
         cfg.reposDBPath = self._getConnectStringForDb()
+        from mint import schema
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        schema.loadSchema(db)
+        db.close()
         return cfg
 
     def loadFixture(self, name):
@@ -637,7 +637,8 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
 
     def __del__(self):
         self.stop()
-        FixtureCache.__del__(self)
+        for f in self._fixtures.values():
+            util.rmtree(f[0].dataPath)
 
 class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
     keepDbs = ['postgres', 'testdb', 'template1', 'template0']
@@ -802,7 +803,8 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
 
     def __del__(self):
         self.stop()
-        FixtureCache.__del__(self)
+        for f in self._fixtures.values():
+            util.rmtree(f[0].dataPath)
 
 
 class FixturedUnitTest(unittest.TestCase, MCPTestMixin):

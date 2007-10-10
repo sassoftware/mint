@@ -78,14 +78,14 @@ class MintDatabase:
     def __init__(self, path):
         self.path = path
         self.driver = None
+        self.db = None
 
     def connect(self):
         db = dbstore.connect(self.path, driver = self.driver)
         assert(db)
         return db
 
-    def createSchema(self):
-        db = self.connect()
+    def createSchema(self, db):
         from mint import schema
         schema.loadSchema(db)
         db.commit()
@@ -100,7 +100,7 @@ class MintDatabase:
 
     def reset(self):
         db = self._reset()
-        self.createSchema()
+        self.createSchema(db)
         db.commit()
 
     def start(self):
@@ -134,10 +134,13 @@ class MySqlMintDatabase(MintDatabase):
     def _reset(self):
         db = self.connect()
         cu = db.transaction()
-        dbName = self.path.split('/')[1]
-        cu.execute("DROP DATABASE %s" % dbName)
-        cu.execute("CREATE DATABASE %s" % dbName)
+        try:
+            cu.execute("DROP DATABASE minttest")
+        except:
+            pass
+        cu.execute("CREATE DATABASE minttest")
         db.commit()
+        db.use("minttest")
         return db
 
     def start(self):
