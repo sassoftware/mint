@@ -70,7 +70,7 @@ def majorMinor(major):
 # entry point that migrates the schema
 def migrateSchema(db):
     version = db.getVersion()
-    assert(version >= 13) # minimum version we support
+    assert(version >= 37) # minimum version we support
     if version.major > schema.RBUILDER_DB_VERSION.major:
         return version # noop, should not have been called.
     logMe(2, "migrating from version", version)
