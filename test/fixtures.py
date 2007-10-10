@@ -548,6 +548,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         dbName = "mf%s" % name
         self.keepDbs.append(dbName.lower())
         self._newDb(dbName)
+        from mint import schema
         schema.loadSchema(self.db)
         cfg.dbDriver = cfg.reposDBDriver = "mysql"
         cfg.dbPath = self._getConnectStringForDb(dbName)
