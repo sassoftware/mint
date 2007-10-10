@@ -62,13 +62,6 @@ def setup():
     global testPath
     global archivePath
 
-    if not os.environ.has_key('MCP_PATH'):
-        print "please set MCP_PATH"
-        sys.exit(1)
-    if not os.environ.has_key('CONARY_PATH'):
-        print "please set CONARY_PATH"
-        sys.exit(1)
-
     conaryPath      = os.getenv('CONARY_PATH')
     conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test'))
     mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
