@@ -62,10 +62,10 @@ def setup():
     global testPath
     global archivePath
 
-    conaryPath      = os.getenv('CONARY_PATH')
-    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test'))
+    conaryPath      = os.getenv('CONARY_PATH',      '../../conary-1.1')
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test-1.1'))
     mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
-    mcpTestPath     = os.getenv('MCP_TEST_PATH',    '../../mcp/test')
+    mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.join(mcpPath, 'test'))
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   '../../jobslave')
     mintPath        = os.getenv('MINT_PATH',        '..')
     mintTestPath    = os.getenv('MINT_TEST_PATH',   '.')
