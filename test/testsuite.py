@@ -142,8 +142,8 @@ def main(argv=None, individual=True):
                                        testPath=testPath, conaryDir=conaryDir)
     _handler = handler
     results = handler.main(argv)
-    return (not results.wasSuccessful())
+    sys.exit(not results.wasSuccessful())
 
 if __name__ == '__main__':
     setup()
-    sys.exit(main(sys.argv, individual=False))
+    main(sys.argv, individual=False)
