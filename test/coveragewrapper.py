@@ -44,9 +44,10 @@ class CoverageWrapper(object):
         interp = "/usr/bin/python2.4"
         if isinstance(argv, str):
             cmd = '%s %s' % (interp, argv)
+            cmd = cmd.split(' ')
         else:
             cmd = [interp] + argv
-        retval = subprocess.call(cmd.split(" "), env=self.environ)
+        retval = subprocess.call(cmd, env=os.environ)
         return retval
 
     def getCoverage(self):
@@ -55,22 +56,15 @@ class CoverageWrapper(object):
         coverage = imp.load_source('coverage', self._executable)
         coverage = coverage.the_coverage
         coverage.cacheDir = self._dataPath
-        coverage.get_ready(restoreDir=True)
+        coverage.restoreDir()
         return coverage
-
-    def compress(self):
-        coverage = self.getCoverage()
-        if os.path.exists(self._dataPath):
-            util.rmtree(self._dataPath)
-        util.mkdirChain(self._dataPath)
-        coverage.save()
 
     def displayReport(self, files, displayMissingLines=False):
         assert(not displayMissingLines)
         missingSortKey = lambda x: (len(x[2]), len(x[1]))
         sortFn = lambda a,b: cmp(missingSortKey(a), missingSortKey(b))
         coverage = self.getCoverage()
-        coverage.report(files, show_missing=False)
+        coverage.report(files, show_missing=False, sortFn=sortFn)
 
     def writeAnnotatedFiles(self, files):
         if os.path.exists(self._annotatePath):
@@ -106,7 +100,7 @@ class CoverageWrapper(object):
             totalCovered += coveredLines
 
         if totalCovered != totalLines:
-            percentCovered = 100.0 * totalCovered / totalLines
+            percentCovered = 1.0 - 100.0 * totalCovered / totalLines
         else:
             percentCovered = 100.0
         return totalLines, totalCovered, percentCovered
@@ -149,6 +143,7 @@ def _isPythonFile(fullPath, posFilters=[r'\.py$'], negFilters=['sqlite']):
     return True
 
 def getFilesToAnnotate(baseDirs=[], filesToFind=[], exclude=[]):
+
     notExists = set(filesToFind)
     addAll = not filesToFind
 
@@ -174,7 +169,6 @@ def getFilesToAnnotate(baseDirs=[], filesToFind=[], exclude=[]):
                         allFiles.add(fullPath)
     return list(allFiles), notExists
 
-    return files, []
 
 def getFilesToAnnotateByPatch(baseDir, exclude, patchInput, filesDict=None):
     if filesDict is None:
@@ -197,35 +191,37 @@ def getFilesToAnnotateByPatch(baseDir, exclude, patchInput, filesDict=None):
             break
         lines = [ int(x) for x in output.readline().split()]
         files[fileName] = lines
-
     for fileName in files.keys():
         for excludePattern in exclude:
             if re.search(excludePattern, fileName):
                 del files[fileName]
 
-def getFilesToAnnotateFromPatchFile(path, baseDirs=[], excludeDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, open, path)
-    
-def getFilesToAnnotateFromHg(baseDirs=[], excludeDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, os.popen, "hg diff")
+def getFilesToAnnotateFromPatchFile(path, baseDirs=[], exclude=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, exclude, open, path)
 
-def getFilesToAnnotateFromHgOut(baseDirs=[], excludeDirs=[]):
-    return _getFilesToAnnotateFromFn(baseDirs, excludeDirs, os.popen, "hg diff -r $(hg parents -r $(hg outgoing | awk '/changeset/ { print $2}' | head -1  | cut -d: -f1)  | awk '/changeset/ { print $2}' | cut -d: -f1)")
+def getFilesToAnnotateFromHg(baseDirs=[], exclude=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, exclude, os.popen, "hg diff")
 
-def _getFilesToAnnotateFromFn(baseDirs, excludeDirs, fn, *args, **kw):
+def getFilesToAnnotateFromHgOut(baseDirs=[], exclude=[]):
+    return _getFilesToAnnotateFromFn(baseDirs, exclude, os.popen, "hg diff -r $(hg parents -r $(hg outgoing | awk '/changeset/ { print $2}' | head -1  | cut -d: -f1)  | awk '/changeset/ { print $2}' | cut -d: -f1)")
+
+def _getFilesToAnnotateFromFn(baseDirs, exclude, fn, *args, **kw):
     files = {}
     curDir = os.getcwd()
     try:
         for baseDir in baseDirs:
+            if not os.path.isdir(os.path.join(baseDir, '.hg')):
+                # This is not an hg repo (for instance, if policy is not run
+                # from mercurial)
+                continue
             os.chdir(baseDir)
             output = fn(*args, **kw)
-            getFilesToAnnotateByPatch(baseDir, excludeDirs, output, files)
+            getFilesToAnnotateByPatch(baseDir, exclude, output, files)
     finally:
         os.chdir(curDir)
 
     for fullPath in files.keys():
         if not _isPythonFile(fullPath):
             del files[fullPath]
-    
-    return files, []
 
+    return files, []
