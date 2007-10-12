@@ -3108,7 +3108,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
         if troveName in troves:
-            ret = list(set(str(x.branch().label()) for x in troves[troveName]))
+            ret = sorted(list(set(str(x.branch().label()) for x in troves[troveName])))
         else:
             ret = []
         return ret
@@ -3128,7 +3128,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         strFlavor = lambda x: str(x) and str(x).replace(',', ', ') or '(no flavor)'
         for v, fList in versionDict.items():
             diffDict = deps.flavorDifferences(fList)
-            versionDict[v] = [(not diffDict[x].isEmpty() and str(diffDict[x]) or strFlavor(x), str(x)) for x in fList]
+            versionDict[v] = sorted([(not diffDict[x].isEmpty() and str(diffDict[x]) or strFlavor(x), str(x)) for x in fList])
 
         return [versionDict, versionList]
 
