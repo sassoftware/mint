@@ -2124,7 +2124,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             uJob, suggMap = cclient.updateChangeSet(itemList,
                                                     resolveDeps = False)
 
-            job = [x for x in uJob.getPrimaryJobs()][0]
+            # Use the most recent job on the label; we sort the versions
+            # returned to pick the most recent one (fix for RBL-2216).
+            job = sorted([x for x in uJob.getPrimaryJobs()],
+                    key=lambda x: x[2], reverse=True)[0]
             strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
                                      str(job[2][1]))
 
