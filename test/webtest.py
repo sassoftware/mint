@@ -289,6 +289,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("SELECT confirmation FROM Confirmations")
         assert(not cu.fetchall())
+        self.db.commit()
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
