@@ -22,7 +22,7 @@ class RBALogTest(raatest.rAATest):
         RBALog.logPath = self.oldLogPath
 
     def test_indexTitle(self):
-        self.requestWithIdent("/rbalog/RBALog/")
+        self.requestWithIdent("/rbalog/RBALog/?debug")
         print cherrypy.response.body[0]
         assert "<title>rbuilder log</title>" in cherrypy.response.body[0].lower()
 

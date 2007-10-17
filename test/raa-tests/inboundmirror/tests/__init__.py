@@ -25,7 +25,7 @@ class InboundMirrorTest(raatest.rAATest):
         os.system = self.oldSystem
 
     def test_indexTitle(self):
-        self.requestWithIdent("/inboundmirror/InboundMirror/")
+        self.requestWithIdent("/inboundmirror/InboundMirror/?debug")
         assert "<title>schedule inbound mirroring</title>" in cherrypy.response.body[0].lower()
     
     def test_index(self):

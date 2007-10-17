@@ -80,7 +80,7 @@ class LoadMirror(rAAWebPlugin):
         schedId = self.schedule(sched, commit=False)
         self.table.setCommand(schedId, command, done, error)
 
-        return dict()
+        return dict(schedId=schedId)
 
     @turbogears.expose(allow_json=True)
     @turbogears.identity.require(turbogears.identity.not_anonymous())
