@@ -16,8 +16,8 @@ from conary import dbstore
 from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
-# database schema version
-RBUILDER_DB_VERSION = sqllib.DBversion(39)
+# database schema major version
+RBUILDER_DB_VERSION = sqllib.DBversion(40)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -107,8 +107,10 @@ def _createLabels(db):
             projectId       INT,
             label           VARCHAR(255),
             url             VARCHAR(255),
+            authType        VARCHAR(32),
             username        VARCHAR(255),
-            password        VARCHAR(255)
+            password        VARCHAR(255),
+            entitlement     VARCHAR(254)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
         commit = True
@@ -583,8 +585,10 @@ def _createMirrorInfo(db):
             targetProjectId INT NOT NULL,
             sourceLabels    VARCHAR(767) NOT NULL,
             sourceUrl       VARCHAR(767) NOT NULL,
+            sourceAuthType  VARCHAR(32) NOT NULL,
             sourceUsername  VARCHAR(254),
             sourcePassword  VARCHAR(254),
+            sourceEntitlement   VARCHAR(254),
             mirrorOrder     INT DEFAULT 0,
             allLabels       INT DEFAULT 0,
             CONSTRAINT InboundMirrors_targetProjectId_fk

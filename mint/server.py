@@ -3824,16 +3824,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, (list, str), str, str, str, bool)
     @requiresAdmin
     def addInboundMirror(self, targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword, allLabels):
+            sourceUrl, authType, sourceUsername, sourcePassword,
+            sourceEntitlement, allLabels):
         cu = self.db.cursor()
         cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM InboundMirrors")
         mirrorOrder = cu.fetchone()[0]
 
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
-                sourceUrl = sourceUrl, sourceUsername = sourceUsername,
-                sourcePassword = sourcePassword, mirrorOrder = mirrorOrder,
-                allLabels = allLabels)
+                sourceUrl = sourceUrl, sourceAuthType=authType,
+                sourceUsername = sourceUsername,
+                sourcePassword = sourcePassword,
+                sourceEntitlement = sourceEntitlement,
+                mirrorOrder = mirrorOrder, allLabels = allLabels)
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
         if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
@@ -3847,11 +3850,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, (list, str), str, str, str, bool)
     @requiresAdmin
     def editInboundMirror(self, targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword, allLabels):
+            sourceUrl, authType, sourceUsername, sourcePassword,
+            sourceEntitlement, allLabels):
         x = self.inboundMirrors.update(targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
-                sourceUrl = sourceUrl, sourceUsername = sourceUsername,
-                sourcePassword = sourcePassword, allLabels = allLabels)
+                sourceUrl = sourceUrl, sourceAuthType = authType, 
+                sourceUsername = sourceUsername,
+                sourcePassword = sourcePassword,
+                sourceEntitlement=sourceEntitlement,
+                allLabels = allLabels)
         self._generateConaryRcFile()
         return x
 
@@ -3861,7 +3868,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getInboundMirrors(self):
         cu = self.db.cursor()
         cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
-            sourceUsername, sourcePassword, allLabels FROM InboundMirrors ORDER BY mirrorOrder""")
+            sourceAuthType, sourceUsername, sourcePassword, sourceEntitlement, allLabels
+            FROM InboundMirrors ORDER BY mirrorOrder""")
         return [list(x) for x in cu.fetchall()]
 
     @private

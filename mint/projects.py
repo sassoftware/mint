@@ -24,7 +24,8 @@ from conary import sqlite3
 from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
-from conary.conarycfg import ConaryConfiguration
+from conary.conarycfg import ConaryConfiguration, UserInformation, \
+        EntitlementList
 
 
 class InvalidHostname(MintError):
@@ -140,12 +141,11 @@ class Project(database.TableObject):
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
-        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, False, '', '')
-        return labelPath
+        return self.server.getLabelsForProject(self.id, False, '', '')[0]
 
     def getConaryConfig(self, overrideAuth = False, newUser = '', newPass = ''):
 
-        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
+        labelPath, repoMap, userMap, entMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
         #cfg.root = ":memory:"
@@ -156,12 +156,9 @@ class Project(database.TableObject):
         installLabelPath = " ".join(x for x in labelPath.keys())
         cfg.configLine("installLabelPath %s" % installLabelPath)
 
-        for server, auth in userMap.items():
-            if auth[0] and auth[1]:
-                # only add user/pass if both are set
-                cfg.user.addServerGlob(server, auth[0], auth[1])
-
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
+        cfg.user.extend(userMap)
+        cfg.entitlement.extend(entMap)
 
         useInternalConaryProxy, httpProxies = self.server.getProxies()
         cfg = helperfuncs.configureClientProxies(cfg, useInternalConaryProxy,
@@ -542,7 +539,8 @@ class ProjectsTable(database.KeyedTable):
 class LabelsTable(database.KeyedTable):
     name = 'Labels'
     key = 'labelId'
-    fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
+    fields = ['labelId', 'projectId', 'label', 'url', 'authType', 'username',
+        'password', 'entitlement']
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
@@ -563,24 +561,28 @@ class LabelsTable(database.KeyedTable):
             overrideAuth = False, newUser = '', newPass = ''):
         cu = self.db.cursor()
 
-        cu.execute("""SELECT l.labelId, l.label, l.url, l.username, l.password,
-                             p.external
+        cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+                            l.username, l.password, l.entitlement,
+                            p.external
                       FROM Labels l, Projects p
                       WHERE p.projectId=? AND l.projectId=p.projectId""",
                       projectId)
 
         repoMap = {}
         labelIdMap = {}
-        userMap = {}
-        for labelId, label, url, username, password, external in cu.fetchall():
+        userMap = []
+        entMap = []
+        for labelId, label, url, authType, username, password, entitlement, \
+                external in cu.fetchall():
             if overrideAuth:
+                authType = 'userpass'
                 username = newUser
                 password = newPass
 
             labelIdMap[label] = labelId
             host = label[:label.find('@')]
             if url:
-                if username and password:
+                if authType == 'userpass':
                     if not external:
                         if self.cfg.SSL:
                             protocol = "https"
@@ -596,21 +598,28 @@ class LabelsTable(database.KeyedTable):
                 map = "http://%s/conary/" % (host)
 
             repoMap[host] = map
-            userMap[host] = (username, password)
 
-        return labelIdMap, repoMap, userMap
+            if authType == 'userpass':
+                userMap.append((host, (username, password)))
+            elif authType == 'entitlement':
+                entMap.append((host, (None, entitlement)))
+
+        return labelIdMap, repoMap, userMap, entMap
 
     def getLabel(self, labelId):
         cu = self.db.cursor()
-        cu.execute("SELECT label, url, username, password FROM Labels WHERE labelId=?", labelId)
+        cu.execute('''SELECT label, url, authType, username, password,
+            entitlement FROM Labels WHERE labelId=?''', labelId)
 
         p = cu.fetchone()
         if not p:
             raise LabelMissing
         else:
-            return p[0], p[1], p[2], p[3]
+            return dict(label=p[0], url=p[1], authType=p[2],
+                username=p[3], password=p[4], entitlement=p[5])
 
-    def addLabel(self, projectId, label, url=None, username=None, password=None):
+    def addLabel(self, projectId, label, url=None, authType='none',
+            username=None, password=None, entitlement=None):
         cu = self.db.cursor()
 
         cu.execute("""SELECT count(labelId) FROM Labels WHERE label=? and projectId=?""",
@@ -619,15 +628,19 @@ class LabelsTable(database.KeyedTable):
         if c > 0:
             raise DuplicateLabel
 
-        cu.execute("""INSERT INTO Labels (projectId, label, url, username, password)
-                      VALUES (?, ?, ?, ?, ?)""", projectId, label, url, username, password)
+        cu.execute("""INSERT INTO Labels (projectId, label, url, authType,
+            username, password, entitlement)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""", projectId, label, url,
+                    authType, username, password, entitlement)
         self.db.commit()
         return cu._cursor.lastrowid
 
-    def editLabel(self, labelId, label, url, username=None, password=None):
+    def editLabel(self, labelId, label, url, authType='none',
+            username=None, password=None, entitlement=None):
         cu = self.db.cursor()
-        cu.execute("""UPDATE Labels SET label=?, url=?, username=?, password=?
-                      WHERE labelId=?""", label, url, username, password, labelId)
+        cu.execute("""UPDATE Labels SET label=?, url=?, authType=?,
+            username=?, password=?, entitlement=? WHERE labelId=?""",
+            label, url, authType, username, password, entitlement, labelId)
         self.db.commit()
 
     def removeLabel(self, projectId, labelId):

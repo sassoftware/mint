@@ -19,7 +19,8 @@ class InboundMirrorsTable(database.KeyedTable):
     key = 'inboundMirrorId'
 
     fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
-              'sourceUrls', 'sourceUsername', 'sourcePassword',
+              'sourceUrls', 'sourceAuthType', 'sourceUsername',
+              'sourcePassword', 'sourceEntitlement',
               'mirrorOrder', 'allLabels']
 
 class OutboundMirrorsTable(database.KeyedTable):

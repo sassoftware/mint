@@ -37,7 +37,8 @@ class MirrorInbound(MirrorScript):
 
         for label in mirroredLabels:
             inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
-                    sourceUser, sourcePass, allLabels = label
+                    sourceAuthType, sourceUser, sourcePass, \
+                    sourceEntitlement, allLabels = label
             targetProject = client.getProject(targetProjectId)
             self.log.info("Mirroring %s" % targetProject.name)
 
@@ -51,8 +52,10 @@ class MirrorInbound(MirrorScript):
 
                 cfg.source.repositoryMap.update(client.getFullRepositoryMap())
                 cfg.source.repositoryMap.update({reposHost: sourceUrl})
-                if sourceUser:
+                if sourceAuthType == 'userpass':
                     cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+                elif sourceAuthType == 'entitlement':
+                    cfg.source.entitlement.addEntitlement(reposHost, sourceEntitlement)
 
                 cfg.target.repositoryMap.update(cfg.source.repositoryMap)
                 cfg.target.repositoryMap.update({reposHost: targetUrl})

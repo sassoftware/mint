@@ -178,11 +178,9 @@ class UpdatePackageIndexExternal(PackageIndexer):
         projectIds = {}
         netclients = {}
 
-        for r in cu.fetchall():
-            projectId, hostname, localMirror = r
-
+        for projectId, hostname, localMirror in cu.fetchall():
             self.log.info("Retrieving labels from %s...", hostname)
-            l, repMap, userMap = labelsTable.getLabelsForProject(projectId)
+            l, repMap, userMap, entMap = labelsTable.getLabelsForProject(projectId)
 
             hostname = repMap.keys()[0]
             labels[hostname] = versions.Label(l.keys()[0])
@@ -196,10 +194,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
             ccfg.root = ccfg.dbPath = ':memory:'
             ccfg.repositoryMap = repMap
             if not localMirror:
-                for server, auth in userMap.items():
-                    # only add user/pass if both are set
-                    if auth[0] and auth[1]:
-                        ccfg.user.addServerGlob(server, auth[0], auth[1])
+                ccfg.user.extend(userMap)
+                ccfg.entitlement.extend(entMap)
             ccfg = helperfuncs.configureClientProxies(ccfg,
                     self.cfg.useInternalConaryProxy, self.cfg.proxy)
             repos = conaryclient.ConaryClient(ccfg).getRepos()

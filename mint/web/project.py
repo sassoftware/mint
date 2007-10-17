@@ -126,8 +126,8 @@ class ProjectHandler(WebHandler):
             mirrored = bool(self.client.getInboundMirror(self.project.id))
 
             # anonymous external projects can't be mirrored
-            _, _, userMap = self.client.getLabelsForProject(self.project.id)
-            anonymous = True in [x[0] == 'anonymous' for x in userMap.values()]
+            _, _, userMap, entMap = self.client.getLabelsForProject(self.project.id)
+            anonymous = len(userMap) == 0 and len(entMap) == 0
         else:
             mirrored = False
             anonymous = False
@@ -1053,8 +1053,9 @@ class ProjectHandler(WebHandler):
                 oldLabel = self.project.getLabel()
                 if oldLabel != label:
                     labelId = self.project.getLabelIdMap()[oldLabel]
-                    oldLabel, oldUrl, oldUser, oldPass = self.client.server.getLabel(labelId)
-                    self.project.editLabel(labelId, label, oldUrl, oldUser, oldPass)
+                    labelInfo = self.client.server.getLabel(labelId)
+                    labelInfo['label'] = label
+                    self.project.editLabel(**labelInfo)
             except database.DuplicateItem:
                 self._addErrors("Project title conflicts with another project")
 

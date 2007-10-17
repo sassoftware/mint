@@ -51,6 +51,22 @@ class MigrateTo_39(SchemaMigration):
         cu.execute("DROP TABLE DatabaseVersion")
         return True
 
+
+# SCHEMA VERSION 40
+class MigrateTo_40(SchemaMigration):
+    Version = (40, 0)
+
+    # 40.0
+    # - Add explicit auth type columns to Labels, InboundMirrors tables
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ADD COLUMN authType VARCHAR(254)")
+        cu.execute("ALTER TABLE Labels ADD COLUMN entitlement VARCHAR(254)")
+        cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceAuthType VARCHAR(254)")
+        cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceEntitlement VARCHAR(254)")
+        self.db.commit()
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
