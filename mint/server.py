@@ -1690,12 +1690,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterLabelAccess(labelId)
         return self.labels.getLabel(labelId)
 
-    @typeCheck(int, str, str, str, str)
+    @typeCheck(int, str, str, str, str, str, str)
     @requiresAuth
     @private
-    def editLabel(self, labelId, label, url, username, password):
+    def editLabel(self, labelId, label, url, authType, username, password,
+            entitlement):
         self._filterLabelAccess(labelId)
-        self.labels.editLabel(labelId, label, url, username, password)
+        self.labels.editLabel(labelId, label, url, authType, username,
+            password, entitlement)
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
 
@@ -3821,7 +3823,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     # mirrored labels
     @private
-    @typeCheck(int, (list, str), str, str, str, bool)
+    @typeCheck(int, (list, str), str, str, str, str, str, bool)
     @requiresAdmin
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, authType, sourceUsername, sourcePassword,
@@ -3847,7 +3849,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return x
 
     @private
-    @typeCheck(int, (list, str), str, str, str, bool)
+    @typeCheck(int, (list, str), str, str, str, str, str, bool)
     @requiresAdmin
     def editInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, authType, sourceUsername, sourcePassword,

@@ -168,8 +168,10 @@ class Project(database.TableObject):
     def addLabel(self, label, url, username="", password=""):
         return self.server.addLabel(self.id, label, url, username, password)
 
-    def editLabel(self, labelId, label, url, username, password):
-        return self.server.editLabel(labelId, label, url, username, password)
+    def editLabel(self, labelId, label, url, authType, username, password,
+            entitlement):
+        return self.server.editLabel(labelId, label, url, authType, username,
+            password, entitlement)
 
     def removeLabel(self, labelId):
         return self.server.removeLabel(self.id, labelId)

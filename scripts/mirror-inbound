@@ -44,11 +44,11 @@ class MirrorInbound(MirrorScript):
 
             try:
                 targetLabelId = targetProject.getLabelIdMap().values()[0]
-                targetLabelStr, targetUrl, targetUser, targetPass = client.getLabel(targetLabelId)
-                reposHost = versions.Label(targetLabelStr).getHost()
+                labelInfo = client.getLabel(targetLabelId)
+                reposHost = versions.Label(labelInfo['label']).getHost()
 
-                if self.cfg.SSL and targetUrl.startswith('http:'):
-                    targetUrl = "https" + targetUrl[4:]
+                if self.cfg.SSL and labelInfo['url'].startswith('http:'):
+                    labelInfo['url'] = "https" + labelInfo['url'][4:]
 
                 cfg.source.repositoryMap.update(client.getFullRepositoryMap())
                 cfg.source.repositoryMap.update({reposHost: sourceUrl})
@@ -58,8 +58,11 @@ class MirrorInbound(MirrorScript):
                     cfg.source.entitlement.addEntitlement(reposHost, sourceEntitlement)
 
                 cfg.target.repositoryMap.update(cfg.source.repositoryMap)
-                cfg.target.repositoryMap.update({reposHost: targetUrl})
-                cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+                cfg.target.repositoryMap.update({reposHost: labelInfo['url']})
+                if labelInfo['authType'] == 'userpass':
+                    cfg.target.user.addServerGlob(reposHost, labelInfo['username'], labelInfo['password'])
+                elif labelInfo['authType'] == 'entitlement':
+                    cfg.target.entitlement.addEntitlement(reposHost, labelInfo['entitlement'])
 
                 cfg.host = reposHost
                 if allLabels:

@@ -10,7 +10,7 @@
 <?python
     for var in ['name', 'hostname', 'label', 'url',
         'externalUser', 'externalPass', 'externalEntKey',
-        'externalEntClass', 'authType', 'useMirror',
+        'authType', 'useMirror',
         'externalAuth', 'authType', 'additionalLabelsToMirror',
         'allLabels']:
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
@@ -121,12 +121,6 @@
                     <td colspan="2"><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
                         py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" />
                         <label for="authTypeEnt">Use an entitlement</label>
-                    </td>
-                </tr>
-                <tr>
-                    <th style="padding-left: 3em; width: 25%;">Entitlement Class:</th>
-                    <td>
-                        <input type="text" autocompelete="off" name="externalEntClass" value="${kwargs['externalEntClass']}" />
                     </td>
                 </tr>
                 <tr>

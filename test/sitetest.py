@@ -141,11 +141,16 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('logout' not in page.body,
                     'Failed to change user password.')
 
-        page = page.fetchWithRedirect('/userSettings')
-        page = page.postForm(2, page.fetch, 
-                             {'email': 'foo@newemail.com'})
-        self.failIf('Please follow the directions in your confirmation email to complete the update process.' not in page.body,
-                    'Unable to update user e-mail.')
+        # Disable changing user's email until we can mock out the other side.
+        # Even if a mail server is available, we don't want to fire off real
+        # mails at newemail.com (or example.com or wherever else) every time
+        # we run the testsuite. -- gxti
+        #
+        #page = page.fetchWithRedirect('/userSettings')
+        #page = page.postForm(2, page.fetch, 
+        #                     {'email': 'foo@newemail.com'})
+        #self.failIf('Please follow the directions in your confirmation email to complete the update process.' not in page.body,
+        #            'Unable to update user e-mail.')
 
     def testAddMemberById(self):
         client, userId = self.quickMintUser('foouser','foopass')

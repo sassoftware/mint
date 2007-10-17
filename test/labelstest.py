@@ -32,11 +32,16 @@ class LabelsTest(fixtures.FixturedUnitTest):
              'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
-            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
+            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "userpass",
+            "user1", "pass1", "")
         assert adminClient.server.getLabel(newLabelId) == \
-            ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN,
-             'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN,
-             'user1', 'pass1')
+            dict(   label='bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN,
+                    url='http://bar.%s/conary/' % MINT_PROJECT_DOMAIN,
+                    authType='userpass',
+                    username='user1',
+                    password='pass1',
+                    entitlement='',
+                    )
 
         project.removeLabel(newLabelId)
         assert(project.getLabelIdMap() ==\
@@ -58,7 +63,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "foo.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
-            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
+            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "userpass",
+            "user1", "pass1", "")
 
         x = adminClient.getFullRepositoryMap()
         self.failUnlessEqual({'foo.%s' % MINT_PROJECT_DOMAIN: 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN}, x)
@@ -93,13 +99,13 @@ class LabelsTest(fixtures.FixturedUnitTest):
         project = adminClient.getProject(projectId)
         targetLabel = project.getLabel()
         mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
-                "http://www.example.com/conary/",
-                "mirror", "mirrorpass")
+                "http://www.example.com/conary/", "userpass",
+                "mirror", "mirrorpass", "")
 
         labels = adminClient.getInboundMirrors()
         self.failUnlessEqual(labels,
                 [[1, projectId, targetLabel, 'http://www.example.com/conary/',
-                  'mirror', 'mirrorpass', 0]])
+                  'userpass', 'mirror', 'mirrorpass', '', 0]])
 
         # test delete
         adminClient.delInboundMirror(mirrorId)
@@ -108,10 +114,10 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
                 "http://www.example.com/conary/",
-                "mirror", "mirrorpass")
+                "userpass", "mirror", "mirrorpass", "")
         mirrorId = adminClient.addInboundMirror(projectId, [targetLabel],
                 "http://www.example.com/conary/",
-                "mirror", "mirrorpass")
+                "userpass", "mirror", "mirrorpass", "")
         cu = db.cursor()
         cu.execute("SELECT mirrorOrder FROM InboundMirrors")
         self.failUnlessEqual([0, 1], [x[0] for x in cu.fetchall()])

@@ -670,8 +670,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         projectName = project.hostname
         cu = db.cursor()
         cu.execute("""INSERT INTO InboundMirrors
-            (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword)
-            VALUES(?, '', '', '', '')""", project.id)
+            (targetProjectId, sourceLabels, sourceUrl,
+            sourceAuthType)
+            VALUES(?, '', '', 'none')""", project.id)
         db.commit()
         project.refresh()
         del project
@@ -734,7 +735,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "project is local mirror without inbound label")
 
         cu = db.cursor()
-        cu.execute("INSERT INTO InboundMirrors (targetProjectId, sourceLabels, sourceUrl, sourceUsername, sourcePassword) VALUES(?, '', '', '', '')", project.id)
+        cu.execute('''INSERT INTO InboundMirrors (targetProjectId,
+            sourceLabels, sourceUrl, sourceAuthType) VALUES(?, '', '',
+            'none')''', project.id)
         db.commit()
         project.refresh()
         self.failIf(not client.isLocalMirror(project.id),
@@ -749,14 +752,17 @@ class ProjectTest(fixtures.FixturedUnitTest):
             'http://example.com/conary/', 'user', 'pass')
 
         client.editInboundMirror(project.id, ['conary.rpath.com@rpl:devel', 'conary.rpath.com@rpl:1'],
-            'http://www.example.com/conary/', 'username', 'password', False)
+            'http://www.example.com/conary/', 'userpass', 'username', 'password', '', False)
 
         self.failUnlessEqual(client.getInboundMirror(project.id),
             {'inboundMirrorId': 1, 'mirrorOrder': 0,
              'sourceUrl': 'http://www.example.com/conary/',
-             'sourceUsername': 'username', 'allLabels': 0,
+             'sourceAuthType': 'userpass',
+             'sourceUsername': 'username', 'sourcePassword': 'password',
+             'sourceEntitlement': '',
+             'allLabels': 0,
              'sourceLabels': 'conary.rpath.com@rpl:devel conary.rpath.com@rpl:1',
-             'sourcePassword': 'password', 'targetProjectId': 1}
+             'targetProjectId': 1}
         )
 
     @fixtures.fixture('Full')

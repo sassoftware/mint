@@ -81,7 +81,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and make sure that the appropriate database entries are created
         assert(client.getInboundMirrors() == [[1, 1,
             'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen',
-            'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass', 0]])
+            'https://conary.rpath.com/conary/', 'userpass', 'mirror',
+            'mirrorpass', '', 0]])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
@@ -149,17 +150,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
              'authType':        'entitlement',
              'externalEntKey':  entKey,
-             'externalEntClass':entClass,
             }
         )
-
-        self.failUnless(os.path.exists(self.mintCfg.dataPath + "/entitlements/localhost1"))
 
         # re-edit page
         page = self.fetch("/admin/editExternal?projectId=1")
         formData = page.getFormData(1)[0]
+        self.assertEqual(formData.get('authType'), ['entitlement'])
         self.assertEqual(formData.get('externalEntKey'), entKey)
-        self.assertEqual(formData.get('externalEntClass'), entClass)
 
 
     def testCreateExternalProjectEntitlementExtraWhitespace(self):
@@ -191,8 +189,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # re-edit page
         page = self.fetch("/admin/editExternal?projectId=1")
         formData = page.getFormData(1)[0]
+        self.assertEqual(formData.get('authType'), ['entitlement'])
         self.assertEqual(formData.get('externalEntKey'), entKey)
-        self.assertEqual(formData.get('externalEntClass'), entClass)
 
         from conary.conarycfg import loadEntitlementFromString
 
@@ -255,9 +253,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
-        assert(client.getLabelsForProject(1) == ({'conary.rpath.com@rpl:devel': 1},
-                                                 {'conary.rpath.com': 'http://conary.rpath.com/conary/'},
-                                                 {'conary.rpath.com': ('anonymous', 'anonymous')}))
+        self.assertEquals(client.getLabelsForProject(1),
+            ({'conary.rpath.com@rpl:devel': 1},
+             {'conary.rpath.com': 'http://conary.rpath.com/conary/'},
+             [], []))
 
     def testEditMirroredProject(self):
         # mainly make sure that user-entered settings are preserved on the edit
