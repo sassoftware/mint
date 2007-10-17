@@ -13,7 +13,6 @@ from mint import config
 
 from raa.db import schedule
 from raa.modules.raawebplugin import rAAWebPlugin
-from raa.modules.raawebplugin import immedTask
 from raa.localhostonly import localhostOnly
 from raa.db.database import DatabaseTable, writeOp, readOp
 
@@ -76,12 +75,12 @@ class LoadMirror(rAAWebPlugin):
         return dict(schedId = schedId, inProgress=inProgress)
 
 
-    @immedTask
     def _setCommand(self, command, done = False, error = ''):
-        def callback(schedId):
-            self.table.setCommand(schedId, command, done, error)
+        sched = schedule.ScheduleOnce()
+        schedId = self.schedule(sched, commit=False)
+        self.table.setCommand(schedId, command, done, error)
 
-        return dict(callback = callback)
+        return dict()
 
     @turbogears.expose(allow_json=True)
     @turbogears.identity.require(turbogears.identity.not_anonymous())

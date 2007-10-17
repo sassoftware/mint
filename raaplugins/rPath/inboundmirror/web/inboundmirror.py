@@ -10,7 +10,6 @@ from datetime import datetime
 import time
 from raa.db import database, schedule
 import math
-from raa.modules.raawebplugin import immedTask
 
 class InboundMirror(rAAWebPlugin):
     '''
@@ -134,9 +133,9 @@ class InboundMirror(rAAWebPlugin):
         return sched
 
     @raa.expose(allow_json=True)
-    @immedTask
     def mirrorNow(self):
-        return dict()
+        schedId = self.schedule(schedule.ScheduleOnce())
+        return dict(schedId=schedId)
 
     @raa.expose(allow_json=True)
     def checkMirrorStatus(self):
