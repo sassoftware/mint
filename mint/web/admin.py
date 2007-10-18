@@ -131,6 +131,7 @@ class AdminHandler(WebHandler):
     def viewReport(self, *args, **kwargs):
         pdfData = self.client.getReportPdf(kwargs['reportName'])
         self.req.content_type = "application/x-pdf"
+        self.req.headers_out.add('Content-Disposition', "attachment; filename=%s.pdf" % (kwargs['reportName']))
         return pdfData
 
     def _validateExternalProject(self, name, hostname, label, url,
