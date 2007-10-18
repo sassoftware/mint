@@ -333,6 +333,7 @@ class AdminHandler(WebHandler):
                 labels.remove(label)
 
             initialKwargs['url'] = mirror['sourceUrl']
+            initialKwargs['authType'] = mirror['sourceAuthType']
             initialKwargs['externalUser'] = mirror['sourceUsername']
             initialKwargs['externalPass'] = mirror['sourcePassword']
             initialKwargs['externalEntKey'] = mirror['sourceEntitlement']

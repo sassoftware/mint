@@ -192,13 +192,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertEqual(formData.get('authType'), ['entitlement'])
         self.assertEqual(formData.get('externalEntKey'), entKey)
 
-        from conary.conarycfg import loadEntitlementFromString
-
-        entPath = self.mintCfg.dataPath + "/entitlements/localhost1"
-        xmlContent = open(entPath).read()
-        ent = loadEntitlementFromString(xmlContent)
-        self.failUnlessEqual(ent, ('localhost1', entClass, entKey))
-
     def testExternalProjectMirrorAllLabels(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
