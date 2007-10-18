@@ -80,10 +80,16 @@ class MCPConsole(rAAWebPlugin):
                 jobs = [(k, jobStatus[k]) for k in jobStatus]
                 jobs.sort(lambda a, b: cmp(cmpKey(a), cmpKey(b)) or cmp(b[0], a[0]))
 
-                # truncate the list to 10 stopped jobs
+                # truncate the list to 10 stopped jobs ( 5 cooks, 5 builds )
                 running = [x for x in jobs if x[1]['status'][0] <  mint.jobstatus.FINISHED]
-                stopped = [x for x in jobs if x[1]['status'][0] >= mint.jobstatus.FINISHED][0:10]
-                jobs = running + stopped
+                stopped = [x for x in jobs if x[1]['status'][0] >= mint.jobstatus.FINISHED]
+
+                # split the stopped jobs into 5 cooks and 5 image builds due
+                # to lack of a decent sort key
+                stopped_builds = [x for x in stopped if     'build' in x[0]][0:5]
+                stopped_cooks  = [x for x in stopped if not 'build' in x[0]][0:5]
+
+                jobs = running + stopped_builds + stopped_cooks
 
                 return {'jobStatus' : jobs, 'disabled' : False}
             finally:
