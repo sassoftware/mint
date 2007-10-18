@@ -9,7 +9,7 @@ baseConaryLabel = 'conary.rpath.com@rpl:1'
 fallbackTroves = ['anaconda-templates']
 
 labelDict = {baseConaryLabel :
-              [('group-core',
+              [('group-appliance-platform',
                 'A basic set of packages required for a functional system.'),
                ('group-base', 'Basic but non-essential packages.'),
                ('group-devel', 'Software development tools.'),

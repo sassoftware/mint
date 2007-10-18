@@ -189,7 +189,8 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('foouser', 'foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
-        gt.addTrove('group-core', '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
+        gt.addTrove('group-appliance-platform',
+            '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
         page = page.fetch('/project/foo/editGroup?id=%s' % gt.id)
         page = page.fetch('/search?type=Packages')
         self.failIf('only packages for rpl:1 branch' not in page.body, 

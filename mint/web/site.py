@@ -566,7 +566,7 @@ class SiteHandler(WebHandler):
         elif type == "Packages":
             if self.groupTrove and not removed:
                 for x in self.groupTrove.listTroves():
-                    if x['trvName'] == 'group-core':
+                    if x['trvName'] == 'group-appliance-platform':
                         label = versions.Label(x['trvLabel'])
                         labelLimiter = "branch=%s:%s" % \
                                 (label.getNamespace(), label.getLabel())

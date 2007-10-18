@@ -65,10 +65,10 @@
 
                                 <ul>
                                     <li py:for="t in troves[label]" py:if="t in metadata">
-                                        <input type="hidden" name="initialTrove" value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" py:if="t == 'group-core'"/>
-                                        <input type="checkbox" class="check" py:if="t != 'group-core'"
-                                               name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None,
-                                                                              'disabled': 'disabled' and t == 'group-core' or None}"
+                                        <input type="hidden" name="initialTrove" value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" py:if="t == 'group-appliance-platform'"/>
+                                        <input type="checkbox" class="check" py:if="t != 'group-appliance-platform'"
+                                               name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-appliance-platform' or None,
+                                                                              'disabled': 'disabled' and t == 'group-appliance-platform' or None}"
                                                value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" />
                                             <b>${t}</b> - ${metadata.get(t, 'No Description')}
                                     </li>
