@@ -201,7 +201,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
             raise RuntimeError, "%s is not a valid build type. See --help." % buildType.upper()
 
         buildTypeId = buildtypes.validBuildTypes[buildType.upper()]
-        buildOptions = dict(tuple(x.split(" ")) for x in argSet['option'])
+        buildOptions = dict(tuple(x.split(" ", 1)) for x in argSet['option'])
 
         for x in buildOptions:
             if x not in buildtemplates.dataTemplates[buildTypeId]:
