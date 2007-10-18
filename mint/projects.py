@@ -530,7 +530,8 @@ class ProjectsTable(database.KeyedTable):
     def isHidden(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
-        return cu.fetchone()[0]
+        res = cu.fetchone()
+        return res and res[0] or 0
 
     def get(self, *args, **kwargs):
         ret = database.KeyedTable.get(self, *args, **kwargs)
