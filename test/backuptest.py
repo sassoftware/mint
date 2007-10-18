@@ -88,9 +88,11 @@ class BackupTest(fixtures.FixturedUnitTest):
         project = client.getProject(mirroredId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "mirrored.bar.baz@rpl:1",
-            "http://localhost/repos/mirrored/", "mintauth", "mintpass")
+            "http://localhost/repos/mirrored/", "userpass", "mintauth",
+            "mintpass", "")
         client.addInboundMirror(mirroredId, ['mirrored.bar.baz@rpl:1'],
-            "http://mirrored.bar.baz/conary/", "mirror", "mirror")
+            "http://mirrored.bar.baz/conary/", "userpass", "mirror", "mirror",
+            "")
 
         tosh = StringIO.StringIO()
         backup.backup(self.cfg, tosh)
@@ -106,7 +108,7 @@ class BackupTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(client.getLabelsForProject(mirroredId),
             ({'mirrored.bar.baz@rpl:1': mirroredId},
              {'mirrored.bar.baz': 'http://mirrored.bar.baz/conary/'}, # original URL, not the internal
-             {'mirrored.bar.baz': ('mirror', 'mirror')})) # original user/pass, not internal
+             [('mirrored.bar.baz', ('mirror', 'mirror'))], [])) # original user/pass, not internal
 
     @fixtures.fixture("Full")
     def testHandleException(self, db, data):

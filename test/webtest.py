@@ -526,7 +526,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                            'branch' : 'foo:bar'})
 
         project = client.getProject(projectId)
-        assert(project.getLabel() == 'bar.rpath.com@foo:bar')
+        self.assertEquals(project.getLabel(), 'bar.rpath.com@foo:bar')
 
     @testsuite.context("quick")
     def testSearchProjects(self):

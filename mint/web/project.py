@@ -1054,8 +1054,9 @@ class ProjectHandler(WebHandler):
                 if oldLabel != label:
                     labelId = self.project.getLabelIdMap()[oldLabel]
                     labelInfo = self.client.server.getLabel(labelId)
-                    labelInfo['label'] = label
-                    self.project.editLabel(**labelInfo)
+                    self.project.editLabel(labelId, label, labelInfo['url'],
+                        labelInfo['authType'], labelInfo['username'],
+                        labelInfo['password'], labelInfo['entitlement'])
             except database.DuplicateItem:
                 self._addErrors("Project title conflicts with another project")
 

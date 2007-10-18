@@ -632,7 +632,7 @@ class MintServer(object):
 
         project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-            self.cfg.authUser, self.cfg.authPass)
+            'userpass', self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
@@ -682,7 +682,7 @@ class MintServer(object):
         project = projects.Project(self, projectId)
 
         # create the labels entry
-        project.addLabel(label, url, 'anonymous', 'anonymous')
+        project.addLabel(label, url, 'none')
 
         # create the target repository if needed
         if mirrored:
@@ -1676,12 +1676,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.labels.getLabelsForProject(projectId, overrideAuth, newUser, newPass)
 
-    @typeCheck(int, str, str, str, str)
+    @typeCheck(int, str, str, str, str, str, str)
     @requiresAuth
     @private
-    def addLabel(self, projectId, label, url, username, password):
+    def addLabel(self, projectId, label, url, authType, username, password, entitlement):
         self._filterProjectAccess(projectId)
-        return self.labels.addLabel(projectId, label, url, username, password)
+        return self.labels.addLabel(projectId, label, url, authType, username, password, entitlement)
 
     @typeCheck(int)
     @requiresAuth

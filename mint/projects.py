@@ -165,8 +165,8 @@ class Project(database.TableObject):
                 httpProxies)
         return cfg
 
-    def addLabel(self, label, url, username="", password=""):
-        return self.server.addLabel(self.id, label, url, username, password)
+    def addLabel(self, label, url, authType='none', username='', password='', entitlement=''):
+        return self.server.addLabel(self.id, label, url, authType, username, password, entitlement)
 
     def editLabel(self, labelId, label, url, authType, username, password,
             entitlement):
@@ -584,16 +584,15 @@ class LabelsTable(database.KeyedTable):
             labelIdMap[label] = labelId
             host = label[:label.find('@')]
             if url:
-                if authType == 'userpass':
-                    if not external:
-                        if self.cfg.SSL:
-                            protocol = "https"
-                            newHost, newPort = hostPortParse(self.cfg.secureHost, 443)
-                        else:
-                            protocol = "http"
-                            newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
+                if not external:
+                    if self.cfg.SSL:
+                        protocol = "https"
+                        newHost, newPort = hostPortParse(self.cfg.secureHost, 443)
+                    else:
+                        protocol = "http"
+                        newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
 
-                        url = rewriteUrlProtocolPort(url, protocol)
+                    url = rewriteUrlProtocolPort(url, protocol)
 
                 map = url
             else:

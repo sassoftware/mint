@@ -611,7 +611,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         protocol = self.mintCfg.SSL and 'https' or 'http'
         project.editLabel(labelId, defaultLabel,
             '%s://localhost:%d/repos/%s/' % (protocol, port, project.hostname),
-            label[2], label[3])
+            label['authType'], label['username'], label['password'], label['entitlement'])
 
     def writeIsoGenCfg(self):
         raise testsuite.SkipTestExeption('this test references deleted code')
