@@ -872,8 +872,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         class DummyRepo(object):
             def findTrove(*args, **kwargs):
                 return [('group-dummy', \
-                             versions.VersionFromString( \
-                            '/test.rpath.local@rpl:devel/1-1-1'),
+                             versions._VersionFromString( \
+                            '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                            frozen=True),
                          deps.parseFlavor('domU,xen is: x86'))]
         client = self.getClient('admin')
         getProjectRepo = client.server._server._getProjectRepo

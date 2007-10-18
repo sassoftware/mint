@@ -198,7 +198,7 @@ class LoadMirror:
         repos.auth.setMirror(mintCfg.authUser, True)
 
     def copyFiles(self, serverName, project, targetOwner = None, callback = None):
-        labelIdMap, _, _ = self.client.getLabelsForProject(project.id)
+        labelIdMap, _, _, _ = self.client.getLabelsForProject(project.id)
         label, labelId = labelIdMap.items()[0]
 
         targetPath = os.path.join(self.cfg.dataPath, "repos") + os.path.sep

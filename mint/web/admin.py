@@ -135,7 +135,7 @@ class AdminHandler(WebHandler):
 
     def _validateExternalProject(self, name, hostname, label, url,
                         externalUser, externalPass,
-                        externalEntClass, externalEntKey,
+                        externalEntKey,
                         useMirror, authType,
                         additionalLabelsToMirror, allLabels):
         additionalLabels = []
@@ -168,17 +168,15 @@ class AdminHandler(WebHandler):
                     self._addErrors("Missing password for local mirror authentication")
             elif authType == 'entitlement':
                 if not externalEntKey:
-                    self._addErrors('Missing entitlement class for local mirror authentication')
-                if not externalEntClass:
                     self._addErrors('Missing entitlement key for local mirror authentication')
-                if externalEntKey and externalEntClass:
+                if externalEntKey:
                     # Test that the entitlement is valid
                     cfg = conarycfg.ConaryConfiguration()
                     if url:
                         cfg.configLine('repositoryMap %s %s' % (extLabel.host,
                                                                 url))
 
-                    cfg.entitlement.addEntitlement(extLabel.host, externalEntKey, externalEntClass)
+                    cfg.entitlement.addEntitlement(extLabel.host, externalEntKey)
                     nc = conaryclient.ConaryClient(cfg).getRepos()
                     try:
                         # use 2**64 to ensure we won't make the server do much
@@ -197,25 +195,24 @@ class AdminHandler(WebHandler):
 
     @strFields(name = '', hostname = '', label = '', url = '',\
         externalUser = '', externalPass = '', externalEntKey = '',\
-        externalEntClass = '', authType = 'none',\
+        authType = 'none',\
         additionalLabelsToMirror = '', useMirror = 'none')
     @intFields(projectId = -1)
     @boolFields(allLabels = False)
     def processAddExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
-                        externalEntClass, externalEntKey,
+                        externalEntKey,
                         useMirror, authType, additionalLabelsToMirror,
                         projectId, allLabels, *args, **kwargs):
 
+
         # strip extraneous whitespace
         externalEntKey = externalEntKey.strip()
-        externalEntClass = externalEntClass.strip()
 
         kwargs = {'name': name, 'hostname': hostname, 'label': label,
             'url': url, 'authType': authType, 'externalUser': externalUser,
             'externalPass': externalPass,
             'externalEntKey': externalEntKey,
-            'externalEntClass': externalEntClass,
             'useMirror': useMirror,
             'additionalLabelsToMirror': additionalLabelsToMirror,
             'allLabels': allLabels}
@@ -233,7 +230,7 @@ class AdminHandler(WebHandler):
             if editing:
                 project.editProject(project.projecturl, project.description, name)
 
-            labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
+            labelIdMap = self.client.getLabelsForProject(projectId)[0]
             label, labelId = labelIdMap.items()[0]
 
             if not url and not externalAuth:
@@ -241,23 +238,12 @@ class AdminHandler(WebHandler):
             elif not url and externalAuth:
                 url = "https://%s/conary/" % extLabel.getHost()
 
+            if not authType in ('none', 'userpass', 'entitlement'):
+                raise RuntimeError, "Invalid authentication type specified"
+
             # set up the authentication
-            if externalAuth:
-                if authType == 'userpass':
-                    project.editLabel(labelId, str(extLabel), url,
-                            externalUser, externalPass)
-                elif authType == 'entitlement':
-                    externalEnt = conarycfg.emitEntitlement(extLabel.getHost(), externalEntClass, externalEntKey)
-                    entF = file(os.path.join(self.cfg.dataPath, "entitlements", extLabel.getHost()), "w")
-                    entF.write(externalEnt)
-                    entF.close()
-                    project.editLabel(labelId, str(extLabel), url,
-                            self.cfg.authUser, self.cfg.authPass)
-                else:
-                    raise RuntimeError, "Invalid authentication type specified"
-            else:
-                project.editLabel(labelId, str(extLabel), url,
-                    'anonymous', 'anonymous')
+            project.editLabel(labelId, str(extLabel), url,
+                authType, externalUser, externalPass, externalEntKey)
 
             mirror = self.client.getInboundMirror(projectId)
             # set up the mirror, if requested
@@ -267,17 +253,21 @@ class AdminHandler(WebHandler):
                            hostname)
 
                 # set the internal label to our authUser and authPass
-                project.editLabel(labelId, str(extLabel), localUrl, self.cfg.authUser, self.cfg.authPass)
+                project.editLabel(labelId, str(extLabel), localUrl,
+                    'userpass', self.cfg.authUser, self.cfg.authPass, '')
 
                 if mirror and editing:
                     mirrorId = mirror['inboundMirrorId']
-                    self.client.editInboundMirror(mirrorId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass, allLabels)
+                    self.client.editInboundMirror(mirrorId, [str(extLabel)] +
+                        additionalLabels, url, authType, externalUser,
+                        externalPass, externalEntKey, allLabels)
                 else:
-                    self.client.addInboundMirror(projectId, [str(extLabel)] + additionalLabels, url, externalUser, externalPass, allLabels)
+                    self.client.addInboundMirror(projectId, [str(extLabel)] +
+                        additionalLabels, url, authType, externalUser,
+                        externalPass, externalEntKey, allLabels)
                     self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
             elif useMirror == 'none' and mirror and editing:
-                project.editLabel(labelId, str(extLabel), url, externalUser, externalPass)
                 self.client.delInboundMirror(mirror['inboundMirrorId'])
                 self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
 
@@ -316,7 +306,8 @@ class AdminHandler(WebHandler):
     @intFields(projectId = None)
     def editExternal(self, projectId, *args, **kwargs):
         project = self.client.getProject(projectId)
-        label = project.getLabel()
+        labelInfo = self.client.getLabel(projectId)
+        label = labelInfo['label']
         conaryCfg = project.getConaryConfig()
 
         initialKwargs = {}
@@ -328,17 +319,10 @@ class AdminHandler(WebHandler):
         initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
         userMap = conaryCfg.user.find(fqdn)
 
-        ent = conarycfg.loadEntitlement(os.path.join(self.cfg.dataPath, "entitlements"), fqdn)
-        if ent:
-            initialKwargs['authType'] = 'entitlement'
-            initialKwargs['externalEntClass'] = ent[-2]
-            initialKwargs['externalEntKey'] = ent[-1]
-        else:
-            initialKwargs['externalUser'] = userMap[0]
-            initialKwargs['externalPass'] = userMap[1]
-            initialKwargs['authType'] = 'userpass'
-            if userMap[0] == 'anonymous':
-                initialKwargs['authType'] = 'none'
+        initialKwargs['authType'] = labelInfo['authType']
+        initialKwargs['externalUser'] = labelInfo['username']
+        initialKwargs['externalPass'] = labelInfo['password']
+        initialKwargs['externalEntKey'] = labelInfo['entitlement']
 
         initialKwargs['useMirror'] = 'none'
         mirrored = False
@@ -349,8 +333,10 @@ class AdminHandler(WebHandler):
                 labels.remove(label)
 
             initialKwargs['url'] = mirror['sourceUrl']
+            initialKwargs['authType'] = mirror['sourceAuthType']
             initialKwargs['externalUser'] = mirror['sourceUsername']
             initialKwargs['externalPass'] = mirror['sourcePassword']
+            initialKwargs['externalEntKey'] = mirror['sourceEntitlement']
             initialKwargs['additionalLabelsToMirror'] = " ".join(labels)
             initialKwargs['allLabels'] = mirror['allLabels']
             initialKwargs['useMirror'] = 'net'

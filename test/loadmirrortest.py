@@ -44,7 +44,7 @@ class LoadMirrorFixturedTest(fixtures.FixturedUnitTest):
         label = proj.getLabel()
         loader.client.addInboundMirror(proj.id, [label],
             "http://www.example.com/conary/",
-            "mirror", "mirrorpass")
+            "userpass", "mirror", "mirrorpass")
 
         # fail since we're already mirrored
         self.assertRaises(RuntimeError, loader.findTargetProject, "foo." + MINT_PROJECT_DOMAIN)
@@ -149,18 +149,27 @@ class LoadMirrorUnitTest(unittest.TestCase):
         lm.cfg.projectSiteHost = 'test.rpath.local'
         lm.cfg.projectDomainName = 'rpath.local'
 
-        lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None))
+        lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None, None))
         lm.sourceDir = tempfile.mkdtemp()
 
         util.mkdirChain(lm.sourceDir + '/test.rpath.local')
         self.createFile(lm.sourceDir + '/test.rpath.local/MIRROR-INFO')
         self.createFile(lm.sourceDir + '/test.rpath.local/sqldb', 'contents of testfile')
 
+        # Skip failing chown calls to cut down on noise
+        oldCall = loadmirror.call
+        def call(cmd):
+            if cmd.startswith('chown'):
+                return
+            oldCall(cmd)
+        loadmirror.call = call
+
         lm.copyFiles('test.rpath.local', project, callback = callback.callback)
 
         # clean up
         util.rmtree(lm.cfg.dataPath)
         util.rmtree(lm.sourceDir)
+        loadmirror.call = oldCall
         netserver.NetworkRepositoryServer = oldNetworkRepositoryServer
 
 

@@ -569,9 +569,11 @@ class MintClient:
         return self.server.getDownloadChart(projectId, days, format)
 
     def addInboundMirror(self, targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword, allLabels = False):
+            sourceUrl, sourceAuthType='none', sourceUsername='',
+            sourcePassword='', sourceEntitlement='', allLabels = False):
         return self.server.addInboundMirror(targetProjectId, sourceLabels,
-                sourceUrl, sourceUsername, sourcePassword, allLabels)
+                sourceUrl, sourceAuthType, sourceUsername, sourcePassword,
+                sourceEntitlement, allLabels)
 
     def addOutboundMirror(self, sourceProjectId, targetLabels,
             allLabels = False, recurse = False):
@@ -596,9 +598,11 @@ class MintClient:
         return self.server.getInboundMirror(projectId)
 
     def editInboundMirror(self, targetProjectId, sourceLabels,
-                sourceUrl, sourceUsername, sourcePassword, allLabels):
+                sourceUrl, sourceAuthType, sourceUsername, sourcePassword,
+                sourceEntitlement, allLabels):
         return self.server.editInboundMirror(targetProjectId, sourceLabels,
-            sourceUrl, sourceUsername, sourcePassword, allLabels)
+            sourceUrl, sourceAuthType, sourceUsername, sourcePassword,
+            sourceEntitlement, allLabels)
 
     def delInboundMirror(self, inboundMirrorId):
         return self.server.delInboundMirror(inboundMirrorId)

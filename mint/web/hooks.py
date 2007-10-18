@@ -285,20 +285,10 @@ def conaryHandler(req, cfg, pathInfo):
                 repo.forceSecure = False
                 proxy_repository = repo
 
-            # inject our set of known entitlements into the proxy config
+            # inject known authentication (userpass and entitlement)
             repo.cfg.entitlement = conarycfg.EntitlementList()
-            entDir = os.path.join(cfg.dataPath, 'entitlements')
-            if os.path.isdir(entDir):
-                for basename in os.listdir(entDir):
-                    if os.path.isfile(os.path.join(entDir, basename)):
-                        ent = conarycfg.loadEntitlement(entDir, basename)
-                        if not ent:
-                            continue
-                        repo.cfg.entitlement.addEntitlement(ent[0], ent[2], entClass = ent[1])
-
-            # inject the users we know about
+            repo.cfg.user = conarycfg.UserInformation()
             if cfg.injectUserAuth:
-                repo.cfg.user = conarycfg.UserInformation()
                 _updateUserSet(db, proxy_repository.cfg)
         else:
             repo = None
@@ -400,10 +390,15 @@ def getReposDB(db, dbName, projectId, cfg):
 
 def _updateUserSet(db, cfgObj):
     cu = db.cursor()
-    cu.execute("""SELECT label, username, password FROM Labels""")
+    cu.execute("""SELECT label, authType, username, password, entitlement
+        FROM Labels WHERE authType IS NOT NULL AND authType != 'none'""")
 
-    for x in cu.fetchall():
-        cfgObj.user.addServerGlob(versions.Label(x[0]).getHost(), (x[1], x[2]))
+    for label, authType, username, password, entitlement in cu.fetchall():
+        host = versions.Label(label).getHost()
+        if authType == 'userpass':
+            cfgObj.user.addServerGlob(host, (username, password))
+        elif authType == 'entitlement':
+            cfgObj.entitlement.addEntitlement(host, entitlement)
 
 
 def _resolveProjectRepos(db, hostname, domainname):

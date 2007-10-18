@@ -2,8 +2,10 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
+import os
 import sys
 
+from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors, sqllib, idtable
 from conary.lib.tracelog import logMe
 from mint import schema
@@ -49,6 +51,83 @@ class MigrateTo_39(SchemaMigration):
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("DROP TABLE DatabaseVersion")
+        return True
+
+
+# SCHEMA VERSION 40
+class MigrateTo_40(SchemaMigration):
+    Version = (40, 0)
+
+    # 40.0
+    # - Add explicit auth type columns to Labels, InboundMirrors tables
+    # - Move entitlements into Labels/InboundMirrors
+    def migrate(self):
+        cu = self.db.cursor()
+
+        # Add columns
+        cu.execute("ALTER TABLE Labels ADD COLUMN authType VARCHAR(254)")
+        cu.execute("ALTER TABLE Labels ADD COLUMN entitlement VARCHAR(254)")
+        cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceAuthType VARCHAR(254)")
+        cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceEntitlement VARCHAR(254)")
+        self.db.commit()
+
+        # Fix existing data - anonymous
+        cu.execute("""UPDATE Labels
+            SET authType = 'none', username = '', password = ''
+            WHERE username = 'anonymous'
+                OR username = '' OR username IS NULL
+                OR password = '' OR password IS NULL""")
+        cu.execute("""UPDATE InboundMirrors
+            SET sourceAuthType = 'none', sourceUsername = '',
+                sourcePassword=''
+            WHERE sourceUsername = 'anonymous'
+                OR sourceUsername = '' OR sourceUsername IS NULL
+                OR sourcePassword = '' OR sourcePassword IS NULL""")
+
+        # Fix existing data - username & password
+        cu.execute("""UPDATE Labels SET authType = 'userpass'
+            WHERE authType IS NULL""")
+        cu.execute("""UPDATE InboundMirrors SET sourceAuthType = 'userpass'
+            WHERE sourceAuthType IS NULL""")
+
+        self.db.commit()
+
+        # Import entitlements
+        # unfortunately we can't use the config entry from here
+        entDir = '/srv/rbuilder/entitlements'
+        entList = EntitlementList()
+        if os.path.isdir(entDir):
+            for basename in os.listdir(entDir):
+                if os.path.isfile(os.path.join(entDir, basename)):
+                    ent = loadEntitlement(entDir, basename)
+                    if not ent:
+                        continue
+                    entList.addEntitlement(ent[0], ent[2])
+
+        import epdb;epdb.st()
+        for host, ent in entList:
+            ent = ent[1]
+            cu.execute("""SELECT projectId, 
+                    EXISTS(SELECT * FROM InboundMirrors WHERE
+                        projectId=targetProjectId) AS localMirror
+                FROM Projects LEFT JOIN Labels USING(projectId)
+                WHERE external = 1 AND label LIKE ?""", '%s@%%' % host)
+
+            for projectId, localMirror in cu.fetchall():
+                if localMirror:
+                    cu.execute("""UPDATE InboundMirrors
+                        SET sourceAuthType = 'entitlement',
+                            sourceEntitlement = ?
+                        WHERE targetProjectId = ?""",
+                            ent, projectId)
+                else:
+                    cu.execute("""UPDATE Labels
+                        SET authType = 'entitlement', entitlement = ?
+                        WHERE projectId = ?""",
+                            ent, projectId)
+
+        self.db.commit()
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
