@@ -15,11 +15,11 @@ from mint import schema
 class DatabaseVersionMismatch(MintError):
     def __init__(self, currentVersion):
         self.currentVersion = currentVersion
-        self.wantedVersion = schema.VERSION
+        self.wantedVersion = schema.RBUILDER_DB_VERSION
 
     def __str__(self):
-        return "Database version mismatch (current version = %d, wanted version %d)" % (self.currentVersion, self.wantedVersion)
-
+        return "Current rBuilder database schema version is %s; required version is %s" % \
+                (self.currentVersion, self.wantedVersion)
 
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):
