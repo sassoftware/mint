@@ -104,7 +104,6 @@ class MigrateTo_40(SchemaMigration):
                         continue
                     entList.addEntitlement(ent[0], ent[2])
 
-        import epdb;epdb.st()
         for host, ent in entList:
             ent = ent[1]
             cu.execute("""SELECT projectId, 
