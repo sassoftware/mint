@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = rbalog inboundmirror outboundmirror loadmirror mcpconsole
+SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole
 
 extra_dist = __init__.py
 
