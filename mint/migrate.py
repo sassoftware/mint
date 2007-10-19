@@ -45,6 +45,7 @@ class MigrateTo_38(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE GroupTroves ADD COLUMN cookCount INT""")
         cu.execute("UPDATE GroupTroves SET cookCount=0")
+        cu.execute("DROP TABLE DatabaseVersion")
         return True
 
 # SCHEMA VERSION 39
