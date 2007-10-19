@@ -437,8 +437,8 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         f = open(os.path.join(self.mintCfg.dataPath, 'config', 'conaryrc'), 'w')
         f.close()
         troveNames, troveDict, metadata, messages = projectHandler._getBasicTroves()
-        refNamesRpl1 = ('group-core', 'group-base', 'group-devel',
-                        'group-dist-extras', 'group-gnome',
+        refNamesRpl1 = ('group-appliance-platform', 'group-base',
+                        'group-devel', 'group-dist-extras', 'group-gnome',
                         'group-kde', 'group-netserver', 'group-xorg')
 
         refNamesRaa = ('group-raa', )
