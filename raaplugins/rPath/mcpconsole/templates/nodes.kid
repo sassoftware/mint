@@ -28,40 +28,53 @@
     <body id="middleWide">
         ${TabbedPageWidget().display(pageList)}
         <div py:if="not disabled">
-            <h3>Job Masters:</h3>
-            <ul>
-            <li py:for="id, info in sorted(nodeStatus.iteritems())" class="jobMaster">
-               <strong>${id}</strong>:
-               ${info['arch']}
-               <ul>
-	           <li py:for="slaveId, data in sorted(info['slaves'].iteritems())" class="jobSlave ${slaveStatusCss.get(data['status'], 'unknownSlave')}">
-
-                       <dl py:if="data">
-                           <dt>slaveName</dt>
-                               <dd>${slaveId.split(':')[-1]}</dd>
-                           <dt>status</dt>
-                               <dd>${slavestatus.statusNames.get(data['status'])}</dd>
-                           <dt>type</dt>
-                               <dd>${data['type']}</dd>
-                           <dt>jobId</dt>
-                               <dd>${str(data['jobId'])}</dd>
-                       </dl>
-                       <form action="stopSlave" method="POST">
-                           <input type="hidden" name="slaveId" value="${slaveId}"/>
-                           <button type="submit">Kill</button>
-                       </form>
-                   </li>
-                   <div py:if="info.get('limit')" strip="true">
-                       <li py:for="x in range(info['limit'] - len(info['slaves']))" class="jobSlave offlineSlave"/>
-                   </div>
-               </ul>
-               <form action="setSlaveLimit" method="POST">
-                   <input type="hidden" name="masterId" value="${id}"/>
-                   <input type="text" name="limit"/>
-                   <button type="submit">Limit</button>
-               </form>
-            </li>
-            </ul>
+            <h3>Job Master Nodes</h3>
+            <div py:for="id, info in sorted(nodeStatus.iteritems())" class="jobMaster">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="5">${id} (${info['arch']})</th>
+                        </tr>
+                        <tr class="tableHeadings">
+                            <th>Slave Id</th>
+                            <th>Version (arch)</th>
+                            <th>Status</th>
+                            <th>Job Id</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr py:for="slaveId, data in sorted(info['slaves'].iteritems())" class="jobSlave ${slaveStatusCss.get(data['status'], 'unknownSlave')}">
+                            <div py:if="data" py:strip="True">
+                                <?python slaveVer, slaveArch = data['type'].split(':') ?>
+                                <td py:content="slaveId.split(':')[-1]" />
+                                <td py:content="'%s (%s)' % (slaveVer, slaveArch)" />
+                                <td py:content="slavestatus.statusNames.get(data['status'])" />
+                                <td py:content="str(data['jobId'])" />
+                                <td class="actionButton">
+                                    <form action="stopSlave" method="POST">
+                                        <input type="hidden" name="slaveId" value="${slaveId}" />
+                                        <button type="submit">Kill</button>
+                                    </form>
+                                </td>
+                            </div>
+                        </tr>
+                        <div py:if="info.get('limit')" strip="True">
+                            <tr py:for="x in range(info['limit'] - len(info['slaves']))" class="jobSlave offlineSlave">
+                                <td colspan="5">[ Empty Slot ]</td>
+                            </tr>
+                        </div>
+                    </tbody>
+                </table>
+                <div class="jobMasterSettings">
+                    <form action="setSlaveLimit" method="POST">
+                        <input type="hidden" name="masterId" value="${id}"/>
+                        <label for="jobMasterLimit_${id}">Maximum number of job slaves:</label>
+                        <input id="jobMasterLimit_${id}" type="text" name="limit" size="2" value="${info.get('limit','')}" />
+                        <button type="submit">Limit</button>
+                    </form>
+                </div>
+            </div>
         </div>
         <div py:if="disabled">
             <h3>MCP Console is disabled</h3>

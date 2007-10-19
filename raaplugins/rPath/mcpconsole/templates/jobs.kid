@@ -23,42 +23,45 @@
 
     <body id="middleWide">
         ${TabbedPageWidget(forcepage='index').display(pageList)}
-        <table py:if="not disabled" class="mcpJobs" cellspacing="0">
-            <thead>
-                <tr>
-                    <th />
-                    <th>Job ID</th>
-                    <th>Status</th>
-                    <th width="40" />
-                </tr>
-            </thead>
-            <tbody id="jobs">
-                <div py:for="id, info in jobStatus" py:strip="True">
-                    <?python status = jobstatus.statusNames[info['status'][0]] ?>
-                    <tr class="mcpJobSummary mcpJobColor${status}">
-                        <td onclick="doHide(this)">+</td>
-                        <td><b>${id}</b></td>
-                        <td>${status}</td>
-                        <td>
-                          <form action="killJob" method="POST" py:if="jobstatus.FINISHED > info['status'][0]">
-                            <input type="hidden" name="jobId" value="${id}"/>
-                            <button type="submit">Kill</button>
-                          </form>
-                        </td>
-                    </tr>
-                    <tr class="mcpJobDetails mcpJobColor${status}">
-                        <td colspan="4" class="${status != 'Running' and 'hidden' or ''}">
-                          <ul class="jobEntry">
-                            <li><b>jobId:</b> ${id}</li>
-                            <li><b>Status:</b> ${status}</li>
-                            <li><b>Message:</b> ${info['status'][1]}</li>
-                            <li py:if="info['slaveId']"><b>Slave ID:</b> ${info['slaveId']}</li>
-                          </ul>
-                        </td>
-                    </tr>
-                </div>
-            </tbody>
-        </table>
+        <div py:if="not disabled">
+            <h3>Current Jobs</h3>
+            <div class="mcpJobs">
+                <table>
+                    <thead>
+                        <tr class="tableHeadings">
+                            <th>Job ID</th>
+                            <th>Origin</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobs">
+                        <div py:for="id, info in jobStatus" py:strip="True">
+                            <?python
+                                status = jobstatus.statusNames[info['status'][0]]
+                                jobType, jobId = id.split('-')[-2:]
+                                jobOrigin = '-'.join(id.split('-')[:-2])
+                            ?>
+                            <tr class="mcpJobSummary mcpJobColor${status}">
+                                <td py:content="jobId" />
+                                <td py:content="jobOrigin" />
+                                <td py:content="jobType" />
+                                    <td>${status} <span py:if="status == 'Running'" py:content="'[%s]' % info['slaveId']" py:strip="True" />
+                                    <div class="jobMessage" py:if="status == 'Running'" py:content="info['status'][1]"/>
+                                </td>
+                                <td class="actionButton">
+                                    <form action="killJob" method="POST" py:if="jobstatus.FINISHED > info['status'][0]">
+                                        <input type="hidden" name="jobId" value="${id}"/>
+                                        <button type="submit">Kill</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </div>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div py:if="disabled">
             <h3>MCP Console is disabled</h3>
             Unable to contact the MCP
