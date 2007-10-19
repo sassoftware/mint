@@ -13,59 +13,64 @@ body {
     padding-top: 0px;
 }
 
-.jobMaster {
-    background-color: #c0c0ff;
-    padding: 2px;
-    border: 2px solid #333;
-    margin: 2px;
+div.jobMaster,
+div.mcpJobs {
+    margin: 0 0 30px 0;
+    padding: 10px;
+    margin-bottom: 1em;
+    background-color: #e0e0e0;
 }
 
-.jobSlave {
-    padding: 2px;
-    border: 1px solid #333;
-    font-size: 8pt;
-    margin: 2px;
+.jobMaster table,
+.mcpJobs table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background-color: #fff;
 }
 
-.buildingSlave {
-    background-color: #ff8080;
+.jobMaster td,
+.mcpJobs td {
+    border-style: none none dotted none;
+    border-width: 1px;
+    border-color: #e0e0e0;
+    vertical-align: top;
 }
 
-.idleSlave {
-    background-color: #ffffc0;
+.jobMaster td.actionButton {
+    max-width: 40px;
+    width: 40px;
+    text-align: right;
 }
 
-.runningSlave {
-    background-color: #00c000;
+.jobMaster tr.tableHeadings th,
+.mcpJobs tr.tableHeadings th {
+    border-style: none none solid none;
+    border-width: 1px;
+    border-color: #e0e0e0;
+    background-color: #fff;
+    text-align: left;
 }
 
-.offlineSlave {
-    background-color: #808080;
+.jobMaster button,
+.jobMaster input,
+.mcpJobs button,
+.mcpJobs input {
+    font-size: x-small;
 }
+
+.jobMasterSettings {
+    margin-top: 1em;
+}
+
+.buildingSlave td { color: #333; }
+.idleSlave td { color: #333; }
+.runningSlave td { color: #333; }
+.offlineSlave td { color: #999; text-align: center; }
 
 /* Job status page */
 
-.mcpJobs {
-    border: 1px solid black;
-}
-
-.mcpJobs td {
-    margin: 0;
-    padding: 0 0.2em;
-}
-
-.mcpJobSummary td {
-    background-color: #f0f;
-    border-top: 1px solid black;
-}
-
-.mcpJobDetails td {
-}
-
-.jobEntry {
-    margin: 0;
-}
-
+.jobMessage { font-size: x-small; }
 .mcpJobColorWaiting td {  background-color: #dd4; color: black; }
 .mcpJobColorRunning td {  background-color: #259; color: white; }
 .mcpJobColorBuilt td {    background-color: #259; color: white; }
@@ -73,3 +78,6 @@ body {
 .mcpJobColorError td {    background-color: #ecc; color: black; }
 .mcpJobColorKilled td {   background-color: #ddd; color: black; }
 .mcpJobColorNo td {       background-color: #ddd; color: black; } /* no job */
+
+.slaveName { font-size: larger; font-weight: bold; }
+.slaveVersion { font-size: normal; }
