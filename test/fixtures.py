@@ -444,7 +444,7 @@ class SqliteFixtureCache(FixtureCache):
         cfg.reposDBPath = os.path.join(cfg.dataPath, 'repos', '%s', 'sqldb')
         from mint import schema
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        schema.loadSchema(db)
+        schema.loadSchema(db, cfg)
         return cfg
 
     def load(self, name):
@@ -551,7 +551,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         cfg.reposDBPath = self._getConnectStringForDb()
         from mint import schema
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        schema.loadSchema(db)
+        schema.loadSchema(db, cfg)
         db.close()
         return cfg
 

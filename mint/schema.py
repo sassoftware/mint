@@ -884,7 +884,7 @@ def checkVersion(db):
     return version
 
 # run through the schema creation and migration (if required)
-def loadSchema(db, should_migrate=False):
+def loadSchema(db, cfg=None, should_migrate=False):
     global RBUILDER_DB_VERSION
     try:
         version =  checkVersion(db)
@@ -929,7 +929,7 @@ def loadSchema(db, should_migrate=False):
     if version.major == RBUILDER_DB_VERSION.major and not should_migrate:
         return version
     # if we reach here, a schema migration is needed/requested
-    version = migrate.migrateSchema(db)
+    version = migrate.migrateSchema(db, cfg)
     db.loadSchema()
     # run through the schema creation to create any missing objects
     logMe(2, "checking for/initializing missing schema elements...")

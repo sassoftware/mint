@@ -12,6 +12,11 @@ from mint import schema
 
 # SCHEMA Migration
 class SchemaMigration(migration.SchemaMigration):
+
+    def __init__(self, db, cfg=None):
+        migration.SchemaMigration.__init__(self, db)
+        self.cfg = cfg
+
     def message(self, msg = None):
         if msg is None:
             msg = self.msg
@@ -93,8 +98,7 @@ class MigrateTo_40(SchemaMigration):
         self.db.commit()
 
         # Import entitlements
-        # unfortunately we can't use the config entry from here
-        entDir = '/srv/rbuilder/entitlements'
+        entDir = os.path.join(self.cfg.dataPath, 'entitlements')
         entList = EntitlementList()
         if os.path.isdir(entDir):
             for basename in os.listdir(entDir):
@@ -146,7 +150,7 @@ def majorMinor(major):
     return migr.Version
 
 # entry point that migrates the schema
-def migrateSchema(db):
+def migrateSchema(db, cfg=None):
     version = db.getVersion()
     assert(version >= 37) # minimum version we support
     if version.major > schema.RBUILDER_DB_VERSION.major:
@@ -160,12 +164,12 @@ def migrateSchema(db):
             "Could not find migration code that deals with repository "
             "schema %s" % version, version)
     # migrate all the way to the latest minor for the current major
-    migrateFunc(db)()
+    migrateFunc(db, cfg)()
     version = db.getVersion()
     # migrate to the latest major
     while version.major < schema.RBUILDER_DB_VERSION.major:
         migrateFunc = _getMigration(version.major+1)
-        newVersion = migrateFunc(db)()
+        newVersion = migrateFunc(db, cfg)()
         assert(newVersion.major == version.major+1)
         version = newVersion
     return version
