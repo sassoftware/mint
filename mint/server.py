@@ -219,6 +219,15 @@ def typeCheck(*paramTypes):
 
 tables = {}
 def getTables(db, cfg):
+
+    # check to make sure the schema version is correct
+    from mint import schema
+    from mint.database import DatabaseVersionMismatch
+    try:
+        schema.checkVersion(db)
+    except sqlerrors.SchemaVersionError, e:
+        raise DatabaseVersionMismatch(e.args[0])
+
     d = {}
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
