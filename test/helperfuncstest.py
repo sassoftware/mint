@@ -502,14 +502,5 @@ Much like Powdermilk Biscuits[tm]."""
         self.assertRaises(ValueError, fromDatabaseTimestamp, [])
 
 
-class FixturedHelpersTest(fixtures.FixturedUnitTest):
-    @fixtures.fixture('Full')
-    def testIndeces(self, db, data):
-        # the tables have already been loaded. doing an independent load in
-        # this manner will uncover table index dicts with a name mismatch
-        db.loadSchema()
-        tableObjs = server.getTables(db, self.cfg)
-
-
 if __name__ == "__main__":
     testsuite.main()
