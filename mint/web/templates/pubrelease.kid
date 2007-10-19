@@ -37,9 +37,9 @@ from mint.helperfuncs import truncateForDisplay
                     <span py:strip="True" py:if="not release.isPublished()">This release has not been published yet. <span py:strip="True" py:if="isOwner">(<a href="publishRelease?id=${release.id}">Publish this release.</a>)</span></span>
                 </p>
 
-                <div class="help">Release created ${formatTime(release.timeCreated)}</div>
-                <div class="help" py:if="release.timeCreated != release.timeUpdated">Release updated ${formatTime(release.timeUpdated)}</div>
-                <div class="help" py:if="release.isPublished()">Release published ${formatTime(release.timePublished)}</div>
+                <div class="help" py:if="release.timeCreated">Release created ${formatTime(release.timeCreated)}</div>
+                <div class="help" py:if="release.timeCreated != release.timeUpdated and release.timeUpdated">Release updated ${formatTime(release.timeUpdated)}</div>
+                <div class="help" py:if="release.isPublished() and release.timePublished">Release published ${formatTime(release.timePublished)}</div>
 
                 <h3>Description</h3>
                 <p py:if="not release.description">Release has no description.</p>
