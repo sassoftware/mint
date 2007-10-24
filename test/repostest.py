@@ -76,7 +76,7 @@ class RepositoryTest(MintRepositoryHelper):
                                      '/testproject.' + MINT_PROJECT_DOMAIN + \
                                              '@rpl:devel/1.0-1')
 
-    @testsuite.context("quick")
+    @testsuite.context("quick", "unfriendly")
     def testBasicRepository(self):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")

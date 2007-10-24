@@ -767,6 +767,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         x = client.getDownloadChart(data['projectId'], 30, 'svg')
         self.failUnless(x.strip().startswith('<?xml'))
 
+    @testsuite.context('unfriendly')
     @fixtures.fixture('Empty')
     def testSetBuildFilenames(self, db, data):
         client = self.getClient('admin')

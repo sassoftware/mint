@@ -213,6 +213,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(self.spiderLink(self.mintCfg.basePath),
                     "There are broken links in the site for logged-in users.")
 
+    @testsuite.context('unfriendly')
     def testAdminLinks(self):
         self.setUpMint()
         self.quickMintAdmin('adminuser', 'adminpass')
