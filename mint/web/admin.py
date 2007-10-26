@@ -274,9 +274,8 @@ class AdminHandler(WebHandler):
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external project %s" % (verb, name))
-            self._redirect("http://%s%sproject/%s/" % \
-                (self.cfg.projectSiteHost,
-                 self.cfg.basePath, hostname))
+            self._redirect("http://%s%sadmin/external" %
+                (self.cfg.siteHost, self.cfg.basePath))
         else:
             if editing:
                 return self.editExternal(projectId = projectId, **kwargs)
