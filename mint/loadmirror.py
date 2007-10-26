@@ -17,7 +17,7 @@ import sys
 # set up logging
 cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
-logFile = os.path.join(cfg.dataPath, 'logs', 'load-mirror.log')
+logFile = os.path.join(cfg.logPath, 'load-mirror.log')
 try:
     scriptlibrary.setupScriptLogger(logfile = logFile,
         logfileLevel = logging.DEBUG)
