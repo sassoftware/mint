@@ -61,7 +61,8 @@ class BuildsTable(database.KeyedTable):
     fields = ['buildId', 'projectId', 'pubReleaseId',
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
-              'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy', 'deleted']
+              'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
+              'deleted', 'buildCount']
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
@@ -149,6 +150,23 @@ class BuildsTable(database.KeyedTable):
 
         cu.execute("SELECT count(*) FROM BuildsView WHERE buildId=?", buildId)
         return cu.fetchone()[0]
+
+    def bumpBuildCount(self, buildId):
+        # this function will save the current value, increment it, then return
+        # the value the table had before the function was called.
+        # basically a post-increment function.
+        cu = self.db.cursor()
+        cu.execute("SELECT buildCount FROM Builds WHERE buildId=?",
+                   buildId)
+        res = cu.fetchall()
+        if res:
+            cu.execute("""UPDATE Builds
+                              SET buildCount=buildCount+1
+                              WHERE buildId=?""", buildId)
+            return res[0][0]
+        else:
+            return None
+
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various

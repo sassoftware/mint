@@ -838,6 +838,31 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 
     @fixtures.fixture('Full')
+    def testBuildCount(self, db, data):
+        client = self.getClient('admin')
+
+        build = client.getBuild(data['pubReleaseFinalId'])
+
+        serialized = build.serialize()
+        buildDict = simplejson.loads(serialized)
+        UUID = buildDict['UUID']
+
+        self.assertEquals(UUID, 'test.rpath.local-build-2-0')
+
+        # repeat the serialize process to ensure the build count gets bumped
+        serialized = build.serialize()
+        buildDict = simplejson.loads(serialized)
+        UUID = buildDict['UUID']
+
+        self.assertEquals(UUID, 'test.rpath.local-build-2-1')
+
+    @fixtures.fixture('Full')
+    def testBumpBadBuild(self, db, data):
+        client = self.getClient('admin')
+        count = client.server._server.builds.bumpBuildCount(99999)
+        self.assertEquals(count, None)
+
+    @fixtures.fixture('Full')
     def testSerializeBuildAMI(self, db, data):
         client = self.getClient('admin')
         # create a build for the "foo" project called "Test Build"

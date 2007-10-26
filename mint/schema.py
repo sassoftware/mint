@@ -257,7 +257,8 @@ def _createBuilds(db):
             createdBy            INTEGER,
             timeUpdated          DOUBLE,
             updatedBy            INTEGER,
-            deleted              INTEGER DEFAULT '0'
+            deleted              INTEGER DEFAULT '0',
+            buildCount           INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         commit = True

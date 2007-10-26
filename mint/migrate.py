@@ -134,6 +134,18 @@ class MigrateTo_40(SchemaMigration):
 
         return True
 
+# SCHEMA VERSION 41
+class MigrateTo_41(SchemaMigration):
+    Version = (41, 0)
+
+    # 41.0
+    # - buildCount
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD COLUMN buildCount INTEGER")
+        return True
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

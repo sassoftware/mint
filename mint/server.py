@@ -1861,7 +1861,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
-                                      timeCreated = time.time())
+                                      timeCreated = time.time(),
+                                      buildCount = 0)
 
         mc = self._getMcpClient()
 
@@ -2206,7 +2207,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         'conaryCfg' : cfgData}
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.externalDomainName)
-        r['UUID'] = '%s-build-%d' % (hostBase, buildId)
+
+        r['UUID'] = '%s-build-%d-%d' % (hostBase, buildId,
+                self.builds.bumpBuildCount(buildId))
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
