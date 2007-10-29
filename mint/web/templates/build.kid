@@ -219,7 +219,7 @@ from mint import constants
                     </tr>
                     <tr>
                         <th>Type</th>
-                        <td>${buildtypes.typeNames[build.getBuildType()]} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
+                        <td>${buildtypes.typeNames.get(build.getBuildType(), 'Unknown')} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
                     </tr>
                 </table>
 

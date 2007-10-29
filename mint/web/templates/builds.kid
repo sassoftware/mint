@@ -35,7 +35,7 @@ from mint.web.templatesupport import downloadTracker
         <tr py:attrs="rowAttrs">
             <td class="buildInfo">${build.getDefaultName()}</td>
             <td class="buildInfo">${build.getArch()}</td>
-            <td class="buildInfo">${buildtypes.typeNamesShort[build.getBuildType()]}</td>
+            <td class="buildInfo">${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
             <td class="buildInfo">&nbsp;<input py:if="not isPublished" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
