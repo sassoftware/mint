@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# wrapper.sh
+#
+# Wrapper script for making sure that we call the appropriate version
+# of Conary tested with the product rather than the system's Conary.
+#
+# Copyright (c) 2005-2007 rPath, Inc.
+#
+# This program is distributed under the terms of the Common Public License,
+# version 1.0. A copy of this license should have been distributed with this
+# source file in a file called LICENSE. If it is not present, the license
+# is always available at http://www.opensource.org/licenses/cpl.php.
+#
+# This program is distributed in the hope that it will be useful, but
+# without any warranty; without even the implied warranty of merchantability
+# or fitness for a particular purpose. See the Common Public License for
+# full details.
+#
+
+REPOS_CONARY_PATH=@SITEPKG@/reposconary
+export PYTHONPATH=$REPOS_CONARY_PATH
+
+CMD=$(basename $0)
+if [ $CMD == "wrapper.sh" ]; then
+    echo "Not wrapping self; exiting"
+    exit 1
+fi
+
+exec @LIBEXECDIR@/rbuilder/$CMD $*

@@ -4,9 +4,9 @@
 # All Rights Reserved
 #
 
-extra_dist = schema.in.py
+extra_dist = schema.in.py httpd.conf.in
 
-generated_files = schema jobslave_set custom.cfg
+generated_files = schema jobslave_set custom.cfg httpd.conf
 
 .PHONY: all install $(generated_files)
 
@@ -33,7 +33,6 @@ install: default-install
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
-	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
@@ -60,6 +59,8 @@ jobslave_set:
 			>>jobslave_set ; \
 	fi
 
+httpd.conf: httpd.conf.in
+	sed -e's,@SITEPKG@,$(PYDIR),g' httpd.conf.in > httpd.conf
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

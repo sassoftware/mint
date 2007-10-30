@@ -1,4 +1,5 @@
 PythonDebug Off
+PythonPath  "['@SITEPKG@/reposconary'] + sys.path"
 
 Alias /images/          "/srv/rbuilder/finished-images/"
 Alias /xmlrpc/          "/srv/rbuilder/config/rbuilder.conf/"

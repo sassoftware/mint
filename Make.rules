@@ -75,4 +75,13 @@ static-install:
 
 kid-clean:
 
+wrapper-install:
+	mkdir -p $(DESTDIR)$(WRAPPEDSCRIPTSDEST)
+	mkdir -p $(DESTDIR)$(WRAPPERDEST)
+	install -m0755 $(wrapper_script) $(DESTDIR)$(WRAPPERDEST)/
+	for wrappedfile in $(wrapped_scripts); do \
+		cp $$wrappedfile $(DESTDIR)$(WRAPPEDSCRIPTSDEST)/ ; \
+	(cd $(DESTDIR)$(WRAPPERDEST) ; ln -s $(wrapper_script) $$wrappedfile) ; \
+	done
+
 # vim: set sts=8 sw=8 noexpandtab filetype=make :
