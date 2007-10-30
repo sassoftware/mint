@@ -816,14 +816,14 @@ class BuildTest(fixtures.FixturedUnitTest):
         buildDict = simplejson.loads(serialized)
         UUID = buildDict['UUID']
 
-        self.assertEquals(UUID, 'test.rpath.local-build-2-0')
+        self.assertEquals(UUID, 'test.rpath.local-build-2-1')
 
         # repeat the serialize process to ensure the build count gets bumped
         serialized = build.serialize()
         buildDict = simplejson.loads(serialized)
         UUID = buildDict['UUID']
 
-        self.assertEquals(UUID, 'test.rpath.local-build-2-1')
+        self.assertEquals(UUID, 'test.rpath.local-build-2-2')
 
     @fixtures.fixture('Full')
     def testBumpBadBuild(self, db, data):

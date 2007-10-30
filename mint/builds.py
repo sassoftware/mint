@@ -152,18 +152,18 @@ class BuildsTable(database.KeyedTable):
         return cu.fetchone()[0]
 
     def bumpBuildCount(self, buildId):
-        # this function will save the current value, increment it, then return
-        # the value the table had before the function was called.
-        # basically a post-increment function.
+        # This is a post-increment, unlike bumpCookCount, since we always want
+        # to look at the last build.
         cu = self.db.cursor()
         cu.execute("SELECT buildCount FROM Builds WHERE buildId=?",
                    buildId)
         res = cu.fetchall()
         if res:
+            count = res[0][0] + 1
             cu.execute("""UPDATE Builds
-                              SET buildCount=buildCount+1
-                              WHERE buildId=?""", buildId)
-            return res[0][0]
+                              SET buildCount=?
+                              WHERE buildId=?""", count, buildId)
+            return count
         else:
             return None
 
