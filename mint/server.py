@@ -3182,8 +3182,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
 
         mc = self._getMcpClient()
-        uuid = '%s.%s-build-%s' %(self.cfg.hostName,
-                                  self.cfg.externalDomainName, buildId)
+
+        buildDict = self.builds.get(buildId)
+        count = buildDict['buildCount']
+
+        uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
+                                  self.cfg.externalDomainName, buildId, count)
         try:
             status, message = mc.jobStatus(uuid)
         except mcp_error.UnknownJob:

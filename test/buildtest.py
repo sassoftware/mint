@@ -24,6 +24,7 @@ from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
+from mint import jobstatus
 
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
@@ -251,14 +252,16 @@ class BuildTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testBuildStatus(self, db, data):
-        raise testsuite.SkipTestException("stubbed MCP is not cooperating")
         client = self.getClient("owner")
         buildId = data['buildId']
 
-        if client.server.getBuildStatus(buildId) != {'status': 5,
-                                                         'message': 'No Job',
-                                                         'queueLen': 0}:
-            self.fail("getBuildStatus returned unknown values")
+        class MockMcpClient(object):
+            jobStatus = lambda *args, **kwargs: (jobstatus.RUNNING, "starting")
+        client.server._server._getMcpClient = \
+                lambda *args, **kwargs: MockMcpClient()
+
+        self.assertEquals(client.server.getBuildStatus(buildId),
+                {'status': jobstatus.RUNNING, 'message': 'starting'})
 
     @fixtures.fixture("Empty")
     def testGetBuildsForProjectOrder(self, db, data):
@@ -327,40 +330,6 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         self.failIf(not isinstance(build.getDataValue('freespace'), int),
                     "freespace is not an integer")
-
-    @fixtures.fixture("Full")
-    def testImageGenerator(self, db, data):
-        raise testsuite.SkipTestException("Move to jobslave")
-        client = self.getClient('admin')
-        build = client.getBuild(data['buildId'])
-        project = client.getProject(data['projectId'])
-        build.setBuildType(buildtypes.INSTALLABLE_ISO)
-        build.setDataValue('installLabelPath', 'test.rpath.org@rpl:devel')
-
-        job = client.startImageJob(build.getId())
-
-        from mint.distro import jobserver
-        from mint.distro.imagegen import ImageGenerator
-        import os
-        isocfg = jobserver.IsoGenConfig()
-        isocfg.finishedPath = self.cfg.imagesPath
-        ig = ImageGenerator(client, isocfg, job, build, project)
-        from conary import conaryclient
-        cclient = conaryclient.ConaryClient(project.getConaryConfig())
-        tmpdir = tempfile.mkdtemp()
-        mirrorUrls = {'mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/conaryrc\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
-        'https://mirror.rpath.com':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/conaryrc\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
-        'https://mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile https://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n',
-        'mirror.rpath.com/testpath':'installLabelPath test.rpath.org@rpl:devel\nincludeConfigFile http://mirror.rpath.com/testpath\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n', 
-        '':'installLabelPath test.rpath.org@rpl:devel\npinTroves kernel.*\nincludeConfigFile /etc/conary/config.d/*\n'}
-
-        for k, v in mirrorUrls.items():
-            build.setDataValue('mirrorUrl', k)
-            ig.writeConaryRc(tmpdir, cclient)
-            fd = open(os.path.join(tmpdir,  'conaryrc'))
-            rcData = fd.read()
-            fd.close()
-            self.failIf(rcData != v)
 
     @fixtures.fixture("Full")
     def testDeleteBuildFiles(self, db, data):
