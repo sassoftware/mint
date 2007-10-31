@@ -40,8 +40,8 @@
                         <div py:for="id, info in jobStatus" py:strip="True">
                             <?python
                                 status = jobstatus.statusNames[info['status'][0]]
-                                jobType, jobId = id.split('-')[-2:]
-                                jobOrigin = '-'.join(id.split('-')[:-2])
+                                jobOrigin, jobType, jobId, buildCount = id.rsplit('-', 3)
+                                jobId = '-'.join((jobId, buildCount))
                             ?>
                             <tr class="mcpJobSummary mcpJobColor${status}">
                                 <td py:content="jobId" />
