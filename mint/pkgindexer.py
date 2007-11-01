@@ -135,7 +135,7 @@ class UpdatePackageIndex(PackageIndexer):
 
             cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
         except Exception, e:
-            self.log.error("Error occured: %s" % str(e))
+            self.log.error("Error occurred: %s" % str(e))
             self.db.rollback()
             exitcode = 1
             raise

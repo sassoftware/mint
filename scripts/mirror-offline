@@ -244,7 +244,7 @@ class MirrorOffline(SingletonScript):
             except:
                 pass
             try:
-                # attempt to clear the account in case an exception occured
+                # attempt to clear the account in case an exception occurred
                 targetRepos.deleteUserByName(versions.Label(labelStr),
                                              userName)
             except:

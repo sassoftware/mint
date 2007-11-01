@@ -628,7 +628,7 @@ class AdminHandler(WebHandler):
                                is configured properly.""" % str(e[1]))
         else:
             if not res1 or not passwd:
-                self._addErrors("""An error occured configuring your rPath
+                self._addErrors("""An error occurred configuring your rPath
                                    Mirror.""")
         # Clear the mirror mark for this server name
         ccfg = conarycfg.ConaryConfiguration()

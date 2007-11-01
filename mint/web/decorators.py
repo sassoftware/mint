@@ -112,5 +112,5 @@ def mailList(func):
             return func(self, mlists=mlists, **kwargs)
         except mailinglists.MailingListException, e:
             return self._write("error", shortError = "Mailing List Error",
-                error = "An error occured while talking to the mailing list server: %s" % str(e))
+                error = "An error occurred while talking to the mailing list server: %s" % str(e))
     return mailListWrapper

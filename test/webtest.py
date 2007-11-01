@@ -1141,7 +1141,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testUnknownError(self):
         page = self.assertContent('/unknownError', code = [200],
-            content = 'An unknown error occured',
+            content = 'An unknown error occurred',
             server = self.getProjectServerHostname())
 
     def testDownloadISO(self):
