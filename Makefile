@@ -12,7 +12,6 @@ export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
 export LIBDIR =		$(PREFIX)/lib
-export LIBEXECDIR=	$(PREFIX)/libexec
 
 # clear this (from commandline) to build rBO
 PRODUCT_SUBDIRS = product

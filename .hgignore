@@ -13,7 +13,6 @@
 ^distro/schema$
 ^distro/custom.cfg$
 ^distro/jobslave_set$
-^distro/httpd.conf$
 
 ^\.times
 ^test/\.(times|coverage)$
@@ -21,7 +20,6 @@
 ^test/logfile\.test\.*
 
 ^scripts/raw2vmdk$
-^scripts/wrapper.sh$
 
 .*,cover
 ^VERSION$
