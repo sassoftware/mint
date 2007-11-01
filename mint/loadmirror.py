@@ -202,6 +202,8 @@ class LoadMirror:
         label, labelId = labelIdMap.items()[0]
 
         targetPath = os.path.join(self.cfg.dataPath, "repos") + os.path.sep
+        if os.path.exists(targetPath):
+            util.rmtree(targetPath)
         util.mkdirChain(targetPath)
 
         sourcePath = os.path.join(self.sourceDir, serverName)
