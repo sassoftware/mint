@@ -18,7 +18,7 @@ staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
                'bootable_image.conf']
 # toolkit is linked to outgoing job server architecture.
 
-def backup(cfg, out):
+def backup(cfg, out, backupMirrors = False):
     reposContentsDir = cfg.reposContentsDir.split(' ')
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
     print >> out, backupPath
@@ -26,11 +26,13 @@ def backup(cfg, out):
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
         util.execute("echo '.dump' | sqlite3 %s > %s" % (cfg.dbPath, dumpPath))
+    extraArgs = ""
+    if not backupMirrors:
+        extraArgs = " WHERE NOT external"
     if cfg.reposDBDriver == 'sqlite':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
-        cu.execute("""SELECT hostname, domainname
-                          FROM Projects WHERE NOT external""")
+        cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
         for reposDir in ['.'.join(x) for x in cu.fetchall()]:
             reposDBPath = cfg.reposDBPath % reposDir
             dumpPath = os.path.join(backupPath, '%s.dump' % reposDir)
@@ -41,8 +43,7 @@ def backup(cfg, out):
     elif cfg.reposDBDriver == 'postgresql':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
-        cu.execute("""SELECT hostname, domainname
-                          FROM Projects WHERE NOT external""")
+        cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
         for reposDir in ['.'.join(x) for x in cu.fetchall()]:
             reposDbName = reposDir.translate(projects.transTables['postgresql'])
             dbUser = cfg.reposDBPath.split('@')[0]
@@ -106,18 +107,19 @@ def restore(cfg):
             cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
             localMirror = cu.fetchone_dict()
             if localMirror:
-                # convert back to external-only project for later mirroring
-                util.rmtree(reposPath, ignore_errors = True)
+                if not os.path.exists(reposPath):
+                    # revert Labels table to pre-mirror settings
+                    cu.execute( \
+                            "UPDATE Labels SET url=?, username=?, password=?" \
+                                " WHERE projectId=?",
+                        localMirror['sourceUrl'],
+                        localMirror['sourceUsername'],
+                        localMirror['sourcePassword'], projectId)
 
-                # revert Labels table to pre-mirror settings
-                cu.execute("""UPDATE Labels SET url=?, username=?, password=?
-                              WHERE projectId=?""",
-                    localMirror['sourceUrl'], localMirror['sourceUsername'],
-                    localMirror['sourcePassword'], projectId)
-
-                cu.execute("DELETE FROM RepNameMap WHERE toName=?", repo)
-                cu.execute("DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
-                    localMirror['inboundMirrorId'])
+                    cu.execute("DELETE FROM RepNameMap WHERE toName=?", repo)
+                    cu.execute( \
+                        "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
+                        localMirror['inboundMirrorId'])
 
     # delete package index to ensure we don't reference troves until they're
     # restored.
@@ -130,6 +132,11 @@ def restore(cfg):
         db.rollback()
     else:
         db.commit()
+
+def prerestore(cfg):
+    for repo in os.listdir(cfg.reposPath):
+        reposPath = os.path.join(cfg.reposPath, repo)
+        util.rmtree(reposPath, ignore_errors = True)
 
 def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
@@ -162,11 +169,14 @@ def run():
     os.setuid(apacheUID)
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
+    migration = bool(os.getenv('RBA_MIGRATION'))
     mode = (len(sys.argv) > 1) and sys.argv[1] or ''
     if mode in ('r', 'restore'):
         sys.exit(handle(restore, cfg))
+    elif mode in ('pr', 'prerestore'):
+        sys.exit(handle(prerestore, cfg))
     elif mode in ('b', 'backup'):
-        sys.exit(handle(backup, cfg, sys.stdout))
+        sys.exit(handle(backup, cfg, sys.stdouti, backupMirrors = migration))
     elif mode in ('c', 'clean'):
         sys.exit(handle(clean, cfg))
     elif mode.upper() in ('?', 'H', 'HELP'):

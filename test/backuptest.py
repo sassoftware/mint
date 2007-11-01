@@ -131,17 +131,28 @@ class BackupTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testRun(self, db, data):
+        self.usageRan = False
+        def newUsage():
+            self.usageRan = True
         oldsetgid = os.setgid
         os.setgid = mock.MockObject()
 
         oldsetuid = os.setuid
         os.setuid = mock.MockObject()
 
-        backup.run()
+        oldUsage = backup.usage
+        try:
+            backup.usage = newUsage
+            backup.run()
+        finally:
+            backup.usage = oldUsage
+
 
         os.setgid = oldsetgid
         os.setuid = oldsetuid
 
+        self.failIf(not self.usageRan,
+                "run method did not execute to completion")
 
     @fixtures.fixture("Full")
     def testClean(self, db, data):
@@ -152,6 +163,15 @@ class BackupTest(fixtures.FixturedUnitTest):
         backup.clean(self.cfg)
 
         self.failIf(os.path.exists(os.path.join(self.cfg.dataPath, 'tmp', 'backup')))
+
+    @fixtures.fixture("Full")
+    def testPrerestore(self, db, data):
+
+        out = StringIO.StringIO()
+        backup.prerestore(self.cfg)
+
+        self.failIf(os.listdir(self.cfg.reposPath),
+                "repository contents weren't deleted")
 
 
 if __name__ == "__main__":
