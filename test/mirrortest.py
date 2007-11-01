@@ -160,7 +160,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "localhost.other.host@rpl:devel",
-            "https://test.rpath.local2:%d/repos/localhost/" % self.securePort, "mintauth", "mintpass")
+            "https://test.rpath.local2:%d/repos/localhost/" % self.securePort,
+            "userpass", "mintauth", "mintpass", "")
         client.addInboundMirror(projectId, ["localhost.other.host@rpl:devel"],
             "http://localhost:%s/conary/" % sourcePort, "userpass", "mirror",
             "mirror", "", False)
@@ -204,7 +205,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "localhost.other.host@rpl:devel",
-            "https://test.rpath.local2:%d/repos/localhost/" % self.securePort, "userpass", "mintauth", "mintpass", "")
+            "https://test.rpath.local2:%d/repos/localhost/" % self.securePort,
+            "userpass", "mintauth", "mintpass", "")
         client.addInboundMirror(projectId, ["localhost.other.host@rpl:devel",
             "localhost.other.host@rpl:alsothese"],
             "http://localhost:%s/conary/" % sourcePort, "userpass", "mirror",
