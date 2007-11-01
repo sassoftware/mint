@@ -44,7 +44,6 @@ class CoverageWrapper(object):
         interp = "/usr/bin/python2.4"
         if isinstance(argv, str):
             cmd = '%s %s' % (interp, argv)
-            cmd = cmd.split(' ')
         else:
             cmd = [interp] + argv
         retval = subprocess.call(cmd, env=os.environ)
@@ -56,8 +55,15 @@ class CoverageWrapper(object):
         coverage = imp.load_source('coverage', self._executable)
         coverage = coverage.the_coverage
         coverage.cacheDir = self._dataPath
-        coverage.restoreDir()
+        coverage.get_ready(restoreDir=True)
         return coverage
+
+    def compress(self):
+        coverage = self.getCoverage()
+        if os.path.exists(self._dataPath):
+            util.rmtree(self._dataPath)
+        util.mkdirChain(self._dataPath)
+        coverage.save()
 
     def displayReport(self, files, displayMissingLines=False):
         assert(not displayMissingLines)
