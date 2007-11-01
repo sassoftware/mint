@@ -39,7 +39,7 @@ class ErrorHandler(WebHandler):
         return self.errorPage
 
     def errorPage(self, *args, **kwargs):
-        return self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
+        return self._write('error', error = ' An unknown error occurred while handling your request. Site maintainers have been notified.')
 
 
 class MintApp(WebHandler):
