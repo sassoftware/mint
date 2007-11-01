@@ -149,6 +149,22 @@ class UpdatePackageIndex(PackageIndexer):
 class UpdatePackageIndexExternal(PackageIndexer):
     logFileName = 'package-index-external.log'
 
+    def updateMark(self):
+        # This code exists to overcome the situation where there are no
+        # internal projects on the rBuilder. internal package index code will
+        # delete the package index if there is no mark or a mark of zero.
+        # this code sets the mark to "1" to ensure no race conditions exist
+        # sorrounding the setting of the mark.
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM Projects WHERE NOT external")
+        if not cu.fetchone()[0]:
+            cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
+            if not cu.fetchone()[0]:
+                cu.execute("INSERT INTO PackageIndexMark VALUES(1)")
+            else:
+                cu.execute("UPDATE PackageIndexMark SET mark=1")
+            self.db.commit()
+
     def action(self):
         self.log.info("Updating package index")
 
@@ -258,5 +274,6 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 (pkgId, projectId, name, version, serverName, branchName, isSource)
             VALUES (NULL, ?, ?, ?, ?, ?, ?)""", inserts)
         self.db.commit()
+        self.updateMark()
         self.log.info("Database update complete, took %.2fs." % (time.time() - st))
         return 0
