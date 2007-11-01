@@ -13,6 +13,7 @@ import socket
 import sys
 import re
 import testsuite
+import time
 import urlparse
 
 # make webunit not so picky about input tags closed
@@ -241,8 +242,10 @@ class MintApacheServer(rephelp.ApacheServer):
         if self.serverpid != -1:
             return
 
-        # HACK
-        os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
+        # This may not be catching all semaphores (and may catch extra ones
+        # too)
+        oldSemaphores = rephelp.listSemaphores()
+
         self.serverpid = os.fork()
         if self.serverpid == 0:
             os.chdir('/')
@@ -255,6 +258,12 @@ class MintApacheServer(rephelp.ApacheServer):
             rephelp.osExec(args)
         else:
             pass
+        rephelp.tryConnect("localhost", self.port)
+        for i in range(200):
+            self.semaphores = rephelp.listSemaphores() - oldSemaphores
+            if self.semaphores:
+                break
+            time.sleep(.1)
 
         os.mkdir(os.path.join(self.serverRoot, 'cscache'))
 
