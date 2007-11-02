@@ -617,8 +617,11 @@ class LabelsTable(database.KeyedTable):
         if not p:
             raise LabelMissing
         else:
+            username = p[3] is not None and p[3] or ''
+            password = p[4] is not None and p[4] or ''
+            entitlement = p[5] is not None and p[5] or ''
             return dict(label=p[0], url=p[1], authType=p[2],
-                username=p[3], password=p[4], entitlement=p[5])
+                username=username, password=password, entitlement=entitlement)
 
     def addLabel(self, projectId, label, url=None, authType='none',
             username=None, password=None, entitlement=None):
