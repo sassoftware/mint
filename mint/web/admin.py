@@ -290,11 +290,10 @@ class AdminHandler(WebHandler):
             self.client.getProjectByHostname('rpath')
         except database.ItemNotFound:
             firstTime = True
-            kwargs.setdefault('name', 'rPath Linux')
-            kwargs.setdefault('hostname', 'rpath')
-            kwargs.setdefault('url', 'https://conary.rpath.com/conary/')
-            kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
-            kwargs.setdefault('additionalLabelsToMirror', 'conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen')
+            kwargs.setdefault('name', 'rPath Appliance Platform - Linux Service')
+            kwargs.setdefault('hostname', 'rap')
+            kwargs.setdefault('url', 'https://rap.rpath.com/conary/')
+            kwargs.setdefault('label', 'rap.rpath.com@rpath:linux-1')
             kwargs.setdefault('allLabels', 0)
         else:
             firstTime = False

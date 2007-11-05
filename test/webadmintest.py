@@ -32,7 +32,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rpath"')
+                                  'name="hostname" value="rap"')
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rpath',
@@ -62,7 +62,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rpath"')
+                                  'name="hostname" value="rap"')
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rpath',
@@ -80,7 +80,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # and make sure that the appropriate database entries are created
         assert(client.getInboundMirrors() == [[1, 1,
-            'conary.rpath.com@rpl:1 conary.rpath.com@rpl:1-compat conary.rpath.com@rpl:1-xen',
+            'conary.rpath.com@rpl:1',
             'https://conary.rpath.com/conary/', 'userpass', 'mirror',
             'mirrorpass', '', 0]])
 
@@ -221,7 +221,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rpath"')
+                                  'name="hostname" value="rap"')
 
         # check errors
         page = self.fetch("/admin/addExternal")
