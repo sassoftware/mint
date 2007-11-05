@@ -3888,7 +3888,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
             sourceAuthType, sourceUsername, sourcePassword, sourceEntitlement, allLabels
             FROM InboundMirrors ORDER BY mirrorOrder""")
-        return [[y is not None and y or '' for y in x] for x in cu.fetchall()]
+        return [[y is not None and y or '' for y in x[:-1]] + \
+                [x[-1]] for x in cu.fetchall()]
 
     @private
     @typeCheck(int)
