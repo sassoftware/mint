@@ -201,16 +201,18 @@ class LoadMirror:
         labelIdMap, _, _, _ = self.client.getLabelsForProject(project.id)
         label, labelId = labelIdMap.items()[0]
 
-        targetPath = os.path.join(self.cfg.dataPath, "repos") + os.path.sep
+        # Delete any existing repository before copying the new data
+        targetBase = os.path.join(self.cfg.dataPath, "repos")
+        targetPath = os.path.join(targetBase, serverName)
+        util.mkdirChain(targetBase)
         if os.path.exists(targetPath):
             util.rmtree(targetPath)
-        util.mkdirChain(targetPath)
 
         sourcePath = os.path.join(self.sourceDir, serverName)
 
-        copyutils.copytree(sourcePath, targetPath, fileowner = targetOwner,
+        copyutils.copytree(sourcePath, targetBase, fileowner = targetOwner,
             dirowner = targetOwner, callback = callback)
-        os.unlink(os.path.join(targetPath, serverName, "MIRROR-INFO"))
+        os.unlink(os.path.join(targetPath, "MIRROR-INFO"))
         call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, self.cfg)
