@@ -287,7 +287,7 @@ class AdminHandler(WebHandler):
         from mint import database
         kwargs.setdefault('authtype', 'none')
         try:
-            self.client.getProjectByHostname('rpath')
+            self.client.getProjectByHostname('rap')
         except database.ItemNotFound:
             firstTime = True
             kwargs.setdefault('name', 'rPath Appliance Platform - Linux Service')
