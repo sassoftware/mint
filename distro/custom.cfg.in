@@ -8,7 +8,7 @@ backup.local_storage="/srv/raa/backups/"
 backup.tmp_dir="/srv/raa/tmp/"
 
 [/logs]
-logs.files = {'Appliance Logs': None, 'Conary': '/var/log/conary', 'Inbound Mirroring': '/srv/rbuilder/logs/mirror-inbound.log', 'Outbound Mirroring': '/srv/rbuilder/logs/mirror-outbound.log', 'Mirror Preloading': '/srv/rbuilder/logs/load-mirror.log', 'Package Indexer': '/srv/rbuilder/logs/package-index.log', 'External Package Indexer': '/srv/rbuilder/logs/package-index-external.log'}
+logs.files = {'Appliance Logs': None, 'Conary': '/var/log/conary', 'Inbound Mirroring': '/var/log/rbuilder/mirror-inbound.log', 'Outbound Mirroring': '/var/log/rbuilder/mirror-outbound.log', 'Mirror Preloading': '/var/log/rbuilder/load-mirror.log', 'Package Indexer': '/var/log/rbuilder/package-index.log', 'External Package Indexer': '/var/log/rbuilder/package-index-external.log'}
 
 logs.num_lines = 20
 
