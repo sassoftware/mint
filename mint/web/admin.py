@@ -708,7 +708,7 @@ class AdminHandler(WebHandler):
                 self._addErrors("This outbound mirror is already configured to mirror to %s" % mirrorUrl)
 
         if not self._getErrors():
-            servername = self.client.translateProjectFQDN(project.getFQDN())
+            servername = versions.Label(project.getLabel()).getHost()
             group = None
             for x in om['matchStrings'].split(' '):
                 if x.startswith('+group'):
