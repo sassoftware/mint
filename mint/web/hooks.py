@@ -259,14 +259,19 @@ def conaryHandler(req, cfg, pathInfo):
         # it's completely external
         # use the Internal Conary Proxy if it's configured
 
-        # don't proxy stuff that should have been caught in the above if block
-        # XXX: if we had a better way to determine if a request has already been
-        # proxied, we could just interrupt here to prevent a proxy loop.
-        if req.hostname.endswith(cfg.projectDomainName.split(":")[0]) and not actualRepName and 'changeset' not in pathInfo:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-
         global proxy_repository
         if cfg.useInternalConaryProxy:
+
+            # Don't proxy stuff that should have been caught in the above if block
+            # Conary >= 1.1.26 proxies will add a Via header for all
+            # requests forwarded for the Conary Proxy. If it contains our
+            # IP address and port, then we've already handled this request.
+            via = req.headers_in.get("Via", "")
+            myHostPort = "%s:%d" % (req.connection.local_ip,
+                    req.connection.local_addr[1])
+            if myHostPort in via:
+                apache.log_error('Internal Conary Proxy was attempting an infinite loop (request %s, via %s)' % (req.hostname, via))
+                raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
 
             if proxy_repository:
                 repo = proxy_repository
