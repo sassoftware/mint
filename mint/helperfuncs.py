@@ -181,7 +181,7 @@ def fromDatabaseTimestamp(timeStamp):
         raise ValueError  # don't know what to do with it
 
     return (time.mktime(time.strptime(timeStamp, '%Y%m%d%H%M%S')) - \
-            (time.daylight and time.altzone or time.timezone))
+            (time.localtime().tm_isdst and time.altzone or time.timezone))
 
 def getUrlHost(url):
     """
