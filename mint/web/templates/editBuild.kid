@@ -81,8 +81,8 @@ allowNone = ['anaconda-custom', 'media-template']
                                 name="buildtype" value="${key}" 
                                 onclick="javascript:onBuildTypeChange('formgroup_${key}');"
                                 type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
-                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}</label>
-                            <div py:if="buildTypeExtra.has_key(key)" class="clearleft" style="font-size: smaller;margin-left: 6em">${buildTypeExtra[key]}</div>
+                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}
+                                <span py:if="buildTypeExtra.has_key(key)" class="clearleft" style="font-size: smaller;"><br />${buildTypeExtra[key]}</span></label>
                             <div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
