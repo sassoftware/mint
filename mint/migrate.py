@@ -136,13 +136,21 @@ class MigrateTo_40(SchemaMigration):
 
 # SCHEMA VERSION 41
 class MigrateTo_41(SchemaMigration):
-    Version = (41, 0)
+    Version = (41, 1)
 
     # 41.0
     # - buildCount
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD COLUMN buildCount INTEGER")
+        return True
+
+    # 41.1
+    # - buildCount should be set to 1 for older builds that were created
+    #   pre-migration
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Builds SET buildCount = 1 WHERE buildCount IS NULL")
         return True
 
 
