@@ -131,7 +131,7 @@ class WebHandler(object):
         if self.cfg.sendNotificationEmails:
             users.sendMail(self.cfg.adminMail, self.cfg.productName,
                        user.getEmail(),
-                       "%s forgotten password"%self.cfg.productName, message)
+                       "%s password reset"%self.cfg.productName, message)
         else:
             self.req.log_error("The password for %s has been reset to %s" % (user.username, newpw))
 
