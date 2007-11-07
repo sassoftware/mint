@@ -13,7 +13,7 @@ import tempfile
 import simplejson
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes, buildtemplates
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
@@ -814,16 +814,17 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         serialized = build.serialize()
         buildDict = simplejson.loads(serialized)
-        UUID = buildDict['UUID']
+        UUID = str(buildDict['UUID'])
 
-        self.assertEquals(UUID, 'test.rpath.local-build-2-1')
+        hname = '%s.%s' % (MINT_HOST, MINT_DOMAIN)
+        self.assertEquals(UUID, '%s-build-2-1' % (hname,))
 
         # repeat the serialize process to ensure the build count gets bumped
         serialized = build.serialize()
         buildDict = simplejson.loads(serialized)
-        UUID = buildDict['UUID']
+        UUID = str(buildDict['UUID'])
 
-        self.assertEquals(UUID, 'test.rpath.local-build-2-2')
+        self.assertEquals(UUID, '%s-build-2-2' % (hname,))
 
     @fixtures.fixture('Full')
     def testBumpBadBuild(self, db, data):
