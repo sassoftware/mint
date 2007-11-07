@@ -815,6 +815,8 @@ class _Method(xmlrpclib._Method):
             raise DatabaseTableMissing(exceptionArgs[0])
         elif exceptionName == "DatabaseVersionMismatch":
             raise DatabaseVersionMismatch(exceptionArgs[0])
+        elif exceptionName == "NotEntitledError":
+            raise NotEntitledError(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

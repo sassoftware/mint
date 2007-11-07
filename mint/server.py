@@ -380,6 +380,9 @@ class MintServer(object):
             except ParameterError, e:
                 self._handleError(e, authToken, methodName, args)
                 return (True, ("ParameterError", str(e)))
+            except NotEntitledError, e:
+                self._handleError(e, authToken, methodName, args)
+                return (True, ("NotEntitledError", str(e)))
             except Exception, e:
                 self._handleError(e, authToken, methodName, args)
                 raise
@@ -1866,9 +1869,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         mc = self._getMcpClient()
 
-        self.buildData.setDataValue(buildId, 'jsversion',
-                                    str(mc.getJSVersion()),
-                                    data.RDT_STRING)
+        try:
+            self.buildData.setDataValue(buildId, 'jsversion',
+                str(mc.getJSVersion()),
+                data.RDT_STRING)
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
         return buildId
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
@@ -1878,8 +1884,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         cc = self._getProjectRepo(project)
 
-        mc = self._getMcpClient()
-        jsVersion = mc.getJSVersion()
+        try:
+            mc = self._getMcpClient()
+            jsVersion = mc.getJSVersion()
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
 
         buildDicts = buildxml.buildsFromXml(buildXml)
 
@@ -2572,7 +2581,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildPublished()
         mc = self._getMcpClient()
         data = self.serializeBuild(buildId)
-        return mc.submitJob(data)
+        try:
+            return mc.submitJob(data)
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
 
     @typeCheck(int, str)
     @private
@@ -2586,7 +2598,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise GroupTroveEmpty
         mc = self._getMcpClient()
         data = self.serializeGroupTrove(groupTroveId, arch)
-        return mc.submitJob(data)
+        try:
+            return mc.submitJob(data)
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
 
     @typeCheck()
     @requiresAuth
@@ -3399,8 +3414,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['autoResolve'] = groupTrove.autoResolve
 
+        try:
+            jsversion = mc.getJSVersion()
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
         r['data'] = {'arch' : arch,
-                     'jsversion': str(mc.getJSVersion())}
+                     'jsversion': str(jsversion)}
 
         r['description'] = groupTrove.description
 

@@ -435,7 +435,13 @@ class ProjectHandler(WebHandler):
             return
 
         if not buildId:
-            build = self.client.newBuild(self.project.id, name)
+            try:
+                build = self.client.newBuild(self.project.id, name)
+            except NotEntitledError:
+                self._addErrors('The build could not retrieve an appropriate '
+                    'jobslave because rBuilder is not correctly entitled.')
+                self._predirect('newBuild')
+                return
             buildId = build.id
         else:
             build = self.client.getBuild(buildId)

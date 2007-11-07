@@ -157,3 +157,10 @@ class BuildXmlInvalid(MintError):
         return self.reason
     def __init__(self, reason = "Invalid Build XML"):
         self.reason = reason
+
+class NotEntitledError(MintError):
+    def __init__(self, reason="The rBuilder is not entitled to a required "
+            "resource. Please contact your administrator."):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
