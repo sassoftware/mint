@@ -22,6 +22,7 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
+from mint.mint_error import NotEntitledError
 
 from mint import buildtemplates
 from mint import helperfuncs
