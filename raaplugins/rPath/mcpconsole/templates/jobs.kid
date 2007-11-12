@@ -19,6 +19,8 @@
         from rPath.mcpconsole.templates import pageList
 
         from mcp import jobstatus
+
+        import re
     ?>
 
     <body id="middleWide">
@@ -40,8 +42,15 @@
                         <div py:for="id, info in jobStatus" py:strip="True">
                             <?python
                                 status = jobstatus.statusNames[info['status'][0]]
-                                jobOrigin, jobType, jobId, buildCount = id.rsplit('-', 3)
-                                jobId = '-'.join((jobId, buildCount))
+                                match = re.search('^(.*)-(build|cook)-(\d+-\d+)$', id)
+                                if not match:
+                                    # Doesnt have a build count, e.g. with pre-release rbuilder 4.x
+                                    match = re.search('^(.*)-(build|cook)-(\d+)$', id)
+                                if match:
+                                    jobOrigin, jobType, jobId = match.groups()
+                                else:
+                                    # Dont know what this is...
+                                    jobOrigin, jobType, jobId = "unknown", "unknown", "unknown"
                             ?>
                             <tr class="mcpJobSummary mcpJobColor${status}">
                                 <td py:content="jobId" />
