@@ -975,10 +975,11 @@ class MintServer(object):
 
         helpLink = """
 
-Instructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/?version=${constants.mintVersion}
+Instructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/?version=%s
 
 If you would not like to be %s %s of this project, you may resign from this project at %smembers""" % \
-        (userlevelname == 'Developer' and 'a' or 'an', userlevelname, projectUrl)
+        (constants.mintVersion, userlevelname == 'Developer' and 'a' or 'an',
+           userlevelname, projectUrl)
 
         closing = 'If you have questions about the project, please contact the project owners.'
 
