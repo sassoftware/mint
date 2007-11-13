@@ -168,7 +168,16 @@ class BackupTest(fixtures.FixturedUnitTest):
     def testPrerestore(self, db, data):
 
         out = StringIO.StringIO()
-        backup.prerestore(self.cfg)
+        self.cmds = []
+        def fakeExecute(cmd):
+            self.cmds.append(cmd)
+        execute = util.execute
+        try:
+            util.execute = fakeExecute
+            backup.prerestore(self.cfg)
+        finally:
+            util.execute = execute
+        self.assertEquals (self.cmds, ["service httpd stop"])
 
         self.failIf(os.listdir(self.cfg.reposPath),
                 "repository contents weren't deleted")
