@@ -14,7 +14,7 @@ from conary import dbstore
 import conary.server.schema
 from conary.conaryclient import cmdline
 
-schemaCutoff = 38
+schemaCutoff = 37
 knownGroupVersions = ('3.1.4', '4.0.0')
 
 staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
