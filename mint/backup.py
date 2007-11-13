@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -9,9 +8,14 @@ import os, sys
 import pwd
 from mint import config
 from mint import projects
+from mint import schema
 from conary.lib import util
 from conary import dbstore
 import conary.server.schema
+from conary.conaryclient import cmdline
+
+schemaCutoff = 38
+knownGroupVersions = ('3.1.4', '4.0.0')
 
 staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
@@ -34,6 +38,10 @@ def backup(cfg, out, backupMirrors = False):
         cu = db.cursor()
         cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
         for reposDir in ['.'.join(x) for x in cu.fetchall()]:
+            cu.execute("SELECT toName FROM RepNameMap WHERE fromName=?",
+                    reposDir)
+            res = cu.fetchone()
+            reposDir = res and res[0] or reposDir
             reposDBPath = cfg.reposDBPath % reposDir
             dumpPath = os.path.join(backupPath, '%s.dump' % reposDir)
             if os.path.exists(reposDBPath):
@@ -71,6 +79,7 @@ def restore(cfg):
             os.unlink(cfg.dbPath)
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    schema.loadSchema(db, cfg)
     cu = db.cursor()
     cu.execute("SELECT hostname, domainname, projectId FROM Projects")
     for hostname, domainname, projectId in [x for x in cu.fetchall()]:
@@ -88,6 +97,9 @@ def restore(cfg):
                 if os.path.exists(dbPath):
                     os.unlink(dbPath)
                 util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
+                rdb = dbstore.connect(dbPath, cfg.reposDBDriver)
+                conary.server.schema.loadSchema(rdb)
+                rdb.close()
             elif cfg.reposDBDriver == 'postgresql':
                 pgRepo = repo.translate(projects.transTables['postgresql'])
                 dbPath = cfg.reposDBPath % pgRepo
@@ -103,6 +115,10 @@ def restore(cfg):
 
                 dbUser = cfg.reposDBPath.split('@')[0]
                 util.execute('cat %s | psql -U %s %s'% (dumpPath, dbUser, pgRepo))
+                rdb = dbstore.connect('%s' % (cfg.reposDBPath % 'postgres'),
+                                      cfg.reposDBDriver)
+                conary.server.schema.loadSchema(rdb)
+                rdb.close()
         else:
             cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
             localMirror = cu.fetchone_dict()
@@ -134,6 +150,7 @@ def restore(cfg):
         db.commit()
 
 def prerestore(cfg):
+    util.execute("service httpd stop")
     for repo in os.listdir(cfg.reposPath):
         reposPath = os.path.join(cfg.reposPath, repo)
         util.rmtree(reposPath, ignore_errors = True)
@@ -142,11 +159,42 @@ def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
     util.rmtree(backupPath, ignore_errors = True)
 
+def metadata(cfg, out):
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    cu = db.cursor()
+    cu.execute("SELECT COALESCE(MAX(version), 0) FROM DatabaseVersion")
+    schemaVersion = cu.fetchone()[0]
+    print >> out, "rBuilder_schemaVersion=%d" % schemaVersion
+    cu.execute("SELECT COALESCE(MAX(minor), 0) FROM DatabaseVersion")
+    schemaMinor = cu.fetchone()[0]
+    print >> out, "rBuilder_schemaMinor=%d" % schemaMinor
+    sys.stdout.flush()
+
+def isValid(cfg, input):
+    data = input.read()
+    metaData = dict([x.split('=', 1) for x in data.splitlines()])
+    schemaVersion = int(metaData.get('rBuilder_schemaVersion', 0))
+    if schemaVersion < schemaCutoff:
+        if schemaVersion == 0:
+            raise RuntimeError("Unknown Schema Version")
+        else:
+            raise RuntimeError("Schema Version Too Old")
+    NVF = metadata.get('NVF')
+    if not NVF:
+        raise RuntimeError("No group trovespec found")
+    verStr = cmdline.parseTroveSpec[1]
+    ver = versions.VersionFromString(verStr)
+    if ver.trailingRevision().version not in knownGroupVersions:
+        raise RuntimeError("Incompatible upstream revision")
+
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
     print >> out, "    [b/backup]: back up databases and issue manifest."
     print >> out, "    [r/restore]: restore databases."
     print >> out, "    [c/clean]: clean up temporary files used during backup."
+    print >> out, "    [m/metadata]: print appliance metadata in name=value format."
+    print >> out, "    [isValid]: determine if metadata on stdin is for a compatible backup."
+    print >> out, "    [prerestore]: prepare to restore databases."
 
 def handle(func, *args, **kwargs):
     errno = 0
@@ -172,13 +220,17 @@ def run():
     migration = bool(os.getenv('RBA_MIGRATION'))
     mode = (len(sys.argv) > 1) and sys.argv[1] or ''
     if mode in ('r', 'restore'):
-        sys.exit(handle(restore, cfg))
-    elif mode in ('pr', 'prerestore'):
-        sys.exit(handle(prerestore, cfg))
+        handle(restore, cfg)
+    elif mode  == 'prerestore':
+        handle(prerestore, cfg)
     elif mode in ('b', 'backup'):
-        sys.exit(handle(backup, cfg, sys.stdouti, backupMirrors = migration))
+        handle(backup, cfg, sys.stdout, backupMirrors = migration)
     elif mode in ('c', 'clean'):
-        sys.exit(handle(clean, cfg))
+        handle(clean, cfg)
+    elif mode in ('m', 'metadata'):
+        handle(metadata, cfg, sys.stdout)
+    elif mode == 'isValid':
+        handle(isValid, cfg, sys.stdin)
     elif mode.upper() in ('?', 'H', 'HELP'):
         usage(out = sys.stdout)
     else:

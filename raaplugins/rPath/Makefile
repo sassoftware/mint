@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole
+SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole postmigrate
 
 extra_dist = __init__.py
 

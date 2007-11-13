@@ -1,7 +1,9 @@
 [global]
-plugins.disable = ['/configure/ConaryConf', '/services/Services']
+plugins.disable = ['/configure/ConaryConf', '/services/Services', '/postmigrate/rBuilderMigration']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
+
+postmigrate.rBuilderMigration.hidden="property"
 
 [/backup]
 backup.local_storage="/srv/raa/backups/"
