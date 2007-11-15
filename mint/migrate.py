@@ -153,6 +153,22 @@ class MigrateTo_41(SchemaMigration):
         cu.execute("UPDATE Builds SET buildCount = 1 WHERE buildCount IS NULL")
         return True
 
+# SCHEMA VERSION 42
+class MigrateTo_41(SchemaMigration):
+    Version = (42, 0)
+
+    # 42.0
+    # - We were missing fullSync on OutboundMirrors in some 4.0.0 rBuilder
+    #   schemas. This will rectify it without breaking databases which have
+    #   it already.
+    def migrate(self):
+        cu = self.db.cursor()
+        try:
+            cu.execute("""ALTER TABLE OutboundMirrors
+                ADD COLUMN fullSync INT NOT NULL DEFAULT 0""")
+        except sqlerrors.DuplicateColumnName:
+            pass # this is OK, as databases migrated from 3.1.x will have this
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
