@@ -154,7 +154,7 @@ class MigrateTo_41(SchemaMigration):
         return True
 
 # SCHEMA VERSION 42
-class MigrateTo_41(SchemaMigration):
+class MigrateTo_42(SchemaMigration):
     Version = (42, 0)
 
     # 42.0
