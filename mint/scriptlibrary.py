@@ -14,6 +14,8 @@ import fcntl
 from mint import config
 from mint.client import MintClient
 
+from conary.lib.log import logger
+
 class GenericScript:
     """ 
     Class used for a script which has an action phase and an optional
@@ -315,6 +317,16 @@ def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
         logfileHandler.setFormatter(logfileFormatter)
         logfileHandler.setLevel(logfileLevel)
         _scriptLogger.slogger.addHandler(logfileHandler)
+
+        # also, let's log conary messages that would normally go to standard out
+        # into our log files
+        if globals().has_key("logger"):
+            conaryLogfileFormatter = logging.Formatter('%(asctime)s [%(process)d] CONARY: %(message)s', '%Y-%b-%d %H:%M:%S')
+            conaryLogfileHandler = logging.FileHandler(logfile)
+            conaryLogfileHandler.setFormatter(conaryLogfileFormatter)
+            # always use debug level here no matter what
+            conaryLogfileHandler.setLevel(logging.DEBUG)
+            logger.addHandler(conaryLogfileHandler)
 
     # make sure the slogger handles all of the messages we want
     _scriptLogger.slogger.setLevel(min(consoleLevel, logfileLevel))
