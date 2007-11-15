@@ -505,9 +505,18 @@ class ProjectHandler(WebHandler):
                         n, v, f = parseTroveSpec(str(val))
                         thisSearchPath = searchPath + fallbackPath
                         if not n or not v or (f is None):
+                            # incomplete spec from XMLRPC client
                             val = build.resolveExtraTrove(n, v, f, thisSearchPath)
                         else:
-                            val = "%s=%s[%s]" % (n, v, f)
+                            try:
+                                # attept to un-freeze the version
+                                versions.ThawVersion(v)
+                            except versions.ParseError:
+                                # spec with non-frozen version
+                                val = build.resolveExtraTrove(n, v, f)
+                            else:
+                                # frozen version from picker
+                                val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False

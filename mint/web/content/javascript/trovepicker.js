@@ -69,6 +69,7 @@ TrovePicker.prototype.archFilter = Array();
 TrovePicker.prototype.flavFilter = Array();
 TrovePicker.prototype.buildChange = null;
 TrovePicker.prototype.stage = null;
+TrovePicker.prototype.customSpec = null;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -271,6 +272,53 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     }
 }
 
+// Show a textbox in which to enter an exact version
+TrovePicker.prototype.getCustomVersion = function(e) {
+    this.stage = 'custom_version';
+
+    oldList = $(this.elId + 'selectionList');
+    newList = UL({ 'id': this.elId + 'selectionList' });
+
+    label = LI({'style': 'font-size: 80%'},
+        "Example: foobar=example.com@rpl:1[is: x86]");
+
+    input = LI(null, INPUT({ 'id': this.elId + 'customInput', 'value': this.customSpec }));
+    this.customSpec = null;
+
+    link = forwardLink(null, "OK");
+    connect(link, "onclick", this, "pickCustomVersion");
+
+    appendChildNodes(newList, label, input, link);
+
+    this.working(false);
+    swapDOM(oldList, newList);
+    replaceChildNodes($(this.elId + 'prompt'), "Please enter a trovespec:");
+
+    // return to getAllTroveLabels
+    returnLink = A(null, returnImg(), " Back");
+    returnLink.troveName = this.troveName;
+    connect(returnLink, "onclick", this, "getAllTroveLabels");
+    replaceChildNodes($(this.elId + 'return'), returnLink);
+
+}
+
+TrovePicker.prototype.pickCustomVersion = function(e) {
+    this.customSpec = $(this.elId + 'customInput').value;
+    setNodeAttribute($(this.elId.replace("-", "_") + 'Spec'), 'value', this.customSpec);
+
+    oldEl = $(this.elId + 'selectionList');
+    newEl = DIV({'id': this.elId + 'selectionList'},
+        SPAN({'style': 'font-weight: bold;'}, 'Trove: '),
+        SPAN(null, this.customSpec)
+    );
+    swapDOM(oldEl, newEl);
+
+    // return to getCustomVersion
+    returnLink = A(null, returnImg(), " Back");
+    connect(returnLink, "onclick", this, "getCustomVersion");
+    replaceChildNodes($(this.elId + 'return'), returnLink);
+}
+
 // Fetch all labels a trove exists on a given server
 TrovePicker.prototype.getAllTroveLabels = function(e) {
     this.stage = 'label';
@@ -293,7 +341,12 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
             connect(link, "onclick", par, "getTroveVersions");
             appendChildNodes(ul, link);
         }
-        if(labelList.length > 0 && par.allowNone) {
+        if(par.elId != 'distTrove') {
+            link = forwardLink(null, "Custom");
+            connect(link, "onclick", par, "getCustomVersion");
+            appendChildNodes(ul, link);
+        }
+        if(par.allowNone) {
             link = forwardLink(null, "Do not use " + par.troveName + " for this build.");
             link.troveName = par.troveName;
             connect(link, "onclick", par, "pickNoTrove");

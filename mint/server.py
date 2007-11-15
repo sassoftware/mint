@@ -2140,8 +2140,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfg.proxy = self.cfg.proxy
         cclient = conaryclient.ConaryClient(cfg)
 
-        spec = conaryclient.cmdline.parseTroveSpec(trvName)
-        itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+        if trvVersion is None or trvFlavor == '':
+            trvVersion = None
+        if trvFlavor is None or trvFlavor == '':
+            trvFlavor = None
+
+        itemList = [(trvName, (None, None), (trvVersion, trvFlavor), True)]
         try:
             uJob, suggMap = cclient.updateChangeSet(itemList,
                                                     resolveDeps = False)
