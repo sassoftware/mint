@@ -12,7 +12,8 @@ import sys
 import optparse
 import traceback
 
-EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo", "+.*"]
+EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo"]
+INCLUDE_ALL_MATCH_TROVES = ["+.*"]
 
 class InboundMirrorsTable(database.KeyedTable):
     name = 'InboundMirrors'
@@ -107,7 +108,7 @@ class MirrorScript(scriptlibrary.SingletonScript):
         tb = traceback.format_exc()
         [self.log.error(x) for x in tb.split("\n") if x.strip()]
 
-    def _doMirror(self, mirrorCfg, sourceRepos, targetRepos):
+    def _doMirror(self, mirrorCfg, sourceRepos, targetRepos, fullSync = False):
 
         from conary.conaryclient import mirror
         from conary.lib import util
@@ -131,7 +132,7 @@ class MirrorScript(scriptlibrary.SingletonScript):
         passNumber = 1
         self.log.info("Beginning pass %d" % passNumber)
         callAgain = mirror.mirrorRepository(sourceRepos, targetRepos,
-            mirrorCfg, sync = self.options.sync,
+            mirrorCfg, sync = self.options.sync or fullSync,
             syncSigs = self.options.syncSigs)
         self.log.info("Completed pass %d" % passNumber)
 

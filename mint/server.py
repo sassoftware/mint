@@ -1689,6 +1689,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.labels.getLabelsForProject(projectId, overrideAuth, newUser, newPass)
 
+    @typeCheck(bool, ((str, type(None)),), ((str, type(None)),))
+    @private
+    @requiresAuth
+    def getAllLabelsForProjects(self, overrideAuth, newUser, newPass):
+        """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
+        return self.labels.getAllLabelsForProjects(overrideAuth, newUser, newPass)
+
     @typeCheck(int, str, str, str, str, str, str)
     @requiresAuth
     @private
@@ -3937,18 +3944,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
     @private
-    @typeCheck(int, (list, str), bool, bool)
+    @typeCheck(int, (list, str), bool, bool, int)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels, recurse):
-        cu = self.db.cursor()
-        cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM OutboundMirrors")
-        mirrorOrder = cu.fetchone()[0]
-        return self.outboundMirrors.new(sourceProjectId = sourceProjectId,
+            allLabels, recurse, id):
+        if id != -1:
+            self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = allLabels,
                                        recurse = recurse,
-                                       mirrorOrder = mirrorOrder)
+                                       fullSync = True)
+        else:
+            cu = self.db.cursor()
+            cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM OutboundMirrors")
+            mirrorOrder = cu.fetchone()[0]
+            id = self.outboundMirrors.new(sourceProjectId = sourceProjectId,
+                                           targetLabels = ' '.join(targetLabels),
+                                           allLabels = allLabels,
+                                           recurse = recurse,
+                                           mirrorOrder = mirrorOrder,
+                                           fullSync = True)
+        return id
 
     @private
     @typeCheck(int, str, str, str)
@@ -3998,17 +4014,33 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return matchStrings.split()
 
     @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getOutboundMirrorGroups(self, outboundMirrorId):
+        r = self.outboundMirrors.get(outboundMirrorId, fields=['matchStrings'])
+        matchStrings = r.get('matchStrings', '')
+        return [g.replace('+','') for g in matchStrings.split() if g.startswith('+group-')]
+
+    @private
     @typeCheck()
     @requiresAdmin
     def getOutboundMirrors(self):
         cu = self.db.cursor()
         cu.execute("""SELECT outboundMirrorId, sourceProjectId,
                         targetLabels, allLabels, recurse,
-                        matchStrings, mirrorOrder
+                        matchStrings, mirrorOrder, fullSync
                         FROM OutboundMirrors
                         ORDER by mirrorOrder""")
-        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), x[6]] \
+        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
+                x[6], bool(x[7])] \
                 for x in cu.fetchall()]
+
+    @private
+    @typeCheck(int, bool)
+    @requiresAdmin
+    def setOutboundMirrorSync(self, outboundMirrorId, fullSync):
+        self.outboundMirrors.update(outboundMirrorId, fullSync=fullSync)
+        return True
 
     @private
     @typeCheck(int)

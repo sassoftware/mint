@@ -11,6 +11,7 @@ import httplib
 import xmlrpclib
 import urllib
 import socket
+import md5
 
 from conary import conarycfg
 from conary import conaryclient
@@ -557,7 +558,7 @@ class AdminHandler(WebHandler):
         mirrors = self.client.getOutboundMirrors()
         for i, x in enumerate(mirrors):
             outboundMirrorId, projectId, label, \
-                allLabels, recurse, matchStrings, order = x
+                allLabels, recurse, matchStrings, order, fullSync = x
             project = self.client.getProject(projectId)
             mirrorData = {}
             mirrorData['id'] = outboundMirrorId
@@ -570,50 +571,38 @@ class AdminHandler(WebHandler):
             mirrorData['targets'] = [ (x[0], getUrlHost(x[1])) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
-            for x in matchStrings:
-                if x.startswith('+group'):
-                    mirrorData['group'] = x[1:]
-            mirrorData['mirrorSources'] = "-.*:source" not in matchStrings
+            mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
+            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings))
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
 
-    def addOutbound(self, *args, **kwargs):
+    @intFields(id=-1)
+    def addOutbound(self, id, *args, **kwargs):
         projects = self.client.getProjectsList()
-        return self._write('admin/add_outbound', projects = projects, kwargs = kwargs)
+        if id != -1:
+            obm = self.client.getOutboundMirror(id)
+            obmg = self.client.getOutboundMirrorGroups(id)
+            kwargs.update({'projectId': obm['sourceProjectId'],
+                           'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
+                           'allLabels': obm['allLabels'],
+                           'selectedLabels': simplejson.dumps(obm['targetLabels'].split()),
+                           'selectedGroups': simplejson.dumps(obmg),
+                           'mirrorBy': obmg and 'group' or 'label'})
+        else:
+            kwargs.update({'projectId': -1,
+                           'mirrorSources': 0,
+                           'allLabels': 0,
+                           'selectedLabels': simplejson.dumps([]),
+                           'selectedGroups': simplejson.dumps([]),
+                           'mirrorBy': 'label'})
+        return self._write('admin/add_outbound', id=id, projects = projects, kwargs = kwargs)
 
-    def _genPasswd(self):
-        import random
-        random = random.SystemRandom()
-        allowed = "abcdefghijklmnopqrstuvwxyz0123456789"
-        len = 128
-        chars = ''
-        for x in range(len):
-            chars += random.choice(allowed)
-        return chars
-
-    def _updateMirror(self, user, servername, host, sp):
+    def _updateMirror(self, user, servername, mirrorUrl, sp):
         passwd = ''
         try:
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
-            
-            rapa_passwd = self._genPasswd()
-            passData = self.client.getrAPAPassword(host, 'serverNames')
-            server_user = host.replace('.', '_')
-            # Create serverName group if it doesn't exist
-            users = sp.usermanagement.UserInterface.users()
-            if 'serverNames' not in users['all_groups']:
-                sp.usermanagement.UserInterface.addGroup('serverNames', 
-                                                     ['mirror'])
-            # Recreate the user if it arleady exists
-            for x in users['items']:
-                if x['username'] == server_user:
-                    sp.usermanagement.UserInterface.deleteUser(server_user)
-                    break
-            sp.usermanagement.UserInterface.addUser(server_user, rapa_passwd, rapa_passwd, ['serverNames'])
-            # Update the password in our database
-            self.client.setrAPAPassword(host, server_user, rapa_passwd, 'serverNames')
         except xmlrpclib.ProtocolError, e:
             safeUrl = cleanseUrl('https', e.url)
             if e.errcode == 403:
@@ -629,41 +618,47 @@ class AdminHandler(WebHandler):
             if not res1 or not passwd:
                 self._addErrors("""An error occurred configuring your rPath
                                    Mirror.""")
-        # Clear the mirror mark for this server name
-        ccfg = conarycfg.ConaryConfiguration()
-        ccfg.user.addServerGlob(servername, user, passwd)
-        ccfg.repositoryMap.update({servername:'https://%s/conary/' % host})
-        cc = conaryclient.ConaryClient(ccfg)
-        try:
-            cc.repos.setMirrorMark(servername, -1)
-        except errors.OpenError:
-            # This servername is not configured yet, so ignore
-            pass
-
         return passwd
 
-    @intFields(projectId = None)
+    @intFields(projectId = None, id = None)
     @boolFields(mirrorSources = False, allLabels = False)
-    @strFields(mirrorBy = 'label')
-    def processAddOutbound(self, projectId, mirrorSources, allLabels, mirrorBy, *args, **kwargs):
+    @listFields(str, labelList=[])
+    @listFields(str, groups=[])
+    @strFields(mirrorBy = 'label', action = "Cancel")
+    def processAddOutbound(self, projectId, mirrorSources, allLabels, 
+            labelList, id, mirrorBy, groups, action, *args, **kwargs):
+
+        if action == "Cancel":
+            self._redirect("http://%s%sadmin/outbound" %
+                (self.cfg.siteHost, self.cfg.basePath))
+
         inputKwargs = {'projectId': projectId,
-            'mirrorSources': mirrorSources, 'allLabels': allLabels}
+            'mirrorSources': mirrorSources, 'allLabels': allLabels,
+            'selectedLabels': labelList, 'id': id, 'selectedGroups': groups,
+            'mirrorBy': mirrorBy }
+
+        if not mirrorBy == 'label' and not labelList and not allLabels:
+            self._addErrors("No labels selected.")
+
+        # compute the match troves expression
+        matchTroveList = []
+        if not mirrorSources:
+            matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+        if mirrorBy == 'group':
+            if not groups:
+                self._addErrors("No groups were selected")
+            else:
+                matchTroveList.extend(['+%s' % (g,) for g in groups])
+        else:
+            # make sure we include everything else if we are not in
+            # mirror by group mode
+            matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
-            project =  self.client.getProject(projectId)
-            label = project.getLabel()
-            labelList = [label]
-            recurse = mirrorBy == 'group'
+            project = self.client.getProject(projectId)
+            recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
-                    labelList, allLabels, recurse)
-            matchTroveList = []
-            if mirrorBy == 'group':
-                if not mirrorSources:
-                    matchTroveList = ["-.*:source", "-.*:debuginfo", '+%s' % kwargs['groups']]
-                else:
-                    matchTroveList = ['+%s' % kwargs['groups']]
-            elif not mirrorSources:
-                matchTroveList = mirror.EXCLUDE_SOURCE_MATCH_TROVES
+                    labelList, allLabels, recurse, id=id)
             self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
                                matchTroveList)
             self._redirect("http://%s%sadmin/outbound" %
@@ -709,14 +704,13 @@ class AdminHandler(WebHandler):
 
         if not self._getErrors():
             servername = versions.Label(project.getLabel()).getHost()
-            group = None
-            for x in om['matchStrings'].split(' '):
-                if x.startswith('+group'):
-                    group = x.lstrip('+')
-            if group:
-                user = '%s-%s-%s' % (group, servername, mirrorUrl)
-            else:
-                user = '%s-%s' % (servername, mirrorUrl)
+
+            userPrefix = '%s.%s-%s' % (self.cfg.hostName, self.cfg.siteDomainName, mirrorUrl)
+            trailingBits = '%s%s%s' % (om['sourceProjectId'], om.get('targetLabels','ALL'), om.get('matchStrings',mirror.INCLUDE_ALL_MATCH_TROVES))
+            m = md5.new()
+            m.update(userPrefix+trailingBits)
+            userHash = m.hexdigest()[:8]
+            user = '%s_%s' % (userPrefix, userHash)
 
             # Deal with proxy
             if 'https' in self.cfg.proxy.keys():

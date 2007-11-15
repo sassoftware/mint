@@ -206,15 +206,27 @@ function killJob(jobId) {
     req.send(false, [jobId]);
 }
 
-function getGroups(projId) {
-    if (!getElement('mirrorByGroup').checked) {
+function getGroups(projId, callback) {
+    var processShowGroups = function (aReq) {
+        logDebug(aReq.responseText);
+        troveList = evalJSONRequest(aReq);
+        replaceChildNodes('groups');
+        for (var i in troveList) {
+            var opt = OPTION({'value':troveList[i]}, troveList[i]);
+            appendChildNodes('groups', opt);
+        }
+        if (callback != null) {
+            callback.call()
+        }
+    }
+
+    replaceChildNodes('groups');
+    if (projId < 0) {
+        $('groups').disabled = true;
         return;
     }
-    replaceChildNodes('groups');
-    getElement('projectId').disabled = true;
-    getElement('mirrorByGroup').disabled = true;
-    getElement('submitButton').style.display = 'none';
-    getElement('spinner').style.display = '';
+    $('groups').disabled = false;
+    appendChildNodes('groups', OPTION({'value': ''}, "Retrieving groups..."));
     var req = new JsonRpcRequest("jsonrpc/", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processShowGroups);
@@ -225,19 +237,6 @@ function callbackVoid() {}
     
 // RPC callbacks ------------------------------------------------------------
 
-function processShowGroups(aReq) {
-    logDebug(aReq.responseText);
-    troveList = evalJSONRequest(aReq);
-    for (var i in troveList) {
-        var opt = OPTION({'name':'mirrorGroup', 'value':troveList[i]}, troveList[i]);
-        appendChildNodes('groups', opt);
-    }
-
-    getElement('submitButton').style.display = '';
-    getElement('spinner').style.display = 'none';
-    getElement('projectId').disabled = false;
-    getElement('mirrorByGroup').disabled = false;
-}
 
 function processGetCookStatus(aReq) {
 
@@ -547,6 +546,66 @@ function getGroupTroveById(aId) {
 
 }
 
+function getProjectLabels(projectId, callback) {
+    
+    projLabelsCallback = function(aReq) {
+        logDebug("[JSON] response: ", aReq.responseText);
+        var labels = evalJSONRequest(aReq);
+        replaceChildNodes('labelList');
+        for (var i in labels) {
+            var opt = OPTION({'name':'labelList', 'value':labels[i]},
+                             labels[i]);
+            appendChildNodes('labelList', opt);
+        }
+        if (callback != null) {
+            callback.call();
+        }
+        $('labelList').disabled = false;
+    }
+
+    replaceChildNodes('labelList');
+    if (projectId < 0) {
+        $('labelList').disabled = true;
+        return;
+    }
+    appendChildNodes('labelList', OPTION({'value': ''}, "Retrieving labels..."));
+    var req = new JsonRpcRequest('jsonrpc/', 'getAllProjectLabels');
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(projLabelsCallback);
+    req.send(true, [parseInt(projectId)]);
+}
+
+function addOutboundMirror_onProjectChange (e) {
+    getProjectLabels(e.src().value);
+    getGroups(e.src().value);
+    if (e.src().value > 0) {
+        $('submitButton').disabled = false;
+    } else {
+        $('submitButton').disabled = true;
+    }
+}
+
+function setSelectedLabels(labels) {
+    var options = getElementsByTagAndClassName('option', null, 'labelList');
+    for (var i in labels) {
+        for (var j in options) {
+            if (labels[i] == options[j].value) {
+                options[j].selected = true;
+            }
+        }
+    }
+}
+
+function setSelectedGroups(groups) {
+    var options = getElementsByTagAndClassName('option', null, 'groups');
+    for (var i in groups) {
+        for (var j in options) {
+            if (groups[i] == options[j].value) {
+                options[j].selected = true;
+            }
+        }
+    }
+}
 // Front Page
 function buildIt() {
     newRight = DIV({'id':'activeRight'}, 

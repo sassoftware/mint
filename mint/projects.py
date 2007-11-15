@@ -157,8 +157,10 @@ class Project(database.TableObject):
         cfg.configLine("installLabelPath %s" % installLabelPath)
 
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
-        cfg.user.extend(userMap)
-        cfg.entitlement.extend(entMap)
+        for host, authInfo in userMap:
+            cfg.user.addServerGlob(host, authInfo[0], authInfo[1])
+        for host, entitlement in entMap:
+            cfg.entitlement.addEntitlement(host, entitlement[1])
 
         useInternalConaryProxy, httpProxies = self.server.getProxies()
         cfg = helperfuncs.configureClientProxies(cfg, useInternalConaryProxy,
@@ -560,16 +562,22 @@ class LabelsTable(database.KeyedTable):
         label = cu.fetchone()
         return label[0]
 
-    def getLabelsForProject(self, projectId,
+    def _getAllLabelsForProjects(self, projectId = None,
             overrideAuth = False, newUser = '', newPass = ''):
         cu = self.db.cursor()
 
-        cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
-                            l.username, l.password, l.entitlement,
-                            p.external
-                      FROM Labels l, Projects p
-                      WHERE p.projectId=? AND l.projectId=p.projectId""",
-                      projectId)
+        if projectId:
+            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+                                    l.username, l.password, l.entitlement,
+                                    p.external
+                            FROM Labels l, Projects p
+                            WHERE p.projectId=? AND l.projectId=p.projectId""", projectId)
+        else:
+            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+                                    l.username, l.password, l.entitlement,
+                                    p.external
+                            FROM Labels l, Projects p
+                            WHERE l.projectId=p.projectId""")
 
         repoMap = {}
         labelIdMap = {}
@@ -604,9 +612,17 @@ class LabelsTable(database.KeyedTable):
             if authType == 'userpass':
                 userMap.append((host, (username, password)))
             elif authType == 'entitlement':
-                entMap.append((host, (None, entitlement)))
+                entMap.append((host, ('', entitlement)))
 
         return labelIdMap, repoMap, userMap, entMap
+
+    def getLabelsForProject(self, projectId,
+            overrideAuth = False, newUser = '', newPass = ''):
+        return self._getAllLabelsForProjects(projectId, overrideAuth, newUser, newPass)
+
+    def getAllLabelsForProjects(self,
+            overrideAuth = False, newUser = '', newPass = ''):
+        return self._getAllLabelsForProjects(overrideAuth=overrideAuth, newUser=newUser, newPass=newPass)
 
     def getLabel(self, labelId):
         cu = self.db.cursor()

@@ -274,8 +274,26 @@ class MintClient:
 
     def getLabelsForProject(self, projectId,
             overrideAuth = False, newUser = '', newPass = ''):
+        """
+        Return label information and authorization information for a single project.
+        @param projectId: the id of the project we wish to generate label/auth info from
+        @param overrideAuth:  Should we use a specific user/pass combo to access this?
+        @param newUser: userid to use if overrideAuth is set to True
+        @param newpass: password to use if overrideAuth is set to True
+        """
         return self.server.getLabelsForProject(projectId,
             overrideAuth, newUser, newPass)
+
+    def getAllLabelsForProjects(self,
+            overrideAuth = False, newUser = '', newPass = ''):
+        """
+        Return label information and authorization information for a single project.
+        @param overrideAuth:  Should we use a specific user/pass combo to access this?
+        @param newUser: userid to use if overrideAuth is set to True
+        @param newpass: password to use if overrideAuth is set to True
+        """
+        return self.server.getAllLabelsForProjects(overrideAuth,
+                newUser, newPass)
 
     def getUsers(self, sortOrder, limit, offset):
         """
@@ -576,9 +594,9 @@ class MintClient:
                 sourceEntitlement, allLabels)
 
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels = False, recurse = False):
+            allLabels = False, recurse = False, id = -1):
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
-                allLabels, recurse)
+                allLabels, recurse, id)
 
     def addOutboundMirrorTarget(self, outboundMirrorId, targetUrl,
             mirroruser, mirrorpass):
@@ -624,6 +642,12 @@ class MintClient:
 
     def setOutboundMirrorMatchTroves(self, outboundMirrorId, matchStringList):
         return self.server.setOutboundMirrorMatchTroves(outboundMirrorId, matchStringList)
+
+    def setOutboundMirrorSync(self, outboundMirrorId, value):
+        return self.server.setOutboundMirrorSync(outboundMirrorId, value)
+
+    def getOutboundMirrorGroups(self, outboundMirrorId):
+        return self.server.getOutboundMirrorGroups(outboundMirrorId)
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)

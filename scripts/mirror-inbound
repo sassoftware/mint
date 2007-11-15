@@ -27,9 +27,9 @@ class MirrorInbound(MirrorScript):
     options = None
 
     def action(self):
+        self.resetLogging()
         client = MintClient(self.args[0])
         cfg = mirror.MirrorConfiguration()
-        cfg.entitlementDirectory = self.cfg.dataPath + '/entitlements/'
 
         proxy = self.cfg.proxy
 
@@ -70,26 +70,21 @@ class MirrorInbound(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-                sourceCfg = conarycfg.ConaryConfiguration()
-                sourceCfg.repositoryMap.update(cfg.source.repositoryMap)
-                sourceCfg.user = cfg.source.user
-                sourceCfg.entitlementDirectory = cfg.entitlementDirectory
-                sourceCfg.readEntitlementDirectory()
-                sourceCfg.proxy = proxy
-                sourceRepos = conaryclient.ConaryClient(sourceCfg).getRepos()
+                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                                          cfg.source.user, proxy = proxy)
 
-                targetCfg = conarycfg.ConaryConfiguration()
-                targetCfg.repositoryMap.update(cfg.target.repositoryMap)
-                targetCfg.user = cfg.target.user
-                targetCfg.entitlementDirectory = cfg.entitlementDirectory
-                targetCfg.readEntitlementDirectory()
-                targetCfg.proxy = proxy
-                targetRepos = conaryclient.ConaryClient(targetCfg).getRepos()
+                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                                          cfg.target.user)
+
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
-
+            except KeyboardInterrupt, ke:
+                self.log.info("Inbound mirror killed by user")
+                break
+            except errors.InsufficientPermission, ie:
+                self.log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository." % ie)
             except Exception, e:
-                self.log.error("Exception occurred mirroring %s" % targetProject.name)
+                self.log.error("Exception occurred while mirroring %s" % targetProject.name)
                 self.logTraceback()
 
         return 0
