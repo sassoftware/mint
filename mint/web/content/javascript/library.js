@@ -216,7 +216,7 @@ function getGroups(projId, callback) {
             appendChildNodes('groups', opt);
         }
         if (callback != null) {
-            callback.call()
+            callback.call();
         }
     }
 
