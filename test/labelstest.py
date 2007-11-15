@@ -134,7 +134,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         labels = adminClient.getOutboundMirrors()
         assert(labels ==
-                [[1, projectId, sourceLabel, False, False, [], 0]])
+                [[1, projectId, sourceLabel, False, False, [], 0, True]])
 
         adminClient.delOutboundMirror(1)
         labels = adminClient.getOutboundMirrors()
