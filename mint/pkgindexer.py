@@ -203,8 +203,10 @@ class UpdatePackageIndexExternal(PackageIndexer):
             ccfg.root = ccfg.dbPath = ':memory:'
             ccfg.repositoryMap = repMap
             if not localMirror:
-                ccfg.user.extend(userMap)
-                ccfg.entitlement.extend(entMap)
+                for host, authInfo in userMap:
+                    ccfg.user.addServerGlob(host, authInfo[0], authInfo[1])
+                for host, entitlement in entMap:
+                    ccfg.entitlement.addEntitlement(host, entitlement[1])
             ccfg = helperfuncs.configureClientProxies(ccfg,
                     self.cfg.useInternalConaryProxy, self.cfg.proxy)
             repos = conaryclient.ConaryClient(ccfg).getRepos()
