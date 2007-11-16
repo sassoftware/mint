@@ -606,6 +606,9 @@ class ProjectHandler(WebHandler):
                 (build.getStatus()['status'] <= jobstatus.RUNNING)
         try:
             trove, version, flavor = build.getTrove()
+            versionString = "%s/%s" % \
+                (versions.ThawVersion(version).trailingLabel(),
+                    versions.ThawVersion(version).trailingRevision())
             files = build.getFiles()
 
             fileIds = list(set([x['fileId'] for x in files]))
@@ -619,7 +622,7 @@ class ProjectHandler(WebHandler):
                 files = files,
                 fileIds = fileIds,
                 trove = trove,
-                version = versions.ThawVersion(version),
+                version = versionString,
                 flavor = deps.ThawFlavor(flavor),
                 buildId = id,
                 projectId = self.project.getId(),

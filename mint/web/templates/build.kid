@@ -207,7 +207,7 @@ from mint import constants
                     </tr>
                     <tr>
                         <th>Version</th>
-                        <td>${str(version.trailingRevision())}</td>
+                        <td>${version}</td>
                     </tr>
                     <tr>
                         <th>Flavor</th>
