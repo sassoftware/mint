@@ -24,7 +24,7 @@ from mint.web.templatesupport import downloadTracker
             isPublished = build.getPublished()
         ?>
         <tr py:attrs="rowAttrs">
-            <td colspan="4" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
+            <td colspan="3" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
                 <span py:if="isPublished" class="buildAssociated">
                     <?python
                         release = self.client.getPublishedRelease(build.pubReleaseId)
@@ -33,9 +33,8 @@ from mint.web.templatesupport import downloadTracker
             </td>
         </tr>
         <tr py:attrs="rowAttrs">
-            <td class="buildInfo">${"%s/%s" % (build.getTroveVersion().trailingLabel(), build.getTroveVersion().trailingRevision())}</td>
-            <td class="buildInfo">${build.getArch()}</td>
-            <td class="buildInfo">${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
+            <td class="buildInfo">${build.getTroveName()}<br />${"%s/%s" % (build.getTroveVersion().trailingLabel(), build.getTroveVersion().trailingRevision())}</td>
+            <td class="buildInfo">${build.getArch()}&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
             <td class="buildInfo">&nbsp;<input py:if="not isPublished" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
