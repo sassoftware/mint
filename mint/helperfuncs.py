@@ -220,3 +220,17 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
             conaryCfg.proxy = httpProxies
 
     return conaryCfg
+
+def hashMirrorRepositoryUser(hostName, siteDomainName, mirrorUrl,
+        projectId, labels, matchStrings):
+
+    userPrefix = '%s.%s-%s' % (hostName, siteDomainName,
+            mirrorUrl)
+    trailingBits = '%s%s%s' % (projectId,
+            labels and labels or 'ALL',
+            matchStrings and matchStrings or 'ALL')
+    import md5
+    m = md5.new()
+    m.update(userPrefix+trailingBits)
+    userHash = m.hexdigest()[:8]
+    return '%s_%s' % (userPrefix, userHash)

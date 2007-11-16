@@ -23,7 +23,7 @@ from mint import users
 from mint import mint_error
 from mint import maintenance
 from mint import mirror
-from mint.helperfuncs import cleanseUrl, getUrlHost
+from mint.helperfuncs import cleanseUrl, getUrlHost, hashMirrorRepositoryUser
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
@@ -620,7 +620,7 @@ class AdminHandler(WebHandler):
                                    Mirror.""")
         return passwd
 
-    @intFields(projectId = None, id = None)
+    @intFields(projectId = None, id = -1)
     @boolFields(mirrorSources = False, allLabels = False)
     @listFields(str, labelList=[])
     @listFields(str, groups=[])
@@ -637,7 +637,7 @@ class AdminHandler(WebHandler):
             'selectedLabels': labelList, 'id': id, 'selectedGroups': groups,
             'mirrorBy': mirrorBy }
 
-        if not mirrorBy == 'label' and not labelList and not allLabels:
+        if not labelList and not allLabels:
             self._addErrors("No labels selected.")
 
         # compute the match troves expression
@@ -705,12 +705,10 @@ class AdminHandler(WebHandler):
         if not self._getErrors():
             servername = versions.Label(project.getLabel()).getHost()
 
-            userPrefix = '%s.%s-%s' % (self.cfg.hostName, self.cfg.siteDomainName, mirrorUrl)
-            trailingBits = '%s%s%s' % (om['sourceProjectId'], om.get('targetLabels','ALL'), om.get('matchStrings',mirror.INCLUDE_ALL_MATCH_TROVES))
-            m = md5.new()
-            m.update(userPrefix+trailingBits)
-            userHash = m.hexdigest()[:8]
-            user = '%s_%s' % (userPrefix, userHash)
+            user = hashMirrorRepositoryUser(self.cfg.hostName,
+                     self.cfg.siteDomainName, mirrorUrl,
+                     om['sourceProjectId'], om.get('targetLabels'),
+                     om.get('matchStrings'))
 
             # Deal with proxy
             if 'https' in self.cfg.proxy.keys():

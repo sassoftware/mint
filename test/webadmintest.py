@@ -15,6 +15,8 @@ import StringIO
 import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 from mint import database
+from mint import helperfuncs
+from mint import mirror
 from mint.web import admin
 from mint.web.webhandler import HttpMoved
 
@@ -388,7 +390,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/admin/addOutbound",
             content = "Project to mirror:")
 
-        def fakeUpdateMirror(user, servername, host, sp):
+        def fakeUpdateMirror(user, servername, mirrorUrl, sp):
             return 'totallyfakepassword'
 
         ad = admin.AdminHandler()
@@ -398,12 +400,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         ad.cfg = self.mintCfg
         ad.req = rogueReq()
         self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId)
+                              projectId=projectId, action="Save",
+                              labelList=['testproject.fake.project.domain@rpl:devel'])
         self.assertRaises(HttpMoved, ad.processAddOutbound,
                               projectId=projectId,
                               mirrorSources=1,
                               mirrorBy='group',
-                              groups='group-test')
+                              labelList=['testproject.fake.project.domain@rpl:devel'],
+                              groups='group-test', action="Save")
 
         ad = admin.AdminHandler()
         ad._updateMirror = fakeUpdateMirror
@@ -431,15 +435,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         label = "testproject." + 'fake.project.domain' + "@rpl:devel"
         self.assertContent("/admin/outbound", content = label)
-        fqdn = client.translateProjectFQDN(client.getProject(projectId).getFQDN())
+        expectedUser = helperfuncs.hashMirrorRepositoryUser(self.mintCfg.hostName, self.mintCfg.siteDomainName, 'www.example.com', 1, label, '-.*:source -.*:debuginfo +.*')
         assert(client.getOutboundMirrors() == \
-            [[1, 1, 'testproject.fake.project.domain@rpl:devel', False, False, ['-.*:source', '-.*:debuginfo', '+.*'], 0], [2, 1, 'testproject.fake.project.domain@rpl:devel', False, True, ['+group-test'], 1]])
+            [[1, 1, 'testproject.fake.project.domain@rpl:devel', False, False, ['-.*:source', '-.*:debuginfo', '+.*'], 0, True], [2, 1, 'testproject.fake.project.domain@rpl:devel', False, True, ['+group-test'], 1, True]])
 
         assert(client.getOutboundMirrorTargets(1) == \
                         [[1, 'https://www.example.com/conary/',
-                    '%s-www.example.com' % fqdn, 'totallyfakepassword']])
+                         expectedUser, 'totallyfakepassword']])
+        expectedUser = helperfuncs.hashMirrorRepositoryUser(self.mintCfg.hostName, self.mintCfg.siteDomainName, 'www.example.com', 1, label, '+group-test')
         assert(client.getOutboundMirrorTargets(2) == \
-            [[2, 'https://www.example.com/conary/', 'group-test-testproject.fake.project.domain-www.example.com', 'totallyfakepassword']])
+            [[2, 'https://www.example.com/conary/', expectedUser, 'totallyfakepassword']])
         assert(client.getOutboundMirrorMatchTroves(1) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
 
@@ -462,6 +467,70 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         assert(client.getOutboundMirrors() == [])
 
+    def testCreateOutboundMirrorSameServername(self):
+        rusPasswordInfo = dict()
+
+        def fakeUpdateMirror1(user, host, mirrorUrl, sp):
+            rusPasswordInfo[user] = 'totallyfake'
+            return 'totallyfake'
+
+        def fakeUpdateMirror2(user, host, mirrorUrl, sp):
+            rusPasswordInfo[user] = 'totallyfakealso'
+            return 'totallyfakealso'
+
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+        projectId = client.newExternalProject("tp-1-release",
+                "tp-1-release", MINT_PROJECT_DOMAIN,
+                'repos.example.com@tp:1-release',
+                'https://repos.example.com/conary/', False)
+
+        projectId2 = client.newExternalProject("tp-1-devel",
+                "tp-1-devel", MINT_PROJECT_DOMAIN,
+                'repos.example.com@tp:1-devel',
+                'https://repos.example.com/conary/', False)
+
+        ad = admin.AdminHandler()
+        ad._updateMirror = fakeUpdateMirror1
+        ad.session = {}
+        ad.client = client
+        ad.cfg = self.mintCfg
+        ad.req = rogueReq()
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId, id = -1,
+                              allLabels=True, action="Save")
+        self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget,
+                outboundMirrorId=1,
+                targetUrl='https://rus.example.com/conary/',
+                mirrorUser='foo',
+                mirrorPass='bar')
+        obm = client.getOutboundMirror(1)
+        obt = client.getOutboundMirrorTarget(1)
+
+        ad2 = admin.AdminHandler()
+        ad2._updateMirror = fakeUpdateMirror2
+        ad2.session = {}
+        ad2.client = client
+        ad2.cfg = self.mintCfg
+        ad2.req = rogueReq()
+        self.assertRaises(HttpMoved, ad2.processAddOutbound,
+                              projectId=projectId2, id = -1,
+                              allLabels=True, action="Save")
+        self.assertRaises(HttpMoved, ad2.processAddOutboundMirrorTarget,
+                outboundMirrorId=2,
+                targetUrl='https://rus.example.com/conary/',
+                mirrorUser='foo',
+                mirrorPass='bar')
+        obm2 = client.getOutboundMirror(2)
+        obt2 = client.getOutboundMirrorTarget(2)
+
+        self.failUnlessEqual(len(rusPasswordInfo), 2,
+                "Tripped over RBL-2318")
+        self.failUnlessEqual(rusPasswordInfo[obt['username']],
+                obt['password'])
+        self.failUnlessEqual(rusPasswordInfo[obt2['username']],
+                obt2['password'])
+
     def testCreateOutboundMirrorSources(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
@@ -470,7 +539,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch("/admin/addOutbound")
 
-        def fakeUpdateMirror(user, servername, sp):
+        def fakeUpdateMirror(user, servername, mirrorUrl, sp):
             return 'totallyfakepassword'
 
         ad = admin.AdminHandler()
@@ -479,25 +548,23 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         ad.client = client
         ad.cfg = self.mintCfg
         ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId,
-                              mirrorSources=1)
-
         label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
-        self.assertContent("/admin/outbound", content = label)
-        #fqdn = client.getProject(projectId).getFQDN()
-        assert(client.getOutboundMirrors() == \
-            [[1, 1, label, False, False, [], 0]])
+        self.assertRaises(HttpMoved, ad.processAddOutbound,
+                              projectId=projectId, labelList=[label],
+                              mirrorSources=1, action="Save")
 
-        #assert(client.getOutboundMirrorTargets(1) == \
-                #    [ [ 'https://www.example.com/conary/', '%s-www.example.com' % fqdn, 'totallyfakepassword' ] ])
-        assert(client.getOutboundMirrorMatchTroves(1) == [])
+        self.assertContent("/admin/outbound", content = label)
+        assert(client.getOutboundMirrors() == \
+            [[1, 1, label, False, False, mirror.INCLUDE_ALL_MATCH_TROVES, 0, True]])
+
+        assert(client.getOutboundMirrorMatchTroves(1) == mirror.INCLUDE_ALL_MATCH_TROVES)
 
         self.assertRaises(HttpMoved, ad.processAddOutbound,
                               projectId=projectId,
                               mirrorSources=0,
+                              labelList=[label],
                               mirrorBy='group',
-                              groups='group-test')
+                              groups='group-test', action="Save")
         assert(client.getOutboundMirrors()[1][5] == ['-.*:source', '-.*:debuginfo', '+group-test'])
 
     def testBrowseUsers(self):
