@@ -66,7 +66,6 @@ class RBuilderClient(MintClient):
 
 class RBuilderMain(options.MainHandler):
     name = 'rbuilder'
-    version = constants.mintVersion
 
     commandList = commands._commands
     configClass = RBuilderShellConfig

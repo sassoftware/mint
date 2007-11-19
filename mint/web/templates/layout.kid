@@ -124,7 +124,7 @@ onload = "javascript:;"
                     <span id="copyright">Copyright &copy; 2005-2007 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
-                <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
+                <p id="mintVersionString">${cfg.productName} version ${constants.fullVersion}</p>
             </div>
         </div>
         <div py:if="cfg.googleAnalyticsTracker" py:strip="True">
