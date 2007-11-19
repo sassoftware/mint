@@ -603,6 +603,27 @@ class AdminHandler(WebHandler):
         try:
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
+            rapa_passwd = users.newPassword(length=128)
+            passData = self.client.getrAPAPassword(mirrorUrl,
+                    'serverNames')
+            server_user = '%s_%s-%s' % (self.cfg.hostName, self.cfg.siteDomainName,
+                    mirrorUrl)
+            server_user = server_user.replace('.', '_')
+            # Create serverName group if it doesn't exist
+            rapausers = sp.usermanagement.UserInterface.users()
+            if 'serverNames' not in rapausers['all_groups']:
+                sp.usermanagement.UserInterface.addGroup('serverNames',
+                                                     ['mirror'])
+            # Recreate the user if it already exists
+            for x in rapausers['items']:
+                if x['username'] == server_user:
+                    sp.usermanagement.UserInterface.deleteUser(server_user)
+                    break
+            sp.usermanagement.UserInterface.addUser(server_user, rapa_passwd,
+                    rapa_passwd, ['serverNames'])
+            # Update the password in our database
+            self.client.setrAPAPassword(mirrorUrl, server_user, rapa_passwd,
+                    'serverNames')
         except xmlrpclib.ProtocolError, e:
             safeUrl = cleanseUrl('https', e.url)
             if e.errcode == 403:
@@ -618,6 +639,18 @@ class AdminHandler(WebHandler):
             if not res1 or not passwd:
                 self._addErrors("""An error occurred configuring your rPath
                                    Mirror.""")
+
+        # Clear the mirror mark for this server name
+        ccfg = conarycfg.ConaryConfiguration()
+        ccfg.user.addServerGlob(servername, user, passwd)
+        ccfg.repositoryMap.update({servername:'https://%s/conary/' % mirrorUrl})
+        cc = conaryclient.ConaryClient(ccfg)
+        try:
+            cc.repos.setMirrorMark(servername, -1)
+        except errors.OpenError:
+            # This servername is not configured yet, so ignore
+            pass
+
         return passwd
 
     @intFields(projectId = None, id = -1)
