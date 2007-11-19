@@ -170,6 +170,21 @@ class MigrateTo_42(SchemaMigration):
             pass # this is OK, as databases migrated from 3.1.x will have this
         return True
 
+# SCHEMA VERSION 43
+class MigrateTo_43(SchemaMigration):
+    Version = (43, 0)
+
+    # 43.0
+    # - Add userDataTemplate to BlessedAMIs table
+    # - Add userData to LaunchedAMIs table
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE BlessedAMIs
+            ADD COLUMN userDataTemplate TEXT""")
+        cu.execute("""ALTER TABLE LaunchedAMIs
+            ADD COLUMN userData TEXT""")
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
