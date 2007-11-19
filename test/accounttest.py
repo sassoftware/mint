@@ -6,6 +6,8 @@
 import testsuite
 testsuite.setup()
 
+import fixtures
+
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
@@ -21,7 +23,7 @@ from conary.conaryclient import ConaryClient
 from conary.repository.netclient import UserNotFound
 from conary import dbstore
 
-class AccountTest(MintRepositoryHelper):
+class AccountTest(fixtures.FixturedUnitTest):
 
     # this function MUST be shortcutted since we should not make an xmlrpc
     # call for it
@@ -33,16 +35,10 @@ class AccountTest(MintRepositoryHelper):
         except TypeError:
             return None
 
-    # this function is shortcutted simply because there isn't a need for an
-    # xmlrpc call. if there ever is in the future, consider dropping this func.
-    def _userActive(self, userId):
-        cu = self.db.cursor()
-        cu.execute("SELECT active FROM Users WHERE userId=?", userId)
-        return cu.fetchone()[0]
-
     @testsuite.context("quick")
-    def testBasicAttributes(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture('Full')
+    def testBasicAttributes(self, db, data):
+        client, userId = self.getFixtureUser(data, 'user')
         user = client.getUser(userId)
 
         eMail = "not_for_real@broken.domain"
@@ -58,14 +54,10 @@ class AccountTest(MintRepositoryHelper):
         user.setEmail(eMail)
         user.setPassword("passtest")
 
-        try:
-            client.server.updateAccessedTime(userId)
-        except PermissionDenied:
-            pass
-        else:
-            self.fail("password change did not take effect")
+        self.failUnlessRaises(PermissionDenied,
+            client.updateAccessedTime, userId)
 
-        client = self.openMintClient(("testuser", "passtest"))
+        client = self.getClient('user', 'passtest')
 
         # refresh the user
         user = client.getUser(userId)
@@ -82,7 +74,7 @@ class AccountTest(MintRepositoryHelper):
         if user.getEmail() != eMail:
             self.fail("User's email lost in translation")
 
-        client.server.updateAccessedTime(userId)
+        client.updateAccessedTime(userId)
         try:
             oldChecks = users.sendMailWithChecks
             users.sendMailWithChecks = lambda *args, **kwargs: True
@@ -96,116 +88,134 @@ class AccountTest(MintRepositoryHelper):
         except MailError:
             pass
 
-    def testProjectInteraction(self):
-        client, userId = self.quickMintUser("testuser","testpass")
+    @fixtures.fixture('Full')
+    def testProjectInteraction(self, db, data):
+        # FIXME: needs annotation, and a good bludgeoning with the cluebat
+        raise testsuite.SkipTestException, 'nonsensical test'
+
+        client, userId = self.getFixtureUser(data, 'owner')
         user = client.getUser(userId)
-        projectId = client.newProject("Foo","foo", "example.com")
+
+        projectId = data['projectId']
         project = client.getProject(projectId)
+
         project.addMemberById(userId, userlevels.OWNER)
-        # these functions have a different code path if the
-        # user is a member of projects
+
         user.setPassword("passtest")
 
-        client = self.openMintClient(("testuser", "passtest"))
+        client = self.getClient('owner', 'passtest')
         user = client.getUser(userId)
         user.cancelUserAccount()
 
-    def testConfirmedTwice(self):
-	client = self.openMintClient(("anonymous", "anonymous"))
-	client.registerNewUser("Foo", "Bar", "Foo Bar",
-			       "foo@localhost", "fooATlocalhost",
-			       "blah, blah", False)
-	conf = client.server._server.getConfirmation("Foo")
-	client.confirmUser(conf)
-	self.assertRaises(AlreadyConfirmed, client.confirmUser, conf)
+    @fixtures.fixture('Empty')
+    def testConfirmedTwice(self, db, data):
+        '''Confirm an account twice'''
+        client = self.getAnonymous()
+        client.registerNewUser('testuser', 'testpass', 'test user',
+            'test@example.com', 'test at example dot com', 'LFO', False)
+        conf = client.server._server.getConfirmation('testuser')
+        client.confirmUser(conf)
+        self.assertRaises(AlreadyConfirmed, client.confirmUser, conf)
 
-    def testImmediatelyActive(self):
-        client = self.openMintClient(("anonymous", "anonymous"))
+    @fixtures.fixture('Empty')
+    def testImmediatelyActive(self, db, data):
+        '''Register a new user from an admin account'''
 
-        self.assertRaises(PermissionDenied, client.registerNewUser,
-            "foo", "bar", "foo bar", "foo@localhost",
-            "foo at localhost", "blah, blah", True)
+        regInfo = ('testuser', 'testpass', 'test user', 'test@example.com',
+            'test at example dot com', 'LFO', True)
 
-        client = self.openMintClient()
-        client.registerNewUser("testuser", "testpass", "test user", "test@user.com",
-            "test at user dot com", "", True)
+        client = self.getAnonymous()
+        self.assertRaises(PermissionDenied, client.registerNewUser, *regInfo)
+
+        client = self.getAdminClient()
+        client.registerNewUser(*regInfo)
 
         self.assertRaises(ItemNotFound,
-            client.server._server.getConfirmation, "testuser")
+            client.server._server.getConfirmation, 'testuser')
 
-    def testAccountConfirmation(self):
-        client = self.openMintClient()
-        # ignore the userId and make a new one that's not registered...
-        userId = client.registerNewUser("newuser", "memberpass", "Test Member",
-                                        "test@example.com", "test at example.com", "", active=False)
-        # now check that it is indeed not active.
-        assert(not self._userActive(userId))
-        # retrieve the confirmations entry so we can confirm it.
-        conf = self._getConfirmation(userId)
-        # confirm it.
+    @fixtures.fixture('Empty')
+    def testAccountConfirmation(self, db, data):
+        '''Ensure that accounts can be activated after registration'''
+
+        client = self.getAnonymous()
+        userId = client.registerNewUser('newuser', 'newuserpass',
+            'Test Member', 'test@example.com', 'test at example dot com',
+            '', active=False)
+
+        # These helpers lack XMLRPC calls
+        def isActive():
+            cu = db.cursor()
+            cu.execute('SELECT active FROM Users WHERE userId=?', userId)
+            return cu.fetchone()[0]
+        def getConfirmation():
+            cu = db.cursor()
+            cu.execute('SELECT confirmation FROM Confirmations '
+                'WHERE userId=?', userId)
+            try:
+                return cu.fetchone()[0]
+            except TypeError:
+                return None
+
+        # Make sure the account isn't active yet
+        self.failIf(isActive(), 'User should not have been active yet')
+
+        # Confirm the account
+        conf = getConfirmation()
         client.confirmUser(conf)
-        # check confs entry doesn't exist
-        assert (self._getConfirmation(userId) is None)
-        # test to see status of active flag
-        assert(self._userActive(userId))
-        # make it stagnant
+        self.failUnlessEqual(getConfirmation(), None,
+            'User confirmation should have been deleted')
+        self.failUnless(isActive(), 'User was not activated')
+
+        # Make it stagnant
         # there's no xmlrpc call for this due to the fact that it's generally
         # something the server decides arbitrarily to do to an acct...
-        self.mintServer.users.invalidateUser(userId)
-        # test to confirm active flag is still set
-        assert(self._userActive(userId))
-        # retrieve confirmations entry
-        conf = self._getConfirmation(userId)
-        # confirm it.
+        client.server._server.users.invalidateUser(userId)
+        self.failUnless(isActive(), 'User should have been active')
+
+        # Confirm the account again
+        conf = getConfirmation()
         client.confirmUser(conf)
-        # test to confirm active flag is still set
-        assert(self._userActive(userId))
-        # check confs entry doesn't exist
-        assert (self._getConfirmation(userId) is None)
+        self.failUnlessEqual(getConfirmation(), None,
+            'User confirmation should have been deleted')
+        self.failUnless(isActive(), 'User should have been active')
 
-    def testWatchProjects(self):
-        # test watching projects in various ways
+    @fixtures.fixture('Full')
+    def testWatchProjects(self, db, data):
+        '''Test watching projects in various ways'''
 
-        client = self.openMintClient()
+        ownerClient, ownerId = self.getFixtureUser(data, 'owner')
+        userClient, userId = self.getFixtureUser(data, 'user')
 
-        ownerClient, ownerId = self.quickMintUser("owner", "foo")
-        readerClient, readerId = self.quickMintUser("reader", "foo")
-
-        projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
-
-        project = readerClient.getProject(projectId)
+        projectId = data['projectId']
+        project = userClient.getProject(projectId)
 
         # add by user name
-        project.addMemberByName("reader", userlevels.USER)
-        assert(project.getUserLevel(readerId) == userlevels.USER)
-
-        project.delMemberById(readerId)
+        project.addMemberByName('user', userlevels.USER)
+        self.failUnlessEqual(project.getUserLevel(userId), userlevels.USER)
+        project.delMemberById(userId)
 
         # add by user id
-        project.addMemberById(readerId, userlevels.USER)
-        assert(project.getUserLevel(readerId) == userlevels.USER)
+        project.addMemberById(userId, userlevels.USER)
+        self.failUnlessEqual(project.getUserLevel(userId), userlevels.USER)
+        project.delMemberById(userId)
 
-    def testOrphanProjects(self):
-        # owner tries to quit in various ways
+    @fixtures.fixture('Full')
+    def testOrphanProjects(self, db, data):
+        '''Try to quit projects in various ways'''
 
-        client = self.openMintClient()
-        ownerClient, ownerId = self.quickMintUser("ownerAcct","foo")
-        develClient, develId = self.quickMintUser("develAcct","foo")
-        readerClient, readerId = self.quickMintUser("readerAcct", "foo")
+        ownerClient, ownerId = self.getFixtureUser(data, 'owner')
+        develClient, develId = self.getFixtureUser(data, 'developer')
+        readerClient, readerId = self.getFixtureUser(data, 'user')
 
-        projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
+        projectId = data['projectId']
         project = ownerClient.getProject(projectId)
-
         readerProject = readerClient.getProject(projectId)
 
-        try:
-            project.updateUserLevel(ownerId, userlevels.USER)
-            self.fail('Project allowed changing owner status to user status')
-        except LastOwner:
-            pass
+        self.failUnlessRaises(project.updateUserLevel(ownerId,
+            userlevels.USER), LastOwner)
 
         for i in range(2):
-            assert(not project.lastOwner(ownerId))
+            self.failUnless(project.lastOwner(ownerId))
             assert(project.onlyOwner(ownerId))
 
             try:
@@ -272,6 +282,7 @@ class AccountTest(MintRepositoryHelper):
 
     # one could argue that this test could go here or in searchtest. we put it
     # here so we can use the _getConfirmation shortcut...
+    # FIXME: move me back
     def testSearchUnconfUsers(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
@@ -288,42 +299,27 @@ class AccountTest(MintRepositoryHelper):
         if client.getUserSearchResults('newuser') == ([], 0):
             self.fail("Failed a search for a newly confirmed user")
 
-    def testIllegalCancel(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        client2, userId2 = self.quickMintUser("testuser2", "testpass")
+    @fixtures.fixture('Full')
+    def testIllegalCancel(self, db, data):
+        client, userId = self.getFixtureUser(data, 'owner')
+        client2, userId2 = self.getFixtureUser(data, 'user')
+        self.failUnlessRaises(PermissionDenied,
+            client.server.cancelUserAccount, userId2)
+        self.failUnlessRaises(PermissionDenied,
+            client.server.removeUserAccount, userId2)
 
-        try:
-            client.server.cancelUserAccount(userId2)
-            self.fail("User was allowed to cancel the wrong account")
-        except PermissionDenied:
-            pass
+    @fixtures.fixture('Full')
+    def testUserList(self, db, data):
+        user = self.getClient('user')
+        admin = self.getAdminClient()
 
-        try:
-            client.server.removeUserAccount(userId2)
-            self.fail("You can pick your friends, and you can pick your nose, but you can't cancel your buddy's account.")
-        except PermissionDenied:
-            pass
-
-    def testUserList(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        client2, userId2 = self.quickMintUser("testuser2", "testpass")
-        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
-
-        userList = adminClient.getUsers(0, 10, 0)
-        if userList[1] != 3:
-            self.fail("admin account couldn't find all users from UserList")
-
-        try:
-            client.getUsers(0, 10, 0)
-            self.fail("Client allowed to list users")
-        except PermissionDenied:
-            pass
-
-        if len(adminClient.getUsersList()) != 3:
-            self.fail("admin account could not see all users from getUsersList")
-
-        if client.server.searchUsers('test', 10, 0)[1] != 3:
-            self.fail("user level user search returned incorrect results.")
+        self.failUnlessEqual(admin.getUsers(0, 10, 0)[1], 5,
+            'Admin account could not see all users via getUsers')
+        self.failUnlessEqual(len(admin.getUsersList()), 5,
+            'Admin account could not see all users via getUsersList')
+        self.failUnlessRaises(PermissionDenied, user.getUsers, 0, 10, 0)
+        self.failUnlessEqual(user.server.searchUsers('user', 10, 0)[1], 5,
+            'User-level user search returned incorrect results.')
 
     def testChangePassword(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
