@@ -18,7 +18,8 @@ class ActiveUsersReport(MintReport):
                           FROM Users
                           LEFT JOIN Commits ON Users.userId=Commits.userId
                           WHERE Commits.timestamp > ?
-                          GROUP BY username ORDER BY commits DESC""",
+                          GROUP BY username, fullName, email
+                          ORDER BY commits DESC""",
                    reportTime - 2592000)
         data = []
         for row in cu.fetchall():
