@@ -66,6 +66,9 @@ class MirrorInbound(MirrorScript):
                 elif labelInfo['authType'] == 'entitlement':
                     cfg.target.entitlement.addEntitlement(reposHost, labelInfo['entitlement'])
 
+                # Hidden commits are not needed on inbound mirrors
+                cfg.useHiddenCommits = False
+
                 cfg.host = reposHost
                 if allLabels:
                     cfg.labels = []
