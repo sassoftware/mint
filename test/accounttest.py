@@ -36,9 +36,9 @@ class AccountTest(fixtures.FixturedUnitTest):
             return None
 
     @testsuite.context("quick")
-    @fixtures.fixture('Full')
+    @fixtures.fixture('Empty')
     def testBasicAttributes(self, db, data):
-        client, userId = self.getFixtureUser(data, 'user')
+        client, userId = self.getClient('test'), data['test']
         user = client.getUser(userId)
 
         eMail = "not_for_real@broken.domain"
@@ -57,7 +57,7 @@ class AccountTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(PermissionDenied,
             client.updateAccessedTime, userId)
 
-        client = self.getClient('user', 'passtest')
+        client = self.getClient('test', 'passtest')
 
         # refresh the user
         user = client.getUser(userId)
@@ -110,7 +110,7 @@ class AccountTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Empty')
     def testConfirmedTwice(self, db, data):
         '''Confirm an account twice'''
-        client = self.getAnonymous()
+        client = self.getAnonymousClient()
         client.registerNewUser('testuser', 'testpass', 'test user',
             'test@example.com', 'test at example dot com', 'LFO', False)
         conf = client.server._server.getConfirmation('testuser')
@@ -124,7 +124,7 @@ class AccountTest(fixtures.FixturedUnitTest):
         regInfo = ('testuser', 'testpass', 'test user', 'test@example.com',
             'test at example dot com', 'LFO', True)
 
-        client = self.getAnonymous()
+        client = self.getAnonymousClient()
         self.assertRaises(PermissionDenied, client.registerNewUser, *regInfo)
 
         client = self.getAdminClient()
@@ -137,7 +137,7 @@ class AccountTest(fixtures.FixturedUnitTest):
     def testAccountConfirmation(self, db, data):
         '''Ensure that accounts can be activated after registration'''
 
-        client = self.getAnonymous()
+        client = self.getAnonymousClient()
         userId = client.registerNewUser('newuser', 'newuserpass',
             'Test Member', 'test@example.com', 'test at example dot com',
             '', active=False)
@@ -183,14 +183,15 @@ class AccountTest(fixtures.FixturedUnitTest):
     def testWatchProjects(self, db, data):
         '''Test watching projects in various ways'''
 
-        ownerClient, ownerId = self.getFixtureUser(data, 'owner')
-        userClient, userId = self.getFixtureUser(data, 'user')
+        owner = self.getClient('owner')
+        user = self.getClient('nobody')
 
         projectId = data['projectId']
-        project = userClient.getProject(projectId)
+        project = user.getProject(projectId)
 
         # add by user name
-        project.addMemberByName('user', userlevels.USER)
+        userId = data['nobody']
+        project.addMemberByName('nobody', userlevels.USER)
         self.failUnlessEqual(project.getUserLevel(userId), userlevels.USER)
         project.delMemberById(userId)
 
@@ -203,87 +204,106 @@ class AccountTest(fixtures.FixturedUnitTest):
     def testOrphanProjects(self, db, data):
         '''Try to quit projects in various ways'''
 
-        ownerClient, ownerId = self.getFixtureUser(data, 'owner')
-        develClient, develId = self.getFixtureUser(data, 'developer')
-        readerClient, readerId = self.getFixtureUser(data, 'user')
+        owner, ownerId = self.getClient('owner'), data['owner']
+        user, userId = self.getClient('user'), data['user']
+        develId = data['developer']
 
         projectId = data['projectId']
-        project = ownerClient.getProject(projectId)
-        readerProject = readerClient.getProject(projectId)
+        ownerProject = owner.getProject(projectId)
+        userProject = user.getProject(projectId)
 
-        self.failUnlessRaises(project.updateUserLevel(ownerId,
-            userlevels.USER), LastOwner)
+        # The fixture already made developer a member of the project, but
+        # we need him not to be.
+        ownerProject.delMemberById(develId)
+
+        self.failUnlessRaises(LastOwner, ownerProject.updateUserLevel,
+            ownerId, userlevels.USER)
 
         for i in range(2):
-            self.failUnless(project.lastOwner(ownerId))
-            assert(project.onlyOwner(ownerId))
+            # Make sure owner is the only owner, but can still quit
+            self.failIf(ownerProject.lastOwner(ownerId))
+            self.failUnless(ownerProject.onlyOwner(ownerId))
 
+            # Try to demote owner to a developer
             try:
-                project.updateUserLevel(ownerId, userlevels.DEVELOPER)
+                ownerProject.updateUserLevel(ownerId, userlevels.DEVELOPER)
                 self.fail("Project allowed demotion of single owner")
             except LastOwner:
                 pass
 
+            # Add developer as a developer
             try:
-                project.addMemberById(develId, userlevels.DEVELOPER)
+                ownerProject.addMemberById(develId, userlevels.DEVELOPER)
             except DuplicateItem:
                 pass
 
+            # Try to demote developer to user
             try:
-                project.updateUserLevel(develId, userlevels.USER)
+                ownerProject.updateUserLevel(develId, userlevels.USER)
                 self.fail("Project allowed demotion from developer to user")
             except UserInduction:
                 pass
 
-            assert(project.lastOwner(ownerId))
-            assert(not project.lastOwner(develId))
-            assert(not project.lastOwner(0))
+            ## Now that there is a developer ...
 
+            # Make sure owner is still the only owner
+            self.failUnless(ownerProject.lastOwner(ownerId))
+            self.failIf(ownerProject.lastOwner(develId))
+            self.failIf(ownerProject.lastOwner(0))
+
+            # Try to remove owner from the project
             try:
-                project.delMemberById(ownerId)
-                self.fail("Project allowed deletion of single owner in a project with developers")
+                ownerProject.delMemberById(ownerId)
+                self.fail("Project allowed deletion of single owner in a "
+                    "project with developers")
             except LastOwner:
                 pass
 
+            # Try to demote owner to a developer
             try:
-                project.updateUserLevel(ownerId, userlevels.DEVELOPER)
+                ownerProject.updateUserLevel(ownerId, userlevels.DEVELOPER)
                 self.fail("Project allowed demotion of single owner")
             except LastOwner:
                 pass
 
-            user = ownerClient.getUser(ownerId)
+            # Try to cancel account with an unorphanable project
+            user = owner.getUser(ownerId)
             try:
                 user.cancelUserAccount()
                 self.fail("Project allowed owner to cancel account while orphaning a project with developers")
             except LastOwner:
                 pass
 
+            # Stop watching the project (second pass)
             try:
-                readerProject.delMemberById(readerId)
+                userProject.delMemberById(userId)
             except UserNotFound:
                 pass
 
+            # Try to force user to watch the project
             try:
-                project.addMemberById(readerId, userlevels.USER)
+                ownerProject.addMemberById(userId, userlevels.USER)
                 self.fail('Owner inducted a user')
             except UserInduction:
                 pass
 
-            readerProject.addMemberById(readerId, userlevels.USER)
+            # Try to force user to stop watching the project
+            userProject.addMemberById(userId, userlevels.USER)
             try:
-                project.delMemberById(readerId)
+                ownerProject.delMemberById(userId)
                 self.fail('owner ejected a reader')
             except UserInduction:
                 pass
 
-            project.delMemberById(develId)
+            ownerProject.delMemberById(develId)
 
-        readerProject.delMemberById(readerId)
+        userProject.delMemberById(userId)
 
     # one could argue that this test could go here or in searchtest. we put it
     # here so we can use the _getConfirmation shortcut...
-    # FIXME: move me back
-    def testSearchUnconfUsers(self):
+    @fixtures.fixture('Full')
+    def testSearchUnconfUsers(self, db, data):
+        raise testsuite.SkipTestException("relocate me")
         client, userId = self.quickMintUser("testuser", "testpass")
 
         newUserId = client.registerNewUser("newuser", "memberpass", "Test Member",
@@ -299,10 +319,12 @@ class AccountTest(fixtures.FixturedUnitTest):
         if client.getUserSearchResults('newuser') == ([], 0):
             self.fail("Failed a search for a newly confirmed user")
 
-    @fixtures.fixture('Full')
+    @fixtures.fixture('Empty')
     def testIllegalCancel(self, db, data):
-        client, userId = self.getFixtureUser(data, 'owner')
-        client2, userId2 = self.getFixtureUser(data, 'user')
+        '''Try to cancel another user's account'''
+
+        client, userId = self.getClient('test'), data['test']
+        client2, userId2 = self.getClient('admin'), data['admin']
         self.failUnlessRaises(PermissionDenied,
             client.server.cancelUserAccount, userId2)
         self.failUnlessRaises(PermissionDenied,
@@ -310,6 +332,8 @@ class AccountTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testUserList(self, db, data):
+        '''Try to get a user list'''
+
         user = self.getClient('user')
         admin = self.getAdminClient()
 
@@ -321,7 +345,13 @@ class AccountTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(user.server.searchUsers('user', 10, 0)[1], 5,
             'User-level user search returned incorrect results.')
 
-    def testChangePassword(self):
+    @fixtures.fixture('Full')
+    def testChangePassword(self, db, data):
+        '''Check repository access after changing a user's password'''
+
+        raise testsuite.SkipTestException("Can't be ported without "
+            "repository fixture")
+
         client, userId = self.quickMintAdmin("testuser", "testpass")
         intProjectId = self.newProject(client, "Internal Project", "internal",
                 MINT_PROJECT_DOMAIN)
@@ -349,96 +379,109 @@ class AccountTest(fixtures.FixturedUnitTest):
         cfg = external.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(extLabel) == [])
 
-    def testPasswordPermissions(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        adminClient, adminId = self.quickMintAdmin("adminuser", "adminpass")
+    @fixtures.fixture('Empty')
+    def testPasswordPermissions(self, db, data):
+        '''Try to change a user's password as various roles'''
+
+        client, userId = self.getClient('test'), data['test']
+        admin, adminId = self.getClient('admin'), data['admin']
 
         # user changes own password
         user = client.getUser(userId)
         user.setPassword('newpass')
-        client = self.openMintClient(('testuser', 'newpass'))
+        client = self.getClient('user', 'newpass')
 
         # user attempts to change other user's password--should fail
         user = client.getUser(adminId)
         self.assertRaises(PermissionDenied, user.setPassword, 'newpass')
 
         # admin changes user's password
-        user = adminClient.getUser(userId)
+        user = admin.getUser(userId)
         user.setPassword('testpass')
 
-        # verify auth user works
-        client = self.openMintClient((self.mintCfg.authUser,
-                                      self.mintCfg.authPass))
-        user.setPassword('foobar')
+    @fixtures.fixture('Empty')
+    def testHangingGroupMembership(self, db, data):
+        '''Check group membership cleanup after deleting a user'''
 
-    def testHangingGroupMembership(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        client.removeUserAccount(userId)
+        client, userId = self.getClient('test'), data['test']
+        cu = db.cursor()
 
-        cu = self.db.cursor()
+        # First make sure they were in a group to start with
         cu.execute("SELECT * FROM UserGroupMembers WHERE userId=?", userId)
+        self.failIfEqual(len(cu.fetchall()), 0,
+            "User was not initially a member of a group")
 
-        self.failIf(cu.fetchall(),
+        # Now remove them and make sure they're not in a group anymore
+        client.removeUserAccount(userId)
+        cu.execute("SELECT * FROM UserGroupMembers WHERE userId=?", userId)
+        self.failUnlessEqual(len(cu.fetchall()), 0,
                     "Leftover UserGroupMembers after account was canceled")
 
-    def testHangingGroups(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture('Empty')
+    def testHangingGroups(self, db, data):
+        '''Check group cleanup after deleting a user'''
+
+        client, userId = self.getClient('test'), data['test']
+        cu = db.cursor()
+
+        # First make sure the user's group existed in the first place
+        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'test')
+        self.failIfEqual(len(cu.fetchall()), 0,
+            "User's group did not initially exist")
+
+        # Now remove them and make sure the group no longer exists
         client.removeUserAccount(userId)
-
-        cu = self.db.cursor()
-        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'testuser')
-
-        self.failIf(cu.fetchall(),
+        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'test')
+        self.failUnlessEqual(len(cu.fetchall()), 0,
                     "Leftover UserGroup after account was canceled")
 
-    def testPromoteUserToAdmin(self):
-        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
-        client, userId  = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture('Full')
+    def testPromoteDemoteAdmin(self, db, data):
+        '''Promote and demote a user to admin as various roles'''
+
+        adminClient, adminId = self.getClient('admin'), data['admin']
+        client, userId = self.getClient('user'), data['user']
 
         # promote test user
         adminClient.promoteUserToAdmin(userId)
 
         mintAdminId = client.server._server.userGroups.getMintAdminId()
-        cu = self.db.cursor()
-        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, userId)
+        cu = db.cursor()
+        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE "
+            "userGroupId=? AND userId=?", mintAdminId, userId)
         (count, ) = cu.fetchone()
-        self.failUnlessEqual(count, 1)
+        self.failUnlessEqual(count, 1, "Admin user was not promoted")
 
         # make sure we don't allow a user to be promoted twice
         self.failUnlessRaises(UserAlreadyAdmin,
                 adminClient.promoteUserToAdmin,
                 userId)
 
-        # make sure joeblow (a non admin) cannot promote billybob
-        client2, userId2  = self.quickMintUser("joeblow", "testpass")
-        client3, userId3  = self.quickMintUser("billybob", "testpass")
-
+        # make sure a non-admin user cannot promote another user to admin
+        client2 = self.getClient('developer')
+        userId3 = data['owner']
         self.failUnlessRaises(PermissionDenied,
                 client2.promoteUserToAdmin,
                 userId3)
 
-    def testDemoteUserFromAdmin(self):
-        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
-        otherClient, otherUserId  = self.quickMintAdmin("testuser", "testpass")
-
-        adminClient.demoteUserFromAdmin(otherUserId)
-
-        # verify other user was demoted
-        mintAdminId = adminClient.server._server.userGroups.getMintAdminId()
-        cu = self.db.cursor()
-
-        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, otherUserId)
-
-        self.failIf(cu.fetchone()[0], "Admin user was not demoted")
+        # demote the user back to peon status
+        adminClient.demoteUserFromAdmin(userId)
+        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE "
+            "userGroupId=? AND userId=?", mintAdminId, userId)
+        (count, ) = cu.fetchone()
+        self.failUnlessEqual(count, 0, "Admin user was not demoted")
 
         # ensure nothing bad happens if we click twice
-        adminClient.demoteUserFromAdmin(otherUserId)
+        adminClient.demoteUserFromAdmin(userId)
 
         # ensure we can't demote the last admin
         self.assertRaises(AdminSelfDemotion, adminClient.demoteUserFromAdmin,
                           adminId)
 
-    def testAutoGenerateMintAdminId(self):
+    @fixtures.fixture('Empty')
+    def testAutoGenerateMintAdminId(self, db, data):
+        '''Ensure a mint admin group is auto-generated'''
+
         client, userId  = self.quickMintUser("testuser", "testpass")
 
         # test auto adding the group here
@@ -448,23 +491,30 @@ class AccountTest(fixtures.FixturedUnitTest):
         mintAdminId2 = client.server._server.userGroups.getMintAdminId()
         self.failUnlessEqual(mintAdminId, mintAdminId2)
 
-    def testLastAdmin(self):
-        client, userId = self.quickMintAdmin('foouser', 'foopass')
-        # this should fail
-        self.assertRaises(LastAdmin, client.removeUserAccount, userId)
-        client, userId = self.quickMintAdmin('foouser1', 'foopass1')
-        # this should succeed
-        client.removeUserAccount(userId);
+    @fixtures.fixture('Empty')
+    def testLastAdmin(self, db, data):
+        '''Ensure that the last admin cannot demote themselves'''
 
-    def testLastAdmin2(self):
-        client, userId = self.quickMintAdmin('foouser', 'foopass')
-        client2, userId2 = self.quickMintUser('foouser1', 'foopass1')
-        # this should succeed
-        client.removeUserAccount(userId2);
+        client1, userId1 = self.getClient('admin'), data['admin']
+        client2, userId2 = self.getClient('test'), data['test']
 
-    def testAdminNewUser(self):
-        anonClient = self.openMintClient(("anonymous", "anonymous"))
-        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
+        self.assertRaises(LastAdmin, client1.removeUserAccount, userId1)
+
+        client1.promoteUserToAdmin(userId2)
+        client1.removeUserAccount(userId1)
+
+    @fixtures.fixture('Empty')
+    def testLastAdmin2(self, db, data):
+        '''Ensure that the last admin can delete the last non-admin user'''
+        admin = self.getClient('admin')
+        userId = data['test']
+        admin.removeUserAccount(userId)
+
+    @fixtures.fixture('Empty')
+    def testAdminNewUser(self, db, data):
+        '''Check creation of accounts by admin and restricted creation'''
+        anonClient = self.getAnonymousClient()
+        adminClient = self.getClient('admin')
 
         anonClient.registerNewUser("Foo", "Bar", "Foo Bar",
 			                       "foo@localhost", "fooATlocalhost",
@@ -489,7 +539,10 @@ class AccountTest(fixtures.FixturedUnitTest):
 			                        "blah, blah", True)
         adminClient._cfg.adminNewUsers = False
 
-    def testExternalModify(self):
+    @fixtures.fixture('Full')
+    def testExternalModify(self, db, data):
+        raise testsuite.SkipTestException("Can't be ported without "
+            "repository fixture")
         client, userId = self.quickMintAdmin('foouser', 'foopass')
         client2, userId2 = self.quickMintUser('foouser1', 'foopass1')
 

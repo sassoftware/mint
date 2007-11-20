@@ -845,13 +845,8 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
         s.server._server.mcpClient = self.mcpClient
         return s
 
-    def getAnonymous(self):
+    def getAnonymousClient(self):
         return self.getClient('anonymous')
-
-    def getFixtureUser(self, data, username):
-        userId = data[username]
-        client = self.getClient(username)
-        return client, userId
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         client = self.getAdminClient()
