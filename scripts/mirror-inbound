@@ -71,13 +71,18 @@ class MirrorInbound(MirrorScript):
                     cfg.labels = []
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
+                sourceCCfg = conarycfg.ConaryConfiguration()
+                sourceCCfg.repositoryMap.update(cfg.source.repositoryMap)
+                sourceCCfg.user = cfg.source.user
+                sourceCCfg.entitlement = cfg.source.entitlement
+                sourceCCfg.proxy = proxy
+                sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
 
-                sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                          cfg.source.user, proxy = proxy)
-
-                targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                          cfg.target.user)
-
+                targetCCfg = conarycfg.ConaryConfiguration()
+                targetCCfg.repositoryMap.update(cfg.target.repositoryMap)
+                targetCCfg.user = cfg.target.user
+                targetCCfg.entitlement = cfg.target.entitlement
+                targetRepos = conaryclient.ConaryClient(targetCCfg).getRepos()
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
             except KeyboardInterrupt, ke:
