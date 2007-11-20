@@ -71,6 +71,7 @@ class FixtureCache(object):
         cfg = config.MintConfig()
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
+        cfg.debugMode = True
         cfg.hostName = MINT_HOST
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.externalDomainName = MINT_DOMAIN
@@ -829,22 +830,26 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
 
         return db, fixtureData
 
-    def _getAdminClient(self):
+    def getAdminClient(self):
         if not self.adminClient:
             self.adminClient = shimclient.ShimMintClient(self.cfg, ('mintauth', 'mintpass'))
         return self.adminClient
 
-    def getClient(self, username):
-        if username == 'anonymous':
-            password = 'anonymous'
-        else:
-            password = '%spass' % username
+    def getClient(self, username, password=None):
+        if password is None:
+            if username == 'anonymous':
+                password = 'anonymous'
+            else:
+                password = '%spass' % username
         s = shimclient.ShimMintClient(self.cfg, (username, password))
         s.server._server.mcpClient = self.mcpClient
         return s
 
+    def getAnonymousClient(self):
+        return self.getClient('anonymous')
+
     def quickMintUser(self, username, password, email = "test@example.com"):
-        client = self._getAdminClient()
+        client = self.getAdminClient()
         userId = client.registerNewUser(username, password, "Test User",
             email, "test at example.com", "", active=True)
         client = shimclient.ShimMintClient(self.cfg, (username, password))

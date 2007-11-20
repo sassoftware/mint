@@ -4,6 +4,8 @@
 # All rights reserved
 #
 
+import unittest
+
 import testsuite
 testsuite.setup()
 
@@ -12,7 +14,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import config
 from mint import buildtypes
 
-class ConfigTest(MintRepositoryHelper):
+class ConfigTest(unittest.TestCase):
     # these tests should be fairly specific in nature, since testing cfg
     # in general terms will overlap conary.
     def testBuildTypes(self):
