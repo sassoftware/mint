@@ -13,6 +13,8 @@ from conary import versions
 from conary import conarycfg
 from conary.conaryclient import mirror
 from conary.lib import util, log
+from conary.repository import errors
+from conary.repository import netclient
 from conary import conaryclient
 
 from mint import config
