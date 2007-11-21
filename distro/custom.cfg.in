@@ -14,3 +14,6 @@ logs.files = {'Appliance Logs': None, 'Conary': '/var/log/conary', 'Inbound Mirr
 
 logs.num_lines = 20
 
+[/configure/Network]
+# A list of interfaces that should be excluded from display.
+configure.network.ifsExclude = ["vif", "lo", "sit", "tun", "vmnet", "ird"]
