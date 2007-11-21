@@ -88,8 +88,8 @@ class rBuilderMigration(rAASrvPlugin):
                     'filename': filename,
                     'settings': {
                         'backup.file_format': 'backup-%Y%m%d-%H%M-%Z.tgz',
-                        'backup.local_storage': '/srv/raa/backups/',
-                        'backup.tmp_dir': '/srv/raa/tmp/',
+                        'backup.local_storage': '/var/lib/raa/backups/',
+                        'backup.tmp_dir': '/tmp',
                         'backup.disabled_types': ['URL'],
                         'backup.file_list_dir': '/etc/raa/backup.d'},
                     'plugin_properties': {

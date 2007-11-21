@@ -5,10 +5,6 @@ product.productVersion="@VERSION@"
 
 postmigrate.rBuilderMigration.hidden="property"
 
-[/backup]
-backup.local_storage="/srv/raa/backups/"
-backup.tmp_dir="/srv/raa/tmp/"
-
 [/logs]
 logs.files = {'Appliance Logs': None, 'Conary': '/var/log/conary', 'Inbound Mirroring': '/var/log/rbuilder/mirror-inbound.log', 'Outbound Mirroring': '/var/log/rbuilder/mirror-outbound.log', 'Mirror Preloading': '/var/log/rbuilder/load-mirror.log', 'Package Indexer': '/var/log/rbuilder/package-index.log', 'External Package Indexer': '/var/log/rbuilder/package-index-external.log'}
 
