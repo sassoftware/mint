@@ -604,8 +604,6 @@ class AdminHandler(WebHandler):
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
             rapa_passwd = users.newPassword(length=128)
-            passData = self.client.getrAPAPassword(mirrorUrl,
-                    'serverNames')
             server_user = '%s_%s-%s' % (self.cfg.hostName, self.cfg.siteDomainName,
                     mirrorUrl)
             server_user = server_user.replace('.', '_')
@@ -624,6 +622,18 @@ class AdminHandler(WebHandler):
             # Update the password in our database
             self.client.setrAPAPassword(mirrorUrl, server_user, rapa_passwd,
                     'serverNames')
+
+            # Clear the mirror mark for this server name
+            ccfg = conarycfg.ConaryConfiguration()
+            ccfg.user.addServerGlob(servername, user, passwd)
+            ccfg.repositoryMap.update({servername:'https://%s/conary/' % mirrorUrl})
+            cc = conaryclient.ConaryClient(ccfg)
+            try:
+                cc.repos.setMirrorMark(servername, -1)
+            except errors.OpenError:
+                # This servername is not configured yet, so ignore
+                pass
+
         except xmlrpclib.ProtocolError, e:
             safeUrl = cleanseUrl('https', e.url)
             if e.errcode == 403:
@@ -639,17 +649,6 @@ class AdminHandler(WebHandler):
             if not res1 or not passwd:
                 self._addErrors("""An error occurred configuring your rPath
                                    Mirror.""")
-
-        # Clear the mirror mark for this server name
-        ccfg = conarycfg.ConaryConfiguration()
-        ccfg.user.addServerGlob(servername, user, passwd)
-        ccfg.repositoryMap.update({servername:'https://%s/conary/' % mirrorUrl})
-        cc = conaryclient.ConaryClient(ccfg)
-        try:
-            cc.repos.setMirrorMark(servername, -1)
-        except errors.OpenError:
-            # This servername is not configured yet, so ignore
-            pass
 
         return passwd
 
