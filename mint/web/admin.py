@@ -617,8 +617,19 @@ class AdminHandler(WebHandler):
                 if x['username'] == server_user:
                     sp.usermanagement.UserInterface.deleteUser(server_user)
                     break
-            sp.usermanagement.UserInterface.addUser(server_user, rapa_passwd,
-                    rapa_passwd, ['serverNames'])
+
+            # Use the XMLRPC-specific call (new in rAPA 2.1.5) to add the user
+            try:
+                sp.usermanagement.UserInterface.addUserViaXmlrpc(server_user,
+                    rapa_passwd, rapa_passwd, ['serverNames'])
+            except xmlrpclib.ProtocolError, e:
+                if e.errcode == 404:
+                    # Not supported, use addUser
+                    sp.usermanagement.UserInterface.addUser(server_user,
+                        rapa_passwd, rapa_passwd, ['serverNames'])
+                else:
+                    raise
+
             # Update the password in our database
             self.client.setrAPAPassword(mirrorUrl, server_user, rapa_passwd,
                     'serverNames')
