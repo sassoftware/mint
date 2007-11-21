@@ -6,25 +6,13 @@
 
 SUBDIRS =
 
-all: default-all default-subdirs
-
 python_files = __init__.py postmigrate.py
 
-extra_files = Makefile
+all: default-all
 
-dist_files = $(python_files) $(extra_files)
+install: raaplugins-install default-install
 
-generated_files = *.pyo *.pyc
-
-.PHONY: clean dist install
-
-install: all raaplugins-install install-subdirs
-
-dist: default-dist dist-subdirs
-
-clean: default-clean clean-subdirs
-
-subdirs: default-subdirs
+clean: default-clean
 
 
 include ../../../../Make.rules
