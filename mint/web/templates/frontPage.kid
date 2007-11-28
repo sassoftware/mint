@@ -68,7 +68,7 @@ from mint.client import upstream
             <span py:if="table1Data">
                 <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
-                        Make your own software appliance in three easy steps.
+                        Make your own software appliance.
                 </div>
                 <div id="activeLeft" >
                     <div id="orangeTitle">Use It.</div>
@@ -93,14 +93,9 @@ from mint.client import upstream
             </table>
             </div>
 
-        <div id="steps"> 
+        <div id="steps">
             <div id="threeEasySteps">
-                <a href="${cfg.basePath}help?page=dev-tutorial">
-                    <img id="getStarted" src="${cfg.staticPath}apps/mint/images/getting_started.png" width="147" height="37" alt="Get Started" />
-                </a>
-                <img src="${cfg.staticPath}apps/mint/images/three_easy_steps.png" width="239" height="23" alt="It's Just 3 Easy Steps" />
-                <div id="stepsText">There's nothing to download. All you need is your web browser.</div>
-                <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.jpg" alt="three steps to use rBuilder Online" />
+                <a class="imageButton" href="http://wiki.rpath.com/wiki/Application_to_Appliance"><img src="${cfg.staticPath}/apps/mint/images/appliance_guide.png" alt="Check out our appliance guide" /></a>
             </div>
         </div>
 
