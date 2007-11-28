@@ -61,7 +61,7 @@ from mint.client import upstream
                     Check out the software appliances others have built.
                 </span>
                 <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
-                    Make your own software appliance in three easy steps.
+                    Make your own software appliance.
                 </span>
             </span>
 
