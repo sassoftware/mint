@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(42)
+RBUILDER_DB_VERSION = sqllib.DBversion(43)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -777,6 +777,7 @@ def _createEC2Data(db):
             instanceTTL         INTEGER NOT NULL,
             mayExtendTTLBy      INTEGER,
             isAvailable         INTEGER NOT NULL DEFAULT 1,
+            userDataTemplate    TEXT,
             CONSTRAINT ba_fk_b FOREIGN KEY (buildId)
                 REFERENCES Builds(buildId) ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
@@ -795,6 +796,7 @@ def _createEC2Data(db):
             launchedAt          NUMERIC(14,0) NOT NULL,
             expiresAfter        NUMERIC(14,0) NOT NULL,
             isActive            INTEGER NOT NULL DEFAULT 1,
+            userData            TEXT,
             CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
                 REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
         ) %(TABLEOPTS)s """ % db.keywords)

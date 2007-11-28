@@ -32,7 +32,8 @@ class BlessedAMIsTable(database.KeyedTable):
     key = 'blessedAMIId'
 
     fields = ( 'blessedAMIId', 'ec2AMIId', 'buildId', 'shortDescription',
-               'helptext', 'instanceTTL', 'mayExtendTTLBy',  'isAvailable' )
+               'helptext', 'instanceTTL', 'mayExtendTTLBy',
+               'isAvailable', 'userDataTemplate' )
 
     def getAvailable(self):
         cu = self.db.cursor()
@@ -45,7 +46,8 @@ class LaunchedAMIsTable(database.KeyedTable):
     key = 'launchedAMIId'
 
     fields = ( 'launchedAMIId', 'blessedAMIId', 'launchedFromIP',
-               'ec2InstanceId', 'raaPassword', 'launchedAt', 'expiresAfter', 'isActive' )
+               'ec2InstanceId', 'raaPassword', 'launchedAt',
+               'expiresAfter', 'isActive', 'userData' )
 
     def getActive(self):
         cu = self.db.cursor()

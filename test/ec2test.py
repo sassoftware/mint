@@ -132,6 +132,15 @@ Please log in via raa using the following password. %(raaPassword)s"""
         blessedAMI = client.getBlessedAMI(blessedAMIId)
         self.failUnlessEqual(blessedAMI.isAvailable, 0)
 
+        blessedAMI = client.getBlessedAMI(blessedAMIId)
+        blessedAMI.userDataTemplate = "This here is my userdata template!"
+        blessedAMI.save()
+        del blessedAMI
+
+        blessedAMI = client.getBlessedAMI(blessedAMIId)
+        self.failUnlessEqual(blessedAMI.userDataTemplate,
+                "This here is my userdata template!")
+
     @fixtures.fixture("EC2")
     def testGetAvailableBlessedAMIs(self, db, data):
 
@@ -282,6 +291,33 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         self.assertEqual(toDatabaseTimestamp(fromDatabaseTimestamp(launchedAMI.launchedAt) + blessedAMI.instanceTTL + blessedAMI.mayExtendTTLBy),
                 launchedAMI.expiresAfter, "Failed to extend the timeout")
+
+    @fixtures.fixture("EC2")
+    def testUserDataTemplate(self, db, data):
+        client = self.getClient("admin")
+        amiIds = data['amiIds']
+
+        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        instanceId = client.launchAMIInstance(amiIds[0])
+
+        blessedAMI = client.getBlessedAMI(amiIds[0])
+        blessedAMIUserDataTemplate = \
+"""[amiconfig]
+plugins = rapadminpassword conaryproxy
+
+[rpath]
+rapadminpassword = @RAPAPASSWORD@
+conaryproxy = http://proxy.hostname.com/proxy/
+"""
+
+        blessedAMI.userDataTemplate = blessedAMIUserDataTemplate
+        blessedAMI.save()
+
+        instanceId = client.launchAMIInstance(amiIds[0])
+        launchedAMIInstance = client.getLaunchedAMI(instanceId)
+
+        self.failUnless('rapadminpassword = password' in
+                launchedAMIInstance.userData)
 
 if __name__ == '__main__':
     testsuite.main()

@@ -4302,13 +4302,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.cfg.ec2MaxInstancesPerIP):
            raise ec2.TooManyAMIInstancesPerIP()
 
+        userDataTemplate = bami['userDataTemplate']
+
         # generate the rAA Password
         if self.cfg.ec2GenerateTourPassword:
             from mint.users import newPassword
             raaPassword = newPassword(length=8)
-            userData = "[rpath]\nrap-password=%s" % raaPassword
         else:
             raaPassword = 'password'
+
+        if userDataTemplate:
+            userData = userDataTemplate.replace('@RAPAPASSWORD@',
+                    raaPassword)
+        else:
             userData = None
 
         # attempt to boot it up
@@ -4326,7 +4332,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 launchedFromIP = launchedFromIP,
                 raaPassword = raaPassword,
                 expiresAfter = toDatabaseTimestamp(offset=bami['instanceTTL']),
-                launchedAt = toDatabaseTimestamp())
+                launchedAt = toDatabaseTimestamp(),
+                userData = userData)
 
     @requiresAdmin
     @private
