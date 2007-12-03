@@ -60,7 +60,7 @@ from mint.client import upstream
                 <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
                     Check out the software appliances others have built.
                 </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'" style="display: none">
                     Make your own software appliance.
                 </span>
             </span>
