@@ -44,7 +44,7 @@
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
             <li py:if="isWriter"><a href="${projectUrl}downloads">Download Statistics</a></li>
-            <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config?version=${constants.mintVersion}">Help</a></li>
+            <li><a href="http://wiki.rpath.com/wiki/Conary:Install_Config?version=${constants.mintVersion}" target="_blank">Help</a></li>
         </ul>
     </div>
 
