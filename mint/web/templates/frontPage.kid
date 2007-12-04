@@ -23,7 +23,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
-    <body onload="hideElement('${table1Data and 'steps' or 'applianceLogos'}');">
+    <body>
         <div id="right" class="side">
             ${resourcePane()}
         </div>
@@ -60,7 +60,7 @@ from mint.client import upstream
                 <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
                     Check out the software appliances others have built.
                 </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'" style="display: none">
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
                     Make your own software appliance.
                 </span>
             </span>
@@ -76,7 +76,7 @@ from mint.client import upstream
                 </div>
             </span>
 
-           <div id="applianceLogos" style="width: 720px; height: 234px;">
+            <div id="applianceLogos" py:attrs="{'style': 'width: 720px; height: 234px;' + (not table1Data and 'display:none;' or '')}">
             <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
                 <tr>
                     <td id="useIt" py:for="td in table1Data">
@@ -93,8 +93,8 @@ from mint.client import upstream
             </table>
             </div>
 
-        <div id="steps">
-            <div id="threeEasySteps">
+        <div id="steps" py:attrs="{'style': table1Data and 'display:none;' or None}">
+            <div id="threeEasySteps" >
                 <a class="imageButton" href="http://wiki.rpath.com/wiki/Application_to_Appliance"><img src="${cfg.staticPath}/apps/mint/images/appliance_guide.png" alt="Check out our appliance guide" /></a>
             </div>
         </div>
