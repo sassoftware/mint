@@ -141,7 +141,9 @@ def getRepository(projectName, repName, dbName, cfg,
                       'projectName': projectName,
                       'commitFromEmail': cfg.commitEmail,
                       'commitEmail': commitEmail,
-                      'basePath' : cfg.basePath
+                      'basePath' : cfg.basePath,
+                      'authUser' : cfg.authUser,
+                      'authPass' : cfg.authPass
         }
 
         nscfg.commitAction = cfg.commitAction % actionDict
