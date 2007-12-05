@@ -20,9 +20,7 @@
                 the menu to the left, you can:</p>
 
                 <ul>
-                    <li>View ${cfg.productName} usage reports</li>
                     <li>Create ${cfg.productName} user accounts</li>
-                    <li>Send email to all registered ${cfg.productName} users</li>
                     <li>Add projects that reference remote repositories</li>
                     <li>Control the projects that can be mirrored to remote repositories</li>
                     <li>Put ${cfg.productName} into or out of maintenance mode</li>
