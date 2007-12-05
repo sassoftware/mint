@@ -264,21 +264,6 @@ a.trove {
     cursor: pointer;
 } 
 
-.boldshadow {
-/*	background:url(../images/shadow.gif) no-repeat;
-    padding-right: 25px;
-    background-position: right;*/
-    vertical-align: center;
-    font-weight: bold;
-}
-
-.shadow {
-/*	background:url(../images/shadow.gif) no-repeat;
-    padding-right: 25px;
-    background-position: right; */
-    vertical-align: center;
-} 
-
 /* MEMBERS LIST TABLE */
 table.memberstable {
 	padding:0px; margin:0px; margin-bottom:8px; width:auto;
