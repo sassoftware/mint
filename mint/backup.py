@@ -11,11 +11,12 @@ from mint import projects
 from mint import schema
 from conary.lib import util
 from conary import dbstore
+from conary import versions
 import conary.server.schema
 from conary.conaryclient import cmdline
 
 schemaCutoff = 37
-knownGroupVersions = ('3.1.4', '4.0.0')
+knownGroupVersions = ('3.1.5', '4.0.0')
 
 staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
@@ -182,7 +183,7 @@ def isValid(cfg, input):
     NVF = metaData.get('NVF')
     if not NVF:
         raise RuntimeError("No group trovespec found")
-    verStr = cmdline.parseTroveSpec[1]
+    verStr = cmdline.parseTroveSpec(NVF)[1]
     ver = versions.VersionFromString(verStr)
     if ver.trailingRevision().version not in knownGroupVersions:
         raise RuntimeError("Incompatible upstream revision")
