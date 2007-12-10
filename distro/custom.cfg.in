@@ -1,5 +1,5 @@
 [global]
-plugins.disable = ['/configure/ConaryConf', '/services/Services', '/postmigrate/rBuilderMigration']
+plugins.disable = ['/configure/ConaryConf', '/services/Services']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 
