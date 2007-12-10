@@ -41,7 +41,7 @@ from conary import conarycfg
 from conary.deps import deps
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.errors import TroveNotFound
+from conary.errors import TroveNotFound, ParseError
 
 from mcp import mcp_error
 
@@ -209,7 +209,7 @@ class ProjectHandler(WebHandler):
         # validate version
         try:
             versions.Revision(version + "-1-1")
-        except versions.ParseError, e:
+        except ParseError, e:
             self._addErrors("Error parsing version string: %s" % version)
 
         # validate group name
@@ -511,7 +511,7 @@ class ProjectHandler(WebHandler):
                             try:
                                 # attept to un-freeze the version
                                 versions.ThawVersion(v)
-                            except versions.ParseError:
+                            except (ValueError, ParseError):
                                 # spec with non-frozen version
                                 val = build.resolveExtraTrove(n, v, f)
                             else:
@@ -1059,7 +1059,7 @@ class ProjectHandler(WebHandler):
             host = versions.Label(self.project.getLabel()).getHost()
             label = host + '@' + branch
             versions.Label(label)
-        except versions.ParseError:
+        except ParseError:
             self._addErrors("Invalid branch name")
 
         if not self._getErrors():
