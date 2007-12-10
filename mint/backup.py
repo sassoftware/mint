@@ -179,7 +179,7 @@ def isValid(cfg, input):
             raise RuntimeError("Unknown Schema Version")
         else:
             raise RuntimeError("Schema Version Too Old")
-    NVF = metadata.get('NVF')
+    NVF = metaData.get('NVF')
     if not NVF:
         raise RuntimeError("No group trovespec found")
     verStr = cmdline.parseTroveSpec[1]
