@@ -6,6 +6,7 @@
 import os
 import stat
 import re
+import tarfile
 import tempfile
 
 from raa.modules.raasrvplugin import rAASrvPlugin
