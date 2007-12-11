@@ -548,13 +548,30 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
         excludeBuildTypes = self.cfg.excludeBuildTypes
+        includeBuildTypes = self.cfg.includeBuildTypes
         try:
-            for buildTypes in ([], [buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE, buildtypes.LIVE_ISO]):
-                self.cfg.excludeBuildTypes = buildTypes
-                assert client.server._server.getAvailableBuildTypes() == \
-                       sorted([x for x in buildtypes.TYPES if x not in buildTypes + [buildtypes.BOOTABLE_IMAGE]])
+            for exTypes, inTypes in [([], []),
+                                     ([buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE, buildtypes.LIVE_ISO], []),
+                                     ([buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE], [buildtypes.INSTALLABLE_ISO]),
+                                     ([], [buildtypes.BOOTABLE_IMAGE])]:
+                self.cfg.excludeBuildTypes = exTypes
+                self.cfg.includeBuildTypes = inTypes
+                ret = client.server._server.getAvailableBuildTypes()
+                # Enforce no excluded types are present, unless included
+                for x in exTypes:
+                    self.failIf(x in ret and x not in inTypes,
+                        'Build type %d was not excluded' % x)
+                # Enforce all included types are present, sans bootable
+                for x in inTypes:
+                    self.failIf(x not in ret and
+                        x != buildtypes.BOOTABLE_IMAGE,
+                        'Build type %d was not included' % x)
+                # Enforce bootable is always absent
+                self.failIf(buildtypes.BOOTABLE_IMAGE in ret, 'Bootable '
+                    'image was not excluded as a valid build type')
         finally:
             self.cfg.excludeBuildTypes = excludeBuildTypes
+            self.cfg.includeBuildTypes = includeBuildTypes
 
     @fixtures.fixture('Full')
     def testSetMissingFilenames(self, db, data):

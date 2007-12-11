@@ -2576,12 +2576,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @private
     def getAvailableBuildTypes(self):
+        buildTypes = set(buildtypes.TYPES)
+
+        if self.cfg.excludeBuildTypes:
+            buildTypes -= set(self.cfg.excludeBuildTypes)
+
+        if self.cfg.includeBuildTypes:
+            buildTypes |= set(self.cfg.includeBuildTypes)
+
         # BOOTABLE_IMAGE should never be a valid image type, so make sure it's
         # removed
-        excludedTypes = [buildtypes.BOOTABLE_IMAGE]
-        if self.cfg.excludeBuildTypes:
-            excludedTypes.extend(self.cfg.excludeBuildTypes)
-        return sorted([x for x in buildtypes.TYPES if x not in excludedTypes])
+        buildTypes.remove(buildtypes.BOOTABLE_IMAGE)
+
+        return sorted(buildTypes)
 
     @typeCheck(int)
     @requiresAuth

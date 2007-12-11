@@ -59,5 +59,8 @@ class ConfigTest(unittest.TestCase):
                     "excludeBuildTypes did not properly incorporate "
                     "a second build")
 
+        cfg.configLine("includeBuildTypes INSTALLABLE_ISO")
+        self.failUnlessEqual(cfg.includeBuildTypes, [buildtypes.INSTALLABLE_ISO])
+
 if __name__ == "__main__":
     testsuite.main()
