@@ -72,12 +72,14 @@ class rBuilderMigration(rAASrvPlugin):
                             if lib.isValid(scripts, metadata,
                                     raiseError = False):
                                 backups.append(backup)
-                        except:
-                            pass
+                        finally:
+                            if tar:
+                                tar.close()
                 finally:
                     mount.umount_point(tmpDir)
             finally:
-                os.rmdir(tmpDir)
+                if tmpDir: 
+                    os.rmdir(tmpDir)
         return bool(device), backups
 
     def doRestore(self, schedId, execId, filename):
