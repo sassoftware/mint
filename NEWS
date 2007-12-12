@@ -1,6 +1,7 @@
 Changes in @NEW@
 ================
 
+* Added apache's access and errors logs to rAPA logs viewer. (RBL-2250)
 * Mirrored repositories can now be converted to external repositories,
   effectively disabling the mirror process. The mirrored contents are
   preserved, but not used, unless mirroring is re-enabled. (RBL-1292)
