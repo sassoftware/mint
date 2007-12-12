@@ -199,6 +199,10 @@ def usage(out = sys.stderr):
 
 def handle(func, *args, **kwargs):
     errno = 0
+    if kwargs.pop('dropPriv', True):
+        apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
+        os.setgid(apacheGID)
+        os.setuid(apacheUID)
     try:
         func(*args, **kwargs)
     except:
@@ -213,9 +217,6 @@ def handle(func, *args, **kwargs):
     sys.exit(errno)
 
 def run():
-    apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
-    os.setgid(apacheGID)
-    os.setuid(apacheUID)
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
     migration = bool(os.getenv('RBA_MIGRATION'))
@@ -223,7 +224,7 @@ def run():
     if mode in ('r', 'restore'):
         handle(restore, cfg)
     elif mode  == 'prerestore':
-        handle(prerestore, cfg)
+        handle(prerestore, cfg, dropPriv = False)
     elif mode in ('b', 'backup'):
         handle(backup, cfg, sys.stdout, backupMirrors = migration)
     elif mode in ('c', 'clean'):
