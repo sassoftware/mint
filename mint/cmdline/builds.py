@@ -145,8 +145,7 @@ def genHelp():
 
 
 def resolveExtraTrove(cclient, trvName, trvVersion = None, trvFlavor = None, searchPath = []):
-    spec = cmdline.parseTroveSpec(trvName)
-    itemList = [(spec[0], (None, None), (spec[1], spec[2]), True)]
+    itemList = [(trvName, (None, None), (trvVersion, trvFlavor), True)]
     try:
         uJob, suggMap = cclient.updateChangeSet(itemList,
                                                 resolveDeps = False)
@@ -246,7 +245,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
                     val = buildOptions[name]
                     if val != "NONE":
                         n, v, f = cmdline.parseTroveSpec(str(val))
-                        val = resolveExtraTrove(cc, v, f, searchPath)
+                        val = resolveExtraTrove(cc, n, v, f, searchPath)
                 else:
                     # not specified at all, resolve it ourselves from just the name
                     val = resolveExtraTrove(cc, name, searchPath = searchPath)
