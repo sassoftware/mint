@@ -15,12 +15,33 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import backup
+from mint import constants
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 from conary.lib import util
 
 import fixtures
+
+goodMetadata = """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/%s-1-1[is: x86]
+""" % constants.mintVersion
+
+badMetadata_oldSchema = """
+rBuilder_schemaVersion=10
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/%s-1-1[is: x86]
+""" % constants.mintVersion
+
+badMetadata_oldGroup = """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/3.1.4-1-1[is: x86]
+"""
+
+badMetadata_mangledTrovespec= """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.coxxxxllxljfkldsmdrpath:rba-3/3.1.3-1-1[is: x86]
+"""
 
 class BackupTest(fixtures.FixturedUnitTest):
 
@@ -182,6 +203,48 @@ class BackupTest(fixtures.FixturedUnitTest):
         self.failIf(os.listdir(self.cfg.reposPath),
                 "repository contents weren't deleted")
 
+    @fixtures.fixture("Empty")
+    def testIsValid_GoodMetadata(self, db, data):
+        metadataIO = StringIO.StringIO(goodMetadata)
+        try:
+            try:
+                valid = backup.isValid(self.cfg, metadataIO)
+            except RuntimeError:
+                self.fail("Metadata was valid; check mint.backup.knownGroupVersions")
+        finally:
+            metadataIO.close()
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_OldSchema(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_oldSchema)
+        try:
+            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
+        finally:
+            metadataIO.close()
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_OldGroup(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_oldGroup)
+        try:
+            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
+        finally:
+            metadataIO.close()
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_OldSchema(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_mangledTrovespec)
+        try:
+            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
+        finally:
+            metadataIO.close()
+
+    @fixtures.fixture("Empty")
+    def testIsValid_MissingMetadata(self, db, data):
+        metadataIO = StringIO.StringIO()
+        try:
+            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
+        finally:
+            metadataIO.close()
 
 if __name__ == "__main__":
     testsuite.main()
