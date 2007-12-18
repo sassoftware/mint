@@ -74,11 +74,19 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver, calllog
+from conary.repository.netrepos import netserver
 from conary import errors as conary_errors
 from conary.dbstore import sqlerrors, sqllib
 from conary import checkin
 from conary.build import use
+
+try:
+    # Conary 2
+    from conary.repository.netrepos.reposlog \
+        import RepositoryCallLogger as CallLogger
+except ImportError:
+    # Conary 1
+    from conary.repository.netrepos.calllog import CallLogger
 
 
 from mint.rmakeconstants import buildjob
@@ -4392,7 +4400,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         global callLog
         if self.cfg.xmlrpcLogFile:
             if not callLog:
-                callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
+                callLog = CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
         self.callLog = callLog
 
         if self.req:
