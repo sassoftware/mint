@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-import os, sys
+import re, os, sys
 import pwd
 from mint import config
 from mint import projects
@@ -12,11 +12,12 @@ from mint import schema
 from conary.lib import util
 from conary import dbstore
 from conary import versions
+import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
 
 schemaCutoff = 37
-knownGroupVersions = ('3.1.5', '4.0.0')
+knownGroupVersions = ('3\.1\.5.*', '4\..*')
 
 staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
@@ -173,7 +174,11 @@ def metadata(cfg, out):
 
 def isValid(cfg, input):
     data = input.read()
-    metaData = dict([x.split('=', 1) for x in data.splitlines()])
+    metaData = dict()
+    for x in data.splitlines():
+        if '=' in x:
+           k, v = x.split('=', 1)
+           metaData[k] = v
     schemaVersion = int(metaData.get('rBuilder_schemaVersion', 0))
     if schemaVersion < schemaCutoff:
         if schemaVersion == 0:
@@ -184,9 +189,17 @@ def isValid(cfg, input):
     if not NVF:
         raise RuntimeError("No group trovespec found")
     verStr = cmdline.parseTroveSpec(NVF)[1]
-    ver = versions.VersionFromString(verStr)
-    if ver.trailingRevision().version not in knownGroupVersions:
-        raise RuntimeError("Incompatible upstream revision")
+    try:
+        trailingVer = versions.VersionFromString(verStr).trailingRevision().version
+    except conary.errors.ParseError:
+        raise RuntimeError("Bad version string %s" % verStr)
+    foundMatch = False
+    for pat in knownGroupVersions:
+        if re.match(pat, trailingVer):
+            foundMatch = True
+            break
+    if not foundMatch:
+        raise RuntimeError("Incompatible upstream revision %s" % trailingVer)
 
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
