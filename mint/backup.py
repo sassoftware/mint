@@ -203,8 +203,6 @@ def isValid(cfg, input):
             break
     return foundMatch
 
-    return True
-
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
     print >> out, "    [b/backup]: back up databases and issue manifest."
