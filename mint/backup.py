@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-import os, sys
+import re, os, sys
 import pwd
 from mint import config
 from mint import projects
@@ -12,11 +12,12 @@ from mint import schema
 from conary.lib import util
 from conary import dbstore
 from conary import versions
+import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
 
 schemaCutoff = 37
-knownGroupVersions = ('3.1.5', '4.0.0')
+knownGroupVersions = ('3\.1\.5.*', '4\..*')
 
 staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
@@ -171,22 +172,38 @@ def metadata(cfg, out):
     print >> out, "rBuilder_schemaMinor=%d" % schemaMinor
     sys.stdout.flush()
 
+# XXX This version is used internally since our handler expects
+#     an exception, while rAPA expects a True/False return.
+def _isValid(cfg, input):
+    if not isValid(cfg, input):
+        raise RuntimeError("Invalid Backup")
+
 def isValid(cfg, input):
     data = input.read()
-    metaData = dict([x.split('=', 1) for x in data.splitlines()])
+    metaData = dict()
+    for x in data.splitlines():
+        if '=' in x:
+           k, v = x.split('=', 1)
+           metaData[k] = v
     schemaVersion = int(metaData.get('rBuilder_schemaVersion', 0))
-    if schemaVersion < schemaCutoff:
-        if schemaVersion == 0:
-            raise RuntimeError("Unknown Schema Version")
-        else:
-            raise RuntimeError("Schema Version Too Old")
+    if schemaVersion == 0 or schemaVersion < schemaCutoff:
+        return False
     NVF = metaData.get('NVF')
     if not NVF:
-        raise RuntimeError("No group trovespec found")
+        return False
     verStr = cmdline.parseTroveSpec(NVF)[1]
-    ver = versions.VersionFromString(verStr)
-    if ver.trailingRevision().version not in knownGroupVersions:
-        raise RuntimeError("Incompatible upstream revision")
+    try:
+        trailingVer = versions.VersionFromString(verStr).trailingRevision().version
+    except conary.errors.ParseError:
+        return False
+    foundMatch = False
+    for pat in knownGroupVersions:
+        if re.match(pat, trailingVer):
+            foundMatch = True
+            break
+    return foundMatch
+
+    return True
 
 def usage(out = sys.stderr):
     print >> out, sys.argv[0] + ":"
@@ -232,7 +249,7 @@ def run():
     elif mode in ('m', 'metadata'):
         handle(metadata, cfg, sys.stdout)
     elif mode == 'isValid':
-        handle(isValid, cfg, sys.stdin)
+        handle(_isValid, cfg, sys.stdin)
     elif mode.upper() in ('?', 'H', 'HELP'):
         usage(out = sys.stdout)
     else:

@@ -15,12 +15,33 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import backup
+from mint import constants
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 from conary.lib import util
 
 import fixtures
+
+goodMetadata = """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/%s-1-1[is: x86]
+""" % constants.mintVersion
+
+badMetadata_oldSchema = """
+rBuilder_schemaVersion=10
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/%s-1-1[is: x86]
+""" % constants.mintVersion
+
+badMetadata_oldGroup = """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/3.1.4-1-1[is: x86]
+"""
+
+badMetadata_mangledTrovespec= """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.coxxxxllxljfkldsmdrpath:rba-3/3.1.3-1-1[is: x86]
+"""
 
 class BackupTest(fixtures.FixturedUnitTest):
 
@@ -122,7 +143,7 @@ class BackupTest(fixtures.FixturedUnitTest):
         oldSysExit = sys.exit
         sys.exit = mock.MockObject()
 
-        backup.handle(_tosscookies)
+        backup.handle(_tosscookies, dropPriv=False)
 
         sys.stderr.close()
         sys.stderr = oldStdErr
@@ -182,6 +203,35 @@ class BackupTest(fixtures.FixturedUnitTest):
         self.failIf(os.listdir(self.cfg.reposPath),
                 "repository contents weren't deleted")
 
+    @fixtures.fixture("Empty")
+    def testIsValid_GoodMetadata(self, db, data):
+        metadataIO = StringIO.StringIO(goodMetadata)
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failUnless(valid, "Metadata was valid; check mint.backup.knownGroupVersions")
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_OldSchema(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_oldSchema)
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Schema is too old, test should have failed")
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_OldGroup(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_oldGroup)
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Group is too old, test should have failed")
+
+    @fixtures.fixture("Empty")
+    def testIsValid_BadMetadata_MangledSpec(self, db, data):
+        metadataIO = StringIO.StringIO(badMetadata_mangledTrovespec)
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Group was malformed, test should have failed")
+
+    @fixtures.fixture("Empty")
+    def testIsValid_MissingMetadata(self, db, data):
+        metadataIO = StringIO.StringIO()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Metadata was missing, test should have failed")
 
 if __name__ == "__main__":
     testsuite.main()
