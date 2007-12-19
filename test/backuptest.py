@@ -206,45 +206,32 @@ class BackupTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testIsValid_GoodMetadata(self, db, data):
         metadataIO = StringIO.StringIO(goodMetadata)
-        try:
-            try:
-                valid = backup.isValid(self.cfg, metadataIO)
-            except RuntimeError:
-                self.fail("Metadata was valid; check mint.backup.knownGroupVersions")
-        finally:
-            metadataIO.close()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failUnless(valid, "Metadata was valid; check mint.backup.knownGroupVersions")
 
     @fixtures.fixture("Empty")
     def testIsValid_BadMetadata_OldSchema(self, db, data):
         metadataIO = StringIO.StringIO(badMetadata_oldSchema)
-        try:
-            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
-        finally:
-            metadataIO.close()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Schema is too old, test should have failed")
 
     @fixtures.fixture("Empty")
     def testIsValid_BadMetadata_OldGroup(self, db, data):
         metadataIO = StringIO.StringIO(badMetadata_oldGroup)
-        try:
-            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
-        finally:
-            metadataIO.close()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Group is too old, test should have failed")
 
     @fixtures.fixture("Empty")
-    def testIsValid_BadMetadata_OldSchema(self, db, data):
+    def testIsValid_BadMetadata_MangledSpec(self, db, data):
         metadataIO = StringIO.StringIO(badMetadata_mangledTrovespec)
-        try:
-            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
-        finally:
-            metadataIO.close()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Group was malformed, test should have failed")
 
     @fixtures.fixture("Empty")
     def testIsValid_MissingMetadata(self, db, data):
         metadataIO = StringIO.StringIO()
-        try:
-            self.failUnlessRaises(RuntimeError, backup.isValid, self.cfg, metadataIO)
-        finally:
-            metadataIO.close()
+        valid = backup.isValid(self.cfg, metadataIO)
+        self.failIf(valid, "Metadata was missing, test should have failed")
 
 if __name__ == "__main__":
     testsuite.main()

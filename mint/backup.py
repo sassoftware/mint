@@ -172,6 +172,12 @@ def metadata(cfg, out):
     print >> out, "rBuilder_schemaMinor=%d" % schemaMinor
     sys.stdout.flush()
 
+# XXX This version is used internally since our handler expects
+#     an exception, while rAPA expects a True/False return.
+def _isValid(cfg, input):
+    if not isValid(cfg, input):
+        raise RuntimeError("Invalid Backup")
+
 def isValid(cfg, input):
     data = input.read()
     metaData = dict()
@@ -180,26 +186,22 @@ def isValid(cfg, input):
            k, v = x.split('=', 1)
            metaData[k] = v
     schemaVersion = int(metaData.get('rBuilder_schemaVersion', 0))
-    if schemaVersion < schemaCutoff:
-        if schemaVersion == 0:
-            raise RuntimeError("Unknown Schema Version")
-        else:
-            raise RuntimeError("Schema Version Too Old")
+    if schemaVersion == 0 or schemaVersion < schemaCutoff:
+        return False
     NVF = metaData.get('NVF')
     if not NVF:
-        raise RuntimeError("No group trovespec found")
+        return False
     verStr = cmdline.parseTroveSpec(NVF)[1]
     try:
         trailingVer = versions.VersionFromString(verStr).trailingRevision().version
     except conary.errors.ParseError:
-        raise RuntimeError("Bad version string %s" % verStr)
+        return False
     foundMatch = False
     for pat in knownGroupVersions:
         if re.match(pat, trailingVer):
             foundMatch = True
             break
-    if not foundMatch:
-        raise RuntimeError("Incompatible upstream revision %s" % trailingVer)
+    return foundMatch
 
     return True
 
@@ -247,7 +249,7 @@ def run():
     elif mode in ('m', 'metadata'):
         handle(metadata, cfg, sys.stdout)
     elif mode == 'isValid':
-        handle(isValid, cfg, sys.stdin)
+        handle(_isValid, cfg, sys.stdin)
     elif mode.upper() in ('?', 'H', 'HELP'):
         usage(out = sys.stdout)
     else:
