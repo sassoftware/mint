@@ -143,7 +143,7 @@ class BackupTest(fixtures.FixturedUnitTest):
         oldSysExit = sys.exit
         sys.exit = mock.MockObject()
 
-        backup.handle(_tosscookies)
+        backup.handle(_tosscookies, dropPriv=False)
 
         sys.stderr.close()
         sys.stderr = oldStdErr
