@@ -598,46 +598,66 @@ class AdminHandler(WebHandler):
                            'mirrorBy': 'label'})
         return self._write('admin/add_outbound', id=id, projects = projects, kwargs = kwargs)
 
-    def _updateMirror(self, user, servername, mirrorUrl, sp):
+    def _updateMirror(self, user, servername, mirrorUrl, sp, mirrorUser,
+      mirrorPass):
         passwd = ''
         try:
+            # Add our already-known servername directly
             res1 = sp.conaryserver.ConaryServer.addServerName(servername)
             passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
-            rapa_passwd = users.newPassword(length=128)
-            server_user = '%s_%s-%s' % (self.cfg.hostName, self.cfg.siteDomainName,
-                    mirrorUrl)
-            server_user = server_user.replace('.', '_')
-            # Create serverName group if it doesn't exist
-            rapausers = sp.usermanagement.UserInterface.users()
-            if 'serverNames' not in rapausers['all_groups']:
-                sp.usermanagement.UserInterface.addGroup('serverNames',
-                                                     ['mirror'])
-            # Recreate the user if it already exists
-            for x in rapausers['items']:
-                if x['username'] == server_user:
-                    sp.usermanagement.UserInterface.deleteUser(server_user)
-                    break
 
-            # Use the XMLRPC-specific call (new in rAPA 2.1.5) to add the user
+            # Try adding a user with mirror privs so we can add more server
+            # names later (for mirror-by-group). If we can't (probably
+            # because our rAPA creds are already mirror-only), just store
+            # those creds and move on.
             try:
-                sp.usermanagement.UserInterface.addUserViaXmlrpc(server_user,
-                    rapa_passwd, rapa_passwd, ['serverNames'])
+                rapa_passwd = users.newPassword(length=128)
+                server_user = '%s_%s-%s' % (self.cfg.hostName,
+                    self.cfg.siteDomainName, mirrorUrl)
+                server_user = server_user.replace('.', '_')
+                # Create serverName group if it doesn't exist
+                rapausers = sp.usermanagement.UserInterface.users()
+                if 'serverNames' not in rapausers['all_groups']:
+                    sp.usermanagement.UserInterface.addGroup('serverNames',
+                                                     ['mirror'])
+                # Recreate the user if it already exists
+                for x in rapausers['items']:
+                    if x['username'] == server_user:
+                        sp.usermanagement.UserInterface.deleteUser(
+                            server_user)
+                        break
+
+                # Use the XMLRPC-specific call (new in rAPA 2.1.5) to add the
+                # user
+                try:
+                    sp.usermanagement.UserInterface.addUserViaXmlrpc(
+                        server_user, rapa_passwd, rapa_passwd,
+                        ['serverNames'])
+                except xmlrpclib.ProtocolError, e:
+                    if e.errcode == 404:
+                        # Not supported, use addUser
+                        sp.usermanagement.UserInterface.addUser(server_user,
+                            rapa_passwd, rapa_passwd, ['serverNames'])
+                    else:
+                        raise
+
+                # Update the password in our database
+                self.client.setrAPAPassword(mirrorUrl, server_user,
+                    rapa_passwd, 'serverNames')
             except xmlrpclib.ProtocolError, e:
-                if e.errcode == 404:
-                    # Not supported, use addUser
-                    sp.usermanagement.UserInterface.addUser(server_user,
-                        rapa_passwd, rapa_passwd, ['serverNames'])
+                if e.errcode == 403:
+                    # No access to add users/groups/roles. Save creds from UI
+                    # instead.
+                    self.client.setrAPAPassword(mirrorUrl, mirrorUser,
+                        mirrorPass, 'serverNames')
                 else:
                     raise
-
-            # Update the password in our database
-            self.client.setrAPAPassword(mirrorUrl, server_user, rapa_passwd,
-                    'serverNames')
 
             # Clear the mirror mark for this server name
             ccfg = conarycfg.ConaryConfiguration()
             ccfg.user.addServerGlob(servername, user, passwd)
-            ccfg.repositoryMap.update({servername:'https://%s/conary/' % mirrorUrl})
+            ccfg.repositoryMap.update({servername:'https://%s/conary/'
+                % mirrorUrl})
             cc = conaryclient.ConaryClient(ccfg)
             try:
                 cc.repos.setMirrorMark(servername, -1)
@@ -650,16 +670,17 @@ class AdminHandler(WebHandler):
             if e.errcode == 403:
                 self._addErrors("Username and/or password incorrect.")
             else:
-                self._addErrors("""Protocol error: %s (%d %s). Please be sure your
-                                      rPath Mirror is configured properly.""" % \
-                    (safeUrl, e.errcode, e.errmsg))
+                self._addErrors('Protocol error: %s (%d %s). Please be sure '
+                                'your rPath Mirror is configured properly.' %
+                                (safeUrl, e.errcode, e.errmsg))
         except socket.error, e:
-            self._addErrors("""Socket error: %s. Please be sure your rPath Mirror
-                               is configured properly.""" % str(e[1]))
+            self._addErrors('Socket error: %s. Please be sure your rPath '
+                                'Update Service is configured properly.'
+                                % str(e[1]))
         else:
             if not res1 or not passwd:
-                self._addErrors("""An error occurred configuring your rPath
-                                   Mirror.""")
+                self._addErrors('An error occurred while configuring your '
+                                'rPath Update Service.')
 
         return passwd
 
@@ -762,7 +783,7 @@ class AdminHandler(WebHandler):
                 transport = None
             
             sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (mirrorUser, mirrorPass, mirrorUrl), transport=transport)
-            passwd = self._updateMirror(user, servername, mirrorUrl, sp)
+            passwd = self._updateMirror(user, servername, mirrorUrl, sp, mirrorUser, mirrorPass)
 
         if not self._getErrors():
             outboundMirrorTargetId = self.client.addOutboundMirrorTarget(outboundMirrorId, 'https://%s/conary/' % mirrorUrl, user, passwd)

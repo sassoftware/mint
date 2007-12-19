@@ -390,7 +390,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/admin/addOutbound",
             content = "Project to mirror:")
 
-        def fakeUpdateMirror(user, servername, mirrorUrl, sp):
+        def fakeUpdateMirror(*P, **K):
             return 'totallyfakepassword'
 
         ad = admin.AdminHandler()
@@ -470,11 +470,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateOutboundMirrorSameServername(self):
         rusPasswordInfo = dict()
 
-        def fakeUpdateMirror1(user, host, mirrorUrl, sp):
+        def fakeUpdateMirror1(user, *P, **K):
             rusPasswordInfo[user] = 'totallyfake'
             return 'totallyfake'
 
-        def fakeUpdateMirror2(user, host, mirrorUrl, sp):
+        def fakeUpdateMirror2(user, *P, **K):
             rusPasswordInfo[user] = 'totallyfakealso'
             return 'totallyfakealso'
 
