@@ -19,7 +19,7 @@ from conary.conaryclient import cmdline
 schemaCutoff = 37
 knownGroupVersions = ('3\.1\.5.*', '4\..*')
 
-staticPaths = ['config', 'entitlements', 'logs', 'installable_iso.conf',
+staticPaths = ['config', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
                'bootable_image.conf']
 # toolkit is linked to outgoing job server architecture.
@@ -81,7 +81,7 @@ def restore(cfg):
             os.unlink(cfg.dbPath)
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-    schema.loadSchema(db, cfg)
+    schema.loadSchema(db, cfg, should_migrate=True)
     cu = db.cursor()
     cu.execute("SELECT hostname, domainname, projectId FROM Projects")
     for hostname, domainname, projectId in [x for x in cu.fetchall()]:
@@ -100,7 +100,7 @@ def restore(cfg):
                     os.unlink(dbPath)
                 util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
                 rdb = dbstore.connect(dbPath, cfg.reposDBDriver)
-                conary.server.schema.loadSchema(rdb)
+                conary.server.schema.loadSchema(rdb, doMigrate=True)
                 rdb.close()
             elif cfg.reposDBDriver == 'postgresql':
                 pgRepo = repo.translate(projects.transTables['postgresql'])
@@ -119,7 +119,7 @@ def restore(cfg):
                 util.execute('cat %s | psql -U %s %s'% (dumpPath, dbUser, pgRepo))
                 rdb = dbstore.connect('%s' % (cfg.reposDBPath % 'postgres'),
                                       cfg.reposDBDriver)
-                conary.server.schema.loadSchema(rdb)
+                conary.server.schema.loadSchema(rdb, doMigrate=True)
                 rdb.close()
         else:
             cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
