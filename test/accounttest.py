@@ -8,7 +8,6 @@ testsuite.setup()
 
 import fixtures
 
-from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
 from mint import userlevels
@@ -87,25 +86,6 @@ class AccountTest(fixtures.FixturedUnitTest):
             self.fail('Did not catch bad e-mail domain')
         except MailError:
             pass
-
-    @fixtures.fixture('Full')
-    def testProjectInteraction(self, db, data):
-        # FIXME: needs annotation, and a good bludgeoning with the cluebat
-        raise testsuite.SkipTestException, 'nonsensical test'
-
-        client, userId = self.getFixtureUser(data, 'owner')
-        user = client.getUser(userId)
-
-        projectId = data['projectId']
-        project = client.getProject(projectId)
-
-        project.addMemberById(userId, userlevels.OWNER)
-
-        user.setPassword("passtest")
-
-        client = self.getClient('owner', 'passtest')
-        user = client.getUser(userId)
-        user.cancelUserAccount()
 
     @fixtures.fixture('Empty')
     def testConfirmedTwice(self, db, data):

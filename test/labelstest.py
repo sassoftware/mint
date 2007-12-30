@@ -6,7 +6,6 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import database

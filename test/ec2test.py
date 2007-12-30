@@ -16,7 +16,6 @@ from boto.exception import EC2ResponseError
 
 from mint import ec2
 from mint.database import ItemNotFound
-from mint_rephelp import MintRepositoryHelper
 
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
 from conary.lib import util

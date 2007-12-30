@@ -6,8 +6,6 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
-
 import fixtures
 
 from mint import pkgindexer

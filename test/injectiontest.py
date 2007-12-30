@@ -7,7 +7,6 @@ import testsuite
 testsuite.setup()
 
 import fixtures
-from mint_rephelp import MintRepositoryHelper
 
 from conary.dbstore import sqlerrors
 

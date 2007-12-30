@@ -15,7 +15,7 @@
 ^distro/jobslave_set$
 
 ^\.times
-^test/\.(times|coverage)$
+^test/(raa-tests/)?\.(times|coverage)$
 ^test/archive/macrosc$
 ^test/logfile\.test\.*
 

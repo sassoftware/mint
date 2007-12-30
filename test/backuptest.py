@@ -11,7 +11,6 @@ import os
 import mock
 import StringIO
 
-from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import backup
@@ -232,6 +231,10 @@ class BackupTest(fixtures.FixturedUnitTest):
         metadataIO = StringIO.StringIO()
         valid = backup.isValid(self.cfg, metadataIO)
         self.failIf(valid, "Metadata was missing, test should have failed")
+
+    def tearDown(self):
+        if os.path.isdir('ignoreme'):
+            util.rmtree('ignoreme')
 
 if __name__ == "__main__":
     testsuite.main()

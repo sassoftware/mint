@@ -6,7 +6,6 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 
 from fixtures import FixturedUnitTest, fixture

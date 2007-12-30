@@ -6,8 +6,6 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
-
 from mint import server
 from mint import users
 from mint import shimclient

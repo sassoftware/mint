@@ -9,8 +9,6 @@ import unittest
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
-
 from mint import config
 from mint import buildtypes
 
