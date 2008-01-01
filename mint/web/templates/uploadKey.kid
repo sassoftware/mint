@@ -28,9 +28,10 @@ from mint import userlevels
                         <th><em class="required">Project or Projects:</em></th>
                         <td>
                              <select class="wide" multiple="multiple" size="10" name="projects">
-                                <option py:for="project, level in [(x[0], x[1]) for x in projects if x[1] in userlevels.WRITERS]"
-                                    py:content="project.getName()"
-                                    value="${project.getHostname()}"/>
+                                <option py:for="project, hostname in projects"
+                                    py:content="project"
+                                    py:attrs="(hostname in kwargs['projects']) and {'selected': 'selected'} or {}"
+                                    value="${hostname}"/>
                              </select>
                              <p class="help">
                                 Select one or more projects to which to upload this key.

@@ -425,9 +425,13 @@ class SiteHandler(WebHandler):
     @listFields(str, projects=[])
     @strFields(keydata = '')
     def uploadKey(self, auth, projects, keydata):
-        projects = sorted((x for x in self.projectList if not x[0].external), key = lambda x: x[0].getName())
+        projectList = sorted((
+                (x[0].getName(), x[0].getHostname())
+                for x in self.projectList
+                if not x[0].external and x[1] in userlevels.WRITERS
+            ), key=lambda y: y[0])
         if self.projectList:
-            return self._write("uploadKey", kwargs={}, projects = projects)
+            return self._write("uploadKey", kwargs={}, projects=projectList)
         else:
             return self._write("error", shortError="Not a project member",
                 error = "You may not upload a key as you are not a member of any projects. "
@@ -438,15 +442,22 @@ class SiteHandler(WebHandler):
     @listFields(str, projects=None)
     @strFields(keydata=None)
     def processKey(self, auth, projects, keydata):
+        projectList = sorted((
+                (x[0].getName(), x[0].getHostname())
+                for x in self.projectList
+                if not x[0].external and x[1] in userlevels.WRITERS
+            ), key=lambda y: y[0])
+
         added = []
         for project, level in self.projectList:
-            if project.getHostname() in projects:
+            if project.getHostname() in projects and level in userlevels.WRITERS:
                 try:
                     project.addUserKey(auth.username, keydata)
                 except Exception, e:
                     self._addErrors('Error uploading key: %s' % str(e))
                     return self._write("uploadKey",
-                            kwargs={'projects': projects, 'keydata': keydata})
+                            kwargs={'projects': projects, 'keydata': keydata},
+                            projects=projectList)
                 else:
                     added.append(project)
 
