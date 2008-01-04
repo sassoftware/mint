@@ -142,6 +142,7 @@ class MintConfig(ConfigFile):
     authCacheTimeout        = (cfgtypes.CfgInt, None,
                                "Number of seconds to cache authentication results")
     removeTrovesVisible     = (cfgtypes.CfgBool, False)
+    serializeCommits        = (cfgtypes.CfgBool, False)
     hideNewProjects         = (cfgtypes.CfgBool, False)
     allowTroveRefSearch     = (cfgtypes.CfgBool, True)
 

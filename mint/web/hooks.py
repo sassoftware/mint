@@ -98,6 +98,7 @@ def getRepository(projectName, repName, dbName, cfg,
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
     nscfg.requireSigs = requireSigs
+    nscfg.serializeCommits = cfg.serializeCommits
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
