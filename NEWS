@@ -1,10 +1,177 @@
-Changes in @NEW@
+Changes in 4.0.1
 ================
 
-* Added apache's access and errors logs to rAPA logs viewer. (RBL-2250)
-* Mirrored repositories can now be converted to external repositories,
-  effectively disabling the mirror process. The mirrored contents are
-  preserved, but not used, unless mirroring is re-enabled. (RBL-1292)
+Web Front End Changes
+---------------------
+
+* Project owners and admins may now configure a project to send commit mail
+  to arbitrary e-mail addresses. (RBL-1568)
+* Uploading an invalid GPG key no longer causes the web UI to backtrace.
+  (RBL-1625)
+* A regression in the anaconda-templates trove picker in the advanced build
+  option has been fixed. (RBL-1760)
+* Apache's access_log and error_log may now be viewed and downloaded from
+  the Appliance Agent log viewer. (RBL-2250)
+* Accessing help in project resources now opens a new {window, tab}.
+  (RBL-2287)
+* Accept non-admin rAPA users when adding an outbound mirror target.
+  (RBL-2408)
+* Remove an unused and invalid CSS style that caused warnings in some
+  browsers. (RBL-2450)
+* The appliance agent log file is now viewable in the Appliance Agent log
+  viewer. (RBL-2451)
+* Build types may be now included in /srv/rbuilder/config/rbuilder-custom.conf
+  using the includeBuildType directive. Previously, one would have to modify
+  /srv/rbuilder/config/rbuilder.conf and remove the "excluded" build type
+  in order to include it. This change would have to be re-applied upon each
+  subsequent update as rbuilder.conf is treated as a template and is
+  overwritten. (RBL-2458)
+* rBuilder command line client may now be installed on systems running
+  Conary 2.0. (RBL-2477)
+
+Build System Changes
+--------------------
+
+* The build system now uses Xen 3.1.0 and Linux kernel 2.6.20
+  for enhanced stability and better hardware support.
+* Zombie processes are no longer left behind if the anaconda template
+  web service fails to build and cache the template. (RBL-2323)
+* The partition sizing algorithm used in previous versions of the Job
+  Slave caused some builds to prematurely run out of space when building
+  an image. (RBL-2330)
+* Images built by rBuilder Appliance now pin the kernel package. (RBL-2412)
+* The anaconda template web service now uses the Conary proxy provided by
+  rBuilder when generating templates. (RBL-2429)
+* Previous versions of the Job Master left behind lock files which prevented
+  a new job slave image from being created in the case of a system failure.
+  These lock files are now cleaned up when the Job Master starts. (RBL-2444)
+* The Conary client used by the Job Slaves was configured incorrectly to use
+  /var/tmp instead of /tmp when building images. This resulted in the
+  Job Slave process failing to build the job due to lack of disk space.
+  (RBL-2461)
+* Compatibility changes have been made to support newer anaconda-templates
+  using the latest rPath Linux development images. This only affects users
+  building bleeding-edge builds using the latest anaconda-templates.
+  (RBL-2493)
+* Builds that were migrated from rBuilder 3.x can now be rebuilt using the
+  most recent Job Slave version. (RBL-2484)
+
+
+Changes in 4.0.0
+================
+
+* rBuilder can build 64-bit bootable images for all image build types.
+* The VMware image types create a gzip tar archive, eliminating the previous
+  4 GB limitation for such images.
+* Group Builder uses group-appliance-platform from rPath Linux to provide basic
+  operating system components. (RBL-1865)
+* Each image build shows a SHA-1 message digest on its build page.
+* Image builds are handled with a new system that works on top of Xen
+  technology. Each build job is handled inside a Xen DomU. The goal of this job
+  system is to make image builds faster.
+* The rPath Appliance Platform Agent interface includes a "Job Control Console"
+  page for managing image build jobs.
+* Outbound mirroring allows for selecting one or more groups to mirror.
+  (RBL-2351)
+* Outbound mirroring by group recurses the selected group for all its contents
+  and subgroups.
+* When uploading GPG keys, projects are listed in alphabetical order.
+  (RBL-2084)
+* When uploading GPG keys, external projects are not listed. (RBL-2085)
+* Apache logs have been consolidated into a single log. (RBL-2037)
+* rBuilder logs are kept in /var/log/rbuilder (previously in
+  /srv/rbuilder/logs).
+* Fixed: VMware ESX images had the wrong guestOS setting in the VMX file.
+  (RBL-2338)
+* Fixed: Including troves from external projects caused permission issues when
+  building images. (RBL-2184)
+* Fixed: RepositoryMismatch errors occured when mirroring from an external
+  project in caching mode. (RBL-2241)
+* Fixed: An infinite loop and lock-up was created by certain Conary proxy
+  errors. (RBL-1664)
+* Fixed: When two or more outbound mirrors were configured for different
+  labels, the rPath Appliance Platform Update Service would confuse the
+  authentication and return insufficient permission errors. (RBL-2318)
+* Known issue: When configuring the target for an outbound mirror in rBuilder,
+  if the Update Service appliance user has a role of mirror and does not have a
+  role of admin, mirroring will not work when mirroring by group.
+
+Changes in 3.1.4
+================
+* A change in Conary's entitlement handling inadvertantly broke the
+  edit external projects admin page when using entitlements for access.
+  This has been corrected to match the new behavior. (RBL-1849)
+* Entitlement and user/password information from external projects is
+  now injected into the proxy repository server, so unauthorized clients
+  using rBuilder as a proxy will gain all of the access that rBuilder
+  is entitled to. (RBL-1886)
+
+Changes in 3.1.3
+================
+
+* rBuilder's internal proxy now uses the correct urlBase containing
+  the rBuilder's hostname instead of localhost.
+* A minor corner case was fixed in the diff code in the repository
+  browser.
+* Fixes for LiveCD generation.
+* In previous versions of rBuilder, it was possible to enter an
+  invalid hostname when creating an external project. rBuilder will
+  now check the hostname's validity before creating the external project.
+
+Changes in 3.1.2
+================
+* rBuilder now contains an internal caching Conary proxy.
+* The repository browser now displays the packages that are included in a
+  group or sub-group. (RBL-654)
+* The repository browser now displays a graphical "diff" of individual
+  files modified in a shadow. (RBL-656)
+* The repository browser now displays a shadow's derivation tree. (RBL-658)
+* The repository browser now displays a version list, by label, in a tree
+  view. (RBL-1393)
+* The repository browser now displays where a trove was cloned from. (RBL-1394)
+* rBulder can now serve files larger than 2G. (RBL-1495)
+* The repository browser now displays expandable/abbreviated versions
+  of versions and flavors. (RBL-1558)
+* A plugin for scheduling outbound mirroring has been added. (RBL-1558)
+* In the event of an unhandled error, rBuilder now displays a custom
+  500 page containing support information. (RBL-1574)
+* The external project entitlement form now protects against white
+  space. (RBL-1386)
+* GPG-compatible keyserver interface has been exposed in the repository
+  browser. (RBL-1488)
+* The builds page no longer backtraces if an unknown architecture is
+  encountered. (RBL-1524)
+* An additional status message has been added before copying starts in
+  mirror preload. (RBL-1551)
+* A UDP port has been opened for monitoring via SNMP. (RBL-1571)
+* Group Builder now pulls rAA from raa.rpath.org@rpath:raa-2. (RBL-1572)
+* Hard-coded reference to raa.rpath.org removed have been. (RBL-1536)
+* Inbound/Outbound mirroring operations now configure a complete set of
+  repository map entries. (RBL-1579)</p></li>
+* The repository browser now displays files for the flavor selected. (RBL-1581)
+* The correct project name is now displayed when a user adds a GPG 
+  key. (RBL-1625)
+* rBuilder can now push to multiple mirrors simultaneously. (RBL-1520)
+
+Changes in 3.1.0
+================
+* rBuilder's Repository Browser uses a different color in the file list
+  to indicate files modified in a shadowed package. (RBL-657)
+* Administrators have the option in a mirror to include all labels of an
+  inbound mirrored repository. (RBL-1474)
+* Administrators can order inbound and outbound mirror operations if
+  necessary for dependencies. (RBL-1305)
+* rBuilder no longer restricts the file size for bootable image
+  generation. (RBL-1312)
+* Administrators can convert any project from a mirrored project to an
+  external (network access) project, and from external to 
+  mirrored. (RBL-1292)
+* When a mirrored project is restored from backup, rBuilder converts it
+  to an external project. (RBL-1291)
+* Installable CDs include all public keys needed to validate signed
+  packages on the disk. (RBL-1416)
+* The Repository Browser and command line interface each have a method
+  to search derived and referenced packages. (RBL-1412)
 * Some bugs in the external project editing have been fixed. (RBL-1243)
 * The specific option to add an external project and preload with a disk
   drive has been removed. The same functionality is available if you
@@ -12,15 +179,10 @@ Changes in @NEW@
   updated. (RBL-1323)
 * Usernames for rBuilder accounts follow new Conary restrictions. (RBL-1338)
 * The "Notify All Users" functionality has been removed. (RBL-1370)
-* In certain circumstances, rBuilder could set up an externa Update Service
+* In certain circumstances, rBuilder could set up an external Update Service
   with the wrong hostname for mirror contents. This has been fixed. (RBL-1369)
-* Upon backup restore, all external mirrored projects are reverted to external
-  projects only. This prevents a race condition where the repository is
-  unusable while the mirror update proceeds. (RBL-1291)
-* Entitlement and user/password information from external projects is
-  now injected into the proxy repository server, so unauthorized clients
-  using rBuilder as a proxy will gain all of the access that rBuilder
-  is entitled to. (RBL-1886)
+* rBuilder previously did not create some Anaconda installer files for
+  bootable images.  This has been fixed. (RBL-1328)
 
 Changes in 3.0.0
 ================
