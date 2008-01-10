@@ -874,9 +874,6 @@ div#projectsPane div#userSettings {
 div#projectsPane div#administer {
     text-align: center;
 }
-div#projectsPane div#rMake {
-    text-align: center;
-}
 
 div#projectsPane h4 {
     padding-bottom: 0;
@@ -942,42 +939,6 @@ table.groupTroveItems > tr:first-child td {
 
 table.groupTroveItems textarea {
     width: 95%;
-}
-
-/* rMake */
-
-div#rMakeBuilder {
-    clear: right;
-    width: 224px;
-    margin: 8px 3px 12px 3px;
-    background: url(../images/box_body_r.png) no-repeat bottom left;
-}
-
-div#rMakeBuilder img.left {
-    float: left;
-}
-
-div#rMakeBuilder img.right {
-    float: right;
-}
-
-div#rMakeBuilder div.boxHeader {
-    color: white;
-    background: url(../images/header_orange_bg.png);
-    padding: 4px 11px 6px 11px;
-    margin-bottom: 0px;
-    font-size: 120%;
-    font-weight: bold;
-    height: 22px;
-}
-
-div#rMakeBuilderItems {
-    padding: 4px;
-}
-
-div#rMakeBuilder table tr:first-child {
-    color: black;
-    font-weight: bold;
 }
 
 span#editProject {

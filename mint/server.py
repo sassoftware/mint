@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -51,7 +51,6 @@ from mint import spotlight
 from mint import selections
 from mint import urltypes
 from mint import useit
-from mint import rmakebuild
 from mint import rapapasswords
 from mint import constants
 from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
@@ -88,10 +87,6 @@ except ImportError:
     # Conary 1
     from conary.repository.netrepos.calllog import CallLogger
 
-
-from mint.rmakeconstants import buildjob
-from mint.rmakeconstants import supportedApiVersions \
-     as supportedrMakeApiVersions
 
 import gettext
 gettext.install('rBuilder')
@@ -271,8 +266,6 @@ def getTables(db, cfg):
     d['topProjects'] = selections.TopProjectsTable(db)
     d['popularProjects'] = selections.PopularProjectsTable(db)
     d['latestCommit'] = selections.LatestCommitTable(db)
-    d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
-    d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
@@ -549,25 +542,6 @@ class MintServer(object):
         r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
-
-    def _filterrMakeBuildAccess(self, rMakeBuildId):
-        cu = self.db.cursor()
-        cu.execute("SELECT UserId FROM rMakeBuild WHERE rMakeBuildId=?",
-                   rMakeBuildId)
-        res = cu.fetchone()
-        if not res or res[0] != self.auth.userId:
-            raise database.ItemNotFound
-
-    def _filterrMakeBuildItemAccess(self, rMakeBuildItemId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT rMakeBuildId
-                          FROM rMakeBuildItems
-                          WHERE rMakeBuildItemId=?""",
-                   rMakeBuildItemId)
-        res = cu.fetchone()
-        if not res:
-            raise database.ItemNotFound
-        return self._filterrMakeBuildAccess(res[0])
 
     def _checkProjectAccess(self, projectId, allowedUserlevels):
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
@@ -3637,203 +3611,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
             raise PermissionDenied
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
-        return True
-
-    ### rMake build functions ###
-    def _checkrMakeBuildTitle(self, title):
-        if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            raise ParameterError('Bad rMake build name: %s' % title)
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def getrMakeBuild(self, rMakeBuildId):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        return self.rMakeBuild.get(rMakeBuildId)
-
-    @private
-    @typeCheck(str)
-    @requiresAuth
-    def createrMakeBuild(self, title):
-        self._checkrMakeBuildTitle(title)
-        return self.rMakeBuild.new(userId = self.auth.userId, title = title)
-
-    @private
-    @typeCheck(int, str)
-    @requiresAuth
-    def renamerMakeBuild(self, rMakeBuildId, title):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        self._checkrMakeBuildTitle(title)
-        self.rMakeBuild.update(rMakeBuildId, title = title)
-        return True
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def listrMakeBuilds(self):
-        return self.rMakeBuild.listByUser(self.auth.userId)
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def delrMakeBuild(self, rMakeBuildId):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        self.rMakeBuild.delete(rMakeBuildId)
-        return True
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def listrMakeBuildTroves(self, rMakeBuildId):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        return [self.rMakeBuildItems.get(x) for x in \
-                self.rMakeBuild.listTrovesById(rMakeBuildId)]
-
-    @private
-    @typeCheck(int, str, int)
-    @requiresAuth
-    def getrMakeBuildXML(self, rMakeBuildId, command, protocolVersion):
-        if protocolVersion not in supportedrMakeApiVersions:
-            raise ParameterError('Unsupported rMake API Version')
-        def makeOption(name, val):
-            return "<option><name>%s</name><value>%s</value></option>" % \
-                   (name, val)
-
-        def makeTroveSpec(trvName, trvVersion):
-            ret = "<trove><troveName>%s</troveName>" % trvName
-            ret += "<troveVersion>%s</troveVersion>" % trvVersion
-            ret += "<troveFlavor></troveFlavor></trove>"
-            return ret
-
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        if command not in ('build', 'stop', 'commit'):
-            raise ParameterError("Invalid rMake Command: %s" % command)
-        trvList = self.listrMakeBuildTroves(rMakeBuildId)
-        if not trvList:
-            raise rMakeBuildEmpty
-        rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
-        if (command == 'stop' and rMakeBuildDict['status'] == 0) or \
-               (command == 'commit' and rMakeBuildDict['status'] \
-                not in (buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTING)):
-            raise rMakeBuildOrder
-        UUID = rMakeBuildDict['UUID']
-        if command == 'build':
-            if UUID:
-                raise rMakeBuildCollision
-            else:
-                UUID = self.rMakeBuild.randomizeUUID(rMakeBuildId)
-        res = "<rmake><version>1</version><buildConfig>"
-        if self.cfg.createConaryRcFile:
-            res += makeOption( \
-                'includeConfigFile',
-                'http://' + self.cfg.siteHost + self.cfg.basePath + 'conaryrc')
-        res += makeOption('subscribe', 'rBuilder xmlrpc ' \
-                          'http://' + self.cfg.siteHost + self.cfg.basePath + \
-                          'rmakesubscribe/' + UUID)
-        res += makeOption('subscribe', 'rBuilder apiVersion %d' % \
-                          protocolVersion)
-        res += makeOption('uuid', UUID)
-        res += "</buildConfig><command><name>%s</name>" % command
-        if command == "build":
-            for rMakeBuildItem in trvList:
-                res += makeTroveSpec(rMakeBuildItem['trvName'],
-                                     rMakeBuildItem['trvLabel'])
-            self.rMakeBuild.startBuild(rMakeBuildId)
-        elif command == 'stop':
-            self.rMakeBuild.reset(rMakeBuildId)
-        elif command == 'commit':
-            self.rMakeBuild.commitBuild(rMakeBuildId)
-        res += "</command></rmake>"
-        return res
-
-    @private
-    @typeCheck(int)
-    def resetrMakeBuildStatus(self, rMakeBuildId):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        self.rMakeBuild.reset(rMakeBuildId)
-        return True
-
-    @private
-    @typeCheck(str, int, str)
-    def setrMakeBuildStatus(self, UUID, status, statusMessage):
-        self.rMakeBuild.setStatus(UUID, status, statusMessage)
-        return True
-
-    @private
-    @typeCheck(str, int)
-    def setrMakeBuildJobId(self, UUID, jobId):
-        self.rMakeBuild.setJobId(UUID, jobId)
-        return True
-
-    ### rMake build trove functions ###
-    @private
-    @typeCheck(int, ((unicode, str),), ((unicode, str),))
-    @requiresAuth
-    def addrMakeBuildTrove(self, rMakeBuildId, trvName, trvLabel):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        trvName = str(trvName)
-        trvLabel = str(trvLabel)
-        rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
-        if rMakeBuildDict['status']:
-            raise rMakeBuildOrder('Cannot add troves at this time.')
-        if ':' in trvName and not trvName.endswith(':source'):
-            raise ParameterError('Cannot add components to rMake build')
-        rMakeBuildItemId = self.rMakeBuildItems.new( \
-            rMakeBuildId = rMakeBuildId, trvName = trvName,
-            trvLabel = trvLabel)
-        return self.rMakeBuildItems.get(rMakeBuildItemId)
-
-    @private
-    @typeCheck(int, ((unicode, str),), ((unicode, str),))
-    @requiresAuth
-    def addrMakeBuildTroveByProject(self, rMakeBuildId, trvName, projectName):
-        self._filterrMakeBuildAccess(rMakeBuildId)
-        trvName = str(trvName)
-        projectName = str(projectName)
-        projectId = self.projects.getProjectIdByHostname(projectName)
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project)
-        leaves = None
-        leaves = repos.getTroveVersionsByLabel(
-            {trvName:{versions.Label(project.getLabel()):None}})
-        if not leaves:
-            leaves = repos.getAllTroveLeaves( \
-                versions.Label(project.getLabel()).host,{trvName: None})
-        if trvName not in leaves:
-            raise TroveNotFound
-        trvVersion = sorted(leaves[trvName].keys(),
-                            reverse = True)[0].asString()
-        trvLabel = str(versions.VersionFromString(trvVersion).branch().label())
-
-        return self.addrMakeBuildTrove(rMakeBuildId, trvName, trvLabel)
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def delrMakeBuildTrove(self, rMakeBuildItemId):
-        self._filterrMakeBuildItemAccess(rMakeBuildItemId)
-        rMakeBuildItemDict = self.rMakeBuildItems.get(rMakeBuildItemId)
-        rMakeBuildDict = self.rMakeBuild.get( \
-            rMakeBuildItemDict['rMakeBuildId'])
-        if rMakeBuildDict['status']:
-            raise rMakeBuildOrder('Cannot delete troves at this time.')
-        self.rMakeBuildItems.delete(rMakeBuildItemId)
-        return rMakeBuildItemId
-
-    @private
-    @typeCheck(int)
-    @requiresAuth
-    def getrMakeBuildTrove(self, rMakeBuildItemId):
-        self._filterrMakeBuildItemAccess(rMakeBuildItemId)
-        return self.rMakeBuildItems.get(rMakeBuildItemId)
-
-    @private
-    @typeCheck(str, str, str, int, str)
-    def setrMakeBuildTroveStatus(self, UUID, trvName, trvVersion,
-                                 status, statusMessage):
-        self.rMakeBuildItems.setStatus(UUID, trvName, trvVersion,
-                                       status, statusMessage)
         return True
 
     ### Site reports ###

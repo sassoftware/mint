@@ -31,7 +31,6 @@ from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.webhandler import normPath, HttpError, getHttpAuth
-from mint.web.rmakehandler import rMakeHandler
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
@@ -324,7 +323,6 @@ urls = (
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
-    (r'^/rmakesubscribe',    rMakeHandler),
     (r'^/',                  mintHandler),
 )
 

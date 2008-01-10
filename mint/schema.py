@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -535,47 +535,6 @@ def _createNewsCache(db):
         db.commit()
         db.loadSchema()
 
-def _createRMakeBuilds(db):
-    cu = db.cursor()
-    commit = False
-
-    if 'rMakeBuild' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rMakeBuild(
-            rMakeBuildId    %(PRIMARYKEY)s,
-            userId          INT,
-            title           VARCHAR(128),
-            UUID            CHAR(32),
-            jobId           INT,
-            status          INT DEFAULT 0,
-            statusMessage   TEXT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['rMakeBuild'] = []
-        commit = True
-    db.createIndex('rMakeBuild', 'rMakeBuildIdx', 'userId')
-    db.createIndex('rMakeBuild', 'rMakeBuildTitleIdx', 'userId, title',
-            unique = True)
-
-    if 'rMakeBuildItems' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rMakeBuildItems(
-            rMakeBuildItemId    %(PRIMARYKEY)s,
-            rMakeBuildId        INT,
-            trvName           VARCHAR(128),
-            trvLabel          VARCHAR(128),
-            status              INT DEFAULT 0,
-            statusMessage       TEXT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['rMakeBuildItems'] = []
-        commit = True
-    db.createIndex('rMakeBuildItems', 'rMakeBuildItemIdx', 'rMakeBuildId')
-    db.createIndex('rMakeBuildItems', 'rMakeBuildItemNameIdx',
-            'rMakeBuildId, trvName, trvLabel', unique = True)
-
-    if commit:
-        db.commit()
-        db.loadSchema()
-
 def _createMirrorInfo(db):
     cu = db.cursor()
     commit = False
@@ -843,7 +802,6 @@ def createSchema(db):
     _createJobs(db)
     _createPackageIndex(db)
     _createNewsCache(db)
-    _createRMakeBuilds(db)
     _createMirrorInfo(db)
     _createRepNameMap(db)
     _createApplianceSpotlight(db)
