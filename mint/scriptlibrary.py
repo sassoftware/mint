@@ -34,8 +34,8 @@ class GenericScript:
         """
         oldLogPath = None
         if self.logPath:
-            if not os.access(self.logPath, os.W_OK) \
-               and not os.access(os.path.dirname(self.logPath), os.W_OK):
+            if not (os.access(self.logPath, os.W_OK) \
+                and os.access(os.path.dirname(self.logPath), os.W_OK)):
                 oldLogPath = self.logPath
                 self.logPath = None
 
