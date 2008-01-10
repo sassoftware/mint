@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -23,12 +23,6 @@ def injectVersion(version):
     parts = version.split('/')
     parts[-1] = str(time.time()) + ':' + parts[-1]
     return '/'.join(parts)
-
-def isrMakeLegal(rMakeBuild, userLevel, trvName):
-    """Returns True if 'trv' is legal to add to an rMake build."""
-    # FIXME: the final condition currently removes group troves--but should
-    # be re-enabled once rMake properly handles them.
-    return rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and (':' not in trvName or trvName.endswith(':source')) and not trvName.startswith('group-')
 
 def isGroupBuilderLegal(groupTrove, trv):
     """Returns True if 'trv' is legal to add to a group builder project."""

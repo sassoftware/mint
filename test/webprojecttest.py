@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -132,24 +132,6 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                              'No Description', False)
         self.webLogin('testuser', 'testpass')
         page = self.assertContent('/project/testproject/editGroup?id=%d' \
-                                      % groupTrove.id,
-                                  code=[200],
-                                  content='Save and Cook',
-                                  server=self.getProjectServerHostname())
-
-    def testEditGrouprMake(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-                                             'No Description', False)
-        rMakeBuild = client.createrMakeBuild('foo')
-        self.webLogin('testuser', 'testpass')
-        page = self.fetchWithRedirect('/editrMake?id=%d' % rMakeBuild.id,
-                                      server=self.getProjectServerHostname())
-        assert 'action="editrMake2"' in page.body
-
-        page = self.assertContent('/project/testproject/editGroup?id=%s' \
                                       % groupTrove.id,
                                   code=[200],
                                   content='Save and Cook',

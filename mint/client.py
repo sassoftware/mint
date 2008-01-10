@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -17,7 +17,6 @@ from mint import projects
 from mint import builds
 from mint import pubreleases
 from mint import users
-from mint import rmakebuild
 from mint.mint_error import *
 from mint.searcher import SearchTermsError
 
@@ -25,7 +24,7 @@ from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
 
-CLIENT_VERSIONS = [4]
+CLIENT_VERSIONS = [5]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -553,25 +552,6 @@ class MintClient:
     def listGroupTrovesByProject(self, projectId):
         return self.server.listGroupTrovesByProject(projectId)
 
-    # rMake build functions
-    def getrMakeBuild(self, rMakeBuildId):
-        return rmakebuild.rMakeBuild(self.server, rMakeBuildId)
-
-    def getrMakeBuildTrove(self, rMakeBuildItemId):
-        return self.server.getrMakeBuildTrove(rMakeBuildItemId)
-
-    def delrMakeBuildTrove(self, rMakeBuildItemId):
-        return self.server.delrMakeBuildTrove(rMakeBuildItemId)
-
-    def createrMakeBuild(self, title):
-        return self.getrMakeBuild(self.server.createrMakeBuild(title))
-
-    def setrMakeBuildStatus(self, UUID, status, statusMessage):
-        return self.server.setrMakeBuildStatus(UUID, status, statusMessage)
-
-    def listrMakeBuilds(self):
-        return sorted([self.getrMakeBuild(x) for x in \
-                       self.server.listrMakeBuilds()], key = lambda x:x.title)
 
     # report functions
     def listAvailableReports(self):

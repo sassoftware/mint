@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -235,16 +235,6 @@ class MintApp(WebHandler):
             self.groupTrove = None
             self.groupProject = None
 
-        if self.session.has_key('rMakeBuildId') and self.auth.authorized:
-            try:
-                self.rMakeBuild = self.client.getrMakeBuild( \
-                    self.session['rMakeBuildId'])
-            except database.ItemNotFound:
-                del self.session['rMakeBuildId']
-                self.rMakeBuild = None
-        else:
-            self.rMakeBuild = None
-
         # Handle messages stashed in the session
         self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', '')
@@ -275,7 +265,6 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
-            'rMakeBuild' :      self.rMakeBuild,
             'inlineMime':       self.inlineMime,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,

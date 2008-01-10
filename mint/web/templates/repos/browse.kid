@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 
@@ -18,8 +18,7 @@ from mint.helperfuncs import truncateForDisplay
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
-        py:if="(groupTrove and not package.endswith(':source') and package != groupTrove.recipeName) or
-               (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component and not package.startswith('group-'))">
+        py:if="groupTrove and not package.endswith(':source') and package != groupTrove.recipeName">
         <?python
             if component:
                 package += ":" + component
@@ -27,9 +26,6 @@ from mint.helperfuncs import truncateForDisplay
         ?>
         <a py:if="groupTrove" href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
             Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
-        </a>
-        <a py:if="rMakeBuild" href="${cfg.basePath}addrMakeTrove?trvName=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">
-            Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}
         </a>
     </span>
 

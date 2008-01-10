@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -43,10 +43,6 @@ from conary.lib import util
 from conary import versions
 from conary.deps import deps
 from conary import conarycfg, conaryclient
-
-from mint.rmakeconstants import buildjob
-from mint.rmakeconstants import supportedApiVersions \
-     as supportedrMakeApiVersions
 
 BUFFER=1024 * 256
 
@@ -630,7 +626,7 @@ class SiteHandler(WebHandler):
     #
 
     def _formatPackageSearch(self, results):
-        if self.groupTrove or self.rMakeBuild:
+        if self.groupTrove:
             columns = ('Package', 'Project', '')
         else:
             columns = ('Package', 'Project')
@@ -656,16 +652,6 @@ class SiteHandler(WebHandler):
                 link = self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % \
                     (self.groupTrove.projectName, self.groupTrove.getId(), quote(troveName), troveVersionStr, quote(self.req.unparsed_uri))
                 row['columns'].append((link, name))
-
-            # show the rMake build links?
-            elif self.rMakeBuild and not self.rMakeBuild.status and not troveName.startswith('group-'):
-                projectHosts = [y[0].hostname for y in self.projectList if y[1] in userlevels.WRITERS]
-                if p.hostname in projectHosts:
-
-                    name = 'Add to %s' % self.rMakeBuild.title
-                    link = self.cfg.basePath + 'addrMakeTrove?trvName=%s;label=%s;referer=%s' % \
-                        (quote(troveName), str(versions.VersionFromString(troveVersionStr).branch().label()), quote(self.req.unparsed_uri))
-                    row['columns'].append((link, name))
 
             formattedRows.append(row)
         return formattedRows, columns
@@ -950,189 +936,6 @@ class SiteHandler(WebHandler):
         else:
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
-
-    @intFields(supported = 0)
-    @requiresAuth
-    def rMake(self, auth, supported):
-        if supported and supported not in supportedrMakeApiVersions:
-            return self._write('error',
-                               error = 'Your version of rMake is not '
-                               'supported by this server.')
-        self.session['rMakeProtocolVersion'] = supported
-        return self._write('rMake',
-                           rMakeBuilds = self.client.listrMakeBuilds(),
-                           supported = supported)
-
-    @requiresAuth
-    def newrMake(self, auth):
-        return self._write('newrMake')
-
-    @strFields(title = None)
-    @requiresAuth
-    def createrMake(self, auth, title):
-        if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            self._addErrors("Invalid rMake build name: %s" % title)
-        rMakeBuild = self.client.createrMakeBuild(title)
-        if self._getErrors():
-            return self._write('newrMake')
-        else:
-            return self._redirect(self.cfg.basePath + 'editrMake?id=%d' % \
-                                  rMakeBuild.id)
-
-    @intFields(id = None)
-    @requiresAuth
-    def editrMake(self, auth, id):
-        self.session['rMakeBuildId'] = id
-        self.rMakeBuild = self.client.getrMakeBuild(id)
-        # rMake and Group Builder are mutually exclusive
-        if 'groupTroveId' in self.session:
-            del self.session['groupTroveId']
-        self.session.save()
-        self.groupTrove = None
-        self.groupProject = None
-        return self._write( \
-            'editrMake',
-            selfLink = quote(self.cfg.basePath + 'editrMake?id=%d' % id))
-
-    @strFields(title = None)
-    @requiresAuth
-    def editrMake2(self, auth, title):
-        if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            self._addErrors("Invalid rMake build name: %s" % title)
-        else:
-            self.rMakeBuild.rename(title)
-            self._setInfo('name successfully changed to: %s' % title)
-        return self._redirect(self.cfg.basePath + 'editrMake?id=%d' % \
-                                  self.rMakeBuild.id)
-
-    @strFields(referer = '')
-    @requiresAuth
-    def closeCurrentrMake(self, auth, referer):
-        self.rMakeBuild = None
-        if 'rMakeBuildId' in self.session:
-            del self.session['rMakeBuildId']
-            self.session.save()
-        if not referer:
-            referrer = self.cfg.basePath
-        self._redirect(referer)
-
-    @dictFields(yesArgs = {})
-    @boolFields(confirmed=False)
-    @requiresAuth
-    def deleterMakeBuild(self, auth, confirmed, **yesArgs):
-        if confirmed:
-            try:
-                self.rMakeBuild.delete()
-            except:
-                self._addErrors("Unable to delete rMake build: %s" % \
-                                self.rMakeBuild.title)
-            else:
-                self._setInfo("Successfully deleted rMake build: %s" % \
-                              self.rMakeBuild.title)
-                self.rMakeBuild = None
-                if 'rMakeBuildId' in self.session:
-                    del self.session['rMakeBuildId']
-                    self.session.save
-            return self._redirect(self.cfg.basePath)
-        else:
-            return self._write('confirm',
-                               message = "Are you sure you want to delete " \
-                               "this rMake build: %s?" % self.rMakeBuild.title,
-                               yesArgs = {'func':'deleterMakeBuild',
-                                          'confirmed':'1'},
-                               noLink = "rMake")
-
-    @strFields(trvName = None, label = '', projectName = '', referer = '')
-    def addrMakeTrove(self, auth, trvName, projectName, referer, label):
-        if not self.rMakeBuild:
-            self._addErrors("No rMake build underway.")
-        elif not label and not projectName:
-            self._addErrors("No reference to trove origins given.")
-        else:
-            if label:
-                self.rMakeBuild.addTrove(trvName, label)
-            else:
-                self.rMakeBuild.addTroveByProject(trvName, projectName)
-            self._setInfo("Added %s" % trvName)
-        if not referer:
-            referer = self.cfg.basePath
-        self._redirect(referer)
-
-    @intFields(troveId = None)
-    @strFields(referer = '')
-    def deleterMakeTrove(self, auth, troveId, referer):
-        if not self.rMakeBuild:
-            self._addErrors("No rMake build underway.")
-        else:
-            trvDict = self.client.getrMakeBuildTrove(troveId)
-            self.client.delrMakeBuildTrove(troveId)
-            self._setInfo('Successfully deleted %s' % trvDict['trvName'])
-        if not referer:
-            referer = self.cfg.basePath
-        self._redirect(referer)
-
-    @strFields(command = None)
-    def commandrMake(self, auth, command):
-        if not self.rMakeBuild:
-            self._addErrors("No rMake build underway.")
-            self._redirect(self.cfg.basePath)
-        elif command not in ('build', 'stop', 'commit'):
-            self._addErrors("Illegal rMake Command.")
-            self._redirect(self.cfg.basePath)
-        else:
-            self._setInlineMime(self.cfg.basePath + \
-                                "rMakeCommand", command = command)
-            if command == 'build':
-                self._setInfo("Starting rMake build")
-            elif command == 'stop':
-                self._setInfo("Stopping rMake build")
-            elif command == 'commit':
-                self._setInfo("Committing rMake build")
-            self._redirect(self.cfg.basePath + 'rMakeStatus')
-
-    @strFields(command = None)
-    def rMakeCommand(self, auth, command):
-        command = str(command)
-        if not self.rMakeBuild:
-            self._addErrors("No rMake build underway.")
-            self._redirect(self.cfg.basePath)
-        else:
-            try:
-                xml = self.rMakeBuild.getXML( \
-                    command, self.session['rMakeProtocolVersion'])
-            except Exception, e:
-                self._addErrors(str(e))
-                self._redirect(self.cfg.basePath)
-            else:
-                self.req.content_type = "application/x-rmake"
-                return xml
-
-    @requiresAuth
-    def rMakeStatus(self, auth):
-        if not self.rMakeBuild:
-            return self._write('error', 'error', "No rMake build underway.")
-        else:
-            return self._write('rMakeStatus',
-                               troveList = self.rMakeBuild.listTroves())
-
-    @requiresAuth
-    @dictFields(yesArgs = {})
-    @boolFields(confirmed = False)
-    @strFields(referer = '')
-    def resetrMakeStatus(self, auth, confirmed, referer, **yesArgs):
-        if not self.rMakeBuild:
-            return self._write('error', 'error', "No rMake build underway.")
-        if confirmed or self.rMakeBuild.status in \
-               (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_FAILED,
-                buildjob.JOB_STATE_COMMITTED):
-            self.rMakeBuild.resetStatus()
-            self._redirect(referer or self.cfg.basePath)
-        else:
-            return self._write("confirm", message = "rMake Server will continue to service this rMake build but you will not be able to track it from rBuilder. Are you sure?",
-                               yesArgs = {'func' : 'resetrMakeStatus',
-                                          'confirmed' : '1',
-                                          'referer' : referer},
-                               noLink = referer)
 
     @requiresAuth
     @strFields(trvName = None, trvVersion = None)

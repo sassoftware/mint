@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -115,24 +115,6 @@ class GroupTroveEmpty(MintError):
     def __str__(self):
         return self.reason
     def __init__(self, reason = "Group cannot be empty"):
-        self.reason = reason
-
-class rMakeBuildEmpty(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "rMake build cannot be empty"):
-        self.reason = reason
-
-class rMakeBuildCollision(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "rMake build already underway"):
-        self.reason = reason
-
-class rMakeBuildOrder(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "rMake build commands submitted out of order"):
         self.reason = reason
 
 class AMIBuildNotConfigured(MintError):

@@ -28,6 +28,7 @@ Web Front End Changes
   overwritten. (RBL-2458)
 * rBuilder command line client may now be installed on systems running
   Conary 2.0. (RBL-2477)
+* The seldom-used rMake web UI integration has been removed. (RBL-2516)
 
 Build System Changes
 --------------------

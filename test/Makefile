@@ -35,8 +35,6 @@ python_files = \
                recipes.py \
                repostest.py \
                reportstest.py \
-               rmakebuildtest.py \
-               rmakestatustest.py \
                schematest.py \
                searchtest.py \
                sessionstest.py \

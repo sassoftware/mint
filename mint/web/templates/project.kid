@@ -104,25 +104,6 @@
 
 
     <div py:def="projectsPane()" id="projectsPane" >
-        <?python
-            from mint import rmakeconstants
-        ?>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js?v=${cacheFakeoutVersion}" />
-        <script type="text/javascript">
-        <![CDATA[
-        addLoadEvent(function() {
-            supportedrMakeVersions = ${str(list(rmakeconstants.supportedApiVersions))};
-            var rMakeVersion = rMakeProtocolVersion();
-            if (rMakeVersion != 0) {
-                var rMake = document.getElementById("rMake");
-                if (rMake) {
-                    swapDOM(rMake, DIV({id : "rMake"},
-                                       A({href : BaseUrl + 'rMake?supported=' + rMakeVersion, style: 'font-weight: bold;'}, 'rMake')));
-                }
-            }
-            });
-        ]]>
-        </script>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
         <div class="boxHeader">
@@ -171,7 +152,6 @@
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
-            <div id="rMake"><a href="http://${SITE}rMake/" style="font-weight: bold;">rMake</a></div>
         </div>
     </div>
 

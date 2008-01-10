@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import os
@@ -183,6 +183,18 @@ class MigrateTo_43(SchemaMigration):
             ADD COLUMN userDataTemplate TEXT""")
         cu.execute("""ALTER TABLE LaunchedAMIs
             ADD COLUMN userData TEXT""")
+        return True
+
+# SCHEMA VERSION 44
+class MigrateTo_44(SchemaMigration):
+    Version = (44, 0)
+
+    # 44.0
+    # - Drop rMake related tables
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""DROP TABLE rMakeBuild""")
+        cu.execute("""DROP TABLE rMakeBuildItems""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

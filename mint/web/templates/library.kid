@@ -5,14 +5,13 @@ from urllib import quote
 from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
-from mint.rmakeconstants import buildtrove, buildjob
 
 from mint.web.templatesupport import injectVersion, dictToJS
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <div py:def="formatTitle(title)" py:strip="True" py:content="'%s%s%s'%(cfg.productName, title and ' - ', title)"/>
@@ -38,72 +37,6 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 ${result['desc']}
             </td>
         </tr>
-    </div>
-
-    <div py:strip="True" py:def="rMakeBuildNextAction(rMakeBuildTroveList)">
-        <div py:strip="True" py:if="rMakeBuildTroveList">
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus?referer=${quote(req.unparsed_uri)}">Reset</a></div>
-        </div>
-        <div py:strip="True" py:if="not rMakeBuildTroveList">
-            <div style="padding: 10px 0; text-align: center;"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="editrMake?id=${rMakeBuild.id}">Edit</a></div>
-        </div>
-    </div>
-
-    <div id="rMakeBuilder" py:def="rMakeBuilder" py:if="rMakeBuild">
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js?v=${cacheFakeoutVersion}"/>
-        <?python
-            statusIcons = {buildtrove.TROVE_STATE_FAILED : cfg.staticPath + "apps/mint/images/action_stop.gif",
-                           buildtrove.TROVE_STATE_BUILDABLE : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
-                           buildtrove.TROVE_STATE_BUILDING : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
-                           buildtrove.TROVE_STATE_BUILT : cfg.staticPath + "apps/mint/images/icon_accept.gif"}
-            stopStatusList = [buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_COMMITTED]
-            jobStatusCodes = {buildjob.JOB_STATE_FAILED    : 'statusError',
-                              buildjob.JOB_STATE_BUILT     : 'statusFinished',
-                              buildjob.JOB_STATE_COMMITTED : 'statusFinished'}
-            if rMakeBuild.status:
-                statusIcons[buildtrove.TROVE_STATE_INIT] = cfg.staticPath + "apps/mint/images/clock.gif"
-            rMakeBuildTroveList = rMakeBuild.listTroves()
-        ?>
-        <script type="text/javascript">
-        <![CDATA[
-            statusIcons = ${dictToJS(statusIcons)};
-            jobStatusCodes = ${dictToJS(jobStatusCodes)};
-            stopStatusList = ${str(stopStatusList)};
-            buildjob = ${str(buildjob)};
-            addLoadEvent(function () {initrMakeManager(${rMakeBuild.id})});
-        ]]>
-        </script>
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
-        <div class="boxHeader">
-            <a href="${cfg.basePath}closeCurrentrMake?referer=${quote(req.unparsed_uri)}" title="Close"><img id="rmake_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" alt="X" class="noborder" /></a>
-            rMake
-        </div>
-        <div id="rMakeBuilderItems">
-            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th colspan="2">Trove</th>
-                        <th>Project</th>
-                        <th py:if="not rMakeBuild.status">Del</th>
-                    </tr>
-                </thead>
-                <tbody class="rmake-builder" id="rmakebuilder-tbody">
-                    <tr/>
-                    <tr py:for="item in rMakeBuildTroveList" id="rmakebuilder-item-${item['rMakeBuildItemId']}">
-                        <td><img id="rmakebuilder-statusicon-${item['rMakeBuildItemId']}" py:if="item['status'] in statusIcons" src="${statusIcons[item['status']]}"/></td>
-                        <td><a href="${cfg.basePath + 'repos/' + item['shortHost'] + '/troveInfo?t=' + item['trvName']}">${item['trvName']}</a></td>
-                        <td><a href="${cfg.basePath + 'repos/' + item['shortHost']}/browse">${item['shortHost']}</a></td>
-                        <td py:if="not rMakeBuild.status"><a href="${cfg.basePath}deleterMakeTrove?troveId=${item['rMakeBuildItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
-                    </tr>
-                </tbody>
-            </table>
-            ${rMakeBuildNextAction(rMakeBuildTroveList)}
-        </div>
     </div>
 
     <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
@@ -154,9 +87,6 @@ from mint.web.templatesupport import injectVersion, dictToJS
     <div id="builderPane" py:def="builderPane">
         <div py:if="groupTrove">
             ${groupTroveBuilder()}
-        </div>
-        <div py:if="rMakeBuild">
-            ${rMakeBuilder()}
         </div>
     </div>
 
