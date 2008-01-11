@@ -91,7 +91,7 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [1, 2, 3, 4]
+SERVER_VERSIONS = [5]
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
