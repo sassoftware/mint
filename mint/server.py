@@ -10,6 +10,7 @@ import os
 import re
 import random
 import simplejson
+import socket
 import stat
 import string
 import sys
@@ -98,6 +99,7 @@ VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
+reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
@@ -579,18 +581,27 @@ class MintServer(object):
         return SERVER_VERSIONS
 
     # project methods
+    def _validateHostname(self, hostname, domainname, resHosts):
+        if not hostname:
+            raise projects.InvalidHostname
+        if validHost.match(hostname) == None:
+            raise projects.InvalidHostname
+        if hostname in resHosts:
+            raise projects.InvalidHostname
+        if (hostname + "." + domainname) == socket.gethostname():
+            raise projects.InvalidHostname
+        return None
+
     @typeCheck(str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
-        if not hostname:
-            raise projects.InvalidHostname
-        if validHost.match(hostname) == None:
-            raise projects.InvalidHostname
-        if hostname in reservedHosts:
-            raise projects.InvalidHostname
+
+        # make sure the hostname is valid
+        self._validateHostname(hostname, domainname, reservedHosts)
+
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
@@ -647,6 +658,9 @@ class MintServer(object):
     def newExternalProject(self, name, hostname, domainname, label, url, mirrored):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
+
+        # make sure the hostname is valid
+        self._validateHostname(hostname, domainname, reservedExtHosts)
 
         # ensure that the label we were passed is valid
         try:
