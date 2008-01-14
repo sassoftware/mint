@@ -2183,6 +2183,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # jobslaves)
         cc.conaryProxy = None
 
+        # Add authentication for each project to which the builder has access.
+        # This should allow them to run builds that include troves from
+        # hidden projects.
+        for otherProjectId, level in \
+          self.getProjectIdsByMember(self.auth.userId):
+            if level in userlevels.WRITERS:
+                otherProject = projects.Project(self, otherProjectId)
+                cc.user.addServerGlob(otherProject.getFQDN(),
+                    self.cfg.authUser, self.cfg.authPass)
+
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue().split("\n")

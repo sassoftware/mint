@@ -24,6 +24,7 @@ from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
+from mint import userlevels
 from mint import jobstatus
 
 from conary.lib import util
@@ -874,6 +875,37 @@ class BuildTest(fixtures.FixturedUnitTest):
             set(['ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId', 'ec2S3Bucket',
                  'ec2Certificate', 'ec2CertificateKey',
                  'ec2LaunchUsers', 'ec2LaunchGroups']))
+
+    @fixtures.fixture('Full')
+    def testSerializePermissions(self, db, data):
+        '''
+        Test that all projects to which the user can write are given
+        permissions in the serialized conaryrc.
+
+        @tests: RBL-2120
+        '''
+
+        developer = self.getClient('developer')
+        projectId = data['projectId']
+        buildId = data['buildId']
+        build = developer.getBuild(buildId)
+
+        # Create a second project owned by a different user
+        nobody = self.getClient('nobody')
+        otherProjectId = nobody.newProject('bar', 'bar', MINT_PROJECT_DOMAIN)
+        otherProject = nobody.getProject(otherProjectId)
+        FQDN = otherProject.getFQDN()
+
+        # First check that only foo shows up for developer
+        buildDict = simplejson.loads(build.serialize())
+        self.failIf(FQDN in buildDict['project']['conaryCfg'],
+            'Project "bar" should not be in conaryrc')
+
+        # Now add developer to bar and make sure bar appears in their builds
+        otherProject.addMemberById(data['developer'], userlevels.DEVELOPER)
+        buildDict = simplejson.loads(build.serialize())
+        self.failUnless(FQDN in buildDict['project']['conaryCfg'],
+            'Project "bar" should be in conaryrc')
 
     def getBuildXml(self):
         f = open('archive/build.xml')
