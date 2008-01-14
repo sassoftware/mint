@@ -8,6 +8,8 @@ testsuite.setup()
 
 import sys
 import os
+import re
+import socket
 import time
 
 from mint_rephelp import MintRepositoryHelper
@@ -74,6 +76,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
                               'foo', MINT_PROJECT_DOMAIN)
         self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
                               MINT_PROJECT_DOMAIN)
+        sData = re.split("\.", socket.gethostname(), 1)
+        self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
+                              sData[0], sData[1])
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
@@ -317,6 +322,17 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         x = adminClient.server._server._getProjectRepo(project)
         self.failIf(x is None)
+
+        # test with invalid hostnames
+        self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
+                              "Foo",  "www", MINT_PROJECT_DOMAIN, "label",
+                              "url")
+        sData = re.split("\.", socket.gethostname(), 1)
+        self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
+                              "Foo", sData[0], sData[1], "label", "url")
+        self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
+                              "Test", '&bar', MINT_PROJECT_DOMAIN, "label",
+                              "url")
 
     @fixtures.fixture("Full")
     def testBlankExtProjectUrl(self, db, data):
