@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 import sys
@@ -65,10 +65,6 @@ class bugsUrl(StringOption):
 class installLabelPath(StringOption):
     default = ''
     prompt = 'Custom Conary installLabelPath setting (leave blank for default)'
-
-class mirrorUrl(StringOption):
-    default = ''
-    prompt = 'rPath Mirror URL'
 
 class autoResolve(BooleanOption):
     default = False
@@ -170,35 +166,35 @@ class amiHugeDiskMountpoint(StringOption):
 ###
 
 class StubImageTemplate(Template):
-    __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg', 'mirrorUrl']
+    __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
     id = buildtypes.STUB_IMAGE
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize', 'mirrorUrl']
+                 'installLabelPath', 'swapSize']
     id = buildtypes.RAW_HD_IMAGE
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize', 'mirrorUrl']
+                 'installLabelPath', 'swapSize']
     id = buildtypes.RAW_FS_IMAGE
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking',
+                 'installLabelPath', 'swapSize', 'natNetworking',
                  'diskAdapter', 'vmSnapshots']
     id = buildtypes.VMWARE_IMAGE
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize', 'mirrorUrl', 'natNetworking']
+                 'installLabelPath', 'swapSize', 'natNetworking']
     id = buildtypes.VMWARE_ESX_IMAGE
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
                  'mediaTemplateTrove', 'anacondaCustomTrove',
-                 'anacondaTemplatesTrove', 'mirrorUrl']
+                 'anacondaTemplatesTrove']
     id = buildtypes.INSTALLABLE_ISO
 
 class UpdateIsoTemplate(Template):
@@ -207,44 +203,43 @@ class UpdateIsoTemplate(Template):
 
 
 class NetbootTemplate(Template):
-    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'mirrorUrl']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath']
     id = buildtypes.NETBOOT_IMAGE
 
 class LiveIsoTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'zisofs',
-                 'unionfs', 'mirrorUrl']
+                 'unionfs']
     id = buildtypes.LIVE_ISO
 
 class TarballTemplate(Template):
-    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize',
-                 'mirrorUrl']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize']
     id = buildtypes.TARBALL
 
 class VirtualPCTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
-                 'swapSize', 'mirrorUrl', 'vhdDiskType']
+                 'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_PC_IMAGE
 
 class XenOVATemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
-                 'swapSize', 'mirrorUrl', 'vmMemory']
+                 'swapSize', 'vmMemory']
     id = buildtypes.XEN_OVA
 
 class VirtualIronVHDTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
-                 'swapSize', 'mirrorUrl', 'vhdDiskType']
+                 'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_IRON
 
 class AMITemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'amiHugeDiskMountpoint', 'installLabelPath', 'mirrorUrl']
+                 'amiHugeDiskMountpoint', 'installLabelPath']
     id = buildtypes.AMI
 
 class ApplianceISOTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
                  'mediaTemplateTrove', 'anacondaCustomTrove',
-                 'anacondaTemplatesTrove', 'mirrorUrl']
+                 'anacondaTemplatesTrove']
     id = buildtypes.APPLIANCE_ISO
 
 ########################

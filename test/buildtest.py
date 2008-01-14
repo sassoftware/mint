@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -637,7 +637,6 @@ class BuildTest(fixtures.FixturedUnitTest):
                 {'amiId': 'bogusAMIId',
                     'enumArg': '2',
                     'boolArg': False,
-                    'mirrorUrl': '',
                     'jsversion': 'None',
                     'amiManifestName,': 'bogusManifestName',
                     'stringArg': '', 'intArg': 0})
