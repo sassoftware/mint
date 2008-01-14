@@ -8,6 +8,7 @@ testsuite.setup()
 
 import fixtures
 
+import mint.server
 from mint import userlevels, mint_error
 from mint.server import deriveBaseFunc, checkParam, \
     typeCheck, ParameterError, SERVER_VERSIONS
@@ -145,12 +146,16 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
         client = self.getClient("test")
         server = client.server
 
-        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:1',))
+        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:5',))
         self.failUnlessEqual(r[1], SERVER_VERSIONS)
 
         # fake an old unversioned client
-        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ())
-        self.failUnlessEqual(r[1], SERVER_VERSIONS)
+        mint.server.SERVER_VERSIONS = [1]
+        try:
+            r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ())
+            self.failUnlessEqual(r[1], [1])
+        finally:
+            mint.server.SERVER_VERSIONS = SERVER_VERSIONS
 
         # fake an old client
         self.assertRaises(mint_error.InvalidClientVersion, 
