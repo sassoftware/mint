@@ -3,9 +3,13 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+    from mint.web.templatesupport import projectText
+?>
+
     <head>
         <title>${formatTitle('Privacy Policy')}</title>
     </head>
@@ -20,7 +24,7 @@
         <p>The term "The Service" as used in this document means the Conary
         repository hosting service accessible via
         <a href="${cfg.basePath}">http://${siteHost}${cfg.basePath}</a> and
-        all software development projects created via
+        all software development ${projectText().lower()}s created via
         <a href="${cfg.basePath}">http://${siteHost}${cfg.basePath}</a>,
         hosted in the rpath.org domain.</p>
 
