@@ -1,12 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <?python
-#
-# Copyright (c) 2005-2008 rPath, Inc.
-# All Rights Reserved
-#
 from mint import pubreleases
-from mint.web.templatesupport import projectText
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -185,7 +180,7 @@ from mint.web.templatesupport import projectText
                     ?>
                     <input type="hidden" name="id" value="${releaseId}" />
                 </form>
-                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no available builds associated with this ${projectText().lower()} that contain downloadable files. One or more available builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
+                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no available builds associated with this project that contain downloadable files. One or more available builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
             </div>
         </div>
     </body>

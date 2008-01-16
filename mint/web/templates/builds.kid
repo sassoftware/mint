@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2007 rPath, Inc.
 # All Rights Reserved
 #
-from mint.web.templatesupport import downloadTracker, projectText
+from mint.web.templatesupport import downloadTracker
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -51,7 +51,7 @@ from mint.web.templatesupport import downloadTracker, projectText
                 <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Builds</button></p>
             </form>
         </div>
-        <p py:if="not builds">This ${projectText().lower()} contains no builds.</p>
+        <p py:if="not builds">This project contains no builds.</p>
     </div>
 
     <body>

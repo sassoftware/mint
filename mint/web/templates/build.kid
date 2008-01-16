@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2007 rPath, Inc.
 # All Rights Reserved
 #
 from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
-from mint.web.templatesupport import downloadTracker, projectText
+from mint.web.templatesupport import downloadTracker
 from mint.builds import getExtraFlags
 from mint import urltypes
 from mint import constants
@@ -16,7 +16,7 @@ from mint import constants
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <head>
-        <title>${formatTitle('%s Build'%projectText().title())}</title>
+        <title>${formatTitle('Project Build')}</title>
         <script type="text/javascript">
             <div py:if="isWriter" py:strip="True">
                 <![CDATA[

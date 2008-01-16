@@ -1,14 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from conary.lib.cfg import *
-from mint.web.templatesupport import projectText
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
 
@@ -26,7 +25,7 @@ from mint.web.templatesupport import projectText
 
                 <p>To do so, click on the "Launch" button below.  After a
                 short delay, you will be directed to the rBuilder front
-                page, where you can login and create the ${projectText().lower()}(s) your
+                page, where you can login and create the project(s) your
                 users require.</p>
 
                 <div><img id="setupSpinner" src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" /></div>

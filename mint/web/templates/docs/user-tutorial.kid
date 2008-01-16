@@ -4,11 +4,10 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <?python
-        from mint.web.templatesupport import projectText
         ownsProjects = False
         if projectList:
             for project, level in projectList:
@@ -33,17 +32,17 @@
             <h2>Download and Install Complete Distributions</h2>
             <p>
                 You can download and install a complete Conary-based system from
-                the published releases of an rBuilder ${projectText().lower()}.  These releases may be referred
+                the published releases of an rBuilder project.  These releases may be referred
                 to as <i>distributions</i> or <i>software appliances</i> depending on the
-                nature of the ${projectText().lower()}.  Conary-based Linux distributions, such as <a
+                nature of the project.  Conary-based Linux distributions, such as <a
                 href="http://www.rpath.com/rbuilder/project/rpath/">rPath
                 Linux</a>, are available for free from rBuilder Online.
             </p>
 
             <p>
                 Use the Search text box at the top of the rBuilder web interface to find a
-                ${projectText().lower()} that has the release you want.  Click the <b>View Releases</b> link in
-                the <i>${projectText().title()} Resources</i> menu to see a list of the ${projectText().lower()}'s published
+                project that has the release you want.  Click the <b>View Releases</b> link in
+                the <i>Project Resources</i> menu to see a list of the project's published
                 releases, which are each fully installable Conary-based systems representing
                 distributions or software appliances.
             </p>
@@ -60,37 +59,37 @@
             <p>
                 If you are currently using a Conary-based system, and you are looking for
                 software already packaged for Conary, find available packages in rBuilder and
-                install them from their original ${projectText().lower()} repositories.
+                install them from their original project repositories.
             </p>
 
             <p>
                 Use the Search text box at the top of the rBuilder web interface to find a
                 package that has the software you want.  Click <b>Browse Repository</b> to
-                navigate the list of individual packages in the ${projectText().lower()}, each of which can be
+                navigate the list of individual packages in the project, each of which can be
                 installed on an existing Conary-based system.
             </p>
 
             <p>
                 Click the linked package name in the <i>Repository Browser</i> to view
-                package information, and locate the ${projectText().lower()} <a
+                package information, and locate the project <a
                 href="http://wiki.rpath.com/wiki/Glossary?version=${constants.mintVersion}#label">label</a> as
-                part of the <i>Version</i> string listed in this information.  The ${projectText().lower()}
+                part of the <i>Version</i> string listed in this information.  The project
                 label for a package with a version of
-                <i>/${projectText().lower()}name.rpath.org@rpl:devel/1.1-1-1</i> is
-                <b>${projectText().lower()}name.rpath.org@rpl:devel</b>.  As the root user of your Conary-based
+                <i>/projectname.rpath.org@rpl:devel/1.1-1-1</i> is
+                <b>projectname.rpath.org@rpl:devel</b>.  As the root user of your Conary-based
                 system, use the following command to install the package from rBuilder,
-                replacing &lt;package&gt; with the package name and &lt;${projectText().lower()}_label&gt; with
-                the ${projectText().lower()} label:
+                replacing &lt;package&gt; with the package name and &lt;project_label&gt; with
+                the project label:
             </p>
 
-            <pre class="cmd">[user@host ~]# conary update &lt;package&gt;=&lt;${projectText().lower()}_label&gt;</pre>
+            <pre class="cmd">[user@host ~]# conary update &lt;package&gt;=&lt;project_label&gt;</pre>
 
             <h3>Keep Software Updated</h3>
 
             <p>Keep your distributions and installed software packages updated using
             <b>conary update</b>.  This command used with an installed package name will
             tell Conary to update the system to the latest version of that package in the
-            rBuilder ${projectText().lower()}'s repository.  As the root user on the Conary-based system,
+            rBuilder project's repository.  As the root user on the Conary-based system,
             run the following command to update a package by name: </p>
 
             <pre class="cmd">[user@host ~]# conary update &lt;package_name&gt;</pre>
@@ -101,32 +100,32 @@
             QuickReference</a> to reference this and other tasks used to maintain your
             Conary-based system.  </p>
 
-            <h3>Follow or Join a ${projectText().title()}</h3>
+            <h3>Follow or Join a Project</h3>
             <p>While a Conary update for installed packages is automated, eliminating the
-            need to visit a ${projectText().lower()} in rBuilder, you may choose to watch the ${projectText().lower()} in
-            rBuilder or follow discussions in a ${projectText().lower()}'s mailing lists.  rBuilder users
+            need to visit a project in rBuilder, you may choose to watch the project in
+            rBuilder or follow discussions in a project's mailing lists.  rBuilder users
             can create a watch list available on the right side of each rBuilder page, and
             registered and unregistered users alike can subscribe to mailing lists and RSS
-            feeds for the ${projectText().lower()}.  </p>
+            feeds for the project.  </p>
 
             <ul>
-                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists?version=${constants.mintVersion}">Subscribe to a ${projectText().lower()} mailing list</a> from a ${projectText().lower()}s <i>Mailing Lists</i> page</li>
-                <li> Subscribe to an RSS feed for ${projectText().lower()} release news using the RSS link on a ${projectText().lower()}'s main page</li>
-                <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project?version=${constants.mintVersion}">Watch a ${projectText().lower()}</a> to bookmark it in your rBuilder watch list</li>
+                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists?version=${constants.mintVersion}">Subscribe to a project mailing list</a> from a projects <i>Mailing Lists</i> page</li>
+                <li> Subscribe to an RSS feed for project release news using the RSS link on a project's main page</li>
+                <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project?version=${constants.mintVersion}">Watch a project</a> to bookmark it in your rBuilder watch list</li>
             </ul>
 
             <p>As an rBuilder user, you may also wish to <a
             href="http://wiki.rpath.com/wiki/rBuilder:Join_a_Project?version=${constants.mintVersion}">join
-            a ${projectText().lower()}</a> to help out with testing, documentation, design, or to
+            a project</a> to help out with testing, documentation, design, or to
             participate as a developer.</p>
 
-            <h3>Create Your Own ${projectText().title()}</h3>
-            <p>rBuilder gives you the opportunity to create a new rBuilder ${projectText().lower()}.  Use
-            your ${projectText().lower()} to develop your own distributions using existing rBuilder packages
+            <h3>Create Your Own Project</h3>
+            <p>rBuilder gives you the opportunity to create a new rBuilder project.  Use
+            your project to develop your own distributions using existing rBuilder packages
             or for incorporating new packaged software.  Instructions for joining,
-            participating in, and creating an rBuilder ${projectText().lower()} is available in <a
+            participating in, and creating an rBuilder project is available in <a
             href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}">rBuilder's online documentation</a>,
-            and an introduction to packaging your own software for a ${projectText().lower()} is available
+            and an introduction to packaging your own software for a project is available
             in the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial?version=${constants.mintVersion}">New
             Package Tutorial</a>.</p>
 

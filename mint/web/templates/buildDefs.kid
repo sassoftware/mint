@@ -3,15 +3,11 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2007-2008 rPath, Inc.
+    Copyright (c) 2007 rPath, Inc.
     All Rights Reserved
 -->
-<?python
-from mint.web.templatesupport import projectText
-?>
-
     <head>
-        <title>${projectText().title()} Build Definitions</title>
+        <title>Project Build Definitions</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/json.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtemplates.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/builddefs.js?v=${cacheFakeoutVersion}"/>

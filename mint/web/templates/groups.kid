@@ -3,12 +3,9 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
-<?python
-from mint.web.templatesupport import projectText
-?>
     <head>
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
     </head>
@@ -33,11 +30,11 @@ from mint.web.templatesupport import projectText
                 contain.</p>
 
                 <p>Once Group Builder creates your group, you can browse or
-                search any ${cfg.productName} ${projectText().lower()} for 
-                packages, and add them to the current group.  When you are 
-                done adding packages, you can cook the group, which commits 
-                it into your ${projectText().lower()}'s repository.  At that 
-                point, you can create a build based on the group.</p>
+                search any ${cfg.productName} project for packages, and add
+                them to the current group.  When you are done adding
+                packages, you can cook the group, which commits it into
+                your project's repository.  At that point, you can create a
+                build based on the group.</p>
 
                 <h2>Current Group</h2>
 

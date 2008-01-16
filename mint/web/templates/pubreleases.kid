@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2007 rPath, Inc.
 # All Rights Reserved
 #
-from mint.web.templatesupport import downloadTracker, projectText
+from mint.web.templatesupport import downloadTracker
 from mint import buildtypes
 ?>
 
@@ -72,7 +72,7 @@ from mint import buildtypes
                     <strong><a href="newRelease">Create a new release</a></strong>
                 </p>
                 <div py:if="not projectReleases">
-                    This ${projectText().lower()} currently has no releases.
+                    This project currently has no releases.
                 </div>
                 <div py:if="projectPublishedReleases">
                     ${pubReleasesTable(projectPublishedReleases, isOwner)}

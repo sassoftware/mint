@@ -6,13 +6,13 @@ from mint import searcher
 from mint import buildtypes
 from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
-from mint.web.templatesupport import projectText
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -20,7 +20,7 @@ from mint.web.templatesupport import projectText
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} ${projectText().title()}s" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
+              title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>

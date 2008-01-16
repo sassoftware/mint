@@ -6,10 +6,6 @@
     Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
-<?python
-    from mint.web.templatesupport import projectText
-?>
-
     <head>
         <title>${formatTitle('Administer')}</title>
     </head>
@@ -25,16 +21,16 @@
 
                 <ul>
                     <li>Create ${cfg.productName} user accounts</li>
-                    <li>Add ${projectText().lower()}s that reference remote repositories</li>
-                    <li>Control the ${projectText().lower()}s that can be mirrored to remote repositories</li>
+                    <li>Add projects that reference remote repositories</li>
+                    <li>Control the projects that can be mirrored to remote repositories</li>
                     <li>Put ${cfg.productName} into or out of maintenance mode</li>
                     <li>Use rPath Appliance Agent to perform system-level maintenance of ${cfg.productName}</li>
                 </ul>
 
-                <p>Note: Administrative operations for existing users and ${projectText().lower()}s 
-                    are available on each user/${projectText().lower()} home page. Find the 
-                    desired user/${projectText().lower()} by searching or browsing, then 
-                    navigate to the main page for the user/${projectText().lower()}.</p>
+                <p>Note: Administrative operations for existing users and projects 
+                    are available on each user/project home page. Find the 
+                    desired user/project by searching or browsing, then 
+                    navigate to the main page for the user/project.</p>
         </div>
     </body>
 </html>
