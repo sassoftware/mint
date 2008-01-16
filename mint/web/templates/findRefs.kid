@@ -2,13 +2,12 @@
 <?python
 from urllib import quote
 from conary.deps import deps
-from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -40,10 +39,10 @@ from mint.web.templatesupport import projectText
                     </li>
                 </ul>
 
-                <h4>The following ${projectText().lower()}s have groups that contain $trvName=$trvVersion:</h4>
+                <h4>The following projects have groups that contain $trvName=$trvVersion:</h4>
                 ${referenceList(references)}
 
-                <h4>The following ${projectText().lower()}s have derived from $trvName=$trvVersion:</h4>
+                <h4>The following projects have derived from $trvName=$trvVersion:</h4>
                 ${referenceList(descendants)}
 
             </div>

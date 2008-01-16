@@ -6,12 +6,12 @@ from mint import searcher
 from mint import buildtypes
 from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
-from mint.web.templatesupport import projectText
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -107,7 +107,7 @@ from mint.web.templatesupport import projectText
                     <tr>
                         <th py:if="selectionData" class="topten_header">Recommended Appliances</th>
                         <th class="topten_header">Most Popular</th>
-                        <th class="topten_header">Top ${projectText().title()}s</th>
+                        <th class="topten_header">Top Projects</th>
                         <th py:if="not selectionData" class="topten_header">Recent Releases</th>
                     </tr>
                     <tr>

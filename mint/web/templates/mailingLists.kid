@@ -3,11 +3,10 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
 <?python
-    from mint.web.templatesupport import projectText
     isRPL = project.external and project.getName() == 'rPath Linux'
 ?>
     <head>
@@ -78,7 +77,7 @@
                         </li>
                     </ul>
                 </div>
-                <div py:if="not (lists or isRPL)">This ${projectText().lower()} has no lists.</div>
+                <div py:if="not (lists or isRPL)">This project has no lists.</div>
             </div>
         </div>
     </body>

@@ -7,7 +7,6 @@
     All Rights Reserved
 -->
 <?python
-    from mint.web.templatesupport import projectText
     for var in ['outboundMirrorId', 'mirrorUser', 'mirrorPass', 'targetUrl']:
         kwargs[var] = kwargs.get(var, '')
 ?>
@@ -22,7 +21,7 @@
             <form action="${cfg.basePath}admin/processAddOutboundMirrorTarget" method="post">
                 <h2>Add Outbound Mirror Target</h2>
 
-                <p>Adding an outbound mirror target for <span style="font-weight: bold;">${projectName}</span>. <span py:strip="True" py:if="targets">This ${projectText().lower()} is configured to mirror to the following repositories:<ul><li py:for="target in targets">${target}</li></ul></span></p>
+                <p>Adding an outbound mirror target for <span style="font-weight: bold;">${projectName}</span>. <span py:strip="True" py:if="targets">This project is configured to mirror to the following repositories:<ul><li py:for="target in targets">${target}</li></ul></span></p>
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>

@@ -1,17 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python 
-    from mint import constants 
-    from mint.web.templatesupport import projectText
-?>
+<?python from mint import constants ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('%s Settings: %s'%(projectText().title(),project.getNameForDisplay()))}</title>
+        <title>${formatTitle('Project Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <div id="layout">
@@ -21,14 +18,14 @@
             </div>
 
             <div id="spanleft">
-                <h2>Edit ${projectText().title()} Properties</h2>
+                <h2>Edit Project Properties</h2>
                 <form method="post" action="${basePath}processEditProject">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
-                            <th>${projectText().title()} Title</th>
+                            <th>Project Title</th>
                             <td>
                                 <input type="text" name="name" value="${kwargs['name']}" />
-                                <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}, such as "<strong>My Custom Linux</strong>."
+                                <p class="help">The title is a longer, more descriptive name for your project, such as "<strong>My Custom Linux</strong>."
                                 </p>
                             </td>
                         </tr>
@@ -36,7 +33,7 @@
                             <th>Default Branch Name</th>
                             <td>
                                 <input type="text" name="branch" value="${kwargs['branch']}" />
-                                <p class="help">The default Conary branch name for your ${projectText().lower()}.
+                                <p class="help">The default Conary branch name for your project.
                                     A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. Refer to
                                     <a href="http://wiki.rpath.com/wiki/Conary:Concepts?version=${constants.mintVersion}">Conary Concepts</a>
                                         for more information about branch names.
@@ -51,19 +48,19 @@
                                     <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
                                     <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
                                 </select>
-                                <p class="help">Please select "yes" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                                <p class="help">Please select "yes" if this project's main purpose is to produce a software appliance.</p>
                             </td>
                         </tr>
                         <tr>
-                            <th>${projectText().title()} Description</th>
+                            <th>Project Description</th>
                             <td>
                                 <textarea name="desc" cols="70" rows="12">${kwargs['desc']}</textarea>
-                                <p class="help">It may be useful to put alternate branch labels, ${projectText().lower()} goals,
-                                    mechanisms for joining a ${projectText().lower()}, or other relevant information here.</p>
+                                <p class="help">It may be useful to put alternate branch labels, project goals,
+                                    mechanisms for joining a project, or other relevant information here.</p>
                             </td>
                         </tr>
                         <tr>
-                            <th>${projectText().title()} Home Page</th>
+                            <th>Project Home Page</th>
                             <td>
                                 <input type="text" name="projecturl" value="${kwargs['projecturl']}" />
                                 <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>

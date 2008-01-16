@@ -3,13 +3,9 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
-<?python
-from mint.web.templatesupport import projectText
-?>
-
     <head>
         <title>${formatTitle('Please Confirm')}</title>
         <script type="text/javascript">
@@ -66,7 +62,7 @@ Appliance Marketplace</a></label>
                                     <td>${previewData['oneLiner']}</td>
                                 </tr>
                                 <tr>
-                                    <td style="text-align: right; padding-right: 30px;">${projectText().title()} Description:</td>
+                                    <td style="text-align: right; padding-right: 30px;">Project Description:</td>
                                     <td>${previewData['longDesc']}</td>
                                 </tr>
                                 <tr><td/></tr>

@@ -3,13 +3,12 @@
   from mint import userlevels 
   from mint.client import timeDelta
   from mint.helperfuncs import truncateForDisplay
-  from mint.web.templatesupport import projectText
  ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <?python
@@ -34,7 +33,7 @@
                     <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
                     <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
-                    <div class="boxHeader">Add to ${projectText().title()}</div>
+                    <div class="boxHeader">Add to Project</div>
                     <form method="post" action="addMemberById">
                         <p>
                             <label>Select a project:</label><br/>
@@ -78,7 +77,7 @@
                 </p>
                 <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
 
-                <h3>${projectText().title()}s</h3>
+                <h3>Projects</h3>
                 <ul py:if="userProjects">
                     <li py:for="project, level in userProjects">
                         <a
@@ -86,7 +85,7 @@
                         (${userlevels. names[level]})
                     </li>
                 </ul>
-                <p py:if="not userProjects">This user is not a member of any ${projectText().lower()}s.</p>
+                <p py:if="not userProjects">This user is not a member of any projects.</p>
                 <div py:if="auth.admin" py:strip="True">
                     <h3>User Status</h3>
 

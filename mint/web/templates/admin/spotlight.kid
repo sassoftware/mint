@@ -3,7 +3,7 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -12,7 +12,6 @@
     <?python # kid bug requires comment.
         from mint import maintenance
         import time
-        from mint.web.templatesupport import projectText
     ?>
     <body>
         <div id="left" class="side">
@@ -54,7 +53,7 @@
                     <td id="spotInput"><textarea cols="50" rows="4" class="spotlightInput" name="text"/></td>
                 </tr>
                 <tr>
-                    <td id="spotLabel"><label>${projectText().title()} URL:</label></td>
+                    <td id="spotLabel"><label>Project URL:</label></td>
                     <td id="spotInput"><input size="50" type="text" name="link"/></td>
                 </tr>
                 <tr>

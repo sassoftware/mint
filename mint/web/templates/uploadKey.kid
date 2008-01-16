@@ -1,13 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
-from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
     <?python
@@ -26,7 +25,7 @@ from mint.web.templatesupport import projectText
 
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                     <tr>
-                        <th><em class="required">${projectText().title()} or ${projectText().title()}s:</em></th>
+                        <th><em class="required">Project or Projects:</em></th>
                         <td>
                              <select class="wide" multiple="multiple" size="10" name="projects">
                                 <option py:for="project, hostname in projects"
@@ -35,8 +34,8 @@ from mint.web.templatesupport import projectText
                                     value="${hostname}"/>
                              </select>
                              <p class="help">
-                                Select one or more ${projectText().lower()}s to which to upload this key.
-                                To select multiple ${projectText().lower()}s, hold down your keyboard's
+                                Select one or more projects to which to upload this key.
+                                To select multiple projects, hold down your keyboard's
                                 Ctrl key while clicking. <strong>This key can never be 
                                 deleted from the repository to which you submit it, so 
                                 choose carefully.</strong>

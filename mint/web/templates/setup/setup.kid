@@ -1,14 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from conary.lib.cfg import *
-from mint.web.templatesupport import projectText
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2005-2007 rPath, Inc.
     All Rights Reserved
 -->
 
@@ -33,9 +32,9 @@ from mint.web.templatesupport import projectText
             </p>
 
             <p py:if="'Server Setup' in configGroups">
-                Once you have created a ${projectText().lower()} on your 
-                rBuilder server, you will no longer be able to change the 
-                hostName or siteDomainName fields.
+                Once you have created a project on your rBuilder server, you
+                will no longer be able to change the hostName or siteDomainName
+                fields.
             </p>
 
             <p>When you've filled in the necessary information, click on
