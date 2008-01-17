@@ -3,12 +3,13 @@
     import time
     from mint import searcher
     from mint import buildtypes
+    from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
 
@@ -43,8 +44,8 @@
                             </td>
                         </tr>
                         <tr>
-                            <div py:if="filterNoDownloads" class="help">Showing only projects with releases.
-                                <a href="search?type=$searchType;search=$terms;modified=$modified;showAll=1">Show All Projects</a>
+                            <div py:if="filterNoDownloads" class="help">Showing only ${projectText().lower()}s with releases.
+                                <a href="search?type=$searchType;search=$terms;modified=$modified;showAll=1">Show All ${projectText().title()}s</a>
                             </div>
                         </tr>
                     </table>
