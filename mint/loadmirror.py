@@ -1,10 +1,11 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
 
 from mint import config, client, database
 from mint import scriptlibrary, copyutils
+from mint.helperfuncs import getProjectText
 from conary.lib import util
 from conary.repository.netrepos import netserver
 
@@ -156,6 +157,7 @@ class LoadMirror:
         self.client = client.MintClient(self.serverUrl)
 
     def findTargetProject(self, serverName):
+        pText = getProjectText()
         if not self.client:
             self._openMintClient()
 
@@ -168,16 +170,16 @@ class LoadMirror:
                 break
 
         if not found:
-            raise RuntimeError, "Can't find external project %s on rBuilder. " \
-                "Please add the project through the web interface first." % serverName
+            raise RuntimeError, "Can't find external %s %s on rBuilder. " \
+                "Please add the %s through the web interface first." % (pText.lower(), serverName, pText.lower())
 
         if not found.external:
-            raise RuntimeError, "Project %s is not external: " \
-                "can't load mirror" % serverName
+            raise RuntimeError, "%s %s is not external: " \
+                "can't load mirror" % (pText.title(), serverName)
 
         if self.client.isLocalMirror(found.id):
-            raise RuntimeError, "Project %s is already mirrored" \
-                % serverName
+            raise RuntimeError, "%s %s is already mirrored" \
+                % (pText.title(), serverName)
 
         return found
 
