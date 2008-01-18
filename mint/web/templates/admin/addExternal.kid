@@ -27,7 +27,7 @@
             <h2>${editing and 'Edit ' or 'Add '} External Project</h2>
             <p py:if="not editing" class="help">External projects appear just like the
             projects you host on ${cfg.productName} with one exception:
-            the respository is <em>not</em> stored on
+            the repository is <em>not</em> stored on
             ${cfg.productName}.  External projects are useful for
             integrating the contents of another organization's
             repository into ${cfg.productName}, making it easier for
