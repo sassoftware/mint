@@ -11,7 +11,7 @@ import time
 from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies
+        hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
@@ -34,15 +34,17 @@ class InvalidHostname(MintError):
 
 class DuplicateHostname(MintError):
     def __str__(self):
-        return "A project using this hostname already exists"
+        return "A %s using this hostname already exists"%getProjectText().lower()
 
 class DuplicateName(MintError):
     def __str__(self):
-        return "A project using this project title already exists"
+        pText = getProjectText().lower()
+        return "A %s using this %s title already exists"%(pText, pText)
 
 class LabelMissing(MintError):
     def __str__(self):
-        return "Project label does not exist"
+        return "%s label does not exist"%getProjectText().title()
+
 
 class DuplicateLabel(MintError):
     def __str__(self):
@@ -763,7 +765,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         if createDb:
             cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
@@ -794,7 +796,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
