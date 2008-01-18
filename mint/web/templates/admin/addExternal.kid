@@ -25,11 +25,19 @@
         </div>
         <div id="spanright">
           <form action="${cfg.basePath}admin/processAddExternal" method="post">
+<<<<<<< /home/bmurphy/workspace/hg/mint-devel/mint/web/templates/admin/addExternal.kid
             <h2>${editing and 'Edit ' or 'Add '} External ${projectText().title()}</h2>
             <p py:if="not editing" class="help">External ${projectText().lower()}s appear just like the
             ${projectText().lower()}s you host on ${cfg.productName} with one exception:
             the respository is <em>not</em> stored on
             ${cfg.productName}.  External ${projectText().lower()}s are useful for
+=======
+            <h2>${editing and 'Edit ' or 'Add '} External Project</h2>
+            <p py:if="not editing" class="help">External projects appear just like the
+            projects you host on ${cfg.productName} with one exception:
+            the repository is <em>not</em> stored on
+            ${cfg.productName}.  External projects are useful for
+>>>>>>> /tmp/addExternal.kid~other.CZzJ7L
             integrating the contents of another organization's
             repository into ${cfg.productName}, making it easier for
             your users to reference that organization's work in
