@@ -57,6 +57,8 @@ Build System Changes
   (RBL-2493)
 * Builds that were migrated from rBuilder 3.x can now be rebuilt using the
   most recent Job Slave version. (RBL-2484)
+* Image builds of groups that reference troves on a hidden project now
+  work if the creator of the build has access to those troves. (RBL-2120)
 
 
 Changes in 4.0.0
