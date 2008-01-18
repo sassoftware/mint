@@ -8,7 +8,7 @@
 import time
 from mint import constants
 from mint import userlevels
-from mint.helperfuncs import getArchFromFlavor
+from mint.helperfuncs import getArchFromFlavor, getProjectText
 
 import conary
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -42,7 +42,4 @@ def shortTroveSpec(spec):
     return "%s=%s (%s)" % (n, str(v.trailingRevision()), getArchFromFlavor(f))
 
 def projectText():
-    text = "project"
-    if constants.rBuilderOnline == False:
-        text = "product"
-    return text 
+    return getProjectText()
