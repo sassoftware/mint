@@ -12,7 +12,9 @@ import xmlrpclib
 import zlib
 import re
 import stat
+import shutil
 import sys
+import tempfile
 import time
 import traceback
 import simplejson
@@ -38,6 +40,7 @@ from conary import versions
 from conary.dbstore import sqlerrors
 from conary.lib import log
 from conary.lib import coveragehook
+from conary.lib import util as conary_util
 from conary.repository import shimclient
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
@@ -350,33 +353,53 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     }
 
     timeStamp = time.ctime(time.time())
-    # log error
-    apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
-    # send email
-    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' % (exception.__name__, e)
-    body += 'Time of occurrence: %s\n\n' %timeStamp
-    body += ''.join( traceback.format_tb(bt))
 
-    print >> sys.stderr, body
-    sys.stderr.flush()
+    # Format large traceback to file
+    (fd, tb_path) = tempfile.mkstemp('.txt', 'mint-error-')
+    large = os.fdopen(fd, 'w')
+    print >>large, 'Unhandled exception from mint web interface:'
+    print >>large, 'Time of occurrence: %s' % timeStamp
+    print >>large
+    conary_util.formatTrace(exception, e, bt, stream=large, withLocals=False)
+    print >>large
+    print >>large, 'Full stack:'
+    print >>large
+    conary_util.formatTrace(exception, e, bt, stream=large, withLocals=True)
+    print >>large
+    print >>large, 'Environment:'
     for key, val in sorted(info_dict.items()):
-        body += '\n' + key + ': ' + str(val)
+        print >>large, '%s: %s' % (key, val)
+    large.seek(0)
 
-    body += '\nConnection Information:\n'
-    body_small = 'Mint Exception: %s: %s' % (exception.__name__, e)
-    for key, val in sorted(info_dict_small.items()):
-        body_small += '\n' + key + ': ' + str(val)
+    # Format small traceback to memory
+    small = conary_util.BoundedStringIO()
+    print >>small, 'Unhandled exception from mint web interface:'
+    conary_util.formatTrace(exception, e, bt, stream=small, withLocals=False)
+    print >>small, 'Extended traceback at %s' % tb_path
+    small.seek(0)
 
+    # Log to apache
+    apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
+    shutil.copyfileobj(small, sys.stderr)
+    sys.stderr.flush()
+    small.seek(0)
+
+    # send email
     try:
         if cfg.bugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.bugsEmail, cfg.bugsEmailSubject, body)
+                                     cfg.bugsEmail, cfg.bugsEmailSubject,
+                                     large.read())
         if cfg.smallBugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
+                                     cfg.smallBugsEmail,
+                                     cfg.bugsEmailSubject, small.read())
     except MailError, e:
         apache.log_error("Failed to send e-mail to %s, reason: %s" % \
             (cfg.bugsEmail, str(e)))
+
+    small.close()
+    large.close()
 
 cfg = None
 db = None
