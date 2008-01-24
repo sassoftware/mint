@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -886,6 +886,23 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
             client.server._server.addGroupTroveItem, data['groupTroveId'],
             'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
             False, False, False)
+
+    @fixtures.fixture('Full')
+    def testBumpCookCount(self, db, data):
+        client = self.getClient('owner')
+        groupTroveId = data['groupTroveId']
+        cu = db.cursor()
+        cu.execute("SELECT cookCount FROM GroupTroves WHERE groupTroveId=?",
+                   groupTroveId)
+        count1 = cu.fetchone()[0]
+        count2 = client.server._server.groupTroves.bumpCookCount(groupTroveId)
+        cu = db.cursor()
+        cu.execute("SELECT cookCount FROM GroupTroves WHERE groupTroveId=?",
+                   groupTroveId)
+        count3 = cu.fetchone()[0]
+        self.failIfEqual(count1, count2, "Cook count wasn't incremented")
+        self.failUnlessEqual(count2, count3, "bumpCookCount didn't return correct value")
+
 
 class GroupTroveTestConary(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
