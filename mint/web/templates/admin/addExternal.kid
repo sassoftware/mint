@@ -3,11 +3,12 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
 
 <?python
+    from mint.web.templatesupport import projectText
     for var in ['name', 'hostname', 'label', 'url',
         'externalUser', 'externalPass', 'externalEntKey',
         'authType', 'useMirror',
@@ -16,7 +17,7 @@
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
 ?>
     <head>
-        <title>${formatTitle((editing and 'Edit' or 'Add') + ' External Project')}</title>
+        <title>${formatTitle((editing and 'Edit' or 'Add') + ' External %s'%projectText().title())}</title>
     </head>
     <body>
         <div id="left" class="side">
@@ -24,60 +25,60 @@
         </div>
         <div id="spanright">
           <form action="${cfg.basePath}admin/processAddExternal" method="post">
-            <h2>${editing and 'Edit ' or 'Add '} External Project</h2>
-            <p py:if="not editing" class="help">External projects appear just like the
-            projects you host on ${cfg.productName} with one exception:
+            <h2>${editing and 'Edit ' or 'Add '} External ${projectText().title()}</h2>
+            <p py:if="not editing" class="help">External ${projectText().lower()}s appear just like the
+            ${projectText().lower()}s you host on ${cfg.productName} with one exception:
             the repository is <em>not</em> stored on
-            ${cfg.productName}.  External projects are useful for
+            ${cfg.productName}.  External ${projectText().lower()}s are useful for
             integrating the contents of another organization's
             repository into ${cfg.productName}, making it easier for
             your users to reference that organization's work in
             theirs.</p>
 
             <p py:if="firstTime" class="help">Because you have not yet
-            added rPath Linux as an external project, the following
+            added rPath Linux as an external ${projectText().lower()}, the following
             fields have been pre-populated to make adding rPath Linux
             easy.  If you do not wish to add rPath Linux as an external
-            project, you can erase the contents of each field and add
-            the appropriate information for the external project you
+            ${projectText().lower()}, you can erase the contents of each field and add
+            the appropriate information for the external ${projectText().lower()} you
             wish to add.</p>
 
             <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
               <tr>
-                <th><em class="required">Project Name:</em></th>
+                <th><em class="required">${projectText().title()} Name:</em></th>
                 <td>
                     <input type="${editing and 'hidden' or 'text'}" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
                     <div py:if="editing">${kwargs['hostname']}</div>
                     <p py:if="not editing" class="help">Enter a local name for this
-                    project. The local name will be used as the hostname
-                    for this project's site and repository
-                    (http://&lt;project-name&gt;.${cfg.projectDomainName}/). It
+                    ${projectText().lower()}. The local name will be used as the hostname
+                    for this ${projectText().lower()}'s site and repository
+                    (http://&lt;${projectText().lower()}-name&gt;.${cfg.projectDomainName}/). It
                     must start with a letter and contain only letters and
                     numbers, and be less than or equal to 16 characters
                     long.  For example, <strong>mylinux</strong></p>
 
                     <p py:if="not editing" class="help">(To reduce confusion, we recommend
-                    that you enter the external project's name.)</p>
+                    that you enter the external ${projectText().lower()}'s name.)</p>
                 </td>
               </tr>
               <tr>
-                  <th><em class="required">Project Title:</em></th>
+                  <th><em class="required">${projectText().title()} Title:</em></th>
                   <td>
                     <input type="text" autocomplete="off" name="name" value="${kwargs['name']}"/>
                     <p class="help">Enter a local title for this
-                    project.  The title is a longer, more descriptive
-                    name for the project. For example, <strong>My
+                    ${projectText().lower()}.  The title is a longer, more descriptive
+                    name for the ${projectText().lower()}. For example, <strong>My
                     Custom Linux</strong></p>
 
                    <p class="help">(To reduce confusion, we recommend
-                   that you enter the external project's title.)</p>
+                   that you enter the external ${projectText().lower()}'s title.)</p>
                   </td>
               </tr>
               <tr>
-                <th><em class="required">Project Label:</em></th>
+                <th><em class="required">${projectText().title()} Label:</em></th>
                 <td>
                   <input type="text" autocomplete="off" name="label" value="${kwargs['label']}" />
-                  <p class="help">Enter this project's label.  For
+                  <p class="help">Enter this ${projectText().lower()}'s label.  For
                   example, <strong>conary.example.com@rpl:1</strong></p>
                 </td>
               </tr>
@@ -85,9 +86,9 @@
                 <th>Repository URL:</th>
                 <td>
                   <input type="text" autocomplete="off" name="url" value="${kwargs['url']}"/>
-                  <p class="help">Enter the URL for this project's
+                  <p class="help">Enter the URL for this ${projectText().lower()}'s
                   repository.  If a URL is not provided, the standard
-                  URL format will be derived from the project's label
+                  URL format will be derived from the ${projectText().lower()}'s label
                   (eg; for label
                   <strong>conary.example.com@rpl:1</strong> the
                   repository URL will be

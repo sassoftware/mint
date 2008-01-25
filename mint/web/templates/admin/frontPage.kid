@@ -3,9 +3,13 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+    from mint.web.templatesupport import projectText
+?>
+
     <head>
         <title>${formatTitle('Administer')}</title>
     </head>
@@ -23,15 +27,15 @@
                     <li>View ${cfg.productName} usage reports</li>
                     <li>Create ${cfg.productName} user accounts</li>
                     <li>Send email to all registered ${cfg.productName} users</li>
-                    <li>Add projects that reference remote repositories</li>
-                    <li>Control the projects that can be mirrored to remote repositories</li>
+                    <li>Add ${projectText().lower()}s that reference remote repositories</li>
+                    <li>Control the ${projectText().lower()}s that can be mirrored to remote repositories</li>
                     <li>Put ${cfg.productName} into or out of maintenance mode</li>
                 </ul>
 
-                <p>Note: Administrative operations for existing users and projects 
-                    are available on each user/project home page. Find the 
-                    desired user/project by searching or browsing, then 
-                    navigate to the main page for the user/project.</p>
+                <p>Note: Administrative operations for existing users and ${projectText().lower()}s 
+                    are available on each user/${projectText().lower()} home page. Find the 
+                    desired user/${projectText().lower()} by searching or browsing, then 
+                    navigate to the main page for the user/${projectText().lower()}.</p>
         </div>
     </body>
 </html>

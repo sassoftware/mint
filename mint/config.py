@@ -7,6 +7,7 @@ import os
 import sys
 
 from mint import client
+from mint import constants
 from mint import buildtypes
 from mint import urltypes
 from conary import conarycfg
@@ -48,6 +49,7 @@ class CfgBuildEnum(cfgtypes.CfgEnum):
         return cfgtypes.CfgEnum.parseString(self, val)
 
 class MintConfig(ConfigFile):
+    rBuilderOnline          = (cfgtypes.CfgBool, constants.rBuilderOnline)
     companyName             = (cfgtypes.CfgString, 'rPath, Inc.',
         "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
 

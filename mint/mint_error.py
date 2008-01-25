@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+from mint.helperfuncs import getProjectText
+
 class MintError(Exception):
     args = []
 
@@ -95,7 +97,7 @@ class LastAdmin(MintError):
      def __str__(self):
          return self.msg
 
-     def __init__(self, msg = "You cannot close your account since you are the only owner of a project."):
+     def __init__(self, msg = "You cannot close your account since you are the only owner of a %s."%getProjectText().lower()):
          self.msg = msg
 
 class MaintenanceMode(MintError):

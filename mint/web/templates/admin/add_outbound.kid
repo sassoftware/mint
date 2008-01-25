@@ -3,9 +3,13 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+    from mint.web.templatesupport import projectText
+?>
+
     <head>
         <title>${formatTitle('Add Outbound Mirror')}</title>
         <script type="text/javascript">
@@ -29,7 +33,7 @@
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
-                        <th style="width: 1%;"><em class="required">Project to mirror:</em></th>
+                        <th style="width: 1%;"><em class="required">${projectText().title()} to mirror:</em></th>
                         <td>
                             <select id="projectId" name="projectId">
                                 <option value="-1">--</option>

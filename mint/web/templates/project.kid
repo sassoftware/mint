@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
+    #
+    # Copyright (c) 2005-2008 rPath, Inc.
+    # All Rights Reserved
+    #
+    from mint.web.templatesupport import projectText
     from mint import userlevels, buildtypes, constants
     from mint.client import timeDelta
     from mint.client import upstream
@@ -32,13 +37,13 @@
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
-        <div class="boxHeader">Project Resources</div>
+        <div class="boxHeader">${projectText().title()} Resources</div>
         <ul>
-            <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">Project Home</a></li>
+            <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">${projectText().title()} Home</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Manage Builds</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">${isOwner and 'Manage' or 'View'} Releases</a></li>
-            <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} Project Membership</a></li>
-            <li py:if="isWriter and not project.external" py:attrs="{'class': (lastchunk in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')) and 'selectedItem' or None}"><a href="${projectUrl}groups">Group Builder</a></li>
+            <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} ${projectText().title()} Membership</a></li>
+            <li py:if="isWriter and not project.external and cfg.rBuilderOnline" py:attrs="{'class': (lastchunk in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')) and 'selectedItem' or None}"><a href="${projectUrl}groups">Group Builder</a></li>
             <li py:attrs="{'class': (lastchunk in ('browse', 'troveInfo')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/browse">Browse Repository</a></li>
             <li py:if="projectAdmin" py:attrs="{'class': (lastchunk in ('userlist', 'addGroupForm', 'addPermForm', 'manageGroupForm')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist">Manage Repository Permissions</a></li>
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
@@ -122,19 +127,19 @@
             <ul>
                 <li><a
                 href="http://${SITE}newProject"><strong>Creating a new
-                project</strong></a></li>
+                ${projectText().lower()}</strong></a></li>
 
-                <li>Joining an existing project</li>
+                <li>Joining an existing ${projectText().lower()}</li>
             </ul>
 
-            <p>To join an existing project, use the "Browse projects" link or "Search" text box at the top of the page to find a project of interest. Then, submit your request to project owners: click a project name, click "View Project Membership" on the project panel at the left, and click "Request to join this project."</p>
+            <p>To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
-            <div py:for="level, title in [(userlevels.OWNER, 'Projects I Own'),
-                                          (userlevels.DEVELOPER, 'Projects I Work On'),
-                                          (userlevels.USER, 'Projects I Am Watching')]"
+            <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
+                                          (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
+                                          (userlevels.USER, '%ss I Am Watching'%projectText().title())]"
                  py:strip="True">
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>
@@ -149,7 +154,7 @@
                     </ul>
                 </div>
             </div>
-            <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
+            <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new ${projectText().lower()}</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
