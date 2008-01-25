@@ -1,3 +1,14 @@
+Changes in @NEW@
+================
+
+Web Front End Changes
+---------------------
+
+* A bug that prevented a group trove from being cooked more than one time
+  by Group Builder has been corrected. (RBL-2570)
+* The Group Builder has been removed from rBA, to be replaced by a different
+  mechanism to get appliances built quickly. (RBL-2514)
+
 Changes in 4.0.1
 ================
 

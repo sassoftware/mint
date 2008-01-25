@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -120,10 +120,12 @@ class GroupTroveTable(database.KeyedTable):
                    groupTroveId)
         res = cu.fetchall()
         if res:
+            count = res[0][0] + 1
             cu.execute("""UPDATE GroupTroves
-                              SET cookCount=cookCount+1
-                              WHERE groupTroveId=?""", groupTroveId)
-            return res[0][0]
+                              SET cookCount=?
+                              WHERE groupTroveId=?""", count, groupTroveId)
+            self.db.commit()
+            return count
         else:
             return None
 
