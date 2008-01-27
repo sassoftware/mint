@@ -110,7 +110,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
     def spiderLink(self, link, page = None):
         self.checked.append(link)
-        # print "link:", link
+        print "spiderLink-ing", link
 
         # skipped links:
         if link.endswith('logout'):
