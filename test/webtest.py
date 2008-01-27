@@ -21,6 +21,7 @@ from mint import database
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
+from mint import helperfuncs
 
 from repostest import testRecipe
 
@@ -901,10 +902,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                  server = self.getProjectServerHostname())
 
     def testUploadKeyPage(self):
+        pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
         page = self.assertContent('/uploadKey', code = [200],
-                               content = "you are not a member of any projects")
+                               content = "you are not a member of any %ss"%pText)
         page = page.fetchWithRedirect('/logout')
 
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)

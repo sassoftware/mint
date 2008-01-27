@@ -18,6 +18,7 @@ from mint import jobstatus
 from mint import buildtypes
 from mint import userlevels
 from mint import users
+from mint import helperfuncs
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
@@ -404,13 +405,14 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                   server=self.getProjectServerHostname())
 
     def testProjectPage(self):
+        pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'This is a fledgling project' in page.body
+        assert 'This is a fledgling %s'%pText in page.body
 
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()
@@ -540,6 +542,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testProjectActions(self, db, data):
+        pText = helperfuncs.getProjectText()
         client = self.getClient("admin")
         p = client.getProject(data['projectId'])
 
@@ -558,7 +561,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_hide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already hidden'])
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already hidden'%pText.title()])
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_unhide")
@@ -568,13 +571,13 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_unhide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already visible'])
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already visible'%pText.title()])
 
         self.ph.session = {}
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_not_valid")
         self.failUnlessEqual(self.ph.session['errorMsgList'],
-            ['Please select a valid project administration option from the menu'])
+            ['Please select a valid %s administration option from the menu'%pText.lower()])
 
 
 if __name__ == "__main__":

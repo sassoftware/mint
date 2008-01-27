@@ -31,6 +31,9 @@ Web Front End Changes
 * The seldom-used rMake web UI integration has been removed. (RBL-2516)
 * Removed the Mirror URL option under advanced options for building. (RBL-2470)
 * Projects are now referred to as products. (RBL-1641)
+* A bug that prevented a group trove from being cooked more than one time
+  by Group Builder has been corrected. (RBL-2570)
+
 
 Build System Changes
 --------------------
