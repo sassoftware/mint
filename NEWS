@@ -3,6 +3,9 @@ Changes in 4.X
 
 Web Front End Changes
 ---------------------
+* Projects are now referred to as products. (RBL-1641)
+* A bug that prevented a group trove from being cooked more than one time
+  by Group Builder has been corrected. (RBL-2570)
 * The Group Builder has been removed from rBA, to be replaced by a different
   mechanism to get appliances built quickly. (RBL-2514)
 
@@ -38,10 +41,6 @@ Web Front End Changes
   Conary 2.0. (RBL-2477)
 * The seldom-used rMake web UI integration has been removed. (RBL-2516)
 * Removed the Mirror URL option under advanced options for building. (RBL-2470)
-* Projects are now referred to as products. (RBL-1641)
-* A bug that prevented a group trove from being cooked more than one time
-  by Group Builder has been corrected. (RBL-2570)
-
 
 Build System Changes
 --------------------
