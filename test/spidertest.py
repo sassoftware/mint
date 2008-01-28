@@ -110,14 +110,10 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
     def spiderLink(self, link, page = None):
         self.checked.append(link)
-        print "spiderLink-ing", link
 
         # skipped links:
         if link.endswith('logout'):
             # we don't want to log out. just short circuit this link
-            return False
-        if link.endswith('jobs'):
-            # jobs link calls sudo
             return False
         if 'getFile' in link:
             # getFile breaks spider
@@ -133,6 +129,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'builds' in link:
             return False
 
+        print "inspecting", link
         if page is None:
             try:
                 # rewrite project-based links properly, to avoid breaking SSL

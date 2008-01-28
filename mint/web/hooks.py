@@ -155,7 +155,6 @@ def getRepository(projectName, repName, dbName, cfg,
     else:
         nscfg.commitAction = None
 
-    repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
         netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
 
