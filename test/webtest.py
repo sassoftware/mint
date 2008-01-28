@@ -22,6 +22,7 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint import helperfuncs
+from mint import constants
 
 from repostest import testRecipe
 
@@ -897,9 +898,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                  server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
-        page = self.assertContent('/project/foo/', code = [200],
-                                 content = "Group Builder",
-                                 server = self.getProjectServerHostname())
+        
+        if constants.rBuilderOnline:
+            page = self.assertContent('/project/foo/', code = [200],
+                                     content = "Group Builder",
+                                     server = self.getProjectServerHostname())
+        else:
+            # disabled on rBA
+            page = self.assertNotContent('/project/foo/', code = [200],
+                                     content = "Group Builder",
+                                     server = self.getProjectServerHostname())
 
     def testUploadKeyPage(self):
         pText = helperfuncs.getProjectText().lower()
