@@ -856,11 +856,13 @@ class MintServer(object):
                 # edit vice/drop+add is intentional to honor acl tweaks by
                 # admins.
                 repos.editAcl(label, username, None, None, None,
-                              None, level in userlevels.WRITERS, False,
-                              self.cfg.projectAdmin and \
-                              level == userlevels.OWNER)
-                repos.setUserGroupCanMirror(label, username,
-                                            int(level == userlevels.OWNER))
+                              None, write=level in userlevels.WRITERS,
+                              canRemove=False)
+                repos.setRoleIsAdmin(label, username,
+                                     self.cfg.projectAdmin and
+                                     level == userlevels.OWNER)
+                repos.setRoleCanMirror(label, username,
+                                       int(level == userlevels.OWNER))
             return True
 
         if not project.external:
@@ -876,10 +878,12 @@ class MintServer(object):
             repos = self._getProjectRepo(project)
             repos.addUserByMD5(label, username, salt, password)
             repos.addAcl(label, username, None, None,
-                         level in userlevels.WRITERS, False,
-                         self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(label, username,
-                                        int(level == userlevels.OWNER))
+                         write=(level in userlevels.WRITERS),
+                         remove=False)
+            repos.setRoleIsAdmin(label, username,
+                                 self.cfg.projectAdmin and level == userlevels.OWNER)
+            repos.setRoleCanMirror(label, username,
+                                   int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
                          projects.Project(self,projectId), level)
@@ -900,17 +904,13 @@ class MintServer(object):
             self._translateProjectFQDN(project.getFQDN()), db = self.db)
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         cu = db.cursor()
-        # id's guaranteed by schema definition.
-        labelId = itemId = 0
         # aggregate with MAX in case user is member of multiple groups
-        cu.execute("""SELECT MAX(admin)
-                          FROM Users
-                          LEFT JOIN UserGroupMembers ON Users.userId =
-                                  UserGroupMembers.userId
-                          LEFT JOIN Permissions ON Permissions.userGroupId =
-                                  UserGroupMembers.userGroupId
-                          WHERE Users.username=? AND itemId=? and labelId=?""",
-                   userName, itemId, labelId)
+        cu.execute("""SELECT MAX(admin) FROM Users
+                      JOIN UserGroupMembers ON
+                          Users.userId = UserGroupMembers.userId
+                      JOIN UserGroups ON
+                          UserGroups.userGroupId = UserGroupMembers.userGroupId
+                      WHERE Users.username=?""", userName)
         res = cu.fetchone()
         # acl in question can be non-existent
         db.close()
@@ -1081,7 +1081,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         userId = repos.addUser(versions.Label(project.getLabel()), 'anonymous', 'anonymous')
-        repos.addAcl(versions.Label(project.getLabel()), 'anonymous', None, None, False, False, False)
+        repos.addAcl(versions.Label(project.getLabel()), 'anonymous', None, None, write=False, remove=False)
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
@@ -1132,9 +1132,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             repos = self._getProjectRepo(project)
             label = versions.Label(project.getLabel())
             repos.editAcl(label, user['username'], "ALL", None,
-                          None, None, level in userlevels.WRITERS, False,
-                          level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(label, user['username'], int(level == userlevels.OWNER))
+                          None, None, write=(level in userlevels.WRITERS),
+                          canRemove=False)
+            repos.setRoleIsAdmin(label, user['username'],
+                                 level == userlevels.OWNER)
+            repos.setRoleCanMirror(label, user['username'], int(level == userlevels.OWNER))
 
         #Ok, now update the mint db
         if level in userlevels.WRITERS:

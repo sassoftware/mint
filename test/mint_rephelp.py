@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -305,8 +305,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
     def getMintCfg(self):
         # write Mint configuration
-        conaryPath = os.environ.get("CONARY_PATH", "")
-        mintPath = os.environ.get("MINT_PATH", "")
+        conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
+        mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
 
         cfg = config.MintConfig()
 

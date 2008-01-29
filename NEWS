@@ -9,6 +9,12 @@ Web Front End Changes
   by Group Builder has been corrected. (RBL-2570)
 * The Group Builder has been removed from rBA, to be replaced by a different
   mechanism to get appliances built quickly. (RBL-2514)
+* The Conary repository permission management web user interface has
+  been modified to use the term "Role" instead of "Group". (RBL-2580)
+
+Internal Changes
+----------------
+* rBuilder now requires Conary 2.0. (RBL-2580)
 
 Changes in 4.0.1
 ================

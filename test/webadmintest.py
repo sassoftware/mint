@@ -127,8 +127,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def setupUser(self, repos, reposLabel, user, pw, troves, label):
         repos.addUser(reposLabel, user, pw)
-        repos.addAcl(reposLabel, user, troves, label, False, False, False)
-        repos.setUserGroupCanMirror(reposLabel, user, True)
+        repos.addAcl(reposLabel, user, troves, label, write=False, remove=False)
+        repos.setRoleCanMirror(reposLabel, user, True)
 
         return self.getRepositoryClient(user = user, password = pw)
 
@@ -141,8 +141,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         repos = self.openRepository(1)
         userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
 
-        repos.addEntitlementGroup('localhost1', entClass, 'user')
-        repos.addEntitlements('localhost1', entClass, [entKey])
+        repos.addEntitlementClass('localhost1', entClass, 'user')
+        repos.addEntitlementKeys('localhost1', entClass, [entKey])
 
         util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
         # ensure "first time" content appears on page
@@ -173,8 +173,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         repos = self.openRepository(1)
         userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
 
-        repos.addEntitlementGroup('localhost1', entClass, 'user')
-        repos.addEntitlements('localhost1', entClass, [entKey])
+        repos.addEntitlementClass('localhost1', entClass, 'user')
+        repos.addEntitlementKeys('localhost1', entClass, [entKey])
 
         util.mkdirChain(self.mintCfg.dataPath + "/entitlements/")
         # ensure "first time" content appears on page

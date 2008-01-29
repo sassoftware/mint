@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -49,9 +49,9 @@ class ConaryHandler(WebHandler):
         if self.cfg.authUser in memberList:
             return self._write("error", shortError="Invalid User Name",
                     error = "A user name you have selected is invalid.")
-        if kwargs.get('userGroupName', None) == self.cfg.authUser:
-            return self._write("error", shortError="Invalid Group Name",
-                    error = "The group name you are attempting to edit is invalid.")
+        if kwargs.get('roleName', None) == self.cfg.authUser:
+            return self._write("error", shortError="Invalid Role Name",
+                    error = "The role name you are attempting to edit is invalid.")
         return None
 
     @strFields(search = '')
@@ -71,7 +71,7 @@ class ConaryHandler(WebHandler):
         return self._write("pgp_get_key", keyId = search, keyData = keyData)
 
     def pgpAdminForm(self, auth):
-        admin = self.repServer.auth.check(self.authToken,admin=True)
+        admin = self.repServer.auth.authCheck(self.authToken, admin=True)
 
         if admin:
             users = self.repServer.auth.userAuth.getUserList()
@@ -376,26 +376,26 @@ class ConaryHandler(WebHandler):
         return self._write("user_admin", netAuth = self.repServer.auth)
 
     @ownerOnly
-    @strFields(userGroupName = None)
-    def deleteGroup(self, auth, userGroupName):
-        self.repServer.auth.deleteGroup(userGroupName)
-        self._filterAuth(userGroupName=userGroupName) or self._redirect("userlist")
+    @strFields(roleName = None)
+    def deleteRole(self, auth, roleName):
+        self.repServer.auth.deleteRole(roleName)
+        self._filterAuth(roleName=roleName) or self._redirect("userlist")
 
     @ownerOnly
-    @strFields(userGroupName = "")
-    def addPermForm(self, auth, userGroupName):
-        groups = self.repServer.auth.getGroupList()
+    @strFields(roleName = "")
+    def addPermForm(self, auth, roleName):
+        roles = self.repServer.auth.getRoleList()
         labels = self.repServer.auth.getLabelList()
         troves = self.repServer.auth.getItemList()
 
-        return self._write("permission", operation='Add', group=userGroupName, trove=None,
-            label=None, groups=groups, labels=labels, troves=troves,
+        return self._write("permission", operation='Add', role=roleName, trove=None,
+            label=None, roles=roles, labels=labels, troves=troves,
             writeperm=None, capped=None, admin=None, remove=None)
 
     @ownerOnly
-    @strFields(group = None, label = "", trove = "",
+    @strFields(role = None, label = "", trove = "",
                writeperm = "off", capped = "off", admin = "off", remove = "off")
-    def addPerm(self, auth, group, label, trove,
+    def addPerm(self, auth, role, label, trove,
                 writeperm, capped, admin, remove):
         writeperm = (writeperm == "on")
         capped = (capped == "on")
@@ -403,7 +403,7 @@ class ConaryHandler(WebHandler):
         remove = (remove== "on")
 
         try:
-            self.repServer.addAcl(self.authToken, 0, group, trove, label,
+            self.repServer.addAcl(self.authToken, 0, role, trove, label,
                writeperm, capped, admin, remove = remove)
         except errors.PermissionAlreadyExists, e:
             return self._write("error", shortError="Duplicate Permission",
@@ -412,58 +412,58 @@ class ConaryHandler(WebHandler):
         self._redirect("userlist")
 
     @ownerOnly
-    def addGroupForm(self, auth):
+    def addRoleForm(self, auth):
         users = self.repServer.auth.userAuth.getUserList()
-        return self._write("add_group", modify = False, userGroupName = None, users = users, members = [], canMirror = False)
+        return self._write("add_role", modify = False, roleName = None, users = users, members = [], canMirror = False)
 
     @ownerOnly
-    @strFields(userGroupName = None)
-    def manageGroupForm(self, auth, userGroupName):
+    @strFields(roleName = None)
+    def manageRoleForm(self, auth, roleName):
         users = self.repServer.auth.userAuth.getUserList()
-        members = set(self.repServer.auth.getGroupMembers(userGroupName))
-        canMirror = self.repServer.auth.groupCanMirror(userGroupName)
+        members = set(self.repServer.auth.getRoleMembers(roleName))
+        canMirror = self.repServer.auth.roleCanMirror(roleName)
 
-        return self._filterAuth(auth=auth, userGroupName=userGroupName) or self._write("add_group", userGroupName = userGroupName, users = users, members = members, canMirror = canMirror, modify = True)
+        return self._filterAuth(auth=auth, roleName=roleName) or self._write("add_role", roleName = roleName, users = users, members = members, canMirror = canMirror, modify = True)
 
     @ownerOnly
-    @strFields(userGroupName = None, newUserGroupName = None)
+    @strFields(roleName = None, newUserRoleName = None)
     @listFields(str, memberList = [])
     @intFields(canMirror = False)
-    def manageGroup(self, auth, userGroupName, newUserGroupName, memberList,
+    def manageRole(self, auth, roleName, newUserRoleName, memberList,
                     canMirror):
-        if userGroupName != newUserGroupName:
+        if roleName != newUserRoleName:
             try:
-                self.repServer.auth.renameGroup(userGroupName, newUserGroupName)
-            except errors.GroupAlreadyExists:
-                return self._write("error", shortError="Invalid Group Name",
-                    error = "The group name you have chosen is already in use.")
+                self.repServer.auth.renameRole(roleName, newUserRoleName)
+            except errors.RoleAlreadyExists:
+                return self._write("error", shortError="Invalid Role Name",
+                    error = "The role name you have chosen is already in use.")
 
-            userGroupName = newUserGroupName
+            roleName = newUserRoleName
 
-        self.repServer.auth.updateGroupMembers(userGroupName, memberList)
-        self.repServer.auth.setMirror(userGroupName, canMirror)
+        self.repServer.auth.updateRoleMembers(roleName, memberList)
+        self.repServer.auth.setMirror(roleName, canMirror)
 
-        self._filterAuth(memberList=memberList, userGruopName=userGroupName) or self._redirect("userlist")
+        self._filterAuth(memberList=memberList, roleName=roleName) or self._redirect("userlist")
 
     @ownerOnly
-    @strFields(newUserGroupName = None)
+    @strFields(newUserRoleName = None)
     @listFields(str, memberList = [])
     @intFields(canMirror = False)
-    def addGroup(self, auth, newUserGroupName, memberList, canMirror):
+    def addRole(self, auth, newUserRoleName, memberList, canMirror):
         try:
-            self.repServer.auth.addGroup(newUserGroupName)
-        except errors.GroupAlreadyExists:
-            return self._write("error", shortError="Invalid Group Name",
-                error = "The group name you have chosen is already in use.")
+            self.repServer.auth.addRole(newUserRoleName)
+        except errors.RoleAlreadyExists:
+            return self._write("error", shortError="Invalid Role Name",
+                error = "The role name you have chosen is already in use.")
 
-        self.repServer.auth.updateGroupMembers(newUserGroupName, memberList)
-        self.repServer.auth.setMirror(newUserGroupName, canMirror)
+        self.repServer.auth.updateRoleMembers(newUserRoleName, memberList)
+        self.repServer.auth.setMirror(newUserRoleName, canMirror)
 
         self._filterAuth(memberList=memberList) or self._redirect("userlist")
 
     @ownerOnly
-    @strFields(group = None, label = None, item = None)
-    def deletePerm(self, auth, group, label, item):
+    @strFields(role = None, label = None, item = None)
+    def deletePerm(self, auth, role, label, item):
         # labelId and itemId are optional parameters so we can't
         # default them to None: the fields decorators treat that as
         # required, so we need to reset them to None here:
@@ -472,36 +472,36 @@ class ConaryHandler(WebHandler):
         if not item or item == "ALL":
             item = None
 
-        self.repServer.auth.deleteAcl(group, label, item)
+        self.repServer.auth.deleteAcl(role, label, item)
         self._redirect("userlist")
 
     @ownerOnly
-    @strFields(group = None, label = "", trove = "")
+    @strFields(role = None, label = "", trove = "")
     @intFields(writeperm = None, capped = None, admin = None, remove = None)
-    def editPermForm(self, auth, group, label, trove, writeperm, capped, admin,
+    def editPermForm(self, auth, role, label, trove, writeperm, capped, admin,
                      remove):
-        groups = self.repServer.auth.getGroupList()
+        roles = self.repServer.auth.getRoleList()
         labels = self.repServer.auth.getLabelList()
         troves = self.repServer.auth.getItemList()
 
         #remove = 0
-        return self._write("permission", operation='Edit', group=group, label=label,
-            trove=trove, groups=groups, labels=labels, troves=troves,
+        return self._write("permission", operation='Edit', role=role, label=label,
+            trove=trove, roles=roles, labels=labels, troves=troves,
             writeperm=writeperm, capped=capped, admin=admin, remove=remove)
 
     @ownerOnly
-    @strFields(group = None, label = "", trove = "",
+    @strFields(role = None, label = "", trove = "",
                oldlabel = "", oldtrove = "",
-               writeperm = "off", capped = "off", admin = "off", remove = "off")
-    def editPerm(self, auth, group, label, trove, oldlabel, oldtrove,
-                writeperm, capped, admin, remove):
+               writeperm = "off", remove = "off")
+    def editPerm(self, auth, role, label, trove, oldlabel, oldtrove,
+                writeperm, remove):
         writeperm = (writeperm == "on")
         capped = (capped == "on")
         admin = (admin == "on")
         remove = (remove == "on")
 
         try:
-            self.repServer.editAcl(auth, 0, group, oldtrove, oldlabel, trove,
+            self.repServer.editAcl(auth, 0, role, oldtrove, oldlabel, trove,
                label, writeperm, capped, admin, canRemove = remove)
         except errors.PermissionAlreadyExists, e:
             return self._write("error", shortError="Duplicate Permission",

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -502,16 +502,17 @@ class ProjectsTable(database.KeyedTable):
 
         if username:
             repos.auth.addUser(username, password)
-            repos.auth.addAcl(username, None, None, True, False,
-                              self.cfg.projectAdmin)
+            repos.auth.addAcl(username, None, None, write=True, remove=False)
+            repos.auth.setAdmin(username, True)
 
         repos.auth.addUser("anonymous", "anonymous")
-        repos.auth.addAcl("anonymous", None, None, False, False, False)
+        repos.auth.addAcl("anonymous", None, None, write=False, remove=False)
 
         # add the mint auth user so we can add additional permissions
         # to this repository
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
-        repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, remove=False)
+        repos.auth.setAdmin(self.cfg.authUser, True)
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:
             repos.auth.setMirror(username, True)

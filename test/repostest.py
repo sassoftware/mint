@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import os
@@ -189,7 +189,7 @@ class RepositoryTest(MintRepositoryHelper):
 
         troveNames = nc.troveNames(versions.Label("testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel"))
-        assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
+        assert(sorted(troveNames) == ['testcase', 'testcase:runtime', 'testcase:source'])
 
     def testGetTroveVersionsByArch(self):
         # XXX: hardcoded MINT_PROJECT_DOMAIN in this RE, sorry --sgp
@@ -272,7 +272,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(nc.troveNames(self.cfg.buildLabel) == [])
 
         # delete anon access
-        nc.deleteAccessGroup(self.cfg.buildLabel, 'anonymous')
+        nc.deleteRole(self.cfg.buildLabel, 'anonymous')
 
         # now make an anon client
         labels = [x[0] for x in cfg.user]
@@ -341,12 +341,17 @@ class RepositoryTest(MintRepositoryHelper):
         # get rid of anonymous access
         nc.deleteUserByName(self.cfg.buildLabel, 'anonymous')
         entclass = 'entclass'
+        role = 'entclass-role'
         entkey = 'ENTITLEMENT'
-        nc.addEntitlementGroup(self.cfg.buildLabel, entclass, 'testuser')
+        nc.addRole(self.cfg.buildLabel, role)
+        nc.addAcl(self.cfg.buildLabel, role, None, None, write=True, remove=False)
+        nc.addEntitlementClass(self.cfg.buildLabel, entclass, role)
         if hasattr(nc, 'addEntitlement'):
             nc.addEntitlement(self.cfg.buildLabel, entclass, entkey)
-        else:
+        elif hasattr(nc, 'addEntitlements'):
             nc.addEntitlements(self.cfg.buildLabel, entclass, [entkey])
+        else:
+            nc.addEntitlementKeys(self.cfg.buildLabel, entclass, [entkey])
 
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
@@ -488,20 +493,21 @@ class RepositoryTest(MintRepositoryHelper):
         projectId = self.newProject(client, name = "P1", hostname = "p1")
         _buildReferences("p1")
         projectId = self.newProject(client, name = "P2", hostname = "p2")
-        v = "/p2.%s@rpl:linux//devel/1.0-1-1" % (MINT_PROJECT_DOMAIN)
-        v2 = "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % (MINT_PROJECT_DOMAIN)
-        self.addCollection("group-alpha", v, [("alpha:runtime", v2)], weakRefList = [("alpha", v2)])
+        v = "/p2.%s@rpl:linux//devel/1.0-1-1" % MINT_PROJECT_DOMAIN
+        v1 = "/p1.%s@rpl:linux//devel" % MINT_PROJECT_DOMAIN
+        v2 = "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % MINT_PROJECT_DOMAIN
+        self.addCollection("group-alpha", v, [("alpha:runtime", v2)],
+                           weakRefList = [("alpha", v2)])
 
-        r = client.getTroveReferences('alpha', "/p1.%s@rpl:linux//devel//qa/1.0-1-1" % MINT_PROJECT_DOMAIN, [''])
-        self.failUnlessEqual(r,
-            {
-                1: [('alpha1', '/p1.%s@rpl:linux//devel//qa/1.0-1-1' % MINT_PROJECT_DOMAIN, '')],
-                2: [('group-alpha', '/p2.%s@rpl:linux//devel/1.0-1-1' % MINT_PROJECT_DOMAIN, '')]
-            }
-        )
-
-        d = client.getTroveDescendants('alpha', "/p1.%s@rpl:linux//devel" % MINT_PROJECT_DOMAIN, '')
-        self.failUnlessEqual(d, {1: [(v2, '')], 2: [(v2, '')]})
+        r = client.getTroveReferences('alpha', v2, [''])
+        self.failUnlessEqual(r, { 1: [('alpha1', v2, '')],
+                                  2: [('group-alpha', v, '')] })
+        d = client.getTroveDescendants('alpha', v1, '')
+        # FIXME: should asking p2 for decendant information for troves
+        # residing solely in p1 return results?  conary-2.0 does not
+        # think so
+        #self.failUnlessEqual(d, {1: [(v2, '')], 2: [(v2, '')]})
+        self.failUnlessEqual(d, {1: [(v2, '')]})
 
 
     def testShadowDiff(self):
