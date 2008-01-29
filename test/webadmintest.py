@@ -17,6 +17,7 @@ from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 from mint import database
 from mint import helperfuncs
 from mint import mirror
+from mint import constants
 from mint.web import admin
 from mint.web.webhandler import HttpMoved
 
@@ -105,8 +106,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalUser': 'mirror',
                               'externalPass': 'mirrorpass'})
 
+        pText = helperfuncs.getProjectText().lower()
         page = self.assertContent("/project/rpath/",
-            "To preload this external project as a local mirror")
+            "To preload this external %s as a local mirror"%pText)
 
         page = self.fetch("/admin/addExternal")
 
@@ -121,7 +123,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'anonymous'})
 
         self.assertNotContent("/project/rpath2/",
-            "To preload this external project as a local mirror")
+            "To preload this external %s as a local mirror"%pText)
 
     def setupUser(self, repos, reposLabel, user, pw, troves, label):
         repos.addUser(reposLabel, user, pw)
@@ -234,7 +236,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
               'url':            '',
               'operation':      'process_external'}
         )
-        assert('Missing project title' in page.body)
+        pText = helperfuncs.getProjectText().lower()
+        assert('Missing %s title'%pText in page.body)
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rpath',
@@ -387,8 +390,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
+        pText = helperfuncs.getProjectText().title()
         page = self.assertContent("/admin/addOutbound",
-            content = "Project to mirror:")
+            content = "%s to mirror:"%pText)
 
         def fakeUpdateMirror(*P, **K):
             return 'totallyfakepassword'

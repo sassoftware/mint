@@ -1,10 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python from mint import userlevels, constants ?>
+<?python 
+    from mint import userlevels, constants
+    from mint.web.templatesupport import projectText
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <?python
@@ -45,30 +48,30 @@
                 <li>Open source software packaged with Conary</li>
             </ul>
 
-            <p>Development is done in projects, which consist of:</p>
+            <p>Development is done in ${projectText().lower()}s, which consist of:</p>
 
             <ul>
-                <li>Project owners, who create and manage the project
+                <li>${projectText().title()} owners, who create and manage the project
                 on a day-to-day basis</li>
 
-                <li>Project members, who join the project to support
-                the project's development effort</li>
+                <li>${projectText().title()} members, who join the ${projectText().lower()} to support
+                the ${projectText().lower()}'s development effort</li>
 
                 <li>A Conary repository to hold all the packaged
-                software specific to the project</li>
+                software specific to the ${projectText().lower()}</li>
 
-                <li>A project-specific hostname
-                (&lt;project-name&gt;.${cfg.siteDomainName})</li>
+                <li>A ${projectText().lower()}-specific hostname
+                (&lt;${projectText().lower()}-name&gt;.${cfg.siteDomainName})</li>
 
-                <li>Project-specific mailing lists</li>
+                <li>${projectText().title()}-specific mailing lists</li>
 
-                <li>(For projects developing Conary-based
+                <li>(For ${projectText().lower()}s developing Conary-based
                 distributions) Storage space for ISO images (known as
-                releases) generated from the project's software</li>
+                releases) generated from the ${projectText().lower()}'s software</li>
             </ul>
 
             <p>${cfg.productName} also provides a way to browse and
-            search projects and packages, making it a single source for
+            search ${projectText().lower()}s and packages, making it a single source for
             all Conary-based software development.</p>
 
             <p>Need more details?  Pick the link that best matches your

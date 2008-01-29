@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -26,6 +26,7 @@ from mint.mint_error import NotEntitledError
 
 from mint import buildtemplates
 from mint import helperfuncs
+from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
@@ -928,7 +929,7 @@ class ProjectHandler(WebHandler):
             self._predirect(temporary = True)
             return
         if not self.latestPublishedRelease:
-            self._addErrors("This project does not have any published releases.")
+            self._addErrors("This %s does not have any published releases."%getProjectText().lower())
             self._predirect(temporary = True)
         else:
             if buildType:
@@ -1050,8 +1051,9 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
                            branch, appliance, commitEmail):
+        pText = getProjectText()
         if not name:
-            self._addErrors("You must supply a project title")
+            self._addErrors("You must supply a %s title"%pText.lower())
         try:
             host = versions.Label(self.project.getLabel()).getHost()
             label = host + '@' + branch
@@ -1074,7 +1076,7 @@ class ProjectHandler(WebHandler):
                         labelInfo['authType'], labelInfo['username'],
                         labelInfo['password'], labelInfo['entitlement'])
             except database.DuplicateItem:
-                self._addErrors("Project title conflicts with another project")
+                self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
@@ -1082,7 +1084,7 @@ class ProjectHandler(WebHandler):
                       'appliance': appliance, 'commitEmail': commitEmail}
             return self._write("editProject", kwargs = kwargs)
         else:
-            self._setInfo("Updated project %s" % name)
+            self._setInfo("Updated %s %s" % (pText.lower(), name))
             self._predirect()
 
     def members(self, auth):
@@ -1179,12 +1181,13 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):
+        pText = getProjectText().lower()
         user = self.client.getUser(userId)
         if self.cfg.sendNotificationEmails:
             subject = "Membership Rejection Notice"
-            body = "Your request to join the following project on %s:\n\n" % self.cfg.productName
+            body = "Your request to join the following %s on %s:\n\n" % (pText, self.cfg.productName)
             body += "%s\n\n" % self.project.getName()
-            body += " has been rejected by the project's owner.\n\n"
+            body += " has been rejected by the %s's owner.\n\n"%pText
             if comments:
                 body += "Owner's comments:\n%s" % comments
             else:
@@ -1192,8 +1195,8 @@ class ProjectHandler(WebHandler):
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
         self._setInfo("Join request for user %s has been rejected " \
-                "for project %s" % (user.getUsername(), \
-                self.project.getNameForDisplay()))
+                "for %s %s" % (user.getUsername(), \
+                pText, self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -1205,8 +1208,8 @@ class ProjectHandler(WebHandler):
     def editMember(self, auth, userId, level):
         user = self.client.getUser(userId)
         self.project.updateUserLevel(userId, level)
-        self._setInfo("User %s has been updated for project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._setInfo("User %s has been updated for %s %s" % \
+                (user.getUsername(), getProjectText(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
@@ -1222,8 +1225,8 @@ class ProjectHandler(WebHandler):
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
                     self._setInfo("User %s promoted" % user.getUsername())
                     self._predirect("members")
-        self._addErrors("User %s not a member of project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._addErrors("User %s not a member of %s %s" % \
+                (user.getUsername(), getProjectText().lower(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
@@ -1239,8 +1242,8 @@ class ProjectHandler(WebHandler):
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
                     self._setInfo("User %s demoted" % user.getUsername())
                     self._predirect("members")
-        self._addErrors("User %s not a member of project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._addErrors("User %s not a member of %s %s" % \
+                (user.getUsername(), getProjectText().lower(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -1273,11 +1276,11 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed, **yesArgs):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            self._setInfo("You have resigned from project %s" % \
-                    self.project.getNameForDisplay())
+            self._setInfo("You have resigned from %s %s" % \
+                    (getProjectText().lower(), self.project.getNameForDisplay()))
             self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
         else:
-            return self._write("confirm", message = "Are you sure you want to resign from this project?",
+            return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
     @strFields(feed= "releases")
@@ -1341,21 +1344,22 @@ class ProjectHandler(WebHandler):
     @strFields(operation = None)
     @requiresAdmin
     def processProjectAction(self, auth, projectId, operation):
+        pText = getProjectText()
         project = self.client.getProject(projectId)
 
         if operation == "project_hide":
             if not project.hidden:
                 self.client.hideProject(projectId)
-                self._setInfo("Project hidden")
+                self._setInfo("%s hidden"%pText.title())
             else:
-                self._addErrors("Project is already hidden")
+                self._addErrors("%s is already hidden"%pText.title())
         elif operation == "project_unhide":
             if project.hidden:
                 self.client.unhideProject(projectId)
-                self._setInfo("Project is now visible")
+                self._setInfo("%s is now visible"%pText.title())
             else:
-                self._addErrors("Project is already visible")
+                self._addErrors("%s is already visible"%pText.title())
         else:
-            self._addErrors("Please select a valid project administration option from the menu")
+            self._addErrors("Please select a valid %s administration option from the menu"%pText.lower())
 
         return self._predirect()

@@ -3,9 +3,12 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+    from mint.web.templatesupport import projectText
+?>
     <head>
         <title>${formatTitle('Outbound Mirroring')}</title>
     </head>
@@ -15,15 +18,15 @@
         </div>
         <div id="spanright">
             <form action="${cfg.basePath}admin/removeOutbound" method="post">
-                <h2>Outbound Mirrored Projects</h2>
+                <h2>Outbound Mirrored ${projectText().title()}s</h2>
                 <p class="help">
-                    You can select projects in ${cfg.productName} to be mirrored out to
+                    You can select ${projectText().lower()}s in ${cfg.productName} to be mirrored out to
                     an external Conary repository or Update Service.
                 </p>
 
                 <table py:if="rows" cellspacing="0" cellpadding="0" class="results">
                     <tr>
-                        <th>Project</th>
+                        <th>${projectText().title()}</th>
                         <th>Targets</th>
                         <th>Include Sources</th>
                         <th>Order</th>
