@@ -89,6 +89,7 @@ class UpdatePackageIndex(PackageIndexer):
                 label = str(version.branch().label())
                 versionList = troveEntry.setdefault(label, [])
 
+                version = version.copy()
                 version.resetTimeStamps(timeStamp)
                 versionList.append(version)
                 labelMap[label] = projectId
