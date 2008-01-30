@@ -314,6 +314,11 @@ rapadminpassword = @RAPAPASSWORD@
 conaryproxy = http://proxy.hostname.com/proxy/
 """
 
+        # FIXME: client.getBlessedAMI turns buildId from None to ''
+        #   database.py:161 KeyedTable.get()
+        # so we have to set it back here or we end up with a foreign
+        # key constraint failure.
+        blessedAMI.buildId = None
         blessedAMI.userDataTemplate = blessedAMIUserDataTemplate
         blessedAMI.save()
 
