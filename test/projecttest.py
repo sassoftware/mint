@@ -901,7 +901,7 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
         self.assertEquals(trvLeaves.keys(), ['group-app-appliance:source'])
         labels = trvLeaves['group-app-appliance:source']
         self.assertEquals(len(labels), 1)
-        self.assertEquals(str(labels.keys()[0].branch()), '/app.rpath.local2@rpl:devel')
+        self.assertEquals(str(labels.keys()[0].branch()), '/app.%s@rpl:devel' % MINT_PROJECT_DOMAIN)
         self.assertEquals(str(labels.keys()[0].trailingRevision()), '1.0-1')
 
 
