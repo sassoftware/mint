@@ -18,6 +18,14 @@ Internal Changes
 ----------------
 * rBuilder now requires Conary 2.0. (RBL-2580)
 
+Command-Line Client Changes
+---------------------------
+
+* The command-line client's build-create command now accepts the --name option
+  to set the name of the new build, and --build-notes and --build-notes-file
+  to set the build notes from the command-line and from a file, respectively.
+  (RBL-2486)
+
 Changes in 4.0.1
 ================
 
