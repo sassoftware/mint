@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -249,7 +249,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # fetch from both URLs, one with and one without the trailing slash
         # both should redirect
         self.assertCode('/conary', code = 301)
-        self.assertCode('/conary/', code = 301)
+        self.assertCode('/conary/', code = 302)
 
     def testReferencesAndDescendants(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
@@ -435,14 +435,14 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # addPermForm
         page = page.fetch('/repos/testproject/addPermForm')
         self.failIf('testuser' not in page.body, 'Error in addPermForm')
-        # manageGroupForm
-        page = page.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser')
-        self.failIf('Edit Group' not in page.body, 'Error in manageGroupForm')
-        # addGroupForm
-        page = page.fetch('/repos/testproject/addGroupForm')
-        self.failIf('Add Group' not in page.body, 'Error in addGroupForm')
+        # manageRoleForm
+        page = page.fetch('/repos/testproject/manageRoleForm?roleName=testuser')
+        self.failIf('Edit Role' not in page.body, 'Error in manageRoleForm')
+        # addRoleForm
+        page = page.fetch('/repos/testproject/addRoleForm')
+        self.failIf('Add Role' not in page.body, 'Error in addRoleForm')
         # editPermForm
-        page = page.fetch('/repos/testproject/editPermForm?group=testuser&writeperm=1&capped=0&admin=1&remove=1')
+        page = page.fetch('/repos/testproject/editPermForm?role=testuser&writeperm=1&capped=0&admin=1&remove=1')
         self.failIf('Edit Permission' not in page.body, 'Error in editPermForm')
 
     def testPGPOperations(self):
@@ -473,13 +473,13 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.fetch('/repos/testproject/pgpAdminForm')
         self.fetch('/repos/testproject/pgpChangeOwner?key=blah&owner=blah', ok_codes = [403])
         self.fetch('/repos/testproject/userlist', ok_codes = [403])
-        self.fetch('/repos/testproject/deleteGroup?userGroupName=foo', ok_codes=[403])
+        self.fetch('/repos/testproject/deleteRole?roleName=foo', ok_codes=[403])
         self.fetch('/repos/testproject/addPermForm', ok_codes=[403])
         self.fetch('/repos/testproject/addPerm', ok_codes=[403])
-        self.fetch('/repos/testproject/addGroupForm', ok_codes=[403])
-        self.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser', ok_codes=[403])
-        self.fetch('/repos/testproject/manageGroup', ok_codes=[403])
-        self.fetch('/repos/testproject/addGroup', ok_codes=[403])
+        self.fetch('/repos/testproject/addRoleForm', ok_codes=[403])
+        self.fetch('/repos/testproject/manageRoleForm?roleName=testuser', ok_codes=[403])
+        self.fetch('/repos/testproject/manageRole', ok_codes=[403])
+        self.fetch('/repos/testproject/addRole', ok_codes=[403])
         self.fetch('/repos/testproject/deletePerm', ok_codes=[403])
         self.fetch('/repos/testproject/editPermForm', ok_codes=[403])
         self.fetch('/repos/testproject/editPerm', ok_codes=[403])
@@ -489,13 +489,13 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page.fetch('/repos/testproject/pgpAdminForm')
         page.fetch('/repos/testproject/pgpChangeOwner?key=blah&owner=blah', ok_codes = [403])
         page.fetch('/repos/testproject/userlist')
-        page.fetch('/repos/testproject/deleteGroup')
+        page.fetch('/repos/testproject/deleteRole')
         page.fetch('/repos/testproject/addPermForm')
         page.fetch('/repos/testproject/addPerm')
-        page.fetch('/repos/testproject/addGroupForm')
-        page.fetch('/repos/testproject/manageGroupForm?userGroupName=testuser')
-        page.fetch('/repos/testproject/manageGroup')
-        page.fetch('/repos/testproject/addGroup')
+        page.fetch('/repos/testproject/addRoleForm')
+        page.fetch('/repos/testproject/manageRoleForm?roleName=testuser')
+        page.fetch('/repos/testproject/manageRole')
+        page.fetch('/repos/testproject/addRole')
         page.fetch('/repos/testproject/deletePerm')
         page.fetch('/repos/testproject/editPermForm')
         page.fetch('/repos/testproject/editPerm')

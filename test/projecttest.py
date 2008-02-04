@@ -23,6 +23,7 @@ from mint.server import ParameterError, PermissionDenied
 from mint import mint_error
 from mint import database
 from mint import urltypes
+from mint import constants
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -875,6 +876,42 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
         cfg = project.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNamesOnServer("quux-project." \
                 + MINT_PROJECT_DOMAIN) == [])
+
+    def testNoCreateGroupTemplate(self):
+        client, userid = self.quickMintUser("test", "testpass")
+
+        #First, create a project without being an appliance
+        projId = client.newProject('Not an appliance', 'nap', MINT_PROJECT_DOMAIN, appliance="no")
+        project = client.getProject(projId)
+        cfg = project.getConaryConfig()
+        #This one should be empty
+        self.assertEquals(ConaryClient(cfg).getRepos().troveNamesOnServer(
+            'nap.' + MINT_PROJECT_DOMAIN), [])
+
+    def testCreateGroupTemplate(self):
+
+        if not constants.rBuilderOnline:
+            raise testsuite.SkipTestException("test skipped because it is not rBA safe...using protected branches")
+
+        client, userid = self.quickMintUser("test", "testpass")
+
+        #First, create a project without being an appliance
+        projId = client.newProject('Not an appliance', 'nap', MINT_PROJECT_DOMAIN, appliance="no")
+        projId = client.newProject('An appliance', 'app', MINT_PROJECT_DOMAIN, appliance="yes")
+        project = client.getProject(projId)
+        cfg = project.getConaryConfig()
+        #This one should be empty
+        trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
+                'app.' + MINT_PROJECT_DOMAIN, {})
+        self.assertEquals(trvLeaves.keys(), ['group-app-appliance:source'])
+        labels = trvLeaves['group-app-appliance:source']
+        self.assertEquals(len(labels), 1)
+        self.assertEquals(str(labels.keys()[0].branch()), '/app.%s@rpl:devel' % MINT_PROJECT_DOMAIN)
+        self.assertEquals(str(labels.keys()[0].trailingRevision()), '1.0-1')
+
+
+        # TODO: Add additional tests to exercise the label selecting, and
+        # optional groupnames, label, etc.
 
 
 if __name__ == "__main__":

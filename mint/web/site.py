@@ -30,6 +30,7 @@ from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint.client import timeDelta
+from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
 from mint.web.cache import cache
@@ -429,15 +430,17 @@ class SiteHandler(WebHandler):
         if self.projectList:
             return self._write("uploadKey", kwargs={}, projects=projectList)
         else:
-            return self._write("error", shortError="Not a project member",
-                error = "You may not upload a key as you are not a member of any projects. "
-                        "Create a project, or ask a project owner to add you to their "
-                        "project and then come back")
+            pText = getProjectText().lower()
+            return self._write("error", shortError="Not a %s member"%pText,
+                error = "You may not upload a key as you are not a member of any %ss. "
+                        "Create a %s, or ask a %s owner to add you to their "
+                        "%s and then come back"%(pText,pText,pText,pText))
 
     @requiresAuth
     @listFields(str, projects=None)
     @strFields(keydata=None)
     def processKey(self, auth, projects, keydata):
+        pText = getProjectText().lower()
         projectList = sorted((
                 (x[0].getName(), x[0].getHostname())
                 for x in self.projectList
@@ -458,7 +461,7 @@ class SiteHandler(WebHandler):
                     added.append(project)
 
         c = len(added)
-        self._setInfo("Added key to %d %s" % (c, (c == 1) and "project" or "projects"))
+        self._setInfo("Added key to %d %s" % (c, (c == 1) and pText or "%ss"%pText))
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
@@ -493,12 +496,13 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance):
         hostname = hostname.lower()
+        pText = getProjectText().lower()
         if not title:
-            self._addErrors("You must supply a project title")
+            self._addErrors("You must supply a %s title"%pText)
         if not hostname:
-            self._addErrors("You must supply a project hostname")
+            self._addErrors("You must supply a %s hostname"%pText)
         if not domainname:
-            self._addErrors("You must supply a project domain name")
+            self._addErrors("You must supply a %s domain name"%pText)
         if not self._getErrors():
             try:
                 # attempt to create the project
@@ -519,7 +523,7 @@ class SiteHandler(WebHandler):
             except mint_error.MintError, e:
                 self._addErrors(str(e))
         if not self._getErrors():
-            self._setInfo("Project %s successfully created" % title)
+            self._setInfo("%s %s successfully created" % (pText.title(),title))
             self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance}
@@ -626,10 +630,11 @@ class SiteHandler(WebHandler):
     #
 
     def _formatPackageSearch(self, results):
+        pText = getProjectText().title()
         if self.groupTrove:
-            columns = ('Package', 'Project', '')
+            columns = ('Package', pText, '')
         else:
-            columns = ('Package', 'Project')
+            columns = ('Package', pText)
 
         formattedRows = []
         for troveName, troveVersionStr, projectId in results:
@@ -683,7 +688,8 @@ class SiteHandler(WebHandler):
     # Project search
     # 
     def _formatProjectSearch(self, results):
-        columns = ('Project', 'Last Commit', 'Last Release')
+        pText = getProjectText().title()
+        columns = (pText, 'Last Commit', 'Last Release')
         formattedRows = []
         for x in results:
             p = self.client.getProject(x[0])
@@ -697,6 +703,7 @@ class SiteHandler(WebHandler):
         return formattedRows, columns
 
     def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False, filterNoDownloads = True):
+        pText = getProjectText()
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset,
             filterNoDownloads = filterNoDownloads)
 
@@ -706,7 +713,7 @@ class SiteHandler(WebHandler):
 
         def describeFn(key, val):
             if key == "buildtype":
-                return "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
+                return "%s containing %s builds" % (pText.lower(),buildtypes.typeNamesMarketing[int(val)])
             else:
                 return ""
 
@@ -726,7 +733,7 @@ class SiteHandler(WebHandler):
         else:
             extraParams = ";showAll=1"
         
-        return self._write("searchResults", searchType = "Projects",
+        return self._write("searchResults", searchType = pText.title(),
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
                 columns = columns, count = count, limit = limit,
@@ -847,12 +854,13 @@ class SiteHandler(WebHandler):
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
+        pText = getProjectText()
         if feed == "newProjects":
             results = self.client.getNewProjects(10, showFledgling = False)
 
-            title = "%s - New Projects" % self.cfg.productName
+            title = "%s - New %ss" % (self.cfg.productName,pText.title())
             link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New projects created on %s" % self.cfg.productName
+            desc = "New %ss created on %s" % (pText.lower(),self.cfg.productName) 
 
             items = []
             for p in results:
@@ -861,11 +869,11 @@ class SiteHandler(WebHandler):
 
                 item['title'] = project.getName()
                 item['link'] = project.getUrl()
-                item['content'] = "<p>A new project named <a href=\"%s\">%s</a> has been created.</p>" % \
-                    (project.getUrl(), project.getName())
+                item['content'] = "<p>A new %s named <a href=\"%s\">%s</a> has been created.</p>" % \
+                    (pText.lower(),project.getUrl(), project.getName())
                 desc = project.getDesc().strip()
                 if desc:
-                    item['content'] += "Project description:"
+                    item['content'] += "%s description:"%pText.title()
                     item['content'] += "<blockquote>%s</blockquote>" % desc
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
@@ -884,7 +892,7 @@ class SiteHandler(WebHandler):
                 if release.version:
                     item['title'] += " (version %s)" % (release.version)
                 item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, release.getId())
-                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, projectName)
+                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> %s.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, projectName, pText.lower())
                 item['content']  += "This release contains the following builds:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]

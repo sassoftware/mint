@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -234,3 +234,10 @@ def hashMirrorRepositoryUser(hostName, siteDomainName, mirrorUrl,
     m.update(userPrefix+trailingBits)
     userHash = m.hexdigest()[:8]
     return '%s_%s' % (userPrefix, userHash)
+
+def getProjectText():
+    """Returns project if rBO and product if rBA"""
+    text = "project"
+    if constants.rBuilderOnline == False:
+        text = "product"
+    return text 

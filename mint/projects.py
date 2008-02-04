@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -11,7 +11,7 @@ import time
 from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies
+        hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
@@ -34,15 +34,17 @@ class InvalidHostname(MintError):
 
 class DuplicateHostname(MintError):
     def __str__(self):
-        return "A project using this hostname already exists"
+        return "A %s using this hostname already exists"%getProjectText().lower()
 
 class DuplicateName(MintError):
     def __str__(self):
-        return "A project using this project title already exists"
+        pText = getProjectText().lower()
+        return "A %s using this %s title already exists"%(pText, pText)
 
 class LabelMissing(MintError):
     def __str__(self):
-        return "Project label does not exist"
+        return "%s label does not exist"%getProjectText().title()
+
 
 class DuplicateLabel(MintError):
     def __str__(self):
@@ -500,16 +502,17 @@ class ProjectsTable(database.KeyedTable):
 
         if username:
             repos.auth.addUser(username, password)
-            repos.auth.addAcl(username, None, None, True, False,
-                              self.cfg.projectAdmin)
+            repos.auth.addAcl(username, None, None, write=True, remove=False)
+            repos.auth.setAdmin(username, True)
 
         repos.auth.addUser("anonymous", "anonymous")
-        repos.auth.addAcl("anonymous", None, None, False, False, False)
+        repos.auth.addAcl("anonymous", None, None, write=False, remove=False)
 
         # add the mint auth user so we can add additional permissions
         # to this repository
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
-        repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, remove=False)
+        repos.auth.setAdmin(self.cfg.authUser, True)
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:
             repos.auth.setMirror(username, True)
@@ -763,7 +766,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         if createDb:
             cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
@@ -794,7 +797,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)

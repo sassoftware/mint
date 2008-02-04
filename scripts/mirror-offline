@@ -110,7 +110,9 @@ class MirrorOffline(SingletonScript):
 
             try:
                 netRepos.auth.addUser(userName, userPass)
-                netRepos.auth.addAcl(userName, None, None, True, False, True)
+                netRepos.auth.addAcl(userName, None, None, 
+                                     write=True, remove=False)
+                netRepos.auth.setAdmin(userName, True)
                 netRepos.auth.setMirror(userName, True)
             except errors.GroupAlreadyExists:
                 # assume user is already present--probably due to a previous

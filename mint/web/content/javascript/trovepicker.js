@@ -394,7 +394,7 @@ TrovePicker.prototype.getGroupTroves = function() {
         ul = UL({'id': par.elId + 'selectionList'});
 
         if(troveList.length < 1) {
-            appendChildNodes(ul, LI(null, "No groups found. Cook a group with the Group Builder and try again."));
+            appendChildNodes(ul, LI(null, "No groups found. Cook a group and try again."));
         }
         for(var i in troveList) {
             link = forwardLink(null, troveList[i]);
