@@ -23,6 +23,7 @@ from mint.server import ParameterError, PermissionDenied
 from mint import mint_error
 from mint import database
 from mint import urltypes
+from mint import constants
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -888,6 +889,10 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             'nap.' + MINT_PROJECT_DOMAIN), [])
 
     def testCreateGroupTemplate(self):
+
+        if not constants.rBuilderOnline:
+            raise testsuite.SkipTestException("test skipped because it is not rBA safe...using protected branches")
+
         client, userid = self.quickMintUser("test", "testpass")
 
         #First, create a project without being an appliance
