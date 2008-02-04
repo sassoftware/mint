@@ -118,7 +118,7 @@ onload = "javascript:;"
                     </ul>
                 </div>
                 <div id="bottomText">
-                    <span id="copyright">Copyright &copy; 2005-2007 rPath. All Rights Reserved.</span>
+                    <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
                 <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
