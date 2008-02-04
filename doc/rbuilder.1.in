@@ -20,7 +20,11 @@ configuration.
 .SS COMMANDS
 
 .TP 4
-.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR [\fB--wait\fR] [\fB--timeout \fB\fI<seconds>\fR] [\fB--option '\fI<key>\fR \fI<value>\fR'\fR ...]
+.B build-create \fI<project-name>\fR \fI<trove-spec>\fR \fI<image-type>\fR
+[\fB--wait\fR] [\fB--timeout \fB\fI<seconds>\fR]
+[\fB--option '\fI<key>\fR \fI<value>\fR'\fR ...]
+[\fB--name\fR \fI<name>\fR]
+[\fB--build-notes\fR \fI<notes>\fR | \fB--build-notes-file\fR \fI<file>\fR]
 
 Creates a build based on the following information:
 
@@ -44,6 +48,10 @@ where <key> is the name of the option and <value> is the value
 you wish to set for that option.  Options not specified will
 apply the default values for those options.  Specify multiple options
 by using \fB--option\fR multiple times.
+
+Set the build name using \fB--name\fR \fI'<name>'\fR. Release
+notes can be set directly with \fB--build-notes\fR \fI'<notes>'\fR
+or loaded from a file by passing \fB--build-notes-file\fR \fI'<file>'\fR.
 
 Use \fBrbuilder --help\fR to display the list of supported build options.
 
