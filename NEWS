@@ -4,8 +4,19 @@ Changes in @NEW@
 Web Front End Changes
 ---------------------
 
+* Projects are now referred to as products. (RBL-1641)
 * A bug that prevented a group trove from being cooked more than one time
   by Group Builder has been corrected. (RBL-2570)
+* The Group Builder has been removed from rBA, to be replaced by a different
+  mechanism to get appliances built quickly. (RBL-2514)
+* The Conary repository permission management web user interface has
+  been modified to use the term "Role" instead of "Group". (RBL-2580)
+* New appliance projects will be prepopulated with a sample group recipe ready
+  for extending. (RBL-2515)
+
+Internal Changes
+----------------
+* rBuilder now requires Conary 2.0. (RBL-2580)
 
 Command-Line Client Changes
 ---------------------------

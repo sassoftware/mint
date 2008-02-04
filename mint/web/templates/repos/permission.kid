@@ -3,7 +3,7 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <?python
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 ?>
@@ -34,9 +34,9 @@
                 <input py:if="operation=='Edit'" name="oldtrove" value="${trove}" type="hidden" />
                 <table class="add-form">
                     <tr>
-                        <td id="header">Group:</td>
-                        <td py:if="operation!='Edit'" py:content="makeSelect('group', [x for x in groups if x != cfg.authUser], group)"/>
-                        <td py:if="operation=='Edit'"><input name="group" value="${group}" readonly="readonly" type="text" /></td>
+                        <td id="header">Role:</td>
+                        <td py:if="operation!='Edit'" py:content="makeSelect('role', [x for x in roles if x != cfg.authUser], role)"/>
+                        <td py:if="operation=='Edit'"><input name="role" value="${role}" readonly="readonly" type="text" /></td>
                     </tr>
                     <tr>
                         <td id="header">Label:</td>

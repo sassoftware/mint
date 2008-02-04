@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -23,7 +23,7 @@ from mint import users
 from mint import mint_error
 from mint import maintenance
 from mint import mirror
-from mint.helperfuncs import cleanseUrl, getUrlHost, hashMirrorRepositoryUser
+from mint.helperfuncs import cleanseUrl, getUrlHost, hashMirrorRepositoryUser, getProjectText
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
@@ -142,12 +142,13 @@ class AdminHandler(WebHandler):
                         additionalLabelsToMirror, allLabels):
         additionalLabels = []
         extLabel = ""
+        pText = getProjectText().lower()
         if not name:
-            self._addErrors("Missing project title")
+            self._addErrors("Missing %s title"%pText)
         if not hostname:
-            self._addErrors("Missing project name")
+            self._addErrors("Missing %s name"%pText)
         if not label:
-            self._addErrors("Missing project label")
+            self._addErrors("Missing %s label"%pText)
         else:
             try:
                 extLabel = versions.Label(label)
@@ -274,7 +275,7 @@ class AdminHandler(WebHandler):
                 self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
 
             verb = editing and "Edited" or "Added"
-            self._setInfo("%s external project %s" % (verb, name))
+            self._setInfo("%s external %s %s" % (verb, getProjectText().lower(), name))
             self._redirect("http://%s%sadmin/external" %
                 (self.cfg.siteHost, self.cfg.basePath))
         else:
@@ -348,7 +349,8 @@ class AdminHandler(WebHandler):
 
 
     def external(self, auth):
-        regColumns = ['Project Name', 'Mirrored']
+        pText = getProjectText().title()
+        regColumns = ['%s Name'%pText, 'Mirrored']
         regRows = []
 
         # iterate through all projects, set up the
@@ -370,7 +372,7 @@ class AdminHandler(WebHandler):
 
         # set up the mirrored projects list
         mirroredProjects.sort(key = lambda x: x[1]['mirrorOrder'])
-        mirrorColumns = ['Mirrored Project Name', 'Order']
+        mirrorColumns = ['Mirrored %s Name'%pText, 'Order']
         mirrorRows = []
         for i, (project, mirrored) in enumerate(mirroredProjects):
             orderHtml = self._makeMirrorOrderingLinks("InboundMirror",
@@ -794,11 +796,12 @@ class AdminHandler(WebHandler):
 
     @intFields(id = -1)
     def removeOutboundMirrorTarget(self, id, *args, **kwargs):
+        pText = getProjectText()
         omt = self.client.getOutboundMirrorTarget(id)
         om = self.client.getOutboundMirror(omt['outboundMirrorId'])
         project = self.client.getProject(om['sourceProjectId'])
-        message = 'Delete target %s for outbound mirrored project %s?' % \
-                (getUrlHost(omt['url']), project.name)
+        message = 'Delete target %s for outbound mirrored %s %s?' % \
+                (getUrlHost(omt['url']), pText.lower(), project.name)
         noLink = 'outbound'
         yesArgs = {'func': 'processRemoveOutboundMirrorTarget', 'id': id}
         return self._write('confirm', message=message, noLink=noLink,

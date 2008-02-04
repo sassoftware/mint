@@ -4,10 +4,11 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <?python
+        from mint.web.templatesupport import projectText
         ownsProjects = False
         if projectList:
             for project, level in projectList:
@@ -36,10 +37,10 @@
                     using existing packages in rBuilder.
                 </p>
 
-                <h2>1) Create a new group for your project</h2>
+                <h2>1) Create a new group for your ${projectText().lower()}</h2>
                 <p>
                     Your new group will represent the recipe for your software
-                    appliance. From your project's home page, click Group Builder
+                    appliance. From your ${projectText().lower()}'s home page, click Group Builder
                     and complete the form with the new group's details.
                 </p>
 
@@ -76,7 +77,7 @@
 
                 <p>To extend rBuilder functions, you might also choose to:</p>
                 <ul>
-                    <li><a href="http://wiki.rpath.com/wiki/Conary:Packager?version=${constants.mintVersion}">Create your own packages</a> for your project on a local Conary-based system</li>
+                    <li><a href="http://wiki.rpath.com/wiki/Conary:Packager?version=${constants.mintVersion}">Create your own packages</a> for your ${projectText().lower()} on a local Conary-based system</li>
                     <li>Step through an introduction to packaging using the <a href="http://wiki.rpath.com/wiki/Conary:New_Package_Tutorial?version=${constants.mintVersion}">New Package Tutorial</a>, including the steps to package your own software for rBuilder Online</li>
                     <li><a href="http://wiki.rpath.com/wiki/Application-to-Appliance?version=${constants.mintVersion}">Make your application into an appliance</a> by incorporating rBuilder and other rPath technologies in the <a href="http://wiki.rpath.com/wiki/Appliance_Build_Instructions?version=${constants.mintVersion}">appliance build process</a></li>
                 </ul>
