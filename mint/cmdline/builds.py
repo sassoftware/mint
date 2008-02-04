@@ -174,6 +174,9 @@ class BuildCreateCommand(commands.RBuilderCommand):
             'option':   ('set a build option', '\'KEY VALUE\''),
             'timeout' : ('time to wait before ending, even if the job is not done', 'seconds'),
             'quiet':    'suppress job status output',
+            'name':     'set a build name',
+            'build-notes': 'set build notes',
+            'build-notes-file': 'set build notes from a file',
     }
 
     def addParameters(self, argDef):
@@ -182,6 +185,9 @@ class BuildCreateCommand(commands.RBuilderCommand):
          argDef["option"] = options.MULT_PARAM
          argDef["timeout"] = options.ONE_PARAM
          argDef["quiet"] = options.NO_PARAM
+         argDef["name"] = options.ONE_PARAM
+         argDef["build-notes"] = options.ONE_PARAM
+         argDef["build-notes-file"] = options.ONE_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
@@ -206,8 +212,25 @@ class BuildCreateCommand(commands.RBuilderCommand):
             if x not in buildtemplates.dataTemplates[buildTypeId]:
                 raise RuntimeError, "%s is not a valid option for %s. See --help." % (x, buildType.upper())
 
+        if 'build-notes' in argSet and 'build-notes-file' in argSet:
+            raise RuntimeError('--build-notes and --build-notes-file may not'
+                'be used together.')
+
         project = client.getProjectByHostname(projectName)
         build = client.newBuild(project.id, project.name)
+
+        # set name and build notes
+        if 'name' in argSet:
+            build.setName(argSet['name'])
+        if 'build-notes' in argSet:
+            build.setDesc(argSet['build-notes'])
+        elif 'build-notes-file' in argSet:
+            fn = argSet['build-notes-file']
+            if os.path.exists(fn):
+                build.setDesc(open(fn).read())
+            else:
+                raise RuntimeError('Release notes file "%s" does not exist.'
+                    % fn)
 
         # resolve a trovespec
         cfg = conarycfg.ConaryConfiguration(True)
