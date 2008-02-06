@@ -20,10 +20,10 @@ from conary.repository import errors
 from mod_python import apache
 
 from mint import users
-from mint import mint_error
 from mint import maintenance
 from mint import mirror
 from mint.helperfuncs import cleanseUrl, getUrlHost, hashMirrorRepositoryUser, getProjectText
+from mint.mint_error import *
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
@@ -290,7 +290,7 @@ class AdminHandler(WebHandler):
         kwargs.setdefault('authtype', 'none')
         try:
             self.client.getProjectByHostname('rap')
-        except database.ItemNotFound:
+        except ItemNotFound:
             firstTime = True
             kwargs.setdefault('name', 'rPath Appliance Platform - Linux Service')
             kwargs.setdefault('hostname', 'rap')

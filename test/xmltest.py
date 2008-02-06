@@ -146,7 +146,7 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
         client = self.getClient("test")
         server = client.server
 
-        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:5',))
+        r = server._server.callWrapper('checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:6',))
         self.failUnlessEqual(r[1], SERVER_VERSIONS)
 
         # fake an old unversioned client
@@ -158,9 +158,10 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
             mint.server.SERVER_VERSIONS = SERVER_VERSIONS
 
         # fake an old client
-        self.assertRaises(mint_error.InvalidClientVersion, 
-            server._server.callWrapper ,'checkVersion', ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:0',))
-
+        self.failUnlessEqual(server._server.callWrapper('checkVersion',
+                ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:0',)),
+            (True, ('InvalidClientVersion', 'Invalid client version 0. '
+                'Server accepts client versions 6')))
 
 if __name__ == "__main__":
     testsuite.main()

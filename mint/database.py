@@ -8,39 +8,9 @@ import weakref
 
 from conary.dbstore import sqlerrors
 
-from mint.mint_error import MintError
+from mint.mint_error import *
 
 from mint import schema
-
-class DatabaseVersionMismatch(MintError):
-    def __init__(self, currentVersion):
-        self.currentVersion = currentVersion
-        self.wantedVersion = schema.RBUILDER_DB_VERSION
-
-    def __str__(self):
-        return "Current rBuilder database schema version is %s; required version is %s" % \
-                (self.currentVersion, self.wantedVersion)
-
-class ItemNotFound(MintError):
-    def __init__(self, item = "item"):
-        self.item = item
-
-    def __str__(self):
-        return "requested %s not found" % self.item
-
-class DuplicateItem(MintError):
-    def __init__(self, item = "item"):
-        self.item = item
-
-    def __str__(self):
-        return "duplicate item in %s" % self.item
-
-class UpToDateException(MintError):
-    def __init__(self, table = "Unknown Table"):
-        self.table = table
-
-    def __str__(self):
-            return "The table '%s' is not up to date" % self.table
 
 def concat(db, *items):
     if db.driver == "mysql":

@@ -57,7 +57,6 @@ from mint import constants
 from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
 from mint.reports import MintReport
-from mint.searcher import SearchTermsError
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 
 from mcp import client as mcpClient
@@ -92,7 +91,12 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [5]
+SERVER_VERSIONS = [6]
+# XMLRPC Schema History
+# Version 6
+#  * Reworked exception marshalling API. All exceptions derived from MintError
+#    are now marshalled automatically.
+
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
@@ -227,7 +231,6 @@ def getTables(db, cfg):
 
     # check to make sure the schema version is correct
     from mint import schema
-    from mint.database import DatabaseVersionMismatch
     try:
         schema.checkVersion(db)
     except sqlerrors.SchemaVersionError, e:
@@ -347,47 +350,13 @@ class MintServer(object):
                 if self.callLog:
                     self.callLog.log(self.remoteIp, list(authToken) + [None, None], methodName, args)
 
-            except users.UserAlreadyExists, e:
+            except MintError, e:
                 self._handleError(e, authToken, methodName, args)
-                return (True, ("UserAlreadyExists", str(e)))
-            except database.DuplicateItem, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("DuplicateItem", e.item))
-            except database.ItemNotFound, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("ItemNotFound", e.item))
-            except SearchTermsError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("SearchTermsError", str(e)))
-            except users.AuthRepoError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("AuthRepoError", str(e)))
-            except jobs.DuplicateJob, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("DuplicateJob", str(e)))
-            except UserAlreadyAdmin, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("UserAlreadyAdmin", str(e)))
-            except AdminSelfDemotion, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("AdminSelfDemotion" , str(e)))
-            except JobserverVersionMismatch, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("JobserverVersionMismatch", str(e)))
-            except MaintenanceMode, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("MaintenanceMode", str(e)))
-            except users.LastOwner, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("LastOwner", str(e)))
-            except ParameterError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("ParameterError", str(e)))
-            except NotEntitledError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("NotEntitledError", str(e)))
-            except Exception, e:
-                self._handleError(e, authToken, methodName, args)
+                frozen = (e.__class__.__name__, e.freeze())
+                return (True, frozen)
+            except:
+                e_type, e_value, e_tb = sys.exc_info()
+                self._handleError(e_value, authToken, methodName, args)
                 raise
             else:
                 self.db.commit()
@@ -485,12 +454,12 @@ class MintServer(object):
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
             self.auth.userId) in userlevels.WRITERS):
                 return
-        raise database.ItemNotFound()
+        raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
         try:
             buildRow = self.builds.get(buildId, fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         self._filterProjectAccess(buildRow['projectId'])
@@ -500,14 +469,14 @@ class MintServer(object):
         try:
             pubReleaseRow = self.publishedReleases.get(pubReleaseId,
                     fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
-        # if the release is not published, then only project members 
+        # if the release is not published, then only project members
         # with write access can see the published release
         if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
-            raise database.ItemNotFound()
+            raise ItemNotFound()
         # if the published release is published, then anyone can see it
         # unless the project is hidden and the user is not an admin
         else:
@@ -516,7 +485,7 @@ class MintServer(object):
     def _filterLabelAccess(self, labelId):
         try:
             labelRow = self.labels.get(labelId, fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         self._filterProjectAccess(labelRow['projectId'])
@@ -552,7 +521,7 @@ class MintServer(object):
             if (self.projectUsers.getUserlevelForProjectMember(projectId,
                     self.auth.userId) in allowedUserlevels):
                 return True
-        except database.ItemNotFound:
+        except ItemNotFound:
             pass
         return False
 
@@ -561,7 +530,7 @@ class MintServer(object):
         try:
             if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
                 return True
-        except database.ItemNotFound:
+        except ItemNotFound:
             pass
         return False
 
@@ -633,9 +602,9 @@ class MintServer(object):
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
-            raise InvalidClientVersion(
-                'Invalid client version %s.  Server accepts client versions %s ' \
-                    % (self.clientVer, ', '.join(str(x) for x in SERVER_VERSIONS)))
+            raise InvalidClientVersion('Invalid client version %s. Server '
+                'accepts client versions %s' % (self.clientVer,
+                    ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
     # project methods
@@ -890,7 +859,7 @@ class MintServer(object):
                               WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
-                raise database.ItemNotFound("username")
+                raise ItemNotFound("username")
             else:
                 userId = r[0]
         elif userId and not username:
@@ -898,7 +867,7 @@ class MintServer(object):
                               WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
-                raise database.ItemNotFound("userId")
+                raise ItemNotFound("userId")
             else:
                 username = r[0]
 
@@ -909,7 +878,7 @@ class MintServer(object):
             self.membershipRequests.deleteRequest(projectId, userId)
         try:
             self.projectUsers.new(projectId, userId, level)
-        except database.DuplicateItem:
+        except DuplicateItem:
             project.updateUserLevel(userId, level)
             # only attempt to modify acl's of local projects.
             if not project.external:
@@ -935,7 +904,7 @@ class MintServer(object):
             try:
                 salt, password = cu.fetchone()
             except TypeError:
-                raise database.ItemNotFound("username")
+                raise ItemNotFound("username")
             repos = self._getProjectRepo(project)
             repos.addUserByMD5(label, username, salt, password)
             repos.addAcl(label, username, None, None,
@@ -996,7 +965,7 @@ class MintServer(object):
         #XXX Make this atomic
         try:
             userLevel = self.getUserLevel(userId, projectId)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise netclient.UserNotFound()
         if (self.auth.userId != userId) and userLevel == userlevels.USER:
             raise users.UserInduction()
@@ -1173,7 +1142,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound("membership")
+            raise ItemNotFound("membership")
         else:
             return r[0]
 
@@ -1421,12 +1390,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu.execute("SELECT userId FROM Users WHERE username=?", username)
         r = cu.fetchall()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
                    r[0][0])
         r = cu.fetchall()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         return r[0][0]
 
     @typeCheck(str)
@@ -1877,7 +1846,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         try:
             userId = self.getUserIdByName(username)
-        except database.ItemNotFound:
+        except ItemNotFound:
             userId = 0
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
@@ -1915,7 +1884,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
-            raise database.ItemNotFound
+            raise ItemNotFound
         self._filterBuildAccess(buildId)
         build = self.builds.get(buildId)
 
@@ -4178,7 +4147,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # get blessed instance
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise ec2.FailedToLaunchAMIInstance()
 
         launchedFromIP = self.remoteIp

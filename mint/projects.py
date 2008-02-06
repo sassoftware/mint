@@ -17,7 +17,7 @@ from mint import mailinglists
 from mint import searcher
 from mint import userlevels
 from mint import builds
-from mint.mint_error import MintError
+from mint.mint_error import *
 
 from conary import dbstore
 from conary import sqlite3
@@ -27,30 +27,6 @@ from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration, UserInformation, \
         EntitlementList
 
-
-class InvalidHostname(MintError):
-    def __str__(self):
-        return "Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
-
-class DuplicateHostname(MintError):
-    def __str__(self):
-        return "A %s using this hostname already exists"%getProjectText().lower()
-
-class DuplicateName(MintError):
-    def __str__(self):
-        pText = getProjectText().lower()
-        return "A %s using this %s title already exists"%(pText, pText)
-
-class LabelMissing(MintError):
-    def __str__(self):
-        return "%s label does not exist"%getProjectText().title()
-
-
-class DuplicateLabel(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "Label already exists"):
-        self.reason = reason
 
 # functions to convert a repository name to a database-safe name string
 transTables = {
@@ -115,7 +91,7 @@ class Project(database.TableObject):
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)
-        except database.ItemNotFound:
+        except ItemNotFound:
             return userlevels.NONMEMBER
 
     def updateUserLevel(self, userId, level):
@@ -253,7 +229,7 @@ class ProjectsTable(database.KeyedTable):
     def new(self, **kwargs):
         try:
             id = database.KeyedTable.new(self, **kwargs)
-        except database.DuplicateItem, e:
+        except DuplicateItem, e:
             cu = self.db.cursor()
             cu.execute("SELECT projectId FROM Projects WHERE hostname=?", kwargs['hostname'])
             results = cu.fetchall()
@@ -289,7 +265,7 @@ class ProjectsTable(database.KeyedTable):
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         else:
             return r[0]
 
@@ -300,7 +276,7 @@ class ProjectsTable(database.KeyedTable):
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         else:
             return r[0]
 

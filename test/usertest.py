@@ -8,8 +8,8 @@ testsuite.setup()
 
 import fixtures
 from mint import mint_error, users
-from mint.database import ItemNotFound
 from mint.users import InvalidUsername
+from mint.mint_error import *
 
 class UsersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")

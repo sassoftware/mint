@@ -11,10 +11,7 @@ import fixtures
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
 from mint import userlevels
-from mint.database import DuplicateItem, ItemNotFound
-from mint.mint_error import PermissionDenied, UserAlreadyAdmin, \
-     AdminSelfDemotion, LastAdmin
-from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
+from mint.mint_error import *
 from mint import users
 
 from conary import versions

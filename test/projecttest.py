@@ -16,11 +16,10 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import userlevels
-from mint.database import DuplicateItem, ItemNotFound
+from mint.mint_error import *
 from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
      DuplicateLabel
 from mint.server import ParameterError, PermissionDenied
-from mint import mint_error
 from mint import database
 from mint import urltypes
 from mint import constants

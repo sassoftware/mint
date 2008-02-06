@@ -7,6 +7,7 @@
 from mint import builds
 from mint import database
 from mint import helperfuncs
+from mint.mint_error import *
 from conary.deps import deps
 
 class PublishedReleasesTable(database.KeyedTable):
@@ -32,7 +33,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def publishedReleaseExists(self, pubReleaseId):
         try:
             pubRelease = self.get(pubReleaseId, fields=['pubReleaseId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return False
         return True
 

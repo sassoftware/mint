@@ -8,7 +8,7 @@ import unittest
 testsuite.setup()
 
 from mint import mailinglists
-from mint.mailinglists import MailingListException
+from mint.mint_error import MailingListException
 
 class StubServer:
     fail = False

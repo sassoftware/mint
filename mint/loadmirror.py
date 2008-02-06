@@ -6,6 +6,7 @@
 from mint import config, client, database
 from mint import scriptlibrary, copyutils
 from mint.helperfuncs import getProjectText
+from mint.mint_error import *
 from conary.lib import util
 from conary.repository.netrepos import netserver
 
@@ -57,16 +58,6 @@ class Callback:
             self.f.truncate()
         print >> self.f, msg
 
-
-class NoMirrorLoadDiskFound(Exception):
-    def __str__(self):
-        return "No mirror preload disk was found attached to your appliance."
-
-class UnmountFailed(Exception):
-    def __init__(self, dev):
-        self.dev = dev
-    def __str__(self):
-        return "Unable to automatically unmount %s; please manually unmount" % self.dev
 
 def call(cmd):
     logger.debug("+ %s" % cmd)

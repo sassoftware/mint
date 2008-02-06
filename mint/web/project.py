@@ -22,7 +22,7 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
-from mint.mint_error import NotEntitledError
+from mint.mint_error import *
 
 from mint import buildtemplates
 from mint import helperfuncs
@@ -65,7 +65,7 @@ class ProjectHandler(WebHandler):
 
         try:
             self.project = self.client.getProjectByHostname(cmds[0])
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise HttpNotFound
 
         # redirect endorsed (external) projects
@@ -914,7 +914,7 @@ class ProjectHandler(WebHandler):
             builds = (not buildType) and  builds or \
                 ([x for x in builds if x.buildType in buildType or \
                       flaggedBuilds.intersection(x.getDataDict())])
-        except database.ItemNotFound:
+        except ItemNotFound:
             self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
         else:
             return self._write("pubrelease", release = release, builds = builds)
@@ -1075,7 +1075,7 @@ class ProjectHandler(WebHandler):
                     self.project.editLabel(labelId, label, labelInfo['url'],
                         labelInfo['authType'], labelInfo['username'],
                         labelInfo['password'], labelInfo['entitlement'])
-            except database.DuplicateItem:
+            except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
 
         if self._getErrors():

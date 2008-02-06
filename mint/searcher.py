@@ -30,15 +30,6 @@ datesql = {
     FOURWEEKS: "(EPOCH - 2419200)",
 }
 
-class SearchError(MintError):
-    def __str__(self):
-        return "An error has occurred during your search: "
-
-class SearchTermsError(SearchError):
-    def __str__(self):
-        return SearchError.__str__(self) + "Invalid search terms"
-
-
 class Searcher :
     WORDS_PRE = 10
     WORDS_POST = 10

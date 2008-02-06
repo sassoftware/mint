@@ -21,9 +21,9 @@ import simplejson
 
 
 from mint import database
-from mint import mint_error
 from mint import userlevels
 from mint import helperfuncs
+from mint.mint_error import *
 from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
@@ -103,10 +103,10 @@ class ConaryHandler(WebHandler):
     def pgpChangeOwner(self, auth, owner, key):
         # The requiresAdmin decorator will not work with our authOveride
         # tuple, so check for admin here
-        if not self.project:             
-            raise database.ItemNotFound("project")
+        if not self.project:
+            raise ItemNotFound("project")
         if not self.auth.admin:
-            raise mint_error.PermissionDenied
+            raise PermissionDenied
 
         if not owner or owner == '--Nobody--':
             owner = None
@@ -222,7 +222,7 @@ class ConaryHandler(WebHandler):
         try:
             proj = self.client.getProjectByFQDN(extVer.getHost())
             hostname = proj.getHostname()
-        except database.ItemNotFound:
+        except ItemNotFound:
             pass
 
         if hostname:
@@ -676,7 +676,7 @@ class ConaryHandler(WebHandler):
             else:
                 serverName = self.req.hostname
                 self.project = self.client.getProjectByFQDN(serverName)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise HttpNotFound
 
         self.serverNameList = [serverName]
@@ -749,7 +749,7 @@ class ConaryHandler(WebHandler):
                 return self._write("error",
                                    shortError = "Invalid Regular Expression",
                                    error = str(e))
-            except mint_error.PermissionDenied:
+            except PermissionDenied:
                 raise HttpForbidden
         finally:
             # carefully restore old credentials so that this code can work

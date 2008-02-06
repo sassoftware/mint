@@ -7,7 +7,7 @@ import re
 import sys
 import xmlrpclib
 
-from mint.mint_error import MintError
+from mint.mint_error import *
 
 (PROJECT, PROJECT_COMMITS, PROJECT_DEVEL, PROJECT_BUGS) = range(0, 4)
 
@@ -47,13 +47,6 @@ def GetLists(projectName, lists):
 
 def DefaultLists(projectName):
     return GetLists(projectName, defaultlists)
-
-class MailingListException(MintError):
-    def __init__(self, mesg):
-        self.mesg = mesg
-
-    def __str__(self):
-        return self.mesg
 
 class MailingListClient:
     def __init__(self, server):

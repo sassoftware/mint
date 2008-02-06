@@ -16,30 +16,12 @@ from mint import helperfuncs
 from mint import jobs
 
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
-from mint.mint_error import MintError, ParameterError
+from mint.mint_error import *
 
 from conary import versions
 from conary.deps import deps
 
 PROTOCOL_VERSION = 1
-
-class TroveNotSet(MintError):
-    def __str__(self):
-        return "This build is not associated with a group."
-
-class BuildMissing(MintError):
-    def __str__(self):
-        return "The requested build does not exist."
-
-class BuildDataNameError(MintError):
-    def __str__(self):
-        return self.str
-
-    def __init__(self, reason = None):
-        if reason is None:
-            self.str = "Named value is not in data template."
-        else:
-            self.str = reason
 
 class UrlDownloadsTable(database.DatabaseTable):
     name = "UrlDownloads"

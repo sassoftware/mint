@@ -13,10 +13,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes
 from mint import pubreleases
-from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, \
-     BuildEmpty, PublishedReleasePublished, PublishedReleaseEmpty, \
-     PublishedReleaseNotPublished
-from mint.database import ItemNotFound
+from mint.mint_error import *
 
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
     @testsuite.context("quick")

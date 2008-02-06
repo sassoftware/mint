@@ -6,13 +6,7 @@
 import elementtree
 from elementtree.XMLTreeBuilder import FancyTreeBuilder
 
-from mint.mint_error import MintError
-
-class HtmlTagNotAllowed(MintError):
-    pass
-
-class HtmlParseError(MintError):
-    pass
+from mint.mint_error import *
 
 defaultAllowed = ['b', 'i', 'pre', 'p', 'br', 'a', 'div', 'span']
 
