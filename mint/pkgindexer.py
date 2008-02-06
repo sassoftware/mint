@@ -65,7 +65,7 @@ class UpdatePackageIndex(PackageIndexer):
             cu.execute("""DELETE FROM PackageIndex WHERE
                               (SELECT mark FROM PackageIndexMark) = 0""")
 
-            cu.execute("""SELECT Projects.projectId, troveName, version,
+            cu.execute("""SELECT Projects.projectId, troveName, Commits.version,
                                  timestamp
                               FROM Commits
                               LEFT JOIN Projects

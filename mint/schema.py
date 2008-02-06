@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(43)
+RBUILDER_DB_VERSION = sqllib.DBversion(44)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -131,6 +131,7 @@ def _createProjects(db):
             creatorId       INT,
             name            varchar(128) UNIQUE,
             hostname        varchar(128) UNIQUE,
+            shortname       varchar(128),
             domainname      varchar(128) DEFAULT '' NOT NULL,
             projecturl      varchar(128) DEFAULT '' NOT NULL,
             description     text,
@@ -140,11 +141,15 @@ def _createProjects(db):
             isAppliance     INT,
             timeCreated     INT,
             timeModified    INT DEFAULT 0,
-            commitEmail     varchar(128) DEFAULT ''
+            commitEmail     varchar(128) DEFAULT '',
+            prodtype        varchar(128) DEFAULT '',
+            version         varchar(128) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True
     db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname', 
+        unique = True)
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 

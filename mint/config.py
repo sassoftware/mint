@@ -20,6 +20,7 @@ RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
 # these are keys that are generated for the "generated" configuration file
 keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'companyName', 'corpSite', 'defaultBranch',
+                           'namespace',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
@@ -61,6 +62,9 @@ class MintConfig(ConfigFile):
 
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
         "The default namespace and tag used by rBuilder projects")
+    
+    namespace               = (cfgtypes.CfgString, 'yournamespace',
+        "The namespace used by rBuilder projects")
 
     supportContactHTML      = 'Contact information in HTML.'
     supportContactTXT       = 'Contact information in text.'

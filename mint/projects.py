@@ -41,7 +41,8 @@ class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail')
+                 'timeCreated', 'timeModified', 'commitEmail', 'shortname',
+                 'prodtype', 'version')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -81,6 +82,15 @@ class Project(database.TableObject):
 
     def getTimeModified(self):
         return self.timeModified
+
+    def getShortname(self):
+        return self.shortname
+
+    def getProdType(self):
+        return self.prodtype
+
+    def getVersion(self):
+        return self.version
 
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
@@ -213,7 +223,7 @@ class ProjectsTable(database.KeyedTable):
     key = 'projectId'
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
               'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail']
+              'timeModified', 'commitEmail', 'shortname', 'prodtype', 'version']
 
     def __init__(self, db, cfg):
         self.cfg = cfg

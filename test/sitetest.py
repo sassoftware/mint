@@ -155,8 +155,10 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testAddMemberById(self):
         client, userId = self.quickMintUser('foouser','foopass')
         client2, userId2 = self.quickMintUser('baruser','barpass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        projectId2 = client2.newProject('Bar', 'bar', MINT_PROJECT_DOMAIN)
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN, 
+                        shortname='foo', version="1.0", prodtype="Component")
+        projectId2 = client2.newProject('Bar', 'bar', MINT_PROJECT_DOMAIN,
+                        shortname='bar', version="1.0", prodtype="Component")
         page = self.webLogin('foouser', 'foopass')
         self.assertContent('/addMemberById?userId=%s&projectId=%s&level=0'\
                           % (userId2, projectId2),
@@ -187,7 +189,9 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testGroupTroveSearch(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
         gt.addTrove('group-appliance-platform',
             '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
@@ -199,7 +203,9 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testPackageSearchFormat(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         cu = self.db.cursor()
         for name in ('package1', 'package2', 'package3'):
             cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")

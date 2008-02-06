@@ -35,7 +35,7 @@ configGroups = {
     'Branding':
         ('companyName', 'corpSite'),
     'Repository Setup':
-        ('defaultBranch',),
+        ('defaultBranch', 'namespace'),
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
     '(Optional) Miscellaneous':

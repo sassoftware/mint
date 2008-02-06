@@ -101,7 +101,9 @@ class CmdLineFuncTest(MintRepositoryHelper):
         raise testsuite.SkipTestException("Un-logged internal server error")
         client, userId = self.quickMintUser("test", "testpass")
 
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
+                        shortname="testproject", version="1.0", 
+                        prodtype="Component")
 
         cmd = builds.BuildCreateCommand()
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
@@ -135,7 +137,8 @@ class CmdLineFuncTest(MintRepositoryHelper):
     def testUserMembershipCMD(self):
         adminClient, userId = self.quickMintAdmin("adminuser", "adminpass")
         newProjectId = adminClient.newProject("testproject", "testproject",
-            MINT_PROJECT_DOMAIN)
+            MINT_PROJECT_DOMAIN, shortname="testproject",
+            version="1.0", prodtype="Component")
 
         client, userId = self.quickMintUser("testuser", "testpass")
 
@@ -151,7 +154,9 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cfg = RBuilderShellConfig(False)
         cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
 
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
+                        shortname="testproject", version="1.0", 
+                        prodtype="Component")
         b = client.newBuild(projectId, 'build 1')
         b.setBuildType(buildtypes.INSTALLABLE_ISO)
         b.setFiles([["file1", "File Title 1"],

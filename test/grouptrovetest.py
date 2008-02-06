@@ -20,6 +20,7 @@ from repostest import testRecipe
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
+from mint import constants
 from mint import jobstatus
 from mint import grouptrove
 from mint import server
@@ -415,8 +416,14 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
         addTestTrove(groupTrove, "testcase", trvVersion = trvVersion)
         addTestTrove(groupTrove, "testcase2", trvVersion = trvVersion)
-        assert (groupTrove.getLabelPath() == ['foo.' + \
-                MINT_PROJECT_DOMAIN + '@rpl:devel'])
+        if constants.rBuilderOnline:
+            assert (groupTrove.getLabelPath() == ['foo.' + \
+                    MINT_PROJECT_DOMAIN + '@rpl:devel'])
+        else:
+            assert (groupTrove.getLabelPath() == [
+                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                        client.server._server.cfg.namespace + ':foo-1.0-devel',
+                    'foo.' + MINT_PROJECT_DOMAIN + '@rpl:devel'])
 
     @fixtures.fixture("Full")
     def testEmptyCook(self, db, data):
@@ -681,7 +688,12 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
     def testLabelPath(self, db, data):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
-        assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
+        if constants.rBuilderOnline:
+            assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
+        else:
+            assert groupTrove.getLabelPath() == [
+                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                        client.server._server.cfg.namespace + ':foo-1.0-devel']
 
         client = self.getClient('user')
         # bogus call to prime client

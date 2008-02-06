@@ -512,7 +512,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                    hostname = "testproject",
                    domainname = MINT_PROJECT_DOMAIN):
         """Create a new mint project and return that project ID."""
-        projectId = client.newProject(name, hostname, domainname)
+        projectId = client.newProject(name, hostname, domainname,
+                        shortname=hostname, version="1.0", prodtype="Component")
         self.setupProject(client, hostname, domainname)
 
         return projectId

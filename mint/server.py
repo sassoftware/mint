@@ -107,6 +107,7 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
+validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
 dbConnection = None
 callLog = None
@@ -619,26 +620,68 @@ class MintServer(object):
             raise projects.InvalidHostname
         return None
 
-    @typeCheck(str, str, str, str, str, str)
+    def _validateShortname(self, shortname, domainname, resHosts):
+        if not shortname:
+            raise projects.InvalidShortname
+        if validHost.match(shortname) == None:
+            raise projects.InvalidShortname
+        if shortname in resHosts:
+            raise projects.InvalidShortname
+        if (shortname + "." + domainname) == socket.gethostname():
+            raise projects.InvalidShortname
+        return None
+
+    @typeCheck(str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        # make sure the hostname is valid
-        self._validateHostname(hostname, domainname, reservedHosts)
+        if self.cfg.rBuilderOnline:
+            # make sure the hostname is valid
+            self._validateHostname(hostname, domainname, reservedHosts)
+        else:
+            # make sure the shortname, version, and prodtype are valid, and
+            # validate the hostname also in case it ever splits from being
+            # the same as the short name
+            self._validateShortname(shortname, domainname, reservedHosts)
+            self._validateHostname(hostname, domainname, reservedHosts)
+            if not version or len(version) <= 0:
+                raise projects.InvalidVersion
+            if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
+                raise projects.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
-        if appliance == "yes":
-            applianceValue = 1
-        elif appliance == "no":
-            applianceValue = 0
+        if self.cfg.rBuilderOnline:
+            if appliance == "yes":
+                applianceValue = 1
+            elif appliance == "no":
+                applianceValue = 0
+            else:
+                applianceValue = None
         else:
-            applianceValue = None
+            if prodtype == 'Appliance':
+                appliance = "yes"
+                applianceValue = 1
+            else:
+                appliance = "no"
+                applianceValue = 0
+
+        if not self.cfg.rBuilderOnline:
+            # if rBA 
+            label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
+                 self.cfg.namespace, hostname, version) 
+        else:
+            label = fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch
+
+        # validate the label, which will be added later.  This is done
+        # here so the project is not created before this error occurs
+        if validLabel.match(label) == None:
+            raise projects.InvalidLabel(label)
 
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
@@ -649,7 +692,10 @@ class MintServer(object):
                                       isAppliance = applianceValue,
                                       projecturl = projecturl,
                                       timeModified = time.time(),
-                                      timeCreated = time.time())
+                                      timeCreated = time.time(),
+                                      shortname = shortname,
+                                      prodtype = prodtype, 
+                                      version = version)
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
@@ -662,9 +708,10 @@ class MintServer(object):
 
         project = projects.Project(self, projectId)
 
-        project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
-            "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-            'userpass', self.cfg.authUser, self.cfg.authPass)
+        project.addLabel(label,
+                         "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, 
+                         self.cfg.basePath, hostname), 'userpass', 
+                         self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],

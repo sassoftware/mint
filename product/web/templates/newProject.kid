@@ -8,7 +8,7 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb']:
+    for var in ['title', 'hostname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -31,21 +31,29 @@
                     </tr>
 
                     <tr>
-                        <th><em class="required">${projectText().title()} Name:</em></th>
+                        <th><em class="required">${projectText().title()} Short Name:</em></th>
                         <td>
-                            <table>
-                                <tr style="font-size: smaller;">
-                                    <td style="margin: 0; padding: 0;" colspan="2">hostname</td>
-                                    <td style="margin: 0; padding: 0;">domainname</td>
-                                </tr>
-                                <tr>
-                                    <td><input style="width: 100%;" type="text" name="hostname" value="${kwargs['hostname']}" maxlength="16"/></td>
-                                    <td><span style="font-weight: bold;">.</span></td>
-                                    <td><input style="width: 100%;" type="text" name="domainname" value="${kwargs['domainname']}" /></td>
-                                </tr>
-                            </table>
-                            <p class="help">The two fields above, when combined, will form the hostname portion of your ${projectText().lower()} repository's label.  In the first field, enter a string that reflects your ${projectText().lower()}'s identity (for example, <tt>custlinux</tt>).  It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
-                            <p class="help">The second field has been prepopulated with the domain used to access ${cfg.productName}. Although your ${projectText().lower()}'s repository will be accessible using this default value, there are circumstances where a different setting may be desirable. <a class="learnmore" href="http://${SITE}help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
+                            <input type="text" autocomplete="off" name="shortname" value="${kwargs['shortname']}" maxlength="16"/>
+                            <p class="help">The short name should reflect your ${projectText().lower()}'s identity (for example <tt>custlinux</tt>).  It must start with a letter, contain only letters and numbers, and be less than or equal to 16 characters long. <a class="learnmore" href="http://${SITE}help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><em class="required">${projectText().title()} Version:</em></th>
+                        <td>
+                            <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
+                            <p class="help">Choose an initial major version number for your ${projectText().lower()}. Eg., 1</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <td>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                            <label for="prodtype">Appliance</label>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                            <label for="prodtype">Component</label>
+                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
                         </td>
                     </tr>
 
@@ -90,6 +98,7 @@
                 <p><button class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                 </button></p>
+                <input type="hidden" name="domainname" value="${kwargs['domainname']}" />
             </form>
         </div>
     </body>

@@ -466,7 +466,7 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown'})
+        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance'})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -491,23 +491,41 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance):
+    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version):
+        if not self.cfg.rBuilderOnline:
+            # for rBA, hostname is same as short name
+            hostname = shortname
+        else:
+            # for rBO, just shortname is same as hostname
+            shortname = hostname
         hostname = hostname.lower()
+        shortname = shortname.lower()
         pText = getProjectText().lower()
         if not title:
             self._addErrors("You must supply a %s title"%pText)
-        if not hostname:
-            self._addErrors("You must supply a %s hostname"%pText)
-        if not domainname:
-            self._addErrors("You must supply a %s domain name"%pText)
+        if not self.cfg.rBuilderOnline:
+            # only applies to rBA
+            if not shortname:
+                self._addErrors("You must supply a %s short name"%pText)
+            if not prodtype or prodtype == 'unknown':
+                self._addErrors("You must select a %s type"%pText)
+            if not version or len(version) <= 0:
+                self._addErrors("You must supply a %s version"%pText)
+        else:
+            # only applies to rBO
+            if not hostname:
+                self._addErrors("You must supply a %s hostname"%pText)
+            if not domainname:
+                self._addErrors("You must supply a %s domain name"%pText)
+
         if not self._getErrors():
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance)
+                    domainname, projecturl, blurb, appliance, shortname, prodtype, version)
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
                     if not self._createProjectLists(auth=auth,
@@ -526,7 +544,7 @@ class SiteHandler(WebHandler):
             self._setInfo("%s %s successfully created" % (pText.title(),title))
             self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance}
+            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
             return self._write("newProject", kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)

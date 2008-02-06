@@ -424,7 +424,7 @@ class RepositoryTest(MintRepositoryHelper):
         upi.logPath = None
         upi.cfg = self.mintCfg
         x = self.captureOutput(upi.run)
-
+        
         cu = self.db.cursor()
         cu.execute("SELECT name FROM PackageIndex ORDER BY name")
         self.failUnlessEqual([x[0] for x in cu.fetchall()], ['package1', 'package2', 'package3', 'package3:source'])

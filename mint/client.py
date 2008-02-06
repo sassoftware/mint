@@ -46,7 +46,7 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown"):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version=""):
         """
         Create a new project.
         @param name: name of new project
@@ -56,9 +56,12 @@ class MintClient:
         @param desc: description of new project
         @param appliance: whether or not this project represents a
                a software appliance ('yes', 'no', 'unknown')
+        @param shortname: the shortname of the product being created
+        @param prodtype: the type of product being created.
+        @param version:  the initial product version.
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -754,7 +757,6 @@ class _Method(xmlrpclib._Method):
 
     def handleError(self, result):
         exceptionName, exceptionArgs = result
-
         if exceptionName in mint_error.__all__:
             cls = getattr(mint_error, exceptionName)
             raise cls.thaw(exceptionArgs)

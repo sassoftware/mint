@@ -81,6 +81,20 @@ class DuplicateLabel(MintError): "Label already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
+class InvalidShortname(MintError):
+    def __str__(self):
+        return "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
+class InvalidLabel(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, label):
+        self.reason = "The generated development label (%s) is invalid.  This can be caused by an invalid short name, namespace, or version."%label
+class InvalidVersion(MintError):
+    def __str__(self):
+        return "The version is invalid."
+class InvalidProdType(MintError):
+    def __str__(self):
+        return "The selected %s type is invalid."%getProjectText().lower()
 class LabelMissing(MintError):
     "%(Project)s label does not exist"
 class FailedToLaunchAMIInstance(MintError):

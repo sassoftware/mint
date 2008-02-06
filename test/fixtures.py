@@ -219,7 +219,10 @@ class FixtureCache(object):
 
         # create the project
         client = shimclient.ShimMintClient(cfg, ("owner", "ownerpass"))
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = shortname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                                      shortname=shortname, 
+                                      version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         # add the developer

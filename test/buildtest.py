@@ -265,7 +265,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testGetBuildsForProjectOrder(self, db, data):
         # FIXME broken w/r/t new release arch
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -287,7 +289,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testFlavorFlags(self, db, data):
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -756,7 +760,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         client = self.getClient('admin')
 
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         build = client.newBuild(projectId, "Test Build")
@@ -889,7 +895,9 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # Create a second project owned by a different user
         nobody = self.getClient('nobody')
-        otherProjectId = nobody.newProject('bar', 'bar', MINT_PROJECT_DOMAIN)
+        hostname = "bar"
+        otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 

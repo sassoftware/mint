@@ -8,6 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
+from mint import constants
 from mint import database
 from mint import server
 from mint import users
@@ -26,9 +27,15 @@ class LabelsTest(fixtures.FixturedUnitTest):
         newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
 
-        assert(project.getLabelIdMap() ==\
-            {'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId,
-             'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
+        if constants.rBuilderOnline:
+            assert(project.getLabelIdMap() ==\
+                {'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId,
+                 'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
+        else:
+            assert(project.getLabelIdMap() ==\
+                 {'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                     adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1,
+                 'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId})
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "userpass",
@@ -43,8 +50,13 @@ class LabelsTest(fixtures.FixturedUnitTest):
                     )
 
         project.removeLabel(newLabelId)
-        assert(project.getLabelIdMap() ==\
-            {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
+        if constants.rBuilderOnline:
+            assert(project.getLabelIdMap() ==\
+                {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
+        else:
+            assert(project.getLabelIdMap() ==\
+                {'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                     adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1})
 
         try:
             adminClient.server.getLabel(newLabelId)
@@ -80,7 +92,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
             assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
         extProjectId = adminClient.newProject("External Project", "external",
-                "localhost")
+                "localhost", shortname="external", version="1.0", 
+                prodtype="Component")
 
         cu = db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",

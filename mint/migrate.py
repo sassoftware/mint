@@ -191,10 +191,25 @@ class MigrateTo_44(SchemaMigration):
 
     # 44.0
     # - Drop rMake related tables
+    # - Add new Projects colums
     def migrate(self):
         cu = self.db.cursor()
-        cu.execute("""DROP TABLE rMakeBuild""")
-        cu.execute("""DROP TABLE rMakeBuildItems""")
+        try:
+            cu.execute("""DROP TABLE rMakeBuild""")
+            cu.execute("""DROP TABLE rMakeBuildItems""")
+        except sqlerrors.InvalidTable:
+            # pass because of migration discrepancy...version was not changed
+            # to 44 so there is a difference between original 43 install and
+            # 43 migration
+            pass
+        cu.execute("""ALTER TABLE Projects
+            ADD COLUMN shortname VARCHAR(128)""")
+        self.db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname', 
+            unique = True)
+        cu.execute("""ALTER TABLE Projects
+            ADD COLUMN prodtype VARCHAR(128) DEFAULT ''""")
+        cu.execute("""ALTER TABLE Projects
+            ADD COLUMN version VARCHAR(128) DEFAULT ''""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

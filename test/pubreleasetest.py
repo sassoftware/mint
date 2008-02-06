@@ -282,7 +282,9 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         # create an unrelated project using a seperate admin client
         adminClient = self.getClient("admin")
-        otherProjectId = adminClient.newProject('Quux', 'quux', 'rpath.org')
+        hostname = "quux"
+        otherProjectId = adminClient.newProject('Quux', hostname, 'rpath.org',
+                       shortname=hostname, version="1.0", prodtype="Component")
 
         for (user, (allowed, exc)) in acls.items():
             client = self.getClient(user)
@@ -413,9 +415,12 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         client = self.getClient("owner")
         adminClient = self.getClient("admin")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        project2Id = client.newProject("Bar", "bar", "rpath.org")
-        project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
+        projectId = client.newProject("Foo", "foo", "rpath.org",
+                        shortname="foo", version="1.0", prodtype="Component")
+        project2Id = client.newProject("Bar", "bar", "rpath.org",
+                        shortname="bar", version="1.0", prodtype="Component")
+        project3Id = adminClient.newProject("Hide", "hide", "rpath.org",
+                         shortname="hide", version="1.0", prodtype="Component")
         adminClient.hideProject(project3Id)
         buildsToMake = [ (int(projectId), "foo", "Foo Unpublished"),
                            (int(project3Id), "hide", "Hide Build 1"),

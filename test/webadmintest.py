@@ -537,7 +537,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testCreateOutboundMirrorSources(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
+                        shortname="testproject", version="1.0", 
+                        prodtype="Component")
 
         self.webLogin('adminuser', 'adminpass')
 

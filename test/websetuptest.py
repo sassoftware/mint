@@ -151,6 +151,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'siteDomainName': 'rpath.local',
                    'corpSite': 'http://foo.bar.baz',
                    'defaultBranch': 'foo:bar',
+                   'namespace': 'foospace',
                    'new_username': 'fooadmin',
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
@@ -188,6 +189,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
         self.assertEqual(newCfg.defaultBranch, 'foo:bar')
+        self.assertEqual(newCfg.namespace, 'foospace')
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
