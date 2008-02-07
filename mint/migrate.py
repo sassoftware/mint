@@ -193,8 +193,29 @@ class MigrateTo_44(SchemaMigration):
     # - Drop rMake related tables
     def migrate(self):
         cu = self.db.cursor()
-        cu.execute("""DROP TABLE rMakeBuild""")
-        cu.execute("""DROP TABLE rMakeBuildItems""")
+
+        # The schema version was not bumped correctly last time,
+        # so the tables may or may not have been removed.
+        try:
+            cu.execute("""DROP TABLE rMakeBuild""")
+        except sqlerrors.InvalidTable:
+            pass
+        try:
+            cu.execute("""DROP TABLE rMakeBuildItems""")
+        except sqlerrors.InvalidTable:
+            pass
+        return True
+
+# SCHEMA VERSION 45
+class MigrateTo_45:
+    Version = (45, 0)
+
+    # 45.0
+    # - Add backupExternal column to Projects table
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Projects
+            ADD COLUMN backupExternal INT DEFAULT 0""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

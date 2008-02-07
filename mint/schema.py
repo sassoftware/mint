@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(43)
+RBUILDER_DB_VERSION = sqllib.DBversion(45)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -140,7 +140,8 @@ def _createProjects(db):
             isAppliance     INT,
             timeCreated     INT,
             timeModified    INT DEFAULT 0,
-            commitEmail     varchar(128) DEFAULT ''
+            commitEmail     varchar(128) DEFAULT '',
+            backupExternal  INT DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True

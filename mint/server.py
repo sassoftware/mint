@@ -1074,6 +1074,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._generateConaryRcFile()
         return True
 
+    @typeCheck(int, bool)
+    @requiresAdmin
+    @private
+    def setBackupExternal(self, projectId, backupExternal):
+        return self.projects.update(projectId, backupExternal=backupExternal)
+
     @typeCheck(int)
     @requiresAdmin
     @private

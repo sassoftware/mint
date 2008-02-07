@@ -6,6 +6,8 @@ Web Front End Changes
 
 * A bug that prevented a group trove from being cooked more than one time
   by Group Builder has been corrected. (RBL-2570)
+* External projects configured for inbound mirroring can now be backed
+  up. (RBL-2038)
 
 Command-Line Client Changes
 ---------------------------

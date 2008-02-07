@@ -89,6 +89,40 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
 
+    @testsuite.tests('RBL-2039')
+    def testConfigureMirrorBackup(self):
+        '''
+        Check that an external mirrored project can be configured for
+        backups.
+        '''
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        details = { 'hostname' : 'rap',
+                    'name' : 'rPath Appliance Platform',
+                    'label' : 'rap.rpath.com@rpath:linux-1',
+                    'url' : '',
+                    'useMirror': 'net',
+                    'authType': 'userpass',
+                    'externalUser': 'mirror',
+                    'externalPass': 'mirrorpass'}
+
+        # Create without backup
+        page = self.assertContent("/admin/addExternal",
+                                  'name="hostname" value="rap"')
+        page.postForm(1, self.post, details)
+
+        project = client.getProjectByHostname("rap")
+        self.failUnlessEqual(project.backupExternal, 0)
+
+        # Turn backups on
+        page = self.fetch("/admin/editExternal?projectId=%d" % project.id)
+        details['backupExternal'] = '1'
+        page.postForm(1, self.post, details)
+
+        project.refresh()
+        self.failUnlessEqual(project.backupExternal, 1)
+
     def testPreloadMirroredProject(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
 

@@ -63,7 +63,8 @@ class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail')
+                 'timeCreated', 'timeModified', 'commitEmail',
+                 'backupExternal')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -138,6 +139,9 @@ class Project(database.TableObject):
 
     def setCommitEmail(self, commitEmail):
         return self.server.setProjectCommitEmail(self.id, commitEmail)
+
+    def setBackupExternal(self, backupExternal):
+        return self.server.setBackupExternal(self.id, backupExternal)
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
@@ -235,7 +239,7 @@ class ProjectsTable(database.KeyedTable):
     key = 'projectId'
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
               'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail']
+              'timeModified', 'commitEmail', 'backupExternal']
 
     def __init__(self, db, cfg):
         self.cfg = cfg

@@ -12,7 +12,7 @@
         'externalUser', 'externalPass', 'externalEntKey',
         'authType', 'useMirror',
         'externalAuth', 'authType', 'additionalLabelsToMirror',
-        'allLabels']:
+        'allLabels', 'backupExternal']:
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
 ?>
     <head>
@@ -166,6 +166,19 @@
                    </td>
                 </tr>
             </table>
+
+            <h2>Backup Settings</h2>
+            <p>
+                <div>
+                    <label>
+                        <input type="checkbox" id="backupExternal" name="backupExternal" value="1"
+                            py:attrs="{'checked': kwargs['backupExternal'] and 'checked' or None}" />
+                        Backup inbound mirror contents. (This will make backups
+                        substantially larger.)
+                    </label>
+                </div>
+            </p>
+
             <button py:if="not editing" class="img" type="submit">
                 <img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" />
             </button>

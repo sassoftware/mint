@@ -139,7 +139,7 @@ class AdminHandler(WebHandler):
                         externalUser, externalPass,
                         externalEntKey,
                         useMirror, authType,
-                        additionalLabelsToMirror, allLabels):
+                        additionalLabelsToMirror, allLabels, backupExternal):
         additionalLabels = []
         extLabel = ""
         if not name:
@@ -200,12 +200,12 @@ class AdminHandler(WebHandler):
         authType = 'none',\
         additionalLabelsToMirror = '', useMirror = 'none')
     @intFields(projectId = -1)
-    @boolFields(allLabels = False)
+    @boolFields(allLabels = False, backupExternal=False)
     def processAddExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntKey,
                         useMirror, authType, additionalLabelsToMirror,
-                        projectId, allLabels, *args, **kwargs):
+                        projectId, allLabels, backupExternal, *args, **kwargs):
 
 
         # strip extraneous whitespace
@@ -217,7 +217,9 @@ class AdminHandler(WebHandler):
             'externalEntKey': externalEntKey,
             'useMirror': useMirror,
             'additionalLabelsToMirror': additionalLabelsToMirror,
-            'allLabels': allLabels}
+            'allLabels': allLabels,
+            'backupExternal': backupExternal,
+            }
 
         editing = (projectId != -1)
         externalAuth = (authType != 'none')
@@ -231,6 +233,7 @@ class AdminHandler(WebHandler):
             project = self.client.getProject(projectId)
             if editing:
                 project.editProject(project.projecturl, project.description, name)
+            project.setBackupExternal(backupExternal)
 
             labelIdMap = self.client.getLabelsForProject(projectId)[0]
             label, labelId = labelIdMap.items()[0]
@@ -296,6 +299,7 @@ class AdminHandler(WebHandler):
             kwargs.setdefault('url', 'https://rap.rpath.com/conary/')
             kwargs.setdefault('label', 'rap.rpath.com@rpath:linux-1')
             kwargs.setdefault('allLabels', 0)
+            kwargs.setdefault('backupExternal', 0)
         else:
             firstTime = False
 
@@ -314,6 +318,7 @@ class AdminHandler(WebHandler):
         initialKwargs['name'] = project.name
         initialKwargs['hostname'] = project.hostname
         initialKwargs['label'] = label
+        initialKwargs['backupExternal'] = project.backupExternal
 
         fqdn = versions.Label(label).getHost()
         initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
