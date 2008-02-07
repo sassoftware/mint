@@ -207,7 +207,7 @@ class MigrateTo_44(SchemaMigration):
         return True
 
 # SCHEMA VERSION 45
-class MigrateTo_45:
+class MigrateTo_45(SchemaMigration):
     Version = (45, 0)
 
     # 45.0
