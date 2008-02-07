@@ -877,12 +877,11 @@ class BuildTest(fixtures.FixturedUnitTest):
                  'ec2LaunchUsers', 'ec2LaunchGroups']))
 
     @fixtures.fixture('Full')
+    @testsuite.tests('RBL-2120')
     def testSerializePermissions(self, db, data):
         '''
         Test that all projects to which the user can write are given
         permissions in the serialized conaryrc.
-
-        @tests: RBL-2120
         '''
 
         developer = self.getClient('developer')
