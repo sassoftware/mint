@@ -17,10 +17,15 @@ from conary.lib import cfgtypes
 RBUILDER_CONFIG = "/srv/rbuilder/config/rbuilder.conf"
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
 
+# just want the namespace for rBA
+if constants.rBuilderOnline:
+    namespaceOpt = 'defaultBranch'
+else:
+    namespaceOpt = 'namespace'
+
 # these are keys that are generated for the "generated" configuration file
 keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
-                           'companyName', 'corpSite', 'defaultBranch',
-                           'namespace',
+                           'companyName', 'corpSite', namespaceOpt,
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',

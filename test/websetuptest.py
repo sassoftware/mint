@@ -15,6 +15,7 @@ import os
 import time
 
 from mint import config
+from mint import constants
 
 from mint import shimclient
 from mint.web import setup, hooks
@@ -188,8 +189,12 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.hostName, 'foo')
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
-        self.assertEqual(newCfg.defaultBranch, 'foo:bar')
-        self.assertEqual(newCfg.namespace, 'foospace')
+        if constants.rBuilderOnline:
+            self.assertEqual(newCfg.defaultBranch, 'foo:bar')
+            self.assertEqual(newCfg.namespace, self.cfg.namespace)
+        else:
+            self.assertEqual(newCfg.namespace, 'foospace')
+            self.assertEqual(newCfg.defaultBranch, self.cfg.defaultBranch)
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')

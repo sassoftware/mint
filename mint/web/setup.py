@@ -15,6 +15,7 @@ import time
 
 from mod_python import apache
 
+from mint import constants
 from mint import helperfuncs
 from mint import mint_error
 from mint import shimclient
@@ -27,6 +28,12 @@ from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from conary.repository.netrepos import netauth
 
+# just want the namespace for rBA
+if constants.rBuilderOnline:
+    namespaceOpt = 'defaultBranch'
+else:
+    namespaceOpt = 'namespace'
+
 # be careful with 'Server Setup', code below and the associated kid template
 # refer to this key directly. be sure to find all instances if you change it.
 configGroups = {
@@ -35,7 +42,7 @@ configGroups = {
     'Branding':
         ('companyName', 'corpSite'),
     'Repository Setup':
-        ('defaultBranch', 'namespace'),
+        (namespaceOpt,),
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
     '(Optional) Miscellaneous':
