@@ -33,6 +33,12 @@ Command-Line Client Changes
   to set the build notes from the command-line and from a file, respectively.
   (RBL-2486)
 
+Bug Fixes
+---------
+
+* A bug that prevented image builds from succeeding when a project is
+  hidden has been fixed. (RBL-2619)
+
 Changes in 4.0.1
 ================
 

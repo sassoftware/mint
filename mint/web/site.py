@@ -1004,9 +1004,12 @@ class SiteHandler(WebHandler):
         if method != "PUT":
             raise HttpMethodNotAllowed
 
+        client = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser,
+                                                      self.cfg.authPass))
+
         buildId, fileName = self.req.uri.split("/")[-2:]
-        build = self.client.getBuild(int(buildId))
-        project = self.client.getProject(build.projectId)
+        build = client.getBuild(int(buildId))
+        project = client.getProject(build.projectId)
 
         # make sure the hash we receive from the slave matches
         # the hash we gave the slave in the first place.
