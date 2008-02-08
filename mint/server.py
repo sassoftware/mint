@@ -543,19 +543,9 @@ class MintServer(object):
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
 
-    def _createGroupTemplate(self, project, version='1.0', buildLabel=None, groupName=None):
-        currentRlsVersion = 1
-        currentRapaTag = 'rpath:raa-2'
-        if self.cfg.rBuilderOnline:
-            groupApplianceLabel = 'conary.rpath.com@rpl:%d' % currentRlsVersion
-            rapaLabel = 'raa.rpath.org@%s' % currentRapaTag
-        else:
-            groupApplianceLabel = 'rap.rpath.com@rpath:linux-%d' % currentRlsVersion
-            rapaLabel = 'products.rpath.com@%s' % currentRapaTag
+    def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
         if groupName is None:
             groupName = 'group-%s-appliance' % project.getHostname()
-        if buildLabel is None:
-            buildLabel = "%s@%s" % (project.getFQDN(), self.cfg.defaultBranch)
         #Create the new trove
         cfg = self._setupCheckin(project, buildLabel)
 
@@ -577,9 +567,11 @@ class MintServer(object):
                         f = open(recipePath, 'w')
                         from mint.templates import groupTemplate
                         recipe = templates.write(groupTemplate,
-                            cfg = self.cfg, groupApplianceLabel=groupApplianceLabel,
-                            projectName=project.getHostname(), groupName=groupName,
-                            rapaLabel=rapaLabel, version=version)
+                            cfg = self.cfg, 
+                            groupApplianceLabel=self.cfg.groupApplianceLabel,
+                            projectName=project.getHostname(), 
+                            groupName=groupName,
+                            rapaLabel=self.cfg.rapaLabel, version=version)
                         f.write(recipe)
                         f.write('\n') #Force a blank line at the end for cvc add's sake
                         f.close()
@@ -718,7 +710,7 @@ class MintServer(object):
                                   self.authToken[1])
 
         if applianceValue:
-            self._createGroupTemplate(project)
+            self._createGroupTemplate(project, label, version)
 
         if self.cfg.hideNewProjects:
             repos = self._getProjectRepo(project)

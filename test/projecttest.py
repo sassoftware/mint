@@ -234,8 +234,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         client = self.getClient("owner")
         projectId = client.newProject("Quux", 'footoo', 'localhost', 
-                                      shortname="footoo", prodtype="Appliance",
-                                      version="1.0")
+                                  shortname="footoo", prodtype="Appliance",
+                                  version="1.0")
         project = client.getProject(projectId)
         assert(project.getProdType() == "Appliance")
         if not constants.rBuilderOnline:
@@ -994,30 +994,50 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             'nap.' + MINT_PROJECT_DOMAIN), [])
 
     def testCreateGroupTemplate(self):
-        if not constants.rBuilderOnline:
-            raise testsuite.SkipTestException("test skipped because it is not rBA safe...using protected branches")
 
         client, userid = self.quickMintUser("test", "testpass")
 
-        #First, create a project without being an appliance
-        hostname = "nap"
-        projId = client.newProject('Not an appliance', hostname, 
-                    MINT_PROJECT_DOMAIN, appliance="no", shortname=hostname,
-                    version='1.0', prodtype='Component')
-        hostname = "app"
-        projId = client.newProject('An appliance', hostname, 
-                    MINT_PROJECT_DOMAIN, appliance="yes", shortname=hostname,
-                    version='1.0', prodtype='Component')
-        project = client.getProject(projId)
-        cfg = project.getConaryConfig()
-        #This one should be empty
-        trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
-                'app.' + MINT_PROJECT_DOMAIN, {})
-        self.assertEquals(trvLeaves.keys(), ['group-app-appliance:source'])
-        labels = trvLeaves['group-app-appliance:source']
-        self.assertEquals(len(labels), 1)
-        self.assertEquals(str(labels.keys()[0].branch()), '/app.%s@rpl:devel' % MINT_PROJECT_DOMAIN)
-        self.assertEquals(str(labels.keys()[0].trailingRevision()), '1.0-1')
+        _groupApplianceLabel = client.server._server.cfg.groupApplianceLabel
+        _rapaLabel = client.server._server.cfg.rapaLabel
+
+        # set labels that don't use protected repositories so we can test
+        client.server._server.cfg.groupApplianceLabel = 'conary.rpath.com@rpl:1'
+        client.server._server.cfg.rapaLabel = 'raa.rpath.org@rpath:raa-2'
+
+        try:
+            #First, create a project without being an appliance
+            hostname = "nap"
+            projId = client.newProject('Not an appliance', hostname, 
+                        MINT_PROJECT_DOMAIN, appliance="no", shortname=hostname,
+                        version='5.4', prodtype='Component')
+            #This one should be empty
+            project = client.getProject(projId)
+            cfg = project.getConaryConfig()
+            trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
+                    hostname + '.' + MINT_PROJECT_DOMAIN, {})
+
+            hostname = "app"
+            projId = client.newProject('An appliance', hostname, 
+                   MINT_PROJECT_DOMAIN, appliance="yes", shortname=hostname,
+                   version='5.4', prodtype='Appliance')
+            project = client.getProject(projId)
+            cfg = project.getConaryConfig()
+            #This one should have a group trove
+            trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
+                    '%s.' % hostname + MINT_PROJECT_DOMAIN, {})
+            self.assertEquals(trvLeaves.keys(), ['group-%s-appliance:source' % hostname])
+            labels = trvLeaves['group-%s-appliance:source' % hostname]
+            if constants.rBuilderOnline:
+                branch = '/%s.%s@%s'%(hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.defaultBranch)
+            else:
+                branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
+            self.assertEquals(len(labels), 1)
+            self.assertEquals(str(labels.keys()[0].branch()), branch)
+            self.assertEquals(str(labels.keys()[0].trailingRevision()), '5.4-1')
+        finally:
+            # reset the labels
+            client.server._server.cfg.groupApplianceLabel = _groupApplianceLabel
+            client.server._server.cfg.rapaLabel = _rapaLabel
 
 
         # TODO: Add additional tests to exercise the label selecting, and
