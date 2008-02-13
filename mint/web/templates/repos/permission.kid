@@ -52,12 +52,6 @@
                         <td id="header" rowspan="3">Options:</td>
                         <td><input type="checkbox" name="writeperm" py:attrs="{'checked': (writeperm) and 'checked' or None}" /> Write access</td>
                     </tr>
-                    <tr style="display: none;">
-                        <td><input type="checkbox" name="capped" py:attrs="{'checked': (capped) and 'checked' or None}" /> Capped</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" name="admin" py:attrs="{'checked': (admin) and 'checked' or None}" /> Admin access</td>
-                    </tr>
                     <tr py:attrs="{'style' :  not cfg.removeTrovesVisible and 'display : none;' or None}">
                         <td><input type="checkbox" name="remove" py:attrs="{'checked': (remove) and 'checked' or None}"/> Remove access</td>
                     </tr>

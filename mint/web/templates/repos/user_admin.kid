@@ -64,8 +64,8 @@
                         <td py:if="not rows" style="font-size: 80%;">Role has no permissions</td>
                         <td style="text-align: right;">
                             <a href="addPermForm?roleName=${role}">Add Permission</a><br />
-                            <a href="deleteRole?userRoleName=${role}">Delete</a> |
-                            <a href="manageRoleForm?userRoleName=${role}">Manage</a>
+                            <a href="deleteRole?roleName=${role}">Delete</a> |
+                            <a href="manageRoleForm?roleName=${role}">Manage</a>
                         </td>
                     </tr>
                 </tbody>

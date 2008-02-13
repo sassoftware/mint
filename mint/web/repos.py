@@ -446,19 +446,19 @@ class ConaryHandler(WebHandler):
         return self._filterAuth(auth=auth, roleName=roleName) or self._write("add_role", roleName = roleName, users = users, members = members, canMirror = canMirror, modify = True)
 
     @ownerOnly
-    @strFields(roleName = None, newUserRoleName = None)
+    @strFields(roleName = None, newRoleName = None)
     @listFields(str, memberList = [])
     @intFields(canMirror = False)
-    def manageRole(self, auth, roleName, newUserRoleName, memberList,
+    def manageRole(self, auth, roleName, newRoleName, memberList,
                     canMirror):
-        if roleName != newUserRoleName:
+        if roleName != newRoleName:
             try:
-                self.repServer.auth.renameRole(roleName, newUserRoleName)
+                self.repServer.auth.renameRole(roleName, newRoleName)
             except errors.RoleAlreadyExists:
                 return self._write("error", shortError="Invalid Role Name",
                     error = "The role name you have chosen is already in use.")
 
-            roleName = newUserRoleName
+            roleName = newRoleName
 
         self.repServer.auth.updateRoleMembers(roleName, memberList)
         self.repServer.auth.setMirror(roleName, canMirror)
@@ -466,18 +466,18 @@ class ConaryHandler(WebHandler):
         self._filterAuth(memberList=memberList, roleName=roleName) or self._redirect("userlist")
 
     @ownerOnly
-    @strFields(newUserRoleName = None)
+    @strFields(newRoleName = None)
     @listFields(str, memberList = [])
     @intFields(canMirror = False)
-    def addRole(self, auth, newUserRoleName, memberList, canMirror):
+    def addRole(self, auth, newRoleName, memberList, canMirror):
         try:
-            self.repServer.auth.addRole(newUserRoleName)
+            self.repServer.auth.addRole(newRoleName)
         except errors.RoleAlreadyExists:
             return self._write("error", shortError="Invalid Role Name",
                 error = "The role name you have chosen is already in use.")
 
-        self.repServer.auth.updateRoleMembers(newUserRoleName, memberList)
-        self.repServer.auth.setMirror(newUserRoleName, canMirror)
+        self.repServer.auth.updateRoleMembers(newRoleName, memberList)
+        self.repServer.auth.setMirror(newRoleName, canMirror)
 
         self._filterAuth(memberList=memberList) or self._redirect("userlist")
 
@@ -497,9 +497,8 @@ class ConaryHandler(WebHandler):
 
     @ownerOnly
     @strFields(role = None, label = "", trove = "")
-    @intFields(writeperm = None, capped = None, admin = None, remove = None)
-    def editPermForm(self, auth, role, label, trove, writeperm, capped, admin,
-                     remove):
+    @intFields(writeperm = None, remove = None)
+    def editPermForm(self, auth, role, label, trove, writeperm, remove):
         roles = self.repServer.auth.getRoleList()
         labels = self.repServer.auth.getLabelList()
         troves = self.repServer.auth.getItemList()
@@ -507,7 +506,7 @@ class ConaryHandler(WebHandler):
         #remove = 0
         return self._write("permission", operation='Edit', role=role, label=label,
             trove=trove, roles=roles, labels=labels, troves=troves,
-            writeperm=writeperm, capped=capped, admin=admin, remove=remove)
+            writeperm=writeperm, remove=remove)
 
     @ownerOnly
     @strFields(role = None, label = "", trove = "",
