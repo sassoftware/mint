@@ -442,7 +442,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/repos/testproject/addRoleForm')
         self.failIf('Add Role' not in page.body, 'Error in addRoleForm')
         # editPermForm
-        page = page.fetch('/repos/testproject/editPermForm?role=testuser&writeperm=1&capped=0&admin=1&remove=1')
+        page = page.fetch('/repos/testproject/editPermForm?role=testuser&writeperm=1&remove=1')
         self.failIf('Edit Permission' not in page.body, 'Error in editPermForm')
 
     def testPGPOperations(self):
