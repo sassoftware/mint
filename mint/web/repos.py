@@ -466,10 +466,14 @@ class ConaryHandler(WebHandler):
         self._filterAuth(memberList=memberList, roleName=roleName) or self._redirect("userlist")
 
     @ownerOnly
-    @strFields(newRoleName = None)
+    @strFields(newRoleName = '')
     @listFields(str, memberList = [])
     @intFields(canMirror = False)
     def addRole(self, auth, newRoleName, memberList, canMirror):
+        if not newRoleName or newRoleName.isspace():
+            return self._write("error", shortError="Invalid Role Name",
+                error = "Please enter a valid role name.")
+
         try:
             self.repServer.auth.addRole(newRoleName)
         except errors.RoleAlreadyExists:
