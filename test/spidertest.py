@@ -118,7 +118,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'getFile' in link:
             # getFile breaks spider
             return False
-        if 'deleteGroup' in link or 'deletePerm' in link:
+        if 'deleteRole' in link or 'deletePerm' in link:
             # conary web code deletes using a GET: CNY-963
             return False
         if 'build?id=' in link:
