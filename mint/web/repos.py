@@ -150,15 +150,35 @@ class ConaryHandler(WebHandler):
         return self._write('lic_crypto_report', troves=data, troveName=t)
 
     def _getLicenseAndCrypto(self, tr, ver, fl):
-        groupCs = self.repos.createChangeSet([(tr, (None, None), (ver, fl),
-                                              True)], withFiles=False,
-                                             withFileContents=False, 
-                                             recurse=True)
+        try:
+            groupCs = self.repos.createChangeSet([(tr, (None, None), (ver, fl),
+                                                   True)], withFiles=False,
+                                                 withFileContents=False, 
+                                                 recurse=True)
+        except conaryerror.ConaryError, e:
+            return self._write("error",
+                               error = ('An error occurred while generating '
+                                        'the report: %s' %str(e)))
         data = []
         for cs in groupCs.iterNewTroveList():
             tr = Trove(cs, skipIntegrityChecks=True)
+            if ':' in tr.getName():
+                continue
             md = tr.getMetadata()
-            data.append((tr.getName(), tr.getVersion(), tr.getFlavor(), md['licenses'], md['crypto']))
+            licenses = []
+            crypto = []
+            for l, info in ((licenses, md['licenses']),
+                            (crypto, md['crypto'])):
+                if not info:
+                    continue
+                for x in info:
+                    if x.startswith('rpath.com/'):
+                        l.append('<a href="http://%s">%s</a>'
+                                 %(x, os.path.basename(x)))
+                    else:
+                        l.append(x)
+            data.append((tr.getName(), tr.getVersion(), tr.getFlavor(),
+                         licenses, crypto))
 
         data.sort(cmp=lambda x,y: cmp(x[0], y[0]))
         return data

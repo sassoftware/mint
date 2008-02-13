@@ -704,8 +704,8 @@ That is all."""
             self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
                                repos = repos)
         self.addCollection("group-test", "1.0",
-                                    [ ("test1:runtime"),
-                                      ("test2:runtime"),
+                                    [ ("test1"),
+                                      ("test2"),
                                     ], repos=repos)
 
         # Add some metadata
@@ -714,16 +714,16 @@ That is all."""
         mi.crypto.set('Test Crypto')
         ver = versions.VersionFromString('/localhost.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1')
         fl = deps.parseFlavor('')
-        repos.addMetadataItems([(('test0:runtime',ver,fl), mi)])
+        repos.addMetadataItems([(('test0',ver,fl), mi)])
         mi = trove.MetadataItem()
         mi.licenses.set('Different Test License')
         mi.licenses.set('Different Test License part 2')
         mi.crypto.set('Different Test Crypto')
-        repos.addMetadataItems([(('test1:runtime',ver,fl), mi)])
+        repos.addMetadataItems([(('test1',ver,fl), mi)])
 
         mi = trove.MetadataItem()
         mi.licenses.set('Another license')
-        repos.addMetadataItems([(('test2:runtime',ver,fl), mi)])
+        repos.addMetadataItems([(('test2',ver,fl), mi)])
         
         # test
         ch = ConaryHandler(None, None)
@@ -732,14 +732,14 @@ That is all."""
         res = ch.licenseCryptoReport(t='group-test', v=ver, f=fl, auth=None)
         self.failIf(res[0][0] != 'lic_crypto_report')
         self.failIf(res[1]['troveName'] != 'group-test')
-        expected = {'test0:runtime': (['Test License'], ['Test Crypto']),
-                    'test1:runtime': (['Different Test License',
+        expected = {'test0': (['Test License'], ['Test Crypto']),
+                    'test1': (['Different Test License',
                                       'Different Test License part 2'], 
                                       ['Different Test Crypto']),
-                    'test2:runtime': (['Another license'], None),
-                    'group-test': (None, None)}
+                    'test2': (['Another license'], []),
+                    'group-test': ([], [])}
         for x in res[1]['troves']:
-            self.failIf((x[3], x[4]) != expected[x[0]])
-        
+            self.failUnlessEqual((x[3], x[4]), expected[x[0]])
+
 if __name__ == "__main__":
     testsuite.main()

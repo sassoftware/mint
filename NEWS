@@ -20,6 +20,10 @@ Web Front End Changes
   been modified to use the term "Role" instead of "Group". (RBL-2580)
 * New appliance projects will be prepopulated with a sample group recipe ready
   for extending. (RBL-2515)
+* The License and Crypto report has been improved.  Now only the
+  information is only displayed for packages, instead of displaying
+  the same information for every package component.  A link to the
+  full text of the license is provided if available. (RBL-2521)
 
 Internal Changes
 ----------------
@@ -38,6 +42,9 @@ Bug Fixes
 
 * A bug that prevented image builds from succeeding when a project is
   hidden has been fixed. (RBL-2619)
+* A bug that would cause an Internal Server Error when attempting to
+  generate a License and Crypto report if the underlying Conary
+  repository operation failed has been fixed. (RBL-2595)
 
 Changes in 4.0.1
 ================
