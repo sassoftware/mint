@@ -424,7 +424,7 @@ class ConaryHandler(WebHandler):
 
         try:
             self.repServer.addAcl(self.authToken, 0, role, trove, label,
-               writeperm, capped, admin, remove = remove)
+               writeperm, remove)
         except errors.PermissionAlreadyExists, e:
             return self._write("error", shortError="Duplicate Permission",
                 error = "Permissions have already been set for %s, please go back and select a different User, Label or Trove." % str(e))
