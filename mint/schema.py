@@ -148,8 +148,7 @@ def _createProjects(db):
         db.tables['Projects'] = []
         commit = True
     db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
-    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname', 
-        unique = True)
+    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 

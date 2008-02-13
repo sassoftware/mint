@@ -204,8 +204,10 @@ class MigrateTo_44(SchemaMigration):
             pass
         cu.execute("""ALTER TABLE Projects
             ADD COLUMN shortname VARCHAR(128)""")
-        self.db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname', 
-            unique = True)
+        # default the shortname to the project hostname for migrated
+        # projects
+        cu.execute('UPDATE Projects SET shortname=hostname')
+        self.db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
         cu.execute("""ALTER TABLE Projects
             ADD COLUMN prodtype VARCHAR(128) DEFAULT ''""")
         cu.execute("""ALTER TABLE Projects
