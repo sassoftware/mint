@@ -724,7 +724,7 @@ That is all."""
         mi = trove.MetadataItem()
         mi.licenses.set('Another license')
         repos.addMetadataItems([(('test2',ver,fl), mi)])
-        
+
         # test
         ch = ConaryHandler(None, None)
         ch.__dict__.update(repos=repos)
@@ -740,6 +740,14 @@ That is all."""
                     'group-test': ([], [])}
         for x in res[1]['troves']:
             self.failUnlessEqual((x[3], x[4]), expected[x[0]])
+
+        # check error handling
+        client.hideProject(projectId)
+        repos = ConaryClient(project.getConaryConfig(True, 'anonymous',
+                                                     'anonymous')).getRepos()
+        ch.__dict__.update(repos=repos)
+        res = ch.licenseCryptoReport(t='group-test', v=ver, f=fl, auth=None)
+        self.failUnlessEqual(res[0][0], 'error')
 
 if __name__ == "__main__":
     testsuite.main()

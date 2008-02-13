@@ -146,19 +146,19 @@ class ConaryHandler(WebHandler):
         tr = unquote(t)
         ver = versions.VersionFromString(unquote(v))
         fl = deps.parseFlavor(unquote(f))
-        data = self._getLicenseAndCrypto(tr, ver, fl)
-        return self._write('lic_crypto_report', troves=data, troveName=t)
-
-    def _getLicenseAndCrypto(self, tr, ver, fl):
         try:
-            groupCs = self.repos.createChangeSet([(tr, (None, None), (ver, fl),
-                                                   True)], withFiles=False,
-                                                 withFileContents=False, 
-                                                 recurse=True)
-        except conaryerror.ConaryError, e:
+            data = self._getLicenseAndCrypto(tr, ver, fl)
+        except Exception, e:
             return self._write("error",
                                error = ('An error occurred while generating '
                                         'the report: %s' %str(e)))
+        return self._write('lic_crypto_report', troves=data, troveName=t)
+
+    def _getLicenseAndCrypto(self, tr, ver, fl):
+        groupCs = self.repos.createChangeSet([(tr, (None, None), (ver, fl),
+                                               True)], withFiles=False,
+                                             withFileContents=False, 
+                                             recurse=True)
         data = []
         for cs in groupCs.iterNewTroveList():
             tr = Trove(cs, skipIntegrityChecks=True)
