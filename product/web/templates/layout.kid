@@ -65,7 +65,6 @@ onload = "javascript:;"
                           Maintenance Mode&nbsp;
                           </b>
                         </a>
-                        <a href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
@@ -112,7 +111,6 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBA?version=${constants.mintVersion}" target="_blank">Help</a></li>
                     </ul>
