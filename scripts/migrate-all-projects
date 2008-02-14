@@ -57,7 +57,7 @@ for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
     try:
         reposDb = dbstore.connect(cfg.reposDBPath % actualDbName,
                                   driver = cfg.reposDBDriver)
-        schema.loadSchema(reposDb)
+        schema.loadSchema(reposDb, doMigrate=True)
     except:
         errors += 1
         e = sys.exc_info()[1]
