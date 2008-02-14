@@ -167,7 +167,6 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    addonsHost              = None
     awsPublicKey            = None
     awsPrivateKey           = None
 
