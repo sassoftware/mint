@@ -130,7 +130,7 @@ typeNamesMarketing = {
 }
 
 buildTypeExtra = {
-    APPLIANCE_ISO:      "This build type will not work without using "
+    APPLIANCE_ISO:      "This image type will not work without using "
                         "a version of anaconda-templates based on "
                         "rPath Linux 2.",
 }

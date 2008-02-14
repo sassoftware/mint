@@ -72,7 +72,7 @@ class autoResolve(BooleanOption):
 
 class baseFileName(StringOption):
     default = ''
-    prompt = 'Custom output filename prefix (replaces name-version-arch)'
+    prompt = 'Custom image file name (replaces name-version-arch)'
 
 class showMediaCheck(BooleanOption):
     default = False
@@ -80,7 +80,7 @@ class showMediaCheck(BooleanOption):
 
 class betaNag(BooleanOption):
     default = False
-    prompt = 'This build is considered a beta'
+    prompt = 'This image is considered a beta'
 
 class maxIsoSize(EnumOption):
     default = '681574400'

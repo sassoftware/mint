@@ -51,7 +51,7 @@ from mint.web.templatesupport import downloadTracker, projectText
                 <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Builds</button></p>
             </form>
         </div>
-        <p py:if="not builds">This ${projectText().lower()} contains no builds.</p>
+        <p py:if="not builds">This ${projectText().lower()} contains no images.</p>
     </div>
 
     <body>
@@ -84,8 +84,8 @@ from mint.web.templatesupport import downloadTracker, projectText
                     </div>
                 </div>
 
-                <h2>Individual Builds</h2>
-                <p py:if="isWriter"><strong><a href="newBuild">Create a new build</a></strong></p>
+                <h2>Individual Images</h2>
+                <p py:if="isWriter"><strong><a href="newBuild">Create a new image</a></strong></p>
                 ${buildsTable(builds)}
             </div>
         </div>

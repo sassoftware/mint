@@ -15,7 +15,7 @@ allowNone = ['anaconda-custom', 'media-template']
       py:extends="'layout.kid'">
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="${basePath}builds">Builds</a>
+        <a href="${basePath}builds">Images</a>
         <a href="#">${(buildId and "Create New" or "Edit") + " Build"}</a>
     </div>
     <?python
@@ -60,21 +60,21 @@ allowNone = ['anaconda-custom', 'media-template']
 
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-                <h2>${buildId and "Edit" or "Create"} Build</h2>
+                <h2>${buildId and "Edit" or "Create"} Image</h2>
 
                 <form method="post" action="saveBuild" id="mainForm">
 
-                    <div class="formgroupTitle">Distribution Information</div>
+                    <div class="formgroupTitle">Image Information</div>
                     <div class="formgroup">
                         <label for="relname">Name</label>
                         <input id="relname" name="name" type="text" value="${name}" /><div class="clearleft">&nbsp;</div>
 
-                        <label for="reldesc">Build Notes (optional)</label>
+                        <label for="reldesc">Image Notes (optional)</label>
                         <textarea id="reldesc" name="desc" type="text" py:content="desc" /><div class="clearleft">&nbsp;</div>
 
                     </div>
 
-                    <div class="formgroupTitle">Build Types</div>
+                    <div class="formgroupTitle">Image Type</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in visibleTypes">
                             <input class="reversed" id="buildtype_${key}"
@@ -140,7 +140,7 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
                     <br/>
 
-                    <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
+                    <div class="formgroupTitle">Image Contents<span id="baton"></span></div>
                     <div class="formgroup">
                         <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
                         <div py:if="buildId" style="margin: 4px;">

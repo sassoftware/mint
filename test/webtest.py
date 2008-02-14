@@ -628,7 +628,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'level' : 0})
 
 
-    def testEmptyBuildsPage(self):
+    def testEmptyImagesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         hostname = 'foo'
         projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
@@ -640,7 +640,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent('/project/foo/builds/',
-                                  content = 'contains no builds',
+                                  content = 'contains no images',
                                   code = [200])
 
     def testBuildsPage(self):
