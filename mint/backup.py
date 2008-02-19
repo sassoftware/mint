@@ -17,7 +17,7 @@ import conary.server.schema
 from conary.conaryclient import cmdline
 
 schemaCutoff = 37
-knownGroupVersions = ('3\.1\.5.*', '4\..*')
+knownGroupVersions = ('3\.1\.(\d{2}|[56789])(\.\d+)?$', '4\..*')
 
 staticPaths = ['config', 'logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
