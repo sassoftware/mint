@@ -3023,8 +3023,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._setBuildFilenames(buildId, filenames)
 
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
-        build = builds.Build(self, buildId)
-        project = projects.Project(self, build.projectId)
+
+        from mint.shimclient import ShimMintClient
+        authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
+                                               self.cfg.authPass))
+
+        build = authclient.getBuild(buildId)
+        project = authclient.getProject(build.projectId)
 
         cu = self.db.transaction()
         try:
