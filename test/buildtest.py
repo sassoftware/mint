@@ -592,10 +592,13 @@ class BuildTest(fixtures.FixturedUnitTest):
                           client.server._server.setBuildFilenames, build.id,
                           [['not right at all']])
 
-    @fixtures.fixture('Full')
-    def testSetBuildFilenamesSafe(self, db, data):
+    def _testSetBuildFilenamesSafe(self, db, data, hidden):
         ownerClient = self.getClient('owner')
         nobodyClient = self.getClient('anonymous')
+
+        if hidden:
+            adminClient = self.getClient('admin')
+            adminClient.hideProject(data['projectId'])
 
         build = ownerClient.getBuild(data['buildId'])
         build.setDataValue('outputToken', 'thisisasecretstring',
@@ -618,9 +621,20 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
 
     @fixtures.fixture('Full')
-    def testSetBuildAMIDataSafe(self, db, data):
+    def testSetBuildFilenamesSafe(self, db, data):
+        return self._testSetBuildFilenamesSafe(db, data, hidden = False)
+
+    @fixtures.fixture('Full')
+    def testSetBuildFilenamesSafeHidden(self, db, data):
+        return self._testSetBuildFilenamesSafe(db, data, hidden = True)
+
+    def _testSetBuildAMIDataSafe(self, db, data, hidden):
         ownerClient = self.getClient('owner')
         nobodyClient = self.getClient('anonymous')
+
+        if hidden:
+            adminClient = self.getClient('admin')
+            adminClient.hideProject(data['projectId'])
 
         build = ownerClient.getBuild(data['buildId'])
         build.setDataValue('outputToken', 'thisisasecretstring',
@@ -645,6 +659,14 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # make sure the outputTokengets removed from the build data
         self.failUnlessEqual(build.getDataValue('outputToken', validate = False), 0)
+
+    @fixtures.fixture('Full')
+    def testSetBuildAMIDataSafe(self, db, data):
+        return self._testSetBuildAMIDataSafe(db, data, hidden = False)
+
+    @fixtures.fixture('Full')
+    def testSetBuildAMIDataSafeHidden(self, db, data):
+        return self._testSetBuildAMIDataSafe(db, data, hidden = True)
 
     @fixtures.fixture('Full')
     def testSetImageFilenamesCompat(self, db, data):

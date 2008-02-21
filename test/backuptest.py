@@ -42,6 +42,11 @@ rBuilder_schemaVersion=37
 NVF=group-rbuilder-dist=/products.rpath.coxxxxllxljfkldsmdrpath:rba-3/3.1.3-1-1[is: x86]
 """
 
+metadataPattern = """
+rBuilder_schemaVersion=37
+NVF=group-rbuilder-dist=/products.rpath.com@rpath:rba-3/%s-1-1[is: x86]
+"""
+
 class BackupTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
@@ -231,6 +236,27 @@ class BackupTest(fixtures.FixturedUnitTest):
         metadataIO = StringIO.StringIO()
         valid = backup.isValid(self.cfg, metadataIO)
         self.failIf(valid, "Metadata was missing, test should have failed")
+
+    @fixtures.fixture("Empty")
+    def testKnownGoodVersions(self, db, data):
+        shouldPass = ('3.1.5', '3.1.5.1', '3.1.6', '3.1.7', '3.1.8',
+                      '3.1.9', '3.1.10', '3.1.11', '3.1.12', '3.1.13',
+                      '3.1.14', '3.1.15', '4.0.2', '4.1.0', '4.9.9')
+
+        shouldFail = ('3.1.0', '2.0.0', '3.1.1', '3.1.2', '3.1.3',
+                      '3.1.4', '1.6.3')
+
+        for x in shouldPass:
+            gvs = metadataPattern % x
+            mIO = StringIO.StringIO(gvs)
+            self.failUnless(backup.isValid(self.cfg, mIO),
+                    "Version %s was expected to be a known good version" % x)
+
+        for x in shouldFail:
+            gvs = metadataPattern % x
+            mIO = StringIO.StringIO(gvs)
+            self.failIf(backup.isValid(self.cfg, mIO),
+                    "Version %s isn't supposed to be a known good version" % x)
 
     def tearDown(self):
         if os.path.isdir('ignoreme'):
