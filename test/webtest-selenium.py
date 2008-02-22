@@ -108,7 +108,7 @@ class WebPageTest(SeleniumHelper):
         self.failUnless("Build: Test Project" in self.s.get_body_text())
 
 
-    def testDeleteMultipleBuilds(self):
+    def testDeleteMultipleImages(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
@@ -163,7 +163,7 @@ class WebPageTest(SeleniumHelper):
 
         self.clickAndWait("deleteBuildsSubmit")
 
-        self.failUnless("No builds specified" in self.s.get_body_text())
+        self.failUnless("No images specified" in self.s.get_body_text())
 
         self.s.check("name=buildIdsToDelete value=%d" % build.id)
         self.s.check("name=buildIdsToDelete value=%d" % build3.id)
@@ -190,7 +190,7 @@ class WebPageTest(SeleniumHelper):
         self.clickAndWait("yes")
 
         self.failIf("Build 3" in self.s.get_body_text())
-        self.failUnless("no builds" in self.s.get_body_text())
+        self.failUnless("no images" in self.s.get_body_text())
 
 if __name__ == "__main__":
     testsuite.main()
