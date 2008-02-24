@@ -107,7 +107,7 @@ class SiteHandler(WebHandler):
         ret = 'false'
         if not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off':
             ret = str(bool(self.client.pwCheck(user, password))).lower()
-        return """<auth valid="%s">\n""" % ret
+        return """<auth valid="%s" />\n""" % ret
 
     @intFields(pageId=1)
     def applianceSpotlight(self, pageId, *args, **kwargs):
