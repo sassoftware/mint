@@ -484,6 +484,15 @@ class ProjectHandler(WebHandler):
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
         template = build.getDataTemplate()
+
+        # validate the template options
+        try:
+            template.validate(kwargs)
+        except BuildOptionValidationException, e:
+            self._addErrors(str(e))
+            self._predirect("editBuild?buildId=%d" % build.id)
+            return
+
         searchPath = [build.getTroveVersion().branch().label()]
         fallbackPath = [versions.Label(basictroves.baseConaryLabel)]
         fallbackTroves = basictroves.fallbackTroves

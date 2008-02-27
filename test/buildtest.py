@@ -126,6 +126,36 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, build.setDataValue, 'enumArg', '5')
+    
+    @fixtures.fixture("Full")
+    def testBuildDataIntegerValidation(self, db, data):
+        
+        # get a template, doesn't matter what build type is used
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        dataTemplate = build.getDataTemplate()
+
+        # test freespace
+        buildtemplates.freespace().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "-1")
+
+        # test vmMemory
+        buildtemplates.vmMemory().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "-1")
+
+        # test swap size
+        buildtemplates.swapSize().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "-1")
 
     @fixtures.fixture("Full")
     def testMaxIsoSize(self, db, data):

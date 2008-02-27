@@ -166,6 +166,14 @@ class UnmountFailed(MintError):
 class UpToDateException(MintError):
     def __init__(self, table = "Unknown Table"):
         self.msg = "The table '%s' is not up to date" % table
+class InvalidBuildOption(MintError):
+    def __init__(self, desc):
+        self.msg = "Invalid value for %s"%desc
+class BuildOptionValidationException(MintError):
+    def __init__(self, errlist):
+        self.errlist = errlist
+        self.msg = str(self.errlist)
+    
 
 class DatabaseVersionMismatch(MintError):
     def __init__(self, currentVersion):
