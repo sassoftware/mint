@@ -8,7 +8,7 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version']:
+    for var in ['title', 'hostname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -92,6 +92,13 @@
                             </span>
                             <p class="help">Note that, once your ${projectText().lower()} has been created, you can create new lists at any time from your
                                 ${projectText().lower()}'s administration page.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Repository Commits Email</th>
+                        <td>
+                            <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
+                            <p class="help">An email address to which Conary repository commit messages are sent.</p>
                         </td>
                     </tr>
                 </table>

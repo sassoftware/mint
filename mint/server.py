@@ -623,10 +623,10 @@ class MintServer(object):
             raise projects.InvalidShortname
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -708,6 +708,9 @@ class MintServer(object):
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
+
+        if commitEmail:
+            project.setCommitEmail(commitEmail)
 
         if applianceValue:
             self._createGroupTemplate(project, label, version)

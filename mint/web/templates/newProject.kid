@@ -8,7 +8,7 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -61,6 +61,13 @@
                         <td>
                             <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
                             <p class="help">Please enter the URL for an externally-hosted web page that will be linked from your ${projectText().lower()}'s main page.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Repository Commits Email</th>
+                        <td>
+                            <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
+                            <p class="help">An email address to which Conary repository commit messages are sent.</p>
                         </td>
                     </tr>
                 </table>

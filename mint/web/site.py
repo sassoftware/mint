@@ -491,10 +491,10 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '', commitEmail='')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version):
+    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version, commitEmail):
         if not self.cfg.rBuilderOnline:
             # for rBA, hostname is same as short name
             hostname = shortname
@@ -525,7 +525,7 @@ class SiteHandler(WebHandler):
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance, shortname, prodtype, version)
+                    domainname, projecturl, blurb, appliance, shortname, prodtype, version, commitEmail)
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
                     if not self._createProjectLists(auth=auth,

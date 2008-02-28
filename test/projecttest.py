@@ -268,6 +268,26 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.getApplianceValue() == "no")
 
     @fixtures.fixture("Full")
+    def testCommitEmail(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                      appliance="no",
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0", commitEmail="foo@bar.net")
+        project = client.getProject(projectId)
+        assert(project.getCommitEmail() == "foo@bar.net")
+
+    @fixtures.fixture("Full")
+    def testCommitEmailBlank(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                      appliance="no",
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0")
+        project = client.getProject(projectId)
+        assert(project.getCommitEmail() == "")
+
+    @fixtures.fixture("Full")
     def testUnconfirmedMembers(self, db, data):
         client = self.getClient("owner")
         unconfirmedUserId = client.registerNewUser("unconfirmed",

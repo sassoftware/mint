@@ -98,6 +98,9 @@ class Project(database.TableObject):
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
 
+    def getCommitEmail(self):
+        return self.commitEmail
+
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)

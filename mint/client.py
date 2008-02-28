@@ -46,7 +46,7 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version=""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version="", commitEmail=""):
         """
         Create a new project.
         @param name: name of new project
@@ -59,9 +59,10 @@ class MintClient:
         @param shortname: the shortname of the product being created
         @param prodtype: the type of product being created.
         @param version:  the initial product version.
+        @param commitEmail: email address to which commit messages are sent.
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
