@@ -7,8 +7,8 @@ Web Front End Changes
 * Projects are now referred to as products. (RBL-1641)
 * Builds are now referred to as images. (RBL-2645)
 * The form for creating new products has been updated to ask for the project
-  title, short name, type (Appliance or Component) and initial version number.  
-  (RBL-2508)
+  title, short name, type (Appliance or Component) and initial version number
+  (RBL-2508), and the Repository Commits Email address (RBL-2590)
 * The initial setup page has a new option under "Repository Setup" to specify
   the namespace to be used by products. (RBL-2564)
 * New products will have an initial development label created in the format
