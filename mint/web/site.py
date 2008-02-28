@@ -395,7 +395,7 @@ class SiteHandler(WebHandler):
         if fullName != auth.fullName:
             self.user.setFullName(fullName)
 
-        for key, (dType, default, prompt) in \
+        for key, (dType, default, prompt, errordesc) in \
                 self.user.getDataTemplate().iteritems():
             if dType == data.RDT_BOOL:
                 val = bool(kwargs.get(key, False))
