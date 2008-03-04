@@ -343,7 +343,6 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.dataPath = self.reposDir
         cfg.logPath = self.reposDir + '/logs'
-        cfg.authDbPath = None
         cfg.imagesPath = self.reposDir + '/images/'
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'

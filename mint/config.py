@@ -87,7 +87,6 @@ class MintConfig(ConfigFile):
     authRepoMap             = cfgtypes.CfgDict(cfgtypes.CfgString)
     authUser                = None
     authPass                = None
-    authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
     logPath                 = os.path.join(os.path.sep, 'var', 'log', 'rbuilder')

@@ -61,8 +61,6 @@ class UsersTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
         # not passing a db object since a mint db isn't correct
@@ -594,8 +592,6 @@ class UserGroupsTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         cu = self.db.cursor()
         cu.execute("""SELECT userGroupId FROM UserGroups
@@ -625,8 +621,6 @@ class UserGroupMembersTable(database.DatabaseTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
 
     def getGroupsForUser(self, userId):
