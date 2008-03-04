@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -10,6 +10,7 @@ from mint import client
 from mint import constants
 from mint import buildtypes
 from mint import urltypes
+from mint.helperfuncs import getProjectText
 from conary import conarycfg
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
@@ -22,6 +23,7 @@ if constants.rBuilderOnline:
     namespaceOpt = 'defaultBranch'
 else:
     namespaceOpt = 'namespace'
+projectText = getProjectText()
 
 # these are keys that are generated for the "generated" configuration file
 keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
@@ -66,10 +68,10 @@ class MintConfig(ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
 
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
-        "The default namespace and tag used by rBuilder projects")
+       "The default namespace and tag used by rBuilder %ss"%projectText.lower())
     
     namespace               = (cfgtypes.CfgString, 'yournamespace',
-        "The namespace used by rBuilder projects")
+        "The namespace used by rBuilder %ss"%projectText.lower())
 
     groupApplianceLabel     = (cfgtypes.CfgString, 
             'rap.rpath.com@rpath:linux-1',
@@ -104,7 +106,7 @@ class MintConfig(ConfigFile):
         "(The complete URL to access rBuilder is constructed from the "\
         "host name and domain name.)")
 
-    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder projects?")
+    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder %ss?"%projectText.lower())
     adminMail               = 'mint@rpath.org'
     newsRssFeed             = ''
     commitAction            = None
