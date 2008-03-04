@@ -118,7 +118,8 @@ onload = "javascript:;"
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="${cfg.basePath}legal/">Legal</a></li>
                         <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
-                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBO?version=${constants.mintVersion}" target="_blank">Help</a></li>
+                        <li><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} User Guide</a></li>
+                        <li py:if="auth.admin"><a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} Administration Guide</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">

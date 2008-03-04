@@ -112,7 +112,8 @@ onload = "javascript:;"
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBA?version=${constants.mintVersion}" target="_blank">Help</a></li>
+                        <li><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} User Guide</a></li>
+                        <li py:if="auth.admin"><a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} Administration Guide</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">
