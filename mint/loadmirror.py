@@ -176,7 +176,7 @@ class LoadMirror:
 
     def _addUsers(self, serverName, mintCfg):
         cfg = netserver.ServerConfig()
-        cfg.repositoryDB = ("sqlite", mintCfg.reposDBPath % serverName)
+        cfg.repositoryDB = (mintCfg.dbDriver, mintCfg.reposDBPath % serverName)
         cfg.serverName = serverName
         cfg.contentsDir = os.path.join(mintCfg.dataPath, "repos", serverName, "contents")
         repos = netserver.NetworkRepositoryServer(cfg, '')
