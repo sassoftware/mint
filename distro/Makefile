@@ -6,7 +6,7 @@
 
 extra_dist = schema.in.py
 
-generated_files = schema jobslave_set custom.cfg
+generated_files = schema jobslave_set custom.cfg rbuilder.conf
 
 .PHONY: all install $(generated_files)
 
@@ -49,6 +49,9 @@ schema: schema.in.py
 
 custom.cfg: custom.cfg.in
 	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
+
+rbuilder.conf: rbuilder.conf.in
+	sed -e s,@VERSION@,$(VERSION), rbuilder.conf.in >rbuilder.conf
 
 jobslave_set:
 	if [ -n "$$JOBSLAVE_SET_LABEL" ]; then \
