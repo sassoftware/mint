@@ -73,6 +73,14 @@ def backup(cfg, out, backupMirrors = False):
         if os.path.exists(path):
             print >> out, path
 
+    # Handle configs separately so we can exclude rbuilder.conf
+    backup_path = os.path.join(cfg.dataPath, 'config')
+    if os.path.exists(backup_path):
+        for config_file in os.listdir(backup_path):
+            if config_file != 'rbuilder.conf':
+                path = os.path.join(backup_path, config_file)
+                print >> out, path
+
 def restore(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
     dumpPath = os.path.join(backupPath, 'db.dump')

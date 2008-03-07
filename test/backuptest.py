@@ -68,6 +68,18 @@ class BackupTest(fixtures.FixturedUnitTest):
             p = os.path.join(self.cfg.dataPath, d)
             util.mkdirChain(p)
 
+        # And touch some configs
+        config_path = os.path.join(self.cfg.dataPath, 'config')
+        util.mkdirChain(config_path)
+        for file_name in ('rbuilder.conf', 'rbuilder-generated.conf'):
+            open(os.path.join(config_path, file_name), 'w').close()
+
+        # And touch some configs
+        config_path = os.path.join(self.cfg.dataPath, 'config')
+        util.mkdirChain(config_path)
+        for file_name in ('rbuilder.conf', 'rbuilder-generated.conf'):
+            open(os.path.join(config_path, file_name), 'w').close()
+
         # and a few that shouldn't be
         util.mkdirChain('ignoreme')
 
@@ -82,8 +94,10 @@ class BackupTest(fixtures.FixturedUnitTest):
         # spot check some things
         self.failUnless(os.path.join(self.cfg.dataPath, 'tmp', 'backup') \
                 in out.getvalue())
-        self.failUnless(os.path.join(self.cfg.dataPath, 'config') \
+        self.failUnless(os.path.join(self.cfg.dataPath, 'config/rbuilder-generated.conf') \
                 in out.getvalue())
+        self.failUnless(os.path.join(self.cfg.dataPath, 'config/rbuilder.conf') \
+                not in out.getvalue())
         self.failUnless(os.path.join(reposContentsDir % \
                 'foo.' + MINT_PROJECT_DOMAIN) in out.getvalue())
 
