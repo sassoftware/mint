@@ -22,6 +22,8 @@ Bug Fixes
 
 * A bug that prevents image builds from succeeding if a project is hidden
   has been fixed. (RBL-2619)
+* Commit mail, recent commits, and other data on installations migrated
+  from rBuilder 3.x will now update correctly. (RBL-2648)
 
 Changes in 4.0.1
 ================
