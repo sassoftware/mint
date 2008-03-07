@@ -29,6 +29,7 @@ install: default-install
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
+	install -D -m0644 postgres.cron $(DESTDIR)/etc/cron.d/postgres.cron
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
 	# system dist (executable)
