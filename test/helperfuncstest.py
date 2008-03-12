@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -500,6 +500,10 @@ Much like Powdermilk Biscuits[tm]."""
 
         self.assertRaises(ValueError, fromDatabaseTimestamp, '34842afjk')
         self.assertRaises(ValueError, fromDatabaseTimestamp, [])
+
+    def testGeneratePassword(self):
+        p1 = genPassword(32)
+        self.assertTrue(len(p1) == 32)
 
 
 if __name__ == "__main__":

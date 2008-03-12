@@ -70,7 +70,7 @@ from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound
+from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
@@ -443,6 +443,48 @@ class MintServer(object):
                 cfg.repositoryMap, cfg.user,
                 conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
+
+    def _addMirrorRoleToProject(self, project):
+        role = 'mirror'
+        user = 'mirror'
+        repo = self._getProjectRepo(project)
+        label = versions.Label(project.getLabel())
+        try:
+            # XXX This is commented out b/c the addUser also tries to
+            # add the role.  It craps out since the role already exists.
+            #self._addRoleToProject(project, role, label=label, repo=repo)
+            self._addUserToProject(project, user, self.cfg.mirrorRolePass,
+                label=label, repo=repo)
+            repo.setRoleCanMirror(label, role, True)
+        except Exception, e:
+            raise PublishedReleaseMirrorRole(str(e))
+
+    def _addRoleToProject(self, project, role, label=None, repo=None):
+        if not label:
+            label = versions.Label(project.getLabel())
+        if not repo:
+            repo = self._getProjectRepo(project)
+        try:
+            repo.addRole(label, role)
+        except RoleAlreadyExists:
+            # already there, so who cares
+            pass
+
+    def _addUserToProject(self, project, user, password, label=None, repo=None):
+        if not label:
+            label = versions.Label(project.getLabel())
+        if not repo:
+            repo = self._getProjectRepo(project)
+        try:
+            repo.addUser(label, user, password)
+        except UserAlreadyExists:
+            # already there, so who cares
+            pass
+        except RoleAlreadyExists:
+            # in the current code, adding a user adds a role of the same 
+            # name.
+            pass
+
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -2420,12 +2462,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def publishPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
+        project = projects.Project(self, projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         if not len(self.publishedReleases.getBuilds(pubReleaseId)):
             raise PublishedReleaseEmpty
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
             raise PublishedReleasePublished
+        
+        # add the mirror role to the project
+        self._addMirrorRoleToProject(project)
+        
         valDict = {'timePublished': time.time(),
                    'publishedBy': self.auth.userId}
         return self.publishedReleases.update(pubReleaseId, **valDict)

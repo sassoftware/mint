@@ -193,11 +193,8 @@ class SetupHandler(WebHandler):
         if kwargs.get('requireSigs'):
             newCfg.requireSigs = True
 
-        mintPass = ''
-        passwdLength = 32
-        for x in range(passwdLength):
-            mintPass += random.choice('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        newCfg.authPass = mintPass
+        newCfg.authPass = helperfuncs.genPassword(32)
+        newCfg.mirrorRolePass = helperfuncs.genPassword(128)
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 
@@ -229,3 +226,4 @@ class SetupHandler(WebHandler):
 
         t = template.Template(cfg = self.cfg, req = self.req, cacheFakeoutVersion = helperfuncs.getVersionForCacheFakeout(), **values)
         return t.serialize(encoding = "utf-8", output = "xhtml")
+

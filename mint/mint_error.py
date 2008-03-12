@@ -173,6 +173,9 @@ class BuildOptionValidationException(MintError):
     def __init__(self, errlist):
         self.errlist = errlist
         self.msg = str(self.errlist)
+class PublishedReleaseMirrorRole(MintError):
+    def __init__(self, err = "Unknown error"):
+        self.msg = "Release cannot be published due to an error adding the mirror role/user: %s" % err
     
 
 class DatabaseVersionMismatch(MintError):
