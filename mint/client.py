@@ -583,13 +583,9 @@ class MintClient:
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
                 allLabels, recurse, id)
 
-    def addOutboundMirrorTarget(self, outboundMirrorId, targetUrl,
-            mirroruser, mirrorpass):
-        return self.server.addOutboundMirrorTarget(outboundMirrorId,
-                targetUrl, mirroruser, mirrorpass)
-
-    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.server.delOutboundMirrorTarget(outboundMirrorTargetId)
+    def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
+        return self.server.setOutboundMirrorTargets(outboundMirrorId,
+                updateServiceIds)
 
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
@@ -616,9 +612,6 @@ class MintClient:
     def getOutboundMirror(self, outboundMirrorId):
         return self.server.getOutboundMirror(outboundMirrorId)
 
-    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.server.getOutboundMirrorTarget(outboundMirrorTargetId)
-
     def getOutboundMirrorTargets(self, outboundMirrorId):
         return self.server.getOutboundMirrorTargets(outboundMirrorId)
 
@@ -633,6 +626,23 @@ class MintClient:
 
     def getOutboundMirrorGroups(self, outboundMirrorId):
         return self.server.getOutboundMirrorGroups(outboundMirrorId)
+
+    def addUpdateService(self, hostname, adminUser, adminPassword,
+            description):
+        return self.server.addUpdateService(hostname, adminUser,
+                adminPassword, description)
+
+    def getUpdateService(self, upsrvId):
+        return self.server.getUpdateService(upsrvId)
+
+    def editUpdateService(self, upsrvId, newDesc):
+        return self.server.editUpdateService(upsrvId, newDesc)
+
+    def delUpdateService(self, upsrvId):
+        return self.server.delUpdateService(upsrvId)
+
+    def getUpdateServiceList(self):
+        return self.server.getUpdateServiceList()
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)

@@ -138,6 +138,9 @@ def getVersionForCacheFakeout():
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
+def generateMirrorUserName(rbuilderHostname, updateServiceHostname):
+    # Generate a mirrorUser for this rBuilder
+    return "-mirroruser-%s-%s" % (rbuilderHostname, updateServiceHostname)
 
 def cleanseUrl(protocol, url):
     if url.find('@') != -1:
@@ -220,20 +223,6 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
             conaryCfg.proxy = httpProxies
 
     return conaryCfg
-
-def hashMirrorRepositoryUser(hostName, siteDomainName, mirrorUrl,
-        projectId, labels, matchStrings):
-
-    userPrefix = '%s.%s-%s' % (hostName, siteDomainName,
-            mirrorUrl)
-    trailingBits = '%s%s%s' % (projectId,
-            labels and labels or 'ALL',
-            matchStrings and matchStrings or 'ALL')
-    import md5
-    m = md5.new()
-    m.update(userPrefix+trailingBits)
-    userHash = m.hexdigest()[:8]
-    return '%s_%s' % (userPrefix, userHash)
 
 def getProjectText():
     """Returns project if rBO and product if rBA"""

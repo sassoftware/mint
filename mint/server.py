@@ -263,8 +263,9 @@ def getTables(db, cfg):
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
-    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db)
-    d['outboundMirrorTargets'] = mirror.OutboundMirrorTargetsTable(db)
+    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
+    d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
+    d['outboundMirrorsTargets'] = mirror.OutboundMirrorsTargetsTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
     d['useit'] = useit.UseItTable(db, cfg)
@@ -542,6 +543,41 @@ class MintServer(object):
         else:
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
+
+    def _configureUpdateService(self, hostname, adminUser, adminPassword):
+        import xmlrpclib
+        from mint.proxiedtransport import ProxiedTransport
+        mirrorUser = ''
+        try:
+            # Make sure that we deal with any HTTP proxies
+            if 'https' in self.cfg.proxy.keys():
+                transport = ProxiedTransport(self.cfg.proxy['https'])
+            elif 'http' in self.cfg.proxy.keys():
+                transport = ProxiedTransport(self.cfg.proxy['http'])
+            else:
+                transport = None
+
+            # Connect to the rUS via XML-RPC
+            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (adminUser, adminPassword, hostname), transport=transport)
+
+            mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
+                    (self.cfg.hostName, self.cfg.siteDomainName), hostname)
+
+            # Add a user to the update service with mirror permissions
+            mirrorPassword = sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+        except xmlrpclib.ProtocolError, e:
+            if e.errcode == 403:
+                raise UpdateServiceAuthError(hostname)
+            else:
+                raise UpdateServiceConnectionFailed(hostname, "%d %s" % \
+                        (e.errcode, e.errmsg))
+        except socket.error, e:
+            raise UpdateServiceConnectionFailed(hostname, str(e[1]))
+        else:
+            if not mirrorPassword:
+                raise UpdateServiceUnknownError(hostname)
+
+        return (mirrorUser, mirrorPassword)
 
     def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
         if groupName is None:
@@ -3842,7 +3878,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         return True
 
-
     @private
     @typeCheck(int, (list, str), bool, bool, int)
     @requiresAdmin
@@ -3867,32 +3902,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return id
 
     @private
-    @typeCheck(int, str, str, str)
+    @typeCheck(int, list)
     @requiresAdmin
-    def addOutboundMirrorTarget(self, outboundMirrorId, url, username, password):
-        return self.outboundMirrorTargets.new(outboundMirrorId = outboundMirrorId,
-                                              url = url,
-                                              username = username,
-                                              password = password)
+    def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
+        return self.outboundMirrorsTargets.setTargets(outboundMirrorId,
+               updateServiceIds)
 
     @private
     @typeCheck(int)
     @requiresAdmin
     def delOutboundMirror(self, outboundMirrorId):
-        # XXX sqlite doesn't obey cascading deletes
-        if self.cfg.dbDriver == 'sqlite':
-            cu = self.db.cursor()
-            cu.execute("""DELETE FROM OutboundMirrorTargets WHERE
-                          outboundMirrorId = ?""", outboundMirrorId)
         self.outboundMirrors.delete(outboundMirrorId)
         self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
         return True
-
-    @private
-    @typeCheck(int)
-    @requiresAdmin
-    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.outboundMirrorTargets.delete(outboundMirrorTargetId)
 
     @private
     @typeCheck(int, (list, str))
@@ -3925,15 +3947,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @requiresAdmin
     def getOutboundMirrors(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorId, sourceProjectId,
-                        targetLabels, allLabels, recurse,
-                        matchStrings, mirrorOrder, fullSync
-                        FROM OutboundMirrors
-                        ORDER by mirrorOrder""")
-        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
-                x[6], bool(x[7])] \
-                for x in cu.fetchall()]
+        return self.outboundMirrors.getOutboundMirrors()
 
     @private
     @typeCheck(int, bool)
@@ -3951,18 +3965,50 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @typeCheck(int)
     @requiresAdmin
-    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.outboundMirrorTargets.get(outboundMirrorTargetId)
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        return self.outboundMirrorsTargets.getOutboundMirrorTargets(outboundMirrorId)
 
     @private
-    @typeCheck(int)
     @requiresAdmin
-    def getOutboundMirrorTargets(self, outboundMirrorId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorTargetsId, url, username, password
-                        FROM OutboundMirrorTargets
-                        WHERE outboundMirrorId = ?""", outboundMirrorId)
-        return [ list(x) for x in cu.fetchall() ]
+    @typeCheck(str, str, str, ((str, unicode),))
+    def addUpdateService(self, hostname, adminUser, adminPassword,
+            description=''):
+        mirrorUser, mirrorPassword = \
+                self._configureUpdateService(hostname, adminUser,
+                        adminPassword)
+        return self.updateServices.new(hostname = hostname,
+                description = description,
+                mirrorUser = mirrorUser,
+                mirrorPassword = mirrorPassword)
+
+    @private
+    @requiresAdmin
+    @typeCheck(int)
+    def getUpdateService(self, upsrvId):
+        try:
+            ret = self.updateServices.get(upsrvId)
+        except database.ItemNotFound:
+            raise UpdateServiceNotFound()
+        else:
+            return ret
+
+    @private
+    @requiresAdmin
+    @typeCheck(int, ((str, unicode),)) 
+    def editUpdateService(self, upsrvId, newDesc):
+        return self.updateServices.update(upsrvId, description = newDesc)
+
+    @private
+    @requiresAdmin
+    @typeCheck(int)
+    def delUpdateService(self, upsrvId):
+        return self.updateServices.delete(upsrvId)
+
+    @private
+    @typeCheck()
+    @requiresAdmin
+    def getUpdateServiceList(self):
+        return self.updateServices.getUpdateServiceList()
 
     @private
     @typeCheck(int)

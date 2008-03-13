@@ -42,6 +42,7 @@ python_files =			\
 	pkgindexer.py		\
 	profile.py		\
 	projects.py		\
+	proxiedtransport.py	\
 	pubreleases.py		\
 	rapapasswords.py	\
 	rbuilderaction.py	\

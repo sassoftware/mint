@@ -214,6 +214,22 @@ class MigrateTo_44(SchemaMigration):
             ADD COLUMN version VARCHAR(128) DEFAULT ''""")
         return True
 
+# SCHEMA VERSION 45
+class MigrateTo_45(SchemaMigration):
+    Version = (45, 0)
+
+    # 45.0
+    # - Add UpdateServices table
+    # - Distill the OutboundMirrorTargets table into a set unique by URL
+    # - Create OutboundMirrorsTargets table (map between UpdateServices and
+    #   OutboundMirrors)
+    # - Take data distilled earlier and fill in UpdateServices table and
+    #   new mapping table.
+    # - Drop no longer needed OutboundMirrorTargets table
+    def migrate(self):
+        # TODO Implement me
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

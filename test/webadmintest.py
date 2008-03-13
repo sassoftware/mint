@@ -509,6 +509,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 mirrorUser='foo',
                 mirrorPass='bar')
         obm = client.getOutboundMirror(1)
+        # FIXME use getUpdateService
         obt = client.getOutboundMirrorTarget(1)
 
         ad2 = admin.AdminHandler()
@@ -526,6 +527,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 mirrorUser='foo',
                 mirrorPass='bar')
         obm2 = client.getOutboundMirror(2)
+        # FIXME use getUpdateService
         obt2 = client.getOutboundMirrorTarget(2)
 
         self.failUnlessEqual(len(rusPasswordInfo), 2,

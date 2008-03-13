@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(44)
+RBUILDER_DB_VERSION = sqllib.DBversion(45)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -564,6 +564,18 @@ def _createMirrorInfo(db):
     db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
             'targetProjectId')
 
+    if 'UpdateServices' not in db.tables:
+        cu.execute("""
+        CREATE TABLE UpdateServices (
+            updateServiceId         %(PRIMARYKEY)s,
+            hostname                VARCHAR(767) NOT NULL,
+            description             TEXT,
+            mirrorUser              VARCHAR(254) NOT NULL,
+            mirrorPassword          VARCHAR(254) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['UpdateServices'] = []
+        commit = True
+
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
             outboundMirrorId %(PRIMARYKEY)s,
@@ -583,34 +595,24 @@ def _createMirrorInfo(db):
     db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
-    if 'OutboundMirrorTargets' not in db.tables:
+    if 'OutboundMirrorsTargets' not in db.tables:
         cu.execute("""
-        CREATE TABLE OutboundMirrorTargets (
-            outboundMirrorTargetsId %(PRIMARYKEY)s,
+        CREATE TABLE OutboundMirrorsTargets (
             outboundMirrorId        INT NOT NULL,
-            url                     VARCHAR(767) NOT NULL,
-            username                VARCHAR(254) NOT NULL,
-            password                VARCHAR(254) NOT NULL,
-            CONSTRAINT OutboundMirrorTargets_omi_fk
+            updateServiceId         INT NOT NULL,
+            CONSTRAINT omt_omi_fk
                 FOREIGN KEY (outboundMirrorId)
                     REFERENCES OutboundMirrors(outboundMirrorId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+                ON DELETE CASCADE,
+            CONSTRAINT omt_usi_fk
+                FOREIGN KEY (updateServiceId)
+                    REFERENCES UpdateServices(updateServiceId)
+                ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['OutboundMirrorTargets'] = []
+        db.tables['OutboundMirrorsTargets'] = []
         commit = True
-    db.createIndex('OutboundMirrorTargets',
-            'outboundMirrorTargets_outboundMirrorIdIdx', 'outboundMirrorId')
-
-    if 'rAPAPasswords' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rAPAPasswords (
-            host            VARCHAR(255),
-            user            VARCHAR(255),
-            password        VARCHAR(255),
-            role            VARCHAR(255)
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['rAPAPasswords'] = []
-        commit = True
+    db.createIndex('OutboundMirrorsTargets', 'omt_omi_usi_uq',
+            'outboundMirrorId, updateServiceId', unique = True)
 
     if commit:
         db.commit()

@@ -12,6 +12,8 @@ import sys
 import optparse
 import traceback
 
+from mint.mint_error import UpdateServiceNotFound
+
 EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo"]
 INCLUDE_ALL_MATCH_TROVES = ["+.*"]
 
@@ -31,6 +33,10 @@ class OutboundMirrorsTable(database.KeyedTable):
     fields = ['outboundMirrorId', 'sourceProjectId', 'targetLabels',
               'allLabels', 'recurse', 'matchStrings', 'mirrorOrder']
 
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
+
     def get(self, *args, **kwargs):
         res = database.KeyedTable.get(self, *args, **kwargs)
         if 'allLabels' in res:
@@ -39,14 +45,68 @@ class OutboundMirrorsTable(database.KeyedTable):
             res['recurse'] = bool(res['recurse'])
         return res
 
+    def delete(self, id):
+        cu = self.db.transaction()
+        try:
+            cu.execute("""DELETE FROM OutboundMirrors WHERE
+                              outboundMirrorId = ?""", id)
 
-class OutboundMirrorTargetsTable(database.KeyedTable):
-    name = "OutboundMirrorTargets"
-    key = 'outboundMirrorTargetsId'
+            # Cleanup mapping table ourselves if we are using SQLite,
+            # as it doesn't know about contraints.
+            if self.cfg.dbDriver == 'sqlite':
+                cu.execute("""DELETE FROM OutboundMirrorsTargets WHERE
+                              outboundMirrorId = ?""", id)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return True
 
-    fields = [ 'outboundMirrorTargetsId', 'outboundMirrorId',
-               'url', 'username', 'password' ]
+    def getOutboundMirrors(self):
+        cu = self.db.cursor()
+        cu.execute("""SELECT outboundMirrorId, sourceProjectId,
+                        targetLabels, allLabels, recurse,
+                        matchStrings, mirrorOrder, fullSync
+                        FROM OutboundMirrors
+                        ORDER by mirrorOrder""")
+        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
+                x[6], bool(x[7])] \
+                for x in cu.fetchall()]
 
+class OutboundMirrorsTargetsTable(database.DatabaseTable):
+    name = "OutboundMirrorsTargets"
+    fields = [ 'updateServiceId', 'outboundMirrorId' ]
+
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT obmt.updateServiceId, us.hostname,
+                             us.mirrorUser, us.mirrorPassword, us.description
+                      FROM OutboundMirrorsTargets obmt
+                           JOIN
+                           UpdateServices us
+                           USING(updateServiceId)
+                      WHERE outboundMirrorId = ?""", outboundMirrorId)
+        return [ list(x) for x in cu.fetchall() ]
+
+    def setTargets(self, outboundMirrorId, updateServiceIds):
+        cu = self.db.transaction()
+        updates = [ (outboundMirrorId, x) for x in updateServiceIds ]
+        try:
+            cu.execute("""DELETE FROM OutboundMirrorsTargets
+                          WHERE outboundMirrorId = ?""", outboundMirrorId)
+        except:
+            pass # don't worry if there is nothing to do here
+
+        try:
+            cu.executemany("INSERT INTO OutboundMirrorsTargets VALUES(?,?)",
+                updates)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return updateServiceIds
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
@@ -59,6 +119,39 @@ class RepNameMapTable(database.DatabaseTable):
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
         self.db.commit()
         return cu._cursor.lastrowid
+
+class UpdateServicesTable(database.KeyedTable):
+    name = 'UpdateServices'
+    key = 'updateServiceId'
+    fields = [ 'updateServiceId', 'hostname',
+               'mirrorUser', 'mirrorPassword', 'description' ]
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
+
+    def getUpdateServiceList(self):
+        cu = self.db.cursor()
+        cu.execute("""SELECT %s FROM UpdateServices""" % ', '.join(self.fields))
+        return [ list(x) for x in cu.fetchall() ]
+
+    def delete(self, id):
+        cu = self.db.transaction()
+        try:
+            cu.execute("""DELETE FROM UpdateServices WHERE
+                              updateServiceId = ?""", id)
+
+            # Cleanup mapping table ourselves if we are using SQLite,
+            # as it doesn't know about contraints.
+            if self.cfg.dbDriver == 'sqlite':
+                cu.execute("""DELETE FROM OutboundMirrorsTargets WHERE
+                              updateServiceId = ?""", id)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return True
 
 
 class MirrorScript(scriptlibrary.SingletonScript):
