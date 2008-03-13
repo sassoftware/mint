@@ -31,7 +31,7 @@
                     <table>
                         <tr>
                             <td>
-                                <label for="buildTypeRestriction">Restrict by Build Type</label>
+                                <label for="buildTypeRestriction">Restrict by Image Type</label>
                                 <select id="buildTypeRestriction" name="search">
                                     <option value="${fullTerms}">--</option>
                                     <option value="${fullTerms} buildtype=${bt}"

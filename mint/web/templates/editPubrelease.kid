@@ -34,7 +34,7 @@ from mint.web.templatesupport import projectText
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>${releaseId and "Edit" or "Create"} Release</h2>
-                <p  py:if="availableBuilds" class="help" style="margin-bottom: 24px;">Use this page to ${releaseId and 'edit an existing' or 'create a'} release. Fields labeled with a <em class="required">red arrow</em> are required. In addition, one or more builds must be selected from the Release Contents section${releaseId and 's' or ''}.</p>
+                <p  py:if="availableBuilds" class="help" style="margin-bottom: 24px;">Use this page to ${releaseId and 'edit an existing' or 'create a'} release. Fields labeled with a <em class="required">red arrow</em> are required. In addition, one or more images must be selected from the Release Contents section${releaseId and 's' or ''}.</p>
 
                 <form py:if="availableBuilds or currentBuilds" method="post" action="saveRelease" id="mainForm">
 
@@ -65,7 +65,10 @@ from mint.web.templatesupport import projectText
                     <div strip="True" py:if="currentBuilds">
                     <div class="formgroupTitle">Current Release Contents</div>
                     <div class="formgroup">
-                    <p class="help" style="margin-left: 20px; margin-right: 10px; margin-top: -5px; margin-bottom: 5px;">The following builds are currently included in this release. Un-check a build to remove it.</p>
+                    <p class="help" style="margin-left: 20px;
+                    margin-right: 10px; margin-top: -5px;
+                    margin-bottom: 5px;">The following images are
+                    currently included in this release. Un-check an image to remove it.</p>
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
@@ -108,7 +111,7 @@ from mint.web.templatesupport import projectText
                             <br/>
 			    </div>
 			    <div style="height: 1%">
-                            <label class="troveSpecs">Build Notes</label>
+                            <label class="troveSpecs">Image Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
@@ -164,7 +167,7 @@ from mint.web.templatesupport import projectText
                             <br/>
 			    </div>
 			    <div style="height: 1%">
-                            <label class="troveSpecs">Build Notes</label>
+                            <label class="troveSpecs">Image Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>

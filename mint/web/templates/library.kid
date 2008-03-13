@@ -94,7 +94,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
       <div id="builds" class="palette" py:if="builds">
         <h3 onclick="javascript:toggle_display('recentBuild_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Recently Published Builds
+            Recently Published Images
         </h3>
         <div id="recentBuild_items" style="display: $display">
           <ul>

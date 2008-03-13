@@ -59,15 +59,15 @@
                     After you have chosen the packages for your group, you are ready to cook. 
                     Click Cook this Group in the Group Builder and watch as rBuilder assembles 
                     the chosen packages in the group recipe. When the group is finished cooking, 
-                    you can create and manage builds to distribute as your new software appliance.
+                    you can create and manage images to distribute as your new software appliance.
                 </p>
 
                 <h2>4) Build the software appliance</h2>
                 <p>
                     Create a build to make your cooked group into a distributable software appliance. 
-                    Click Manage Builds, choose a cooked group and a build type (such as installable 
-                    CD/DVD or VMware&reg; Player image), and create the new build. Then, click Manage 
-                    Releases to publish one or more builds in a release, making them available for download.
+                    Click Manage Images, choose a cooked group and an image type (such as installable 
+                    CD/DVD or VMware&reg; Player image), and create the new image. Then, click Manage 
+                    Releases to publish one or more images in a release, making them available for download.
                 </p>
 
                 <p>

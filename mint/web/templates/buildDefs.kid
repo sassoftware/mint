@@ -11,7 +11,7 @@ from mint.web.templatesupport import projectText
 ?>
 
     <head>
-        <title>${projectText().title()} Build Definitions</title>
+        <title>${projectText().title()} Image Definitions</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/json.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtemplates.js?v=${cacheFakeoutVersion}"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/builddefs.js?v=${cacheFakeoutVersion}"/>
@@ -50,14 +50,14 @@ from mint.web.templatesupport import projectText
         <div id="layout">
             <div id="spanboth">
 
-                <h2>Default Builds for ${label}</h2>
+                <h2>Default Image Definitions for ${label}</h2>
 
                 <p>Group name: <input type="text" id="troveName" name="troveName" /></p>
 
                 <table>
                     <thead>
                         <tr style="font-size: larger; font-weight: bold; color: #293D82;">
-                            <td style="padding-bottom: 8px;">Build type</td>
+                            <td style="padding-bottom: 8px;">Image type</td>
                             <td colspan="2" style="text-align: right;">Options</td>
                         </tr>
                     </thead>
@@ -75,18 +75,21 @@ from mint.web.templatesupport import projectText
                         <button onclick="javascript:saveChanges(true);" id="buildAllButton">
                             <img id="buildAllSpinner" class="invisible"
                                 src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />
-                            Build All
+                            Build All Images
                         </button>
                     </span>
 
-                    <span style="font-size: larger; font-weight: bold; color: #293D82; padding-right: 1em;">Add a new build:</span> <select id="newBuildType">
+                    <span style="font-size: larger; font-weight: bold;
+                        color: #293D82; padding-right: 1em;">Add a new
+                        image definition:</span> <select id="newBuildType">
                         <option py:for="buildType in visibleTypes" py:content="buildtypes.typeNames[buildType]" value="${buildType}" />
                     </select>
                     <button id="newBuildButton" onclick="javascript:addNew();">Add</button>
                 </div>
                 <div id="alert" />
 
-                <p><a href="builds"><img src="${cfg.staticPath}apps/mint/images/prev.gif" /><b>Return to Builds</b></a></p>
+                <p><a href="builds"><img src="${cfg.staticPath}apps/mint/images/prev.gif"/>
+		<b>Return to image list</b></a></p>
             </div>
         </div>
     </body>

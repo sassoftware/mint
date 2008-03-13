@@ -16,7 +16,7 @@ allowNone = ['anaconda-custom', 'media-template']
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="${basePath}builds">Images</a>
-        <a href="#">${(buildId and "Create New" or "Edit") + " Build"}</a>
+        <a href="#">${(buildId and "Create New" or "Edit") + " Image"}</a>
     </div>
     <?python
         for var in ['buildId', 'buildName']:
@@ -38,7 +38,7 @@ allowNone = ['anaconda-custom', 'media-template']
     </div>
 
     <head>
-        <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
+        <title>${formatTitle((buildId and "Edit" or "Create New") + " Image")}</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" ></script>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo-dom-event/yahoo-dom-event.js" ></script>
@@ -169,7 +169,7 @@ allowNone = ['anaconda-custom', 'media-template']
 
                     <p>
                         <input type="submit" id="submitButton" name="action"
-                               value="${buildId and 'Recreate' or 'Create'} Build"
+                               value="${buildId and 'Recreate' or 'Create'} Image"
                                py:attrs="{'disabled': not buildId and 'disabled' or None}" />
                         <input type="submit" name="action" value="Cancel" />
                     </p>

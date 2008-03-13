@@ -11,9 +11,9 @@ from mint.web.templatesupport import downloadTracker, projectText
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <head>
-        <title>${formatTitle('Builds: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Images: %s' % project.getNameForDisplay())}</title>
         <link py:if="builds" rel="alternate" type="application/rss+xml"
-              title="${project.getName()} Builds" href="${basePath}rss" />
+              title="${project.getName()} Images" href="${basePath}rss" />
     </head>
 
     <div py:strip="True" py:def="buildsTableRow(build, rowNumber)">
@@ -48,7 +48,7 @@ from mint.web.templatesupport import downloadTracker, projectText
                         ${buildsTableRow(build, rowNumber)}
                     </div>
                 </table>
-                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Builds</button></p>
+                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Images</button></p>
             </form>
         </div>
         <p py:if="not builds">This ${projectText().lower()} contains no images.</p>

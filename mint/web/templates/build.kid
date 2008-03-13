@@ -42,7 +42,7 @@ from mint import constants
             <div id="middle">
 
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
-                <h2>Build: ${name}</h2>
+                <h2>Image: ${name}</h2>
 
                 <div py:if="isWriter and not build.getPublished()" py:strip="True">
                     ${statusArea("Build")}
@@ -67,8 +67,8 @@ from mint import constants
 
                             <div id="file_help" style="display: none;">
                                 <p>The file(s) entitled <tt>Disc <em>N</em></tt>
-                                represent the disc(s) required to install this
-                                build. These files are in ISO 9660 format, and can be
+                                represent(s) the disc(s) required to install this
+                                image. These files are in ISO 9660 format, and can be
                                 burned onto CD or DVD media using the CD/DVD burning
                                 software of your choice. The installation process is
                                 then started by booting your system from a disc
@@ -76,7 +76,7 @@ from mint import constants
 
                                 <p>The last two files are used only if you want to
                                 perform a network installation.  To do so, you must
-                                first download all "Disc N" file(s) and export them
+                                first download all "Disc N" file(s) and share them
                                 (via NFS).  You can then download and use one of the
                                 following files to boot the system to be installed:</p>
 
