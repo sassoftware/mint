@@ -78,11 +78,12 @@ def setup():
         JOB_SLAVE_PATH=jobslavePath, PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
-    testPath = testhelp.getTestPath()
-    archivePath = testPath + '/' + "archive"
+    from conary_test import resources
+    resources.testPath = testPath = testhelp.getTestPath()
+    resources.archivePath = archivePath = testPath + '/' + "archive"
 
     global conaryDir
-    conaryDir = os.environ['CONARY_PATH']
+    resources.conaryDir = conaryDir = os.environ['CONARY_PATH']
 
     from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
