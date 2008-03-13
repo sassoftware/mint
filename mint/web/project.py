@@ -374,10 +374,10 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     @intFields(buildId = -1)
-    @strFields(action = "Edit Build")
+    @strFields(action = "Edit Image")
     def editBuild(self, auth, buildId, action):
 
-        if action == "Edit Build":
+        if action == "Edit Image":
             build = self.client.getBuild(buildId)
 
             troveName, versionStr, flavor = build.getTrove()
@@ -400,7 +400,7 @@ class ProjectHandler(WebHandler):
                 arch = arch,
                 visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
-        elif action == "Recreate Build":
+        elif action == "Recreate Image":
             try:
                 job = self.client.startImageJob(buildId)
             except mcp_error.JobConflict:
@@ -450,7 +450,7 @@ class ProjectHandler(WebHandler):
         jobStatus, msg = res['status'], res['message']
         if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
                              jobstatus.FAILED):
-            self._addErrors("You cannot alter this build because a "
+            self._addErrors("You cannot alter this image because a "
                             "conflicting image is currently being generated.")
             self._predirect("build?id=%d" % buildId)
             return
@@ -557,8 +557,8 @@ class ProjectHandler(WebHandler):
             message = ""
             if build.pubReleaseId:
                 pubRelease = self.client.getPublishedRelease(build.pubReleaseId)
-                message += "This build is part of the unpublished release %s (version %s). Deleting the build will automatically delete the build from the release. " % (pubRelease.name, pubRelease.version)
-            message += "Are you sure you want to delete this build?"
+                message += "This image is part of the unpublished release %s (version %s). Deleting the image will automatically remove the image from the release. " % (pubRelease.name, pubRelease.version)
+            message += "Are you sure you want to delete this image?"
             return self._write("confirm",
                     message = message,
                     yesArgs = { 'func': 'deleteBuild',
@@ -576,11 +576,11 @@ class ProjectHandler(WebHandler):
             for buildId in buildIds:
                 build = self.client.getBuild(int(buildId))
                 build.deleteBuild()
-            self._setInfo("Builds deleted")
+            self._setInfo("Images deleted")
             self._predirect("builds")
         else:
             if not buildIdsToDelete:
-                self._addErrors("No builds specified.")
+                self._addErrors("No images specified.")
                 self._predirect("builds")
             numToDelete = len(buildIdsToDelete)
             numPublished = 0
@@ -590,9 +590,9 @@ class ProjectHandler(WebHandler):
                 if build.pubReleaseId:
                     numPublished += 1
             if numPublished:
-                message += "One or more of the builds you have specified are a part of a release. Deleting these builds will automatically delete the builds from their corresponding release(s). "
+                message += "One or more of the images you have specified are a part of a release. Deleting these images will automatically remove the images from their corresponding release(s). "
 
-            message += "Are you sure you want to delete these builds?"
+            message += "Are you sure you want to delete these images?"
             # we use JSON to serialize that list because confirm.kid
             # will eat the list.
             return self._write("confirm",
@@ -749,7 +749,7 @@ class ProjectHandler(WebHandler):
             self._predirect("releases")
         else:
             return self._write("confirm",
-                    message = "Are you sure you want to delete this release? All builds associated with this release will be put back in the pool of unpublished releases.",
+                    message = "Are you sure you want to delete this release? All images associated with this release will be put back in the pool of unpublished images.",
                     yesArgs = { 'func': 'deleteRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1' },
@@ -888,7 +888,7 @@ class ProjectHandler(WebHandler):
             else:
                 previewData = False
             return self._write("confirmPublish",
-                    message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (i.e. add/remove builds, update metadata) you will need to unpublish it first. Are you sure you want to publish this release?",
+                    message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (e.g. add/remove images, update description, etc.) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
@@ -934,7 +934,7 @@ class ProjectHandler(WebHandler):
                          buildtypes.deprecatedBuildTypes.get(x) \
                          or buildtypes.flavorFlags.get(x) for x in buildType]
         if None in buildType:
-            self._addErrors("Invalid build type")
+            self._addErrors("Invalid image type")
             self._predirect(temporary = True)
             return
         if not self.latestPublishedRelease:
@@ -1308,7 +1308,7 @@ class ProjectHandler(WebHandler):
                 item['title'] = "%s (version %s)" % (release.name, release.version)
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \
                     (self.cfg.siteHost, self.cfg.basePath, hostname, release.getId())
-                item['content']  = "This release contains the following builds:"
+                item['content']  = "This release contains the following images:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
                 for build in builds:

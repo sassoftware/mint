@@ -16,7 +16,7 @@ from mint import constants
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <head>
-        <title>${formatTitle('%s Build'%projectText().title())}</title>
+        <title>${formatTitle('%s Image'%projectText().title())}</title>
         <script type="text/javascript">
             <div py:if="isWriter" py:strip="True">
                 <![CDATA[
@@ -49,8 +49,8 @@ from mint import constants
                     <div id="editOptions" py:attrs="{ 'style': buildInProgress and 'display: none;' or None }">
                         <form id="editBuildOptions" action="editBuild" method="post">
                             <input type="hidden" name="buildId" value="${build.id}" />
-                            <input type="submit" name="action" value="Edit Build" /> &nbsp;
-                            <input type="submit" name="action" value="Recreate Build" />
+                            <input type="submit" name="action" value="Edit Image" /> &nbsp;
+                            <input type="submit" name="action" value="Recreate Image" />
                         </form>
                     </div>
                 </div>
@@ -189,7 +189,7 @@ from mint import constants
                             </div>
                         </div>
                     </div>
-                    <p py:if="not files">Build contains no downloadable files.</p>
+                    <p py:if="not files">Image contains no downloadable files.</p>
                 <h3>Details</h3>
 
                 <table class="troveinfo">

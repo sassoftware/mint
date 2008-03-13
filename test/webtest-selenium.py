@@ -86,8 +86,8 @@ class WebPageTest(SeleniumHelper):
         self.createTestGroup(client)
 
         self.clickAndWait("link=Test Project")
-        self.clickAndWait("link=Manage Builds")
-        self.clickAndWait("link=Create a new build")
+        self.clickAndWait("link=Manage Images")
+        self.clickAndWait("link=Create a new image")
 
         # Create Build button should be disabled
         self.failUnless(not self.s.is_editable("submitButton"))
@@ -155,7 +155,7 @@ class WebPageTest(SeleniumHelper):
         self.failUnless("Edit my account" in self.s.get_body_text())
 
         self.clickAndWait("link=Foo")
-        self.clickAndWait("link=Manage Builds")
+        self.clickAndWait("link=Manage Images")
 
         self.failUnless("Build 1" in self.s.get_body_text())
         self.failUnless("Build 2" in self.s.get_body_text())
@@ -175,7 +175,7 @@ class WebPageTest(SeleniumHelper):
 
         self.clickAndWait("yes")
 
-        self.failUnless("Builds deleted" in self.s.get_body_text())
+        self.failUnless("Images deleted" in self.s.get_body_text())
         self.failIf("Build 1" in self.s.get_body_text())
         self.failUnless("Build 2" in self.s.get_body_text())
         self.failIf("Build 3" in self.s.get_body_text())

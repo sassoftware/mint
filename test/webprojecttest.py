@@ -347,7 +347,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         page = self.fetch('/project/testproject/editBuild?' \
-                              'buildId=%d&action=Edit%%20Build' % build.id,
+                              'buildId=%d&action=Edit%%20Image' % build.id,
                           server=self.getProjectServerHostname())
         assert 'action="saveBuild"' in page.body
 
@@ -362,7 +362,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         page = self.fetch('/project/testproject/editBuild?' \
-                              'buildId=%d&action=Recreate%%20Build' % build.id,
+                              'buildId=%d&action=Recreate%%20Image' % build.id,
                           server=self.getProjectServerHostname())
         assert '/project/testproject/build?id=%d' % build.id in page.body
 
