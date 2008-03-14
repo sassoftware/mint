@@ -10,6 +10,8 @@ from mint import constants
 
 import htmlentitydefs
 import re
+import random
+import string
 import time
 import urlparse
 
@@ -241,3 +243,14 @@ def getProjectText():
     if constants.rBuilderOnline == False:
         text = "product"
     return text 
+
+def genPassword(length):
+    """
+    @param length: length of random password generated
+    @returns: returns a character string of random letters and digits.
+    @rtype: str
+    """
+    choices = string.letters + string.digits
+    pw = "".join([random.choice(choices) for x in range(length)])
+    return pw
+

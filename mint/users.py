@@ -25,6 +25,7 @@ from email import MIMEText
 from mint import database
 from mint import userlevels
 from mint import templates
+from mint import helperfuncs
 from mint.templates import registerNewUser
 from mint.templates import validateNewEmail
 from mint import searcher
@@ -644,10 +645,7 @@ def newPassword(length = 6):
     @returns: returns a character string of random letters and digits.
     @rtype: str
     """
-    choices = string.letters + string.digits
-    pw = "".join([random.choice(choices) for x in range(length)])
-    return pw
-
+    return helperfuncs.genPassword(length)
 
 def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
     validateEmailDomain(toEmail)

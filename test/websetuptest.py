@@ -198,7 +198,9 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
+        self.assertTrue(len(newCfg.mirrorRolePass) == 128)
+        for x in newCfg.mirrorRolePass:
+            self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")

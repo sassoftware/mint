@@ -32,7 +32,7 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
                            'requireSigs', 'authPass', 'reposDBDriver', 
-                           'reposDBPath']
+                           'reposDBPath', 'mirrorRolePass']
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -225,6 +225,12 @@ class MintConfig(ConfigFile):
     # whether or not to generate a scrambled password for the guided tour
     # currently this is set to false (see WEB-354) until further notice
     ec2GenerateTourPassword = (cfgtypes.CfgBool, False)
+
+    # this password is generated on intial setup and is used as the mirror
+    # role password for when projects are published.  This is hidden from
+    # users during setup.
+    mirrorRolePass          = (cfgtypes.CfgString, 'mirrorPass',
+        "The password to use for the mirror role")
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

@@ -15,6 +15,8 @@ from mint import buildtypes
 from mint import pubreleases
 from mint.mint_error import *
 
+from conary import versions
+
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
     @testsuite.context("quick")
     @fixtures.fixture("Full")
@@ -23,10 +25,17 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         # The full fixture actually creates a published release; we'll
         # use this already created object as a starting point.
         client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         pubReleaseId = pubRelease.id
         self.failUnless(pubRelease.id == pubRelease.pubReleaseId,
                 "id and pubReleaseId should be identical")
+
+        # make sure the mirror role exists and it can mirror
+        label = versions.Label(project.getLabel())
+        repo = client.server._server._getProjectRepo(project)
+        self.assertTrue('mirror' in repo.listRoles(label))
+        self.assertTrue(self.getMirrorAcl(project, 'mirror'))
 
         # check the timeCreated and createdBy fields
         # fixture creates the published release using the owner's id

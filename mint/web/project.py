@@ -487,7 +487,7 @@ class ProjectHandler(WebHandler):
 
         # validate the template options
         try:
-            template.validate(kwargs)
+            template.validate(**kwargs)
         except BuildOptionValidationException, e:
             self._addErrors(str(e))
             self._predirect("editBuild?buildId=%d" % build.id)
