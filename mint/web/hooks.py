@@ -184,7 +184,7 @@ def conaryHandler(req, cfg, pathInfo):
         # group builder)
         requireSigs = False
 
-    global db, conaryDb
+    global db, cachedMySQLDb
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
@@ -210,37 +210,45 @@ def conaryHandler(req, cfg, pathInfo):
         # it's local
         repHash = actualRepName + req.hostname + str(requireSigs)
         dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
-        database = cfg.reposDBPath % dbName
         reposDBDriver, reposDBPath, isDefault = getReposDB(db, dbName, projectId, cfg)
-        if reposDBDriver == "sqlite":
-            conaryDb = None
-            reposDb = None
-        else:
+
+        # reposDb is the database connection we'll ultimately use
+        # when creating a NetworkRepositoryServer object.
+        reposDb = None
+
+        # We cache the last accessed MySQLDb db connection if it
+        # is a default (i.e. not alternate) database. This way, we
+        # can use use() to switch databases rather than reconnect.
+        if isDefault and reposDBDriver == 'mysql':
+
+            # If we have the connection already, reset it.
+            # If the database name changed, then use use() to switch.
+            if cachedMySQLDb:
+                try:
+                    cachedMySQLDb.reopen()
+                    cachedMySQLDb.rollback()
+                    if cachedMySQLDb.dbName != dbName:
+                        cachedMySQLDb.use(dbName)
+                    reposDb = cachedMySQLDb
+                except:
+                    # Whiteout the cache if the client throws an error;
+                    # we'll re-open below.
+                    cachedMySQLDb = reposDb = None
+
+        # If we still don't have a database; just create a new
+        # connection.
+        if not reposDb:
             try:
-                if not conaryDb or not isDefault:
-                    reposDb = dbstore.connect(reposDBPath, reposDBDriver)
-                    if isDefault:
-                        conaryDb = reposDb
-                else:
-                    if conaryDb.reopen():
-                        req.log_error("reopened a dead database connection in hooks.py")
-
-                    conaryDb.rollback() # roll back any hanging transactions
-
-                    if reposDBDriver == 'postgresql' and \
-                       conaryDb.database != database:
-                        # use is not implemented for pg
-                        reposDb = dbstore.connect(reposDBPath, reposDBDriver)
-                        conaryDb = reposDb
-                    elif reposDBDriver == 'mysql' and \
-                         conaryDb.dbName != dbName:
-                        conaryDb.use(dbName)
-                        reposDb = conaryDb
-                    else:
-                        reposDb = conaryDb
+                reposDb = dbstore.connect(reposDBPath, reposDBDriver)
             except sqlerrors.DatabaseError, e:
-                req.log_error("Error opening database %s: %s" % (dbName, str(e)))
+                req.log_error("Error opening database %s: %s" % \
+                        (dbName, str(e)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
+            # Cache this connection IFF it's MySQL and was the default.
+            if isDefault and reposDBDriver == 'mysql' \
+                    and not cachedMySQLDb:
+                cachedMySQLDb = reposDb
 
         # clear the repository cache if the db connection has changed
         if repHash in repositories and repositories[repHash]:
@@ -586,7 +594,7 @@ def handler(req):
         coveragehook.save()
     return ret
 
-conaryDb = None
+cachedMySQLDb = None
 repositories = {}
 shim_repositories = {}
 proxy_repository = None
