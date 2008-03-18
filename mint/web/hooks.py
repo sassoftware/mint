@@ -254,6 +254,7 @@ def conaryHandler(req, cfg, pathInfo):
         if repHash in repositories and repositories[repHash]:
             if repositories[repHash].dbTuple != (reposDBDriver, reposDBPath):
                 del repositories[repHash]
+                del shim_repositories[repHash]
 
         if not repositories.has_key(repHash):
             repo, shimRepo = getRepository(projectHostName, actualRepName,
