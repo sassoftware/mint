@@ -70,8 +70,8 @@ class InboundMirrorTest(raatest.rAATest):
         os.system = lambda st: sio.write(st)
         self.callWithIdent(ibm.doTask, res['schedId'], 1)
         # The username/password is randomly generated
-        assert sio.getvalue().startswith('sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://mintauth:')
-        assert sio.getvalue().endswith('@localhost/xmlrpc-private/ 2>> /var/log/rbuilder/mirror-inbound.log"')
+        assert sio.getvalue().startswith('sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://mintauth:'), "Mismatch in %s" % sio.getvalue()
+        assert sio.getvalue().endswith('@localhost/xmlrpc-private/ 2>> /var/log/rbuilder/mirror-inbound.log"'), "Mismatch in %s" % sio.getvalue()
 
     def test_hourly(self):
         """

@@ -247,7 +247,7 @@ exit %d
         #get the projects
         repnamemap, dbNames=self.srvPlugin._getDBNames(self.mintCfg.dbPath, self.mintCfg.dbDriver)
 
-        self.assertEquals(dbNames, ['%s.rpath.local2' % x for x in ['a', 'b', 'c', 'd']])
+        self.assertEquals(dbNames, ['%s.%s' % (x, mint_rephelp.MINT_PROJECT_DOMAIN) for x in ['a', 'b', 'c', 'd']])
         # TODO: Add external projects
         self.assertEquals(repnamemap, {})
 
@@ -285,17 +285,20 @@ exit %d
             self.assertEqual(len(raa.lib.command.runCommand.commandList), 2)
 
             #TODO: Add tests for acceptance
-            assert 'Shutting down httpd' in cmdList
-            assert 'Checking that PostgreSQL is running, and if not, starting it' in cmdList
-            assert 'Running database conversion script' in cmdList
-            assert 'Migrating rBuilder Repositories to PostgreSQL...' in cmdList
-            assert 'Converting nap0.rpath.local2 repository' in cmdList
-            assert 'Conversion completed successfully for nap0.rpath.local2' in cmdList
-            assert 'Converting nap1.rpath.local2 repository' in cmdList
-            assert 'Conversion completed successfully for nap1.rpath.local2' in cmdList
-            assert 'Saving new database configuration values' in cmdList
-            assert 'Migration complete' in cmdList
-            assert 'Starting httpd' in cmdList
+            try:
+                assert 'Shutting down httpd' in cmdList
+                assert 'Checking that PostgreSQL is running, and if not, starting it' in cmdList
+                assert 'Running database conversion script' in cmdList
+                assert 'Migrating rBuilder Repositories to PostgreSQL...' in cmdList
+                assert 'Converting nap0.%s repository' % mint_rephelp.MINT_PROJECT_DOMAIN in cmdList
+                assert 'Conversion completed successfully for nap0.%s' % mint_rephelp.MINT_PROJECT_DOMAIN in cmdList
+                assert 'Converting nap1.%s repository' % mint_rephelp.MINT_PROJECT_DOMAIN in cmdList
+                assert 'Conversion completed successfully for nap1.%s' % mint_rephelp.MINT_PROJECT_DOMAIN in cmdList
+                assert 'Saving new database configuration values' in cmdList
+                assert 'Migration complete' in cmdList
+                assert 'Starting httpd' in cmdList
+            except AssertionError, e:
+                assert False, str(e) + str(cmdList)
 
             #Check the new config
             mc = config.MintConfig()
