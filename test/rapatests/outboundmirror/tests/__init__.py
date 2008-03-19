@@ -26,8 +26,7 @@ class OutboundMirrorTest(raatest.rAATest):
 
     def test_indexTitle(self):
         self.requestWithIdent("/outboundmirror/OutboundMirror/?debug")
-        print cherrypy.response.body
-        assert "<title>schedule outbound mirroring</title>" in cherrypy.response.body[0].lower() "%s not in %s" % ("<title>schedule outbound mirroring</title>", cherrypy.response.body[0].lower())
+        assert "<title>schedule outbound mirroring</title>" in cherrypy.response.body[0].lower(), "%s not in %s" % ("<title>schedule outbound mirroring</title>", cherrypy.response.body[0].lower())
     
     def test_index(self):
         res = self.callWithIdent(self.pseudoroot.index)
