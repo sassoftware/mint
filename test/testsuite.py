@@ -97,6 +97,7 @@ def setup():
     sys.modules[__name__].TestCase = TestCase
     sys.modules[__name__].findPorts = findPorts
     sys.modules[__name__].SkipTestException = SkipTestException
+    sys.modules['testsuite'] = sys.modules[__name__]
 
     # ensure shim client errors on types that can't be sent over xml-rpc
     from mint import shimclient

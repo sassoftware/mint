@@ -10,7 +10,7 @@ class webPluginTest(raatest.webTest):
         self, module = None, init = True, preInit = None, preConst = None):
 
         def func(rt):
-            cherrypy.root.servicecfg.pluginDirs = [os.path.join("..", "..", "raaplugins")]
+            cherrypy.root.servicecfg.pluginDirs = [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "raaplugins"))]
             if preInit:
                 preInit(rt)
 
