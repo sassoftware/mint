@@ -32,6 +32,9 @@ Web Front End Changes
 Internal Changes
 ----------------
 * rBuilder now requires Conary 2.0. (RBL-2580)
+* New rBuilder installations are created using PostgreSQL as the repository
+  database.  Existing installations are given a new plugin that will migrate
+  existing Sqlite repositories to PostgreSQL.  (RBL-2650)
 
 Command-Line Client Changes
 ---------------------------
