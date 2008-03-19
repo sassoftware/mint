@@ -7,7 +7,7 @@ import raatest
 
 from rPath.outboundmirror.srv.outboundmirror import OutboundMirror
 
-from raatests import webPluginTest
+from mintraatests import webPluginTest
 import os
 import re
 import StringIO

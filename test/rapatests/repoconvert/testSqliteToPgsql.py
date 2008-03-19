@@ -16,7 +16,7 @@ import raatest
 import raa.crypto
 import raa.service.lib
 import raatest.service.tests.fakeclasses
-from raatests import webPluginTest
+from mintraatests import webPluginTest
 from rPath.repoconvert.srv import repoconvert
 import pgsql
 import time
