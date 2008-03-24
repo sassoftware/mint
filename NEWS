@@ -28,6 +28,9 @@ Web Front End Changes
   full text of the license is provided if available. (RBL-2521)
 * The footer "Help" link has been replaced with a link for the User Guide, and
   a link to the Administration Guide has been added for admin users. (RBL-2622)
+* It is now possible to choose a different anaconda-template,
+  anaconda-custom or media-template when editing an existing build.
+  (RBL-2172)
 
 Internal Changes
 ----------------

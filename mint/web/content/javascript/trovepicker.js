@@ -136,9 +136,9 @@ TrovePicker.prototype.pickFlavor = function(e) {
     replaceChildNodes($(this.elId + 'return'), returnLink);
     replaceChildNodes($(this.elId + 'prompt'), "Selected group:");
 
+    var sb = $('submitButton');
+    sb.disabled = false;
     if(this.elId == "distTrove") {
-        var sb = $('submitButton');
-        sb.disabled = false;
         handleBuildTypes(f);
     }
 }
@@ -159,6 +159,8 @@ TrovePicker.prototype.pickNoTrove = function(e) {
     returnLink.troveName = n;
     connect(returnLink, "onclick", this, "getAllTroveLabels");
     replaceChildNodes($(this.elId + 'return'), returnLink);
+    var sb = $('submitButton');
+    sb.disabled = false;
 }
 
 // Display flavors in the dom
@@ -222,6 +224,9 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     var par = this;
     var key = this.label + "=" + this.troveName;
 
+    var sb = $('submitButton');
+    sb.disabled = true;
+
     var setupList = function(req) {
         var versionDict = req[0];
         var versionList = req[1];
@@ -276,6 +281,9 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 TrovePicker.prototype.getCustomVersion = function(e) {
     this.stage = 'custom_version';
 
+    var sb = $('submitButton');
+    sb.disabled = true;
+
     oldList = $(this.elId + 'selectionList');
     newList = UL({ 'id': this.elId + 'selectionList' });
 
@@ -317,6 +325,8 @@ TrovePicker.prototype.pickCustomVersion = function(e) {
     returnLink = A(null, returnImg(), " Back");
     connect(returnLink, "onclick", this, "getCustomVersion");
     replaceChildNodes($(this.elId + 'return'), returnLink);
+    var sb = $('submitButton');
+    sb.disabled = false;
 }
 
 // Fetch all labels a trove exists on a given server
@@ -327,6 +337,9 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
     }
     var key = this.serverName + "=" + this.troveName;
     var par = this; // save the parent for the subfunction's use
+
+    var sb = $('submitButton');
+    sb.disabled = true;
 
     var setupList = function(labelList) {
         oldList = $(par.elId + 'selectionList');
@@ -389,6 +402,8 @@ TrovePicker.prototype.getGroupTroves = function() {
     this.stage = 'group';
     var par = this;
 
+    var sb = $('submitButton');
+    sb.disabled = true;
     var setupList = function(troveList) {
         oldList = $(par.elId + 'selectionList');
         ul = UL({'id': par.elId + 'selectionList'});
