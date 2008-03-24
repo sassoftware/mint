@@ -15,6 +15,7 @@ import re
 import testsuite
 import time
 import urlparse
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
@@ -813,4 +814,41 @@ class FakeRequest(object):
 
     def get_options(self):
         return self.options
+
+# Gleefully ripped off from Conary's testsuite
+# Use to instantiate an XML-RPC server
+class StubXMLRPCServerController:
+    def __init__(self):
+        self.port = testsuite.findPorts(num = 1)[0]
+        self.childPid = os.fork()
+        if self.childPid > 0:
+            rephelp.tryConnect('127.0.0.1', self.port)
+            return
+
+        server = SimpleXMLRPCServer(("127.0.0.1", self.port),
+                                    logRequests=False)
+        server.register_instance(self.handlerFactory())
+        server.serve_forever()
+
+    def handlerFactory(self):
+        raise NotImplementedError
+
+    def kill(self):
+        if not self.childPid:
+            return
+        os.kill(self.childPid, 15)
+        os.waitpid(self.childPid, 0)
+        self.childPid = 0
+
+    def url(self):
+        return "http://%s:%d/" % (self.getHost(), self.getPort())
+
+    def getHost(self):
+        return "localhost"
+
+    def getPort(self):
+        return self.port
+
+    def __del__(self):
+        self.kill()
 
