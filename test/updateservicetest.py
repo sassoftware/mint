@@ -6,7 +6,7 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
+from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, WebRepositoryHelper
 
 from conary.dbstore import sqlerrors
 
@@ -14,6 +14,9 @@ from mint import database
 from mint import helperfuncs
 from mint import mirror
 from mint import mint_error
+from mint.web.webhandler import HttpMoved
+
+import StringIO
 
 import fixtures
 import xmlrpclib
@@ -53,6 +56,19 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
         self.failUnless(us1Id,
                 "Expecting an id to be returned from addUpdateService,"
                 " got %s" % us1Id)
+
+    @testsuite.context("quick")
+    @fixtures.fixture("Full")
+    def testCreateDuplicateUpdateService(self, db, data):
+        adminClient = self.getClient("admin")
+        us1 = ['foo.example.com',
+                helperfuncs.generateMirrorUserName(FQDN, 'foo.example.com'),
+                STOCK_MIRROR_PASSWORD, 'Foo 1']
+        us1Id = adminClient.addUpdateService(*us1)
+
+        # This should fail
+        self.failUnlessRaises(mint_error.DuplicateItem,
+                adminClient.addUpdateService, *us1)
 
     @fixtures.fixture("Full")
     def testEditUpdateService(self, db, data):
@@ -390,7 +406,6 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
 
         # make sure cascading deletes worked
         self.failUnlessEqual([], adminClient.getOutboundMirrorTargets(omid))
-
 
 if __name__ == "__main__":
     testsuite.main()
