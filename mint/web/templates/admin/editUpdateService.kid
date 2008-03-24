@@ -33,10 +33,7 @@
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
                         <th><em class="required">Update Service Hostname</em></th>
-                        <td>
-                            <input type="text" name="hostname" maxlength="255" value="${kwargs['hostname']}"/>
-                            <p class="help">Use the fully-qualified domain name of the target repository or Update Service (example: mirror.rpath.com).</p>
-                        </td>
+                        <td>${kwargs['hostname']}</td>
                     </tr>
                     <tr>
                         <th><em class="optional">Description</em></th>
