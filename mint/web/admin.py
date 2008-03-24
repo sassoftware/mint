@@ -712,10 +712,10 @@ class AdminHandler(WebHandler):
                     self._addErrors("Failed to add Update Service: %s" % \
                             str(e))
                 else:
-                    self._setInfo("Update service added")
+                    self._setInfo("Update Service added")
             else:
                 self.client.editUpdateService(id, description)
-                self._setInfo("Update service changed")
+                self._setInfo("Update Service changed")
 
         if not self._getErrors():
             self._redirect("http://%s%sadmin/updateServices" %
