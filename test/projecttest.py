@@ -17,8 +17,6 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import userlevels
 from mint.mint_error import *
-from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
-     DuplicateLabel, InvalidShortname, InvalidVersion, InvalidProdType
 from mint.server import ParameterError, PermissionDenied
 from mint import database
 from mint import urltypes
