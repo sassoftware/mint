@@ -550,21 +550,31 @@ class MintServer(object):
         mirrorUser = ''
         try:
             # Make sure that we deal with any HTTP proxies
-            if 'https' in self.cfg.proxy.keys():
-                transport = ProxiedTransport(self.cfg.proxy['https'])
-            elif 'http' in self.cfg.proxy.keys():
-                transport = ProxiedTransport(self.cfg.proxy['http'])
+            proxy_host = self.cfg.proxy.get('https') or \
+                            self.cfg.proxy.get('http')
+            if proxy_host:
+                transport = ProxiedTransport(proxy_host)
             else:
                 transport = None
 
             # Connect to the rUS via XML-RPC
-            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (adminUser, adminPassword, hostname), transport=transport)
+            if ':' not in hostname:
+                hostname += '8003'
+                protocol = 'https'
+            else:
+                # Hack to allow testsuite, which passes 'hostname:port'
+                # and isn't using HTTPS
+                protocol = 'http'
+            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
+                    (protocol, adminUser, adminPassword, hostname)
+            sp = xmlrpclib.ServerProxy(url, transport=transport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
 
             # Add a user to the update service with mirror permissions
-            mirrorPassword = sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+            mirrorPassword = \
+                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
                 raise UpdateServiceAuthError(hostname)
@@ -650,13 +660,13 @@ class MintServer(object):
 
     def _validateShortname(self, shortname, domainname, resHosts):
         if not shortname:
-            raise projects.InvalidShortname
+            raise InvalidShortname
         if validHost.match(shortname) == None:
-            raise projects.InvalidShortname
+            raise InvalidShortname
         if shortname in resHosts:
-            raise projects.InvalidShortname
+            raise InvalidShortname
         if (shortname + "." + domainname) == socket.gethostname():
-            raise projects.InvalidShortname
+            raise InvalidShortname
         return None
 
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
