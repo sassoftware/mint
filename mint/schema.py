@@ -575,6 +575,8 @@ def _createMirrorInfo(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UpdateServices'] = []
         commit = True
+    db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
+            'hostname', unique = True)
 
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
