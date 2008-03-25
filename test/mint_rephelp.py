@@ -410,6 +410,10 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
+
+    # Repository tests tend to be slow, so tag them with this context
+    contexts = ('slow',)
+
     def openRepository(self, serverIdx = 0, requireSigs = False, serverName = None):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs, serverName)
 
@@ -711,6 +715,11 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
 
 
 class WebRepositoryHelper(BaseWebHelper):
+
+    # apply default context of 'web' to all children of this class
+    # (also, since these tend to be slow, add 'slow' as well)
+    contexts = ('web', 'slow')
+
     def __init__(self, methodName):
         webunittest.WebTestCase.__init__(self, methodName)
         MintRepositoryHelper.__init__(self, methodName)
