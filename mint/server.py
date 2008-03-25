@@ -558,15 +558,16 @@ class MintServer(object):
                 transport = None
 
             # Connect to the rUS via XML-RPC
-            if ':' not in hostname:
-                hostname += '8003'
+            urlhostname = hostname
+            if ':' not in urlhostname:
+                urlhostname += ':8003'
                 protocol = 'https'
             else:
                 # Hack to allow testsuite, which passes 'hostname:port'
                 # and isn't using HTTPS
                 protocol = 'http'
             url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
-                    (protocol, adminUser, adminPassword, hostname)
+                    (protocol, adminUser, adminPassword, urlhostname)
             sp = xmlrpclib.ServerProxy(url, transport=transport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
@@ -577,15 +578,15 @@ class MintServer(object):
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
-                raise UpdateServiceAuthError(hostname)
+                raise UpdateServiceAuthError(urlhostname)
             else:
-                raise UpdateServiceConnectionFailed(hostname, "%d %s" % \
-                        (e.errcode, e.errmsg))
+                raise UpdateServiceConnectionFailed(urlhostname, \
+                        "%d %s" % (e.errcode, e.errmsg))
         except socket.error, e:
-            raise UpdateServiceConnectionFailed(hostname, str(e[1]))
+            raise UpdateServiceConnectionFailed(urlhostname, str(e[1]))
         else:
             if not mirrorPassword:
-                raise UpdateServiceUnknownError(hostname)
+                raise UpdateServiceUnknownError(urlhostname)
 
         return (mirrorUser, mirrorPassword)
 
