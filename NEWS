@@ -24,6 +24,9 @@ Bug Fixes
   has been fixed. (RBL-2619)
 * Commit mail, recent commits, and other data on installations migrated
   from rBuilder 3.x will now update correctly. (RBL-2648)
+* An error that occured when creating builds with custom
+  anaconda-templates and with the XMLRPC log file enabled has been
+  corrected. (RBL-2764)
 
 Changes in 4.0.1
 ================
