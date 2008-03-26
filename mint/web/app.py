@@ -155,7 +155,7 @@ class MintApp(WebHandler):
         except fields.MissingParameterError, e:
             tb = logTraceback()
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
-        except (TypeError, fields.BadParameterError), e:
+        except fields.BadParameterError, e:
             tb = logTraceback()
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)

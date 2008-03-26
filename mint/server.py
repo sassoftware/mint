@@ -345,7 +345,13 @@ class MintServer(object):
                 self.clientVer = clientVer
                 r = method(*args)
                 if self.callLog:
-                    self.callLog.log(self.remoteIp, list(authToken) + [None, None], methodName, args)
+                    # We mustn't try to pickle flavors or versions, so just
+                    # stringify everything except numbers. This could be
+                    # better, but it is an undocumented feature after all.
+                    str_args = [isinstance(x, (int, long)) and x or str(x)
+                        for x in args]
+                    self.callLog.log(self.remoteIp,
+                        list(authToken) + [None, None], methodName, str_args)
 
             except users.UserAlreadyExists, e:
                 self._handleError(e, authToken, methodName, args)
@@ -398,8 +404,11 @@ class MintServer(object):
     def _handleError(self, e, authToken, methodName, args):
         self.db.rollback()
         if self.callLog:
+            # See above for rant about pickling args
+            str_args = [isinstance(x, (int, long)) and x or str(x)
+                for x in args]
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
-                methodName, args, exception = e)
+                methodName, str_args, exception = e)
 
     @typeCheck(str)
     @requiresAdmin
