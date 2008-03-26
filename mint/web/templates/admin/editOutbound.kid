@@ -8,16 +8,18 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
+    from mint import helperfuncs
 ?>
 
     <head>
-        <title>${formatTitle('Add Outbound Mirror')}</title>
+        <title py:if="id == -1">${formatTitle('Add Outbound Mirror')}</title>
+        <title py:if="id != -1">${formatTitle('Edit Outbound Mirror')}</title>
         <script type="text/javascript">
             addLoadEvent(function(){
                 getGroups(getElement('projectId').value,
-                    function() { setSelectedGroups(${kwargs['selectedGroups']});});
+                     ${kwargs['selectedGroups']});
                 getProjectLabels(getElement('projectId').value,
-                    function(){ setSelectedLabels(${kwargs['selectedLabels']});});
+                    ${kwargs['selectedLabels']});
                 connect('projectId', 'onchange', addOutboundMirror_onProjectChange);
             });
         </script>
@@ -27,9 +29,10 @@
             ${adminResourcesMenu()}
         </div>
         <div id="spanright">
-            <form action="${cfg.basePath}admin/processAddOutbound" method="post">
+            <form action="${cfg.basePath}admin/processEditOutbound" method="post">
                 <input type="hidden" name="id" value="${id}" />
-                <h2>Add Outbound Mirror</h2>
+                <h2 py:if="id == -1">Add Outbound Mirror</h2>
+                <h2 py:if="id != -1">Edit Outbound Mirror</h2>
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
@@ -43,23 +46,64 @@
                         </td>
                     </tr>
                     <tr>
+                        <th><em class="required">Update Services:</em></th>
+                        <td>
+                            <p py:if="kwargs['allTargets']" class="help notopmargin">
+                                Choose one or more Update Services
+                                to publish the content for this project.
+                            </p>
+                            <div py:strip="True" py:for="upsrvId, hostname, _, _, description in kwargs['allTargets']">
+                                <input id="upsrv_${upsrvId}" class="check" type="checkbox" name="selectedTargets" value="${upsrvId}" py:attrs="{'checked': (upsrvId in kwargs['selectedTargets']) and 'checked' or None}" />
+                                <label for="upsrv_${upsrvId}">${hostname}<span py:strip="True" py:if="description"> (${helperfuncs.truncateForDisplay(description)})</span></label><br />
+                            </div>
+                            <div class="help" py:if="not kwargs['allTargets']">
+                                No Update Services have been configured for this
+                                instance of ${cfg.productName}. You may still
+                                configure outbound mirroring for this
+                                ${projectText()}, but be aware that packages
+                                will not be published until
+                                <ol>
+                                    <li>rBuilder is configured for one or more
+                                        Update Services, and</li>
+                                    <li>Each ${projectText()}'s outbound
+                                        mirroring setup has
+                                        had one or more of the Update
+                                        Services added to its configuration.</li>
+                                </ol>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
                         <th><em class="required">Labels:</em></th>
                         <td>
+                            <p class="help notopmargin">
+                                You may choose to publish content from all of the
+                                labels on your ${projectText()}'s repository,
+                                or you may choose to restrict publishing content
+                                to one or more labels.
+                            </p>
                             <input py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" class="radio" type="radio" name="allLabels" value="1" id="allLabels" />
                             <label for="allLabels">Mirror all labels</label><br />
-                            <select style="float: right; vertical-align: top; width: 20em; height: 10em;" id="labelList" name="labelList" multiple="multiple" />
                             <input py:attrs="{'checked': not kwargs['allLabels'] and 'checked' or None}" class="radio" type="radio" name="allLabels" value="0" id="selectLabels" />
                             <label for="selectLabels">Mirror only selected labels</label>
+                            <div id="chklist_labelList" />
                         </td>
                     </tr>
                     <tr>
                         <th><em class="required">Groups:</em></th>
                         <td>
+                            <p class="help notopmargin">
+                                You may further restrict mirroring by choosing
+                                to publish one or more groups. The publishing
+                                process will publish all versions of each
+                                group chosen including all of the packages
+                                contained within the group.
+                            </p>
                             <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'label') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="label" id="mirrorByLabel" />
-                            <label for="mirrorByLabel">Mirror all contents</label><br />
-                            <select style="float: right; vertical-align: top; width: 20em; height: 10em;" multiple="multiple" name="groups" id="groups" />
+                                <label for="mirrorByLabel">Mirror all contents</label><br />
                             <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'group') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="group" id="mirrorByGroup" />
                             <label for="mirrorByGroup">Mirror groups and their referenced packages</label>
+                            <div id="chklist_groups" />
                         </td>
                     </tr>
                     <tr>

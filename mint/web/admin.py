@@ -7,7 +7,6 @@
 import os
 import sys
 import BaseHTTPServer
-import httplib
 import xmlrpclib
 import urllib
 import socket
@@ -22,7 +21,7 @@ from mod_python import apache
 from mint import users
 from mint import maintenance
 from mint import mirror
-from mint.helperfuncs import cleanseUrl, getUrlHost, hashMirrorRepositoryUser, getProjectText
+from mint.helperfuncs import getUrlHost, getProjectText
 from mint.mint_error import *
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
@@ -31,31 +30,6 @@ from kid.pull import XML
 from conary import conarycfg, versions
 
 import simplejson
-
-class ProxiedTransport(xmlrpclib.Transport):
-    """
-    Transport class for contacting rUS through a proxy
-    """
-    def __init__(self, proxy):
-        splitUrl = urllib.splittype(proxy)
-        self.protocol = splitUrl[0]
-        self.proxy = splitUrl[1].lstrip('/')
-
-    def make_connection(self, host):
-        self.realHost = host
-        if self.protocol == 'https':
-            h = httplib.HTTPS(self.proxy)
-        else:
-            h = httplib.HTTP(self.proxy)
-        return h
-
-    def send_request(self, connection, handler, request_body):
-        connection.putrequest('POST', 'https://%s%s' % (self.realHost, 
-                                                         handler))
-
-    def send_host(self, connection, host):
-        connection.putheader('Host', self.realHost)
-
 
 class AdminHandler(WebHandler):
     def handle(self, context):
@@ -570,7 +544,7 @@ class AdminHandler(WebHandler):
             mirrorData['allLabels'] = allLabels
             if not allLabels:
                 mirrorData['labels'] = label.split(' ')
-            mirrorData['targets'] = [ (x[0], getUrlHost(x[1])) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
+            mirrorData['targets'] = [ (x[0], x[1]) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
@@ -580,119 +554,42 @@ class AdminHandler(WebHandler):
         return self._write('admin/outbound', rows = rows)
 
     @intFields(id=-1)
-    def addOutbound(self, id, *args, **kwargs):
+    def editOutbound(self, id, *args, **kwargs):
         projects = self.client.getProjectsList()
+        allTargets = self.client.getUpdateServiceList()
         if id != -1:
             obm = self.client.getOutboundMirror(id)
             obmg = self.client.getOutboundMirrorGroups(id)
+            obmt = self.client.getOutboundMirrorTargets(id)
             kwargs.update({'projectId': obm['sourceProjectId'],
                            'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
                            'allLabels': obm['allLabels'],
                            'selectedLabels': simplejson.dumps(obm['targetLabels'].split()),
                            'selectedGroups': simplejson.dumps(obmg),
-                           'mirrorBy': obmg and 'group' or 'label'})
+                           'mirrorBy': obmg and 'group' or 'label',
+                           'selectedTargets': [x[0] for x in obmt],
+                           'allTargets': allTargets})
         else:
             kwargs.update({'projectId': -1,
                            'mirrorSources': 0,
-                           'allLabels': 0,
+                           'allLabels': 1,
                            'selectedLabels': simplejson.dumps([]),
                            'selectedGroups': simplejson.dumps([]),
-                           'mirrorBy': 'label'})
-        return self._write('admin/add_outbound', id=id, projects = projects, kwargs = kwargs)
+                           'mirrorBy': 'label',
+                           'selectedTargets': [],
+                           'allTargets': allTargets})
+        return self._write('admin/editOutbound', id=id, projects = projects, kwargs = kwargs)
 
-    def _updateMirror(self, user, servername, mirrorUrl, sp, mirrorUser,
-      mirrorPass):
-        passwd = ''
-        try:
-            # Add our already-known servername directly
-            res1 = sp.conaryserver.ConaryServer.addServerName(servername)
-            passwd = sp.mirrorusers.MirrorUsers.addRandomUser(user)
-
-            # Try adding a user with mirror privs so we can add more server
-            # names later (for mirror-by-group). If we can't (probably
-            # because our rAPA creds are already mirror-only), just store
-            # those creds and move on.
-            try:
-                rapa_passwd = users.newPassword(length=128)
-                server_user = '%s_%s-%s' % (self.cfg.hostName,
-                    self.cfg.siteDomainName, mirrorUrl)
-                server_user = server_user.replace('.', '_')
-                # Create serverName group if it doesn't exist
-                rapausers = sp.usermanagement.UserInterface.users()
-                if 'serverNames' not in rapausers['all_groups']:
-                    sp.usermanagement.UserInterface.addGroup('serverNames',
-                                                     ['mirror'])
-                # Recreate the user if it already exists
-                for x in rapausers['items']:
-                    if x['username'] == server_user:
-                        sp.usermanagement.UserInterface.deleteUser(
-                            server_user)
-                        break
-
-                # Use the XMLRPC-specific call (new in rAPA 2.1.5) to add the
-                # user
-                try:
-                    sp.usermanagement.UserInterface.addUserViaXmlrpc(
-                        server_user, rapa_passwd, rapa_passwd,
-                        ['serverNames'])
-                except xmlrpclib.ProtocolError, e:
-                    if e.errcode == 404:
-                        # Not supported, use addUser
-                        sp.usermanagement.UserInterface.addUser(server_user,
-                            rapa_passwd, rapa_passwd, ['serverNames'])
-                    else:
-                        raise
-
-                # Update the password in our database
-                self.client.setrAPAPassword(mirrorUrl, server_user,
-                    rapa_passwd, 'serverNames')
-            except xmlrpclib.ProtocolError, e:
-                if e.errcode == 403:
-                    # No access to add users/groups/roles. Save creds from UI
-                    # instead.
-                    self.client.setrAPAPassword(mirrorUrl, mirrorUser,
-                        mirrorPass, 'serverNames')
-                else:
-                    raise
-
-            # Clear the mirror mark for this server name
-            ccfg = conarycfg.ConaryConfiguration()
-            ccfg.user.addServerGlob(servername, user, passwd)
-            ccfg.repositoryMap.update({servername:'https://%s/conary/'
-                % mirrorUrl})
-            cc = conaryclient.ConaryClient(ccfg)
-            try:
-                cc.repos.setMirrorMark(servername, -1)
-            except errors.OpenError:
-                # This servername is not configured yet, so ignore
-                pass
-
-        except xmlrpclib.ProtocolError, e:
-            safeUrl = cleanseUrl('https', e.url)
-            if e.errcode == 403:
-                self._addErrors("Username and/or password incorrect.")
-            else:
-                self._addErrors('Protocol error: %s (%d %s). Please be sure '
-                                'your rPath Mirror is configured properly.' %
-                                (safeUrl, e.errcode, e.errmsg))
-        except socket.error, e:
-            self._addErrors('Socket error: %s. Please be sure your rPath '
-                                'Update Service is configured properly.'
-                                % str(e[1]))
-        else:
-            if not res1 or not passwd:
-                self._addErrors('An error occurred while configuring your '
-                                'rPath Update Service.')
-
-        return passwd
 
     @intFields(projectId = None, id = -1)
     @boolFields(mirrorSources = False, allLabels = False)
     @listFields(str, labelList=[])
     @listFields(str, groups=[])
+    @listFields(int, selectedTargets=[])
     @strFields(mirrorBy = 'label', action = "Cancel")
-    def processAddOutbound(self, projectId, mirrorSources, allLabels, 
-            labelList, id, mirrorBy, groups, action, *args, **kwargs):
+    def processEditOutbound(self, projectId, mirrorSources, allLabels,
+            labelList, id, mirrorBy, groups, action, selectedTargets,
+            *args, **kwargs):
 
         if action == "Cancel":
             self._redirect("http://%s%sadmin/outbound" %
@@ -701,10 +598,10 @@ class AdminHandler(WebHandler):
         inputKwargs = {'projectId': projectId,
             'mirrorSources': mirrorSources, 'allLabels': allLabels,
             'selectedLabels': labelList, 'id': id, 'selectedGroups': groups,
-            'mirrorBy': mirrorBy }
+            'mirrorBy': mirrorBy, 'selectedTargets': selectedTargets }
 
         if not labelList and not allLabels:
-            self._addErrors("No labels selected.")
+            self._addErrors("No labels were selected")
 
         # compute the match troves expression
         matchTroveList = []
@@ -727,95 +624,12 @@ class AdminHandler(WebHandler):
                     labelList, allLabels, recurse, id=id)
             self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
                                matchTroveList)
+            self.client.setOutboundMirrorTargets(outboundMirrorId,
+                    selectedTargets)
             self._redirect("http://%s%sadmin/outbound" %
                 (self.cfg.siteHost, self.cfg.basePath))
         else:
             return self.addOutbound(**inputKwargs)
-
-    @intFields(id = -1)
-    def addOutboundMirrorTarget(self, id, *args, **kwargs):
-        om = self.client.getOutboundMirror(id)
-        targets = [ getUrlHost(x[1]) for x in self.client.getOutboundMirrorTargets(id) ]
-        project = self.client.getProject(om['sourceProjectId'])
-        return self._write("admin/mirrortarget",
-                projectName = project.name,
-                targets = targets,
-                outboundMirrorId = id, kwargs = kwargs)
-
-    @intFields(outboundMirrorId = -1)
-    @strFields(targetUrl = '', mirrorUser = '', mirrorPass = '')
-    def processAddOutboundMirrorTarget(self, outboundMirrorId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
-        if not mirrorUser:
-            self._addErrors("Missing Update Service Username")
-        if not mirrorPass:
-            self._addErrors("Missing Update Service Password")
-        if not targetUrl:
-            self._addErrors("Missing Update Service Hostname")
-
-        inputKwargs = {'id': outboundMirrorId,
-                       'targetUrl': targetUrl, 'mirrorUser': mirrorUser,
-                       'mirrorPass': mirrorPass}
-
-        urltype, mirrorUrl = urllib.splittype(targetUrl)
-        if not urltype:
-            mirrorUrl = '//' + mirrorUrl
-        mirrorUrl, ignoreMe = urllib.splithost(mirrorUrl)
-
-        if not self._getErrors():
-            om = self.client.getOutboundMirror(outboundMirrorId)
-            project = self.client.getProject(om['sourceProjectId'])
-            targetHosts = [ getUrlHost(x[1]) for x in self.client.getOutboundMirrorTargets(outboundMirrorId) ]
-            if mirrorUrl in targetHosts:
-                self._addErrors("This outbound mirror is already configured to mirror to %s" % mirrorUrl)
-
-        if not self._getErrors():
-            servername = versions.Label(project.getLabel()).getHost()
-
-            user = hashMirrorRepositoryUser(self.cfg.hostName,
-                     self.cfg.siteDomainName, mirrorUrl,
-                     om['sourceProjectId'], om.get('targetLabels'),
-                     om.get('matchStrings'))
-
-            # Deal with proxy
-            if 'https' in self.cfg.proxy.keys():
-                transport = ProxiedTransport(self.cfg.proxy['https'])
-            elif 'http' in self.cfg.proxy.keys():
-                transport = ProxiedTransport(self.cfg.proxy['http'])
-            else:
-                transport = None
-            
-            sp = xmlrpclib.ServerProxy("https://%s:%s@%s:8003/rAA/xmlrpc/" % (mirrorUser, mirrorPass, mirrorUrl), transport=transport)
-            passwd = self._updateMirror(user, servername, mirrorUrl, sp, mirrorUser, mirrorPass)
-
-        if not self._getErrors():
-            outboundMirrorTargetId = self.client.addOutboundMirrorTarget(outboundMirrorId, 'https://%s/conary/' % mirrorUrl, user, passwd)
-            self._redirect("http://%s%sadmin/outbound" %
-                (self.cfg.siteHost, self.cfg.basePath))
-        else:
-            return self.addOutboundMirrorTarget(**inputKwargs)
-
-    @intFields(id = -1)
-    def removeOutboundMirrorTarget(self, id, *args, **kwargs):
-        pText = getProjectText()
-        omt = self.client.getOutboundMirrorTarget(id)
-        om = self.client.getOutboundMirror(omt['outboundMirrorId'])
-        project = self.client.getProject(om['sourceProjectId'])
-        message = 'Delete target %s for outbound mirrored %s %s?' % \
-                (getUrlHost(omt['url']), pText.lower(), project.name)
-        noLink = 'outbound'
-        yesArgs = {'func': 'processRemoveOutboundMirrorTarget', 'id': id}
-        return self._write('confirm', message=message, noLink=noLink,
-                           yesArgs=yesArgs)
-
-    @intFields(id = -1)
-    def processRemoveOutboundMirrorTarget(self, id, *args, **kwargs):
-        try:
-            self.client.delOutboundMirrorTarget(id)
-        except:
-            self._addErrors("Failed to delete outbound mirror target")
-
-        self._redirect("http://%s%sadmin/outbound" %
-            (self.cfg.siteHost, self.cfg.basePath))
 
     @listFields(int, remove = [])
     @boolFields(confirmed = False)
@@ -844,3 +658,90 @@ class AdminHandler(WebHandler):
         mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
+
+    def updateServices(self, *args, **kwargs):
+        updateServices = self.client.getUpdateServiceList()
+        return self._write('admin/updateServices',
+                updateServices = updateServices)
+
+    @intFields(id = -1)
+    def editUpdateService(self, id, *args, **kwargs):
+        isNew = (id == -1)
+        if not isNew:
+            kwargs.update(self.client.getUpdateService(id))
+        else:
+            kwargs.setdefault('id', -1)
+            kwargs.setdefault('hostname', '')
+            kwargs.setdefault('adminUser', '')
+            kwargs.setdefault('adminPassword', '')
+            kwargs.setdefault('description', '')
+
+        return self._write('admin/editUpdateService', id=id, isNew = isNew,
+                kwargs = kwargs)
+
+    @intFields(id = -1)
+    @strFields(hostname = '', adminUser = '', adminPassword = '',
+            description = '', action = 'Cancel')
+    def processEditUpdateService(self, id, hostname, adminUser, adminPassword,
+            description, action, *args, **kwargs):
+
+        if action == "Cancel":
+            self._redirect("http://%s%sadmin/updateServices" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+
+        inputKwargs = {'hostname': hostname,
+            'adminUser': adminUser,
+            'adminPassword': adminPassword,
+            'description': description}
+
+        # these are only necessary during a first time setup of an update
+        # service
+        if not hostname and id == -1:
+            self._addErrors('No hostname specified')
+        if not adminUser and id == -1:
+            self._addErrors('No username specified')
+        if not adminPassword and id == -1:
+            self._addErrors('No password specified')
+
+        if not self._getErrors():
+            if id == -1:
+                try:
+                    self.client.addUpdateService(hostname, adminUser,
+                            adminPassword, description)
+                except Exception, e:
+                    self._addErrors("Failed to add Update Service: %s" % \
+                            str(e))
+                else:
+                    self._setInfo("Update Service added")
+            else:
+                self.client.editUpdateService(id, description)
+                self._setInfo("Update Service changed")
+
+        if not self._getErrors():
+            self._redirect("http://%s%sadmin/updateServices" %
+                (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self.editUpdateService(**inputKwargs)
+ 
+    @listFields(int, remove = [])
+    @boolFields(confirmed = False)
+    def removeUpdateServices(self, remove, confirmed, **yesArgs):
+        if confirmed:
+            remove = simplejson.loads(yesArgs['removeJSON'])
+            for updateServiceId in remove:
+                self.client.delUpdateService(int(updateServiceId))
+            self._setInfo("Update service(s) removed")
+            self._redirect("http://%s%sadmin/updateServices" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            if not remove:
+                self._addErrors("No update services to delete.")
+                self._redirect("http://%s%sadmin/updateServices" %
+                        (self.cfg.siteHost, self.cfg.basePath))
+            message = 'Are you sure you want to remove the update service(s)?'
+            noLink = 'updateServices'
+            yesArgs = {'func': 'removeUpdateServices', 'confirmed': 1,
+                    'removeJSON': simplejson.dumps(remove)}
+            return self._write('confirm', message=message, noLink=noLink,
+                               yesArgs=yesArgs)
+

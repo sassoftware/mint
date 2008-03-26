@@ -9,23 +9,40 @@ import testsuite
 testsuite.setup()
 
 import os
+
 from conary.lib import util
-import StringIO
 
 import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
-from mint import database
 from mint import helperfuncs
-from mint import mirror
-from mint import constants
-from mint.web import admin
-from mint.web.webhandler import HttpMoved
 
-class rogueReq(object):
-    def __init__(self):
-        self.err_headers_out = {}
-        self.headers_out = {}
-        self.uri = ''
+class FakeUpdateServiceServerProxy:
+
+    def __init__(self, url, *args, **kwargs):
+        self.url = url
+        self.mirrorusers = self
+        self.MirrorUsers = self
+
+    def addRandomUser(self, name):
+        return 'thisisamirrorpassword'
+
+
+class FakerAPA(mint_rephelp.StubXMLRPCServerController):
+
+    class FakerAPAInterface:
+
+        # dispatcher that works around methods that
+        # look like 'foo.bar.baz.actualmethod' and
+        # just calls 'actualmethod'
+        def _dispatch(self, name, params):
+            func = getattr(self, name.split('.')[-1])
+            return func(*params)
+
+        def addRandomUser(self, name):
+            return 'thisisamirrorpassword'
+
+    def handlerFactory(self):
+        return self.FakerAPAInterface()
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateExternalProject(self):
@@ -379,200 +396,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': ''})
         self.failUnlessEqual(p.getLabel(), "conary.rpath.com@rpl:1-newlabel")
 
-    def testCreateOutboundMirror(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        # Test repMapName
-        projectId = client.newExternalProject("Foo", "testproject",
-            MINT_PROJECT_DOMAIN, 'testproject.fake.project.domain@rpl:devel',
-            'https://fake.project.domain/conary/', True)
-        client.addRemappedRepository('testproject.' + MINT_PROJECT_DOMAIN,
-                                     'testproject.fake.project.domain')
-        self.webLogin('adminuser', 'adminpass')
-
-        # ensure "first time" content appears on page
-        pText = helperfuncs.getProjectText().title()
-        page = self.assertContent("/admin/addOutbound",
-            content = "%s to mirror:"%pText)
-
-        def fakeUpdateMirror(*P, **K):
-            return 'totallyfakepassword'
-
-        ad = admin.AdminHandler()
-        ad._updateMirror = fakeUpdateMirror
-        ad.session = {}
-        ad.client = client
-        ad.cfg = self.mintCfg
-        ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId, action="Save",
-                              labelList=['testproject.fake.project.domain@rpl:devel'])
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId,
-                              mirrorSources=1,
-                              mirrorBy='group',
-                              labelList=['testproject.fake.project.domain@rpl:devel'],
-                              groups='group-test', action="Save")
-
-        ad = admin.AdminHandler()
-        ad._updateMirror = fakeUpdateMirror
-        ad.session = {}
-        ad.client = client
-        ad.cfg = self.mintCfg
-        ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=1,
-                targetUrl='https://www.example.com/conary/', mirrorUser='foo',
-                mirrorPass='bar')
-        oldTrans = admin.ProxiedTransport.__init__
-        oldProxy = ad.cfg.proxy.copy()
-        try:
-            ad.cfg.proxy.update({'https':'https://fake.proxy.setting:1234'})
-            sio = StringIO.StringIO()
-            admin.ProxiedTransport.__init__ = lambda x,y: sio.write(y)
-            self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget, outboundMirrorId=2,
-                targetUrl='https://www.example.com/conary/', mirrorUser='foo',
-                mirrorPass='bar')
-            assert(sio.getvalue() == 'https://fake.proxy.setting:1234')
-        finally:
-            admin.ProxiedTransport.__init__ = oldTrans
-            ad.cfg.proxy = oldProxy
-            sio.close()
-
-        label = "testproject." + 'fake.project.domain' + "@rpl:devel"
-        self.assertContent("/admin/outbound", content = label)
-        expectedUser = helperfuncs.hashMirrorRepositoryUser(self.mintCfg.hostName, self.mintCfg.siteDomainName, 'www.example.com', 1, label, '-.*:source -.*:debuginfo +.*')
-        assert(client.getOutboundMirrors() == \
-            [[1, 1, 'testproject.fake.project.domain@rpl:devel', False, False, ['-.*:source', '-.*:debuginfo', '+.*'], 0, True], [2, 1, 'testproject.fake.project.domain@rpl:devel', False, True, ['+group-test'], 1, True]])
-
-        assert(client.getOutboundMirrorTargets(1) == \
-                        [[1, 'https://www.example.com/conary/',
-                         expectedUser, 'totallyfakepassword']])
-        expectedUser = helperfuncs.hashMirrorRepositoryUser(self.mintCfg.hostName, self.mintCfg.siteDomainName, 'www.example.com', 1, label, '+group-test')
-        assert(client.getOutboundMirrorTargets(2) == \
-            [[2, 'https://www.example.com/conary/', expectedUser, 'totallyfakepassword']])
-        assert(client.getOutboundMirrorMatchTroves(1) == \
-               ['-.*:source', '-.*:debuginfo', '+.*'])
-
-        assert(client.getOutboundMirrorMatchTroves(2) == \
-               ['+group-test'])
-
-        page = self.fetch("/admin/outbound")
-        page = page.postForm(1, self.post,
-            {'remove':      ['1'],
-             'operation':   'remove_outbound'})
-        page = page.postForm(1, self.post,
-                {'yesArgs': {'func': 'removeOutbound', 'removeJSON': "['1']", 'confirmed': "1" }})
-
-        page = self.fetch("/admin/outbound")
-        page = page.postForm(1, self.post,
-            {'remove':      ['2'],
-             'operation':   'remove_outbound'})
-        page = page.postForm(1, self.post,
-                {'yesArgs': {'func': 'removeOutbound', 'removeJSON': "['2']", 'confirmed': "1" }})
-
-        assert(client.getOutboundMirrors() == [])
-
-    def testCreateOutboundMirrorSameServername(self):
-        rusPasswordInfo = dict()
-
-        def fakeUpdateMirror1(user, *P, **K):
-            rusPasswordInfo[user] = 'totallyfake'
-            return 'totallyfake'
-
-        def fakeUpdateMirror2(user, *P, **K):
-            rusPasswordInfo[user] = 'totallyfakealso'
-            return 'totallyfakealso'
-
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        self.webLogin('adminuser', 'adminpass')
-        projectId = client.newExternalProject("tp-1-release",
-                "tp-1-release", MINT_PROJECT_DOMAIN,
-                'repos.example.com@tp:1-release',
-                'https://repos.example.com/conary/', False)
-
-        projectId2 = client.newExternalProject("tp-1-devel",
-                "tp-1-devel", MINT_PROJECT_DOMAIN,
-                'repos.example.com@tp:1-devel',
-                'https://repos.example.com/conary/', False)
-
-        ad = admin.AdminHandler()
-        ad._updateMirror = fakeUpdateMirror1
-        ad.session = {}
-        ad.client = client
-        ad.cfg = self.mintCfg
-        ad.req = rogueReq()
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId, id = -1,
-                              allLabels=True, action="Save")
-        self.assertRaises(HttpMoved, ad.processAddOutboundMirrorTarget,
-                outboundMirrorId=1,
-                targetUrl='https://rus.example.com/conary/',
-                mirrorUser='foo',
-                mirrorPass='bar')
-        obm = client.getOutboundMirror(1)
-        obt = client.getOutboundMirrorTarget(1)
-
-        ad2 = admin.AdminHandler()
-        ad2._updateMirror = fakeUpdateMirror2
-        ad2.session = {}
-        ad2.client = client
-        ad2.cfg = self.mintCfg
-        ad2.req = rogueReq()
-        self.assertRaises(HttpMoved, ad2.processAddOutbound,
-                              projectId=projectId2, id = -1,
-                              allLabels=True, action="Save")
-        self.assertRaises(HttpMoved, ad2.processAddOutboundMirrorTarget,
-                outboundMirrorId=2,
-                targetUrl='https://rus.example.com/conary/',
-                mirrorUser='foo',
-                mirrorPass='bar')
-        obm2 = client.getOutboundMirror(2)
-        obt2 = client.getOutboundMirrorTarget(2)
-
-        self.failUnlessEqual(len(rusPasswordInfo), 2,
-                "Tripped over RBL-2318")
-        self.failUnlessEqual(rusPasswordInfo[obt['username']],
-                obt['password'])
-        self.failUnlessEqual(rusPasswordInfo[obt2['username']],
-                obt2['password'])
-
-    def testCreateOutboundMirrorSources(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
-                        shortname="testproject", version="1.0", 
-                        prodtype="Component")
-
-        self.webLogin('adminuser', 'adminpass')
-
-        page = self.fetch("/admin/addOutbound")
-
-        def fakeUpdateMirror(user, servername, mirrorUrl, sp):
-            return 'totallyfakepassword'
-
-        ad = admin.AdminHandler()
-        ad._updateMirror = fakeUpdateMirror
-        ad.session = {}
-        ad.client = client
-        ad.cfg = self.mintCfg
-        ad.req = rogueReq()
-        label = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId, labelList=[label],
-                              mirrorSources=1, action="Save")
-
-        self.assertContent("/admin/outbound", content = label)
-        assert(client.getOutboundMirrors() == \
-            [[1, 1, label, False, False, mirror.INCLUDE_ALL_MATCH_TROVES, 0, True]])
-
-        assert(client.getOutboundMirrorMatchTroves(1) == mirror.INCLUDE_ALL_MATCH_TROVES)
-
-        self.assertRaises(HttpMoved, ad.processAddOutbound,
-                              projectId=projectId,
-                              mirrorSources=0,
-                              labelList=[label],
-                              mirrorBy='group',
-                              groups='group-test', action="Save")
-        assert(client.getOutboundMirrors()[1][5] == ['-.*:source', '-.*:debuginfo', '+group-test'])
-
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
@@ -738,6 +561,94 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/admin/delSpotlight',
             postdata = {'itemId': str(x[0]['itemId'])})
         self.failUnlessEqual(client.getSpotlightAll(), False)
+
+class UpdateServiceWebTest(mint_rephelp.WebRepositoryHelper):
+
+    def setUp(self):
+        self.faker = FakerAPA()
+        mint_rephelp.WebRepositoryHelper.setUp(self)
+
+    def tearDown(self):
+        mint_rephelp.WebRepositoryHelper.tearDown(self)
+        if self.faker: self.faker.kill()
+
+    def testCreateUpdateServiceWeb(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+        page = self.assertNotContent('/admin/updateServices',
+                content = 'Remove Selected')
+
+        page = self.fetch("/admin/editUpdateService")
+        self.failUnless('Add Update Service' in page.body,
+                "We should be in add mode")
+
+        rapaHostPort = '%s:%s' % (self.faker.getHost(),
+                self.faker.getPort())
+        page = page.postForm(1, self.fetchWithRedirect,
+                    { 'hostname': rapaHostPort,
+                              'description': 'WYSIWYG',
+                              'adminUser': 'agent',
+                              'adminPassword': 'secret',
+                              'action': 'submit' })
+
+        self.failUnless('Update Service added' in page.body)
+        self.failUnless(rapaHostPort in page.body)
+        self.failUnless('WYSIWYG' in page.body)
+        self.failUnless('Remove Selected' in page.body)
+
+    def testEditUpdateServiceWeb(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+        rapaHostPort = '%s:%s' % (self.faker.getHost(),
+                self.faker.getPort())
+        rus1id = client.addUpdateService(rapaHostPort,
+                'agent', 'secret', 'WYSIWYG')
+
+        page = self.assertContent('/admin/updateServices',
+                content = 'WYSIWYG')
+
+        page = page.assertContent('/admin/editUpdateService?id=%d' % rus1id,
+                content = 'Edit Update Service')
+
+        self.failUnless(rapaHostPort in page.body)
+        self.failUnless('WYSIWYG' in page.body)
+        self.failIf('Update Service Username' in page.body,
+                'Editing the username/password is not available in edit mode')
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                            { 'description': 'Chumbawamba',
+                              'action': 'Submit'})
+
+        self.failUnless('Update Service changed' in page.body)
+        self.failUnless('Chumbawamba' in page.body)
+
+    def testDeleteUpdateServiceWeb(self):
+        import xmlrpclib
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+
+        _oldServerProxy = xmlrpclib.ServerProxy
+        try:
+            xmlrpclib.ServerProxy = FakeUpdateServiceServerProxy
+
+            rus1id = client.addUpdateService('test1.example.com',
+                    'agent', 'secret', 'Do not delete me')
+            rus2id = client.addUpdateService('test2.example.com',
+                    'agent', 'secret', 'Kill me with fire')
+            rus3id = client.addUpdateService('test3.example.com',
+                    'agent', 'secret', 'Do not delete me, either')
+        finally:
+            xmlrpclib.ServerProxy = _oldServerProxy
+
+        page = self.fetch('/admin/updateServices')
+
+        page = page.postForm(1, self.postAssertContent,
+                { 'remove': {str(rus2id): 'checked'} }, "Are you sure")
+
+        page = page.postForm(1, self.fetchWithRedirect, {'confirmed': "1"})
+
+        self.failIf("Kill me with fire" in page.body)
 
 if __name__ == "__main__":
     testsuite.main()

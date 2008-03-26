@@ -45,9 +45,11 @@ class MintError(Exception):
     freeze = __str__
     @classmethod
     def thaw(cls, blob):
-        ret = cls()
-        ret.msg = blob
-        return ret
+        if isinstance(blob, (str, unicode)):
+            ret = cls()
+            ret.msg = blob
+            return ret
+        return cls(*tuple(blob))
 
 class AdminSelfDemotion(MintError): "You cannot demote yourself."
 class AlreadyConfirmed(MintError):
@@ -81,20 +83,8 @@ class DuplicateLabel(MintError): "Label already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
-class InvalidShortname(MintError):
-    def __str__(self):
-        return "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
-class InvalidLabel(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, label):
-        self.reason = "The generated development label (%s) is invalid.  This can be caused by an invalid short name, namespace, or version."%label
 class InvalidVersion(MintError):
-    def __str__(self):
-        return "The version is invalid."
-class InvalidProdType(MintError):
-    def __str__(self):
-        return "The selected %s type is invalid."%getProjectText().lower()
+    "The version is invalid."
 class LabelMissing(MintError):
     "%(Project)s label does not exist"
 class FailedToLaunchAMIInstance(MintError):
@@ -108,6 +98,10 @@ class GroupTroveVersionError(MintError):
     "Invalid version for group: letters, numbers, periods allowed."
 class HtmlTagNotAllowed(MintError): pass
 class HtmlParseError(MintError): pass
+class InvalidShortname(MintError):
+    "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
+class InvalidProdType(MintError):
+    "The selected %(project)s type is invalid."
 class InvalidUsername(MintError):
     "Username may contain only letters, digits, '-', '_', and '.'"
 class JobserverVersionMismatch(MintError): # LEGACY
@@ -115,8 +109,8 @@ class JobserverVersionMismatch(MintError): # LEGACY
 class LastAdmin(MintError):
     "You cannot close the last administrator account."
 class LastOwner(MintError):
-    "You cannot oprphan a project with developers"
-class MailError(MintError): "there was a problem sending email"
+    "You cannot orphan a %(project)s with developers"
+class MailError(MintError): "There was a problem sending email."
 class MailingListException(MintError): pass
 class MaintenanceMode(MintError): "Repositories are currently offline."
 class MessageException(MintError): pass
@@ -145,45 +139,153 @@ class TroveNotSet(MintError):
 class UserAlreadyAdmin(MintError): "User is already an administrator."
 class UserAlreadyExists(MintError): "User already exists"
 class UserInduction(MintError):
-    "Project owner attempted to manipulate a project user in an " \
+    "%(Project)s owner attempted to manipulate a %(project)s user in an " \
         "illegal fashion"
+class UpdateServiceNotFound(MintError):
+    "The Update Service was not found."
+
 BuildFileUrlMissing = BuildFileMissing
 
 # Exceptions with arguments
 class DuplicateItem(MintError):
     def __init__(self, item = "item"):
-        self.msg = "duplicate item in %s" % item
+        MintError.__init__(self)
+        self.item = item
+
+    def freeze(self): return (self.item,)
+
+    def __str__(self):
+        return "Duplicate item in %s" % self.item
+
+class InvalidLabel(MintError):
+    def __init__(self, label):
+        self.label = label
+
+    def freeze(self): return (self.label,)
+
+    def __str__(self):
+        return "The generated development label %s is invalid. This can be caused by an invalid short name, namespace, or version." % self.label
+
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):
-        self.msg = "requested %s not found" % item
+        MintError.__init__(self)
+        self.item = item
+
+    def freeze(self): return (self.item,)
+
+    def __str__(self):
+        return "Requested %s not found" % self.item
+
 class MethodNotSupported(MintError):
     def __init__(self, method):
-        self.msg = "method not supported by XMLRPC server: %s" % method
+        MintError.__init__(self)
+        self.method = method
+
+    def freeze(self): return (self.method,)
+
+    def __str__(self):
+        return "Method not supported by XMLRPC server: %s" % self.method
+
 class UnmountFailed(MintError):
     def __init__(self, dev):
-        self.msg = "Unable to automatically unmount %s; please manually " \
-            "unmount" % dev
+        MintError.__init__(self)
+        self.dev = dev
+
+    def freeze(self): return (self.dev,)
+
+    def __str__(self):
+        return "Unable to automatically unmount %s; please manually " \
+            "unmount" % self.dev
+
 class UpToDateException(MintError):
     def __init__(self, table = "Unknown Table"):
-        self.msg = "The table '%s' is not up to date" % table
+        MintError.__init__(self)
+        self.table = table
+
+    def freeze(self): return (self.msg,)
+
+    def __str__(self):
+        return "The table '%s' is not up to date" % self.table
+
 class InvalidBuildOption(MintError):
     def __init__(self, desc):
-        self.msg = "Invalid value for %s"%desc
+        MintError.__init__(self)
+        self.desc = desc
+
+    def freeze(self): return (self.desc,)
+
+    def __str__(self):
+        return "Invalid value for %s" % self.desc
+
 class BuildOptionValidationException(MintError):
     def __init__(self, errlist):
+        MintError.__init__(self)
         self.errlist = errlist
-        self.msg = str(self.errlist)
+
+    def freeze(self): return (self.errlist,)
+
+    def __str__(self):
+        return "The following errors occurred: %s" % ", ".join(self.errlist)
+
+class UpdateServiceAuthError(MintError):
+    def __init__(self, hostname):
+        MintError.__init__(self)
+        self.hostname = hostname
+
+    def freeze(self): return (self.hostname,)
+
+    def __str__(self):
+        return "The credentials you supplied to access the Update " \
+                "Service on %s were incorrect or are not part of the " \
+                "admin role on the Update Service." % self.hostname
+
+class UpdateServiceConnectionFailed(MintError):
+    def __init__(self, hostname, errmsg):
+        MintError.__init__(self)
+        self.hostname = hostname
+        self.errmsg = errmsg
+
+    def freeze(self): return (self.hostname, self.errmsg)
+
+    def __str__(self):
+        return "The Update Service on %s could not be contacted. " \
+                "(Reason: %s)" % (self.hostname, self.errmsg)
+
+class UpdateServiceUnknownError(MintError):
+    def __init__(self, hostname):
+        MintError.__init__(self)
+        self.hostname = hostname
+
+    def freeze(self): return (self.hostname,)
+
+    def __str__(self):
+        return "An unknown error occurred when attempting to " \
+                "configure the Update Service on %s." % self.hostname
+
 class PublishedReleaseMirrorRole(MintError):
     def __init__(self, err = "Unknown error"):
-        self.msg = "Release cannot be published due to an error adding the mirror role/user: %s" % err
-    
+        MintError.__init__(self)
+        self.err = err
+
+    def freeze(self): return (self.err,)
+
+    def __str__(self):
+        return "Release cannot be published due to an error adding the mirror role/user: %s" % self.err
 
 class DatabaseVersionMismatch(MintError):
     def __init__(self, currentVersion):
-        self.msg = "The current database schema does not match the " \
+        MintError.__init__(self)
+	from mint import schema
+        self.currentVersion = currentVersion
+        self.requiredVersion = schema.RBUILDER_DB_VERSION
+
+    def freeze(self): return (self.currentVersion, self.requiredVersion)
+
+    def __str__(self):
+        return "The current database schema does not match the " \
             "version required by this version of rBuilder. " \
             "Current version is %s; required version is %s." % (
-                currentVersion, schema.RBUILDER_DB_VERSION)
+                self.currentVersion, self.requiredVersion)
 
 ## Subclassed exceptions
 # MessageException

@@ -815,6 +815,9 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
 
+    # apply default context of "fixtured" to all children of this class
+    contexts = ("fixtured",)
+
     def listFixtures(self):
         return fixtureCache.list()
 
