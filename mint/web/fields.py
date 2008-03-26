@@ -51,9 +51,15 @@ def _weak_signature_call(func, self, kwargs):
             return func(self, **kwargs)
         target_func = target_func.__wrapped_func__
 
-    known_args = inspect.getargspec(target_func)[0]
-    keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
-        if arg in known_args)
+    args, _, varkw, _ = inspect.getargspec(target_func)
+    if varkw:
+        # We can't guess what variable keywords are in use, so just pass
+        # them on. With any luck, the function will not care about extras
+        # in a dictionary.
+        keep_args = kwargs
+    else:
+        keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
+            if arg in args)
     return func(self, **keep_args)
 
 

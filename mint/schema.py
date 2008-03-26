@@ -864,7 +864,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
     if version == 0:
         createSchema(db)
         db.loadSchema()
-        setVer = migrate.majorMinor(RBUILDER_DB_VERSION)
+        setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
     # test if  the repo schema is newer than what we understand
     # (by major schema number)
