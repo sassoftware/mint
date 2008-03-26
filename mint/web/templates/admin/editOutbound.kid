@@ -100,10 +100,10 @@
                                 contained within the group.
                             </p>
                             <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'label') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="label" id="mirrorByLabel" />
-                            <label for="mirrorByLabel">Mirror contents from selected labels only</label><br />
-                            <select style="float: right; vertical-align: top; width: 20em; height: 10em;" multiple="multiple" name="groups" id="groups" />
+                                <label for="mirrorByLabel">Mirror all contents</label><br />
                             <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'group') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="group" id="mirrorByGroup" />
-                            <label for="mirrorByGroup">Mirror selected groups and all referenced packages</label>
+                            <label for="mirrorByGroup">Mirror groups and their referenced packages</label>
+                            <div id="chklist_groups" />
                         </td>
                     </tr>
                     <tr>
