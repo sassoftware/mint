@@ -194,13 +194,15 @@ class MigrateTo_44(SchemaMigration):
     # - Add new Projects colums
     def migrate(self):
         cu = self.db.cursor()
+        # The schema version was not bumped correctly last time,
+        # so the tables may or may not have been removed.
         try:
             cu.execute("""DROP TABLE rMakeBuild""")
+        except sqlerrors.InvalidTable:
+            pass
+        try:
             cu.execute("""DROP TABLE rMakeBuildItems""")
         except sqlerrors.InvalidTable:
-            # pass because of migration discrepancy...version was not changed
-            # to 44 so there is a difference between original 43 install and
-            # 43 migration
             pass
         cu.execute("""ALTER TABLE Projects
             ADD COLUMN shortname VARCHAR(128)""")
@@ -219,6 +221,7 @@ class MigrateTo_45(SchemaMigration):
     Version = (45, 0)
 
     # 45.0
+    # - Add column for backupExternal option for projects
     # - Add UpdateServices table
     # - Distill the OutboundMirrorTargets table into a set unique by URL
     # - Create OutboundMirrorsTargets table (map between UpdateServices and
@@ -227,7 +230,10 @@ class MigrateTo_45(SchemaMigration):
     #   new mapping table.
     # - Drop no longer needed OutboundMirrorTargets table
     def migrate(self):
-        # TODO Implement me
+        # TODO Implement update services bit here
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Projects
+            ADD COLUMN backupExternal INT DEFAULT 0""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -19,6 +19,9 @@ import types
 import unittest
 import __builtin__
 
+from conary_test import resources
+
+
 testPath = None
 archivePath = None
 
@@ -78,11 +81,11 @@ def setup():
         JOB_SLAVE_PATH=jobslavePath, PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
-    from conary_test import resources
     resources.testPath = testPath = testhelp.getTestPath()
     resources.archivePath = archivePath = testPath + '/' + "archive"
 
     global conaryDir
+
     resources.conaryDir = conaryDir = os.environ['CONARY_PATH']
 
     from conary.lib import util
@@ -145,6 +148,27 @@ def main(argv=None, individual=True):
     _handler = handler
     results = handler.main(argv)
     sys.exit(not results.wasSuccessful())
+
+# Marker decorators
+def tests(*issues):
+    '''
+    Marks a function as testing one or more issues.
+    If the referenced issue is a feature, the test verifies that the
+    implementation is valid.
+    If the issue is a bug, the test confirms that the fix is complete. The
+    test should fail against the previous code, and pass with the new code.
+    Note that this decorator doesn't actually do anything useful yet, it's
+    just a marker.
+
+    Example:
+    @testsuite.tests('FOO-123', 'BAR-456')
+    def testPonies(self):
+        ...
+    '''
+    def decorate(func):
+        func.meta_tests = issues
+        return func
+    return decorate
 
 if __name__ == '__main__':
     setup()

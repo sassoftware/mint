@@ -143,7 +143,8 @@ def _createProjects(db):
             timeModified    INT DEFAULT 0,
             commitEmail     varchar(128) DEFAULT '',
             prodtype        varchar(128) DEFAULT '',
-            version         varchar(128) DEFAULT ''
+            version         varchar(128) DEFAULT '',
+            backupExternal  INT DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True

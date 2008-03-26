@@ -350,7 +350,13 @@ class MintServer(object):
                 self.clientVer = clientVer
                 r = method(*args)
                 if self.callLog:
-                    self.callLog.log(self.remoteIp, list(authToken) + [None, None], methodName, args)
+                    # We mustn't try to pickle flavors or versions, so just
+                    # stringify everything except numbers. This could be
+                    # better, but it is an undocumented feature after all.
+                    str_args = [isinstance(x, (int, long)) and x or str(x)
+                        for x in args]
+                    self.callLog.log(self.remoteIp,
+                        list(authToken) + [None, None], methodName, str_args)
 
             except MintError, e:
                 self._handleError(e, authToken, methodName, args)
@@ -369,8 +375,11 @@ class MintServer(object):
     def _handleError(self, e, authToken, methodName, args):
         self.db.rollback()
         if self.callLog:
+            # See above for rant about pickling args
+            str_args = [isinstance(x, (int, long)) and x or str(x)
+                for x in args]
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
-                methodName, args, exception = e)
+                methodName, str_args, exception = e)
 
     @typeCheck(str)
     @requiresAdmin
@@ -1234,6 +1243,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.projects.hide(projectId)
         self._generateConaryRcFile()
         return True
+
+    @typeCheck(int, bool)
+    @requiresAdmin
+    @private
+    def setBackupExternal(self, projectId, backupExternal):
+        return self.projects.update(projectId, backupExternal=backupExternal)
 
     @typeCheck(int)
     @requiresAdmin
@@ -3120,7 +3135,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._setBuildFilenames(buildId, filenames)
 
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
-
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
                                                self.cfg.authPass))

@@ -34,7 +34,7 @@ def backup(cfg, out, backupMirrors = False):
         util.execute("echo '.dump' | sqlite3 %s > %s" % (cfg.dbPath, dumpPath))
     extraArgs = ""
     if not backupMirrors:
-        extraArgs = " WHERE NOT external"
+        extraArgs = " WHERE NOT external OR backupExternal"
     if cfg.reposDBDriver == 'sqlite':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
