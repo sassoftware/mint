@@ -36,7 +36,7 @@
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
-                        <th style="width: 1%;"><em class="required">${projectText().title()} to mirror:</em></th>
+                        <th style="width: 1%;"><em py:strip="not isNew" class="required">${projectText().title()} to mirror:</em></th>
                         <td>
                             <select id="projectId" name="projectId">
                                 <option value="-1">--</option>

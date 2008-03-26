@@ -22,17 +22,29 @@
             <form action="${cfg.basePath}admin/processEditUpdateService" method="post">
                 <div py:strip="True" py:if="isNew">
                 <h2>Add Update Service</h2>
-                <p>Guide text needed for add case.</p>
+                <p>Fill in the form below to set up an rPath Appliance
+                   Platform Update Service.</p>
+                <p>Note: the target Update Service must be online and
+                   network-reachable in order to be added.</p>
                 </div>
 
                 <div py:strip="True" py:if="not isNew">
                 <h2>Edit Update Service</h2>
-                <p>Guide text needed for edit case.</p>
+                <p>Update the configured Update Service's properties.
+                   Currently you may only update the Update Service's
+                   description here.</p>
+               <p>In the event that this Update Service's hostname has
+                  changed, or if the Update Service itself was reinstalled
+                  with no content, you will need to delete this record
+                  of the Update Service and recreate it. This will
+                  reconfigure the Update Service for proper operation.
+                  Additionally, you will need to reassign the existing
+                  Outbound Mirror targets as appropriate.</p>
                 </div>
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                     <tr>
-                        <th><em class="required">Update Service Hostname</em></th>
+                        <th><em py:attrs="{'class': isNew and 'required' or 'optional'}">Update Service Hostname</em></th>
                         <td py:if="isNew">
                             <input type="text" name="hostname" maxlength="255" value="${kwargs['hostname']}" />
                             <p class="help">Use the fully-qualified domain name of the target repository or Update Service (example: mirror.rpath.com).</p>

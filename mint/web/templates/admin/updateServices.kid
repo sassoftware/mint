@@ -16,10 +16,8 @@
         <div id="spanright">
             <form action="${cfg.basePath}admin/removeUpdateServices" method="post">
                 <h2>Manage Update Services</h2>
-                <p>
-                    Need some guide text here: what is an update service,
-                    and what it is used for.
-                </p>
+                <p>Update Services are targets for an Outbound Mirror or
+                   publish operation.</p>
 
                 <table py:if="updateServices" cellspacing="0" cellpadding="0" class="results">
                     <tr>
