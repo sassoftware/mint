@@ -54,7 +54,7 @@ class OutboundMirrorsTable(database.KeyedTable):
             # Cleanup mapping table ourselves if we are using SQLite,
             # as it doesn't know about contraints.
             if self.cfg.dbDriver == 'sqlite':
-                cu.execute("""DELETE FROM OutboundMirrorsTargets WHERE
+                cu.execute("""DELETE FROM OutboundMirrorsUpdateServices WHERE
                               outboundMirrorId = ?""", id)
         except:
             self.db.rollback()
@@ -74,15 +74,15 @@ class OutboundMirrorsTable(database.KeyedTable):
                 x[6], bool(x[7])] \
                 for x in cu.fetchall()]
 
-class OutboundMirrorsTargetsTable(database.DatabaseTable):
-    name = "OutboundMirrorsTargets"
+class OutboundMirrorsUpdateServicesTable(database.DatabaseTable):
+    name = "OutboundMirrorsUpdateServices"
     fields = [ 'updateServiceId', 'outboundMirrorId' ]
 
     def getOutboundMirrorTargets(self, outboundMirrorId):
         cu = self.db.cursor()
-        cu.execute("""SELECT obmt.updateServiceId, us.hostname,
+        cu.execute("""SELECT obus.updateServiceId, us.hostname,
                              us.mirrorUser, us.mirrorPassword, us.description
-                      FROM OutboundMirrorsTargets obmt
+                      FROM OutboundMirrorsUpdateServices obus
                            JOIN
                            UpdateServices us
                            USING(updateServiceId)
@@ -93,13 +93,13 @@ class OutboundMirrorsTargetsTable(database.DatabaseTable):
         cu = self.db.transaction()
         updates = [ (outboundMirrorId, x) for x in updateServiceIds ]
         try:
-            cu.execute("""DELETE FROM OutboundMirrorsTargets
+            cu.execute("""DELETE FROM OutboundMirrorsUpdateServices
                           WHERE outboundMirrorId = ?""", outboundMirrorId)
         except:
             pass # don't worry if there is nothing to do here
 
         try:
-            cu.executemany("INSERT INTO OutboundMirrorsTargets VALUES(?,?)",
+            cu.executemany("INSERT INTO OutboundMirrorsUpdateServices VALUES(?,?)",
                 updates)
         except:
             self.db.rollback()
@@ -144,7 +144,7 @@ class UpdateServicesTable(database.KeyedTable):
             # Cleanup mapping table ourselves if we are using SQLite,
             # as it doesn't know about contraints.
             if self.cfg.dbDriver == 'sqlite':
-                cu.execute("""DELETE FROM OutboundMirrorsTargets WHERE
+                cu.execute("""DELETE FROM OutboundMirrorsUpdateServices WHERE
                               updateServiceId = ?""", id)
         except:
             self.db.rollback()

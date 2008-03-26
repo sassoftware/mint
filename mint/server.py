@@ -265,7 +265,7 @@ def getTables(db, cfg):
     d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
     d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
     d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
-    d['outboundMirrorsTargets'] = mirror.OutboundMirrorsTargetsTable(db)
+    d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
     d['useit'] = useit.UseItTable(db, cfg)
@@ -3977,7 +3977,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, list)
     @requiresAdmin
     def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
-        return self.outboundMirrorsTargets.setTargets(outboundMirrorId,
+        return self.outboundMirrorsUpdateServices.setTargets(outboundMirrorId,
                updateServiceIds)
 
     @private
@@ -4038,7 +4038,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     @requiresAdmin
     def getOutboundMirrorTargets(self, outboundMirrorId):
-        return self.outboundMirrorsTargets.getOutboundMirrorTargets(outboundMirrorId)
+        return self.outboundMirrorsUpdateServices.getOutboundMirrorTargets(outboundMirrorId)
 
     @private
     @requiresAdmin

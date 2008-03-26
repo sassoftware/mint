@@ -598,9 +598,9 @@ def _createMirrorInfo(db):
     db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
-    if 'OutboundMirrorsTargets' not in db.tables:
+    if 'OutboundMirrorsUpdateServices' not in db.tables:
         cu.execute("""
-        CREATE TABLE OutboundMirrorsTargets (
+        CREATE TABLE OutboundMirrorsUpdateServices (
             outboundMirrorId        INT NOT NULL,
             updateServiceId         INT NOT NULL,
             CONSTRAINT omt_omi_fk
@@ -612,9 +612,9 @@ def _createMirrorInfo(db):
                     REFERENCES UpdateServices(updateServiceId)
                 ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['OutboundMirrorsTargets'] = []
+        db.tables['OutboundMirrorsUpdateServices'] = []
         commit = True
-    db.createIndex('OutboundMirrorsTargets', 'omt_omi_usi_uq',
+    db.createIndex('OutboundMirrorsUpdateServices', 'omt_omi_usi_uq',
             'outboundMirrorId, updateServiceId', unique = True)
 
     if commit:
