@@ -12,7 +12,11 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+
+import inspect
+
 from conary import errors
+
 
 class MissingParameterError(errors.WebError):
     def __init__(self, param):
@@ -20,6 +24,7 @@ class MissingParameterError(errors.WebError):
         
     def __str__(self):
         return "Missing Parameter: %s" % self.param
+
 
 class BadParameterError(errors.WebError):
     def __init__(self, param, badvalue):
@@ -29,6 +34,28 @@ class BadParameterError(errors.WebError):
     def __str__(self):
         return "Bad parameter %s received for parameter %s" % \
                 (self.badvalue, self.param)
+
+
+def _weak_signature_call(func, self, kwargs):
+    '''
+    Call I{func} with keyword arguments I{kwargs}, removing any keyword
+    arguments not expected by I{func}.
+    '''
+
+    # Iterate down the chain of decorators until we either hit another soft
+    # call wrapper or the actual function
+    target_func = func
+    while hasattr(target_func, '__wrapped_func__'):
+        if getattr(target_func, 'soft_called', False):
+            # Another wrapper further down will do the soft call
+            return func(self, **kwargs)
+        target_func = target_func.__wrapped_func__
+
+    known_args = inspect.getargspec(target_func)[0]
+    keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
+        if arg in known_args)
+    return func(self, **keep_args)
+
 
 def strFields(**params):
     """Decorator for cgi fields.  Use like @strFields(foo=None, bar='foo') 
@@ -45,9 +72,12 @@ def strFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return _weak_signature_call(func, self, kw)
+        wrapper.__wrapped_func__ = func
+        wrapper.soft_called = True
         return wrapper
     return deco
+
 
 def intFields(**params):
     """Decorator for cgi fields.  Use like @intFields(foo=None, bar=2) 
@@ -68,9 +98,12 @@ def intFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return _weak_signature_call(func, self, kw)
+        wrapper.__wrapped_func__ = func
+        wrapper.soft_called = True
         return wrapper
     return deco
+
 
 def listFields(memberType, **params):
     def deco(func):
@@ -86,9 +119,12 @@ def listFields(memberType, **params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return _weak_signature_call(func, self, kw)
+        wrapper.__wrapped_func__ = func
+        wrapper.soft_called = True
         return wrapper
     return deco
+
 
 def boolFields(**params):
     def deco(func):
@@ -104,9 +140,12 @@ def boolFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return _weak_signature_call(func, self, kw)
+        wrapper.__wrapped_func__ = func
+        wrapper.soft_called = True
         return wrapper
     return deco
+
 
 def dictFields(**params):
     def deco(func):
@@ -123,7 +162,9 @@ def dictFields(**params):
                     value = kw[key]
                     d[parts[0]] = str(value)
                     del kw[key]
-            return func(self, **kw)
+            return _weak_signature_call(func, self, kw)
+        wrapper.__wrapped_func__ = func
+        wrapper.soft_called = True
         return wrapper
     return deco
 

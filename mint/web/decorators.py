@@ -20,6 +20,7 @@ def requiresHttps(func):
         else:
             return func(self, *args, **kwargs)
 
+    requiresHttpsWrapper.__wrapped_func__ = func
     return requiresHttpsWrapper
 
 def redirectHttp(func):
@@ -30,6 +31,8 @@ def redirectHttp(func):
                 self.req.unparsed_uri))
         else:
             return func(self, *args, **kwargs)
+
+    redirectHttpWrapper.__wrapped_func__ = func
     return redirectHttpWrapper
 
 def redirectHttps(func):
@@ -46,6 +49,8 @@ def redirectHttps(func):
                     (self.cfg.secureHost, self.req.unparsed_uri))
         else:
             return func(self, *args, **kwargs)
+
+    redirectHttpsWrapper.__wrapped_func__ = func
     return redirectHttpsWrapper
 
 def requiresAdmin(func):
@@ -54,6 +59,8 @@ def requiresAdmin(func):
             raise mint_error.PermissionDenied
         else:
             return func(self, *args, **kwargs)
+
+    requiresAdminWrapper.__wrapped_func__ = func
     return requiresAdminWrapper
 
 def requiresAuth(func):
@@ -62,6 +69,8 @@ def requiresAuth(func):
             raise mint_error.PermissionDenied
         else:
             return func(self, **kwargs)
+
+    requiresAuthWrapper.__wrapped_func__ = func
     return requiresAuthWrapper
 
 def ownerOnly(func):
@@ -75,6 +84,8 @@ def ownerOnly(func):
             return func(self, **kwargs)
         else:
             raise mint_error.PermissionDenied
+
+    ownerOnlyWrapper.__wrapped_func__ = func
     return ownerOnlyWrapper
 
 def writersOnly(func):
@@ -88,6 +99,8 @@ def writersOnly(func):
             return func(self, **kwargs)
         else:
             raise mint_error.PermissionDenied
+
+    writersOnlyWrapper.__wrapped_func__ = func
     return writersOnlyWrapper
 
 def postOnly(func):
@@ -99,6 +112,8 @@ def postOnly(func):
             raise webhandler.HttpForbidden
         else:
             return func(self, *args, **kwargs)
+
+    postOnlyWrapper.__wrapped_func__ = func
     return postOnlyWrapper
 
 def mailList(func):
@@ -113,4 +128,6 @@ def mailList(func):
         except mailinglists.MailingListException, e:
             return self._write("error", shortError = "Mailing List Error",
                 error = "An error occurred while talking to the mailing list server: %s" % str(e))
+
+    mailListWrapper.__wrapped_func__ = func
     return mailListWrapper
