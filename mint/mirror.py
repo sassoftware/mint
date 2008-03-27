@@ -87,7 +87,8 @@ class OutboundMirrorsUpdateServicesTable(database.DatabaseTable):
                            UpdateServices us
                            USING(updateServiceId)
                       WHERE outboundMirrorId = ?""", outboundMirrorId)
-        return [ list(x) for x in cu.fetchall() ]
+        return [ list(x[:4]) + [x[4] and x[4] or ''] \
+                for x in cu.fetchall() ]
 
     def setTargets(self, outboundMirrorId, updateServiceIds):
         cu = self.db.transaction()
