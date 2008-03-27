@@ -183,6 +183,10 @@ class MirrorScript(scriptlibrary.SingletonScript):
         op.add_option("--show-mirror-cfg", action = "store_true",
                 dest = "showConfig", default = False,
                 help = "print generated mirror configs to stdout")
+        op.add_option("--test", action = "store_true",
+                dest = "test", default = False,
+                help = "show how mirrorRepository would be called "
+                       "(don't actually mirror)")
         (self.options, self.args) = op.parse_args()
         if len(self.args) < 1:
             op.error("missing URL to rBuilder XML-RPC interface")
@@ -206,12 +210,6 @@ class MirrorScript(scriptlibrary.SingletonScript):
         from conary.conaryclient import mirror
         from conary.lib import util
 
-        if self.options.showConfig:
-            print >> sys.stdout, "-- Start Mirror Configuration File --"
-            mirrorCfg.display()
-            print >> sys.stdout, "-- End Mirror Configuration File --"
-            sys.stdout.flush()
-
         # set the correct tmpdir to use
         tmpDir = os.path.join(self.cfg.dataPath, 'tmp')
         if os.access(tmpDir, os.W_OK):
@@ -220,9 +218,32 @@ class MirrorScript(scriptlibrary.SingletonScript):
         else:
             self.log.warning("Using system temporary directory")
 
+        fullSync = self.options.sync or fullSync
+        if fullSync:
+            self.log.info("Full sync requested on this mirror")
+        if self.options.syncSigs:
+            self.log.info("Full signature sync requested on this mirror")
+
         # first time through, we should pass in sync options;
         # subsequent passes should use the mirror marks
         passNumber = 1
+
+        if self.options.test:
+            # If we are testing, print the configuration
+            if not self.options.showConfig:
+                self.log.info("--test implies --show-config")
+                self.options.showConfig = True
+
+        if self.options.showConfig:
+            print >> sys.stdout, "-- Start Mirror Configuration File --"
+            mirrorCfg.display()
+            print >> sys.stdout, "-- End Mirror Configuration File --"
+            sys.stdout.flush()
+
+        if self.options.test:
+            self.log.info("Testing mode, not actually mirroring")
+            return
+
         self.log.info("Beginning pass %d" % passNumber)
         callAgain = mirror.mirrorRepository(sourceRepos, targetRepos,
             mirrorCfg, sync = self.options.sync or fullSync,
