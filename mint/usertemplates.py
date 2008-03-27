@@ -6,6 +6,7 @@
 import sys
 
 from mint.buildtemplates import BooleanOption, IntegerOption
+from mint import constants
 
 # this must be redefined in each template module due to sys.modules[__name__]
 class Template(dict):
@@ -40,13 +41,19 @@ class searchResultsPerPage(IntegerOption):
 ###
 
 class UserPrefsAttTemplate(Template):
-    __slots__ = ['newsletter', 'insider']
+    if constants.rBuilderOnline:
+        __slots__ = ['newsletter', 'insider']
+    else:
+        __slots__ = []
 
 class UserPrefsNoAttTemplate(Template):
     __slots__ = ['searchResultsPerPage']
 
 class UserPrefsInvisibleTemplate(Template):
-    __slots__ = []
+    if constants.rBuilderOnline:
+        __slots__ = []
+    else:
+        __slots__ = ['newsletter', 'insider']
 
 # Base template for items that should be displayed for user.
 class UserPrefsVisibleTemplate(Template):

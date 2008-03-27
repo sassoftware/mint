@@ -6,15 +6,11 @@
 
 SUBDIRS = web
 
-python_files =			\
-	urltypes.py		\
-	usertemplates.py
-
 override PYDEST = mint
 
 all: default-all
 
-install: pyfiles-install default-install
+install: default-install
 
 clean: default-clean
 
