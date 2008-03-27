@@ -1,8 +1,10 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
+
+from mint import constants
 
 baseConaryLabel = 'conary.rpath.com@rpl:1'
 
@@ -18,12 +20,18 @@ labelDict = {baseConaryLabel :
                ('group-kde', 'The KDE desktop environment.'),
                ('group-netserver', 'Network servers, tools, and support.'),
                ('group-xorg', 'The X.org windowing system.')
-              ],
+              ]
 
-             'raa.rpath.org@rpath:raa-2':
-              [('group-raa', 'The rPath Appliance Agent')]
             }
+if constants.rBuilderOnline:
+    labelDict.update({
+        'raa.rpath.org@rpath:raa-2':
+            [('group-raa', 'The rPath Appliance Agent')]
+    })
 
-messageDict = {baseConaryLabel: 'These groups come from rPath Linux on the %s label' % baseConaryLabel,
-               'raa.rpath.org@rpath:raa-2': 'The following group comes from the raa.rpath.org@rpath:raa-2 label'
+messageDict = {baseConaryLabel: 'These groups come from rPath Linux on the %s label' % baseConaryLabel
               }
+if constants.rBuilderOnline:
+    messageDict.update({
+               'raa.rpath.org@rpath:raa-2': 'The following group comes from the raa.rpath.org@rpath:raa-2 label'
+        })

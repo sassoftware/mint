@@ -6,11 +6,9 @@
 
 SUBDIRS = content templates
 
-python_files = basictroves.py
-
 all: default-all
 
-install: pyfiles-install default-install
+install: default-install
 
 clean: default-clean
 
