@@ -12,7 +12,6 @@
 import sys
 import os
 from os import _exit
-import urllib
 import xmlrpclib
 
 from conary.conaryclient import mirror
@@ -77,14 +76,10 @@ class MirrorOutbound(MirrorScript):
                 sourceCfg = cfg.setSection("source")
                 sourceCfg.repositoryMap.update(repositoryMap)
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
-                serverNamesSet = set([reposHost])
-                authHosts = set([reposHost])
                 for host, authInfo in userMap:
                     sourceCfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-                    authHosts.add(host)
                 for host, entitlement in entMap:
                     sourceCfg.entitlement.addEntitlement(host, entitlement[1])
-                    authHosts.add(host)
 
                 sourceCCfg = conarycfg.ConaryConfiguration()
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
@@ -95,14 +90,13 @@ class MirrorOutbound(MirrorScript):
 
                 obmt = client.getOutboundMirrorTargets(outboundMirrorId)
                 if not obmt:
-                    self.log.warning("Skipping mirror of %s; no targets specified" % \
+                    self.log.warning("Skipping %s, no Update Services specified" % \
                             sourceProject.name)
                     continue
 
                 targetOrdinal = 0
-                for _, targetUrl, targetUser, targetPass in obmt:
-                    _, url = urllib.splittype(targetUrl)
-                    rapa_host, _ = urllib.splithost(url)
+                for _, hostname, targetUser, targetPass, _ in obmt:
+                    targetUrl = 'https://%s/conary/' % hostname
 
                     if cfg.hasSection("target"):
                         targetOrdinal += 1
