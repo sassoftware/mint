@@ -888,9 +888,6 @@ def loadSchema(db, cfg=None, should_migrate=False):
         than version 3.1.4. Schema migrations from this database schema
         version are longer supported. Please contact rPath for help 
         converting the rBuilder database to a supported version.""", version)
-    # compatible schema versions have the same major
-    if version.major == RBUILDER_DB_VERSION.major and not should_migrate:
-        return version
     # if we reach here, a schema migration is needed/requested
     version = migrate.migrateSchema(db, cfg)
     db.loadSchema()
