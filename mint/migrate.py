@@ -25,6 +25,34 @@ class SchemaMigration(migration.SchemaMigration):
         logMe(1, msg)
         self.msg = msg
 
+# Helper functions
+def add_columns(cu, table, *columns):
+    '''
+    Add each column while ignoring existing columns.
+
+    >>> add_columns(cu, 'Table', 'something INTEGER',
+    ...     'somethingelse STRING')
+    '''
+
+    for column in columns:
+        try:
+            cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, d))
+        except sqlerrors.DuplicateColumnName:
+            pass
+
+def drop_tables(cu, *tables):
+    '''
+    Drop each table, ignoring any missing tables.
+
+    >>> drop_tables(cu, 'sometable', 'anothertable')
+    '''
+
+    for table in tables:
+        try:
+            cu.execute('DROP TABLE %s' % (table,))
+        except sqlerrors.InvalidTable:
+            pass
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -187,33 +215,20 @@ class MigrateTo_43(SchemaMigration):
 
 # SCHEMA VERSION 44
 class MigrateTo_44(SchemaMigration):
-    Version = (44, 0)
+    Version = (44, 1)
 
     # 44.0
     # - Drop rMake related tables
-    # - Add new Projects colums
     def migrate(self):
         cu = self.db.cursor()
-        # The schema version was not bumped correctly last time,
-        # so the tables may or may not have been removed.
-        try:
-            cu.execute("""DROP TABLE rMakeBuild""")
-        except sqlerrors.InvalidTable:
-            pass
-        try:
-            cu.execute("""DROP TABLE rMakeBuildItems""")
-        except sqlerrors.InvalidTable:
-            pass
-        cu.execute("""ALTER TABLE Projects
-            ADD COLUMN shortname VARCHAR(128)""")
-        # default the shortname to the project hostname for migrated
-        # projects
-        cu.execute('UPDATE Projects SET shortname=hostname')
-        self.db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
-        cu.execute("""ALTER TABLE Projects
-            ADD COLUMN prodtype VARCHAR(128) DEFAULT ''""")
-        cu.execute("""ALTER TABLE Projects
-            ADD COLUMN version VARCHAR(128) DEFAULT ''""")
+        drop_tables(cu, 'rMakeBuild', 'rMakeBuildItems')
+        return True
+
+    # 44.1
+    # - Add backupExternal column to Projects table
+    def migrate1(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'Projects', 'backupExternal INT DEFAULT 0')
         return True
 
 # SCHEMA VERSION 45

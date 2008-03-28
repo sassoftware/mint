@@ -1786,8 +1786,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             self.webLogin, 'testuser', 'testpass')
 
     def testBogusParameters(self):
+        '''Unknown parameters should be silently ignored.'''
         page = self.assertContent("/search?search=wobble&type=Packages&comment=imadirtyspammer",
-            code = [200], content = "search() got an unexpected keyword argument 'comment'")
+            code = [200], content = "Search Results")
 
     def testUtf8Rss(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
