@@ -200,13 +200,6 @@ class SetupHandler(WebHandler):
 
         return self._write("setup/saved")
 
-    def config(self, auth):
-        self.req.content_type = 'text/plain'
-
-        buf = StringIO()
-        self.cfg.display(out = buf)
-        return buf.getvalue()
-
     def restart(self, auth):
 
         newCfg = self._copyCfg()
