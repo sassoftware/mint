@@ -37,7 +37,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
                 <?python #
                     from mint.client import flavorWrap
                     from urllib import quote
-                    url = "troveInfo?t=%s;v=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
+                    url = "troveInfo?t=%s;v=%s;f=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
                 ?>
                 <td style="width: 1%; padding-right: 10px;"><a href="${url}">${name}</a></td>
                 <td style="width: 33%;"><span class="expand" id="${url}_short" onclick="swapDisplay('${url}_short', '${url}_long');">${"%s:%s/%s" % (version.trailingLabel().getNamespace(), version.trailingLabel().getLabel(), version.trailingRevision().getVersion())}</span>
