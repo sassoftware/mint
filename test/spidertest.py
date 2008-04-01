@@ -89,6 +89,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                         print "corp link: %s is relative on page: %s" % \
                               (newLink, link)
                         brokenLinks = True
+                if 'rAA' in newLink or '8003' in newLink:
+                    valid = False
+                    skip = True
                 if not skip and not relativeLink and \
                        str(self.port) not in newLink \
                        and str(self.securePort) not in newLink:
@@ -127,6 +130,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'buildDefs' in link:
             return False
         if 'builds' in link:
+            return False
+        if 'rAA' in link or '8003' in link:
+            # don't try to contact rAPA
             return False
 
         #print "inspecting", link
