@@ -129,7 +129,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'builds' in link:
             return False
 
-        print "inspecting", link
+        #print "inspecting", link
         if page is None:
             try:
                 # rewrite project-based links properly, to avoid breaking SSL
