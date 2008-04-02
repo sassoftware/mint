@@ -8,7 +8,6 @@ testsuite.setup()
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
-from mint import constants
 from mint import database
 from mint import server
 from mint import users
@@ -26,7 +25,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
         newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
 
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             assert(project.getLabelIdMap() ==\
                 {'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId,
                  'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
@@ -49,7 +48,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
                     )
 
         project.removeLabel(newLabelId)
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             assert(project.getLabelIdMap() ==\
                 {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
         else:

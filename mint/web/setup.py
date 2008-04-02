@@ -28,12 +28,6 @@ from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from conary.repository.netrepos import netauth
 
-# just want the namespace for rBA
-if constants.rBuilderOnline:
-    namespaceOpt = 'defaultBranch'
-else:
-    namespaceOpt = 'namespace'
-
 # be careful with 'Server Setup', code below and the associated kid template
 # refer to this key directly. be sure to find all instances if you change it.
 configGroups = {
@@ -42,7 +36,7 @@ configGroups = {
     'Branding':
         ('companyName', 'corpSite'),
     'Repository Setup':
-        (namespaceOpt,),
+        ('namespace',),
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
     '(Optional) Miscellaneous':

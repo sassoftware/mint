@@ -528,8 +528,7 @@ def handler(req):
 
     global cfg
     if not cfg:
-        cfg = config.MintConfig()
-        cfg.read(cfgPath)
+        cfg = config.getConfig(cfgPath)
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
@@ -595,6 +594,7 @@ def handler(req):
         coveragehook.save()
     return ret
 
+cfg = None
 cachedMySQLDb = None
 repositories = {}
 shim_repositories = {}

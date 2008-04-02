@@ -14,7 +14,6 @@ import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
 from mint import config
-from mint import constants
 from mint import maintenance
 from mint import mint_error
 from mint import buildtypes
@@ -80,7 +79,7 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('admin', 'admin')
         self.setMaintenanceMode(maintenance.LOCKED_MODE)
         page = self.fetchWithRedirect('/newProject')
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             page = page.postForm(1, self.post, {'title': 'Bar Project',
                                                 'hostname': 'bar',
                                                 'version': '1.0',

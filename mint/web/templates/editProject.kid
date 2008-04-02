@@ -28,7 +28,7 @@
                             <th>${projectText().title()} Title</th>
                             <td>
                                 <input type="text" name="name" value="${kwargs['name']}" />
-                                <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}, such as "<strong>My Custom Linux</strong>."
+                                <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}, such as "<strong>Mail server appliance</strong>."
                                 </p>
                             </td>
                         </tr>

@@ -22,7 +22,6 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint import helperfuncs
-from mint import constants
 
 from repostest import testRecipe
 
@@ -338,10 +337,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Registration error not detected.')
         self.failIf('Password must be 6 characters or longer.' not in page.body,
                     'Registration error not detected.')
-        self.failIf('You must accept the Terms of Service' not in page.body,
-                    'Registration error not detected.')
-        self.failIf('You must accept the Privacy Policy' not in page.body,
-                    'Registration error not detected.')
+        if self.mintCfg.rBuilderOnline or self.mintCfg.tosLink:
+            self.failIf('You must accept the Terms of Service' not in page.body,
+                        'Registration error not detected.')
+        if self.mintCfg.rBuilderOnline or self.mintCfg.privacyPolicyLink:
+            self.failIf('You must accept the Privacy Policy' not in page.body,
+                        'Registration error not detected.')
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
@@ -393,7 +394,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             page = page.postForm(1, self.fetchWithRedirect,
                     {'title': 'Test Project', 'hostname': 'test'})
         else:
@@ -403,7 +404,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             self.failUnlessEqual(project.getApplianceValue(), 'unknown')
         else:
             self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -431,7 +432,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             page = page.postForm(1, self.fetchWithRedirect,
                     {'title': 'Test Project 2', 'hostname': 'test2',
                      'appliance': 'no'})
@@ -449,7 +450,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             page = page.postForm(1, self.fetchWithRedirect,
                    {'title': 'Test Project 3', 'hostname': 'test3',
                      'appliance': 'unknown'})
@@ -459,7 +460,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                      'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test3")
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             self.failUnlessEqual(project.getApplianceValue(), 'unknown')
         else:
             self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -960,7 +961,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.webLogin('foouser', 'foopass')
         
-        if constants.rBuilderOnline:
+        if self.mintCfg.rBuilderOnline:
             page = self.assertContent('/project/foo/', code = [200],
                                      content = "Group Builder",
                                      server = self.getProjectServerHostname())
@@ -1649,22 +1650,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent( \
             '/repos/testproject/troveInfo?t=foo:data',
             'Add to group-foo')
-
-    def testDocJail(self):
-        # ensure the legal pages implement a jail for documents. 404 on error
-        page = self.fetch("/legal?page=SOMETHING_NOT_THERE", ok_codes = [404])
-        page = self.fetch('/legal')
-        refPage = self.fetch('/legal?page=legal')
-
-        self.failIf(page.body != refPage.body,
-                    "Withholding page argument did not redirect to legal page")
-
-        # ensure help pages implement a jail for documents. redir to overview.
-        page = self.fetch('/help?page=../frontPage')
-        refPage = self.fetch('/help?page=overview')
-
-        self.failIf(page.body != refPage.body,
-                    "Illegal page reference was not contained.")
 
     def testBuild(self):
         raise testsuite.SkipTestException("MCP not stubbed in web code")

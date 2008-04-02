@@ -109,19 +109,19 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testEditUserSettings(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'newpassword',
                               'password2': 'newpasswordasdf'})
         self.failIf('Passwords do not match.' not in page.body,
                     'Nonmatching passwords accepted.')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'new',
                               'password2': 'new'})
         self.failIf('Password must be 6 characters or longer.' not in page.body,
                     'Nonmatching passwords accepted.')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.post,
                               {'displayEmail': 'display@newemail.com',
                               'fullName': 'Foo B. Bar',
@@ -133,7 +133,7 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless(res == [('display@newemail.com', 'Foo B. Bar', 
                                 'blah blah blah')],
                         "User setting did not update properly.")
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'newpassword',
                               'password2': 'newpassword'})
@@ -187,6 +187,8 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                            code=[301])
 
     def testGroupTroveSearch(self):
+        if not self.mintCfg.rBuilderOnline:
+            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
         hostname = 'foo'
@@ -201,6 +203,8 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                     "Package search failed to limit search to rpl:1 branch")
     
     def testPackageSearchFormat(self):
+        if not self.mintCfg.rBuilderOnline:
+            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
         hostname = 'foo'

@@ -20,7 +20,6 @@ from mint.mint_error import *
 from mint.server import ParameterError, PermissionDenied
 from mint import database
 from mint import urltypes
-from mint import constants
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -80,7 +79,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         sData = re.split("\.", socket.gethostname(), 1)
         self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
                               sData[0], sData[1], shortname='bar3')
-        if not constants.rBuilderOnline:
+        if not self.cfg.rBuilderOnline:
             self.failUnlessRaises(InvalidShortname, client.newProject, "Test", 
                               'barbar', MINT_PROJECT_DOMAIN, shortname="&bar")
             self.failUnlessRaises(InvalidVersion, client.newProject, "Test", 
@@ -199,7 +198,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testBadShortname(self, db, data):
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             raise testsuite.SkipTestException("test skipped because short names apply to rBA only")
 
         client = self.getClient("owner")
@@ -227,7 +226,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testProdTypeAppliance(self, db, data):
-        if not constants.rBuilderOnline:
+        if not self.cfg.rBuilderOnline:
             raise testsuite.SkipTestException("test skipped...needs group template creation mocked out to work")
 
         client = self.getClient("owner")
@@ -236,7 +235,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                   version="1.0")
         project = client.getProject(projectId)
         assert(project.getProdType() == "Appliance")
-        if not constants.rBuilderOnline:
+        if not self.cfg.rBuilderOnline:
             assert(project.getApplianceValue() == "yes")
         else:
             assert(project.getApplianceValue() == "unknown")
@@ -249,7 +248,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                       version="1.0")
         project = client.getProject(projectId)
         assert(project.getProdType() == "Component")
-        if not constants.rBuilderOnline:
+        if not self.cfg.rBuilderOnline:
             assert(project.getApplianceValue() == "no")
         else:
             assert(project.getApplianceValue() == "unknown")
@@ -1045,7 +1044,7 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
                     '%s.' % hostname + MINT_PROJECT_DOMAIN, {})
             self.assertEquals(trvLeaves.keys(), ['group-%s-appliance:source' % hostname])
             labels = trvLeaves['group-%s-appliance:source' % hostname]
-            if constants.rBuilderOnline:
+            if self.mintCfg.rBuilderOnline:
                 branch = '/%s.%s@%s'%(hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.defaultBranch)
             else:
                 branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')

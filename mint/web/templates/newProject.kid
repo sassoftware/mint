@@ -8,7 +8,7 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'commitEmail']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -23,34 +23,42 @@
 
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                     <tr>
-                        <th><em class="required">${projectText().title()} Name:</em></th>
-                        <td>
-                            <input type="text" autocomplete="off" name="hostname" value="${kwargs['hostname']}" maxlength="16"/>&nbsp;.${kwargs['domainname']}
-
-                            <p class="help">Please choose a name for your ${projectText().lower()}. This will be used as the hostname for your ${projectText().lower()} site and repository (http://&lt;${projectText().lower()}-name&gt;.${kwargs['domainname']}/). It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
-                        </td>
-                    </tr>
-
-                    <tr>
                         <th><em class="required">${projectText().title()} Title:</em></th>
                         <td>
                             <input type="text" autocomplete="off" name="title" value="${kwargs['title']}"/>
-                            <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}. For example, <strong>My Custom Linux</strong></p>
+                            <p class="help">The title should be a descriptive name for your ${projectText().lower()}. For example, <strong>My Custom Linux</strong></p>
                         </td>
                     </tr>
+
                     <tr>
-                        <th>Is This a Software Appliance?</th>
+                        <th><em class="required">${projectText().title()} Short Name:</em></th>
                         <td>
-                            <select style="width: auto;" name="appliance">
-                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] in ('unknown', '')) or None}" value="unknown">---</option>
-                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
-                                <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
-                            </select>
-                            <p class="help">Please select "yes" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                            <input type="text" autocomplete="off" name="shortname" value="${kwargs['shortname']}" maxlength="16"/>
+                            <p class="help">The short name should reflect your ${projectText().lower()}'s identity (for example <tt>custlinux</tt>).  It must start with a letter, contain only letters and numbers, and be less than or equal to 16 characters long. <a class="learnmore" href="http://${SITE}help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
                         </td>
                     </tr>
+
                     <tr>
-                        <th>${projectText().title()} Description</th>
+                        <th><em class="required">${projectText().title()} Version:</em></th>
+                        <td>
+                            <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
+                            <p class="help">Choose an initial major version number for your ${projectText().lower()}. Eg., 1</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <td>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                            <label for="prodtype">Appliance</label>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                            <label for="prodtype">Component</label>
+                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>${projectText().title()} Description:</th>
                         <td>
                             <textarea rows="6" cols="72" name="blurb" py:content="kwargs['blurb']"></textarea>
                             <p class="help">Please provide a description of your ${projectText().lower()} and your goals for it.</p>
@@ -71,7 +79,7 @@
                         </td>
                     </tr>
                 </table>
-                <p><button class="img" type="submit" id="newProject">
+                <p><button class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                 </button></p>
                 <input type="hidden" name="domainname" value="${kwargs['domainname']}" />

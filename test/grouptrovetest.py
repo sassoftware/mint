@@ -20,7 +20,6 @@ from repostest import testRecipe
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-from mint import constants
 from mint import jobstatus
 from mint import grouptrove
 from mint import server
@@ -400,7 +399,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
         addTestTrove(groupTrove, "testcase", trvVersion = trvVersion)
         addTestTrove(groupTrove, "testcase2", trvVersion = trvVersion)
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             assert (groupTrove.getLabelPath() == ['foo.' + \
                     MINT_PROJECT_DOMAIN + '@rpl:devel'])
         else:
@@ -672,7 +671,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
     def testLabelPath(self, db, data):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
         else:
             assert groupTrove.getLabelPath() == [

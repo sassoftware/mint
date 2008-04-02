@@ -6,7 +6,7 @@
 import sys
 
 from mint.buildtemplates import BooleanOption, IntegerOption
-from mint import constants
+from mint.config import isRBO
 
 # this must be redefined in each template module due to sys.modules[__name__]
 class Template(dict):
@@ -41,7 +41,7 @@ class searchResultsPerPage(IntegerOption):
 ###
 
 class UserPrefsAttTemplate(Template):
-    if constants.rBuilderOnline:
+    if isRBO():
         __slots__ = ['newsletter', 'insider']
     else:
         __slots__ = []
@@ -50,7 +50,7 @@ class UserPrefsNoAttTemplate(Template):
     __slots__ = ['searchResultsPerPage']
 
 class UserPrefsInvisibleTemplate(Template):
-    if constants.rBuilderOnline:
+    if isRBO():
         __slots__ = []
     else:
         __slots__ = ['newsletter', 'insider']

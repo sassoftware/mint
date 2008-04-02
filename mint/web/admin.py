@@ -562,7 +562,8 @@ class AdminHandler(WebHandler):
     def editOutbound(self, id, *args, **kwargs):
         projects = self.client.getProjectsList()
         allTargets = self.client.getUpdateServiceList()
-        if id != -1:
+        isNew = (id == -1)
+        if not isNew:
             obm = self.client.getOutboundMirror(id)
             obmg = self.client.getOutboundMirrorGroups(id)
             obmt = self.client.getOutboundMirrorTargets(id)
@@ -583,7 +584,7 @@ class AdminHandler(WebHandler):
                            'mirrorBy': 'label',
                            'selectedTargets': [],
                            'allTargets': allTargets})
-        return self._write('admin/editOutbound', id=id, projects = projects, kwargs = kwargs)
+        return self._write('admin/editOutbound', isNew=isNew, id=id, projects = projects, kwargs = kwargs)
 
 
     @intFields(projectId = None, id = -1)

@@ -15,7 +15,7 @@ Web Front End Changes
 * New products will have an initial development label created in the format
   <shortname>.<domainname>@<namespace>:<shortname>-<version>-devel. (RBL-2508)
 * A bug that prevented a group trove from being cooked more than one time
-  by Group Builder has been corrected. (RBL-2570)
+  by Group Builder has been corrected (rBuilder Online only). (RBL-2570)
 * The Group Builder has been removed from rBA, to be replaced by a different
   mechanism to get appliances built quickly. (RBL-2514)
 * The Conary repository permission management web user interface has
@@ -40,6 +40,12 @@ Internal Changes
   existing Sqlite repositories to PostgreSQL.  (RBL-2650)
 * External projects configured for inbound mirroring can now be backed
   up. (RBL-2038)
+* The same rBuilder codebase may be built for rBuilder Online as well as
+  rBuilder Appliance; for rBuilder Online, this means that the 'rBuilderOnline'
+  configuration parameter must be set to True. Additionally, links to legal
+  information is now managed outside the codebase; use "legaleseLink",
+  "privacyPolicyLink", and "tosLink" to point to legal information,
+  privacy policy and terms of service home pages, respectively.
 
 Command-Line Client Changes
 ---------------------------

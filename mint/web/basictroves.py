@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-from mint import constants
+from mint.config import isRBO
 
 baseConaryLabel = 'conary.rpath.com@rpl:1'
 
@@ -23,7 +23,7 @@ labelDict = {baseConaryLabel :
               ]
 
             }
-if constants.rBuilderOnline:
+if isRBO():
     labelDict.update({
         'raa.rpath.org@rpath:raa-2':
             [('group-raa', 'The rPath Appliance Agent')]
@@ -31,7 +31,7 @@ if constants.rBuilderOnline:
 
 messageDict = {baseConaryLabel: 'These groups come from rPath Linux on the %s label' % baseConaryLabel
               }
-if constants.rBuilderOnline:
+if isRBO():
     messageDict.update({
                'raa.rpath.org@rpath:raa-2': 'The following group comes from the raa.rpath.org@rpath:raa-2 label'
         })

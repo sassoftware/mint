@@ -32,9 +32,3 @@ displayNames = {
     AMAZONS3TORRENT : 'Download (BitTorrent)',
     GENERICMIRROR   : 'Download'
 }
-
-from mint import constants
-
-if constants.rBuilderOnline:
-    displayNames[LOCAL]    = 'Download (rpath.com)'
-    displayNames[AMAZONS3] = 'Download (rpath.com)'

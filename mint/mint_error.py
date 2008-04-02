@@ -4,14 +4,6 @@
 # All Rights Reserved
 #
 
-try:
-    from mint import constants
-    isRBO = constants.rBuilderOnline
-except ImportError:
-    # Constants may not be available if this class is copied elsewhere;
-    # e.g. to the cmdline client
-    isRBO = False
-
 class MintError(Exception):
     msg = "An unknown error occured in mint"
     def __init__(self, msg=None, *args):
@@ -31,7 +23,8 @@ class MintError(Exception):
             # rBO or rBA, respectively. Reproduced here instead of using
             # helperfuncs to minimize the number of things that need
             # duplicating to create a mint client.
-            project = isRBO and "project" or "product"
+            from mint.config import isRBO
+            project = isRBO() and "project" or "product"
             transform = dict(   project=project,
                                 Project=project.title(),
                                 PROJECT=project.upper())
@@ -69,6 +62,8 @@ class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
+class ConfigurationMissing(MintError):
+    "The rBuilder configuration is missing."
 class ConfirmError(MintError):
     "Your registration could not be confirmed"
 class DeleteLocalUrlError(MintError):

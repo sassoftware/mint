@@ -454,12 +454,6 @@ Much like Powdermilk Biscuits[tm]."""
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86)] == [x.freeze() for x in x86Path])
         assert([x.freeze() for x in flavors.getStockFlavorPath(x86_64)] == [x.freeze() for x in x86_64Path])
 
-    def testProductUserTemplates(self):
-        sys.path.insert(0, "../product/")
-        import usertemplates
-        self.failUnlessEqual(usertemplates.templateName, 'UserPrefsInvisibleTemplate')
-        sys.path.pop(0)
-
     def testCopyTree(self):
         # test copying tree with different syntaxes
         d = tempfile.mkdtemp()

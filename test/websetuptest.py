@@ -15,7 +15,6 @@ import os
 import time
 
 from mint import config
-from mint import constants
 
 from mint import shimclient
 from mint.web import setup, hooks
@@ -133,18 +132,6 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertRaises(HttpNotFound, self.sh.handle, context)
 
     @testsuite.context("more_cowbell")
-    @fixtures.fixture("Full")
-    def testSetupConfig(self, db, data):
-        """ Test configuration generation """
-        self.sh.req = FakeRequest('foo.test.local', 'GET', '/config')
-        client = self.getClient('admin')
-        auth = client.checkAuth()
-        context = {'auth': auth, 'cmd': 'config', 'client': client}
-        func = self.sh.handle(context)
-        ret = func(auth)
-        self.failUnless('configured' in ret)
-
-    @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")
     def testProcessSetupAndRestart(self, db, data):
         """ Test process setup"""
@@ -189,7 +176,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.hostName, 'foo')
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
-        if constants.rBuilderOnline:
+        if self.cfg.rBuilderOnline:
             self.assertEqual(newCfg.defaultBranch, 'foo:bar')
             self.assertEqual(newCfg.namespace, self.cfg.namespace)
         else:

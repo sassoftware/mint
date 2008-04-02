@@ -57,7 +57,8 @@ onload = "javascript:;"
                 </div>
                 <div id="prodLogo">
                     <a href="http://${SITE}">
-                        <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                        <img py:if="cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo-rbo.gif" alt="rBuilder Online Logo" />
+                        <img py:if="not cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Logo" />
                     </a>
                 </div>
                 <div id="topRight">
@@ -67,7 +68,7 @@ onload = "javascript:;"
                           Maintenance Mode&nbsp;
                           </b>
                         </a>
-                        <a href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                        <a py:if="cfg.rBuilderOnline" href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
@@ -114,10 +115,10 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
+                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li><a href="${cfg.basePath}legal/">Legal</a></li>
-                        <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
+                        <li py:if="cfg.legaleseLink"><a href="${cfg.legaleseLink}">Legal</a></li>
+                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
                         <li><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} User Guide</a></li>
                         <li py:if="auth.admin"><a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} Administration Guide</a></li>
                     </ul>

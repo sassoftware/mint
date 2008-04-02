@@ -167,9 +167,9 @@ class SiteHandler(WebHandler):
             errors.append("Passwords do not match.")
         if len(password) < 6:
             errors.append("Password must be 6 characters or longer.")
-        if not tos:
+        if self.cfg.rBuilderOnline or self.cfg.tosLink and not tos:
             errors.append("You must accept the Terms of Service to create an account")
-        if not privacy:
+        if self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink and not privacy:
             errors.append("You must accept the Privacy Policy to create an account")
         if not errors:
             try:
@@ -203,12 +203,6 @@ class SiteHandler(WebHandler):
     @redirectHttps
     def confirmEmail(self, auth, **kwargs):
         return self._write("confirmEmail", email=auth.email)
-
-    @strFields(page = 'legal')
-    def legal(self, auth, page):
-        if not helpDocument(page):
-            raise HttpNotFound
-        return self._write("docs/" + page)
 
     @strFields(message = "")
     @redirectHttps

@@ -7,6 +7,7 @@
 from conary import versions
 from conary.deps import deps
 from mint import constants
+from mint.config import isRBO
 
 import htmlentitydefs
 import re
@@ -228,10 +229,7 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
 def getProjectText():
     """Returns project if rBO and product if rBA"""
-    text = "project"
-    if constants.rBuilderOnline == False:
-        text = "product"
-    return text 
+    return isRBO() and "project" or "product"
 
 def genPassword(length):
     """
@@ -242,4 +240,3 @@ def genPassword(length):
     choices = string.letters + string.digits
     pw = "".join([random.choice(choices) for x in range(length)])
     return pw
-
