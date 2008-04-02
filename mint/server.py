@@ -52,7 +52,6 @@ from mint import spotlight
 from mint import selections
 from mint import urltypes
 from mint import useit
-from mint import rapapasswords
 from mint import constants
 from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
@@ -277,7 +276,6 @@ def getTables(db, cfg):
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['rapapasswords'] = rapapasswords.rAPAPasswords(db)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -2616,18 +2614,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def deleteCommunityId(self, projectId, communityType):
         return self.communityIds.deleteCommunityId(projectId, communityType)
-
-    @typeCheck(str, str)
-    @private
-    @requiresAdmin
-    def getrAPAPassword(self, host, role):
-        return self.rapapasswords.getrAPAPassword(host, role)
-
-    @typeCheck(str, str, str, str)
-    @private
-    @requiresAdmin
-    def setrAPAPassword(self, host, user, password, role):
-        return self.rapapasswords.setrAPAPassword(host, user, password, role)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)

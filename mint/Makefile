@@ -44,7 +44,6 @@ python_files =			\
 	projects.py		\
 	proxiedtransport.py	\
 	pubreleases.py		\
-	rapapasswords.py	\
 	rbuilderaction.py	\
 	requests.py		\
 	schema.py		\
