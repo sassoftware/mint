@@ -4,29 +4,35 @@ Changes in @NEW@
 Web Front End Changes
 ---------------------
 
-* A bug that prevented a group trove from being cooked more than one time
-  by Group Builder has been corrected. (RBL-2570)
+* A bug that prevented a group trove from being cooked more than one
+  time by Group Builder has been corrected. (RBL-2570)
 * External projects configured for inbound mirroring can now be backed
   up. (RBL-2038)
+
+Build System Changes
+--------------------
+
+* Citrix XenServer (TM) is now an available image type. (RBL-2642)
 
 Command-Line Client Changes
 ---------------------------
 
-* The command-line client's build-create command now accepts the --name option
-  to set the name of the new build, and --build-notes and --build-notes-file
-  to set the build notes from the command-line and from a file, respectively.
-  (RBL-2486)
+* The command-line client's build-create command now accepts the
+  --name option to set the name of the new build, and --build-notes
+  and --build-notes-file to set the build notes from the command-line
+  and from a file, respectively. (RBL-2486)
 
 Bug Fixes
 ---------
 
-* A bug that prevents image builds from succeeding if a project is hidden
-  has been fixed. (RBL-2619)
+* A bug that prevents image builds from succeeding if a project is
+  hidden has been fixed. (RBL-2619)
 * Commit mail, recent commits, and other data on installations migrated
   from rBuilder 3.x will now update correctly. (RBL-2648)
 * An error that occured when creating builds with custom
   anaconda-templates and with the XMLRPC log file enabled has been
   corrected. (RBL-2764)
+
 
 Changes in 4.0.1
 ================
