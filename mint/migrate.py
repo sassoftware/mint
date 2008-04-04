@@ -36,7 +36,7 @@ def add_columns(cu, table, *columns):
 
     for column in columns:
         try:
-            cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, d))
+            cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
         except sqlerrors.DuplicateColumnName:
             pass
 
