@@ -4,6 +4,8 @@ Changes in @NEW@
 Web Front End Changes
 ---------------------
 
+* External projects configured for inbound mirroring can now be backed
+  up. (RBL-2038)
 * "Projects" are now referred to as "products" in rBuilder Appliance.
   (RBL-1641)
 * "Builds" are now referred to as "images". (RBL-2645)
@@ -32,14 +34,17 @@ Web Front End Changes
   anaconda-custom or media-template when editing an existing build.
   (RBL-2172)
 
+Build System Changes
+--------------------
+
+* Citrix XenServer (TM) is now an available image type. (RBL-2642)
+
 Internal Changes
 ----------------
 * rBuilder now requires Conary 2.0. (RBL-2580)
 * New rBuilder installations are created using PostgreSQL as the repository
   database.  Existing installations are given a new plugin that will migrate
   existing Sqlite repositories to PostgreSQL.  (RBL-2650)
-* External projects configured for inbound mirroring can now be backed
-  up. (RBL-2038)
 * The same rBuilder codebase may be built for rBuilder Online as well as
   rBuilder Appliance; for rBuilder Online, this means that the 'rBuilderOnline'
   configuration parameter must be set to True. Additionally, links to legal
@@ -50,10 +55,10 @@ Internal Changes
 Command-Line Client Changes
 ---------------------------
 
-* The command-line client's build-create command now accepts the --name option
-  to set the name of the new build, and --build-notes and --build-notes-file
-  to set the build notes from the command-line and from a file, respectively.
-  (RBL-2486)
+* The command-line client's build-create command now accepts the
+  --name option to set the name of the new build, and --build-notes
+  and --build-notes-file to set the build notes from the command-line
+  and from a file, respectively. (RBL-2486)
 
 Bug Fixes
 ---------
@@ -68,6 +73,7 @@ Bug Fixes
 * An error that occured when creating builds with custom
   anaconda-templates and with the XMLRPC log file enabled has been
   corrected. (RBL-2764)
+
 
 Changes in 4.0.1
 ================

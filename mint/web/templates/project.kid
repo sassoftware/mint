@@ -23,6 +23,7 @@
         buildtypes.VMWARE_IMAGE: ("get-vmware-player.png", "http://www.vmware.com/download/player/", "Download VMware Player"),
         buildtypes.RAW_HD_IMAGE: ("get-parallels.png", "http://www.parallels.com/", "Try Parallels Workstation 2.2"),
         buildtypes.VIRTUAL_IRON: ("get-virtual-iron.png", "http://www.virtualiron.com/free", "Virtual Iron: Download Now"),
+        buildtypes.XEN_OVA: ("get-xen-express.gif", "http://www.citrix.com/xenserver/getexpress", "Citrix XenServer Express Edition: Download Now"),
     }
 
 ?>
