@@ -33,7 +33,7 @@ def rpcHandler(req, cfg, pathInfo = None):
 
     if req.headers_in['Content-Type'] == 'text/xml':
         isXMLrpc = True
-    elif req.headers_in['Content-Type'] == 'application/x-json':
+    elif req.headers_in['Content-Type'].startswith('application/x-json'):
         isJSONrpc = True
     else:
         return apache.HTTP_BAD_REQUEST
