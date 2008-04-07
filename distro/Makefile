@@ -6,7 +6,7 @@
 
 extra_dist = schema.in.py
 
-generated_files = schema jobslave_set custom.cfg rbuilder.conf
+generated_files = schema custom.cfg rbuilder.conf
 
 .PHONY: all install $(generated_files)
 
@@ -40,8 +40,6 @@ install: default-install
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
-	# freeze jobslave set
-	if [ -f jobslave_set ]; then install -D -m0644 jobslave_set $(DESTDIR)/srv/rbuilder/mcp/config.d/05_jobslave_set; fi
 
 clean: default-clean
 
@@ -53,16 +51,6 @@ custom.cfg: custom.cfg.in
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e s,@VERSION@,$(VERSION), rbuilder.conf.in >rbuilder.conf
-
-jobslave_set:
-	if [ -n "$$JOBSLAVE_SET_LABEL" ]; then \
-		echo -n 'slaveSetVersion ' >jobslave_set ; \
-		conary rq --all-flavors --full-versions \
-			group-jobslave-set=$$JOBSLAVE_SET_LABEL \
-			|tail -n 1 \
-			|perl -pe 's{^.*/(.*?)-.*$$}{$$1}' \
-			>>jobslave_set ; \
-	fi
 
 
 include ../Make.rules
