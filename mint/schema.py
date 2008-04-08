@@ -796,7 +796,29 @@ def _createSessions(db):
 
     if commit:
         db.commit()
-        db.loadSchema
+        db.loadSchema()
+
+def _createProductVersions(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'ProductVersions' not in db.tables:
+        cu.execute("""
+            CREATE TABLE ProductVersions (
+                productVersionId    %(PRIMARYKEY)s,
+                projectId           INT NOT NULL,
+                name                VARCHAR(16),
+                description         TEXT,
+            CONSTRAINT FOREIGN KEY (projectId)
+                REFERENCES Projects(projectId) ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['Versions'] = []
+        commit = True
+
+    if commit:
+        db.commit()
+        db.loadSchema()
+
 
 # create the (permanent) server repository schema
 def createSchema(db):
@@ -817,6 +839,7 @@ def createSchema(db):
     _createFrontPageStats(db)
     _createEC2Data(db)
     _createSessions(db)
+    _createProductVersions(db)
 
 #############################################################################
 # The following code was adapted from Conary's Database Migration schema

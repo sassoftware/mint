@@ -356,6 +356,7 @@ class MintClient:
         @param buildXml: xml data describing the builds
         @returns: a list of objects representing the new builds
         """
+        # TODO refactor to work with product definitions
         buildIds = self.server.newBuildsFromXml(projectId, label, buildXml)
         return [self.getBuild(x) for x in buildIds]
 
@@ -366,6 +367,7 @@ class MintClient:
         @param label: the label to store the trove on.
         @param buildXml: xml data describing the builds
         """
+        # TODO refactor to work with product definitions
         return self.server.commitBuildXml(projectId, label, buildXml)
 
     def checkoutBuildXml(self, projectId, label):
@@ -375,6 +377,7 @@ class MintClient:
         @param label: the label to store the trove on.
         @returns: a string containing xml
         """
+        # TODO refactor to work with product definitions
         return self.server.checkoutBuildXml(projectId, label)
 
 

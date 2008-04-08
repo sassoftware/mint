@@ -148,7 +148,42 @@ discSizes = {
     'CD: 700 MB'  : '734003200',
     'DVD: 4.7 GB' : '4700000000',
     'DVD: 8.5 GB' : '8500000000',
-    }
+}
+
+buildDefinitionFlavorTypes = {
+    'BD_GENERIC_X86'    : 0,
+    'BD_GENERIC_X86_64' : 1,
+    'BD_DOM0_X86'       : 2,
+    'BD_DOM0_X86_64'    : 3,
+    'BD_DOMU_X86'       : 4,
+    'BD_DOMU_X86_64'    : 5,
+    'BD_VMWARE_X86'     : 6,
+    'BD_VMWARE_X86_64'  : 7,
+}
+
+sys.modules[__name__].__dict__.update(buildDefinitionFlavorTypes)
+
+buildDefinitionFlavorMap = {
+    BD_GENERIC_X86      : '!dom0, !domU, !xen, !vmware is: x86',
+    BD_GENERIC_X86_64   : '!dom0, !domU, !xen, !vmware is: x86_64',
+    BD_DOM0_X86         : 'dom0, !domU, xen, !vmware is: x86',
+    BD_DOM0_X86_64      : 'dom0, !domU, xen, !vmware is: x86_64',
+    BD_DOMU_X86         : '!dom0, domU, xen, !vmware is: x86',
+    BD_DOMU_X86_64      : '!dom0, domU, xen, !vmware is: x86_64',
+    BD_VMWARE_X86       : '!dom0, !domU, xen, vmware is: x86',
+    BD_VMWARE_X86_64    : '!dom0, !domU, xen, vmware is: x86_64',
+}
+
+buildDefinitionFlavorNameMap = {
+    BD_GENERIC_X86      : 'Generic x86 (32-bit)',
+    BD_GENERIC_X86_64   : 'Generic x86 (64-bit)',
+    BD_DOM0_X86         : 'dom0 x86 (32-bit)',
+    BD_DOM0_X86_64      : 'dom0 x86 (64-bit)',
+    BD_DOMU_X86         : 'domU x86 (32-bit)',
+    BD_DOMU_X86_64      : 'domU x86 (64-bit)',
+    BD_VMWARE_X86       : 'VMware x86 (32-bit)',
+    BD_VMWARE_X86_64    : 'VMware x86 (64-bit)',
+}
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
