@@ -266,6 +266,10 @@ class ApplianceISOTemplate(Template):
                  'anacondaTemplatesTrove']
     id = buildtypes.APPLIANCE_ISO
 
+class ImagelessTemplate(Template):
+    __slots__ = []
+    id = buildtypes.IMAGELESS
+
 ########################
 
 dataHeadings = {}

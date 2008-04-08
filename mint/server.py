@@ -2768,7 +2768,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # removed
         buildTypes.remove(buildtypes.BOOTABLE_IMAGE)
 
-        return sorted(buildTypes)
+        sortedList = sorted(buildTypes) 
+
+        # make image-less the first one for UI display
+        if (sortedList.index(buildtypes.IMAGELESS)):
+            sortedList.remove(buildtypes.IMAGELESS)
+            sortedList.reverse()
+            sortedList.append(buildtypes.IMAGELESS)
+            sortedList.reverse()
+
+        return sortedList
 
     @typeCheck(int)
     @requiresAuth
@@ -2778,12 +2787,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        mc = self._getMcpClient()
-        data = self.serializeBuild(buildId)
-        try:
-            return mc.submitJob(data)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+
+        # image-less builds (i.e. group trove builds) don't actually get built,
+        # they just get stuffed into the DB
+        buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType']
+        if buildType != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+            data = self.serializeBuild(buildId)
+            try:
+                return mc.submitJob(data)
+            except mcp_error.NotEntitledError:
+                raise NotEntitledError()
 
     @typeCheck(int, str)
     @private
@@ -3399,18 +3414,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
-        mc = self._getMcpClient()
-
         buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType'] 
         count = buildDict['buildCount']
 
         uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, buildId, count)
-        try:
-            status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
-            status, message = \
-                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+
+        if buildType != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+            try:
+                status, message = mc.jobStatus(uuid)
+            except mcp_error.UnknownJob:
+                status, message = \
+                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        else:
+            # status is always finished since no build is actually done
+            status, message = jobstatus.FINISHED, \
+                jobstatus.statusNames[jobstatus.FINISHED]
 
         return { 'status' : status, 'message' : message }
 
@@ -3421,16 +3442,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        mc = self._getMcpClient()
+        buildId = helperfuncs.getBuildIdFromUuid(uuid)
+        buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType']
 
-        try:
-            status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
-            status, message = \
-                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        if buildtype != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+
+            try:
+                status, message = mc.jobStatus(uuid)
+            except mcp_error.UnknownJob:
+                status, message = \
+                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        else:
+            # status is always finished since no build is actually done
+            status, message = jobstatus.FINISHED, \
+                jobstatus.statusNames[jobstatus.FINISHED]
 
         return { 'status' : status, 'message' : message }
-
 
     # session management
     @private

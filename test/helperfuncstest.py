@@ -499,6 +499,13 @@ Much like Powdermilk Biscuits[tm]."""
         p1 = genPassword(32)
         self.assertTrue(len(p1) == 32)
 
+    def testGetBuildIdFromUuid(self):
+        buildId = 8
+        count = 1
+        uuid = '%s.%s-build-%d-%d' %('foo', 'bar.com', buildId, count)
+        newBuildId = getBuildIdFromUuid(uuid)
+        self.assertTrue(newBuildId == buildId)
+
 
 if __name__ == "__main__":
     testsuite.main()

@@ -144,7 +144,8 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testGetUnpublishedBuildsByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getUnpublishedBuilds(), [ data['anotherBuildId'] ])
+        self.failUnlessEqual(project.getUnpublishedBuilds(), 
+            [ data['anotherBuildId'], data['imagelessBuildId'] ])
 
     @fixtures.fixture("Full")
     def testDeletePublishedRelease(self, db, data):

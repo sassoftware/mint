@@ -215,7 +215,8 @@ from mint import constants
                     </tr>
                     <tr>
                         <th>Architecture</th>
-                        <td>${build.getArch()}</td>
+                        <td py:if="build.getBuildType() != buildtypes.IMAGELESS" >${build.getArch()}</td>
+                        <td py:if="build.getBuildType() == buildtypes.IMAGELESS" >N/A</td>
                     </tr>
                     <tr>
                         <th>Type</th>

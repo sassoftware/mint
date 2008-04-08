@@ -240,3 +240,18 @@ def genPassword(length):
     choices = string.letters + string.digits
     pw = "".join([random.choice(choices) for x in range(length)])
     return pw
+
+def getBuildIdFromUuid(uuid):
+        """
+        Get the build id from the specified uuid
+        """
+        buildId = None
+        if uuid:
+            chunks = uuid.split("-build-")
+            if chunks and chunks[1]:
+                parts = chunks[1].split('-')
+                if parts:
+                    buildId = parts[0]
+
+        return string.atoi(buildId)
+

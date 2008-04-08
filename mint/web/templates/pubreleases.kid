@@ -24,6 +24,8 @@ from mint import buildtypes
                 <?python
                     uniqueBuildTypeNames = []
                     for buildType, arch, extraFlags in release.getUniqueBuildTypes():
+                        if buildType == buildtypes.IMAGELESS:
+                            arch = ''
                         x = "%s %s" % (arch, buildtypes.typeNamesMarketing[buildType])
                         if extraFlags:
                             x += " (%s)" % (", ".join(extraFlags))

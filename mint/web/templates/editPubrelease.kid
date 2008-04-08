@@ -73,7 +73,8 @@ from mint.web.templatesupport import projectText
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
                         <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;"><a style="text-decoration: none; font-weight: bold; margin-left: 20px;" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                        <div class="smallSpecs" id="${build.getId()}_short">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                        <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                        <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
                         </a></label> 
                         <input type="checkbox" checked="True" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
@@ -100,7 +101,8 @@ from mint.web.templatesupport import projectText
 			    <div style="height: 1%">
                             </div>
                             <label class="troveSpecs">Architecture</label>
-                            <div class="troveData">${build.getArch()}</div>
+                            <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
+                            <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
 			    </div>

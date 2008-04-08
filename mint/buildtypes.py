@@ -24,6 +24,7 @@ validBuildTypes = {
     'AMI'               : 14,
     'UPDATE_ISO'        : 15,
     'APPLIANCE_ISO'     : 16,
+    'IMAGELESS'         : 17,
 }
 
 TYPES = validBuildTypes.values()
@@ -85,6 +86,7 @@ typeNames = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Image-less"
 }
 
 typeNamesShort = {
@@ -104,6 +106,7 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    IMAGELESS:          "Image-less",
 }
 
 typeNamesMarketing = {
@@ -123,6 +126,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Image-less",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
@@ -133,6 +137,9 @@ buildTypeExtra = {
     APPLIANCE_ISO:      "This image type will not work without using "
                         "a version of anaconda-templates based on "
                         "rPath Linux 2.",
+    IMAGELESS:          "This image type can be used to create a group "
+                        "trove image suitable for adding a group to a "
+                        "release."
 }
 
 # sizes are listed in bytes...

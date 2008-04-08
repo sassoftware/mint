@@ -33,6 +33,8 @@ Web Front End Changes
 * It is now possible to choose a different anaconda-template,
   anaconda-custom or media-template when editing an existing build.
   (RBL-2172)
+* Groups can be added to releases now by creating an image-less build and then
+  adding it to a release (RBL-2665)
 
 Build System Changes
 --------------------

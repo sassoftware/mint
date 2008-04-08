@@ -55,9 +55,9 @@ class BuildTest(fixtures.FixturedUnitTest):
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
-                'fileUrls': [(4, 0, 'file1')], 'idx': 0, 'fileId': 4},
+                'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
-                 'fileUrls': [(5, 0, 'file2')], 'idx': 1, 'fileId': 5}]
+                 'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6}]
         )
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
@@ -126,6 +126,23 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, build.setDataValue, 'enumArg', '5')
+    
+    @fixtures.fixture("Full")
+    def testImagelessBuild(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['imagelessBuildId'])
+        dataTemplate = build.getDataTemplate()
+        assert(dataTemplate == {})
+        assert(build.getName() == "Test Imageless Build")
+        assert(build.getTrove() ==\
+            ('group-dist',
+             "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2",
+             '1#x86'))
+        assert(build.getTroveName() == 'group-dist')
+        assert(build.getTroveVersion().asString() == \
+               "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-2")
+        assert(build.getTroveFlavor().freeze() == '1#x86')
+        assert(build.getArch() == "x86")
     
     @fixtures.fixture("Full")
     def testBuildDataIntegerValidation(self, db, data):
@@ -644,7 +661,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.refresh()
         self.failUnlessEqual(build.getFiles(),
             [{'sha1': 'abcd', 'idx': 0, 'title': 'bar', 
-              'fileUrls': [(4, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 4, 'size': 10}]
+              'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 5, 'size': 10}]
         )
 
         # make sure the outputTokengets removed from the build data
@@ -746,8 +763,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(fileUrls), 3)
         self.failUnlessEqual(fileUrls,
                 [(2, urltypes.LOCAL, 'file'),
-                 (4, urltypes.AMAZONS3, 'http://a.test.url/'),
-                 (5, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
+                 (5, urltypes.AMAZONS3, 'http://a.test.url/'),
+                 (6, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
 
 
     @fixtures.fixture('Full')

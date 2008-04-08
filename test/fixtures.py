@@ -273,6 +273,13 @@ class FixtureCache(object):
         anotherBuild.setFiles([["file", "file title 1"]])
         stockBuildFlavor(db, anotherBuild.id, "x86")
 
+        # create an imageless group trove build
+        imagelessBuild = client.newBuild(projectId, "Test Imageless Build")
+        imagelessBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        imagelessBuild.setBuildType(buildtypes.IMAGELESS)
+        imagelessBuild.setFiles([["file", "file title 1"]])
+
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -288,6 +295,7 @@ class FixtureCache(object):
                       'pubReleaseId':   pubRelease.id,
                       'pubReleaseFinalId':   pubReleaseFinal.id,
                       'anotherBuildId': anotherBuild.id,
+                      'imagelessBuildId': imagelessBuild.id,
                       'groupTroveId':   groupTrove.id }
 
     def fixtureCookJob(self, cfg):
