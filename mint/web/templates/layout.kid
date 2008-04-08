@@ -20,14 +20,16 @@ onload = "javascript:;"
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-1.2.3.min.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript">
             <![CDATA[
+                jQuery.noConflict();
                 var BaseUrl = '${cfg.basePath}';
                 var x86_64 = ${int(cfg.bootableX8664)};
                 var staticPath = "${cfg.staticPath}";
             ]]>
         </script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js?v=${cacheFakeoutVersion}" />
