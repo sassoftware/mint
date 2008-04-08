@@ -809,7 +809,7 @@ def _createProductVersions(db):
                 projectId           INT NOT NULL,
                 name                VARCHAR(16),
                 description         TEXT,
-            CONSTRAINT FOREIGN KEY (projectId)
+            CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
                 REFERENCES Projects(projectId) ON DELETE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Versions'] = []
