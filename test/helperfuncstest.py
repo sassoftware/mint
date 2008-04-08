@@ -277,7 +277,7 @@ Much like Powdermilk Biscuits[tm]."""
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
         for library in \
-                [x for x in os.listdir(scriptPath) if x.endswith('.js') and x not in whiteList]:
+                [x for x in os.listdir(scriptPath) if x.endswith('.js') and x not in whiteList and not x.startswith('jquery')]:
             libraryPath = os.path.join(scriptPath, library)
             f = open(libraryPath)
             docu = f.read()
