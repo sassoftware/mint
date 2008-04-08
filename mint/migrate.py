@@ -243,6 +243,7 @@ class MigrateTo_45(SchemaMigration):
     #     fill in UpdateServices table
     # - Remap current outbound mirrors to new update services
     # - Drop no longer needed rAPAPasswords, OutboundMirrorTargets tables
+    # - Add versions table
     def migrate(self):
         from urlparse import urlparse
         cu = self.db.cursor()
@@ -332,6 +333,10 @@ class MigrateTo_45(SchemaMigration):
         # Kill old vestigial tables
         cu.execute("""DROP TABLE rAPAPasswords""")
         cu.execute("""DROP TABLE OutboundMirrorTargets""")
+
+        # Create versions table if needed
+        schema._createProductVersions(self.db)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -794,3 +794,55 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
+
+class ProductVersions(database.TableObject):
+
+    __slots__ = ( 'productVersionId',
+                  'projectId',
+                  'name',
+                  'description',
+                )
+
+    def getItem(self, id):
+        return self.server.getProductVersion(id)
+
+    def _getProductDefinitionTroveForVersion(self):
+        project = Project(self.server, self.id)
+        # XXX fill in with real trove name
+        return ('sekrittrove:source',
+                '%s.%s@%s:proddef-%s' % \
+                (project.shortname,
+                 project.domainname,
+                 self.cfg.namespace,
+                 self.name), None)
+
+    def getProductDefinitionForVersion(self):
+        # TODO implement me
+        pass
+
+
+    def setProductDefinitionForVersion(self):
+        # TODO implement me
+        pass
+
+
+class ProductVersionsTable(database.KeyedTable):
+    name = 'ProjectVersions'
+    key = 'projectVersionsId'
+    fields = [ 'productVersionId',
+               'projectId',
+               'name',
+               'description',
+             ]
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
+
+    def getVersionListForProject(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT %s FROM ProjectVersions
+                      WHERE projectId = ?""" % ', '.join(self.fields),
+                      projectId)
+        return [ list(x) for x in cu.fetchall() ]
+

@@ -2060,6 +2060,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def newBuildsFromXml(self, projectId, label, buildXml):
+        # TODO refactor to work with product definitions
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
         cc = self._getProjectRepo(project)
@@ -2133,6 +2134,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def commitAndBuild(self, projectId, labelStr, buildJson):
+        # TODO refactor to work with product definitions
         xml = buildxml.xmlFromData(simplejson.loads(buildJson))
         self.commitBuildXml(projectId, labelStr, xml)
         return self.newBuildsFromXml(projectId, labelStr, xml)
@@ -2140,10 +2142,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def commitBuildJson(self, projectId, labelStr, buildJson):
+        # TODO refactor to work with product definitions
         xml = buildxml.xmlFromData(simplejson.loads(buildJson))
         return self.commitBuildXml(projectId, labelStr, xml)
 
     def _setupCheckin(self, project, buildLabel):
+        # TODO refactor to work with product definitions
         cfg = project.getConaryConfig()
         cfg.configLine("buildLabel %s" % buildLabel)
         cfg.configLine('name %s' % self.auth.username)
@@ -2156,6 +2160,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def commitBuildXml(self, projectId, labelStr, buildXml):
+        # TODO refactor to work with product definitions
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
         label = versions.Label(labelStr)
@@ -2212,6 +2217,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @requiresAuth
     def checkoutBuildXml(self, projectId, labelStr):
+        # TODO refactor to work with product definitions
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
         label = versions.Label(labelStr)

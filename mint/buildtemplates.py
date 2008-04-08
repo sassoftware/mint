@@ -289,6 +289,15 @@ def getDisplayTemplates():
     return [(x, dataHeadings[x], dataTemplates[x]) \
             for x in dataTemplates.keys()]
 
+def getValueToTemplateIdMap():
+    templateIdMap = dict()
+    for id, dataHeading, dataTemplate in getDisplayTemplates():
+        for optionName, option in dataTemplate.items():
+            if optionName not in templateIdMap.keys():
+                templateIdMap[optionName] = ([], option)
+            templateIdMap[optionName][0].append(id)
+    return templateIdMap
+
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
 def codegen():
