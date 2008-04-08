@@ -2709,7 +2709,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
-        if published and (buildData['buildType'] != buildtypes.AMI and not self.getBuildFilenames(buildId)):
+        if published and (buildData['buildType'] != buildtypes.AMI and buildData['buildType'] != buildtypes.IMAGELESS and not self.getBuildFilenames(buildId)):
             raise BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
