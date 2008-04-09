@@ -148,7 +148,7 @@ class SqliteToPgsql(rAASrvPlugin):
         db.close()
         return repnamemap, dbNames
 
-    def _createNewProjectTable(self, mc):
+    def _createNewProjectTable(self, mc, pgDbName):
             db = dbstore.connect(mc.dbPath, mc.dbDriver)
             #create the new database
             pt = projects.ProjectsTable(db, mc)
@@ -177,7 +177,7 @@ class SqliteToPgsql(rAASrvPlugin):
             actualDbName = repnamemap.get(dbName, dbName)
             pgDbName = actualDbName.translate(projects.transTables['postgresql'])
 
-            self._createNewProjectTable(mc)
+            self._createNewProjectTable(mc, pgDbName)
             #NOTE: We do not create the schema here, the conversion script handles that
 
             self.reportMessage(execId, 'Converting %s repository' % dbName)
