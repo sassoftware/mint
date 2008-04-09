@@ -8,7 +8,6 @@ from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import downloadTracker, projectText
-from mint.builds import getExtraFlags
 from mint import urltypes
 from mint import constants
 ?>

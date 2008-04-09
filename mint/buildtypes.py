@@ -141,6 +141,34 @@ buildTypeExtra = {
                         "version of a group to a release."
 }
 
+buildTypeIcons = {
+    VMWARE_IMAGE: dict(
+        icon="get-vmware-player.png",
+        href="http://www.vmware.com/download/player/",
+        text="Download VMware Player"),
+    RAW_HD_IMAGE: dict(
+        icon="get-parallels.png",
+        href="http://www.parallels.com/",
+        text="Try Parallels Workstation 2.2"),
+    VIRTUAL_IRON: dict(
+        icon="get-virtual-iron.png",
+        href="http://www.virtualiron.com/free",
+        text="Virtual Iron: Download Now"),
+    XEN_OVA: dict(
+        icon="get-xen-express.gif",
+        href="http://www.citrix.com/xenserver/getexpress",
+        text="Citrix XenServer Express Edition: Download Now",
+        ),
+}
+
+typeFlavorOverride = {
+    (RAW_HD_IMAGE, XEN_DOMU):   dict(
+        marketingName="Raw Hard Disk Image",
+        icon=False,
+        ),
+}
+
+
 # sizes are listed in bytes...
 discSizes = {
     'CD: 650 MB'  : '681574400',
