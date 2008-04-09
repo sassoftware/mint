@@ -19,6 +19,9 @@ class ConstantsTest(testhelp.TestCase):
         except ImportError:
             raise testhelp.SkipTestException, 'Jobslave not found, cannot verify constants'
 
+        # These types are in the jobslave but not in this mint code line
+        del buildtypes.validBuildTypes['IMAGELESS']        
+
         if buildtypes.validBuildTypes != refbuildtypes.validBuildTypes:
             types = set(buildtypes.validBuildTypes.iteritems())
             reftypes = set(refbuildtypes.validBuildTypes.iteritems())
