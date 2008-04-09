@@ -1,29 +1,33 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
 import os
 import sys
 
-from mint import client
+from mint import constants
 from mint import buildtypes
 from mint import urltypes
+
 from conary import conarycfg
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
+from mint.mint_error import ConfigurationMissing
 
-RBUILDER_CONFIG = "/srv/rbuilder/config/rbuilder.conf"
+RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
 
-# these are keys that are generated for the "generated" configuration file
+# These are keys that are generated for the "generated" configuration file
+# Note: this is *only* used for the product, as rBO doesn't get configured
+# via "setup".
 keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
-                           'companyName', 'corpSite', 'defaultBranch',
+                           'companyName', 'corpSite', 'namespace',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
                            'requireSigs', 'authPass', 'reposDBDriver', 
-                           'reposDBPath']
+                           'reposDBPath', 'mirrorRolePass']
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -31,6 +35,41 @@ templatePath = os.path.dirname(sys.modules['mint'].__file__)
 # we can override this if we know for a fact that we have external
 # 64-bit job servers handling jobs for this server.
 x86_64 = os.uname()[4] == 'x86_64'
+
+__isRBO = None
+
+def getConfig(path=RBUILDER_CONFIG):
+    """
+    Used as *the* way to get the current rBuilder configuration.
+
+    Raises ConfigurationMissing if not found.
+    """
+    mintCfg = MintConfig()
+    try:
+        mintCfg.read(path)
+    except:
+        raise mint_error.ConfigurationMissing
+    else:
+        return mintCfg
+
+def isRBO():
+    """
+    Use this to determine at runtime whether or not this code is running
+    on rBuilder Online. We'll check the configuration file first,
+    but barring that, we'll assume it's not rBuilder Online.
+
+    FIXME: This will only pull the rBuilderOnline setting from 
+    /srv/rbuilder/config/rbuilder.conf; thus, you can not set the
+    value of rBuilderOnline for running in the testsuite.
+    """
+    global __isRBO
+    if __isRBO is None:
+        try:
+            mintCfg = getConfig()
+            __isRBO = mintCfg.rBuilderOnline
+        except mint_error.ConfigurationMissing:
+            __isRBO = False
+    return __isRBO
 
 class CfgDownloadEnum(cfgtypes.CfgEnum):
     validValues = urltypes.urlTypes
@@ -48,6 +87,9 @@ class CfgBuildEnum(cfgtypes.CfgEnum):
         return cfgtypes.CfgEnum.parseString(self, val)
 
 class MintConfig(ConfigFile):
+    # By default, we are not rBuilder Online unless configured to be rBO
+    rBuilderOnline          = (cfgtypes.CfgBool, False)
+
     companyName             = (cfgtypes.CfgString, 'rPath, Inc.',
         "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
 
@@ -57,8 +99,20 @@ class MintConfig(ConfigFile):
     corpSite                = (cfgtypes.CfgString, 'http://www.rpath.com/corp/',
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
 
+    # deprecated by namespace; we generate the default branch now on a per-product (project) basis
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
-        "The default namespace and tag used by rBuilder projects")
+       "The default namespace and tag used by products you create in rBuilder")
+
+    namespace               = (cfgtypes.CfgString, 'yournamespace',
+        "The default namespace used by products you create in rBuilder")
+
+    groupApplianceLabel     = (cfgtypes.CfgString, 
+            'rap.rpath.com@rpath:linux-1',
+            "The label that contains the group-appliance-platform superclass")
+
+    rapaLabel               = (cfgtypes.CfgString, 
+                                'products.rpath.com@rpath:raa-2',
+                                "The label that contains rAPA")
 
     supportContactHTML      = 'Contact information in HTML.'
     supportContactTXT       = 'Contact information in text.'
@@ -66,7 +120,6 @@ class MintConfig(ConfigFile):
     authRepoMap             = cfgtypes.CfgDict(cfgtypes.CfgString)
     authUser                = None
     authPass                = None
-    authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
     logPath                 = os.path.join(os.path.sep, 'var', 'log', 'rbuilder')
@@ -85,7 +138,7 @@ class MintConfig(ConfigFile):
         "(The complete URL to access rBuilder is constructed from the "\
         "host name and domain name.)")
 
-    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder projects?")
+    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder-based products")
     adminMail               = 'mint@rpath.org'
     newsRssFeed             = ''
     commitAction            = None
@@ -148,7 +201,6 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    addonsHost              = None
     awsPublicKey            = None
     awsPrivateKey           = None
 
@@ -206,6 +258,18 @@ class MintConfig(ConfigFile):
     # whether or not to generate a scrambled password for the guided tour
     # currently this is set to false (see WEB-354) until further notice
     ec2GenerateTourPassword = (cfgtypes.CfgBool, False)
+
+    # this password is generated on intial setup and is used as the mirror
+    # role password for when projects are published.  This is hidden from
+    # users during setup.
+    mirrorRolePass          = (cfgtypes.CfgString, 'mirrorPass',
+        "The password to use for the mirror role")
+
+    # Link to Legal stuff (TOS, Privacy Policy, etc.)
+    # Only needed for rBO
+    legaleseLink            = (cfgtypes.CfgString, '')
+    tosLink                 = (cfgtypes.CfgString, '')
+    privacyPolicyLink       = (cfgtypes.CfgString, '')
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

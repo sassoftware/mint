@@ -47,9 +47,9 @@ from mint.helperfuncs import truncateForDisplay
                     ${truncateForDisplay(line, 100000000, 70)}
                 </p>
                 <div id="builds">
-                    <h3>Builds</h3>
+                    <h3>Images</h3>
                     ${buildTable(builds)}
-                    <p py:if="not builds">Release contains no builds.</p>
+                    <p py:if="not builds">Release contains no images.</p>
                 </div>
             </div>
         </div>

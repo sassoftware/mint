@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -24,6 +24,7 @@ validBuildTypes = {
     'AMI'               : 14,
     'UPDATE_ISO'        : 15,
     'APPLIANCE_ISO'     : 16,
+    'IMAGELESS'         : 17,
 }
 
 TYPES = validBuildTypes.values()
@@ -85,6 +86,7 @@ typeNames = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Group-Only"
 }
 
 typeNamesShort = {
@@ -104,6 +106,7 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    IMAGELESS:          "Group-Only",
 }
 
 typeNamesMarketing = {
@@ -123,6 +126,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Group-Only",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
@@ -130,9 +134,11 @@ typeNamesMarketing = {
 }
 
 buildTypeExtra = {
-    APPLIANCE_ISO:      "This build type will not work without using "
+    APPLIANCE_ISO:      "This image type will not work without using "
                         "a version of anaconda-templates based on "
                         "rPath Linux 2.",
+    IMAGELESS:          "Select this image type to add a specific"
+                        "version of a group to a release."
 }
 
 buildTypeIcons = {
@@ -169,7 +175,42 @@ discSizes = {
     'CD: 700 MB'  : '734003200',
     'DVD: 4.7 GB' : '4700000000',
     'DVD: 8.5 GB' : '8500000000',
-    }
+}
+
+buildDefinitionFlavorTypes = {
+    'BD_GENERIC_X86'    : 0,
+    'BD_GENERIC_X86_64' : 1,
+    'BD_DOM0_X86'       : 2,
+    'BD_DOM0_X86_64'    : 3,
+    'BD_DOMU_X86'       : 4,
+    'BD_DOMU_X86_64'    : 5,
+    'BD_VMWARE_X86'     : 6,
+    'BD_VMWARE_X86_64'  : 7,
+}
+
+sys.modules[__name__].__dict__.update(buildDefinitionFlavorTypes)
+
+buildDefinitionFlavorMap = {
+    BD_GENERIC_X86      : '!dom0, !domU, !xen, !vmware is: x86',
+    BD_GENERIC_X86_64   : '!dom0, !domU, !xen, !vmware is: x86_64',
+    BD_DOM0_X86         : 'dom0, !domU, xen, !vmware is: x86',
+    BD_DOM0_X86_64      : 'dom0, !domU, xen, !vmware is: x86_64',
+    BD_DOMU_X86         : '!dom0, domU, xen, !vmware is: x86',
+    BD_DOMU_X86_64      : '!dom0, domU, xen, !vmware is: x86_64',
+    BD_VMWARE_X86       : '!dom0, !domU, xen, vmware is: x86',
+    BD_VMWARE_X86_64    : '!dom0, !domU, xen, vmware is: x86_64',
+}
+
+buildDefinitionFlavorNameMap = {
+    BD_GENERIC_X86      : 'Generic x86 (32-bit)',
+    BD_GENERIC_X86_64   : 'Generic x86 (64-bit)',
+    BD_DOM0_X86         : 'dom0 x86 (32-bit)',
+    BD_DOM0_X86_64      : 'dom0 x86 (64-bit)',
+    BD_DOMU_X86         : 'domU x86 (32-bit)',
+    BD_DOMU_X86_64      : 'domU x86 (64-bit)',
+    BD_VMWARE_X86       : 'VMware x86 (32-bit)',
+    BD_VMWARE_X86_64    : 'VMware x86 (64-bit)',
+}
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript

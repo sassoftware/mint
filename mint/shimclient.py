@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -39,6 +39,8 @@ class _ShimMethod(client._Method, object):
             self.handleError(result)
 
     def __getattribute__(self, name):
+        if name.startswith('__'):
+            raise AttributeError(name)
         if name in _ShimMethod.weakRefs:
             return object.__getattribute__(self, name)()
         return object.__getattribute__(self, name)
@@ -54,7 +56,13 @@ class ShimServerProxy(client.ServerProxy):
         self._authToken = authToken
         self._server = MintServer(self._cfg, allowPrivate = True)
 
+    def __hasattr__(self, name):
+        if name.startswith('__'):
+            return False
+
     def __getattr__(self, name):
+        if name.startswith('__'):
+            raise AttributeError(name)
         return _ShimMethod(self._server, self._authToken, name)
 
     def __repr__(self):

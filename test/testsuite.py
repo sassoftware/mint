@@ -1,7 +1,7 @@
 #!/usr/bin/python2.4
 # -*- mode: python -*-
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import bdb
@@ -18,9 +18,6 @@ import time
 import types
 import unittest
 import __builtin__
-
-from conary_test import resources
-
 
 testPath = None
 archivePath = None
@@ -65,26 +62,36 @@ def setup():
     global testPath
     global archivePath
 
-    conaryPath      = os.getenv('CONARY_PATH',      '../../conary-1.2')
-    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test-1.2'))
+    conaryPath      = os.getenv('CONARY_PATH',      '../../conary-2.0')
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test-2.0'))
     mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
     mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.join(mcpPath, 'test'))
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   '../../jobslave')
     mintPath        = os.getenv('MINT_PATH',        '..')
     mintTestPath    = os.getenv('MINT_TEST_PATH',   '.')
+    raaPath         = os.getenv('RAA_PATH',         '../../raa')
+    raaTestPath     = os.getenv('RAA_TEST_PATH',    '../../raa-test')
+    raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', '../raaplugins')
 
-    sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath, mcpPath, mcpTestPath,
-        jobslavePath, conaryPath, conaryTestPath)] + sys.path
-    os.environ.update(dict(CONARY_PATH=conaryPath, CONARY_TEST_PATH=conaryTestPath,
+    sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
+        mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
+        raaPath, raaTestPath, raaPluginsPath)] + sys.path
+    os.environ.update(dict(CONARY_PATH=conaryPath,
+        CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
-        JOB_SLAVE_PATH=jobslavePath, PYTHONPATH=(':'.join(sys.path))))
+        JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
+        RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
+        PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
+    from conary_test import resources
+
     resources.testPath = testPath = testhelp.getTestPath()
     resources.archivePath = archivePath = testPath + '/' + "archive"
 
     global conaryDir
+
     resources.conaryDir = conaryDir = os.environ['CONARY_PATH']
 
     from conary.lib import util
@@ -99,6 +106,7 @@ def setup():
     sys.modules[__name__].TestCase = TestCase
     sys.modules[__name__].findPorts = findPorts
     sys.modules[__name__].SkipTestException = SkipTestException
+    sys.modules['testsuite'] = sys.modules[__name__]
 
     # ensure shim client errors on types that can't be sent over xml-rpc
     from mint import shimclient
@@ -115,7 +123,7 @@ def isIndividual():
     return _individual
 
 
-EXCLUDED_PATHS = ['test', 'scripts', 'raaplugins']
+EXCLUDED_PATHS = ['test', 'scripts']
 
 def main(argv=None, individual=True):
     import testhelp

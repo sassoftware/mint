@@ -18,6 +18,7 @@ from mint import jobstatus
 from mint import buildtypes
 from mint import userlevels
 from mint import users
+from mint import helperfuncs
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
@@ -346,7 +347,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         page = self.fetch('/project/testproject/editBuild?' \
-                              'buildId=%d&action=Edit%%20Build' % build.id,
+                              'buildId=%d&action=Edit%%20Image' % build.id,
                           server=self.getProjectServerHostname())
         assert 'action="saveBuild"' in page.body
 
@@ -361,7 +362,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         page = self.fetch('/project/testproject/editBuild?' \
-                              'buildId=%d&action=Recreate%%20Build' % build.id,
+                              'buildId=%d&action=Recreate%%20Image' % build.id,
                           server=self.getProjectServerHostname())
         assert '/project/testproject/build?id=%d' % build.id in page.body
 
@@ -404,13 +405,14 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                   server=self.getProjectServerHostname())
 
     def testProjectPage(self):
+        pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'This is a fledgling project' in page.body
+        assert 'This is a fledgling %s'%pText in page.body
 
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()
@@ -427,14 +429,20 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         for troveName in refNamesRpl1:
             assert troveName in troveNames['conary.rpath.com@rpl:1']
-        for troveName in refNamesRaa:
-            assert troveName in troveNames['raa.rpath.org@rpath:raa-2']
 
         self.failIf(messages['conary.rpath.com@rpl:1'] != 'These groups come from rPath Linux on the conary.rpath.com@rpl:1 label')
-        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpath:raa-2']),
-                    "troveDict doesn't match trove names list")
+
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
+
+        if self.mintCfg.rBuilderOnline:
+            for troveName in refNamesRaa:
+                assert troveName in troveNames['raa.rpath.org@rpath:raa-2']
+
+            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
+        else:
+            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+
 
     testsuite.context('more_cowbell')
     def testCreateGroup(self):
@@ -540,6 +548,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testProjectActions(self, db, data):
+        pText = helperfuncs.getProjectText()
         client = self.getClient("admin")
         p = client.getProject(data['projectId'])
 
@@ -558,7 +567,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_hide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already hidden'])
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already hidden'%pText.title()])
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_unhide")
@@ -568,13 +577,13 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_unhide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['Project is already visible'])
+        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already visible'%pText.title()])
 
         self.ph.session = {}
         self.assertRaises(HttpMoved, self.ph.processProjectAction,
             auth = auth, projectId = p.id, operation = "project_not_valid")
         self.failUnlessEqual(self.ph.session['errorMsgList'],
-            ['Please select a valid project administration option from the menu'])
+            ['Please select a valid %s administration option from the menu'%pText.lower()])
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@
 from mint import constants
 from mint import maintenance
 from mint import helperfuncs
+from mint.web.templatesupport import projectText
 
 from urllib import quote
 onload = "javascript:;"
@@ -19,14 +20,16 @@ onload = "javascript:;"
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-1.2.3.min.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript">
             <![CDATA[
+                jQuery.noConflict();
                 var BaseUrl = '${cfg.basePath}';
                 var x86_64 = ${int(cfg.bootableX8664)};
                 var staticPath = "${cfg.staticPath}";
             ]]>
         </script>
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js?v=${cacheFakeoutVersion}" />
@@ -56,7 +59,8 @@ onload = "javascript:;"
                 </div>
                 <div id="prodLogo">
                     <a href="http://${SITE}">
-                        <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                        <img py:if="cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo-rbo.gif" alt="rBuilder Online Logo" />
+                        <img py:if="not cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Logo" />
                     </a>
                 </div>
                 <div id="topRight">
@@ -66,7 +70,7 @@ onload = "javascript:;"
                           Maintenance Mode&nbsp;
                           </b>
                         </a>
-                        <a href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                        <a py:if="cfg.rBuilderOnline" href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
@@ -75,14 +79,14 @@ onload = "javascript:;"
                             <input class="search" name="search" id="searchLabel" type="text" value="$searchTerms" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
                             <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': (searchType == 'Projects') and 'checked' or None}" />
-                            <label for="typeProject">Project</label>
+                            <label for="typeProject">${projectText().title()}</label>
                             <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': (searchType == 'Packages') and 'checked' or None}" />
                             <label for="typePackage">Package</label>
                             <div py:strip="True" py:if="auth.admin">
                             <input id="typeUser" type="radio" name="type" value="Users" py:attrs="{'checked': (searchType == 'Users') and 'checked' or None}" />
                             <label for="typeUser">User</label>
                             </div>
-                            <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=Projects">projects</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
+                            <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=Projects">${projectText().lower()}s</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
                         </div>
                     </form>
                 </div>
@@ -113,11 +117,12 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
+                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li><a href="${cfg.basePath}legal/">Legal</a></li>
-                        <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
-                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBO?version=${constants.mintVersion}" target="_blank">Help</a></li>
+                        <li py:if="cfg.legaleseLink"><a href="${cfg.legaleseLink}">Legal</a></li>
+                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
+                        <li><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} User Guide</a></li>
+                        <li py:if="auth.admin"><a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} Administration Guide</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">

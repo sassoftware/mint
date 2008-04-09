@@ -1,18 +1,12 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
 import elementtree
 from elementtree.XMLTreeBuilder import FancyTreeBuilder
 
-from mint.mint_error import MintError
-
-class HtmlTagNotAllowed(MintError):
-    pass
-
-class HtmlParseError(MintError):
-    pass
+from mint.mint_error import *
 
 defaultAllowed = ['b', 'i', 'pre', 'p', 'br', 'a', 'div', 'span']
 

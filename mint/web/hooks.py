@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -155,7 +155,6 @@ def getRepository(projectName, repName, dbName, cfg,
     else:
         nscfg.commitAction = None
 
-    repHash = repName + req.hostname
     if os.access(repositoryDir, os.F_OK):
         netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
 
@@ -529,8 +528,7 @@ def handler(req):
 
     global cfg
     if not cfg:
-        cfg = config.MintConfig()
-        cfg.read(cfgPath)
+        cfg = config.getConfig(cfgPath)
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
@@ -596,6 +594,7 @@ def handler(req):
         coveragehook.save()
     return ret
 
+cfg = None
 cachedMySQLDb = None
 repositories = {}
 shim_repositories = {}
