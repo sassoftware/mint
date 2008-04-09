@@ -56,7 +56,7 @@ class ShimServerProxy(client.ServerProxy):
 
     def __getattr__(self, name):
         if name.startswith('__'):
-            raise AttributeError
+            raise AttributeError(name)
         return _ShimMethod(self._server, self._authToken, name)
 
     def __repr__(self):
