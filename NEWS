@@ -8,6 +8,8 @@ Web Front End Changes
   time by Group Builder has been corrected. (RBL-2570)
 * External projects configured for inbound mirroring can now be backed
   up. (RBL-2038)
+* Xen-compatible Hard Disk images are no longe labelled as QEMU or
+  Parallels-compatible. (RBL-1589)
 
 Build System Changes
 --------------------

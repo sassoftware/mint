@@ -359,7 +359,7 @@ class Build(database.TableObject):
             if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
                 return override
 
-        return None
+        return {}
 
     def getMarketingName(self):
         '''
@@ -381,7 +381,7 @@ class Build(database.TableObject):
 
         return name
 
-    def getBrandingIcon(build):
+    def getBrandingIcon(self):
         '''
         Return the icon to be placed beneath build types with some kind
         of third-party download, e.g. a Parallels icon for HD images.
@@ -393,4 +393,4 @@ class Build(database.TableObject):
         if override is not None:
             return override
         else:
-            return buildtypes.buildTypeIcons[self.getBuildType()]
+            return buildtypes.buildTypeIcons.get(self.getBuildType(), None)
