@@ -350,6 +350,8 @@ class Build(database.TableObject):
 
     def _getOverride(self):
         buildFlavor = self.getTrove()[2]
+        if type(buildFlavor) == str:
+            buildFlavor = deps.ThawFlavor(buildFlavor)
         for (buildType, flavorFlag), override \
           in buildtypes.typeFlavorOverride.iteritems():
             if buildType != self.getBuildType():
