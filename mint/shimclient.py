@@ -55,6 +55,8 @@ class ShimServerProxy(client.ServerProxy):
         self._server = MintServer(self._cfg, allowPrivate = True)
 
     def __getattr__(self, name):
+        if name.startswith('__'):
+            raise AttributeError
         return _ShimMethod(self._server, self._authToken, name)
 
     def __repr__(self):
