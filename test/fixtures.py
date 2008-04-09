@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
 import copy
@@ -219,7 +219,10 @@ class FixtureCache(object):
 
         # create the project
         client = shimclient.ShimMintClient(cfg, ("owner", "ownerpass"))
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = shortname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                                      shortname=shortname, 
+                                      version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         # add the developer
@@ -270,6 +273,13 @@ class FixtureCache(object):
         anotherBuild.setFiles([["file", "file title 1"]])
         stockBuildFlavor(db, anotherBuild.id, "x86")
 
+        # create an imageless group trove build
+        imagelessBuild = client.newBuild(projectId, "Test Imageless Build")
+        imagelessBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        imagelessBuild.setBuildType(buildtypes.IMAGELESS)
+        imagelessBuild.setFiles([["file", "file title 1"]])
+
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -285,6 +295,7 @@ class FixtureCache(object):
                       'pubReleaseId':   pubRelease.id,
                       'pubReleaseFinalId':   pubReleaseFinal.id,
                       'anotherBuildId': anotherBuild.id,
+                      'imagelessBuildId': imagelessBuild.id,
                       'groupTroveId':   groupTrove.id }
 
     def fixtureCookJob(self, cfg):
@@ -812,6 +823,9 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
 
+    # apply default context of "fixtured" to all children of this class
+    contexts = ("fixtured",)
+
     def listFixtures(self):
         return fixtureCache.list()
 
@@ -887,25 +901,33 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
         return canMirror
 
     def getWriteAcl(self, project, username):
-        return self.getPermission('canWrite', project, username)
-
-    def getAdminAcl(self, project, username):
-        return self.getPermission('admin', project, username)
-
-    def getPermission(self, column, project, username):
         dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
             project.getFQDN())
         db = dbstore.connect(dbCon[1], dbCon[0])
 
         cu = db.cursor()
 
-        cu.execute("""SELECT MAX(%s)
+        cu.execute("""SELECT MAX(canWrite)
                           FROM Users
                           LEFT JOIN UserGroupMembers ON Users.userId =
                                   UserGroupMembers.userId
                           LEFT JOIN Permissions ON Permissions.userGroupId =
                                   UserGroupMembers.userGroupId
-                          WHERE Users.username=?""" % column, username)
+                          WHERE Users.username=?""", username)
+        return cu.fetchone()[0]
+
+    def getAdminAcl(self, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+        cu.execute("""SELECT MAX(admin) FROM Users
+                      JOIN UserGroupMembers ON
+                          Users.userId = UserGroupMembers.userId
+                      JOIN UserGroups ON
+                          UserGroups.userGroupId = UserGroupMembers.userGroupId
+                      WHERE Users.username=?""", username)
         return cu.fetchone()[0]
 
     def captureAllOutput(self, func, *args, **kwargs):

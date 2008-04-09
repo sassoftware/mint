@@ -12,7 +12,6 @@
 import sys
 import os
 from os import _exit
-import urllib
 import xmlrpclib
 
 from conary.conaryclient import mirror
@@ -77,14 +76,10 @@ class MirrorOutbound(MirrorScript):
                 sourceCfg = cfg.setSection("source")
                 sourceCfg.repositoryMap.update(repositoryMap)
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
-                serverNamesSet = set([reposHost])
-                authHosts = set([reposHost])
                 for host, authInfo in userMap:
                     sourceCfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-                    authHosts.add(host)
                 for host, entitlement in entMap:
                     sourceCfg.entitlement.addEntitlement(host, entitlement[1])
-                    authHosts.add(host)
 
                 sourceCCfg = conarycfg.ConaryConfiguration()
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
@@ -95,84 +90,22 @@ class MirrorOutbound(MirrorScript):
 
                 obmt = client.getOutboundMirrorTargets(outboundMirrorId)
                 if not obmt:
-                    self.log.warning("Skipping mirror of %s; no targets specified" % \
+                    self.log.warning("Skipping %s, no Update Services specified" % \
                             sourceProject.name)
                     continue
 
-                if recurse:
-                    # XXX This entire body of code is really too slow, and doesn't need
-                    # XXX to be done every single pass for group mirrors. Its only purpose
-                    # XXX is to set up the rUS to accept the list of servernames needed
-                    # XXX to properly mirror the group.
-                    groups = client.getOutboundMirrorGroups(outboundMirrorId)
-                    self.log.info("Mirroring the following groups %s" % groups)
-                    for group in groups:
-                        self.log.info("Recursing %s to find serverNames..." % group)
-                        groupNVFs = []
-                        groupVersions = sourceRepos.getTroveVersionList(reposHost, {group:None})
-                        for n, verDict in groupVersions.items():
-                            for v, flavorList in verDict.items():
-                                if cfg.labels and v.trailingLabel() not in cfg.labels:
-                                    continue
-                                for f in flavorList:
-                                    groupNVFs.append((n,v,f))
-
-                        nDone = 0
-                        for n1, v1, f1 in groupNVFs:
-                            self.log.debug("Getting troveVersion for %s=%s[%s]" % (n,v,f))
-                            groupCs = sourceRepos.createChangeSet(
-                                [(n1, (None, None), (v1, f1), True)],
-                                      withFiles=False,
-                                      withFileContents = False,
-                                      recurse = False)
-                            tcs = groupCs.getNewTroveVersion(n1, v1, f1)
-                            t = trove.Trove(tcs)
-                            for n2, v2, f2 in t.iterTroveList(strongRefs=False, weakRefs=True):
-                                serverNamesSet.add(v2.getHost())
-                            nDone += 1
-                            percentDone = int(float(nDone) / float(len(groupNVFs)) * 100.0)
-                            if (nDone % 10) == 0:
-                                self.log.info("Recursing %s to find serverNames (%d%% complete)" % (group, percentDone))
-
-                serverNames = list(serverNamesSet)
-                self.log.info("serverNames needed for mirroring: %s" % ', '.join(serverNames))
-
-                # XXX This is a best-effort attempt to catch if we have servers we need to
-                # contact during the course of mirroring where we didn't specify any
-                # permissions, either via user or entitlements. It will miss cases where
-                # filecontents are spread across two repositories, and it may warn
-                # unnecessarily if the source repository has mirroring enabled for the
-                # anonymous group. A more complete test would be too slow to run every
-                # time, so this will have to do. --sgp
-                neededHosts = serverNamesSet - authHosts
-                for n in neededHosts:
-                    self.log.warning("No authentication was given for server %s; this may cause problems when attempting to mirror troves from that server to the Update Service. Make sure that your rBuilder has an external project with this hostname set up with a valid user or entitlement with mirror permissions." % n)
-
                 targetOrdinal = 0
-                for _, targetUrl, targetUser, targetPass in obmt:
-                    _, url = urllib.splittype(targetUrl)
-                    rapa_host, _ = urllib.splithost(url)
+                for _, hostname, targetUser, targetPass, _ in obmt:
+                    targetUrl = 'https://%s/conary/' % hostname
 
-                    if recurse:
-                        rapa_user = client.getrAPAPassword(rapa_host, 'serverNames')
-                        if rapa_user:
-                            try:
-                                sp = xmlrpclib.ServerProxy('https://%s:%s@%s:8003/rAA/xmlrpc/' % (rapa_user[0], rapa_user[1], rapa_host))
-                                sp.conaryserver.ConaryServer.addServerName(serverNames)
-                            except:
-                                raise
                     if cfg.hasSection("target"):
                         targetOrdinal += 1
                         targetCfg = cfg.setSection("target%d" % targetOrdinal)
                     else:
                         targetCfg = cfg.setSection("target")
-                    targetCfg.repositoryMap.update(repositoryMap)
-                    for x in serverNames:
-                        targetCfg.repositoryMap.update({x:targetUrl})
+                    targetCfg.repositoryMap = []
+                    targetCfg.configLine('repositoryMap * %s' % targetUrl)
                     targetCfg.user.addServerGlob('*', targetUser, targetPass)
-
-                    for k in targetCfg.repositoryMap.keys():
-                        targetCfg.repositoryMap[k] = targetUrl
 
                     targetCCfg = conarycfg.ConaryConfiguration()
                     targetCCfg.repositoryMap.update(targetCfg.repositoryMap)
@@ -180,23 +113,6 @@ class MirrorOutbound(MirrorScript):
                     targetCCfg.proxy = proxy
                     t = conaryclient.ConaryClient(targetCCfg).getRepos()
                     targetRepos.append(t)
-
-                    # If we have multiple sources for the same host,
-                    # reset the mirror mark
-                    try:
-                        mm = t.getMirrorMark(reposHost)
-                    except errors.OpenError:
-                        # No mirrormark for reposHost on this target
-                        mirrorMarks.update({targetUrl:{reposHost:-1}})
-                    else:
-                        if mirrorMarks.get(targetUrl):
-                            oldMark = mirrorMarks[targetUrl].get(reposHost)
-                            if oldMark and oldMark < mm:
-                                t.setMirrorMark(reposHost, oldMark)
-                            else:
-                                mirrorMarks[targetUrl].update({reposHost:mm})
-                        else:
-                            mirrorMarks.update({targetUrl:{reposHost:mm}})
 
                 try:
                     self._doMirror(cfg, sourceRepos, targetRepos, fullSync)

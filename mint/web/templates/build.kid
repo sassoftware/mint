@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
 from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
-from mint.web.templatesupport import downloadTracker
+from mint.web.templatesupport import downloadTracker, projectText
 from mint import urltypes
 from mint import constants
 ?>
@@ -15,7 +15,7 @@ from mint import constants
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <head>
-        <title>${formatTitle('Project Build')}</title>
+        <title>${formatTitle('%s Image'%projectText().title())}</title>
         <script type="text/javascript">
             <div py:if="isWriter" py:strip="True">
                 <![CDATA[
@@ -41,15 +41,15 @@ from mint import constants
             <div id="middle">
 
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
-                <h2>Build: ${name}</h2>
+                <h2>Image: ${name}</h2>
 
                 <div py:if="isWriter and not build.getPublished()" py:strip="True">
                     ${statusArea("Build")}
                     <div id="editOptions" py:attrs="{ 'style': buildInProgress and 'display: none;' or None }">
                         <form id="editBuildOptions" action="editBuild" method="post">
                             <input type="hidden" name="buildId" value="${build.id}" />
-                            <input type="submit" name="action" value="Edit Build" /> &nbsp;
-                            <input type="submit" name="action" value="Recreate Build" />
+                            <input type="submit" name="action" value="Edit Image" /> &nbsp;
+                            <input type="submit" name="action" value="Recreate Image" />
                         </form>
                     </div>
                 </div>
@@ -66,8 +66,8 @@ from mint import constants
 
                             <div id="file_help" style="display: none;">
                                 <p>The file(s) entitled <tt>Disc <em>N</em></tt>
-                                represent the disc(s) required to install this
-                                build. These files are in ISO 9660 format, and can be
+                                represent(s) the disc(s) required to install this
+                                image. These files are in ISO 9660 format, and can be
                                 burned onto CD or DVD media using the CD/DVD burning
                                 software of your choice. The installation process is
                                 then started by booting your system from a disc
@@ -75,7 +75,7 @@ from mint import constants
 
                                 <p>The last two files are used only if you want to
                                 perform a network installation.  To do so, you must
-                                first download all "Disc N" file(s) and export them
+                                first download all "Disc N" file(s) and share them
                                 (via NFS).  You can then download and use one of the
                                 following files to boot the system to be installed:</p>
 
@@ -188,7 +188,7 @@ from mint import constants
                             </div>
                         </div>
                     </div>
-                    <p py:if="not files">Build contains no downloadable files.</p>
+                    <p py:if="not files">Image contains no downloadable files.</p>
                 <h3>Details</h3>
 
                 <table class="troveinfo">
@@ -214,7 +214,8 @@ from mint import constants
                     </tr>
                     <tr>
                         <th>Architecture</th>
-                        <td>${build.getArch()}</td>
+                        <td py:if="build.getBuildType() != buildtypes.IMAGELESS" >${build.getArch()}</td>
+                        <td py:if="build.getBuildType() == buildtypes.IMAGELESS" >N/A</td>
                     </tr>
                     <tr>
                         <th>Type</th>

@@ -1,9 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
+from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -28,7 +29,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
             <thead>
                 <th>Trove</th>
                 <th>Version</th>
-                <th>Project</th>
+                <th>${projectText().title()}</th>
             </thead>
             <tbody>
             <tr py:for="name, version, flavor in troves">

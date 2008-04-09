@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -89,6 +89,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                         print "corp link: %s is relative on page: %s" % \
                               (newLink, link)
                         brokenLinks = True
+                if 'rAA' in newLink or '8003' in newLink:
+                    valid = False
+                    skip = True
                 if not skip and not relativeLink and \
                        str(self.port) not in newLink \
                        and str(self.securePort) not in newLink:
@@ -110,19 +113,15 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
     def spiderLink(self, link, page = None):
         self.checked.append(link)
-        # print "link:", link
 
         # skipped links:
         if link.endswith('logout'):
             # we don't want to log out. just short circuit this link
             return False
-        if link.endswith('jobs'):
-            # jobs link calls sudo
-            return False
         if 'getFile' in link:
             # getFile breaks spider
             return False
-        if 'deleteGroup' in link or 'deletePerm' in link:
+        if 'deleteRole' in link or 'deletePerm' in link:
             # conary web code deletes using a GET: CNY-963
             return False
         if 'build?id=' in link:
@@ -132,7 +131,11 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             return False
         if 'builds' in link:
             return False
+        if 'rAA' in link or '8003' in link:
+            # don't try to contact rAPA
+            return False
 
+        #print "inspecting", link
         if page is None:
             try:
                 # rewrite project-based links properly, to avoid breaking SSL
