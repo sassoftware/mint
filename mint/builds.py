@@ -347,3 +347,50 @@ class Build(database.TableObject):
 
     def resolveExtraTrove(self, trvName, trvVersion = '', trvFlavor = '', searchPath = []):
         return self.server.resolveExtraBuildTrove(self.id, trvName, trvVersion, trvFlavor, searchPath)
+
+    def _getOverride(self):
+        buildFlavor = self.getTrove()[2]
+        for (buildType, flavorFlag), override \
+          in buildtypes.typeFlavorOverride.iteritems():
+            if buildType != self.getBuildType():
+                continue
+
+            flavor = buildtypes.flavorFlagFlavors[flavorFlag]
+            if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
+                return override
+
+        return None
+
+    def getMarketingName(self):
+        '''
+        Return the marketing name for display on build or release pages
+        taking into account any variations related to the flavors the
+        build was created with; e.g. a domU HD image should not use the
+        QEMU/Parallels branding.
+        '''
+
+        override = self._getOverride().get('marketingName', None)
+        if override is not None:
+            name = override
+        else:
+            name = buildtypes.typeNamesMarketing[self.getBuildType()]
+
+        if 'CD/DVD' in name:
+            disc_type = file['size'] > 734003200 and 'DVD' or 'CD'
+            name = name.replace('CD/DVD', disc_type)
+
+        return name
+
+    def getBrandingIcon(build):
+        '''
+        Return the icon to be placed beneath build types with some kind
+        of third-party download, e.g. a Parallels icon for HD images.
+        Check for any flavor qualifications (e.g. the Parallels example
+        will not match domU groups.
+        '''
+
+        override = self._getOverride().get('icon', None)
+        if override is not None:
+            return override
+        else:
+            return buildtypes.buildTypeIcons[self.getBuildType()]

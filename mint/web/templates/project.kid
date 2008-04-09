@@ -14,12 +14,6 @@
         else:
             return up
 
-    icons = {
-        buildtypes.VMWARE_IMAGE: ("get-vmware-player.png", "http://www.vmware.com/download/player/", "Download VMware Player"),
-        buildtypes.RAW_HD_IMAGE: ("get-parallels.png", "http://www.parallels.com/", "Try Parallels Workstation 2.2"),
-        buildtypes.VIRTUAL_IRON: ("get-virtual-iron.png", "http://www.virtualiron.com/free", "Virtual Iron: Download Now"),
-        buildtypes.XEN_OVA: ("get-xen-express.gif", "http://www.citrix.com/xenserver/getexpress", "Citrix XenServer Express Edition: Download Now"),
-    }
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -173,15 +167,16 @@
         <tr style="background: #f0f0f0; font-weight: bold;" class="buildHeader">
             <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
             <td style="text-align: center;">${build.getArch()}
-            &nbsp;${buildtypes.typeNamesMarketing[build.buildType]}</td>
+            &nbsp;${build.getMarketingName()}</td>
         </tr>
         ${buildFiles(build)}
         <tr><td colspan="2" class="buildTypeIcon">${getBuildIcon(build)}</td></tr>
     </div>
 
     <div py:strip="True" py:def="getBuildIcon(build)">
-        <a py:if="build.buildType in icons" title="${icons[build.buildType][2]}" href="${icons[build.buildType][1]}">
-            <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icons[build.buildType][0]}" alt="${icons[build.buildType][2]}" />
+        <?python icon = build.getBrandingIcon() ?>
+        <a py:if="icon" title="${icon['text']}" href="${icon['href']}">
+            <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icon['icon']}" alt="${icon['text']}" />
         </a>
     </div>
 
@@ -234,7 +229,7 @@
                             fileUrl = cfg.basePath + 'downloadImage?fileId=%d' % file['fileId']
                             extraFlags = getExtraFlags(build.troveFlavor)
                         ?>
-                        <a href="$fileUrl">${build.getArch()} ${buildtypes.typeNamesMarketing[build.buildType].replace('CD/DVD', max(734003200, file['size']) == 734003200 and 'CD' or 'DVD')}: ${title}</a>
+                        <a href="$fileUrl">${build.getArch()} ${build.getMarketingName()}: ${title}</a>
                         <span py:omit="True" py:if="extraFlags">(${", ".join(extraFlags)})</span>
                     </li>
                 </div>
