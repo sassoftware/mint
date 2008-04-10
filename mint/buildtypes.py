@@ -86,7 +86,7 @@ typeNames = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
-    IMAGELESS:          "Group-Only"
+    IMAGELESS:          "Online Update"
 }
 
 typeNamesShort = {
@@ -106,7 +106,7 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
-    IMAGELESS:          "Group-Only",
+    IMAGELESS:          "Online Update",
 }
 
 typeNamesMarketing = {
@@ -126,7 +126,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
-    IMAGELESS:          "Group-Only",
+    IMAGELESS:          "Online Update",
 
     # flavor flags here
     XEN_DOMU:           "Xen DomU",
@@ -137,8 +137,8 @@ buildTypeExtra = {
     APPLIANCE_ISO:      "This image type will not work without using "
                         "a version of anaconda-templates based on "
                         "rPath Linux 2.",
-    IMAGELESS:          "Select this image type to add a specific"
-                        "version of a group to a release."
+    IMAGELESS:          "Select this image type to mark a group for "
+                        "later publishing to an Update Service."
 }
 
 buildTypeIcons = {
