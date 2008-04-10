@@ -8,6 +8,7 @@ from conary import versions
 from conary.deps import deps
 from mint import constants
 from mint.config import isRBO
+from conary.repository.errors import RoleAlreadyExists
 
 import htmlentitydefs
 import re
@@ -254,4 +255,46 @@ def getBuildIdFromUuid(uuid):
                     buildId = parts[0]
 
         return string.atoi(buildId)
+
+def addUserToRepository(repos, username, password, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUser(label, username, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUser(username, password)
+        repos.auth.updateRoleMembers(role, [username])
+
+def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUserByMD5(label, username, salt, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUserByMD5(username, salt, password)
+        repos.auth.updateRoleMembers(role, [username])
 

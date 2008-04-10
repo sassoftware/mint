@@ -16,6 +16,8 @@ import sys
 import tempfile
 import time
 
+import mint_rephelp
+import rephelp
 from mint import copyutils
 from mint import config
 from mint import constants
@@ -43,7 +45,7 @@ testTemplateWithConditional = \
 </plain>
 """ % '#'
 
-class HelperFunctionsTest(unittest.TestCase):
+class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
     def testMyProjectCompare(self):
         if not isinstance(myProjectCompare(('not tested', 1),
                                            ('ignored', 0)), int):
@@ -505,6 +507,31 @@ Much like Powdermilk Biscuits[tm]."""
         uuid = '%s.%s-build-%d-%d' %('foo', 'bar.com', buildId, count)
         newBuildId = getBuildIdFromUuid(uuid)
         self.assertTrue(newBuildId == buildId)
+
+    def testAddUserToRepository(self):
+        
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+        label = versions.Label(project.getLabel()) 
+
+        repos = self.openRepository()
+
+        # add a user via label
+        user = "me"
+        passwd = "foo"
+        role = "metoo"
+        addUserToRepository(repos, user, passwd, role, label)
+        self.assertTrue(role in repos.listRoles(label))
+        self.assertTrue(self.userExists(project, user))
+
+        # add user by md5 via label
+        user = "me2"
+        passwd = "foo2"
+        role = "metoo2"
+        addUserByMD5ToRepository(repos, user, passwd, "mysalt!!", role, label)
+        self.assertTrue(role in repos.listRoles(label))
+        self.assertTrue(self.userExists(project, user))
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ import tempfile
 import rephelp
 import mint_rephelp
 
+from mint import helperfuncs
 from conary import versions
 from conary import deps
 from conary.conaryclient import ConaryClient
@@ -30,7 +31,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
     def createMirrorUser(self, repos,
                          labelStr = "localhost.other.host@rpl:devel"):
         label = versions.Label(labelStr)
-        repos.addUser(label, "mirror", "mirror")
+        user = 'mirror'
+        helperfuncs.addUserToRepository(repos, user, user, user, label)
         repos.addAcl(label, "mirror", None, None, write=True, remove=False)
         repos.setRoleCanMirror(label, "mirror", True)
 

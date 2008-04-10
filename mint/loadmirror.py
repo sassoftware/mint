@@ -5,7 +5,7 @@
 
 from mint import config, client, database
 from mint import scriptlibrary, copyutils
-from mint.helperfuncs import getProjectText
+from mint.helperfuncs import getProjectText, addUserToRepository
 from mint.mint_error import *
 from conary.lib import util
 from conary.repository.netrepos import netserver
@@ -181,12 +181,14 @@ class LoadMirror:
         cfg.contentsDir = os.path.join(mintCfg.dataPath, "repos", serverName, "contents")
         repos = netserver.NetworkRepositoryServer(cfg, '')
 
-        repos.auth.addUser("anonymous", "anonymous")
-        repos.auth.addAcl("anonymous", None, None, False, False, False)
+        anon = "anonymous"
+        addUserToRepository(repos, anon, anon, anon)
+        repos.auth.addAcl(anon, None, None, False, False, False)
 
         # add the mint auth user so we can add additional permissions
         # to this repository
-        repos.auth.addUser(mintCfg.authUser, mintCfg.authPass)
+        addUserToRepository(repos, mintCfg.authUser, mintCfg.authPass,
+            mintCfg.authUser)
         repos.auth.addAcl(mintCfg.authUser, None, None, True, False, True)
         repos.auth.setMirror(mintCfg.authUser, True)
 

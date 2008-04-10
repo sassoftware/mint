@@ -158,13 +158,16 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
+        repos = self.openRepository()
 
         # add needed components
-        self.addComponent('testcase:source', '1.0.0')
-        self.addComponent('testcase:runtime', '1.0.0')
-        self.addCollection('testcase', '1.0.0', ['testcase:runtime'])
-        self.addComponent('group-test:source', '1.0.0')
-        trv = self.addCollection('group-test', '1.0.0', ['testcase'])
+        self.addComponent('testcase:source', '1.0.0', repos = repos)
+        self.addComponent('testcase:runtime', '1.0.0', repos = repos)
+        self.addCollection('testcase', '1.0.0', ['testcase:runtime'], 
+            repos = repos)
+        self.addComponent('group-test:source', '1.0.0', repos = repos)
+        trv = self.addCollection('group-test', '1.0.0', ['testcase'], 
+            repos = repos)
 
         # update package index
         upi = pkgindexer.UpdatePackageIndex(aMintServer=client.server._server)

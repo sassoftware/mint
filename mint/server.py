@@ -458,41 +458,22 @@ class MintServer(object):
         repo = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
         try:
-            # XXX This is commented out b/c the addUser also tries to
-            # add the role.  It craps out since the role already exists.
-            #self._addRoleToProject(project, role, label=label, repo=repo)
-            self._addUserToProject(project, user, self.cfg.mirrorRolePass,
+            self._addUserToProject(project, user, self.cfg.mirrorRolePass, role,
                 label=label, repo=repo)
             repo.setRoleCanMirror(label, role, True)
         except Exception, e:
             raise PublishedReleaseMirrorRole(str(e))
 
-    def _addRoleToProject(self, project, role, label=None, repo=None):
+    def _addUserToProject(self, project, user, password, role, label=None, repo=None):
         if not label:
             label = versions.Label(project.getLabel())
         if not repo:
             repo = self._getProjectRepo(project)
         try:
-            repo.addRole(label, role)
-        except RoleAlreadyExists:
-            # already there, so who cares
-            pass
-
-    def _addUserToProject(self, project, user, password, label=None, repo=None):
-        if not label:
-            label = versions.Label(project.getLabel())
-        if not repo:
-            repo = self._getProjectRepo(project)
-        try:
-            repo.addUser(label, user, password)
+            helperfuncs.addUserToRepository(repo, user, password, role, label)
         except UserAlreadyExists:
             # already there, so who cares
             pass
-        except RoleAlreadyExists:
-            # in the current code, adding a user adds a role of the same 
-            # name.
-            pass
-
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -1044,7 +1025,8 @@ class MintServer(object):
             except TypeError:
                 raise ItemNotFound("username")
             repos = self._getProjectRepo(project)
-            repos.addUserByMD5(label, username, salt, password)
+            helperfuncs.addUserByMD5ToRepository(repos, username, password, salt, 
+                username, label)
             repos.addAcl(label, username, None, None,
                          write=(level in userlevels.WRITERS),
                          remove=False)
@@ -1254,8 +1236,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def unhideProject(self, projectId):
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
-        userId = repos.addUser(versions.Label(project.getLabel()), 'anonymous', 'anonymous')
-        repos.addAcl(versions.Label(project.getLabel()), 'anonymous', None, None, write=False, remove=False)
+        label = versions.Label(project.getLabel())
+        username = 'anonymous'
+        helperfuncs.addUserToRepository(repos, username, username, username, 
+            label)
+        repos.addAcl(label, username, None, None, write=False, remove=False)
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()

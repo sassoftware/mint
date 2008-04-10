@@ -597,6 +597,31 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         db.close()
         return canMirror
 
+    def userExists(self, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+
+        cu.execute("""SELECT userId
+                          FROM Users
+                          WHERE userName=?""", username)
+
+        try:
+            # nonexistent results trigger value error
+            id = cu.fetchall()
+            if id:
+                exists = True
+            else:
+                exists = False
+        except ValueError:
+            exists = False
+    
+        db.close()
+
+        return exists
+
     def moveToServer(self, project, serverIdx = 1):
         """Call this to set up a project's Labels table to access a different
            serverIdx instead of 0. Useful for multi-repos tests."""

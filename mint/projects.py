@@ -11,7 +11,8 @@ import time
 from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies, getProjectText
+        hostPortParse, configureClientProxies, getProjectText, \
+        addUserToRepository
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
@@ -494,17 +495,20 @@ class ProjectsTable(database.KeyedTable):
         repos = netserver.NetworkRepositoryServer(cfg, '')
 
         if username:
-            repos.auth.addUser(username, password)
+            addUserToRepository(repos, username, password, username)
             repos.auth.addAcl(username, None, None, write=True, remove=False)
             repos.auth.setAdmin(username, True)
 
-        repos.auth.addUser("anonymous", "anonymous")
-        repos.auth.addAcl("anonymous", None, None, write=False, remove=False)
+        anon = "anonymous"
+        addUserToRepository(repos, anon, anon, anon)
+        repos.auth.addAcl(anon, None, None, write=False, remove=False)
 
         # add the mint auth user so we can add additional permissions
         # to this repository
-        repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
-        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, remove=False)
+        addUserToRepository(repos, self.cfg.authUser, self.cfg.authPass, 
+            self.cfg.authUser)
+        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, 
+            remove=False)
         repos.auth.setAdmin(self.cfg.authUser, True)
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:

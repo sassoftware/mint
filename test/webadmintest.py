@@ -177,7 +177,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             "To preload this external %s as a local mirror"%pText)
 
     def setupUser(self, repos, reposLabel, user, pw, troves, label):
-        repos.addUser(reposLabel, user, pw)
+        helperfuncs.addUserToRepository(repos, user, pw, user, reposLabel)
         repos.addAcl(reposLabel, user, troves, label, write=False, remove=False)
         repos.setRoleCanMirror(reposLabel, user, True)
 
