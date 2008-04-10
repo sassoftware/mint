@@ -261,7 +261,7 @@ exit %d
         oldStartPgsql = repoconvert._startPostgresql
         repoconvert._startPostgresql = lambda: None
         oldCreateProject = self.srvPlugin._createNewProjectTable
-        self.srvPlugin._createNewProjectTable = lambda x: None
+        self.srvPlugin._createNewProjectTable = lambda x,y: None
         try:
             #Set up a user
             client, userid = self.quickMintAdmin("admin", 'adminpass')
