@@ -35,6 +35,8 @@ Web Front End Changes
   (RBL-2172)
 * Groups can be added to releases now by creating an image-less build and then
   adding it to a release (RBL-2665)
+* When publishing a release, there is now a checkbox option to publish the 
+  release to an Update Service (RBL-2541)
 * Xen-compatible Hard Disk images are no longer labelled as QEMU or
   Parallels-compatible. (RBL-1589)
 

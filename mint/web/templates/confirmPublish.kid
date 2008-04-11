@@ -31,6 +31,12 @@ from mint.web.templatesupport import projectText
             <p>${message}</p>
                     <form method="post" action="${yesArgs['func']}">
             <table>
+                <tr>
+                    <td>
+                        <input id="pubTorUS" class="check" type="checkbox" name="pubTorUS" value="${pubtorus}" py:attrs="{'checked': pubtorus and 'checked' or None}" />
+                        <label for="pubTorUS" style="width: 50%;">Publish this release to the Update Service</label>
+                    </td>
+                </tr>
                 <tr><td>
                     <p style="width: 50%;">
                         <a class="imageButton" href="${noLink}"><img src="${cfg.staticPath}apps/mint/images/no_button.png" alt="No" /></a>

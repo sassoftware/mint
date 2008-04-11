@@ -9,15 +9,17 @@ testsuite.setup()
 import time
 
 import fixtures
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
+import mint_rephelp
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, MintRepositoryHelper
 
 from mint import buildtypes
 from mint import pubreleases
 from mint.mint_error import *
 
 from conary import versions
+from conary.conaryclient import ConaryClient
 
-class PublishedReleaseTest(fixtures.FixturedUnitTest):
+class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
     @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testPublishedReleaseCreation(self, db, data):
@@ -138,14 +140,16 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testGetPublishedReleasesByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseFinalId'], data['pubReleaseId'] ])
+        self.failUnlessEqual(project.getPublishedReleases(), 
+            [ data['pubReleaseFinalId'], data['imagelessReleaseId'], 
+            data['pubReleaseId'] ])
 
     @fixtures.fixture("Full")
     def testGetUnpublishedBuildsByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
         self.failUnlessEqual(project.getUnpublishedBuilds(), 
-            [ data['anotherBuildId'], data['imagelessBuildId'] ])
+            [ data['anotherBuildId']])
 
     @fixtures.fixture("Full")
     def testDeletePublishedRelease(self, db, data):
@@ -153,8 +157,8 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         client.deletePublishedRelease(data['pubReleaseId'])
 
-        self.failUnlessEqual(len(project.getPublishedReleases()), 1,
-                "There should be only one published release in the project")
+        self.failUnlessEqual(len(project.getPublishedReleases()), 2,
+                "There should be only two published releases in the project")
 
         self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
                 "Previously published builds should now be unpublished")
@@ -523,8 +527,14 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         client = self.getClient('owner')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         pubRel.publish()
-        pubRel.unpublish()
-        self.assertRaises(PublishedReleaseNotPublished, pubRel.unpublish)
+        pubRel.unpublish(unpubtorus=False)
+        try:
+            pubRel.unpublish(unpubtorus=False)
+            self.fail("Should have failed with PublishedReleaseNotPublished")
+        except PublishedReleaseNotPublished:
+            # do nothing, expected
+            pass
+#        self.assertRaises(PublishedReleaseNotPublished, pubRel.unpublish)
 
     @fixtures.fixture('Full')
     def testUnpubPubRelPerm(self, db, data):
@@ -535,6 +545,88 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         client = self.getClient('developer')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         self.assertRaises(PermissionDenied, pubRel.unpublish)
+
+    def testPublishTorUS(self):
+
+        MintRepositoryHelper.setUp(self)
+        repos = self.openRepository()        
+        client, userId = MintRepositoryHelper.quickMintUser(self, 
+            "testuser", "testpass")
+        projectId = MintRepositoryHelper.newProject(self, client)
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+        
+        # add an x86 trove
+        flavor = "is:x86"
+        self.addComponent("test:runtime", "1.0", flavor=flavor)
+        self.addCollection("test", "1.0", [(":runtime", "1.0", flavor) ])
+        self.addCollection("group-core", "1.0", [("test", "1.0" , flavor)])
+        self.addCollection("group-core", "1.0-1-2", [("test", "1.0" , flavor)])
+
+        # add and x86_64 trove
+        flavor = "is:x86_64"
+        self.addComponent("test:runtime", "1.0", flavor=flavor)
+        self.addCollection("test", "1.0", [(":runtime", "1.0", flavor) ])
+        self.addCollection("group-dist", "1.0", [("test", "1.0" , flavor)])
+        self.addCollection("group-dist", "1.0-1-2", [("test", "1.0" , flavor)])
+        
+        # create some builds
+        build = client.newBuild(projectId, "Test Imageless Build")
+        build.setTrove("group-core", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        build.setBuildType(buildtypes.IMAGELESS)
+        build.setFiles([["file", "file title 1"]])
+
+        build2 = client.newBuild(projectId, "Test Build 2")
+        build2.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86_64")
+        build2.setBuildType(buildtypes.INSTALLABLE_ISO)
+        build2.setFiles([["file2", "file title 2"]])
+
+        # create a release and publish it
+        pubRel = client.newPublishedRelease(projectId)
+        pubRel.name = "Some release"
+        pubRel.version = "1.0"
+        pubRel.addBuild(build.id)
+        pubRel.addBuild(build2.id)
+        pubRel.save()
+        pubRel.publish()
+
+        # make sure mirror user does not have trove access
+        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
+            'mirror')
+        self.assertTrue(troves == [])
+
+        # re-publish as mirror-able
+        pubRel.unpublish()
+        pubRel.publish(pubtorus=True)
+
+        # make sure mirror user has trove access
+        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
+            'mirror')
+        gt1 = troves[0][0]
+        version1 = troves[0][1].asString()
+        flavor1 = str(troves[0][2])
+        gt2 = troves[1][0]
+        version2 = troves[1][1].asString()
+        flavor2 = str(troves[1][2])
+        self.assertTrue(gt1 == 'group-core')
+        self.assertTrue(version1 == "/testproject." + MINT_PROJECT_DOMAIN \
+            + "@rpl:devel/1.0-1-2")
+        self.assertTrue(flavor1 == 'is: x86')
+        self.assertTrue(gt2 == 'group-dist')
+        self.assertTrue(version2 == "/testproject." + MINT_PROJECT_DOMAIN \
+            + "@rpl:devel/1.0-1-2")
+        self.assertTrue(flavor2 == 'is: x86_64')
+
+        # unpublish and make sure trove access has been removed
+        pubRel.unpublish()
+        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
+            'mirror')
+        self.assertTrue(troves == [])
+
+        MintRepositoryHelper.tearDown(self)
 
     @fixtures.fixture('Full')
     def testGetUniqueBuilds(self, db, data):

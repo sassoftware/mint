@@ -458,8 +458,12 @@ class MintServer(object):
         repo = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
         try:
-            self._addUserToProject(project, user, self.cfg.mirrorRolePass, role,
-                label=label, repo=repo)
+            try:
+                self._addUserToProject(project, user, self.cfg.mirrorRolePass, 
+                    role, label=label, repo=repo)
+            except UserAlreadyExists:
+                # don't care
+                pass
             repo.setRoleCanMirror(label, role, True)
         except Exception, e:
             raise PublishedReleaseMirrorRole(str(e))
@@ -469,11 +473,8 @@ class MintServer(object):
             label = versions.Label(project.getLabel())
         if not repo:
             repo = self._getProjectRepo(project)
-        try:
-            helperfuncs.addUserToRepository(repo, user, password, role, label)
-        except UserAlreadyExists:
-            # already there, so who cares
-            pass
+        
+        helperfuncs.addUserToRepository(repo, user, password, role, label)
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -2514,16 +2515,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         project = projects.Project(self, projectId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
-        if not len(self.publishedReleases.getBuilds(pubReleaseId)):
-            raise PublishedReleaseEmpty
-        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
+
+        self._checkPublishedRelease(pubReleaseId, projectId)
         
         # add the mirror role to the project
         self._addMirrorRoleToProject(project)
-        
+
         valDict = {'timePublished': time.time(),
                    'publishedBy': self.auth.userId}
         return self.publishedReleases.update(pubReleaseId, **valDict)
@@ -2531,13 +2528,100 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     @requiresAuth
     @private
+    def allowReleaseGroupsPublishTorUS(self, pubReleaseId):
+        """
+        Set all builds in the release to allow mirroring so they can
+        be published to rUS
+        """
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        project = projects.Project(self, projectId)
+
+        # do sanity checks, but don't raise an exception if the release is
+        # already published since that is the norm (i.e. we get called after
+        # publish)
+        self._checkPublishedRelease(pubReleaseId, projectId, 
+            checkPublished=False)
+        
+        repo = self._getProjectRepo(project)
+        self._updateTroveAccess(repo, pubReleaseId, 'mirror')
+
+        return True
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def disallowReleaseGroupsPublishTorUS(self, pubReleaseId):
+        """
+        Set all builds in the release to disallow mirroring so they can not
+        be published to rUS
+        """
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        project = projects.Project(self, projectId)
+
+        self._checkUnpublishedRelease(pubReleaseId, projectId, 
+            failIfNotPub=False)
+        
+        repo = self._getProjectRepo(project)
+        self._updateTroveAccess(repo, pubReleaseId, 'mirror', addAccess = False)
+
+        return True
+
+    def _updateTroveAccess(self, repo, pubReleaseId, role, addAccess = True):
+        
+        builds = self.getBuildsForPublishedRelease(pubReleaseId)
+        troveList = []
+        for bId in builds:
+            b = self.getBuild(bId)
+            name = b['troveName']
+            version = versions.ThawVersion(b['troveVersion'])
+            flavor = deps.ThawFlavor(b['troveFlavor'])
+            troveList.append((name, version, flavor))
+
+        if troveList:
+            if addAccess:
+                repo.addTroveAccess('mirror', troveList)
+            else:
+                repo.deleteTroveAccess('mirror', troveList)
+
+        return True
+
+    def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
+        """
+        Performs some sanity checks on the published release
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if not len(self.publishedReleases.getBuilds(pubReleaseId)):
+            raise PublishedReleaseEmpty
+        if checkPublished:
+            if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+                raise PublishedReleasePublished
+
+        return True
+
+    def _checkUnpublishedRelease(self, pubReleaseId, projectId, failIfNotPub=True):
+        """
+        Performs some sanity checks on the unpublished release
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if failIfNotPub:
+            if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+                raise PublishedReleaseNotPublished
+
+        return True
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
     def unpublishPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
-        if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleaseNotPublished
+
+        self._checkUnpublishedRelease(pubReleaseId, projectId)
+
         valDict = {'timePublished': None,
                    'publishedBy': None}
         return self.publishedReleases.update(pubReleaseId, **valDict)
@@ -2567,11 +2651,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.builds.getUnpublishedBuilds(projectId)
 
-    @typeCheck(int)
+    @typeCheck(int, int)
     @private
-    def getBuildsForPublishedRelease(self, pubReleaseId):
+    def getBuildsForPublishedRelease(self, pubReleaseId, buildType = None):
+        """
+        Get builds in a release and optionally filters by buildtype
+        """
         self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.getBuilds(pubReleaseId)
+        allBuilds = self.publishedReleases.getBuilds(pubReleaseId)
+
+        if buildType:
+            builds = []
+            for b in allBuilds:
+                if self.getBuildType(b) == buildType:
+                    builds.append(b)
+        else:
+            builds = allBuilds
+        
+        return builds
 
     @typeCheck(int)
     @private

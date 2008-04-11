@@ -839,7 +839,7 @@ class ProjectHandler(WebHandler):
     @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
     @strFields(vmtn = '')
-    def publishRelease(self, auth, confirmed, vmtn, **yesArgs):
+    def publishRelease(self, auth, confirmed, vmtn, pubtorus = False, **yesArgs):
         pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
         if confirmed:
             vmtnError = ''
@@ -873,7 +873,7 @@ class ProjectHandler(WebHandler):
                                                    communitytypes.VMWARE_VAM,
                                                    vamId)
 
-            pubrelease.publish()
+            pubrelease.publish(pubtorus=pubtorus)
             if vmtnError:
                 self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version) + '.  ' + vmtnError)
             else:
@@ -893,7 +893,8 @@ class ProjectHandler(WebHandler):
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
-                    noLink = "releases", previewData = previewData)
+                    noLink = "releases", previewData = previewData, 
+                    pubtorus = False)
 
     @ownerOnly
     @dictFields(yesArgs = {})

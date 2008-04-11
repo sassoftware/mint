@@ -117,8 +117,16 @@ class PublishedRelease(database.TableObject):
                    'description': self.description}
         return self.server.updatePublishedRelease(self.pubReleaseId, valDict)
 
-    def publish(self):
-        return self.server.publishPublishedRelease(self.pubReleaseId)
+    def publish(self, pubtorus=False):
+        self.server.publishPublishedRelease(self.pubReleaseId)
+        if pubtorus:
+            self.server.allowReleaseGroupsPublishTorUS(self.pubReleaseId)
+        
+        return True
 
-    def unpublish(self):
-        return self.server.unpublishPublishedRelease(self.pubReleaseId)
+    def unpublish(self, unpubtorus=True):
+        self.server.unpublishPublishedRelease(self.pubReleaseId)
+        if unpubtorus:
+            self.server.disallowReleaseGroupsPublishTorUS(self.pubReleaseId)
+
+        return True
