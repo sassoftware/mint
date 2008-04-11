@@ -229,44 +229,10 @@ class MintApacheServer(rephelp.ApacheServer):
         f.close()
 
     def start(self, resetDir=True):
-        if resetDir:
-            if os.path.exists(self.reposDir):
-                shutil.rmtree(self.reposDir)
-            os.mkdir(self.reposDir)
-            self.createConfig()
+        rephelp.ApacheServer.start(self, resetDir)
         if self.reposDB:
-            self.reposDB.start()
-            self.reposDB.createSchema()
-            self.reposDB.createUsers()
             if self.reposDB.driver == 'postgresql':
                 os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
-        if self.serverpid != -1:
-            return
-
-        # This may not be catching all semaphores (and may catch extra ones
-        # too)
-        oldSemaphores = rephelp.listSemaphores()
-
-        self.serverpid = os.fork()
-        if self.serverpid == 0:
-            os.chdir('/')
-            #print "starting server in %s" % self.serverRoot
-	    args = ("/usr/sbin/httpd",
-		    "-X",
-		    "-d", self.serverRoot,
-		    "-f", "httpd.conf",
-		    "-C", 'DocumentRoot "%s"' % self.serverRoot)
-            rephelp.osExec(args)
-        else:
-            pass
-        rephelp.tryConnect("localhost", self.port)
-        for i in range(200):
-            self.semaphores = rephelp.listSemaphores() - oldSemaphores
-            if self.semaphores:
-                break
-            time.sleep(.1)
-
-        os.mkdir(os.path.join(self.serverRoot, 'cscache'))
 
         self.mintDb.start()
     
