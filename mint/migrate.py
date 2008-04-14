@@ -348,6 +348,8 @@ class MigrateTo_45(SchemaMigration):
                                     "prodtype VARCHAR(128) DEFAULT ''",
                                     "version VARCHAR(128) DEFAULT ''")
 
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
