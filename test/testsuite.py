@@ -62,26 +62,29 @@ def setup():
     global testPath
     global archivePath
 
-    conaryPath      = os.getenv('CONARY_PATH',      '../../conary-2.0')
-    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.join(conaryPath, '..', 'conary-test-2.0'))
-    mcpPath         = os.getenv('MCP_PATH',         '../../mcp')
-    mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.join(mcpPath, 'test'))
-    jobslavePath    = os.getenv('JOB_SLAVE_PATH',   '../../jobslave')
-    mintPath        = os.getenv('MINT_PATH',        '..')
-    mintTestPath    = os.getenv('MINT_TEST_PATH',   '.')
-    raaPath         = os.getenv('RAA_PATH',         '../../raa')
-    raaTestPath     = os.getenv('RAA_TEST_PATH',    '../../raa-test')
-    raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', '../raaplugins')
+    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary-2.0'))
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test-2.0')))
+    mcpPath         = os.getenv('MCP_PATH',         os.path.realpath('../../mcp'))
+    mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.realpath(os.path.join(mcpPath, 'test')))
+    jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath('../../jobslave'))
+    mintPath        = os.getenv('MINT_PATH',        os.path.realpath('..'))
+    mintTestPath    = os.getenv('MINT_TEST_PATH',   os.path.realpath('.'))
+    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa'))
+    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test'))
+    raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
+
+    coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
 
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
-        raaPath, raaTestPath, raaPluginsPath)] + sys.path
+        raaPath, raaTestPath, raaPluginsPath, coveragePath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
         JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
+        COVERAGE_PATH=coveragePath, 
         PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
