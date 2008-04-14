@@ -19,7 +19,7 @@ from conary.conaryclient import cmdline
 schemaCutoff = 37
 knownGroupVersions = ('3\.1\.(\d{2}|[56789])(\.\d+)?$', '4\..*')
 
-staticPaths = ['config', 'logs', 'installable_iso.conf',
+staticPaths = ['logs', 'installable_iso.conf',
                'toolkit', 'iso_gen.conf', 'live_iso.conf',
                'bootable_image.conf']
 # toolkit is linked to outgoing job server architecture.
