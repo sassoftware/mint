@@ -326,7 +326,7 @@ class MigrateTo_45(SchemaMigration):
         drop_tables(cu, 'rAPAPasswords', 'OutboundMirrorTargets')
 
         # Create versions table if needed
-        if 'ProductVersions' not in db.tables:
+        if 'ProductVersions' not in self.db.tables:
             cu.execute("""
                 CREATE TABLE ProductVersions (
                     productVersionId    %(PRIMARYKEY)s,
@@ -335,8 +335,8 @@ class MigrateTo_45(SchemaMigration):
                     description         TEXT,
                 CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
                     REFERENCES Projects(projectId) ON DELETE CASCADE
-            ) %(TABLEOPTS)s """ % db.keywords)
-            db.tables['ProductVersions'] = []
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+            self.db.tables['ProductVersions'] = []
 
         return True
 
