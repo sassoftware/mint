@@ -1,32 +1,18 @@
 #
-# Copyright (c) 2005-2006 rPath, Inc.
+# Copyright (c) 2008 rPath, Inc.
 #
 # All rights reserved
 #
 
-all: default-all default-subdirs
+python_files = \
+	__init__.py		\
+	repoconvert.py
 
-SUBDIRS = 
 
-python_files = repoconvert.py \
-	__init__.py
+all: default-all
 
-extra_files = Makefile
+install: raaplugins-install default-install
 
-dist_files = $(python_files) $(extra_files)
+clean: default-clean
 
-generated_files = *.pyo *.pyc
-
-.PHONY: clean dist install subdirs
-
-subdirs: default-subdirs
-
-install: all install-subdirs pyfiles-install
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(pluginsdir)', ddir='$(pluginsdir)', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(pluginsdir)', ddir='$(pluginsdir)', quiet=1)"
-
-dist: default-dist
-
-clean: clean-subdirs default-clean
-
-include ../../Make.rules
+include ../../../../Make.rules
