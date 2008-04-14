@@ -233,10 +233,9 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 0)
+    Version = (45, 1)
 
     # 45.0
-    # - Add column for backupExternal option for projects
     # - Create UpdateServices table
     # - Create OutboundMirrorsUpdateServices table
     # - Distill the OutboundMirrorTargets table into a set unique by URL;
@@ -247,13 +246,6 @@ class MigrateTo_45(SchemaMigration):
     def migrate(self):
         from urlparse import urlparse
         cu = self.db.cursor()
-
-        # add backupExternal option, ignoring if there already
-        try:
-            cu.execute("""ALTER TABLE Projects
-                ADD COLUMN backupExternal INT DEFAULT 0""")
-        except sqlerrors.DuplicateColumnName:
-            pass
 
         # Make sure UpdateServices table and OutboundMirrorsUpdateServices tables
         # are created. We copy this code from mint/schema.py because this
@@ -331,13 +323,31 @@ class MigrateTo_45(SchemaMigration):
                           updateServiceId)
 
         # Kill old vestigial tables
-        cu.execute("""DROP TABLE rAPAPasswords""")
-        cu.execute("""DROP TABLE OutboundMirrorTargets""")
+        drop_tables(cu, 'rAPAPasswords', 'OutboundMirrorTargets')
 
         # Create versions table if needed
-        schema._createProductVersions(self.db)
+        if 'ProductVersions' not in db.tables:
+            cu.execute("""
+                CREATE TABLE ProductVersions (
+                    productVersionId    %(PRIMARYKEY)s,
+                    projectId           INT NOT NULL,
+                    name                VARCHAR(16),
+                    description         TEXT,
+                CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
+                    REFERENCES Projects(projectId) ON DELETE CASCADE
+            ) %(TABLEOPTS)s """ % db.keywords)
+            db.tables['ProductVersions'] = []
 
         return True
+
+    # 45.1
+    # - Add columns that got dropped from the migration in a merge
+    def migrate1(self):
+        cu = self.db.cursor()
+
+        add_columns(cu, 'Projects', "shortname VARCHAR(128)",
+                                    "prodtype VARCHAR(128) DEFAULT ''",
+                                    "version VARCHAR(128) DEFAULT ''")
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

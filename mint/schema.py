@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(45, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 1)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -812,7 +812,7 @@ def _createProductVersions(db):
             CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
                 REFERENCES Projects(projectId) ON DELETE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['Versions'] = []
+        db.tables['ProductVersions'] = []
         commit = True
 
     if commit:
