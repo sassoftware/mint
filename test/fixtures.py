@@ -165,7 +165,6 @@ class FixtureCache(object):
                 - C{admin} - the id of the user "admin"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         testId = self.createUser(cfg, db, "test")
         adminId = self.createUser(cfg, db, "admin", isAdmin=True)
@@ -208,7 +207,6 @@ class FixtureCache(object):
 
         # connect to the database and open a MintServer instance
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         # create the users
         adminId = self.createUser(cfg, db, username = "admin", isAdmin = True)
@@ -323,7 +321,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         userId = self.createUser(cfg, db, 'test')
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
@@ -365,7 +362,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
         testId = self.createUser(cfg, db, 'test')
 
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
@@ -400,7 +396,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         testId = self.createUser(cfg, db, 'test')
 
@@ -435,7 +430,6 @@ class FixtureCache(object):
 
     def fixtureEC2(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         adminId = self.createUser(cfg, db, username = 'admin', isAdmin = True)
         client = shimclient.ShimMintClient(cfg, ('admin', 'adminpass'))
