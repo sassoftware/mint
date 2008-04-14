@@ -6,7 +6,7 @@ import os
 import sys
 
 from conary.conarycfg import loadEntitlement, EntitlementList
-from conary.dbstore import migration, sqlerrors, sqllib, idtable
+from conary.dbstore import migration, sqlerrors
 from conary.lib.tracelog import logMe
 from mint import schema
 
@@ -58,7 +58,7 @@ def drop_tables(cu, *tables):
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
 # Note that schemas older than 37 are not supported by this migration
 class MigrateTo_37(SchemaMigration):
-    Version = (37,0)
+    Version = (37, 0)
 
     def migrate(self):
         return self.Version
@@ -247,12 +247,12 @@ class MigrateTo_45(SchemaMigration):
         from urlparse import urlparse
         cu = self.db.cursor()
 
-        # Make sure UpdateServices table and OutboundMirrorsUpdateServices tables
-        # are created. We copy this code from mint/schema.py because this
-        # is a snapshot of how these tables looked at the time this
-        # schema version was created; calling schema._createMirrorInfo would
-        # create the latest version of that table (and foul up future
-        # migrations, perhaps).
+        # Make sure UpdateServices table and OutboundMirrorsUpdateServices
+        # tables are created. We copy this code from mint/schema.py because
+        # this is a snapshot of how these tables looked at the time this schema
+        # version was created; calling schema._createMirrorInfo would create
+        # the latest version of that table (and foul up future migrations,
+        # perhaps).
         if 'UpdateServices' not in self.db.tables:
             cu.execute("""
             CREATE TABLE UpdateServices (
@@ -263,7 +263,6 @@ class MigrateTo_45(SchemaMigration):
                 mirrorPassword          VARCHAR(254) NOT NULL
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['UpdateServices'] = []
-            commit = True
         self.db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
                 'hostname', unique = True)
 
@@ -298,16 +297,16 @@ class MigrateTo_45(SchemaMigration):
                       ORDER BY outboundMirrorTargetsId DESC""")
         updateServices = dict()
         outboundMirrorsUpdateServices = dict()
-        for r in cu.fetchall():
-            updateServiceHostname = urlparse(r[2])[1]
+        for targetId, mirrorId, url, username, password in cu.fetchall():
+            updateServiceHostname = urlparse(url)[1]
             if updateServiceHostname not in updateServices.keys():
-                updateServiceId = r[0]
+                updateServiceId = targetId
                 updateServices[updateServiceHostname] = \
-                        (updateServiceId, r[3], r[4])
+                        (updateServiceId, username, password)
                 outboundMirrorsUpdateServices[updateServiceId] = []
             else:
                 updateServiceId = updateServices[updateServiceHostname][0]
-            outboundMirrorsUpdateServices[updateServiceId].append(r[1])
+            outboundMirrorsUpdateServices[updateServiceId].append(mirrorId)
 
         for usHostname, usData in updateServices.items():
             cu.execute("""INSERT INTO UpdateServices (hostname,
