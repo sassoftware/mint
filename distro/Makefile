@@ -17,9 +17,8 @@ install: default-install
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
+	install -D -m0644 rbuilder-generated.conf $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
-	echo '# This file will be overwritten by rBuilder first-time setup' \
-		> $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	echo '# Custom configuration overrides for rBuilder may be placed here' \
 		> $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
 	# rBuilder misc
@@ -35,10 +34,12 @@ install: default-install
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
+	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
+	echo '# chkconfig: 345 21 36' > $(DESTDIR)/etc/chkconfig.d/postgresql
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 
 clean: default-clean
