@@ -813,7 +813,7 @@ class ProductVersions(database.TableObject):
     def _getProductDefinitionTroveForVersion(self):
         project = Project(self.server, self.id)
         # XXX fill in with real trove name
-        return ('sekrittrove:source',
+        return ('proddef:source',
                 '%s.%s@%s:proddef-%s' % \
                 (project.shortname,
                  project.domainname,
@@ -824,15 +824,14 @@ class ProductVersions(database.TableObject):
         # TODO implement me
         pass
 
-
     def setProductDefinitionForVersion(self):
         # TODO implement me
         pass
 
 
 class ProductVersionsTable(database.KeyedTable):
-    name = 'ProjectVersions'
-    key = 'projectVersionsId'
+    name = 'ProductVersions'
+    key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
                'name',

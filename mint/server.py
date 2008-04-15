@@ -69,6 +69,7 @@ from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
+from conary.lib import xmldata
 from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
 from conary.repository import netclient
 from conary.repository import shimclient
@@ -276,6 +277,7 @@ def getTables(db, cfg):
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
+    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -4497,6 +4499,68 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def getProxies(self):
         return self._getProxies()
+
+    @private
+    @requiresAuth
+    @typeCheck(int, str, ((str, unicode),))
+    def addProductVersion(self, projectId, name, description):
+        return self.productVersions.new(projectId = projectId, name = name,
+                description = description)
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductVersion(self, versionId):
+        try:
+            ret = self.productVersions.get(versionId)
+        except database.ItemNotFound:
+            raise ProductVersionNotFound()
+        else:
+            return ret
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductDefinitionForVersion(self, versionId):
+        # TODO figure out where the real imports are going to be
+        import proddef
+        xmlbinder = xmldata.DataBinder()
+        pd = proddef.ProductDefinition(xml=file('/tmp/testing/%d.xml' % versionId).read())
+
+        buildDefinition = pd
+
+        # TODO Unmock this
+        pdDict = dict(baseFlavor = pd.getBaseFlavor(),
+                      stages = pd.getStages(),
+                      upstreamSources = pd.getUpstreamSources(),
+                      buildDefinition = pd.getBuildDefinition())
+        return pdDict
+
+    @private
+    @requiresAuth
+    @typeCheck(int, dict)
+    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+        # TODO figure out where the real imports are going to be
+        import proddef
+        # TODO Unmock this
+        pd = proddef.ProductDefinition(productDefinitionDict)
+        f = file('/tmp/testing/%d.xml' % versionId, 'w')
+        f.write(pd.toXml())
+        f.close()
+        return True
+
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def editProductVersion(self, versionId, newDesc):
+        return self.productVersions.update(versionId, description = newDesc)
+
+    @private
+    @typeCheck()
+    @requiresAuth
+    def getProductVersionList(self):
+        return self.productVersions.getProductVersionList()
+
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

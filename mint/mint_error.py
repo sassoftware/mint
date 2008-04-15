@@ -117,6 +117,8 @@ class NotEntitledError(MintError):
 class ParameterError(MintError):
     "A required parameter had an incorrect data type."
 class PermissionDenied(MintError): "Permission Denied"
+class ProductVersionNotFound(MintError):
+    "The specified product version was not found."
 class PublishedReleaseEmpty(MintError):
     "The referenced release has no builds and cannot be published."
 class PublishedReleaseMissing(MintError):

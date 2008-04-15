@@ -1062,52 +1062,74 @@ class ProjectHandler(WebHandler):
     @intFields(id = -1)
     def editVersion(self, auth, id, *args, **kwargs):
         isNew = (id == -1)
-        # TODO: this is a strawman; get real data from repository here
-        kwargs = {
-            'name': "1.0",
-            'description': "This is a test version",
-            'upstreamSources': (('*', 'rap.rpath.com@rpath:linux-1'),),
-            'stages': (('devel', 'Development', '-devel'),
-                       ('qa', 'Quality Assurance', '-qa'),
-                       ('release', 'Release', '')),
-            'buildDefinitions': ({'name': 'My Installable ISO', 'buildType': buildtypes.INSTALLABLE_ISO, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86]},
-                                 {'name': 'My Other Installable ISO', 'buildType': buildtypes.INSTALLABLE_ISO, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64]},
-                                 {'name': 'VMware', 'buildType': buildtypes.VMWARE_IMAGE, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86] }),
-            'visibleBuildTypes': self.client.getAvailableBuildTypes(),
-            'buildTemplateValueToIdMap': buildtemplates.getValueToTemplateIdMap(),
-        }
+
+        if not isNew:
+            kwargs.update(self.client.getProductVersion(id))
+            kwargs.update(self.client.getProductDefinitionForVersion(id))
+        else:
+            kwargs.setdefault('id', -1)
+            kwargs.setdefault('name', '')
+            kwargs.setdefault('description', '')
+            kwargs.setdefault('baseFlavor', 'is: x86')
+            kwargs.setdefault('stages', {})
+            kwargs.setdefault('upstreamSources', {})
+            kwargs.setdefault('buildDefinition', [])
         return self._write("editVersion",
                 isNew = isNew,
-                id=-1,
+                id=id,
+                visibleBuildTypes = self.client.getAvailableBuildTypes(),
+                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(action = 'Cancel')
+    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, action, **kwargs):
-        if action == "Cancel":
-            self._predirect()
+    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+            **kwargs):
 
-        # TODO: Gather inputs
-        for kw, val in sorted(kwargs.items(), key=lambda x: x[0]):
-            print >> sys.stderr, "k: %s\tv:%s" % (kw, val)
-        sys.stderr.flush()
+        if not name:
+            self._addErrors("Missing version name")
 
-        # TODO: Serialize new product definition
+        # Gather all grouped inputs
+        collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
+                coerceValues=True)
 
+        builds = []
+        for builddef in collatedDict.get('pd-builddef',[]):
+            buildDict = dict(name=builddef.pop('name'),
+                             baseFlavor=builddef.pop('baseFlavorType'))
 
-        # TODO: Validate product definition
+            # Use data templates to validate individual options
+            tmpl = buildtemplates.getDataTemplate(int(builddef.pop('buildType')))
+            try:
+                tmpl.validate(**builddef)
+            except BuildOptionValidationException, e:
+                self._addErrors(str(e))
+            else:
+                builddef.update(tmpl.getDefaultDict())
+                buildDict[tmpl.xmlName] = builddef
+                builds.append(buildDict)
 
-
-        # TODO: Store the new product definition
+        pdDict = dict(baseFlavor=baseFlavor,
+                      stages=collatedDict.get('pd-stages',{}),
+                      upstreamSources=collatedDict.get('pd-usources',{}),
+                      buildDefinition=builds)
 
         if not self._getErrors():
+            if id == -1:
+                id = self.client.addProductVersion(self.project.id, name,
+                        description)
+            else:
+                self.client.editProductVersion(id, description)
+
+            assert(id != -1)
+            self.client.setProductDefinitionForVersion(id, pdDict)
+
             self._setInfo("Updated product version")
             self._predirect()
         else:
-            # TODO return new product definition
-            pass
+            return self.editVersion(**kwargs)
 
     @strFields(projecturl = '', desc = '', name = '', branch = '',
                appliance = 'unknown', commitEmail = '')
