@@ -63,7 +63,7 @@ def backup(cfg, out, backupMirrors = False):
             rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
                          reposDbName)
             if rcu.fetchone():
-                util.execute("pg_dump -U %s -c -O -d %s > %s" %\
+                util.execute("pg_dump -U %s -c --disable-triggers %s > %s" %\
                              (dbUser, reposDbName, dumpPath))
                 print >> out, reposContentsDir[0] % reposDir
             rdb.close()
@@ -120,12 +120,12 @@ def restore(cfg):
                              pgRepo)
                 if rcu.fetchone():
                     rcu.execute("DROP DATABASE %s" % pgRepo)
-                    rcu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % pgRepo)
+                rcu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % pgRepo)
                 rdb.close()
 
                 dbUser = cfg.reposDBPath.split('@')[0]
-                util.execute('cat %s | psql -U %s %s'% (dumpPath, dbUser, pgRepo))
-                rdb = dbstore.connect('%s' % (cfg.reposDBPath % 'postgres'),
+                util.execute('psql -f %s -U %s %s'% (dumpPath, dbUser, pgRepo))
+                rdb = dbstore.connect('%s' % (cfg.reposDBPath % pgRepo),
                                       cfg.reposDBDriver)
                 conary.server.schema.loadSchema(rdb, doMigrate=True)
                 rdb.close()
