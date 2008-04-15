@@ -8,6 +8,7 @@ from raa import rpath_error
 from raa.constants import *
 from raa.modules.raasrvplugin import rAASrvPlugin
 from conary import dbstore
+from conary.dbstore import sqlerrors
 from conary.lib import util
 from conary.repository.netrepos.netserver import ServerConfig
 from mint import config, projects
@@ -48,6 +49,13 @@ def _startPostgresql():
             time.sleep(4) #Don't spin loop here
             count = count + 1
         else:
+            # Add the plpgsql language to template1 so new databases will
+            # have it.
+            cu = dbm.cursor()
+            try:
+                cu.execute('CREATE LANGUAGE plpgsql')
+            except sqlerrors.CursorError:
+                log.info('Language "plpgsql" already exists')
             break
     return True
 
@@ -76,8 +84,7 @@ class reportCallback:
 
 
 class SqliteToPgsql(rAASrvPlugin):
-    #convertScript = '/usr/share/conary/migration/db2db.py'
-    convertScript = '/home/jtate/hg/conary-2.0/scripts/migration/db2db.py'
+    convertScript = '/usr/share/conary/migration/db2db.py'
     #This follows the assumption that the pg database is on localhost
     pgConnectString = '%s@localhost.localdomain/%%s'
     pgConnectUser = 'rbuilder'
