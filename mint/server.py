@@ -61,10 +61,12 @@ from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlH
 from mcp import client as mcpClient
 from mcp import mcp_error
 
+from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
 from conary import sqlite3
 from conary import versions
+from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
@@ -4524,16 +4526,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getProductDefinitionForVersion(self, versionId):
         # TODO figure out where the real imports are going to be
         import proddef
-        xmlbinder = xmldata.DataBinder()
-        pd = proddef.ProductDefinition(xml=file('/tmp/testing/%d.xml' % versionId).read())
 
-        buildDefinition = pd
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
 
-        # TODO Unmock this
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        proddefLabel = versions.Label(version.getProddefLabel())
+        proddefs = repos.getTroveVersionsByPath(['proddef.xml',], proddefLabel)
+
+        # proddefs is a dict keyed by the file we just said we wanted...
+        proddefTroves = proddefs['proddef.xml']
+
+        # Find the latest trove
+        latestTrove = proddefTroves[0][1]
+        for proddefTrove in proddefTroves:
+            if proddefTrove[1] > latestTrove:
+                latestTrove = proddefTrove[1]
+
+        proddefRevision = latestTrove.trailingRevision()
+        proddefVersion = versions.Version([proddefLabel, proddefRevision])
+
+        proddefData = client.getFilesFromTrove('proddef:source', 
+                                               proddefVersion,
+                                               deps.Flavor())
+
+        xml = proddefData['proddef.xml'].read()
+
+        pd = proddef.ProductDefinition(xml=xml)
+
         pdDict = dict(baseFlavor = pd.getBaseFlavor(),
                       stages = pd.getStages(),
                       upstreamSources = pd.getUpstreamSources(),
                       buildDefinition = pd.getBuildDefinition())
+
         return pdDict
 
     @private
@@ -4542,11 +4570,33 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
         # TODO figure out where the real imports are going to be
         import proddef
-        # TODO Unmock this
+
+        # Convert productDefinitionDict to Xml.
         pd = proddef.ProductDefinition(productDefinitionDict)
-        f = file('/tmp/testing/%d.xml' % versionId, 'w')
-        f.write(pd.toXml())
-        f.close()
+        pdXml = pd.toXml()
+
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+
+        # Set to the special proddef label.
+        projectCfg.buildLabel = version.getProddefLabel()                           
+
+        client = conaryclient.ConaryClient(projectCfg)
+
+        troveXmlFile = filetypes.RegularFile(contents=pdXml)
+        troveChangeLog = changelog.ChangeLog('rBuilder', 'https://issues.rpath.com',
+                             'Product Definition commit from rBuilder\n')
+
+        # Create a change set object from our source data.
+        changeSet = client.createSourceTrove('proddef:source', projectCfg.buildLabel,
+                                             '1.0', {'proddef.xml' : troveXmlFile}, 
+                                             troveChangeLog)
+        
+        # Commit the change set to the repo.
+        repos = client.getRepos()
+        repos.commitChangeSet(changeSet)                            
+
         return True
 
     @private
