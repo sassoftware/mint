@@ -256,6 +256,7 @@ def getBuildIdFromUuid(uuid):
 
         return string.atoi(buildId)
 
+# TODO: Needs unit tests
 def collateDictByKeyPrefix(fields, coerceValues=False):
     """
     Take a dict of fields that looks like this:
@@ -292,6 +293,7 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
         dicts[key] = value
 
     return dicts
+
 def addUserToRepository(repos, username, password, role, label=None):
     """
     Add a user to the repository

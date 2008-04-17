@@ -26,3 +26,4 @@
 .*,cover
 ^VERSION$
 ^INSTALL$
+^\..*project
