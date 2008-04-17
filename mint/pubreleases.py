@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -7,6 +7,7 @@
 from mint import builds
 from mint import database
 from mint import helperfuncs
+from mint.mint_error import *
 from conary.deps import deps
 
 class PublishedReleasesTable(database.KeyedTable):
@@ -32,7 +33,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def publishedReleaseExists(self, pubReleaseId):
         try:
             pubRelease = self.get(pubReleaseId, fields=['pubReleaseId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return False
         return True
 
@@ -116,8 +117,16 @@ class PublishedRelease(database.TableObject):
                    'description': self.description}
         return self.server.updatePublishedRelease(self.pubReleaseId, valDict)
 
-    def publish(self):
-        return self.server.publishPublishedRelease(self.pubReleaseId)
+    def publish(self, pubtorus=False):
+        self.server.publishPublishedRelease(self.pubReleaseId)
+        if pubtorus:
+            self.server.allowReleaseGroupsPublishTorUS(self.pubReleaseId)
+        
+        return True
 
-    def unpublish(self):
-        return self.server.unpublishPublishedRelease(self.pubReleaseId)
+    def unpublish(self, unpubtorus=True):
+        self.server.unpublishPublishedRelease(self.pubReleaseId)
+        if unpubtorus:
+            self.server.disallowReleaseGroupsPublishTorUS(self.pubReleaseId)
+
+        return True

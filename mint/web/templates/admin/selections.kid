@@ -3,7 +3,7 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -11,6 +11,7 @@
     </head>
     <?python # kid bug requires comment.
         from mint import maintenance
+        from mint.web.templatesupport import projectText
     ?>
     <body>
         <div id="left" class="side">
@@ -21,7 +22,7 @@
             <form action="addSelection" method="post">
             <table>
                 <tr>
-                    <td>Project Name:</td>
+                    <td>${projectText().title()} Name:</td>
                     <td width="75%"><input type="text" name="name" size="50"/></td>
                 </tr>
                 <tr>
@@ -44,7 +45,7 @@
             <table id="spotTable" style="width: 100%;" py:if="selectionData">
                 <thead>
                 <tr>
-                    <th id="spotTh">Project Name</th>
+                    <th id="spotTh">${projectText().title()} Name</th>
                     <th id="spotTh">URL</th>
                     <th id="spotTh">Rank</th>
                     <th id="spotTh">Options</th>

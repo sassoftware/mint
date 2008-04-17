@@ -206,27 +206,42 @@ function killJob(jobId) {
     req.send(false, [jobId]);
 }
 
-function getGroups(projId, callback) {
+
+function displayCheckList(fieldname, allItems, selectedItems) {
+    var anchorFieldname = 'chklist_'+fieldname;
+    
+    replaceChildNodes(anchorFieldname, P(null));
+    if (allItems.length > 0) {
+        for (var i in allItems) {
+            var idname = anchorFieldname + '_' + i;
+            var attrs = {'id': idname, 'class': 'check indented groupcheck', 'type': 'checkbox', 'name': fieldname, 'value': allItems[i]};
+            if (selectedItems) {
+                if (selectedItems.indexOf(allItems[i]) >= 0) {
+                    attrs['checked'] = 'checked';
+                }
+            }
+            appendChildNodes(anchorFieldname, INPUT(attrs, null),
+                    LABEL({'for': idname}, allItems[i]), BR(null));
+        }
+        appendChildNodes(anchorFieldname, P(null));
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function getGroups(projId, selectedGroups) {
     var processShowGroups = function (aReq) {
         logDebug(aReq.responseText);
         troveList = evalJSONRequest(aReq);
-        replaceChildNodes('groups');
-        for (var i in troveList) {
-            var opt = OPTION({'value':troveList[i]}, troveList[i]);
-            appendChildNodes('groups', opt);
-        }
-        if (callback != null) {
-            callback.call();
-        }
+        displayCheckList('groups', troveList, selectedGroups);
     }
-
-    replaceChildNodes('groups');
+    replaceChildNodes('chklist_groups');
     if (projId < 0) {
-        $('groups').disabled = true;
         return;
     }
-    $('groups').disabled = false;
-    appendChildNodes('groups', OPTION({'value': ''}, "Retrieving groups..."));
+    appendChildNodes('chklist_groups', P({'class': 'indented'}, IMG({'src': staticPath + 'apps/mint/images/circle-ball-dark-antialiased.gif'}), "Retrieving groups..."));
     var req = new JsonRpcRequest("jsonrpc/", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processShowGroups);
@@ -546,29 +561,18 @@ function getGroupTroveById(aId) {
 
 }
 
-function getProjectLabels(projectId, callback) {
-    
+function getProjectLabels(projectId, selectedProjectLabels) {
+
     projLabelsCallback = function(aReq) {
-        logDebug("[JSON] response: ", aReq.responseText);
         var labels = evalJSONRequest(aReq);
-        replaceChildNodes('labelList');
-        for (var i in labels) {
-            var opt = OPTION({'name':'labelList', 'value':labels[i]},
-                             labels[i]);
-            appendChildNodes('labelList', opt);
-        }
-        if (callback != null) {
-            callback.call();
-        }
-        $('labelList').disabled = false;
+        displayCheckList('labelList', labels, selectedProjectLabels);
     }
 
-    replaceChildNodes('labelList');
+    replaceChildNodes('chklist_labelList');
     if (projectId < 0) {
-        $('labelList').disabled = true;
         return;
     }
-    appendChildNodes('labelList', OPTION({'value': ''}, "Retrieving labels..."));
+    appendChildNodes('chklist_labelList', P({'class': 'indented'}, IMG({'src': staticPath + 'apps/mint/images/circle-ball-dark-antialiased.gif'}), "Retrieving labels..."));
     var req = new JsonRpcRequest('jsonrpc/', 'getAllProjectLabels');
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(projLabelsCallback);
@@ -585,27 +589,6 @@ function addOutboundMirror_onProjectChange (e) {
     }
 }
 
-function setSelectedLabels(labels) {
-    var options = getElementsByTagAndClassName('option', null, 'labelList');
-    for (var i in labels) {
-        for (var j in options) {
-            if (labels[i] == options[j].value) {
-                options[j].selected = true;
-            }
-        }
-    }
-}
-
-function setSelectedGroups(groups) {
-    var options = getElementsByTagAndClassName('option', null, 'groups');
-    for (var i in groups) {
-        for (var j in options) {
-            if (groups[i] == options[j].value) {
-                options[j].selected = true;
-            }
-        }
-    }
-}
 // Front Page
 function buildIt() {
     newRight = DIV({'id':'activeRight'}, 

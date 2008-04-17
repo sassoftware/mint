@@ -5,12 +5,12 @@
 #
 
 kid_files =			\
-	add_outbound.kid	\
 	addExternal.kid		\
-	frontPage.kid		\
+	editOutbound.kid	\
+	editUpdateService.kid	\
 	external.kid		\
+	frontPage.kid		\
 	maintenance.kid		\
-	mirrortarget.kid	\
 	report.kid		\
 	outbound.kid		\
 	newUser.kid		\
@@ -18,6 +18,7 @@ kid_files =			\
 	spotlight.kid		\
 	preview.kid	\
 	selections.kid		\
+	updateServices.kid	\
 	useit.kid
 
 all: kid-build default-all

@@ -3,9 +3,13 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+from mint.web.templatesupport import projectText
+?>
+
     <head>
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
         <script type="text/javascript">
@@ -37,9 +41,9 @@
                 ${statusArea("Cook")}
 
                 <p>When the job status "Finished" appears, your group
-                has finished cooking. Click on the "Builds" link in the
-                "Project Resources" sidebar, and select
-                ${curGroupTrove.recipeName} to create a build.</p>
+                has finished cooking. Click on the "Images" link in the
+                "${projectText().title()} Resources" sidebar, and select
+                ${curGroupTrove.recipeName} to create an image.</p>
             </div>
         </div>
     </body>

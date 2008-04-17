@@ -17,10 +17,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes, buildtemplates
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
-from mint.database import ItemNotFound
-from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
-     PublishedReleaseMissing, PublishedReleasePublished, \
-     JobserverVersionMismatch, PermissionDenied
+from mint.mint_error import *
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
@@ -58,9 +55,9 @@ class BuildTest(fixtures.FixturedUnitTest):
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
-                'fileUrls': [(4, 0, 'file1')], 'idx': 0, 'fileId': 4},
+                'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
-                 'fileUrls': [(5, 0, 'file2')], 'idx': 1, 'fileId': 5}]
+                 'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6}]
         )
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
@@ -129,6 +126,53 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, build.setDataValue, 'enumArg', '5')
+    
+    @fixtures.fixture("Full")
+    def testImagelessBuild(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['imagelessBuildId'])
+        dataTemplate = build.getDataTemplate()
+        assert(dataTemplate == {})
+        assert(build.getName() == "Test Imageless Build")
+        assert(build.getTrove() ==\
+            ('group-dist',
+             "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2",
+             '1#x86'))
+        assert(build.getTroveName() == 'group-dist')
+        assert(build.getTroveVersion().asString() == \
+               "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-2")
+        assert(build.getTroveFlavor().freeze() == '1#x86')
+        assert(build.getArch() == "x86")
+    
+    @fixtures.fixture("Full")
+    def testBuildDataIntegerValidation(self, db, data):
+        
+        # get a template, doesn't matter what build type is used
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        dataTemplate = build.getDataTemplate()
+
+        # test freespace
+        buildtemplates.freespace().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "-1")
+
+        # test vmMemory
+        buildtemplates.vmMemory().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "-1")
+
+        # test swap size
+        buildtemplates.swapSize().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "-1")
 
     @fixtures.fixture("Full")
     def testMaxIsoSize(self, db, data):
@@ -268,7 +312,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testGetBuildsForProjectOrder(self, db, data):
         # FIXME broken w/r/t new release arch
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -290,7 +336,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testFlavorFlags(self, db, data):
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -529,6 +577,11 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setBuildType(buildtypes.AMI)
         self.failUnless(build.setPublished(pubRel.id, True))
 
+        # IMAGELESS shouldn't throw BuildEmpty, as it's expected that they
+        # don't have any files
+        build.setBuildType(buildtypes.IMAGELESS)
+        self.failUnless(build.setPublished(pubRel.id, True))
+
     @fixtures.fixture('Full')
     def testGetImageTypesCompat(self, db, data):
         client = self.getClient('owner')
@@ -613,7 +666,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.refresh()
         self.failUnlessEqual(build.getFiles(),
             [{'sha1': 'abcd', 'idx': 0, 'title': 'bar', 
-              'fileUrls': [(4, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 4, 'size': 10}]
+              'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 5, 'size': 10}]
         )
 
         # make sure the outputTokengets removed from the build data
@@ -715,8 +768,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(fileUrls), 3)
         self.failUnlessEqual(fileUrls,
                 [(2, urltypes.LOCAL, 'file'),
-                 (4, urltypes.AMAZONS3, 'http://a.test.url/'),
-                 (5, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
+                 (5, urltypes.AMAZONS3, 'http://a.test.url/'),
+                 (6, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
 
 
     @fixtures.fixture('Full')
@@ -781,7 +834,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         client = self.getClient('admin')
 
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         build = client.newBuild(projectId, "Test Build")
@@ -913,7 +968,9 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # Create a second project owned by a different user
         nobody = self.getClient('nobody')
-        otherProjectId = nobody.newProject('bar', 'bar', MINT_PROJECT_DOMAIN)
+        hostname = "bar"
+        otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -15,6 +15,7 @@ import re
 import testsuite
 import time
 import urlparse
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
@@ -228,44 +229,10 @@ class MintApacheServer(rephelp.ApacheServer):
         f.close()
 
     def start(self, resetDir=True):
-        if resetDir:
-            if os.path.exists(self.reposDir):
-                shutil.rmtree(self.reposDir)
-            os.mkdir(self.reposDir)
-            self.createConfig()
+        rephelp.ApacheServer.start(self, resetDir)
         if self.reposDB:
-            self.reposDB.start()
-            self.reposDB.createSchema()
-            self.reposDB.createUsers()
             if self.reposDB.driver == 'postgresql':
                 os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
-        if self.serverpid != -1:
-            return
-
-        # This may not be catching all semaphores (and may catch extra ones
-        # too)
-        oldSemaphores = rephelp.listSemaphores()
-
-        self.serverpid = os.fork()
-        if self.serverpid == 0:
-            os.chdir('/')
-            #print "starting server in %s" % self.serverRoot
-	    args = ("/usr/sbin/httpd",
-		    "-X",
-		    "-d", self.serverRoot,
-		    "-f", "httpd.conf",
-		    "-C", 'DocumentRoot "%s"' % self.serverRoot)
-            rephelp.osExec(args)
-        else:
-            pass
-        rephelp.tryConnect("localhost", self.port)
-        for i in range(200):
-            self.semaphores = rephelp.listSemaphores() - oldSemaphores
-            if self.semaphores:
-                break
-            time.sleep(.1)
-
-        os.mkdir(os.path.join(self.serverRoot, 'cscache'))
 
         self.mintDb.start()
     
@@ -305,8 +272,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
     def getMintCfg(self):
         # write Mint configuration
-        conaryPath = os.environ.get("CONARY_PATH", "")
-        mintPath = os.environ.get("MINT_PATH", "")
+        conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
+        mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
 
         cfg = config.MintConfig()
 
@@ -343,7 +310,6 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.dataPath = self.reposDir
         cfg.logPath = self.reposDir + '/logs'
-        cfg.authDbPath = None
         cfg.imagesPath = self.reposDir + '/images/'
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
@@ -410,6 +376,10 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
+
+    # Repository tests tend to be slow, so tag them with this context
+    contexts = ('slow',)
+
     def openRepository(self, serverIdx = 0, requireSigs = False, serverName = None):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs, serverName)
 
@@ -427,18 +397,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         rephelp.RepositoryHelper.__init__(self, methodName)
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
-
-        if 'context' in self.__class__.__dict__:
-            # take string or list of strings--ensure we copy the original
-            # otherwise recursive behavior ensues to ill effect.
-            context = isinstance(self.context, str) and \
-                      [self.context] or self.context[:]
-
-            method = self.__class__.__dict__[self._TestCase__testMethodName]
-            if '_contexts' in method.__dict__:
-                method._contexts.extend(context)
-            else:
-                method._contexts = context
 
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
@@ -512,7 +470,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                    hostname = "testproject",
                    domainname = MINT_PROJECT_DOMAIN):
         """Create a new mint project and return that project ID."""
-        projectId = client.newProject(name, hostname, domainname)
+        projectId = client.newProject(name, hostname, domainname,
+                        shortname=hostname, version="1.0", prodtype="Component")
         self.setupProject(client, hostname, domainname)
 
         return projectId
@@ -603,6 +562,31 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
             canMirror = None
         db.close()
         return canMirror
+
+    def userExists(self, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+
+        cu.execute("""SELECT userId
+                          FROM Users
+                          WHERE userName=?""", username)
+
+        try:
+            # nonexistent results trigger value error
+            id = cu.fetchall()
+            if id:
+                exists = True
+            else:
+                exists = False
+        except ValueError:
+            exists = False
+    
+        db.close()
+
+        return exists
 
     def moveToServer(self, project, serverIdx = 1):
         """Call this to set up a project's Labels table to access a different
@@ -722,6 +706,11 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
 
 
 class WebRepositoryHelper(BaseWebHelper):
+
+    # apply default context of 'web' to all children of this class
+    # (also, since these tend to be slow, add 'slow' as well)
+    contexts = ('web', 'slow')
+
     def __init__(self, methodName):
         webunittest.WebTestCase.__init__(self, methodName)
         MintRepositoryHelper.__init__(self, methodName)
@@ -813,4 +802,41 @@ class FakeRequest(object):
 
     def get_options(self):
         return self.options
+
+# Gleefully ripped off from Conary's testsuite
+# Use to instantiate an XML-RPC server
+class StubXMLRPCServerController:
+    def __init__(self):
+        self.port = testsuite.findPorts(num = 1)[0]
+        self.childPid = os.fork()
+        if self.childPid > 0:
+            rephelp.tryConnect('127.0.0.1', self.port)
+            return
+
+        server = SimpleXMLRPCServer(("127.0.0.1", self.port),
+                                    logRequests=False)
+        server.register_instance(self.handlerFactory())
+        server.serve_forever()
+
+    def handlerFactory(self):
+        raise NotImplementedError
+
+    def kill(self):
+        if not self.childPid:
+            return
+        os.kill(self.childPid, 15)
+        os.waitpid(self.childPid, 0)
+        self.childPid = 0
+
+    def url(self):
+        return "http://%s:%d/" % (self.getHost(), self.getPort())
+
+    def getHost(self):
+        return "localhost"
+
+    def getPort(self):
+        return self.port
+
+    def __del__(self):
+        self.kill()
 

@@ -1506,3 +1506,11 @@ table.buildDefs tr.dialogButtons td button {
     text-decoration: underline;
     background-color: transparent;
 }
+
+.indented {
+    margin-left: 2em;
+}
+
+.notopmargin {
+    margin-top: 0;
+}

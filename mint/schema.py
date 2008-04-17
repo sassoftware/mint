@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(44, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 1)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -131,6 +131,7 @@ def _createProjects(db):
             creatorId       INT,
             name            varchar(128) UNIQUE,
             hostname        varchar(128) UNIQUE,
+            shortname       varchar(128),
             domainname      varchar(128) DEFAULT '' NOT NULL,
             projecturl      varchar(128) DEFAULT '' NOT NULL,
             description     text,
@@ -141,11 +142,14 @@ def _createProjects(db):
             timeCreated     INT,
             timeModified    INT DEFAULT 0,
             commitEmail     varchar(128) DEFAULT '',
+            prodtype        varchar(128) DEFAULT '',
+            version         varchar(128) DEFAULT '',
             backupExternal  INT DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True
     db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 
@@ -561,6 +565,20 @@ def _createMirrorInfo(db):
     db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
             'targetProjectId')
 
+    if 'UpdateServices' not in db.tables:
+        cu.execute("""
+        CREATE TABLE UpdateServices (
+            updateServiceId         %(PRIMARYKEY)s,
+            hostname                VARCHAR(767) NOT NULL,
+            description             TEXT,
+            mirrorUser              VARCHAR(254) NOT NULL,
+            mirrorPassword          VARCHAR(254) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['UpdateServices'] = []
+        commit = True
+    db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
+            'hostname', unique = True)
+
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
             outboundMirrorId %(PRIMARYKEY)s,
@@ -580,34 +598,24 @@ def _createMirrorInfo(db):
     db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
-    if 'OutboundMirrorTargets' not in db.tables:
+    if 'OutboundMirrorsUpdateServices' not in db.tables:
         cu.execute("""
-        CREATE TABLE OutboundMirrorTargets (
-            outboundMirrorTargetsId %(PRIMARYKEY)s,
+        CREATE TABLE OutboundMirrorsUpdateServices (
             outboundMirrorId        INT NOT NULL,
-            url                     VARCHAR(767) NOT NULL,
-            username                VARCHAR(254) NOT NULL,
-            password                VARCHAR(254) NOT NULL,
-            CONSTRAINT OutboundMirrorTargets_omi_fk
+            updateServiceId         INT NOT NULL,
+            CONSTRAINT omt_omi_fk
                 FOREIGN KEY (outboundMirrorId)
                     REFERENCES OutboundMirrors(outboundMirrorId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+                ON DELETE CASCADE,
+            CONSTRAINT omt_usi_fk
+                FOREIGN KEY (updateServiceId)
+                    REFERENCES UpdateServices(updateServiceId)
+                ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['OutboundMirrorTargets'] = []
+        db.tables['OutboundMirrorsUpdateServices'] = []
         commit = True
-    db.createIndex('OutboundMirrorTargets',
-            'outboundMirrorTargets_outboundMirrorIdIdx', 'outboundMirrorId')
-
-    if 'rAPAPasswords' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rAPAPasswords (
-            host            VARCHAR(255),
-            user            VARCHAR(255),
-            password        VARCHAR(255),
-            role            VARCHAR(255)
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['rAPAPasswords'] = []
-        commit = True
+    db.createIndex('OutboundMirrorsUpdateServices', 'omt_omi_usi_uq',
+            'outboundMirrorId, updateServiceId', unique = True)
 
     if commit:
         db.commit()
@@ -788,7 +796,29 @@ def _createSessions(db):
 
     if commit:
         db.commit()
-        db.loadSchema
+        db.loadSchema()
+
+def _createProductVersions(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'ProductVersions' not in db.tables:
+        cu.execute("""
+            CREATE TABLE ProductVersions (
+                productVersionId    %(PRIMARYKEY)s,
+                projectId           INT NOT NULL,
+                name                VARCHAR(16),
+                description         TEXT,
+            CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
+                REFERENCES Projects(projectId) ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['ProductVersions'] = []
+        commit = True
+
+    if commit:
+        db.commit()
+        db.loadSchema()
+
 
 # create the (permanent) server repository schema
 def createSchema(db):
@@ -809,6 +839,7 @@ def createSchema(db):
     _createFrontPageStats(db)
     _createEC2Data(db)
     _createSessions(db)
+    _createProductVersions(db)
 
 #############################################################################
 # The following code was adapted from Conary's Database Migration schema
