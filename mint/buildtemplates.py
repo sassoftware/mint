@@ -302,6 +302,7 @@ class ImagelessTemplate(Template):
 
 dataHeadings = {}
 dataTemplates = {}
+dataTemplatesByXmlName = {}
 
 for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
                      if x.endswith('Template') and x != 'Template']:
@@ -309,6 +310,7 @@ for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
     dataHeadings[template.id] = buildtypes.typeNames[template.id] + \
                                 ' Settings'
     dataTemplates[template.id] = template
+    dataTemplatesByXmlName[template.xmlName] = template
 
 
 def getDataTemplate(buildType):
@@ -316,6 +318,9 @@ def getDataTemplate(buildType):
         return dataTemplates[buildType]
     else:
         return {}
+
+def getDataTemplateByXmlName(xmlName):
+    return dataTemplatesByXmlName.get(xmlName, {})
 
 def getDisplayTemplates():
     return [(x, dataHeadings[x], dataTemplates[x]) \

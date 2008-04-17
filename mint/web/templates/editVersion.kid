@@ -181,16 +181,16 @@
             <?python
                 from mint import buildtypes
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
-                buildType = bdef.get('buildType', 1)
+                buildType = bdef.get('_buildType', visibleBuildTypes[0])
             ?>
             <tr id="pd-builddef-${ordinal}">
                 <td>
                     <input type="text" name="pd-builddef-${ordinal}-name" value="${bdef.get('name','')}" />
                 </td>
                 <td>
-                    <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-buildType">
+                    <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-_buildType">
                         <option py:for="key in visibleBuildTypes"
-                            py:attrs="{'value': key, 'selected': (bdef.get('buildType', visibleBuildTypes[0]) == key) and 'selected' or None}"
+                            py:attrs="{'value': key, 'selected': (buildType == key) and 'selected' or None}"
                             py:content="buildtypes.typeNames[key]" />
                     </select>
                 </td>
