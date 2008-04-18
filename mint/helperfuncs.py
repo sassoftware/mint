@@ -256,7 +256,6 @@ def getBuildIdFromUuid(uuid):
 
         return string.atoi(buildId)
 
-# TODO: Needs unit tests
 def collateDictByKeyPrefix(fields, coerceValues=False):
     """
     Take a dict of fields that looks like this:
@@ -290,7 +289,8 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
 
     for key, value in dicts.iteritems():
         value = [ x[1] for x in sorted(value.iteritems()) ]
-        dicts[key] = value
+        dicts[key] = value 
+
 
     return dicts
 
