@@ -532,7 +532,58 @@ Much like Powdermilk Biscuits[tm]."""
         addUserByMD5ToRepository(repos, user, passwd, "mysalt!!", role, label)
         self.assertTrue(role in repos.listRoles(label))
         self.assertTrue(self.userExists(project, user))
+        
+    def testCollateDictByKeyPrefix(self):
+                
+        class KlassToStr(object):
+            """ Fake class just used to test coercion """
+            def __init__(self, s):
+                self.s = s
+            def __str__(self):
+                return self.s
+            
+        dict_typical = {
+                 'prefix1-1-foo':       'foovalue1',
+                 'prefix1-1-bar':       'barvalue1',
+                 'prefix1-1-baz':       'bazvalue1',
+                 'prefix1-2-foo':       'foovalue2',
+                 'prefix1-2-bar':       'barvalue2',
+                 'prefix1-2-baz':       'bazvalue2',
+                 'otherprefix-1-quux':  'quuxvalue1',
+                 'otherprefix-2-quux':  'quuxvalue2',
+                 'otherprefix-3-quux':  'quuxvalue3',
+                 'nonconformist':       'fightthapowa!',
+                 'klass-1-wargh':       KlassToStr('mine'),
+                 'klass-2-wargh':       KlassToStr('yours'),
+                 }
+                
+        collatedDict = collateDictByKeyPrefix(dict_typical, False)
+        coercedCollatedDict = collateDictByKeyPrefix(dict_typical, True)
+        collatedEmptyDict = collateDictByKeyPrefix({})
+        
+        self.failUnlessEqual(len(collatedDict.get('prefix1')), 2)
+        
+        self.failUnlessEqual(len(collatedDict.get('otherprefix')), 3)
+        
+        self.failIf('nonconformist' in collatedDict,
+                    "Non-conforming keys should not be included in collation")
 
+        self.failUnlessEqual(collatedEmptyDict, {})
+        
+        klassesNonCoerced = collatedDict.get('klass')
+        for i in klassesNonCoerced:
+            for k, v in i.iteritems():
+                self.failUnlessEqual(k, 'wargh', 'Unexpected key %s' % k)
+                self.failUnless(isinstance(v, KlassToStr),
+                                'Should be class value')
+            
+        klassesCoerced = coercedCollatedDict.get('klass')
+        for i in klassesCoerced:
+            for k, v in i.iteritems():
+                self.failUnlessEqual(k, 'wargh', 'Unexpected key %s' % k)
+                self.failUnless(isinstance(v, str),
+                                'Should be str value')        
+        
 
 if __name__ == "__main__":
     testsuite.main()
