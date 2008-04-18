@@ -75,6 +75,7 @@ class DuplicateJob(MintError):
 class DuplicateName(MintError):
     "A %(project)s using this title already exists"
 class DuplicateLabel(MintError): "Label already exists"
+class DuplicateProductVersion(MintError): "Product version already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."

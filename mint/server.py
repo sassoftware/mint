@@ -4506,8 +4506,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(int, str, ((str, unicode),))
     def addProductVersion(self, projectId, name, description):
-        return self.productVersions.new(projectId = projectId, name = name,
-                description = description)
+        self._filterProjectAccess(projectId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
+        try:
+            return self.productVersions.new(projectId = projectId,
+                                                 name = name,
+                                                 description = description) 
+        except DuplicateItem:
+            raise DuplicateProductVersion
 
     @private
     @requiresAuth
