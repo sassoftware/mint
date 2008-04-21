@@ -4543,25 +4543,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
         repos = client.getRepos()
 
         proddefLabel = versions.Label(version.getProddefLabel())
-        proddefs = repos.getTroveVersionsByPath(['proddef.xml',], proddefLabel)
 
-        # proddefs is a dict keyed by the file we just said we wanted...
-        proddefTroves = proddefs['proddef.xml']
+        latestTrove = repos.getTroveLatestByLabel([('proddef:source', proddefLabel, None)])
 
-        # Find the latest trove
-        latestTrove = proddefTroves[0][1]
-        for proddefTrove in proddefTroves:
-            if proddefTrove[1] > latestTrove:
-                latestTrove = proddefTrove[1]
+        # latestTrove is now a tuple of lists of lists of tuples...
+        # If it's not the structure we expect, throw an exception.
+        try:
+            proddefVersion = latestTrove[0][0][0][1]
+        except:
+            raise ProductDefinitionVersionNotFound()
 
-        proddefRevision = latestTrove.trailingRevision()
-        proddefVersion = versions.Version([proddefLabel, proddefRevision])
-
-        proddefData = client.getFilesFromTrove('proddef:source', 
-                                               proddefVersion,
-                                               deps.Flavor())
-
-        xml = proddefData['proddef.xml'].read()
+        try:
+            proddefData = client.getFilesFromTrove('proddef:source', 
+                proddefVersion, deps.Flavor())
+            xml = proddefData['proddef.xml'].read()
+        except KeyError:
+            raise ProductDefinitionVersionNotFound()
 
         pd = proddef.ProductDefinition(xml=xml)
 

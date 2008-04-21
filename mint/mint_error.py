@@ -120,6 +120,8 @@ class ParameterError(MintError):
 class PermissionDenied(MintError): "Permission Denied"
 class ProductVersionNotFound(MintError):
     "The specified product version was not found."
+class ProductDefinitionVersionNotFound(MintError):
+    "The product definition for the specified product version was not found."
 class PublishedReleaseEmpty(MintError):
     "The referenced release has no builds and cannot be published."
 class PublishedReleaseMissing(MintError):
