@@ -4544,7 +4544,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         proddefLabel = versions.Label(version.getProddefLabel())
 
-        latestTrove = repos.getTroveLatestByLabel([('proddef:source', proddefLabel, None)])
+        latestTrove = repos.getTroveLatestByLabel(
+                          [('proddef:source', proddefLabel, None)])
 
         # latestTrove is now a tuple of lists of lists of tuples...
         # If it's not the structure we expect, throw an exception.
@@ -4590,13 +4591,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         client = conaryclient.ConaryClient(projectCfg)
 
         troveXmlFile = filetypes.RegularFile(contents=pdXml)
-        troveChangeLog = changelog.ChangeLog('rBuilder', 'https://issues.rpath.com',
+        troveChangeLog = changelog.ChangeLog('rBuilder', 
+                             'https://issues.rpath.com',
                              'Product Definition commit from rBuilder\n')
 
         # Create a change set object from our source data.
-        changeSet = client.createSourceTrove('proddef:source', projectCfg.buildLabel,
-                                             '1.0', {'proddef.xml' : troveXmlFile}, 
-                                             troveChangeLog)
+        changeSet = client.createSourceTrove('proddef:source', 
+                        projectCfg.buildLabel,
+                        '1.0', {'proddef.xml' : troveXmlFile}, troveChangeLog)
         
         # Commit the change set to the repo.
         repos = client.getRepos()
