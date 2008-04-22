@@ -37,18 +37,19 @@ class GroupApp(ApplianceGroupRecipe):
     name = 'group-app-appliance'
 
     # CUSTOMIZE:  VERSION NUMBER
-    # Change the version number as needed
+    # This is the version of your appliance
     version = '5.4'
     # END CUSTOMIZE
     
     def addPackages(r):
-        r.add('foundation-config')
         
         # CUSTOMIZE: ADD PACKAGES
         # Adding "localpackage" that is built on the appliance
         # label specifically for this appliance (this is the
         # core software that defines your appliance):
-        # r.add('localpackage')
+        # r.add('localpackage').  Note that 'foundation-config'
+        # is added only as an example.
+        r.add('foundation-config')
         # END CUSTOMIZE
         
         # CUSTOMIZE: REPLACE PACKAGES
