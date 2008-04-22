@@ -4,7 +4,7 @@
 #
 import copy
 import inspect
-import unittest
+import testhelp
 import tempfile
 import mysqlharness
 import pgsqlharness
@@ -827,7 +827,7 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
             util.rmtree(f[0].dataPath)
 
 
-class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
+class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
 
@@ -957,10 +957,11 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
                 self.archiveDir = thisdir
                 break
 
-        unittest.TestCase.setUp(self)
+        testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
+        testhelp.TestCase.tearDown(self)
         MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()
