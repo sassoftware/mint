@@ -151,7 +151,7 @@ class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
             self.assertEquals(len(raa.lib.command.runCommand.commandList), 1)
 
             raa.lib.command.runCommand.commandList=[]
-            dbstore.connect = lambda x, y: None
+            dbstore.connect = oldconnect
             assert repoconvert._startPostgresql(), 'Did not return as expected'
             self.assertEquals(len(raa.lib.command.runCommand.commandList), 0)
 
