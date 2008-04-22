@@ -64,7 +64,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.getCreatorId() == 2)
-        
+        assert([[x[2],x[3]] for x in project.getProductVersionList()] ==
+                [['FooV1', 'FooV1Description'],['FooV2', 'FooV2Description']])
+
     @fixtures.fixture("Full")
     def testNewProjectError(self, db, data):
         client = self.getClient("user")

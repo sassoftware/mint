@@ -185,6 +185,9 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
+            - Two Versions
+                - 'FooV1', 'FooV1Description'
+                - 'FooV2', 'FooV2Description'
             - Two published release objects
                 - One publishd, or published, containing one build
                 - One not publishd, containing another build

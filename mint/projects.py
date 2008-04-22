@@ -224,6 +224,8 @@ class Project(database.TableObject):
         else:
             return "yes"
 
+    def getProductVersionList(self):
+        return self.server.getProductVersionListForProduct(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -844,8 +846,9 @@ class ProductVersionsTable(database.KeyedTable):
 
     def getProductVersionListForProduct(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT %s FROM ProductVersions
-                      WHERE projectId = ?""" % ', '.join(self.fields),
+        cu.execute("""SELECT %s FROM %s
+                      WHERE projectId = ?""" % (', '.join(self.fields),
+                            self.name),
                       projectId)
         return [ list(x) for x in cu.fetchall() ]
 
