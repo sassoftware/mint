@@ -850,9 +850,9 @@ class ProductVersionsTable(database.KeyedTable):
         self.cfg = cfg
         database.KeyedTable.__init__(self, db)
 
-    def getVersionListForProject(self, projectId):
+    def getProductVersionListForProduct(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT %s FROM ProjectVersions
+        cu.execute("""SELECT %s FROM ProductVersions
                       WHERE projectId = ?""" % ', '.join(self.fields),
                       projectId)
         return [ list(x) for x in cu.fetchall() ]

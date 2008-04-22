@@ -765,8 +765,8 @@ class MintClient:
     def editProductVersion(self, versionId, newDesc):
         return self.server.editProductVersion(versionId, newDesc)
 
-    def getProductVersionList(self):
-        return self.server.getProductVersionList()
+    def getProductVersionListForProduct(self, projectId):
+        return self.server.getProductVersionListForProduct(projectId)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

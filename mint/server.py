@@ -4613,10 +4613,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.productVersions.update(versionId, description = newDesc)
 
     @private
-    @typeCheck()
+    @typeCheck(int)
     @requiresAuth
-    def getProductVersionList(self):
-        return self.productVersions.getProductVersionList()
+    def getProductVersionListForProduct(self, projectId):
+        return self.productVersions.getProductVersionListForProduct(projectId)
 
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
