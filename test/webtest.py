@@ -409,7 +409,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         else:
             self.failUnlessEqual(project.getApplianceValue(), 'no')
             self.failUnlessEqual(project.getLabel(),
-                'test.rpath.local2@yournamespace:test-1.0-devel')
+                "test." + MINT_PROJECT_DOMAIN +
+                '@yournamespace:test-1.0-devel')
 
 
     def testApplianceFlagYesNewProject(self):
