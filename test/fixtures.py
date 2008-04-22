@@ -28,6 +28,7 @@ from mint import userlevels
 from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
+from conary.dbstore import sqlerrors
 
 import mcp_helper
 from mcp import queue
@@ -123,11 +124,19 @@ class FixtureCache(object):
         email = "%s@example.com" % username
         contactInfo = "%s at example.com" % username
 
+        cu = db.cursor()
+
+        # create the public group
+        try:
+            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
+            db.commit()
+        except sqlerrors.ColumnNotUnique:
+            db.rollback()
+
         userId = client.registerNewUser(username, password, fullname,
             email, contactInfo, "", active=True)
 
         if isAdmin:
-            cu = db.cursor()
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
