@@ -820,21 +820,13 @@ class ProductVersions(database.TableObject):
                  self.cfg.namespace,
                  self.name), None)
 
-    def getProddefLabel(self):
+    def getProdDefLabel(self):
         project = Project(self.server, self.projectId)
         label = versions.Label(project.getLabel())
 
         return "%s@%s:proddef-%s" % (project.getFQDN(),
                                      label.getNamespace(),
                                      self.name)
-
-    def getProductDefinitionForVersion(self):
-        # TODO implement me
-        pass
-
-    def setProductDefinitionForVersion(self):
-        # TODO implement me
-        pass
 
 
 class ProductVersionsTable(database.KeyedTable):

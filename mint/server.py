@@ -4531,6 +4531,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
+    def getProductVersionProdDefLabel(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        return version.getProdDefLabel()
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
         # TODO figure out where the real imports are going to be
         import proddef
