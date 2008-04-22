@@ -283,6 +283,12 @@ class FixtureCache(object):
         imagelessRelease.addBuild(imagelessBuild.id)
         imagelessRelease.save()
 
+        # create 2 product versions in the project
+        versionId = client.addProductVersion(projectId, 'FooV1',
+                'FooV1Description')
+        versionId2 = client.addProductVersion(projectId, 'FooV2',
+                'FooV2Description')
+
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -300,8 +306,10 @@ class FixtureCache(object):
                       'anotherBuildId': anotherBuild.id,
                       'imagelessBuildId': imagelessBuild.id,
                       'imagelessReleaseId':   imagelessRelease.id,
+                      'versionId' : versionId,
+                      'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
-
+    
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
