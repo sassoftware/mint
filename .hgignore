@@ -16,6 +16,9 @@
 ^distro/rbuilder.conf$
 ^distro/schema$
 
+.project
+.pydevproject
+
 ^\.times
 ^test/(raa-tests/)?\.(times|coverage)$
 ^test/archive/macrosc$
