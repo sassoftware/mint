@@ -4549,7 +4549,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         client = conaryclient.ConaryClient(projectCfg)
         repos = client.getRepos()
 
-        proddefLabel = versions.Label(version.getProddefLabel())
+        proddefLabel = versions.Label(version.getProdDefLabel())
 
         latestTrove = repos.getTroveLatestByLabel(
                           [('proddef:source', proddefLabel, None)])
@@ -4593,8 +4593,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectCfg = project.getConaryConfig()
 
         # Set to the special proddef label.
-        projectCfg.buildLabel = version.getProddefLabel()                           
-
+        projectCfg.buildLabel = version.getProdDefLabel()                           
         client = conaryclient.ConaryClient(projectCfg)
 
         troveXmlFile = filetypes.RegularFile(contents=pdXml)
