@@ -231,6 +231,35 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
                            'getBaseFlavor', 'getStages', 'getUpstreamSources',
                            'getBuildDefinition'], result)
 
+    @fixtures.fixture("Full")
+    def testGetProductDefinitionForNonExistantVersion(self, db, data):
+        ownerClient = self.getClient('owner')
+        versionId = data['versionId']
+
+        # Mock repository interaction
+        result = []
+        def getRepos(self):
+
+            class Repo:
+
+                def getTroveLatestByLabel(*args):
+                    result.append('getTroveLatestByLabel')
+                    # Return a bad structure
+                    return ([[(0)]],)
+
+            return Repo()
+
+        oldGetRepos = conaryclient.ConaryClient.getRepos
+        conaryclient.ConaryClient.getRepos = getRepos
+
+        try:
+            self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
+                              ownerClient.getProductDefinitionForVersion,
+                              versionId)
+        finally:
+            # Unmock repository interaction
+            conaryclient.ConaryClient.getRepos = oldGetRepos
+
 
 if __name__ == "__main__":
     testsuite.main()
