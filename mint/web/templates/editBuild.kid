@@ -26,7 +26,8 @@ allowNone = ['anaconda-custom', 'media-template']
     <div py:def="trovePicker(projectId, serverName, troveName, pickerId)" py:omit="True">
         <script type="text/javascript">
             addLoadEvent(function() {
-                picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}');
+                // boolean args are for "allow no groups" and "force all groups"
+                picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}', false, false);
                 if(${buildId or 0})
                     handleBuildTypes("${arch}");
                 else
