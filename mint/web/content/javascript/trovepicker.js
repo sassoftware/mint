@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2006 rPath, Inc
+// Copyright (C) 2006-2008 rPath, Inc
 // All Rights Reserved
 //
 
@@ -32,7 +32,13 @@ function disabledReturn() {
 }
 
 function buildTroveSpec(n, v, f) {
-    return n + "=" + v + "[" + f + "]";
+    var ts = n + "=" + v;
+    // flavor may be null for "all flavors"
+    if(f) {
+        ts += "[" + f + "]";
+    }
+
+    return ts;
 }
 
 function trailingRevision(v) {
@@ -42,13 +48,15 @@ function trailingRevision(v) {
 }
 
 // ctor
-function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath, allowNone) {
+function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath, 
+                     allowNone, forceAllFlavors) {
     this.projectId = projectId;
     this.serverName = serverName;
     this.troveName = troveName;
     this.elId = pickerId;
     staticPath = mintStaticPath;
     this.allowNone = allowNone;
+    this.forceAllFlavors = forceAllFlavors;
 
     if(troveName) {
         this.allowNameChoice = false;
@@ -64,12 +72,13 @@ TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
 TrovePicker.prototype.domCache = {};
 TrovePicker.prototype.allowNameChoice = true;
-TrovePicker.prototype.aloowNone = false;
+TrovePicker.prototype.allowNone = false;
 TrovePicker.prototype.archFilter = Array();
 TrovePicker.prototype.flavFilter = Array();
 TrovePicker.prototype.buildChange = null;
 TrovePicker.prototype.stage = null;
 TrovePicker.prototype.customSpec = null;
+TrovePicker.prototype.forceAllFlavors = false;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -167,35 +176,47 @@ TrovePicker.prototype.pickNoTrove = function(e) {
 TrovePicker.prototype.displayFlavors = function() {
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
-
-    for(var i in this.flavorCache[this.version]) {
-        var omitFlavor = false;
-        // Filter by arch
-        for (var j in this.archFilter) {
-            if (String(this.flavorCache[this.version][i]).match(this.archFilter[j]) != null) {
-                omitFlavor = true;;
-            }
-        }
-        // Filter by flavor
-        for (var j in this.flavFilter) {
-            if (String(this.flavorCache[this.version][i]).split(',').indexOf(this.flavFilter[j]) != -1) {
-                omitFlavor = true;
-            }
-        }
-        if (omitFlavor) {
-            continue;
-        }
-        flavor = this.flavorCache[this.version][i];
-        var myId = "flavorId" + i;
-        link = forwardLink({'id': myId}, flavor[0]);
+    
+    if(this.forceAllFlavors) {
+        var myId = "flavorId" + 0;
+        link = forwardLink({'id': myId}, 'All Flavors');
         link.name = this.troveName;
         link.version = this.version;
-        link.flavor = flavor[1];
-        link.shortFlavor = flavor[0];
+        link.flavor = null;  //we want all flavors
+        link.shortFlavor = 'All Flavors';
         link.label = this.label;
         connect(link, "onclick", this, "pickFlavor");
         appendChildNodes(ul, link);
-    }
+    } else {
+	    for(var i in this.flavorCache[this.version]) {
+	        var omitFlavor = false;
+	        // Filter by arch
+	        for (var j in this.archFilter) {
+	            if (String(this.flavorCache[this.version][i]).match(this.archFilter[j]) != null) {
+	                omitFlavor = true;;
+	            }
+	        }
+	        // Filter by flavor
+	        for (var j in this.flavFilter) {
+	            if (String(this.flavorCache[this.version][i]).split(',').indexOf(this.flavFilter[j]) != -1) {
+	                omitFlavor = true;
+	            }
+	        }
+	        if (omitFlavor) {
+	            continue;
+	        }
+	        flavor = this.flavorCache[this.version][i];
+	        var myId = "flavorId" + i;
+	        link = forwardLink({'id': myId}, flavor[0]);
+	        link.name = this.troveName;
+	        link.version = this.version;
+	        link.flavor = flavor[1];
+	        link.shortFlavor = flavor[0];
+	        link.label = this.label;
+	        connect(link, "onclick", this, "pickFlavor");
+	        appendChildNodes(ul, link);
+	    }
+	}
     swapDOM(oldList, ul);
 }
 
