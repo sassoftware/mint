@@ -461,7 +461,8 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         gpgData.close()
 
         # make sure we see part of the whole key in the response
-        page = page.fetch("/repos/testproject/getOpenPGPKey?search=F94E405E")
+        self.setServer(self.getProjectServerHostname(), self.port)
+        page = self.fetch("/repos/testproject/getOpenPGPKey?search=F94E405E")
         self.failUnless('mIsEQwCyngEEAJ3MC9HwzDve2JzvEdhS' in page.body)
 
     def testRepoPermissions(self):
