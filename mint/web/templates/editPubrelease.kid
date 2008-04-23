@@ -1,7 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <?python
+#
+# Copyright (c) 2005-2008 rPath, Inc.
+# All Rights Reserved
+#
 from mint import pubreleases
+from mint.web.templatesupport import projectText
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -29,7 +34,7 @@ from mint import pubreleases
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>${releaseId and "Edit" or "Create"} Release</h2>
-                <p  py:if="availableBuilds" class="help" style="margin-bottom: 24px;">Use this page to ${releaseId and 'edit an existing' or 'create a'} release. Fields labeled with a <em class="required">red arrow</em> are required. In addition, one or more builds must be selected from the Release Contents section${releaseId and 's' or ''}.</p>
+                <p  py:if="availableBuilds" class="help" style="margin-bottom: 24px;">Use this page to ${releaseId and 'edit an existing' or 'create a'} release. Fields labeled with a <em class="required">red arrow</em> are required. In addition, one or more images must be selected from the Release Contents section${releaseId and 's' or ''}.</p>
 
                 <form py:if="availableBuilds or currentBuilds" method="post" action="saveRelease" id="mainForm">
 
@@ -60,12 +65,16 @@ from mint import pubreleases
                     <div strip="True" py:if="currentBuilds">
                     <div class="formgroupTitle">Current Release Contents</div>
                     <div class="formgroup">
-                    <p class="help" style="margin-left: 20px; margin-right: 10px; margin-top: -5px; margin-bottom: 5px;">The following builds are currently included in this release. Un-check a build to remove it.</p>
+                    <p class="help" style="margin-left: 20px;
+                    margin-right: 10px; margin-top: -5px;
+                    margin-bottom: 5px;">The following images are
+                    currently included in this release. Un-check an image to remove it.</p>
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
                         <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;"><a style="text-decoration: none; font-weight: bold; margin-left: 20px;" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                        <div class="smallSpecs" id="${build.getId()}_short">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                        <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                        <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
                         </a></label> 
                         <input type="checkbox" checked="True" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
@@ -92,7 +101,8 @@ from mint import pubreleases
 			    <div style="height: 1%">
                             </div>
                             <label class="troveSpecs">Architecture</label>
-                            <div class="troveData">${build.getArch()}</div>
+                            <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
+                            <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
 			    </div>
@@ -103,7 +113,7 @@ from mint import pubreleases
                             <br/>
 			    </div>
 			    <div style="height: 1%">
-                            <label class="troveSpecs">Build Notes</label>
+                            <label class="troveSpecs">Image Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
@@ -116,14 +126,15 @@ from mint import pubreleases
                     </div>
 
                     <div py:if="availableBuilds" py:strip="True">
-                    <div class="formgroupTitle">${releaseId and 'Available Builds' or 'Release Contents'}<span id="baton"></span></div>
+                    <div class="formgroupTitle">${releaseId and 'Available Images' or 'Release Contents'}<span id="baton"></span></div>
                     <div class="formgroup">
-                    <p class="help" style="margin-right: 10px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following builds are currently not included with this release. Check a release to add it.' or 'Select builds to be included with this release.'}</p>
+                    <p class="help" style="margin-right: 10px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following images are currently not included with this release. Check a release to add it.' or 'Select images to be included with this release.'}</p>
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in availableBuilds">
                         <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;"><a style="text-decoration: none; font-weight: bold; margin-left: 20px;" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                                <div id="${build.getId()}_short" class="smallSpecs">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                                <div py:if="build.getBuildType() != buildtypes.IMAGELESS" id="${build.getId()}_short" class="smallSpecs">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                                <div py:if="build.getBuildType() == buildtypes.IMAGELESS" id="${build.getId()}_short" class="smallSpecs">${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
                         </a></label>
                         <input type="checkbox" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
@@ -148,7 +159,8 @@ from mint import pubreleases
 			    </div>
 			    <div style="height: 1%">
                             <label class="troveSpecs">Architecture</label>
-                            <div class="troveData">${build.getArch()}</div>
+                            <div  py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
+                            <div  py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
 			    </div>
@@ -159,7 +171,7 @@ from mint import pubreleases
                             <br/>
 			    </div>
 			    <div style="height: 1%">
-                            <label class="troveSpecs">Build Notes</label>
+                            <label class="troveSpecs">Image Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
@@ -180,7 +192,7 @@ from mint import pubreleases
                     ?>
                     <input type="hidden" name="id" value="${releaseId}" />
                 </form>
-                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no available builds associated with this project that contain downloadable files. One or more available builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
+                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no available images associated with this ${projectText().lower()} that contain downloadable files. One or more available images that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new image.</p>
             </div>
         </div>
     </body>

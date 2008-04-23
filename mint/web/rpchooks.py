@@ -75,7 +75,6 @@ def rpcHandler(req, cfg, pathInfo = None):
 
 def handler(req):
     coveragehook.install()
-    cfg = config.MintConfig()
-    cfg.read(req.filename)
+    cfg = config.getConfig(req.filename)
 
     return rpcHandler(req, cfg)

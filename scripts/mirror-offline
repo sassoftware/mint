@@ -15,6 +15,7 @@ import time
 import socket
 import subprocess
 from math import ceil
+from mint import helperfuncs
 
 from conary.conaryclient import mirror
 from conary import versions
@@ -109,8 +110,11 @@ class MirrorOffline(SingletonScript):
             netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
 
             try:
-                netRepos.auth.addUser(userName, userPass)
-                netRepos.auth.addAcl(userName, None, None, True, False, True)
+                helperfuncs.addUserToRepository(netRepos, userName, userPass, 
+                    userName)
+                netRepos.auth.addAcl(userName, None, None, 
+                                     write=True, remove=False)
+                netRepos.auth.setAdmin(userName, True)
                 netRepos.auth.setMirror(userName, True)
             except errors.GroupAlreadyExists:
                 # assume user is already present--probably due to a previous

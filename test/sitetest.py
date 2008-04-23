@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -109,19 +109,19 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testEditUserSettings(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'newpassword',
                               'password2': 'newpasswordasdf'})
         self.failIf('Passwords do not match.' not in page.body,
                     'Nonmatching passwords accepted.')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'new',
                               'password2': 'new'})
         self.failIf('Password must be 6 characters or longer.' not in page.body,
                     'Nonmatching passwords accepted.')
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.post,
                               {'displayEmail': 'display@newemail.com',
                               'fullName': 'Foo B. Bar',
@@ -133,7 +133,7 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failUnless(res == [('display@newemail.com', 'Foo B. Bar', 
                                 'blah blah blah')],
                         "User setting did not update properly.")
-        page = page.fetch('/userSettings')
+        page = page.fetchWithRedirect('/userSettings')
         page = page.postForm(2, page.fetch, 
                               {'password1': 'newpassword',
                               'password2': 'newpassword'})
@@ -155,8 +155,10 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
     def testAddMemberById(self):
         client, userId = self.quickMintUser('foouser','foopass')
         client2, userId2 = self.quickMintUser('baruser','barpass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        projectId2 = client2.newProject('Bar', 'bar', MINT_PROJECT_DOMAIN)
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN, 
+                        shortname='foo', version="1.0", prodtype="Component")
+        projectId2 = client2.newProject('Bar', 'bar', MINT_PROJECT_DOMAIN,
+                        shortname='bar', version="1.0", prodtype="Component")
         page = self.webLogin('foouser', 'foopass')
         self.assertContent('/addMemberById?userId=%s&projectId=%s&level=0'\
                           % (userId2, projectId2),
@@ -185,9 +187,13 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                            code=[301])
 
     def testGroupTroveSearch(self):
+        if not self.mintCfg.rBuilderOnline:
+            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
         gt.addTrove('group-appliance-platform',
             '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
@@ -197,9 +203,13 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                     "Package search failed to limit search to rpl:1 branch")
     
     def testPackageSearchFormat(self):
+        if not self.mintCfg.rBuilderOnline:
+            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         cu = self.db.cursor()
         for name in ('package1', 'package2', 'package3'):
             cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")

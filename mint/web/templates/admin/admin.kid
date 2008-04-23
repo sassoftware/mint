@@ -1,6 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+    from mint.web.templatesupport import projectText
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
+
+<!--
+    Copyright (c) 2005-2008 rPath, Inc.
+    All Rights Reserved
+-->
 
     <div py:def="adminResourcesMenu" id="admin" class="palette">
         <?python
@@ -11,15 +19,17 @@
         <div class="boxHeader">Administration Menu</div>
         <ul>
             <li py:attrs="{'class': (lastchunk in ('', 'admin')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/">Administration Home</a></li>
-            <li py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
             <li py:attrs="{'class': (lastchunk in ('newUser', 'processNewUser')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/newUser">Create User Account</a></li>
-            <li py:attrs="{'class': (lastchunk in ('external', 'addExternal', 'processAddExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Externally-Managed Projects</a></li>
-            <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound', 'addOutboundMirrorTarget')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
+            <li py:attrs="{'class': (lastchunk in ('external', 'addExternal', 'processAddExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Externally-Managed ${projectText().title()}s</a></li>
+            <li py:attrs="{'class': (lastchunk in ('updateServices', 'editUpdateService', 'processEditUpdateService')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/updateServices">Configure Update Services</a></li>
+            <li py:attrs="{'class': (lastchunk in ('outbound', 'editOutbound', 'processEditOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
-            <li py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
-            <li py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
-            <li py:attrs="{'class': (lastchunk == 'useIt') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/useIt">Manage 'Use It' Icons</a></li>
-            <li py:attrs="{'class': (lastchunk == 'setup') and 'selectedItem' or None}"><a href="${cfg.basePath}setup/">Re-run Initial Setup</a></li>
+            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
+            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
+            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
+            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'useIt') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/useIt">Manage 'Use It' Icons</a></li>
+            <li py:if="not cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'setup') and 'selectedItem' or None}"><a href="${cfg.basePath}setup/">Re-run Initial Setup</a></li>
+            <li py:if="not cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${cfg.hostName}.${cfg.siteDomainName.split(':')[0]}:8003/rAA/" target="_blank">Enter rPath Appliance Agent</a></li>
         </ul>
     </div>
 

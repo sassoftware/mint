@@ -6,8 +6,9 @@
 """A handful of functions useful inside kid templates."""
 
 import time
+from mint import constants
 from mint import userlevels
-from mint.helperfuncs import getArchFromFlavor
+from mint.helperfuncs import getArchFromFlavor, getProjectText
 
 import conary
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -39,3 +40,6 @@ def shortTroveSpec(spec):
     except conary.errors.ParseError: # we got a frozen version string
         v = versions.ThawVersion(v)
     return "%s=%s (%s)" % (n, str(v.trailingRevision()), getArchFromFlavor(f))
+
+def projectText():
+    return getProjectText()

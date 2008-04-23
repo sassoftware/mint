@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -65,7 +65,7 @@ class UpdatePackageIndex(PackageIndexer):
             cu.execute("""DELETE FROM PackageIndex WHERE
                               (SELECT mark FROM PackageIndexMark) = 0""")
 
-            cu.execute("""SELECT Projects.projectId, troveName, version,
+            cu.execute("""SELECT Projects.projectId, troveName, Commits.version,
                                  timestamp
                               FROM Commits
                               LEFT JOIN Projects
@@ -89,6 +89,7 @@ class UpdatePackageIndex(PackageIndexer):
                 label = str(version.branch().label())
                 versionList = troveEntry.setdefault(label, [])
 
+                version = version.copy()
                 version.resetTimeStamps(timeStamp)
                 versionList.append(version)
                 labelMap[label] = projectId

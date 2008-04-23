@@ -2,6 +2,7 @@
 ^state.journal$
 ~$
 \.(pyc|pyo|o|so|swp|swo|orig|rej)$
+(^|/).kiderror$
 
 ^bin/rbuilder(|-wrapper)$
 ^mint/constants\.py$
@@ -14,6 +15,9 @@
 ^distro/jobslave_set$
 ^distro/rbuilder.conf$
 ^distro/schema$
+
+.project
+.pydevproject
 
 ^\.times
 ^test/(raa-tests/)?\.(times|coverage)$

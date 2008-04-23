@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -7,9 +7,13 @@
 from conary import versions
 from conary.deps import deps
 from mint import constants
+from mint.config import isRBO
+from conary.repository.errors import RoleAlreadyExists
 
 import htmlentitydefs
 import re
+import random
+import string
 import time
 import urlparse
 
@@ -138,6 +142,9 @@ def getVersionForCacheFakeout():
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
+def generateMirrorUserName(rbuilderHostname, updateServiceHostname):
+    # Generate a mirrorUser for this rBuilder
+    return "-mirroruser-%s-%s" % (rbuilderHostname, updateServiceHostname)
 
 def cleanseUrl(protocol, url):
     if url.find('@') != -1:
@@ -221,16 +228,73 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
     return conaryCfg
 
-def hashMirrorRepositoryUser(hostName, siteDomainName, mirrorUrl,
-        projectId, labels, matchStrings):
+def getProjectText():
+    """Returns project if rBO and product if rBA"""
+    return isRBO() and "project" or "product"
 
-    userPrefix = '%s.%s-%s' % (hostName, siteDomainName,
-            mirrorUrl)
-    trailingBits = '%s%s%s' % (projectId,
-            labels and labels or 'ALL',
-            matchStrings and matchStrings or 'ALL')
-    import md5
-    m = md5.new()
-    m.update(userPrefix+trailingBits)
-    userHash = m.hexdigest()[:8]
-    return '%s_%s' % (userPrefix, userHash)
+def genPassword(length):
+    """
+    @param length: length of random password generated
+    @returns: returns a character string of random letters and digits.
+    @rtype: str
+    """
+    choices = string.letters + string.digits
+    pw = "".join([random.choice(choices) for x in range(length)])
+    return pw
+
+def getBuildIdFromUuid(uuid):
+        """
+        Get the build id from the specified uuid
+        """
+        buildId = None
+        if uuid:
+            chunks = uuid.split("-build-")
+            if chunks and chunks[1]:
+                parts = chunks[1].split('-')
+                if parts:
+                    buildId = parts[0]
+
+        return string.atoi(buildId)
+
+def addUserToRepository(repos, username, password, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUser(label, username, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUser(username, password)
+        repos.auth.updateRoleMembers(role, [username])
+
+def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUserByMD5(label, username, salt, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUserByMD5(username, salt, password)
+        repos.auth.updateRoleMembers(role, [username])
+

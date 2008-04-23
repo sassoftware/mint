@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -13,13 +13,7 @@ from conary import versions
 from conary.lib import options
 from conary.lib import coveragehook
 
-class UnknownException(Exception):
-    def __str__(self):
-        return "%s %s" % (self.eName, self.eArgs)
-
-    def __init__(self, eName, eArgs):
-        self.eName = eName
-        self.eArgs = eArgs
+from mint.mint_error import UnknownException
 
 def usage():
     return "\n".join((
