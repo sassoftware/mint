@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Copyright (c) 2008 rPath, Inc.
+# All rights reserved.
+#
+# This script is executed from the group after each update. It migrates
+# the mint database and all repository databases. Any transitional
+# migrations (e.g. config files) should indicate which version they were
+# added in and should test whether they need to be run beforehand, in order to
+# ease maintenance.
+
+check_apache() {
+    pidof httpd > /dev/null 2>&1
+}
+
+shutdown_apache() {
+    if check_apache; then
+        service httpd stop
+        for i in $(seq 30); do
+            if check_apache; then
+                sleep 1
+            else
+                break
+            fi
+        done
+        if check_apache; then
+            echo "WARNING: httpd still running, killing httpd"
+            killall httpd > /dev/null 2>&1
+            if check_apache; then
+                echo "WARNING: httpd *still* running, sending httpd signal 9"
+                killall -9 httpd > /dev/null 2>&1
+                if check_apache; then
+                    echo "WARNING: failed to shutdown the Apache (httpd) service"
+                fi
+            fi
+        fi
+        START_APACHE=1
+    else
+        START_APACHE=0
+    fi
+}
+
+die() {
+    echo "ERROR:" "$@"
+    exit 1
+}
+
+# Shut down apache, if it's running
+shutdown_apache
+
+# Migrate the mint database
+/usr/share/rbuilder/scripts/rbuilder-database --migrate || die "Failed to migrate the rBuilder database"
+chown apache:apache /srv/rbuilder/data/db
+
+# Migrate all conary repositories
+/usr/share/rbuilder/scripts/migrate-all-projects || die "Failed to migrate all repositories"
+
+# Start apache again (if it was running before)
+if [ $START_APACHE -eq 1 ]
+then
+    service httpd start
+fi

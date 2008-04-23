@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -16,11 +16,8 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import userlevels
-from mint.database import DuplicateItem, ItemNotFound
-from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
-     DuplicateLabel
+from mint.mint_error import *
 from mint.server import ParameterError, PermissionDenied
-from mint import mint_error
 from mint import database
 from mint import urltypes
 
@@ -57,6 +54,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         assert(project.getFQDN() == "foo.%s" % MINT_PROJECT_DOMAIN)
         assert(project.getHostname() == "foo")
+        assert(project.getShortname() == "foo")
         assert(project.getDomainname() == MINT_PROJECT_DOMAIN)
         assert(project.getName() == "Foo")
         assert(project.getMembers() == [ \
@@ -66,19 +64,27 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.getCreatorId() == 2)
-
+        
     @fixtures.fixture("Full")
     def testNewProjectError(self, db, data):
         client = self.getClient("user")
         self.failUnlessRaises(InvalidHostname, client.newProject, "Test", 
-                              '&bar', MINT_PROJECT_DOMAIN)
+                              '&bar', MINT_PROJECT_DOMAIN, shortname="bar")
         self.failUnlessRaises(DuplicateHostname, client.newProject, "Test", 
-                              'foo', MINT_PROJECT_DOMAIN)
+                              'foo', MINT_PROJECT_DOMAIN, shortname="foo",
+                              version='1.0', prodtype='Component')
         self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
-                              MINT_PROJECT_DOMAIN)
+                              MINT_PROJECT_DOMAIN, shortname="bar",
+                              version='1.0', prodtype='Component')
         sData = re.split("\.", socket.gethostname(), 1)
         self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
-                              sData[0], sData[1])
+                              sData[0], sData[1], shortname='bar3')
+        if not self.cfg.rBuilderOnline:
+            self.failUnlessRaises(InvalidShortname, client.newProject, "Test", 
+                              'barbar', MINT_PROJECT_DOMAIN, shortname="&bar")
+            self.failUnlessRaises(InvalidVersion, client.newProject, "Test", 
+                              'barbar', MINT_PROJECT_DOMAIN, 
+                               shortname="barbara", version="")
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
@@ -92,7 +98,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.getProjectUrl() == "http://example.com/")
 
         # create a new project to conflict with
-        newProjectId = client.newProject("Foo2", "foo2", MINT_PROJECT_DOMAIN)
+        hostname=shortname = "foo2"
+        newProjectId = client.newProject("Foo2", hostname, MINT_PROJECT_DOMAIN,
+                                         shortname=shortname,
+                                         version='1.0', prodtype='Component')
 
         self.failUnlessRaises(DuplicateItem, project.editProject,
                 "http://example.com/", "Description", "Foo2")
@@ -176,7 +185,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         for hostname in ('admin', 'a bad name', '', 'a_bad_name', 'a.bad.name'):
             try:
-                projectId = client.newProject("Quux", hostname, 'localhost')
+                projectId = client.newProject("Quux", hostname, 'localhost',
+                                            shortname='validone',
+                                            version='1.0', prodtype='Component')
                 self.fail("allowed to create a project with a bad name")
             except InvalidHostname:
                 pass
@@ -184,6 +195,94 @@ class ProjectTest(fixtures.FixturedUnitTest):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 if str(exc_value).split(' ')[0] != 'ParameterError':
                     raise
+
+    @fixtures.fixture("Full")
+    def testBadShortname(self, db, data):
+        if self.cfg.rBuilderOnline:
+            raise testsuite.SkipTestException("test skipped because short names apply to rBA only")
+
+        client = self.getClient("owner")
+        for shortname in ('admin', 'a bad name', '', 'a_bad_name', 'a.bad.name'):
+            try:
+                projectId = client.newProject("Quux", 'validhn', 'localhost',
+                                            shortname=shortname,
+                                            version='1.0', prodtype='Component')
+                self.fail("allowed to create a project with a bad short name")
+            except InvalidShortname:
+                pass
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                if str(exc_value).split(' ')[0] != 'ParameterError':
+                    raise
+
+    @fixtures.fixture("Full")
+    def testVersion(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                    shortname="footoo", version="9.7",
+                                    prodtype='Component')
+        project = client.getProject(projectId)
+        assert(project.getVersion() == "9.7")
+
+    @fixtures.fixture("Full")
+    def testProdTypeAppliance(self, db, data):
+        if not self.cfg.rBuilderOnline:
+            raise testsuite.SkipTestException("test skipped...needs group template creation mocked out to work")
+
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost', 
+                                  shortname="footoo", prodtype="Appliance",
+                                  version="1.0")
+        project = client.getProject(projectId)
+        assert(project.getProdType() == "Appliance")
+        if not self.cfg.rBuilderOnline:
+            assert(project.getApplianceValue() == "yes")
+        else:
+            assert(project.getApplianceValue() == "unknown")
+
+    @fixtures.fixture("Full")
+    def testProdTypeComponentApplianceValUnknown(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0")
+        project = client.getProject(projectId)
+        assert(project.getProdType() == "Component")
+        if not self.cfg.rBuilderOnline:
+            assert(project.getApplianceValue() == "no")
+        else:
+            assert(project.getApplianceValue() == "unknown")
+
+    @fixtures.fixture("Full")
+    def testProdTypeComponentApplianceValNo(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost', 
+                                      appliance="no",
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0")
+        project = client.getProject(projectId)
+        assert(project.getProdType() == "Component")
+        assert(project.getApplianceValue() == "no")
+
+    @fixtures.fixture("Full")
+    def testCommitEmail(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                      appliance="no",
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0", commitEmail="foo@bar.net")
+        project = client.getProject(projectId)
+        assert(project.getCommitEmail() == "foo@bar.net")
+
+    @fixtures.fixture("Full")
+    def testCommitEmailBlank(self, db, data):
+        client = self.getClient("owner")
+        projectId = client.newProject("Quux", 'footoo', 'localhost',
+                                      appliance="no",
+                                      shortname="footoo", prodtype="Component",
+                                      version="1.0")
+        project = client.getProject(projectId)
+        assert(project.getCommitEmail() == "")
 
     @fixtures.fixture("Full")
     def testUnconfirmedMembers(self, db, data):
@@ -218,7 +317,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # create a new project with the nobody client
         client = self.getClient("owner")
         nobodyClient = self.getClient('nobody')
-        newProjectId = nobodyClient.newProject("Quux", "quux", "localhost")
+        hostname = "quux"
+        newProjectId = nobodyClient.newProject("Quux", hostname, "localhost",
+                                            shortname=hostname,
+                                            version='1.0', prodtype='Component')
         projects = client.getProjectsByMember(data['nobody'])
         assert(projects[0][0].getId() == newProjectId)
         assert(projects[0][1] == userlevels.OWNER)
@@ -383,9 +485,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # fixture already has a foo project, so we try to create duplicates
         client = self.getClient("owner")
         self.assertRaises(DuplicateHostname,
-            client.newProject, "Hello World", "foo", "localhost")
+            client.newProject, "Hello World", "foo", "localhost", 
+                    shortname="foo", version='1.0', prodtype='Component')
         self.assertRaises(DuplicateName,
-            client.newProject, "Foo", "another", "localhost")
+            client.newProject, "Foo", "another", "localhost", 
+                    shortname="another", version='1.0', prodtype='Component')
 
     @fixtures.fixture("Full")
     def testOwnerMirror(self, db, data):
@@ -508,7 +612,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         try:
             self.cfg.adminNewProjects = False
             # ensure no errors
-            client.newProject('Test', 'test', 'rpath.local')
+            hostname = shortname = "test"
+            client.newProject('Test', hostname, 'rpath.local', 
+                              shortname=shortname,
+                              version='1.0', prodtype='Component')
             self.cfg.adminNewProjects = True
             self.assertRaises(PermissionDenied,
                               client.newProject, 'Test', 'test', 'rpath.local')
@@ -528,13 +635,18 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         adminClient = self.getClient('admin')
 
-        hideProjId = client.newProject('Proj', 'proj', 'rpath.local')
+        hostname="proj"
+        hideProjId = client.newProject('Proj', hostname, 'rpath.local',
+                                       shortname=hostname,
+                                       version='1.0', prodtype='Component')
         self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % PFQDN)
 
         adminClient.hideProject(hideProjId)
         self._checkRepoMap('')
 
-        client.newProject('Baz', 'baz', 'rpath.local')
+        hostname="baz"
+        client.newProject('Baz', hostname, 'rpath.local', shortname=hostname,
+                version='1.0', prodtype='Component')
         self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN)
 
         # one regular project, one hidden project, one external project
@@ -595,8 +707,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         preUrl = 'foo2.rpath.local/conary'
         postUrl = 'http://' + preUrl
 
-        projectId = client.newProject('Foo 2', 'foo2', 'rpath.local2',
-                                      preUrl, 'desc')
+        hostname = "foo2"
+        projectId = client.newProject('Foo 2', hostname, 'rpath.local2',
+                                      preUrl, 'desc', shortname=hostname,
+                                      version='1.0', prodtype='Component')
 
         project = client.getProject(projectId)
         assert(postUrl == project.getProjectUrl())
@@ -786,7 +900,10 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
 
         client.server._server.cfg.hideNewProjects = True
-        projectId = client.newProject("Quux", "quux", "localhost")
+        hostname = "quux"
+        projectId = client.newProject("Quux", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component')
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, True)
@@ -801,7 +918,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         db.commit()
         rel1 = client.getPublishedRelease(1)
         rel2 = client.getPublishedRelease(2)
-        rel2.unpublish()
+        # don't try to remove trove access during unpub since the trove doesn't
+        # really exist
+        rel2.unpublish(unpubtorus=False)
         rel2.removeBuild(2)
         rel1.addBuild(2)
 
@@ -868,13 +987,80 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
 
         # make sure we can properly translate a hostname with a dash in it
         # all the way to the conary handler.
-        newProjectId = client.newProject("Quux", "quux-project",
-                MINT_PROJECT_DOMAIN)
+        hostname = "quux-project"
+        newProjectId = client.newProject("Quux", hostname,
+                MINT_PROJECT_DOMAIN, shortname=hostname,
+                version='1.0', prodtype='Component')
 
         project = client.getProject(newProjectId)
         cfg = project.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNamesOnServer("quux-project." \
                 + MINT_PROJECT_DOMAIN) == [])
+
+    def testNoCreateGroupTemplate(self):
+        client, userid = self.quickMintUser("test", "testpass")
+
+        #First, create a project without being an appliance
+        hostname = "nap"
+        projId = client.newProject('Not an appliance', hostname, 
+                                   MINT_PROJECT_DOMAIN, appliance="no",
+                                   shortname=hostname,
+                                   version='1.0', prodtype='Component')
+        project = client.getProject(projId)
+        cfg = project.getConaryConfig()
+        #This one should be empty
+        self.assertEquals(ConaryClient(cfg).getRepos().troveNamesOnServer(
+            'nap.' + MINT_PROJECT_DOMAIN), [])
+
+    def testCreateGroupTemplate(self):
+
+        client, userid = self.quickMintUser("test", "testpass")
+
+        _groupApplianceLabel = client.server._server.cfg.groupApplianceLabel
+        _rapaLabel = client.server._server.cfg.rapaLabel
+
+        # set labels that don't use protected repositories so we can test
+        client.server._server.cfg.groupApplianceLabel = 'conary.rpath.com@rpl:1'
+        client.server._server.cfg.rapaLabel = 'raa.rpath.org@rpath:raa-2'
+
+        try:
+            #First, create a project without being an appliance
+            hostname = "nap"
+            projId = client.newProject('Not an appliance', hostname, 
+                        MINT_PROJECT_DOMAIN, appliance="no", shortname=hostname,
+                        version='5.4', prodtype='Component')
+            #This one should be empty
+            project = client.getProject(projId)
+            cfg = project.getConaryConfig()
+            trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
+                    hostname + '.' + MINT_PROJECT_DOMAIN, {})
+
+            hostname = "app"
+            projId = client.newProject('An appliance', hostname, 
+                   MINT_PROJECT_DOMAIN, appliance="yes", shortname=hostname,
+                   version='5.4', prodtype='Appliance')
+            project = client.getProject(projId)
+            cfg = project.getConaryConfig()
+            #This one should have a group trove
+            trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
+                    '%s.' % hostname + MINT_PROJECT_DOMAIN, {})
+            self.assertEquals(trvLeaves.keys(), ['group-%s-appliance:source' % hostname])
+            labels = trvLeaves['group-%s-appliance:source' % hostname]
+            if self.mintCfg.rBuilderOnline:
+                branch = '/%s.%s@%s'%(hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.defaultBranch)
+            else:
+                branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
+            self.assertEquals(len(labels), 1)
+            self.assertEquals(str(labels.keys()[0].branch()), branch)
+            self.assertEquals(str(labels.keys()[0].trailingRevision()), '5.4-1')
+        finally:
+            # reset the labels
+            client.server._server.cfg.groupApplianceLabel = _groupApplianceLabel
+            client.server._server.cfg.rapaLabel = _rapaLabel
+
+
+        # TODO: Add additional tests to exercise the label selecting, and
+        # optional groupnames, label, etc.
 
 
 if __name__ == "__main__":

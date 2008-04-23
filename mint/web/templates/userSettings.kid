@@ -3,13 +3,14 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <head>
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
         <?python
             from mint import data
+            from mint.web.templatesupport import projectText
         ?>
     </head>
     <body>
@@ -23,7 +24,7 @@
                 <div style="width: 180px;">
                     <h3>Close My Account</h3>
                     <p>If you wish to cancel your account, click the &quot;Close My Account&quot; button below.
-                       If you cancel your account, you will be removed from any project for which you are
+                       If you cancel your account, you will be removed from any ${projectText().lower()} for which you are
                        a member or owner.
                     </p>
                     <p>
@@ -97,7 +98,7 @@
                     </table>
                     <h3>Preferences</h3>
                     <table class="mainformhorizontal">
-                        <tr py:for="key, (dType, default, prompt) in sorted(user.getDataTemplate().iteritems())" class="${key in defaultedData and 'attention' or None}">
+                        <tr py:for="key, (dType, default, prompt, errmsg) in sorted(user.getDataTemplate().iteritems())" class="${key in defaultedData and 'attention' or None}">
                             <div py:strip="True" py:if="dType == data.RDT_BOOL">
                                 <td colspan="2"><input type="checkbox" class='check' name="${key}" py:attrs="{'checked' : dataDict.get(key, default) and 'checked' or None}"/> ${prompt}</td>
                             </div>

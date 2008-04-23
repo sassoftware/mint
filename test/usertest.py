@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -8,8 +8,8 @@ testsuite.setup()
 
 import fixtures
 from mint import mint_error, users
-from mint.database import ItemNotFound
 from mint.users import InvalidUsername
+from mint.mint_error import *
 
 class UsersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")

@@ -4,16 +4,23 @@
 import sys
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint import buildtypes
+from mint.mint_error import InvalidBuildOption, BuildOptionValidationException
 
 class BuildOption(tuple):
-    def __new__(self):
-        return tuple.__new__(tuple, (self.type, self.default, self.prompt))
+    errordesc = None
+    def __new__(cls):
+        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc))
+    def validate(self, value):
+        pass
 
 class StringOption(BuildOption):
     type = RDT_STRING
 
 class IntegerOption(BuildOption):
     type = RDT_INT
+    def validate(self, value):
+        if not value or not value.isdigit() or value < 0:
+            raise InvalidBuildOption(self[3])
 
 class BooleanOption(BuildOption):
     type = RDT_BOOL
@@ -25,7 +32,7 @@ class EnumOption(BuildOption):
     type = RDT_ENUM
 
     def __new__(self):
-        return tuple.__new__(tuple, (self.type, self.default, self.prompt, self.options))
+        return tuple.__new__(EnumOption, (self.type, self.default, self.prompt, self.options))
 
 
 optionNameMap = {
@@ -45,6 +52,19 @@ class Template(dict):
             newOption = optionNameMap.get(option, option)
             dict.__setitem__(self, newOption,
                              sys.modules[__name__].__dict__[option]())
+    def validate(self, **kwargs):
+        errors = []
+        for option in self.__slots__:
+            if option in kwargs:
+                opt = self.get(option)
+                if opt:
+                    try:
+                        opt.validate(kwargs[option])
+                    except InvalidBuildOption, e:
+                        errors.append(str(e))
+
+        if len(errors):
+            raise BuildOptionValidationException(errors)
 
 # *** Extremely Important ***
 # Changing the names or semantic meanings of option classes or templates is
@@ -72,7 +92,7 @@ class autoResolve(BooleanOption):
 
 class baseFileName(StringOption):
     default = ''
-    prompt = 'Custom output filename prefix (replaces name-version-arch)'
+    prompt = 'Custom image file name (replaces name-version-arch)'
 
 class showMediaCheck(BooleanOption):
     default = False
@@ -80,7 +100,7 @@ class showMediaCheck(BooleanOption):
 
 class betaNag(BooleanOption):
     default = False
-    prompt = 'This build is considered a beta'
+    prompt = 'This image is considered a beta'
 
 class maxIsoSize(EnumOption):
     default = '681574400'
@@ -90,14 +110,17 @@ class maxIsoSize(EnumOption):
 class freespace(IntegerOption):
     default = 250
     prompt = 'How many MB of free space should be allocated in the image?'
+    errordesc = "free space"
 
 class swapSize(IntegerOption):
     default = 128
     prompt = 'How many MB swap space should be reserved in this image?'
+    errordesc = "swap space"
 
 class vmMemory(IntegerOption):
     default = 256
     prompt = 'How much memory should be used when running this image?'
+    errordesc = "vmware memory"
 
 class vmSnapshots(BooleanOption):
     default = False
@@ -138,6 +161,7 @@ class stringArg(StringOption):
 class intArg(IntegerOption):
     default = 0
     prompt = 'Garbage Integer'
+    errordesc = "garbage error"
 
 class enumArg(EnumOption):
     default = '2'
@@ -242,6 +266,10 @@ class ApplianceISOTemplate(Template):
                  'anacondaTemplatesTrove']
     id = buildtypes.APPLIANCE_ISO
 
+class ImagelessTemplate(Template):
+    __slots__ = []
+    id = buildtypes.IMAGELESS
+
 ########################
 
 dataHeadings = {}
@@ -264,6 +292,15 @@ def getDataTemplate(buildType):
 def getDisplayTemplates():
     return [(x, dataHeadings[x], dataTemplates[x]) \
             for x in dataTemplates.keys()]
+
+def getValueToTemplateIdMap():
+    templateIdMap = dict()
+    for id, dataHeading, dataTemplate in getDisplayTemplates():
+        for optionName, option in dataTemplate.items():
+            if optionName not in templateIdMap.keys():
+                templateIdMap[optionName] = ([], option)
+            templateIdMap[optionName][0].append(id)
+    return templateIdMap
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript

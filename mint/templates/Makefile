@@ -5,6 +5,7 @@
 #
 
 kid_files = \
+	groupTemplate.kid	\
 	joinRequest.kid		\
 	registerNewUser.kid	\
 	validateNewEmail.kid
