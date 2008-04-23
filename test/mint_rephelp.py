@@ -510,6 +510,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def tearDown(self):
         self.db.close()
         rephelp.RepositoryHelper.tearDown(self)
+        MCPTestMixin.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
         cu = self.db.cursor()
