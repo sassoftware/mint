@@ -275,7 +275,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
                         val = resolveExtraTrove(cc, n2, v2, f2, searchPath)
                 else:
                     # not specified at all, resolve it ourselves from just the name
-                    val = resolveExtraTrove(cc, name, searchPath = searchPath)
+                    val = resolveExtraTrove(cc, name, None, f, searchPath = searchPath)
                 if val:
                     print "Setting %s to %s" % (name, val)
                     buildOptions[name] = val
