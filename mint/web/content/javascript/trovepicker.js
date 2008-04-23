@@ -182,7 +182,7 @@ TrovePicker.prototype.displayFlavors = function() {
         link = forwardLink({'id': myId}, 'All Flavors');
         link.name = this.troveName;
         link.version = this.version;
-        link.flavor = null  //we want all flavors
+        link.flavor = null;  //we want all flavors
         link.shortFlavor = 'All Flavors';
         link.label = this.label;
         connect(link, "onclick", this, "pickFlavor");
