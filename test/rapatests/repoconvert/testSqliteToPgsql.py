@@ -140,28 +140,52 @@ class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
         self.assertEquals(cfg['finalized'], False)
 
     def test_startPostgresql(self):
-        oldconnect = dbstore.connect
-        def raiseProgrammingError(x, y):
-            raise pgsql.ProgrammingError('Fake')
-        dbstore.connect=raiseProgrammingError
+        class FailingDBStore:
+            def connect(self, path, driver):
+                raise pgsql.ProgrammingError('Fake')
+
+        class WorkingDBStore:
+            def __init__(self):
+                self.path = self.driver = None
+                self.commands = []
+            def connect(self, path, driver):
+                self.path, self.driver = path, driver
+                return self
+            def cursor(self):
+                return self
+            def execute(self, command):
+                self.commands.append(command)
+
+        def raiseErrorRunCommand(*x, **y):
+            raise rpath_error.UnknownException('blah', 'blahblah')
+
         oldsleep = time.sleep
         time.sleep = lambda x: None
         try:
+            # First, postgresql isn't running. Check if it is automatically
+            # started.
+            repoconvert.dbstore = FailingDBStore()
             self.assertRaises(repoconvert.PreparationError, repoconvert._startPostgresql)
             self.assertEquals(len(raa.lib.command.runCommand.commandList), 1)
 
+            # Now, starting postgresql fails.
+            _runCommand = raa.lib.command.runCommand
+            raa.lib.command.runCommand = raiseErrorRunCommand
+            try:
+                self.assertRaises(rpath_error.UnknownException, repoconvert._startPostgresql)
+            finally:
+                raa.lib.command.runCommand = _runCommand
+
+            # Finally, postgresql is already running
             raa.lib.command.runCommand.commandList=[]
-            dbstore.connect = oldconnect
+            repoconvert.dbstore = WorkingDBStore()
             assert repoconvert._startPostgresql(), 'Did not return as expected'
             self.assertEquals(len(raa.lib.command.runCommand.commandList), 0)
+            self.assertEquals(repoconvert.dbstore.driver, 'postgresql')
+            self.assertEquals(repoconvert.dbstore.commands, ['CREATE LANGUAGE plpgsql'])
 
-            dbstore.connect=raiseProgrammingError
-            def raiseErrorRunCommand(*x, **y):
-                raise rpath_error.UnknownException('blah', 'blahblah')
-            raa.lib.command.runCommand = raiseErrorRunCommand
-            self.assertRaises(rpath_error.UnknownException, repoconvert._startPostgresql)
         finally:
-            dbstore.connect = oldconnect
+            repoconvert.dbstore = dbstore
             time.sleep = oldsleep
 
     def test_getConfig(self):
