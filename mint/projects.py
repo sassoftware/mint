@@ -38,7 +38,7 @@ transTables = {
 
 
 class Project(database.TableObject):
-    # XXX: disabled is slated for removal next schema upgrade --sgp
+    # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
