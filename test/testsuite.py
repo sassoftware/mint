@@ -156,7 +156,11 @@ def main(argv=None, individual=True):
                                        testPath=testPath, conaryDir=conaryDir)
     _handler = handler
     results = handler.main(argv)
-    sys.exit(not results.wasSuccessful())
+
+    # Return 2 if tests failed. Python will return 1 if there was a fatal
+    # error outside of the actual testing (e.g. an import error).
+    rc = (not results.wasSuccessful()) and 2 or 0
+    sys.exit(rc)
 
 # Marker decorators
 def tests(*issues):
