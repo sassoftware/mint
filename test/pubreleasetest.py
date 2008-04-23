@@ -546,9 +546,15 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         self.assertRaises(PermissionDenied, pubRel.unpublish)
 
+    @fixtures.fixture('Full')
+    def testGetUniqueBuilds(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        assert(pubRel.getUniqueBuildTypes() == [(2, 'x86_64', [])])
+
+class PublishedReleaseRepoTest(MintRepositoryHelper):
     def testPublishTorUS(self):
 
-        MintRepositoryHelper.setUp(self)
         repos = self.openRepository()        
         client, userId = MintRepositoryHelper.quickMintUser(self, 
             "testuser", "testpass")
@@ -625,14 +631,6 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
             'mirror')
         self.assertTrue(troves == [])
-
-        MintRepositoryHelper.tearDown(self)
-
-    @fixtures.fixture('Full')
-    def testGetUniqueBuilds(self, db, data):
-        client = self.getClient('owner')
-        pubRel = client.getPublishedRelease(data['pubReleaseId'])
-        assert(pubRel.getUniqueBuildTypes() == [(2, 'x86_64', [])])
 
 
 if __name__ == "__main__":
