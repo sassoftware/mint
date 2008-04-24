@@ -61,14 +61,17 @@ from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlH
 from mcp import client as mcpClient
 from mcp import mcp_error
 
+from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
 from conary import sqlite3
 from conary import versions
+from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
+from conary.lib import xmldata
 from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
 from conary.repository import netclient
 from conary.repository import shimclient
@@ -276,6 +279,7 @@ def getTables(db, cfg):
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
+    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -4497,6 +4501,129 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def getProxies(self):
         return self._getProxies()
+
+    @private
+    @requiresAuth
+    @typeCheck(int, str, ((str, unicode),))
+    def addProductVersion(self, projectId, name, description):
+        self._filterProjectAccess(projectId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
+        try:
+            return self.productVersions.new(projectId = projectId,
+                                                 name = name,
+                                                 description = description) 
+        except DuplicateItem:
+            raise DuplicateProductVersion
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductVersion(self, versionId):
+        try:
+            ret = self.productVersions.get(versionId)
+        except database.ItemNotFound:
+            raise ProductVersionNotFound()
+        else:
+            return ret
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductVersionProdDefLabel(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        return version.getProdDefLabel()
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductDefinitionForVersion(self, versionId):
+        # TODO figure out where the real imports are going to be
+        import proddef
+
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        proddefLabel = versions.Label(version.getProdDefLabel())
+
+        latestTrove = repos.getTroveLatestByLabel(
+                          [('proddef:source', proddefLabel, None)])
+
+        # latestTrove is now a tuple of lists of lists of tuples...
+        # If it's not the structure we expect, throw an exception.
+        try:
+            proddefVersion = latestTrove[0][0][0][1]
+        except:
+            raise ProductDefinitionVersionNotFound()
+
+        try:
+            proddefData = client.getFilesFromTrove('proddef:source', 
+                proddefVersion, deps.Flavor())
+            xml = proddefData['proddef.xml'].read()
+        except KeyError:
+            raise ProductDefinitionVersionNotFound()
+
+        pd = proddef.ProductDefinition(xml=xml)
+
+        pdDict = dict(baseFlavor = pd.getBaseFlavor(),
+                      stages = pd.getStages(),
+                      upstreamSources = pd.getUpstreamSources(),
+                      buildDefinition = pd.getBuildDefinition())
+
+        return pdDict
+
+    @private
+    @requiresAuth
+    @typeCheck(int, dict)
+    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+        # TODO figure out where the real imports are going to be
+        import proddef
+
+        # Convert productDefinitionDict to Xml.
+        pd = proddef.ProductDefinition(productDefinitionDict)
+        pdXml = pd.toXml()
+
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+
+        # Set to the special proddef label.
+        projectCfg.buildLabel = version.getProdDefLabel()                           
+        client = conaryclient.ConaryClient(projectCfg)
+
+        troveXmlFile = filetypes.RegularFile(contents=pdXml)
+        troveChangeLog = changelog.ChangeLog('rBuilder', 
+                             'https://issues.rpath.com',
+                             'Product Definition commit from rBuilder\n')
+
+        # Create a change set object from our source data.
+        changeSet = client.createSourceTrove('proddef:source', 
+                        projectCfg.buildLabel,
+                        '1.0', {'proddef.xml' : troveXmlFile}, troveChangeLog)
+        
+        # Commit the change set to the repo.
+        repos = client.getRepos()
+        repos.commitChangeSet(changeSet)                            
+
+        return True
+
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def editProductVersion(self, versionId, newDesc):
+        return self.productVersions.update(versionId, description = newDesc)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def getProductVersionListForProduct(self, projectId):
+        return self.productVersions.getProductVersionListForProduct(projectId)
+
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

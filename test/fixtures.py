@@ -4,7 +4,7 @@
 #
 import copy
 import inspect
-import unittest
+import testhelp
 import tempfile
 import mysqlharness
 import pgsqlharness
@@ -194,6 +194,9 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
+            - Two Versions
+                - 'FooV1', 'FooV1Description'
+                - 'FooV2', 'FooV2Description'
             - Two published release objects
                 - One publishd, or published, containing one build
                 - One not publishd, containing another build
@@ -292,6 +295,12 @@ class FixtureCache(object):
         imagelessRelease.addBuild(imagelessBuild.id)
         imagelessRelease.save()
 
+        # create 2 product versions in the project
+        versionId = client.addProductVersion(projectId, 'FooV1',
+                'FooV1Description')
+        versionId2 = client.addProductVersion(projectId, 'FooV2',
+                'FooV2Description')
+
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -309,8 +318,10 @@ class FixtureCache(object):
                       'anotherBuildId': anotherBuild.id,
                       'imagelessBuildId': imagelessBuild.id,
                       'imagelessReleaseId':   imagelessRelease.id,
+                      'versionId' : versionId,
+                      'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
-
+    
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
@@ -828,7 +839,7 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
             util.rmtree(f[0].dataPath)
 
 
-class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
+class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
 
@@ -958,10 +969,11 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
                 self.archiveDir = thisdir
                 break
 
-        unittest.TestCase.setUp(self)
+        testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
+        testhelp.TestCase.tearDown(self)
         MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()

@@ -9,11 +9,10 @@
 <?python
     for var in [ 'name',
                  'description',
-                 'buildDefinitions',
+                 'baseFlavor',
+                 'buildDefinition',
                  'upstreamSources'
-                 'stages',
-                 'visibleBuildTypes',
-                 'buildTemplateValueToIdMap',
+                 'stages'
                 ]:
         kwargs[var] = kwargs.get(var, '')
 ?>
@@ -22,11 +21,15 @@
         <title py:if="not isNew">${formatTitle('Edit Product Version')}</title>
         <style>
             <![CDATA[
-            table#pd-builddefs {
+            
+            table.pretty-fullwidth {
                 border-collapse: collapse;
                 width: 100%;
             }
 
+            a:hover.pd-usource-adder,
+            a:hover.pd-usource-expander,
+            a:hover.pd-usource-deleter,
             a:hover.pd-builddef-adder,
             a:hover.pd-builddef-expander,
             a:hover.pd-builddef-deleter {
@@ -35,62 +38,62 @@
                 cursor: pointer;
             }
 
-            table#pd-builddefs tr td {
-                font-size: x-small;
+            table.pretty-fullwidth tr td {
+                font-size: small;
             }
 
-            table#pd-builddefs tr th,
-            table#pd-builddefs tr td {
+            table.pretty-fullwidth tr th,
+            table.pretty-fullwidth tr td {
                 padding: 4px 4px;
                 border-bottom: 1px solid #e0e0e0;
             }
 
-            table#pd-builddefs tr.pd-builddef-expanded td,
-            table#pd-builddefs tr.pd-builddef-more td {
+            table.pretty-fullwidth tr.pd-builddef-expanded td,
+            table.pretty-fullwidth tr.pd-builddef-more td {
                 background: #fffded;
                 border-bottom: none;
             }
 
-            table#pd-builddefs tr.pd-builddef-more td {
+            table.pretty-fullwidth tr.pd-builddef-more td {
                 border-bottom: 1px solid #e0e0e0;
             }
 
-            table#pd-builddefs th {
+            table.pretty-fullwidth th {
                 font-size: normal;
                 font-weight: bold;
                 background-color: #ccc;
                 color: #000;
             }
 
-            table#pd-builddefs tr td input {
+            table.pretty-fullwidth tr td input {
                 width: 100%;
             }
 
-            table#pd-builddefs tr td label {
+            table.pretty-fullwidth tr td label {
                 text-align: right;
                 width: 30%;
                 margin-left: 10px;
                 padding-right: 10px;
             }
 
-            table#pd-builddefs tr td label.reversed {
+            table.pretty-fullwidth tr td label.reversed {
                 text-align: left;
                 width: 65%;
                 padding-left: 5px;
                 padding-right: 0;
             }
 
-            table#pd-builddefs tr td input.reversed {
+            table.pretty-fullwidth tr td input.reversed {
                 width: 14px;
                 margin-left: 30px;
             }
 
-            table#pd-builddefs input.field,
-            table#pd-builddefs select.field {
+            table.pretty-fullwidth input.field,
+            table.pretty-fullwidth select.field {
                 width: auto;
             }
 
-            table.row-button {
+            td.row-button {
                 width: 20px;
             }
             ]]>
@@ -121,7 +124,7 @@
                     });
                 });
 
-                jQuery('.pd-builddef-adder,.pd-builddef-expander,.pd-builddef-deleter').hover(function () {
+                jQuery('.pd-builddef-adder,.pd-builddef-expander,.pd-builddef-deleter,.pd-usource-adder,.pd-usource-expander,.pd-usource-deleter').hover(function () {
                         var imgbutton = jQuery(this).find('img').get(0);
                         imgbutton.src = imgbutton.src.replace('.gif', '_h.gif');
                     }, function() {
@@ -166,7 +169,8 @@
                         if (this.id) { this.id = this.id.replace('bt', String(currentSerial)); }
                     });
                     templateDomBits.find('select').change();
-                    templateDomBits.find('.pd-builddef-expander').click();
+                    templateDomBits.children().appendTo('#pd-builddefs > tbody');
+
                 });
             });
             ]]>
@@ -177,16 +181,16 @@
             <?python
                 from mint import buildtypes
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
-                buildType = bdef.get('buildType', 1)
+                buildType = bdef.get('_buildType', visibleBuildTypes[0])
             ?>
             <tr id="pd-builddef-${ordinal}">
                 <td>
                     <input type="text" name="pd-builddef-${ordinal}-name" value="${bdef.get('name','')}" />
                 </td>
                 <td>
-                    <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-buildType">
+                    <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-_buildType">
                         <option py:for="key in visibleBuildTypes"
-                            py:attrs="{'value': key, 'selected': (bdef.get('buildType', visibleBuildTypes[0]) == key) and 'selected' or None}"
+                            py:attrs="{'value': key, 'selected': (buildType == key) and 'selected' or None}"
                             py:content="buildtypes.typeNames[key]" />
                     </select>
                 </td>
@@ -266,7 +270,7 @@
                             <em class="required">Version Name</em>
                         </th>
                         <td py:if="isNew">
-                            <input type="text" autocomplete="off" name="title"
+                            <input type="text" autocomplete="off" name="name"
                                 value="${kwargs['name']}"/>
                             <p class="help">Choose a major version number
                                 for your product. Versions may contain alphanumeric
@@ -274,7 +278,7 @@
                                 (e.g. '1', 'A', '1.0', '2007' are all legal versions,
                                 but '1.0 XL' is not).</p>
                         </td>
-                        <td py:if="not isNew" py:content="kwargs['name']" />
+                        <td py:if="not isNew">${kwargs['name']}<input type="hidden" name="name" value="${kwargs['name']}" /></td>
                     </tr>
                     <tr>
                         <th>Version Description:</th>
@@ -288,7 +292,7 @@
                     <tr>
                         <th>Release Stages:</th>
                         <td>
-                            <table id="relstages">
+                            <table id="pd-relstages" class="pretty-fullwidth">
                                 <tr>
                                     <th>Name</th>
                                     <th>Description</th>
@@ -305,12 +309,12 @@
                     <tr>
                         <th>Upstream Sources:</th>
                         <td>
-                            <table id="usources">
+                            <table id="pd-usources" class="pretty-fullwidth">
                                 <tr>
                                     <th>Package</th>
                                     <th>Label</th>
-                                    <th>Edit</th>
-                                    <th>Delete</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
                                 </tr>
                                 <tr id="usource-template" style="display:none">
                                     <td colspan="4">
@@ -329,16 +333,17 @@
                                 <tr py:for="us in kwargs['upstreamSources']">
                                     <td py:content="us[0]" />
                                     <td py:content="us[1]" />
-                                    <td>[edit]</td>
-                                    <td>[delete]</td>
+                                    <td class="row-button"><a class="pd-usource-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" alt="edit" /></a></td>
+                                    <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" alt="delete" /></a></td>
                                 </tr>
                             </table>
+                            <p><a class="pd-usource-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />Add a new upstream source</a></p>
                         </td>
                     </tr>
                     <tr>
                         <th>Build Definitions:</th>
                         <td>
-                            <table id="pd-builddefs">
+                            <table id="pd-builddefs" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
                                         <th class="builddef-name">Name</th>
@@ -349,15 +354,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <div py:strip="True" py:for="ordinal, bdef in enumerate(kwargs['buildDefinitions'])"
-                                         py:content="buildDefinitionOptions(kwargs['buildTemplateValueToIdMap'], kwargs['visibleBuildTypes'], ordinal, bdef)" />
-                                    <tr id="pd-builddef-empty" py:attrs="{'style': kwargs['buildDefinitions'] and None or 'display: none'}">
+                                    <div py:strip="True" py:for="ordinal, bdef in enumerate(kwargs['buildDefinition'])"
+                                         py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
+                                    <tr id="pd-builddef-empty" py:attrs="{'style': kwargs['buildDefinition'] and None or 'display: none'}">
                                         <td colspan="5">No builds defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
                             <table id="pd-builddef-bt-all" style="display: none">
-                                <tbody py:content="buildDefinitionOptions(kwargs['buildTemplateValueToIdMap'], kwargs['visibleBuildTypes'])" />
+                                <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
                             <p><a class="pd-builddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />Add a new build definition</a></p>
                         </td>
@@ -368,6 +373,7 @@
                     <input type="submit" name="action" value="Cancel" />
                 </p>
                 <input type="hidden" name="id" value="${id}" />
+                <input type="hidden" name="baseFlavor" value="${kwargs['baseFlavor']}" />
             </form>
         </div>
     </body>

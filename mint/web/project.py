@@ -1057,58 +1057,6 @@ class ProjectHandler(WebHandler):
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @requiresAuth
-    @ownerOnly
-    @intFields(id = -1)
-    def editVersion(self, auth, id, *args, **kwargs):
-        isNew = (id == -1)
-        # TODO: this is a strawman; get real data from repository here
-        kwargs = {
-            'name': "1.0",
-            'description': "This is a test version",
-            'upstreamSources': (('*', 'rap.rpath.com@rpath:linux-1'),),
-            'stages': (('devel', 'Development', '-devel'),
-                       ('qa', 'Quality Assurance', '-qa'),
-                       ('release', 'Release', '')),
-            'buildDefinitions': ({'name': 'My Installable ISO', 'buildType': buildtypes.INSTALLABLE_ISO, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86]},
-                                 {'name': 'My Other Installable ISO', 'buildType': buildtypes.INSTALLABLE_ISO, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64]},
-                                 {'name': 'VMware', 'buildType': buildtypes.VMWARE_IMAGE, 'baseFlavor': buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86] }),
-            'visibleBuildTypes': self.client.getAvailableBuildTypes(),
-            'buildTemplateValueToIdMap': buildtemplates.getValueToTemplateIdMap(),
-        }
-        return self._write("editVersion",
-                isNew = isNew,
-                id=-1,
-                kwargs = kwargs)
-
-    @intFields(id = -1)
-    @strFields(action = 'Cancel')
-    @requiresAuth
-    @ownerOnly
-    def processEditVersion(self, auth, id, action, **kwargs):
-        if action == "Cancel":
-            self._predirect()
-
-        # TODO: Gather inputs
-        for kw, val in sorted(kwargs.items(), key=lambda x: x[0]):
-            print >> sys.stderr, "k: %s\tv:%s" % (kw, val)
-        sys.stderr.flush()
-
-        # TODO: Serialize new product definition
-
-
-        # TODO: Validate product definition
-
-
-        # TODO: Store the new product definition
-
-        if not self._getErrors():
-            self._setInfo("Updated product version")
-            self._predirect()
-        else:
-            # TODO return new product definition
-            pass
-
     @strFields(projecturl = '', desc = '', name = '', branch = '',
                appliance = 'unknown', commitEmail = '')
     @ownerOnly
@@ -1149,6 +1097,91 @@ class ProjectHandler(WebHandler):
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
             self._predirect()
+
+    @requiresAuth
+    @ownerOnly
+    @intFields(id = -1)
+    def editVersion(self, auth, id, *args, **kwargs):
+        isNew = (id == -1)
+
+        if not isNew:
+            kwargs.update(self.client.getProductVersion(id))
+            
+            # Need to "decorate" the raw product definition with buildtypes
+            # so the settings template knows what to do with it.
+            prodDef = self.client.getProductDefinitionForVersion(id)
+            buildDefinition = prodDef.get('buildDefinition', [])
+            for bdef in buildDefinition:
+                imageKeys = [k for k in bdef if k.endswith('Image')]
+                if len(imageKeys) == 1:
+                    bdefTemplate = buildtemplates.getDataTemplateByXmlName(imageKeys[0])
+                    bdef['_buildType'] = bdefTemplate.id
+                          
+            kwargs.update(prodDef)          
+        else:
+            kwargs.setdefault('id', -1)
+            kwargs.setdefault('name', '')
+            kwargs.setdefault('description', '')
+            kwargs.setdefault('baseFlavor', 'is: x86')
+            kwargs.setdefault('stages', {})
+            kwargs.setdefault('upstreamSources', {})
+            kwargs.setdefault('buildDefinition', [])
+        return self._write("editVersion",
+                isNew = isNew,
+                id=id,
+                visibleBuildTypes = self.client.getAvailableBuildTypes(),
+                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+                kwargs = kwargs)
+
+    @intFields(id = -1)
+    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @requiresAuth
+    @ownerOnly
+    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+            **kwargs):
+
+        if not name:
+            self._addErrors("Missing version name")
+
+        # Gather all grouped inputs
+        collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
+                coerceValues=True)
+
+        builds = []
+        for builddef in collatedDict.get('pd-builddef',[]):
+            buildDict = dict(name=builddef.pop('name'),
+                             baseFlavor=builddef.pop('baseFlavorType'))
+
+            # Use data templates to validate individual options
+            tmpl = buildtemplates.getDataTemplate(int(builddef.pop('_buildType')))
+            try:
+                tmpl.validate(**builddef)
+            except BuildOptionValidationException, e:
+                self._addErrors(str(e))
+            else:
+                builddef.update(tmpl.getDefaultDict())
+                buildDict[tmpl.xmlName] = builddef
+                builds.append(buildDict)
+
+        pdDict = dict(baseFlavor=baseFlavor,
+                      stages=collatedDict.get('pd-stages',{}),
+                      upstreamSources=collatedDict.get('pd-usources',{}),
+                      buildDefinition=builds)
+
+        if not self._getErrors():
+            if id == -1:
+                id = self.client.addProductVersion(self.project.id, name,
+                        description)
+            else:
+                self.client.editProductVersion(id, description)
+
+            assert(id != -1)
+            self.client.setProductDefinitionForVersion(id, pdDict)
+
+            self._setInfo("Updated product version")
+            self._predirect()
+        else:
+            return self.editVersion(**kwargs)
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

@@ -256,6 +256,44 @@ def getBuildIdFromUuid(uuid):
 
         return string.atoi(buildId)
 
+def collateDictByKeyPrefix(fields, coerceValues=False):
+    """
+    Take a dict of fields that looks like this:
+
+        { 'prefix-idx1-key1': 'value1', 'prefix-idx2-key2': 'value2', ... ]
+
+    and collate it into a nested dict that looks like this:
+
+        { 'prefix': [{'key1': 'value1', 'key2': 'value2', ... ] }
+
+    Note: this ignores anything that doesn't match the pattern (i.e.
+    all keys must be in the form 'prefix-index-value'
+
+    Specifying coerceValues as True will coerce all values to Strings.
+    """
+    dicts = {}
+    for key, value in sorted(fields.iteritems()):
+        try:
+            # Split on prefix-index-key from the right; this
+            # allows for the prefix to contain '-'s, too
+            prefix, index, name = key.rsplit('-', 2)
+            index = int(index)
+        except ValueError:
+            # ignore anything that doesn't conform
+            continue
+        pd = dicts.setdefault(prefix, {})
+        d = pd.setdefault(index, {})
+        if coerceValues:
+            value = str(value)
+        d[name] = value
+
+    for key, value in dicts.iteritems():
+        value = [ x[1] for x in sorted(value.iteritems()) ]
+        dicts[key] = value 
+
+
+    return dicts
+
 def addUserToRepository(repos, username, password, role, label=None):
     """
     Add a user to the repository

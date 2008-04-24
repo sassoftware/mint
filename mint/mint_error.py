@@ -75,6 +75,7 @@ class DuplicateJob(MintError):
 class DuplicateName(MintError):
     "A %(project)s using this title already exists"
 class DuplicateLabel(MintError): "Label already exists"
+class DuplicateProductVersion(MintError): "Product version already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
@@ -117,6 +118,10 @@ class NotEntitledError(MintError):
 class ParameterError(MintError):
     "A required parameter had an incorrect data type."
 class PermissionDenied(MintError): "Permission Denied"
+class ProductVersionNotFound(MintError):
+    "The specified product version was not found."
+class ProductDefinitionVersionNotFound(MintError):
+    "The product definition for the specified product version was not found."
 class PublishedReleaseEmpty(MintError):
     "The referenced release has no builds and cannot be published."
 class PublishedReleaseMissing(MintError):

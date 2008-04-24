@@ -749,6 +749,29 @@ class MintClient:
         return self.server.setBuildAMIDataSafe(buildId, outputToken,
                 amiId, amiManifestName)
 
+    def addProductVersion(self, projectId, name, description=''):
+        return self.server.addProductVersion(projectId, name, description)
+
+    def getProductVersion(self, versionId):
+        return self.server.getProductVersion(versionId)
+
+    def getProductDefinitionForVersion(self, versionId):
+        return self.server.getProductDefinitionForVersion(versionId)
+
+    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+        return self.server.setProductDefinitionForVersion(versionId,
+                productDefinitionDict)
+
+    def editProductVersion(self, versionId, newDesc):
+        return self.server.editProductVersion(versionId, newDesc)
+
+    def getProductVersionListForProduct(self, projectId):
+        return self.server.getProductVersionListForProduct(projectId)
+
+    def getProductVersionProdDefLabel(self, versionId):
+        return self.server.getProductVersionProdDefLabel(versionId)
+
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

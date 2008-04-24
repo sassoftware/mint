@@ -38,7 +38,7 @@ transTables = {
 
 
 class Project(database.TableObject):
-    # XXX: disabled is slated for removal next schema upgrade --sgp
+    # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
@@ -224,6 +224,8 @@ class Project(database.TableObject):
         else:
             return "yes"
 
+    def getProductVersionList(self):
+        return self.server.getProductVersionListForProduct(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -813,26 +815,25 @@ class ProductVersions(database.TableObject):
     def _getProductDefinitionTroveForVersion(self):
         project = Project(self.server, self.id)
         # XXX fill in with real trove name
-        return ('sekrittrove:source',
+        return ('proddef:source',
                 '%s.%s@%s:proddef-%s' % \
                 (project.shortname,
                  project.domainname,
                  self.cfg.namespace,
                  self.name), None)
 
-    def getProductDefinitionForVersion(self):
-        # TODO implement me
-        pass
+    def getProdDefLabel(self):
+        project = Project(self.server, self.projectId)
+        label = versions.Label(project.getLabel())
 
-
-    def setProductDefinitionForVersion(self):
-        # TODO implement me
-        pass
+        return "%s@%s:proddef-%s" % (project.getFQDN(),
+                                     label.getNamespace(),
+                                     self.name)
 
 
 class ProductVersionsTable(database.KeyedTable):
-    name = 'ProjectVersions'
-    key = 'projectVersionsId'
+    name = 'ProductVersions'
+    key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
                'name',
@@ -843,10 +844,11 @@ class ProductVersionsTable(database.KeyedTable):
         self.cfg = cfg
         database.KeyedTable.__init__(self, db)
 
-    def getVersionListForProject(self, projectId):
+    def getProductVersionListForProduct(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT %s FROM ProjectVersions
-                      WHERE projectId = ?""" % ', '.join(self.fields),
+        cu.execute("""SELECT %s FROM %s
+                      WHERE projectId = ?""" % (', '.join(self.fields),
+                            self.name),
                       projectId)
         return [ list(x) for x in cu.fetchall() ]
 

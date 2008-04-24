@@ -30,6 +30,7 @@ python_files = \
                newstest.py \
                buildtest.py \
                projecttest.py \
+	       productversiontest.py \
                pubreleasetest.py \
                recipes.py \
                repostest.py \

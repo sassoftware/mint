@@ -29,3 +29,4 @@
 .*,cover
 ^VERSION$
 ^INSTALL$
+^\..*project

@@ -728,7 +728,7 @@ class AdminHandler(WebHandler):
                 (self.cfg.siteHost, self.cfg.basePath))
         else:
             return self.editUpdateService(**inputKwargs)
- 
+
     @listFields(int, remove = [])
     @boolFields(confirmed = False)
     def removeUpdateServices(self, remove, confirmed, **yesArgs):

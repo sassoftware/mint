@@ -814,6 +814,8 @@ def _createProductVersions(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
         commit = True
+    db.createIndex('ProductVersions', 'ProductVersionsProjects',
+            'projectId,name', unique = True)
 
     if commit:
         db.commit()
