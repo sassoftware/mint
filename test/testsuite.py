@@ -72,18 +72,20 @@ def setup():
     raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa'))
     raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test'))
     raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
-
+    proddefPath     = os.getenv('PRODDEF_PATH',     os.path.realpath('../../proddef'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
 
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
-        raaPath, raaTestPath, raaPluginsPath, coveragePath)] + sys.path
+        raaPath, raaTestPath, raaPluginsPath, proddefPath,
+        coveragePath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
         JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
+        PRODDEF_PATH=proddefPath,
         COVERAGE_PATH=coveragePath, 
         PYTHONPATH=(':'.join(sys.path))))
 

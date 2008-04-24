@@ -13,7 +13,8 @@ import fixtures
 
 from conary import conaryclient
 from mint import mint_error
-from mint import proddef
+
+import proddef
 
 class ProductVersionTest(fixtures.FixturedUnitTest):
     
