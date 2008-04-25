@@ -16,8 +16,8 @@
 ^distro/rbuilder.conf$
 ^distro/schema$
 
-.project
-.pydevproject
+^.*project$
+^.*pydevproject$
 
 ^\.times
 ^test/(raa-tests/)?\.(times|coverage)$
