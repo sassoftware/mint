@@ -292,6 +292,16 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
 commands.register(BuildCreateCommand)
 
+class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
+    commands = ['build-product']
+
+    def runCommand(self, client, cfg, argSet, args):
+        pass
+
+
+
+
+commands.register(BuildCreateFromProdDefCommand)
 
 class BuildWaitCommand(commands.RBuilderCommand):
     commands = ['build-wait']

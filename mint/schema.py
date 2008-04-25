@@ -858,25 +858,12 @@ def checkVersion(db):
 
     # test for no version
     if version == 0:
-        # TODO: Better message
-        raise sqlerrors.SchemaVersionError("""
-        Your database schema is not initalized or it is too old.  Please
-        run the standalone server with the --migrate argument to
-        upgrade/initialize the database schema for the Conary Repository.
+        raise sqlerrors.SchemaVersionError('Uninitialized database', version)
 
-        Current schema version is %s; Required schema version is %s.
-        """ % (version, RBUILDER_DB_VERSION), version)
+    # the major and minor versions must match
+    if version != RBUILDER_DB_VERSION:
+        raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
-    # the major versions must match
-    if version.major != RBUILDER_DB_VERSION.major:
-        # XXX better message
-        raise sqlerrors.SchemaVersionError("""
-        This code schema version does not match the Conary repository
-        database schema that you are running.
-
-        Current schema version is %s; Required schema version is %s.
-        """ % (version, RBUILDER_DB_VERSION), version)
-    # the minor numbers are considered compatible up and down across a major
     return version
 
 # run through the schema creation and migration (if required)
@@ -899,20 +886,23 @@ def loadSchema(db, cfg=None, should_migrate=False):
         db.loadSchema()
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
+
     # test if  the repo schema is newer than what we understand
     # (by major schema number)
-    if version.major > RBUILDER_DB_VERSION.major:
+    if version > RBUILDER_DB_VERSION:
         raise sqlerrors.SchemaVersionError("""
         The rBuilder database schema version is newer and incompatible with
         this code base. You need to update rBuilder to a version
         that understands schema %s""" % version, version)
+
     # now we need to perform a schema migration
-    if version.major < RBUILDER_DB_VERSION.major and not should_migrate:
+    if version < RBUILDER_DB_VERSION and not should_migrate:
         raise sqlerrors.SchemaVersionError("""
-        The rBuilder database schema needs to have a major schema update
-        performed.  Please run rbuilder-database with the --migrate option to
-        perform this upgrade.
+        The rBuilder database schema needs to have a schema update
+        performed.  Please run rbuilder-database with the --migrate
+        option to perform this upgrade.
         """, version, RBUILDER_DB_VERSION)
+
     # now the version.major is smaller than RBUILDER_DB_VERSION.major - but is it too small?
     # we only support migrations from schema 37 on
     if version < 37:
@@ -921,13 +911,15 @@ def loadSchema(db, cfg=None, should_migrate=False):
         than version 3.1.4. Schema migrations from this database schema
         version are longer supported. Please contact rPath for help 
         converting the rBuilder database to a supported version.""", version)
+
     # if we reach here, a schema migration is needed/requested
     version = migrate.migrateSchema(db, cfg)
     db.loadSchema()
+
     # run through the schema creation to create any missing objects
     logMe(2, "checking for/initializing missing schema elements...")
     createSchema(db)
-    if version > 0 and version.major != RBUILDER_DB_VERSION.major:
+    if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
         raise sqlerrors.SchemaVersionError("""
         Schema migration process has failed to bring the database
@@ -936,6 +928,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
 
         Current schema version is %s; Required schema version is %s.
         """ % (version, RBUILDER_DB_VERSION))
+
     db.loadSchema()
     return RBUILDER_DB_VERSION
 
