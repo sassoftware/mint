@@ -771,6 +771,9 @@ class MintClient:
     def getProductVersionProdDefLabel(self, versionId):
         return self.server.getProductVersionProdDefLabel(versionId)
 
+    def newBuildsFromProductDefinition(self, versionId, troveSpec):
+        return self.server.newBuildsFromProductDefinition(versionId, troveSpec)
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

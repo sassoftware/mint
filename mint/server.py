@@ -2047,6 +2047,60 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise NotEntitledError()
         return buildId
 
+    @typeCheck(int, tuple)
+    @requiresAuth
+    @private
+    def newBuildsFromProductDefinition(self, versionId, troveSpec):
+        """
+        Create a build for troveSpec for each build definied in the product
+        definition for the version specified by versionId.
+        """
+
+        version = projects.ProductVersions(self, versionId)
+        projectId = version.projectId
+
+        # Read build definition from product definition for the passed in
+        # version.
+        productDefinition = self.getProductDefinitionForVersion(versionId)
+        buildDefinition = productDefinition['buildDefinition']
+
+        # Validate the data in the buildDefinition, presumably, this has
+        # already been done from processEditVersion, but we'll do it again to
+        # be sure.
+        buildDefinition = \
+            builds.applyTemplatesToBuildDefinitions(buildDefinition)
+
+        buildIds = []
+        # Create buildId's for each defined build.
+        for build in buildDefinition:
+            buildId = self.newBuild(projectId, str(build.get('name', '')))
+            buildFlavor = deps.parseFlavor(str(build.get('baseFlavor', '')))
+            self.setBuildTrove(buildId, troveSpec[0].freeze(),
+                               troveSpec[1].freeze(), buildFlavor)
+            self.setBuildType(buildId, build['_buildType'])
+
+            # Add build data from the buildDefinition to the build object.
+            buildData = build[builds.getDataTemplate(build['_buildType']).xmlName]
+            for k, v in buildData.items():
+                self.setBuildDataValue(k, str(v), 0)
+
+            # anaconda-templates?
+            # TODO: fix this hack
+            name = 'anaconda-templates'
+            value = 'anaconda-templates' + \
+                    '=/conary.rpath.com@rpl:devel//1/1.0.7-0.3-2[is: x86]'
+            self.setBuildDataValue(name, value, 4)
+
+            buildIds.append(buildId)
+        else:
+            raise NoBuildsDefinedInBuildDefinition()
+
+        # Start each build.
+        for buildId in buildIds:
+            self.startImageJob(buildId)
+
+        return buildIds
+
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
     def newBuildsFromXml(self, projectId, label, buildXml):
@@ -2070,6 +2124,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if 'type' not in buildDict:
                 raise ParameterError('XML build is missing type')
             template = buildtemplates.getDataTemplate(buildDict['type'])
+
+            # For each key in the data dict, verify that there is class named
+            # with that key in the buildtemplates module. If there isn't,
+            # throw an exception.
             for name in buildDict.get('data', {}):
                 option = buildtemplates.__dict__.get(name)
                 if not(option and option.__base__.__base__ == \
