@@ -110,8 +110,14 @@ class MailError(MintError): "There was a problem sending email."
 class MailingListException(MintError): pass
 class MaintenanceMode(MintError): "Repositories are currently offline."
 class MessageException(MintError): pass
+class MultipleImageTypes(MintError):
+    "The build has multiple image types specified."
 class NoMirrorLoadDiskFound(MintError):
     "No mirror preload disk was found attached to your appliance."
+class NoBuildImageTypeInBuildDefinition(MintError):
+    "No build image set in build definition."
+class NoBuildsDefinedInBuildDefinition(MintError):
+    "No builds defined in build definition."
 class NotEntitledError(MintError):
     "The rBuilder is not entitled to a required resource. Please " \
         "contact your administrator."

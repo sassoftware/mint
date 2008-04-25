@@ -1106,17 +1106,9 @@ class ProjectHandler(WebHandler):
 
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
-            
-            # Need to "decorate" the raw product definition with buildtypes
-            # so the settings template knows what to do with it.
             prodDef = self.client.getProductDefinitionForVersion(id)
-            buildDefinition = prodDef.get('buildDefinition', [])
-            for bdef in buildDefinition:
-                imageKeys = [k for k in bdef if k.endswith('Image')]
-                if len(imageKeys) == 1:
-                    bdefTemplate = buildtemplates.getDataTemplateByXmlName(imageKeys[0])
-                    bdef['_buildType'] = bdefTemplate.id
-                          
+            prodDef['buildDefinition'] = \
+                builds.applyTemplatesToBuildDefinitions(prodDef['buildDefinition'])
             kwargs.update(prodDef)          
         else:
             kwargs.setdefault('id', -1)
@@ -1126,6 +1118,12 @@ class ProjectHandler(WebHandler):
             kwargs.setdefault('stages', {})
             kwargs.setdefault('upstreamSources', {})
             kwargs.setdefault('buildDefinition', [])
+
+        # TODO
+        # remove this
+        self.client.newBuildsFromProductDefinition(43, ('troveName',
+                        'troveVersion', 'troveFlavor'))
+
         return self._write("editVersion",
                 isNew = isNew,
                 id=id,
@@ -1147,26 +1145,30 @@ class ProjectHandler(WebHandler):
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
                 coerceValues=True)
 
-        builds = []
+        # Create and save a list of dicts that we can send to
+        # applyTemplatesToBuildDefinitions
+        buildDefs = []
         for builddef in collatedDict.get('pd-builddef',[]):
-            buildDict = dict(name=builddef.pop('name'),
-                             baseFlavor=builddef.pop('baseFlavorType'))
 
-            # Use data templates to validate individual options
-            tmpl = buildtemplates.getDataTemplate(int(builddef.pop('_buildType')))
-            try:
-                tmpl.validate(**builddef)
-            except BuildOptionValidationException, e:
-                self._addErrors(str(e))
-            else:
-                builddef.update(tmpl.getDefaultDict())
-                buildDict[tmpl.xmlName] = builddef
-                builds.append(buildDict)
+            imageKey = [k for k in builddef.keys() if k.endswith('Image')]
+
+            buildDefs.append(dict(name=builddef.pop('name'),
+                             baseFlavor=builddef.pop('baseFlavorType'),
+                             _buildType=int(builddef.pop('_buildType')),
+                             imageKey=builddef[imageKey]))
+
+        # Apply the build templates to the buildDefs list of dicts.  The
+        # returned dict is used in the dict sent to
+        # setProductDefinitionForVersion
+        try:
+            templBuildDefs = builds.applyTemplatesToBuildDefinitions(buildDefs)
+        except BuildOptionValidationException, e:
+            self._addErrors(str(e))
 
         pdDict = dict(baseFlavor=baseFlavor,
                       stages=collatedDict.get('pd-stages',{}),
                       upstreamSources=collatedDict.get('pd-usources',{}),
-                      buildDefinition=builds)
+                      buildDefinition=templBuildDefs)
 
         if not self._getErrors():
             if id == -1:

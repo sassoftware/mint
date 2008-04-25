@@ -182,6 +182,62 @@ def getImportantFlavors(buildFlavor):
     return flavors
 
 
+def applyTemplatesToBuildDefinitions(buildDefinitions):
+    """
+    Applies default options (if not overridden) and validates the list of
+    buildDefinitions.
+
+    buildDefinition should be a list of dicts in a similar format as is
+    returned from proddef.ProductDefinition.getBuildDefinition.  The only
+    difference is that each dict should have _buildType key corrosponding to
+    build type id placed there by the web side.
+
+    Returns a modified list of dicts.
+    """
+    templatedBuildDefinitions = []
+    validationErrors = []
+
+    for buildDef in buildDefinitions:
+
+        imageKey = [k for k in buildDef.keys() if k.endswith('Image') or k == 'nakedGroup']
+
+        if not imageKey:
+            raise NoBuildImageTypeInBuildDefinition()
+        else:
+            imageKey = imageKey[0]
+
+        buildDefTemplate = buildtemplates.getDataTemplateByXmlName(imageKey)
+        buildDef['_buildType'] = buildDefTemplate.id
+
+        buildOptionsUnicode = buildDef[imageKey]
+        buildOptions = {}
+        for k, v in buildOptionsUnicode.items():
+            buildOptions[str(k)] = str(v)
+
+        # Save all errors so that we can report them all at once.
+        try:
+            buildDefTemplate.validate(**buildOptions)
+        except InvalidBuildOption, e:
+            validationErrors.append(str(e))
+        except BuildOptionValidationException, e:
+            validationErrors.append(str(e))
+
+        # apply the default options to buildDef only if they aren't already
+        # specified.
+        for k, v in buildDefTemplate.getDefaultDict().items():
+            if not buildOptions.has_key(k):
+                buildOptions[k] = v
+
+        buildDef[imageKey] = buildOptions
+        templatedBuildDefinitions.append(buildDef)
+
+    # If we encountered any errors, throw an exception
+    if len(validationErrors) > 0:
+        raise BuildOptionValidationException(str(validationErrors))
+
+    return templatedBuildDefinitions
+
+
 class Build(database.TableObject):
     __slots__ = BuildsTable.fields
 
