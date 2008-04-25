@@ -1145,12 +1145,10 @@ class ProjectHandler(WebHandler):
         buildDefs = []
         for builddef in collatedDict.get('pd-builddef',[]):
 
-            imageKey = [k for k in builddef.keys() if k.endswith('Image')]
-
             buildDefs.append(dict(name=builddef.pop('name'),
                              baseFlavor=builddef.pop('baseFlavorType'),
                              _buildType=int(builddef.pop('_buildType')),
-                             imageKey=builddef[imageKey]))
+                             _builddef=builddef))
 
         # Apply the build templates to the buildDefs list of dicts.  The
         # returned dict is used in the dict sent to

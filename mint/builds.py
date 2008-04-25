@@ -202,7 +202,13 @@ def applyTemplatesToBuildDefinitions(buildDefinitions):
         imageKey = [k for k in buildDef.keys() if k.endswith('Image') or k == 'nakedGroup']
 
         if not imageKey:
-            raise NoBuildImageTypeInBuildDefinition()
+            # Check for _buildType.
+            if buildDef.has_key('_buildType'):
+                imageKey = \
+                    buildtemplates.getDataTemplate(buildDef['_buildType']).xmlName
+                buildDef[imageKey] = buildDef.pop('_builddef', {})
+            else:
+                raise NoBuildImageTypeInBuildDefinition()
         else:
             imageKey = imageKey[0]
 
