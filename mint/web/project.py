@@ -1119,11 +1119,6 @@ class ProjectHandler(WebHandler):
             kwargs.setdefault('upstreamSources', {})
             kwargs.setdefault('buildDefinition', [])
 
-        # TODO
-        # remove this
-        self.client.newBuildsFromProductDefinition(43, ('troveName',
-                        'troveVersion', 'troveFlavor'))
-
         return self._write("editVersion",
                 isNew = isNew,
                 id=id,
