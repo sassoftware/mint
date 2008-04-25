@@ -298,9 +298,6 @@ class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
     def runCommand(self, client, cfg, argSet, args):
         pass
 
-
-
-
 commands.register(BuildCreateFromProdDefCommand)
 
 class BuildWaitCommand(commands.RBuilderCommand):
