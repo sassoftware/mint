@@ -41,6 +41,7 @@ python_files =			\
 	pkgindex.py		\
 	pkgindexer.py		\
 	profile.py		\
+	project.py			\
 	projects.py		\
 	proxiedtransport.py	\
 	pubreleases.py		\
