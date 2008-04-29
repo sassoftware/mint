@@ -322,6 +322,47 @@ class FixtureCache(object):
                       'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
     
+    def fixtureFullProdDef(self, cfg):
+        cfg, data = self.fixtureFull(cfg)
+
+        baseFlavor = """
+            ~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap,
+            ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU,
+            ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug,
+            ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl,
+            ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl,
+            ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux,
+            ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
+            ~!xen, ~!xfce, ~!xorg-x11.xprint
+            """
+        stages = [dict(name='devel',
+                       label='product.example.com@exm:product-1-devel'),
+                  dict(name='qa',
+                       label='product.example.com@exm:product-1-qa'),
+                  dict(name='release',
+                       label='product.example.com@exm:product-1')]
+
+
+        upstreamSources = [dict(troveName='group-rap-standard',
+                                label='rap.rpath.com@rpath:linux-1'),
+                           dict(troveName='group-postgres',
+                                label='products.rpath.com@rpath:postgres-8.2')]
+
+        buildDefinition = [dict(baseFlavor='is: x86',
+                                installableIsoImage=dict()),
+                           dict(baseFlavor='is: x86_64',
+                                installableIsoImage=dict())
+                          ]
+
+        proddef = dict(baseFlavor=baseFlavor,
+                       stages=stages,
+                       upstreamSources=upstreamSources,
+                       buildDefinition=buildDefinition)
+
+        data['proddef'] = proddef
+
+        return cfg, data
+
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
