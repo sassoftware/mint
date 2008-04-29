@@ -1189,7 +1189,8 @@ class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
         isoTemplate = \
             buildtemplates.getDataTemplateByXmlName('installableIsoImage')
-        self.assertEquals(isoTemplate.getDefaultDict(),
+        isoTemplate = isoTemplate.getDefaultDict().copy()
+        self.assertEquals(isoTemplate,
                           templBuildDefs[0]['installableIsoImage'])
 
         # Multiple build definitions at once.
@@ -1201,9 +1202,10 @@ class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
         esxTemplate = \
             buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
-        self.assertEquals(isoTemplate.getDefaultDict(),
+        esxTemplate = esxTemplate.getDefaultDict().copy()
+        self.assertEquals(isoTemplate,
                           templBuildDefs[0]['installableIsoImage'])
-        self.assertEquals(esxTemplate.getDefaultDict(),
+        self.assertEquals(esxTemplate,
                           templBuildDefs[1]['vmwareEsxImage'])
 
     @fixtures.fixture("Empty")
@@ -1232,9 +1234,11 @@ class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
                           '/chupacabra/linux')
         isoTemplate = \
             buildtemplates.getDataTemplateByXmlName('installableIsoImage')
+        isoTemplate = isoTemplate.getDefaultDict().copy()
+
         esxTemplate = \
             buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
-
+        esxTemplate = esxTemplate.getDefaultDict().copy()
         # pop the set option from each, and verify that everything else is the
         # same.
         templBuildDefs[0]['installableIsoImage'].pop('autoResolve')
@@ -1250,9 +1254,9 @@ class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
         esxTemplate.pop('natNetworking')
         esxTemplate.pop('baseFileName')
 
-        self.assertEquals(isoTemplate.getDefaultDict(),
+        self.assertEquals(isoTemplate,
                           templBuildDefs[0]['installableIsoImage'])
-        self.assertEquals(esxTemplate.getDefaultDict(),
+        self.assertEquals(esxTemplate,
                           templBuildDefs[1]['vmwareEsxImage'])
 
 class BuildTestConaryRepository(MintRepositoryHelper):
