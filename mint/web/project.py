@@ -1111,18 +1111,13 @@ class ProjectHandler(WebHandler):
                 builds.applyTemplatesToBuildDefinitions(prodDef['buildDefinition'])
             kwargs.update(prodDef)          
         else:
-            kwargs.setdefault('id', -1)
-            kwargs.setdefault('name', '')
-            kwargs.setdefault('description', '')
-            kwargs.setdefault('baseFlavor', 'is: x86')
-            kwargs.setdefault('stages', {})
-            kwargs.setdefault('upstreamSources', {})
-            kwargs.setdefault('buildDefinition', [])
+            valueToIdMap = buildtemplates.getValueToTemplateIdMap();
+            self._productVersionDefaultKWArgs(kwargs)
 
         return self._write("editVersion",
                 isNew = isNew,
                 id=id,
-                visibleBuildTypes = self.client.getAvailableBuildTypes(),
+                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                 buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                 kwargs = kwargs)
 
@@ -1139,12 +1134,12 @@ class ProjectHandler(WebHandler):
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
                 coerceValues=True)
-
+                
         # Create and save a list of dicts that we can send to
         # applyTemplatesToBuildDefinitions
         buildDefs = []
-        for builddef in collatedDict.get('pd-builddef',[]):
-
+        buildDefsList = collatedDict.get('pd-builddef',[])
+        for builddef in buildDefsList:
             buildDefs.append(dict(name=builddef.pop('name'),
                              baseFlavor=builddef.pop('baseFlavorType'),
                              _buildType=int(builddef.pop('_buildType')),
@@ -1157,13 +1152,21 @@ class ProjectHandler(WebHandler):
             templBuildDefs = builds.applyTemplatesToBuildDefinitions(buildDefs)
         except BuildOptionValidationException, e:
             self._addErrors(str(e))
-
-        pdDict = dict(baseFlavor=baseFlavor,
-                      stages=collatedDict.get('pd-stages',{}),
-                      upstreamSources=collatedDict.get('pd-usources',{}),
-                      buildDefinition=templBuildDefs)
-
+            
+        # get/validate the stages
+        stages = collatedDict.get('pd-stages', {})
+        try:
+            self._validateStages(stages)
+        except ProductDefinitionInvalidStage, e:
+            self._addErrors(str(e))
+    
         if not self._getErrors():
+            
+            pdDict = dict(baseFlavor=baseFlavor,
+                          stages=stages,
+                          upstreamSources=collatedDict.get('pd-usources',{}),
+                          buildDefinition=templBuildDefs)
+            
             if id == -1:
                 id = self.client.addProductVersion(self.project.id, name,
                         description)
@@ -1176,7 +1179,64 @@ class ProjectHandler(WebHandler):
             self._setInfo("Updated product version")
             self._predirect()
         else:
-            return self.editVersion(**kwargs)
+            #FIXME:  The kwargs are refreshed every time on error, not sure 
+            # if that is what we want to do
+            return self._write("editVersion", 
+               isNew = (id == -1),
+               id=id,
+               visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
+               buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+               kwargs = self._productVersionDefaultKWArgs(kwargs))
+            
+    def _productVersionAvaliableBuildTypes(self):
+        """
+        Get a list of the available build types for build defs
+        """
+        # get the build types to allow
+        #    remove online update builds (i.e. imageless)
+        visibleBuildTypes = self.client.getAvailableBuildTypes();
+        visibleBuildTypes.remove(buildtypes.IMAGELESS)
+        
+        return visibleBuildTypes
+            
+    def _productVersionDefaultKWArgs(self, kwargs):
+        """
+        Set the default kwargs for product version
+        """
+        kwargs.setdefault('id', -1)
+        kwargs.setdefault('name', '')
+        kwargs.setdefault('description', '')
+        kwargs.setdefault('baseFlavor', 'is: x86')
+        kwargs.setdefault('stages', self._getDefaultStagesList())
+        kwargs.setdefault('upstreamSources', {})
+        kwargs.setdefault('buildDefinition', [])
+        
+        return kwargs
+        
+    def _validateStages(self, stagesList):
+        """
+        Validate the release stages
+        """
+        for stage in stagesList:
+            # name is required
+            if not stage.has_key('name'):
+                raise ProductDefinitionInvalidStage(
+                    'The release stage name must be specified')
+            # make sure all stages have a label value since we allow it to be empty
+            if not stage.has_key('label'):
+                stage['label'] = ""
+        
+    def _getDefaultStagesList(self):
+        """
+        Build a list containing the default stages
+        """
+        return [dict(name='Development',
+                     label='-devel'),
+                dict(name='QA',
+                     label='-qa'),
+                dict(name='Release',
+                     label='')]
+                                    
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

@@ -214,6 +214,7 @@ def applyTemplatesToBuildDefinitions(buildDefinitions):
 
         buildDefTemplate = buildtemplates.getDataTemplateByXmlName(imageKey)
         buildDef['_buildType'] = buildDefTemplate.id
+        buildDef['_xmlName'] = buildDefTemplate.xmlName
 
         buildOptionsUnicode = buildDef[imageKey]
         buildOptions = {}

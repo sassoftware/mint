@@ -292,6 +292,16 @@ class DatabaseVersionMismatch(MintError):
             "version required by this version of rBuilder. " \
             "Current version is %s; required version is %s." % (
                 self.currentVersion, self.requiredVersion)
+            
+class ProductDefinitionInvalidStage(MintError):
+    def __init__(self, msg):
+        MintError.__init__(self)
+        self.msg = msg
+
+    def freeze(self): return (self.msg,)
+
+    def __str__(self):
+        return "Invalid product definition stage: %s" % self.msg
 
 ## Subclassed exceptions
 # MessageException
