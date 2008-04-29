@@ -292,12 +292,57 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
 commands.register(BuildCreateCommand)
 
+def buildProdDefHelp():
+    return '<product name> <version name> <trove spec>'
+
 class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
     commands = ['build-product']
+    paramHelp = buildProdDefHelp()
+
+    docs = {'wait' :    'wait until a build job finishes',
+            'timeout' : ('time to wait before ending, even if the job is not done', 
+                         'seconds'),
+            'quiet':    'suppress job status output',
+    }
+
+
+    def addParameters(self, argDef):
+         commands.RBuilderCommand.addParameters(self, argDef)
+         argDef["wait"] = options.NO_PARAM
+         argDef["timeout"] = options.ONE_PARAM
+         argDef["quiet"] = options.NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
-        pass
+        wait = argSet.pop('wait', False)
+        timeout = int(argSet.pop('timeout', 0))
+        quiet = argSet.pop('quiet', False)
 
+        if len(args) < 4:
+            return self.usage()
+
+        productName = args[1]
+        versionName = args[2]
+        troveSpec = args[3]
+
+        # Verify that troveSpec is valid.  If raised, we want the exception to
+        # propogate up.
+        cmdline.parseTroveSpec(troveSpec)
+
+        project = client.getProjectByHostname(productName)
+
+        versionList = client.getProductVersionListForProduct(project.id)
+        
+        # Pick the version id that matches versionName
+        versionId = [v[0] for v in versionList if v[2] == versionName][0]
+        buildIds = client.newBuildsFromProductDefinition(versionId, troveSpec)
+
+        for buildId in buildIds:
+            print "BUILD_ID=%d" % (buildId)
+            sys.stdout.flush()
+            if wait:
+                waitForBuild(client, buildId, timeout=timeout, quiet=quiet)
+
+        return 0
 commands.register(BuildCreateFromProdDefCommand)
 
 class BuildWaitCommand(commands.RBuilderCommand):

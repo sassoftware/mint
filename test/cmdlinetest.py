@@ -68,6 +68,27 @@ class CmdLineTest(unittest.TestCase):
             [None, None, None, {'option': ['key val', 'anotherkey anotherval']},
             ['build-create', 'testproject', troveSpec, 'installable_iso']])
 
+    def testBuildCreateFromProductDefinition(self):
+        troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1' % \
+                    MINT_PROJECT_DOMAIN
+
+        self.checkRBuilder('build-product testproject 1 %s' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --wait' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'wait' : True}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --timeout 10' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'timeout' : '10'}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --quiet' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'quiet' : True}, ['build-product',
+                           'testproject', '1', troveSpec]])
+
     def testBuildWait(self):
         self.checkRBuilder('build-wait 111',
             'mint.cmdline.builds.BuildWaitCommand.runCommand',
