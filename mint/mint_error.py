@@ -100,6 +100,8 @@ class InvalidProdType(MintError):
     "The selected %(project)s type is invalid."
 class InvalidUsername(MintError):
     "Username may contain only letters, digits, '-', '_', and '.'"
+class InvalidTroveSpecForBuildDefinition(MintError):
+    "The trove spec for the build definition is invalid."
 class JobserverVersionMismatch(MintError): # LEGACY
     "Image job cannot be run."
 class LastAdmin(MintError):
@@ -140,6 +142,8 @@ class SchemaMigrationError(MintError): pass
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."
+class TroveNotFoundForBuildDefinition(MintError):
+    "The trove for a build definition was not found."
 class TroveNotSet(MintError):
     "This build is not associated with a group."
 class UserAlreadyAdmin(MintError): "User is already an administrator."

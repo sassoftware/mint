@@ -2047,10 +2047,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise NotEntitledError()
         return buildId
 
-    @typeCheck(int, tuple)
+    @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, troveSpec):
+    def newBuildsFromProductDefinition(self, versionId, troveSpec, force=False):
         """
         Create a build for troveSpec for each build definied in the product
         definition for the version specified by versionId.
@@ -2059,47 +2059,86 @@ If you would not like to be %s %s of this project, you may resign from this proj
         version = projects.ProductVersions(self, versionId)
         projectId = version.projectId
 
-        # Read build definition from product definition for the passed in
-        # version.
+        # We expect a troveSpec as a string the format
+        # name=label/version
+        if '=' not in troveSpec:
+            raise InvalidTroveSpecForBuildDefinition(troveSpec)
+        else:
+            troveName, troveLabel = troveSpec.split('=')
+
+        # Read build definition from product definition.
         productDefinition = self.getProductDefinitionForVersion(versionId)
         buildDefinition = productDefinition['buildDefinition']
 
-        # Validate the data in the buildDefinition, presumably, this has
-        # already been done from processEditVersion, but we'll do it again to
-        # be sure.
+        # Validate the data in the buildDefinition against build templates.
         buildDefinition = \
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
 
-        buildIds = []
-        # Create buildId's for each defined build.
-        for build in buildDefinition:
-            buildId = self.newBuild(projectId, str(build.get('name', '')))
-            buildFlavor = deps.parseFlavor(str(build.get('baseFlavor', '')))
-            self.setBuildTrove(buildId, troveSpec[0].freeze(),
-                               troveSpec[1].freeze(), buildFlavor)
-            self.setBuildType(buildId, build['_buildType'])
-
-            # Add build data from the buildDefinition to the build object.
-            buildData = build[builds.getDataTemplate(build['_buildType']).xmlName]
-            for k, v in buildData.items():
-                self.setBuildDataValue(k, str(v), 0)
-
-            # anaconda-templates?
-            # TODO: fix this hack
-            name = 'anaconda-templates'
-            value = 'anaconda-templates' + \
-                    '=/conary.rpath.com@rpl:devel//1/1.0.7-0.3-2[is: x86]'
-            self.setBuildDataValue(name, value, 4)
-
-            buildIds.append(buildId)
-        else:
+        if len(buildDefinition) < 1:
             raise NoBuildsDefinedInBuildDefinition()
+
+        # Create buildId's for each defined build.
+        buildIds = []
+        buildErrors = []
+        for build in buildDefinition:
+            buildFlavor = deps.parseFlavor(str(build.get('baseFlavor', '')))
+            nvfs = self._resolveTrove(projectId, troveName, troveLabel, buildFlavor)
+
+            # Raise error if no troves found.
+            if not nvfs:
+                buildErrors.append(str(conary_errors.TroveNotFound(
+                    "Trove '%s' has no matching flavors for '%s'" % \
+                    (troveName, buildFlavor))))
+            else:
+                # Create a build with options for each trove found.
+                for nvf in nvfs:
+                    buildId = self.newBuild(projectId, str(build.get('name', '')))
+                    self.setBuildTrove(buildId, nvf[0], nvf[1].freeze(), nvf[2].freeze())
+                    self.setBuildType(buildId, build['_buildType'])
+
+                    # Add build data from the buildDefinition to the build object.
+                    buildData = \
+                        build[buildtemplates.getDataTemplate(build['_buildType']).xmlName]
+
+                    for k, v in buildData.items():
+                        self.setBuildDataValue(buildId, k, str(v), 0)
+
+                    self._setAnacondaTemplatesForBuildId(buildId)
+                    buildIds.append(buildId)
+
+        if buildErrors and not force:
+            raise TroveNotFoundForBuildDefinition(str(buildErrors))
 
         # Start each build.
         for buildId in buildIds:
             self.startImageJob(buildId)
 
         return buildIds
+
+    def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
+        """
+        Return a list of trove specs named troveName on troveLabel that
+        satisfy filterFavor.
+        """
+        project = projects.Project(self, projectId)
+        projectCfg = project.getConaryConfig()
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        # Find the troves that satisfy the build.
+        troveList = repos.findTrove(None, (troveName, troveLabel, None))
+        return sorted([x for x in troveList if x[2].satisfies(filterFlavor)],
+                      key=lambda x: x[1])
+
+    def _setAnacondaTemplatesForBuildId(self, buildId):
+        """
+        Add anaconda-templates as a resolved trove to the given buildId.
+        """
+        # anaconda-templates?
+        # TODO: fix this hack
+        name = 'anaconda-templates'
+        value = 'anaconda-templates=/conary.rpath.com@rpl:devel//1/1.0.7-0.3-2[is: x86]'
+        self.setBuildDataValue(buildId, name, value, 4)
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
@@ -2148,12 +2187,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             NVF = sorted([x for x in troveList \
                               if x[2].stronglySatisfies(baseFlavor)],
                          key = lambda x: x[1])
-            if NVF:
-                NVF = NVF[-1]
-            else:
+            if not NVF:
                 raise conary_errors.TroveNotFound(\
                     "Trove '%s' has no matching flavors for '%s'" % \
                         (troveName, baseFlavor))
+            else:
+                NVF = NVF[-1]
 
             buildId = self.builds.new( \
                 projectId = projectId,
@@ -4628,10 +4667,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         pd = proddef.ProductDefinition(xml=xml)
 
-        pdDict = dict(baseFlavor = pd.getBaseFlavor(),
-                      stages = pd.getStages(),
-                      upstreamSources = pd.getUpstreamSources(),
-                      buildDefinition = pd.getBuildDefinition())
+        pdDict = dict(baseFlavor=pd.getBaseFlavor(),
+                      stages=pd.getStages(),
+                      upstreamSources=pd.getUpstreamSources(),
+                      buildDefinition=pd.getBuildDefinition())
 
         return pdDict
 
