@@ -293,7 +293,11 @@ class BuildCreateCommand(commands.RBuilderCommand):
 commands.register(BuildCreateCommand)
 
 def buildProdDefHelp():
-    return '<product name> <version name> <trove spec>'
+    msg = '<product name> <version name> <trove spec>\n'
+    msg += '  <trove spec> should be in the format "name=label/version".\n'
+    msg += '  Do not specify a flavor for <trove spec>, flavors for a product\n'
+    msg += '  build are defined in the product definition.\n'
+    return msg
 
 class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
     commands = ['build-product']
