@@ -132,11 +132,23 @@
         
         <div py:def="releaseStagesOptions(relstage={}, ordinal='bt')" py:strip="True">
             <tr id="pd-stages-${ordinal}">
+                <!--!
+                   We add labels and hidden fields so the user can not edit
+                   the stages.  This will need to be changed when the stages
+                   can be edited.  i.e. remove the labels and make the hidden
+                   fields text fields.
+                -->
                 <td>
-                    <input type="text" name="pd-stages-${ordinal}-name" value="${relstage.get('name')}" readonly="true"/>
+                    <label for="pd-stages-${ordinal}-name" py:content="relstage.get('name')" />
                 </td>
                 <td>
-                    <input type="text" name="pd-stages-${ordinal}-label" value="${relstage.get('label')}" readonly="true"/>
+                    <label for="pd-stages-${ordinal}-label" py:content="relstage.get('label')" />
+                </td>
+                <td>
+                    <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstage.get('name')}"/>
+                </td>
+                <td>
+                    <input type="hidden" name="pd-stages-${ordinal}-label" value="${relstage.get('label')}"/>
                 </td>
             </tr>
         </div>
