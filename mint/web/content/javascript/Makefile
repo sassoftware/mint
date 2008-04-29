@@ -7,6 +7,7 @@ javascript_files =\
 	rpc.js	\
 	trovepicker.js \
 	repobrowser.js \
+	editversion.js \
 	jquery-1.2.3.min.js
 
 generated_files =\
