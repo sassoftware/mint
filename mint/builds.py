@@ -224,10 +224,8 @@ def applyTemplatesToBuildDefinitions(buildDefinitions):
         # Save all errors so that we can report them all at once.
         try:
             buildDefTemplate.validate(**buildOptions)
-        except InvalidBuildOption, e:
-            validationErrors.append(str(e))
         except BuildOptionValidationException, e:
-            validationErrors.append(str(e))
+            validationErrors += e.errlist
 
         # apply the default options to buildDef only if they aren't already
         # specified.
