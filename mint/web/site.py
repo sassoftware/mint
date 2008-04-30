@@ -15,11 +15,13 @@ import simplejson
 
 from mod_python import apache
 
+from mint import buildtemplates
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
 from mint import database
 from mint import data
+from mint import helperfuncs
 from mint import mint_error
 from mint import jobs
 from mint import maintenance
@@ -520,6 +522,7 @@ class SiteHandler(WebHandler):
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
                     domainname, projecturl, blurb, appliance, shortname, prodtype, version, commitEmail)
+                
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
                     if not self._createProjectLists(auth=auth,
@@ -534,9 +537,21 @@ class SiteHandler(WebHandler):
                 self._addErrors(str(e))
             except mint_error.MintError, e:
                 self._addErrors(str(e))
+                
+        creatingVersion = False
+        if not self._getErrors():
+            # attempt to create the project version
+            creatingVersion = True
+            try:
+                versionId = self.client.addProductVersion(projectId, version);
+                self.client.setProductDefinitionForVersion(versionId, 
+                    {'stages': helperfuncs.getProductVersionDefaultStagesList()})
+            except projects.DuplicateProductVersion, e: 
+                self._addErrors(str(e))
+                
         if not self._getErrors():
             self._setInfo("%s %s successfully created" % (pText.title(),title))
-            self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirect("http://%s%sproject/%s/editVersion?id=%d" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
             return self._write("newProject", kwargs=kwargs)

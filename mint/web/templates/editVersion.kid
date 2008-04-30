@@ -82,9 +82,9 @@
                             <input py:attrs="{'class': 'reversed',
                                               'id': elementName,
                                               'type': 'checkbox',
-                                              'checked': 'checked' and dataValue or None,
+                                              'checked': (dataValue=='True') and 'checked' or None,
                                               'name': elementName,
-                                              'value': '1',
+                                              'value': 'True',
                                               'class': 'check field',
                                               'disabled': elementDisabled}" />
                             <label class="reversed" for="${elementName}" py:content="dataRow[2]" />
@@ -162,16 +162,17 @@
                     class="mainformhorizontal">
                     <tr>
                         <th>
-                            <em class="required">Version Name</em>
+                            <em class="required">Version:</em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
                                 value="${kwargs['name']}"/>
-                            <p class="help">Choose a major version number
-                                for your product. Versions may contain alphanumeric
-                                characters and decimals but may not contain any spaces
-                                (e.g. '1', 'A', '1.0', '2007' are all legal versions,
-                                but '1.0 XL' is not).</p>
+                            <p class="help">
+                                Choose an initial version for your product. Versions may contain
+                                any combination of alphanumeric characters and decimals but
+                                cannot contain any spaces (for example, '1', 'A', '1.0', '2007' are
+                                all legal versions, but '1.0 XL' is not).
+                            </p>
                         </td>
                         <td py:if="not isNew">${kwargs['name']}<input type="hidden" name="name" value="${kwargs['name']}" /></td>
                     </tr>
@@ -272,8 +273,10 @@
                     </tr>
                 </table>
                 <p>
-                    <input id="submitButton" type="submit" name="action" value="Submit" />
-                    <input type="submit" name="action" value="Cancel" />
+                    <button class="img" type="submit">
+                        <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
+                        <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" />
+                    </button>
                 </p>
                 <input type="hidden" name="id" value="${id}" />
                 <input type="hidden" name="baseFlavor" value="${kwargs['baseFlavor']}" />

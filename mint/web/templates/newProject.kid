@@ -42,7 +42,12 @@
                         <th><em class="required">${projectText().title()} Version:</em></th>
                         <td>
                             <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
-                            <p class="help">Choose an initial major version number for your ${projectText().lower()}. Eg., 1</p>
+                            <p class="help">
+                                Choose an initial version for your product. Versions may contain
+                                any combination of alphanumeric characters and decimals but
+                                cannot contain any spaces (for example, '1', 'A', '1.0', '2007' are
+                                all legal versions, but '1.0 XL' is not).
+                             </p>
                         </td>
                     </tr>
 
