@@ -240,7 +240,7 @@ def applyTemplatesToBuildDefinitions(buildDefinitions):
 
     # If we encountered any errors, throw an exception
     if len(validationErrors) > 0:
-        raise BuildOptionValidationException(str(validationErrors))
+        raise BuildOptionValidationException(validationErrors)
 
     return templatedBuildDefinitions
 
