@@ -1129,7 +1129,7 @@ class ProjectHandler(WebHandler):
             **kwargs):
 
         if not name:
-            self._addErrors("Missing version name")
+            self._addErrors("Missing version")
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
