@@ -62,8 +62,8 @@
                             py:content="buildtypes.buildDefinitionFlavorNameMap[v]" />
                     </select>
                 </td>
-                <td class="row-button"><a class="pd-builddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" alt="edit" /></a></td>
-                <td class="row-button"><a class="pd-builddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" alt="delete" /></a></td>
+                <td class="row-button"><a class="pd-builddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" title="Edit" /></a></td>
+                <td class="row-button"><a class="pd-builddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
             </tr>
             <tr id="pd-builddef-${ordinal}-more" style="display: none">
                 <td colspan="5">
@@ -126,7 +126,7 @@
                 <td>
                     <input type="text" name="pd-usource-${ordinal}-label" value="foo1 label" />
                 </td>
-                <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" alt="delete" /></a></td>
+                <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
             </tr>
         </div>
         
@@ -238,7 +238,7 @@
                             </table>
                             <p>
                                 <a class="pd-usource-adder">
-                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />
+                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />
                                     Add a new upstream source
                                 </a>
                             </p>
@@ -268,14 +268,14 @@
                             <table id="pd-builddef-bt-all" style="display: none">
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
-                            <p><a class="pd-builddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />Add a new build definition</a></p>
+                            <p><a class="pd-builddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />Add a new build definition</a></p>
                         </td>
                     </tr>
                 </table>
                 <p>
                     <button class="img" type="submit">
-                        <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
-                        <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" />
+                        <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
+                        <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                     </button>
                 </p>
                 <input type="hidden" name="id" value="${id}" />
