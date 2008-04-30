@@ -1167,12 +1167,15 @@ class ProjectHandler(WebHandler):
             self._validateStages(stages)
         except ProductDefinitionInvalidStage, e:
             self._addErrors(str(e))
+            
+        # get the upstream sources
+        usources = collatedDict.get('pd-usources',{})
     
         if not self._getErrors():
             
             pdDict = dict(baseFlavor=baseFlavor,
                           stages=stages,
-                          upstreamSources=collatedDict.get('pd-usources',{}),
+                          upstreamSources=usources,
                           buildDefinition=templBuildDefs)
             
             if id == -1:
@@ -1187,14 +1190,16 @@ class ProjectHandler(WebHandler):
             self._setInfo("Updated product version")
             self._predirect()
         else:
-            #FIXME:  The kwargs are refreshed every time on error, not sure 
-            # if that is what we want to do
+            kwargs.update(id=id, name=name, description=description,
+                          baseFlavor=baseFlavor, stages=stages,
+                          upstreamSources=usources, 
+                          buildDefinition=templBuildDefs)
             return self._write("editVersion", 
                isNew = (id == -1),
                id=id,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
-               kwargs = self._productVersionDefaultKWArgs(kwargs))
+               kwargs = kwargs)
             
     def _productVersionAvaliableBuildTypes(self):
         """
