@@ -21,14 +21,7 @@
         <title py:if="not isNew">${formatTitle('Edit Product Version')}</title>
         <style>
             <![CDATA[
-            
-            table.pretty-fullwidth {
-                border-collapse: collapse;
-                width: 100%;
-            }
-
             a:hover.pd-usource-adder,
-            a:hover.pd-usource-expander,
             a:hover.pd-usource-deleter,
             a:hover.pd-builddef-adder,
             a:hover.pd-builddef-expander,
@@ -37,144 +30,10 @@
                 background-color: inherit;
                 cursor: pointer;
             }
-
-            table.pretty-fullwidth tr td {
-                font-size: small;
-            }
-
-            table.pretty-fullwidth tr th,
-            table.pretty-fullwidth tr td {
-                padding: 4px 4px;
-                border-bottom: 1px solid #e0e0e0;
-            }
-
-            table.pretty-fullwidth tr.pd-builddef-expanded td,
-            table.pretty-fullwidth tr.pd-builddef-more td {
-                background: #fffded;
-                border-bottom: none;
-            }
-
-            table.pretty-fullwidth tr.pd-builddef-more td {
-                border-bottom: 1px solid #e0e0e0;
-            }
-
-            table.pretty-fullwidth th {
-                font-size: normal;
-                font-weight: bold;
-                background-color: #ccc;
-                color: #000;
-            }
-
-            table.pretty-fullwidth tr td input {
-                width: 100%;
-            }
-
-            table.pretty-fullwidth tr td label {
-                text-align: right;
-                width: 30%;
-                margin-left: 10px;
-                padding-right: 10px;
-            }
-
-            table.pretty-fullwidth tr td label.reversed {
-                text-align: left;
-                width: 65%;
-                padding-left: 5px;
-                padding-right: 0;
-            }
-
-            table.pretty-fullwidth tr td input.reversed {
-                width: 14px;
-                margin-left: 30px;
-            }
-
-            table.pretty-fullwidth input.field,
-            table.pretty-fullwidth select.field {
-                width: auto;
-            }
-
-            td.row-button {
-                width: 20px;
-            }
             ]]>
         </style>
-        <script type="text/javascript">
-            <![CDATA[
-                var currentSerial = 0;
-
-                jQuery(document).ready(function () {
-
-                currentSerial = jQuery(".pd-builddef-deleter").length;
-
-                jQuery('select.pd-builddef-picker-buildType').change(function() {
-                    var builddefElement = jQuery(this).parents('tr').get(0);
-                    var builddefmoreElement= jQuery(builddefElement).next().get(0);
-                    var buildtype = this.value;
-                    var buildtypeclass = '.it-'+buildtype;
-
-                    jQuery(builddefmoreElement).find('div.it-'+buildtype).each(function () {
-                        jQuery(this).show();
-                        jQuery(this).find(':input').removeAttr('disabled');
-                    });
-                    jQuery(builddefmoreElement).find('div:not(.it-'+buildtype+')').each(function () {
-                        if (jQuery(this).is(':not(.clearleft)')) {
-                            jQuery(this).hide();
-                        }
-                        jQuery(this).find(':input').attr('disabled', 'disabled');
-                    });
-                });
-
-                jQuery('.pd-builddef-adder,.pd-builddef-expander,.pd-builddef-deleter,.pd-usource-adder,.pd-usource-expander,.pd-usource-deleter').hover(function () {
-                        var imgbutton = jQuery(this).find('img').get(0);
-                        imgbutton.src = imgbutton.src.replace('.gif', '_h.gif');
-                    }, function() {
-                        var imgbutton = jQuery(this).find('img').get(0);
-                        imgbutton.src = imgbutton.src.replace('_h.gif', '.gif');
-                });
-
-                jQuery('.pd-builddef-expander').click(function () {
-                        var imgbutton = jQuery(this).find('img').get(0);
-                        var builddefId = "#" + jQuery(this).parents().get(1).id;
-                        var builddefmoreId = builddefId + "-more";
-                        if (jQuery(builddefId).attr('class') == 'pd-builddef-expanded') {
-                            jQuery(builddefmoreId).hide();
-                            jQuery(builddefId).removeAttr('class');
-                            jQuery(builddefmoreId).removeAttr('class');
-                        } else {
-                            jQuery(builddefmoreId).show();
-                            jQuery(builddefId).attr('class', 'pd-builddef-expanded');
-                            jQuery(builddefmoreId).attr('class', 'pd-builddef-more');
-                        }
-                });
-
-                jQuery('.pd-builddef-deleter').click(function () {
-                        var builddefId = "#" + jQuery(this).parents().get(1).id;
-                        var builddefmoreId = builddefId + '-more';
-                        jQuery(builddefId).remove();
-                        jQuery(builddefmoreId).remove();
-                });
-
-                jQuery('.pd-builddef-adder').click(function () {
-                    currentSerial++;
-                    var templateDomBits = jQuery('#pd-builddef-bt-all > tbody').clone(true);
-                    templateDomBits.find(':disabled').removeAttr('disabled');
-                    templateDomBits.find('label').each(function () {
-                        this.htmlFor = this.htmlFor.replace('bt', String(currentSerial));
-                    });
-                    templateDomBits.find('input,select').each(function () {
-                        if (this.id) { this.id = this.id.replace('bt', String(currentSerial)); }
-                        if (this.name) { this.name = this.name.replace('bt', String(currentSerial)); }
-                    });
-                    templateDomBits.find('tr').each(function () {
-                        if (this.id) { this.id = this.id.replace('bt', String(currentSerial)); }
-                    });
-                    templateDomBits.find('select').change();
-                    templateDomBits.children().appendTo('#pd-builddefs > tbody');
-
-                });
-            });
-            ]]>
-        </script>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/tables.css?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/editversion.js?v=${cacheFakeoutVersion}"/>
     </head>
     <body>
         <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef={})" py:strip="True">
@@ -182,6 +41,7 @@
                 from mint import buildtypes
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                 buildType = bdef.get('_buildType', visibleBuildTypes[0])
+                buildSettings = bdef.get(bdef.get('_xmlName'), {})
             ?>
             <tr id="pd-builddef-${ordinal}">
                 <td>
@@ -212,8 +72,8 @@
                         <div py:strip="True" py:for="name, data in valueToTemplateIdMap.items()">
                         <?python
                             validFor, dataRow = data
-                            elementClasses = ' '.join(['it-%d' % x for x in validFor])
-                            dataValue = bdef.get(name, dataRow[1])
+                            elementClasses = ' '.join(['it-%d' % x for x in validFor])       
+                            dataValue = buildSettings.get(name, dataRow[1])
                             elementName = 'pd-builddef-%s-%s' % (ordinal, name)
                             elementDisabled = buildType not in validFor and 'disabled' or None
                             elementStyle    = buildType not in validFor and 'display: none' or None
@@ -257,6 +117,41 @@
                 </td>
             </tr>
         </div>
+        
+        <div py:def="upstreamSourcesOptions(ordinal='bt')" py:strip="True">
+            <tr id="pd-usource-${ordinal}">
+                <td>
+                    <input type="text" name="pd-usource-${ordinal}-package" value="foo 1 package" />
+                </td>
+                <td>
+                    <input type="text" name="pd-usource-${ordinal}-label" value="foo1 label" />
+                </td>
+                <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" alt="delete" /></a></td>
+            </tr>
+        </div>
+        
+        <div py:def="releaseStagesOptions(relstage={}, ordinal='bt')" py:strip="True">
+            <tr id="pd-stages-${ordinal}">
+                <!--!
+                   We add labels and hidden fields so the user can not edit
+                   the stages.  This will need to be changed when the stages
+                   can be edited.  i.e. remove the labels and make the hidden
+                   fields text fields.
+                -->
+                <td>
+                    <label for="pd-stages-${ordinal}-name" py:content="relstage.get('name')" />
+                </td>
+                <td>
+                    <label for="pd-stages-${ordinal}-label" py:content="relstage.get('label')" />
+                </td>
+                <td>
+                    <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstage.get('name')}"/>
+                </td>
+                <td>
+                    <input type="hidden" name="pd-stages-${ordinal}-label" value="${relstage.get('label')}"/>
+                </td>
+            </tr>
+        </div>
 
         <div id="layout">
             <h2 py:if="isNew">Create New Product Version</h2>
@@ -292,52 +187,60 @@
                     <tr>
                         <th>Release Stages:</th>
                         <td>
-                            <table id="pd-relstages" class="pretty-fullwidth">
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Tag Suffix</th>
-                                </tr>
-                                <tr py:for="relstage in kwargs['stages']">
-                                    <td py:content="relstage[0]" />
-                                    <td py:content="relstage[1]" />
-                                    <td py:content="relstage[2]" />
-                                </tr>
+                            <table id="pd-stages" class="pretty-fullwidth">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Tag Suffix</th>
+                                        <th>&nbsp;</th>
+                                        <th>&nbsp;</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <div py:strip="True" py:for="ordinal, relstage in enumerate(kwargs['stages'])"
+                                         py:content="releaseStagesOptions(relstage, ordinal)" />
+                                    <tr id="pd-stages-empty" py:if="not len(kwargs['stages'])">
+                                        <td colspan="4">No release stages defined.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table id="pd-stages-bt-all" style="display: none">
+                                <tbody py:content="releaseStagesOptions()" />
                             </table>
                         </td>
                     </tr>
-                    <tr>
+                    <!--  Upstream Sources currently disabled -->
+                    <tr py:if="False">
                         <th>Upstream Sources:</th>
                         <td>
-                            <table id="pd-usources" class="pretty-fullwidth">
-                                <tr>
-                                    <th>Package</th>
-                                    <th>Label</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                </tr>
-                                <tr id="usource-template" style="display:none">
-                                    <td colspan="4">
-                                        <label for="custom-usource-label">Repository Label</label>
-                                        <input name="custom-usource-label" value="" type="text" /><br />
-                                        <input type="radio" id="custom-usource-all" name="custom-usource-all" value="1" checked="checked" />
-                                        <label for="custom-usource-all">All Packages</label><br />
-                                        <input type="radio" id="custom-usource-notall" name="custom-usource-all" value="0" checked="" />
-                                        <label for="custom-usource-notall">Specific Package or Group</label>
-                                        <input type="text" id="custom-usource-trovename" name="custom-usource-name" value="" />
-                                    </td>
-                                </tr>
-                                <tr py:if="not len(kwargs['upstreamSources'])">
-                                    <td colspan="4">No upstream sources defined.</td>
-                                </tr>
-                                <tr py:for="us in kwargs['upstreamSources']">
-                                    <td py:content="us[0]" />
-                                    <td py:content="us[1]" />
-                                    <td class="row-button"><a class="pd-usource-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" alt="edit" /></a></td>
-                                    <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" alt="delete" /></a></td>
-                                </tr>
+                            <table id="pd-usource" class="pretty-fullwidth">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Version</th>
+                                        <th>&nbsp;</th>
+                                        <th>&nbsp;</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <div py:strip="True" py:for="us in kwargs['upstreamSources']"
+                                         py:content="upstreamSourcesOptions()" />
+                                    <tr id="pd-usource-empty" py:if="not len(kwargs['upstreamSources'])">
+                                        <td colspan="4">No upstream sources defined.</td>
+                                    </tr>
+                                </tbody>
                             </table>
-                            <p><a class="pd-usource-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />Add a new upstream source</a></p>
+                            <table id="pd-usource-bt-all" style="display: none">
+                                <tbody py:content="upstreamSourcesOptions()" />
+                            </table>
+                            <p>
+                                <a class="pd-usource-adder">
+                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" alt="Add" />
+                                    Add a new upstream source
+                                </a>
+                            </p>
                         </td>
                     </tr>
                     <tr>
@@ -356,7 +259,7 @@
                                 <tbody>
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(kwargs['buildDefinition'])"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
-                                    <tr id="pd-builddef-empty" py:attrs="{'style': kwargs['buildDefinition'] and None or 'display: none'}">
+                                    <tr id="pd-builddef-empty" py:if="not len(kwargs['buildDefinition'])">
                                         <td colspan="5">No builds defined.</td>
                                     </tr>
                                 </tbody>
