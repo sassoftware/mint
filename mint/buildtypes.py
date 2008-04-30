@@ -197,8 +197,8 @@ buildDefinitionFlavorMap = {
     BD_DOM0_X86_64      : 'dom0, !domU, xen, !vmware is: x86_64',
     BD_DOMU_X86         : '!dom0, domU, xen, !vmware is: x86',
     BD_DOMU_X86_64      : '!dom0, domU, xen, !vmware is: x86_64',
-    BD_VMWARE_X86       : '!dom0, !domU, xen, vmware is: x86',
-    BD_VMWARE_X86_64    : '!dom0, !domU, xen, vmware is: x86_64',
+    BD_VMWARE_X86       : '!dom0, !domU, !xen, vmware is: x86',
+    BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
 
 buildDefinitionFlavorNameMap = {

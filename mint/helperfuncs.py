@@ -7,6 +7,7 @@
 from conary import versions
 from conary.deps import deps
 from mint import constants
+from mint import buildtypes
 from mint.config import isRBO
 from conary.repository.errors import RoleAlreadyExists
 
@@ -335,4 +336,41 @@ def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
             pass
         repos.auth.addUserByMD5(username, salt, password)
         repos.auth.updateRoleMembers(role, [username])
+        
+def setProductVersionDefaultKWArgs(kwargs=None):
+        """
+        Set the default kwargs for product version
+        """
+        if not kwargs:
+            kwargs = dict()
+            
+        kwargs.setdefault('id', -1)
+        kwargs.setdefault('name', '')
+        kwargs.setdefault('description', '')
+        kwargs.setdefault('baseFlavor', 'is: x86')
+        kwargs.setdefault('stages', getProductVersionDefaultStagesList())
+        kwargs.setdefault('upstreamSources', {})
+        kwargs.setdefault('buildDefinition', [])
+        
+        return kwargs
 
+def getProductVersionDefaultStagesList():
+        """
+        Build a list containing the default stages
+        """
+        return [dict(name='Development',
+                     label='-devel'),
+                dict(name='QA',
+                     label='-qa'),
+                dict(name='Release',
+                     label='')]
+        
+def getBuildDefsAvaliableBuildTypes(allBuildTypes):
+        """
+        Get a list of the available build types for build defs
+        """
+        # get the build types to allow
+        #    remove online update builds (i.e. imageless)
+        allBuildTypes.remove(buildtypes.IMAGELESS)
+        
+        return allBuildTypes

@@ -1109,10 +1109,10 @@ class ProjectHandler(WebHandler):
             prodDef = self.client.getProductDefinitionForVersion(id)
             prodDef['buildDefinition'] = \
                 builds.applyTemplatesToBuildDefinitions(prodDef['buildDefinition'])
-            kwargs.update(prodDef)          
+            kwargs.update(prodDef)   
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
-            self._productVersionDefaultKWArgs(kwargs)
+            kwargs = self._productVersionDefaultKWArgs(kwargs)
 
         return self._write("editVersion",
                 isNew = isNew,
@@ -1139,11 +1139,19 @@ class ProjectHandler(WebHandler):
         # applyTemplatesToBuildDefinitions
         buildDefs = []
         buildDefsList = collatedDict.get('pd-builddef',[])
+        errCounter = 0
         for builddef in buildDefsList:
-            buildDefs.append(dict(name=builddef.pop('name'),
-                             baseFlavor=builddef.pop('baseFlavorType'),
-                             _buildType=int(builddef.pop('_buildType')),
-                             _builddef=builddef))
+            
+            if not builddef.has_key('name'):
+                # only add this error once
+                if errCounter == 0:
+                    self._addErrors("Missing name for build definition(s)")
+                    errCounter += 1
+            else:
+                buildDefs.append(dict(name=builddef.pop('name'),
+                                 baseFlavor=builddef.pop('baseFlavorType'),
+                                 _buildType=int(builddef.pop('_buildType')),
+                                 _builddef=builddef))
 
         # Apply the build templates to the buildDefs list of dicts.  The
         # returned dict is used in the dict sent to
@@ -1192,31 +1200,23 @@ class ProjectHandler(WebHandler):
         """
         Get a list of the available build types for build defs
         """
-        # get the build types to allow
-        #    remove online update builds (i.e. imageless)
-        visibleBuildTypes = self.client.getAvailableBuildTypes();
-        visibleBuildTypes.remove(buildtypes.IMAGELESS)
-        
-        return visibleBuildTypes
+        return helperfuncs.getBuildDefsAvaliableBuildTypes(
+            self.client.getAvailableBuildTypes())
             
     def _productVersionDefaultKWArgs(self, kwargs):
         """
-        Set the default kwargs for product version
+        Get the default kwargs for product version
         """
-        kwargs.setdefault('id', -1)
-        kwargs.setdefault('name', '')
-        kwargs.setdefault('description', '')
-        kwargs.setdefault('baseFlavor', 'is: x86')
-        kwargs.setdefault('stages', self._getDefaultStagesList())
-        kwargs.setdefault('upstreamSources', {})
-        kwargs.setdefault('buildDefinition', [])
-        
-        return kwargs
+        return helperfuncs.setProductVersionDefaultKWArgs(kwargs);
         
     def _validateStages(self, stagesList):
         """
         Validate the release stages
         """
+        if not stagesList:
+            raise ProductDefinitionInvalidStage(
+                    'You must have one or more release stages defined')
+        
         for stage in stagesList:
             # name is required
             if not stage.has_key('name'):
@@ -1225,18 +1225,6 @@ class ProjectHandler(WebHandler):
             # make sure all stages have a label value since we allow it to be empty
             if not stage.has_key('label'):
                 stage['label'] = ""
-        
-    def _getDefaultStagesList(self):
-        """
-        Build a list containing the default stages
-        """
-        return [dict(name='Development',
-                     label='-devel'),
-                dict(name='QA',
-                     label='-qa'),
-                dict(name='Release',
-                     label='')]
-                                    
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()
