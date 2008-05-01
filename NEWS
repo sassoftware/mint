@@ -37,6 +37,10 @@ Bug Fixes
 * A bug in the rbuidler command line that caused the wrong flavor of
   anaconda-templates to be used when the flavor was not specified has
   been fixed. (RBL-2760)
+* setBuildFilenames and setBuildFilenames safe will now allow the size of
+  a build file to be a string in order to circumvent XML-RPC limitations.
+  Likewise, getBuildFilenames now returns the size as a string for the
+  same reasons. (RBL-2789)
 
 
 Changes in 4.0.1

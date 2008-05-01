@@ -2978,13 +2978,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
                         buildId)
             cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
-            for idx, file in enumerate(filenames):
-                if len(file) == 2:
-                    fileName, title = file
+            for idx, item in enumerate(filenames):
+                if len(item) == 2:
+                    fileName, title = item
                     sha1 = ''
                     size = 0
-                elif len(file) == 4:
-                    fileName, title, size, sha1 = file
+                elif len(item) == 4:
+                    fileName, title, size, sha1 = item
+                    
+                    # Newer jobslaves will send this as a string; convert
+                    # to a long for the database's sake (RBL-2789)
+                    size = long(size)
 
                     if normalize:
                         # sanitize filename based on configuration
@@ -3111,6 +3115,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     lastDict['size'] = os.stat(x['url'])[stat.ST_SIZE]
                 except (OSError, IOError):
                     lastDict['size'] = 0
+            
+            # convert size to a string for XML-RPC's sake (RBL-2789)
+            lastDict['size'] = str(lastDict['size'])
 
         if lastDict:
             buildFilesList.append(lastDict)

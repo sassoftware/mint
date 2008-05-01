@@ -372,12 +372,15 @@ class MintClient:
         """
         return self.server.checkoutBuildXml(projectId, label)
 
-
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
         """
-        return self.server.getBuildFilenames(buildId)
+        filenames = self.server.getBuildFilenames(buildId)
+        for bf in filenames:
+            if 'size' in bf:
+                bf['size'] = int(bf['size'])
+        return filenames
 
     def getPublishedReleaseList(self, limit=10, offset=0):
         """
@@ -725,7 +728,11 @@ class MintClient:
         return self.server.getAllProjectLabels(projectId)
 
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
-        return self.server.setBuildFilenamesSafe(buildId, outputToken, filenames)
+        for f in filenames:
+            if len(f) == 4:
+                f[2] = str(f[2])
+        return self.server.setBuildFilenamesSafe(buildId, outputToken,
+                filenames)
 
     def setBuildAMIDataSafe(self, buildId, outputToken, amiId, amiManifestName):
         return self.server.setBuildAMIDataSafe(buildId, outputToken,

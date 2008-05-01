@@ -590,6 +590,17 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(ValueError,
                           client.server._server.setBuildFilenames, build.id,
                           [['not right at all']])
+        
+    @fixtures.fixture('Full')
+    def testSetGinormousSize(self, db, data):
+        """ Tests sending the size parameter as a string to get around
+            XML-RPC limits. (RBL-2789) """
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+        
+        client.server._server.setBuildFilenames(build.id,
+                                                [['reallybigfile', '3 GB build',
+                                                 '3147483647', 'F'*40 ]])
 
     def _testSetBuildFilenamesSafe(self, db, data, hidden):
         ownerClient = self.getClient('owner')
