@@ -33,12 +33,12 @@
 # modified in most cases.
 
 loadSuperClass('group-appliance=conary.rpath.com@rpl:1')
-class GroupApp(ApplianceGroupRecipe):
-    name = 'group-app-appliance'
+class Group${projectName.capitalize()}Dist(ApplianceGroupRecipe):
+    name = '${groupName}'
 
     # CUSTOMIZE:  VERSION NUMBER
     # This is the version of your appliance
-    version = '5.4'
+    version = '1'
     # END CUSTOMIZE
     
     def addPackages(r):
