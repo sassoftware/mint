@@ -1054,7 +1054,7 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
                 branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
             self.assertEquals(len(labels), 1)
             self.assertEquals(str(labels.keys()[0].branch()), branch)
-            self.assertEquals(str(labels.keys()[0].trailingRevision()), '5.4-1')
+            self.assertEquals(str(labels.keys()[0].trailingRevision()), '1-1')
         finally:
             # reset the labels
             client.server._server.cfg.groupApplianceLabel = _groupApplianceLabel
