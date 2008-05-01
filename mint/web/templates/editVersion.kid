@@ -7,6 +7,7 @@
     All Rights Reserved
 -->
 <?python
+    from mint.web.templatesupport import projectText
     for var in [ 'name',
                  'description',
                  'baseFlavor',
@@ -17,8 +18,11 @@
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
-        <title py:if="isNew">${formatTitle('Create New Product Version')}</title>
-        <title py:if="not isNew">${formatTitle('Edit Product Version')}</title>
+        <title py:if="isNew">${formatTitle('Create New %s Version'%projectText().title())}</title>
+        <div py:if="not isNew">
+            <title py:if="kwargs.has_key('linked')">${formatTitle('Update Initial %s Version'%projectText().title())}</title>
+            <title py:if="not kwargs.has_key('linked')">${formatTitle('Edit %s Version'%projectText().title())}</title>
+        </div>
         <style>
             <![CDATA[
             a:hover.pd-usource-adder,
@@ -154,21 +158,38 @@
         </div>
 
         <div id="layout">
-            <h2 py:if="isNew">Create New Product Version</h2>
-            <h2 py:if="not isNew">Edit Product Version</h2>
-            <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
+            <h2 py:if="isNew">Create New ${projectText().title()} Version</h2>
+            <div py:if="not isNew">
+                <!--!
+                If kwargs['linked'] exists, we were sent here after creating a 
+                new product.  Set the title appropriately.
+                -->
+                <h2 py:if="not kwargs.has_key('linked')">Edit ${projectText().title()} Version</h2>
+                <h2 py:if="kwargs.has_key('linked')">Update Initial ${projectText().title()} Version</h2>
+            </div>
+            <p py:if="kwargs.has_key('linked')">
+                <!--!
+                If kwargs['linked'] exists, we were sent here after creating a 
+                new product.  Add the transitional help text.
+                -->
+                TRANSITIONAL TEXT GOES HERE
+            </p>
+            <!--! Only new ones have a required field for now -->
+            <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="processEditVersion">
                 <table border="0" cellspacing="0" cellpadding="0"
                     class="mainformhorizontal">
                     <tr>
                         <th>
-                            <em class="required">Version:</em>
+                            <!--! version only required if creating new one -->
+                            <div py:if="not isNew">Version:</div>
+                            <em py:if="isNew" class="required">Version:</em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
                                 value="${kwargs['name']}"/>
                             <p class="help">
-                                Choose an initial version for your product. Versions may contain
+                                Choose an initial version for your ${projectText().lower()}. Versions may contain
                                 any combination of alphanumeric characters and decimals but
                                 cannot contain any spaces (for example, '1', 'A', '1.0', '2007' are
                                 all legal versions, but '1.0 XL' is not).
@@ -182,7 +203,7 @@
                             <textarea rows="6" cols="72" name="description"
                                 py:content="kwargs['description']"></textarea>
                             <p class="help">Please provide a description of
-                                this version of your product.</p>
+                                this version of your ${projectText().lower()}.</p>
                         </td>
                     </tr>
                     <tr>
@@ -274,12 +295,21 @@
                 </table>
                 <p>
                     <button class="img" type="submit">
-                        <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
-                        <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
+                        <div py:if="kwargs.has_key('linked')">
+                            <!--! 
+                            Always use create button if coming from create a product page
+                            -->
+                            <img src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
+                        </div>
+                        <div py:if="not kwargs.has_key('linked')">
+                            <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
+                            <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
+                        </div>
                     </button>
                 </p>
                 <input type="hidden" name="id" value="${id}" />
                 <input type="hidden" name="baseFlavor" value="${kwargs['baseFlavor']}" />
+                <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
             </form>
         </div>
     </body>

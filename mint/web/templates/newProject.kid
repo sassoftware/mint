@@ -84,9 +84,11 @@
                         </td>
                     </tr>
                 </table>
-                <p><button class="img" type="submit">
-                    <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
-                </button></p>
+                <p>
+                    <button class="img" type="submit">
+                        <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
+                    </button>
+                </p>
                 <input type="hidden" name="domainname" value="${kwargs['domainname']}" />
             </form>
         </div>

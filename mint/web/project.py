@@ -1103,7 +1103,7 @@ class ProjectHandler(WebHandler):
     @intFields(id = -1)
     def editVersion(self, auth, id, *args, **kwargs):
         isNew = (id == -1)
-
+        
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             prodDef = self.client.getProductDefinitionForVersion(id)
@@ -1128,6 +1128,8 @@ class ProjectHandler(WebHandler):
     def processEditVersion(self, auth, id, name, description, action, baseFlavor,
             **kwargs):
 
+        isNew = (id == -1)
+        
         if not name:
             self._addErrors("Missing version")
 
@@ -1187,7 +1189,20 @@ class ProjectHandler(WebHandler):
             assert(id != -1)
             self.client.setProductDefinitionForVersion(id, pdDict)
 
-            self._setInfo("Updated product version")
+            if kwargs.has_key('linked'):
+                # we got here from the "create a product menu" so output
+                # accordingly.  Note that the value of linked is the name
+                # of the project.
+                self._setInfo("Successfully created %s '%s' version '%s'" % \
+                              (getProjectText().lower(), self.project.name,
+                               name))
+            else:
+                if isNew:
+                    action = "Created"
+                else:
+                    action = "Updated"
+                self._setInfo("%s %s version '%s'" % \
+                              (action, getProjectText().lower(), name))
             self._predirect()
         else:
             kwargs.update(id=id, name=name, description=description,
@@ -1195,7 +1210,7 @@ class ProjectHandler(WebHandler):
                           upstreamSources=usources, 
                           buildDefinition=templBuildDefs)
             return self._write("editVersion", 
-               isNew = (id == -1),
+               isNew = isNew,
                id=id,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),

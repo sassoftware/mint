@@ -550,8 +550,9 @@ class SiteHandler(WebHandler):
                 self._addErrors(str(e))
                 
         if not self._getErrors():
-            self._setInfo("%s %s successfully created" % (pText.title(),title))
-            self._redirect("http://%s%sproject/%s/editVersion?id=%d" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId))
+            # don't output status here since we now move on the updating the 
+            # version.  Status will be updated after that.
+            self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
             return self._write("newProject", kwargs=kwargs)
