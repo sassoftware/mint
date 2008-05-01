@@ -318,9 +318,16 @@ class Build(database.TableObject):
         return self.server.getBuildStatus(self.id)
 
     def getFiles(self):
-        return self.server.getBuildFilenames(self.buildId)
+        filenames = self.server.getBuildFilenames(self.buildId)
+        for bf in filenames:
+            if 'size' in bf:
+                bf['size'] = int(bf['size'])
+        return filenames
 
     def setFiles(self, filenames):
+        for f in filenames:
+            if len(f) == 4:
+                f[2] = str(f[2])
         return self.server.setBuildFilenames(self.buildId, filenames)
 
     def getArch(self):

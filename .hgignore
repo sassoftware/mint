@@ -6,7 +6,6 @@
 
 ^bin/rbuilder(|-wrapper)$
 ^mint/constants\.py$
-^mint/rmakeconstants\.py$
 ^mint/web/content/javascript/(buildtypes|buildtemplates|jobstatus)\.js$
 
 ^doc/rbuilder.1$
