@@ -11,6 +11,7 @@ from mint import config
 from mint import maintenance
 from mint.projects import transTables
 from conary import dbstore
+from conary.lib import tracelog
 from conary.server import schema
 
 cfg = config.MintConfig()
@@ -47,6 +48,8 @@ cu.execute("""SELECT hostname, domainname FROM Projects WHERE
               external = 0 or EXISTS(SELECT * FROM InboundMirrors 
               WHERE Projects.projectId=InboundMirrors.targetProjectId)""")
 
+tracelog.initLog(level=2)
+
 dbNames = [(x[0] + "." + x[1]).translate(transTables[cfg.reposDBDriver]) for x in cu.fetchall()]
 
 errors = 0
@@ -55,8 +58,9 @@ for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
     # mirrors
     actualDbName = repnamemap.get(dbName, dbName)
     try:
-        reposDb = dbstore.connect(cfg.reposDBPath % actualDbName,
-                                  driver = cfg.reposDBDriver)
+        db_path = cfg.reposDBPath % actualDbName
+        reposDb = dbstore.connect(db_path, driver = cfg.reposDBDriver)
+        print 'Migrating database at %s' % db_path
         schema.loadSchema(reposDb, doMigrate=True)
     except:
         errors += 1

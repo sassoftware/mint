@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -107,7 +107,8 @@ class JoinRequestTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testListJoinRequests(self, db, data):
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "localhost")
+        projectId = client.newProject("Foo", "foo", "localhost",
+                        shortname="foo", version="1.0", prodtype="Component")
 
         for i in range(2, 7):
             newClient, newUserId = self.quickMintUser('newUser_%d' %i,'testpass')

@@ -6,7 +6,7 @@ import os
 import sys
 
 from conary.conarycfg import loadEntitlement, EntitlementList
-from conary.dbstore import migration, sqlerrors, sqllib, idtable
+from conary.dbstore import migration, sqlerrors
 from conary.lib.tracelog import logMe
 from mint import schema
 
@@ -58,7 +58,7 @@ def drop_tables(cu, *tables):
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
 # Note that schemas older than 37 are not supported by this migration
 class MigrateTo_37(SchemaMigration):
-    Version = (37,0)
+    Version = (37, 0)
 
     def migrate(self):
         return self.Version
@@ -229,6 +229,125 @@ class MigrateTo_44(SchemaMigration):
     def migrate1(self):
         cu = self.db.cursor()
         add_columns(cu, 'Projects', 'backupExternal INT DEFAULT 0')
+        return True
+
+# SCHEMA VERSION 45
+class MigrateTo_45(SchemaMigration):
+    Version = (45, 1)
+
+    # 45.0
+    # - Create UpdateServices table
+    # - Create OutboundMirrorsUpdateServices table
+    # - Distill the OutboundMirrorTargets table into a set unique by URL;
+    #     fill in UpdateServices table
+    # - Remap current outbound mirrors to new update services
+    # - Drop no longer needed rAPAPasswords, OutboundMirrorTargets tables
+    # - Add versions table
+    def migrate(self):
+        from urlparse import urlparse
+        cu = self.db.cursor()
+
+        # Make sure UpdateServices table and OutboundMirrorsUpdateServices
+        # tables are created. We copy this code from mint/schema.py because
+        # this is a snapshot of how these tables looked at the time this schema
+        # version was created; calling schema._createMirrorInfo would create
+        # the latest version of that table (and foul up future migrations,
+        # perhaps).
+        if 'UpdateServices' not in self.db.tables:
+            cu.execute("""
+            CREATE TABLE UpdateServices (
+                updateServiceId         %(PRIMARYKEY)s,
+                hostname                VARCHAR(767) NOT NULL,
+                description             TEXT,
+                mirrorUser              VARCHAR(254) NOT NULL,
+                mirrorPassword          VARCHAR(254) NOT NULL
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['UpdateServices'] = []
+        self.db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
+                'hostname', unique = True)
+
+        if 'OutboundMirrorsUpdateServices' not in self.db.tables:
+            cu.execute("""
+            CREATE TABLE OutboundMirrorsUpdateServices (
+                outboundMirrorId        INT NOT NULL,
+                updateServiceId         INT NOT NULL,
+                CONSTRAINT ous_omi_fk
+                    FOREIGN KEY (outboundMirrorId)
+                        REFERENCES OutboundMirrors(outboundMirrorId)
+                    ON DELETE CASCADE,
+                CONSTRAINT ous_usi_fk
+                    FOREIGN KEY (updateServiceId)
+                        REFERENCES UpdateServices(updateServiceId)
+                    ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['OutboundMirrorsUpdateServices'] = []
+            commit = True
+        self.db.createIndex('OutboundMirrorsUpdateServices', 'ous_omi_usi_uq',
+                'outboundMirrorId, updateServiceId', unique = True)
+
+        # Collapse all the OutboundMirrorTargets into the
+        # UpdateServices table. Take the ones with the highestId
+        # as they were the most recently-added, and have the best
+        # possiblity of working against the Update Service.
+        # Also collect the OutboundMirrorIds from the duplicate
+        # entries and reassign them to an UpdateService
+        cu.execute("""SELECT outboundMirrorTargetsId, outboundMirrorId,
+                          url, username, password
+                      FROM outboundMirrorTargets
+                      ORDER BY outboundMirrorTargetsId DESC""")
+        updateServices = dict()
+        outboundMirrorsUpdateServices = dict()
+        for targetId, mirrorId, url, username, password in cu.fetchall():
+            updateServiceHostname = urlparse(url)[1]
+            if updateServiceHostname not in updateServices.keys():
+                updateServiceId = targetId
+                updateServices[updateServiceHostname] = \
+                        (updateServiceId, username, password)
+                outboundMirrorsUpdateServices[updateServiceId] = []
+            else:
+                updateServiceId = updateServices[updateServiceHostname][0]
+            outboundMirrorsUpdateServices[updateServiceId].append(mirrorId)
+
+        for usHostname, usData in updateServices.items():
+            cu.execute("""INSERT INTO UpdateServices (hostname,
+                              updateServiceId, mirrorUser,
+                              mirrorPassword)
+                          VALUES(?,?,?,?)""", usHostname, *usData)
+
+        for updateServiceId, outboundMirrorIds in \
+                outboundMirrorsUpdateServices.items():
+            for outboundMirrorId in outboundMirrorIds:
+                cu.execute("""INSERT INTO OutboundMirrorsUpdateServices
+                          VALUES(?,?)""", outboundMirrorId,
+                          updateServiceId)
+
+        # Kill old vestigial tables
+        drop_tables(cu, 'rAPAPasswords', 'OutboundMirrorTargets')
+
+        # Create versions table if needed
+        if 'ProductVersions' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE ProductVersions (
+                    productVersionId    %(PRIMARYKEY)s,
+                    projectId           INT NOT NULL,
+                    name                VARCHAR(16),
+                    description         TEXT,
+                CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
+                    REFERENCES Projects(projectId) ON DELETE CASCADE
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+            self.db.tables['ProductVersions'] = []
+
+        return True
+
+    # 45.1
+    # - Add columns that got dropped from the migration in a merge
+    def migrate1(self):
+        cu = self.db.cursor()
+
+        add_columns(cu, 'Projects', "shortname VARCHAR(128)",
+                                    "prodtype VARCHAR(128) DEFAULT ''",
+                                    "version VARCHAR(128) DEFAULT ''")
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

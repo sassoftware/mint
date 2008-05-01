@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -11,6 +11,7 @@ from mint import database
 from mint import mailinglists
 from mint import mint_error
 from mint import userlevels
+from mint.mint_error import *
 from mint.web import webhandler
 
 def requiresHttps(func):
@@ -79,7 +80,7 @@ def ownerOnly(func):
     """
     def ownerOnlyWrapper(self, **kwargs):
         if not self.project:
-            raise database.ItemNotFound("project")
+            raise ItemNotFound("project")
         if self.userLevel == userlevels.OWNER or self.auth.admin:
             return func(self, **kwargs)
         else:
@@ -94,7 +95,7 @@ def writersOnly(func):
     """
     def writersOnlyWrapper(self, **kwargs):
         if not self.project:
-            raise database.ItemNotFound("project")
+            raise ItemNotFound("project")
         if self.userLevel in userlevels.WRITERS or self.auth.admin:
             return func(self, **kwargs)
         else:
@@ -125,7 +126,7 @@ def mailList(func):
         mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'RPC2')
         try:
             return func(self, mlists=mlists, **kwargs)
-        except mailinglists.MailingListException, e:
+        except MailingListException, e:
             return self._write("error", shortError = "Mailing List Error",
                 error = "An error occurred while talking to the mailing list server: %s" % str(e))
 

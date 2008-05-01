@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -15,7 +15,7 @@ import boto
 from boto.exception import EC2ResponseError
 
 from mint import ec2
-from mint.database import ItemNotFound
+from mint.mint_error import *
 
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
 from conary.lib import util
@@ -133,6 +133,11 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         blessedAMI = client.getBlessedAMI(blessedAMIId)
         blessedAMI.userDataTemplate = "This here is my userdata template!"
+        # FIXME: client.getBlessedAMI turns buildId from None to ''
+        #   database.py:161 KeyedTable.get()
+        # so we have to set it back here or we end up with a foreign
+        # key constraint failure.
+        blessedAMI.buildId = None
         blessedAMI.save()
         del blessedAMI
 
@@ -309,6 +314,11 @@ rapadminpassword = @RAPAPASSWORD@
 conaryproxy = http://proxy.hostname.com/proxy/
 """
 
+        # FIXME: client.getBlessedAMI turns buildId from None to ''
+        #   database.py:161 KeyedTable.get()
+        # so we have to set it back here or we end up with a foreign
+        # key constraint failure.
+        blessedAMI.buildId = None
         blessedAMI.userDataTemplate = blessedAMIUserDataTemplate
         blessedAMI.save()
 

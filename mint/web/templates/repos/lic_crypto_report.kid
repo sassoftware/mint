@@ -10,7 +10,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
       py:extends="'../layout.kid'">
     <head>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}" />
-        
+
         <script type="text/javascript">
             function init() {
                 var elems = getElementsByTagAndClassName(null, 'versionLong');
@@ -22,7 +22,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
             addLoadEvent(init);
         </script>
     </head>
-            
+
     <div id="fileList" py:def="troveList(troves)">
         <table style="width: 100%;">
             <thead>
@@ -44,15 +44,15 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
                 <span id="${url}_long" class="collapse"  style="display: none;" onclick="swapDisplay('${url}_long', '${url}_short');">${splitVersionForDisplay(str(version))}</span></td>
                 <td style="width: 25%;">
                     <div py:strip="True" py:if="licenses">
-                        <div py:for="l in licenses">${l}</div>
+                        <div py:for="l in licenses">${XML(l)}</div>
                     </div>
-                    <div py:if="not licenses">No license data available</div>
+                    <div py:if="not licenses">No data</div>
                 </td>
                 <td style="width: 25%;">
                     <div py:strip="True" py:if="crypto">
-                        <div py:for="c in crypto">${c}</div>
+                        <div py:for="c in crypto">${XML(c)}</div>
                     </div>
-                    <div py:if="not crypto">No crypto data available</div>
+                    <div py:if="not crypto">No data</div>
                 </td>
                 <?python rowClass = not rowClass ?>
             </tr>

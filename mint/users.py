@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -25,12 +25,12 @@ from email import MIMEText
 from mint import database
 from mint import userlevels
 from mint import templates
+from mint import helperfuncs
 from mint.templates import registerNewUser
 from mint.templates import validateNewEmail
 from mint import searcher
 from mint import userlisting
-from mint.mint_error import MintError
-from mint.mint_error import PermissionDenied
+from mint.mint_error import *
 from mint import usertemplates
 
 from conary import conaryclient
@@ -39,44 +39,6 @@ from conary import sqlite3
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
-
-class MailError(MintError):
-    def __str__(self):
-        return self.context
-    def __init__(self, context="there was a problem sending email"):
-        self.context=context
-
-class ConfirmError(MintError):
-    def __str__(self):
-        return "Your registration could not be confirmed"
-
-class AlreadyConfirmed(MintError):
-    def __str__(self):
-        return "Your registration has already been confirmed"
-
-class UserAlreadyExists(MintError):
-    def __str__(self):
-        return "User already exists"
-
-class GroupAlreadyExists(MintError):
-    def __str__(self):
-        return "Group already exists"
-
-class InvalidUsername(MintError):
-    def __str__(self):
-        return "Username may contain only letters, digits, '-', '_', and '.'"
-
-class LastOwner(MintError):
-    def __str__(self):
-        return "Attempted to orphan a project with developers"
-
-class UserInduction(MintError):
-    def __str__(self):
-        return "Project owner attempted to manipulate a project user in an illegal fashion"
-
-class AuthRepoError(MintError):
-    def __str__(self):
-        return "Authentication token could not be manipulated."
 
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
@@ -100,8 +62,6 @@ class UsersTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
         # not passing a db object since a mint db isn't correct
@@ -206,7 +166,7 @@ class UsersTable(database.KeyedTable):
             self.confirm_table.new(userId = userId,
                                    timeRequested = time.time(),
                                    confirmation = confirm)
-        except database.DuplicateItem:
+        except DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
     def registerNewUser(self, username, password, fullName, email,
@@ -270,7 +230,7 @@ class UsersTable(database.KeyedTable):
             cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
                        userId)
 
-        except database.DuplicateItem:
+        except DuplicateItem:
             self.db.rollback()
             raise UserAlreadyExists
         except:
@@ -432,7 +392,7 @@ class UsersTable(database.KeyedTable):
         cu.execute ( "SELECT username FROM Users WHERE userId = ?", userId)
         username = cu.fetchone()
         if not username:
-            raise database.ItemNotFound("UserId: %d does not exist!"% userId)
+            raise ItemNotFound("UserId: %d does not exist!"% userId)
         return username[0]
 
 class User(database.TableObject):
@@ -539,7 +499,7 @@ class ProjectUsersTable(database.DatabaseTable):
         if res:
             return res[0]
         else:
-            raise database.ItemNotFound()
+            raise ItemNotFound()
 
     def new(self, projectId, userId, level):
         assert(level in userlevels.LEVELS)
@@ -549,7 +509,7 @@ class ProjectUsersTable(database.DatabaseTable):
                    projectId, userId)
         if cu.fetchall():
             self.db.rollback()
-            raise database.DuplicateItem("membership")
+            raise DuplicateItem("membership")
 
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
                    userId, level)
@@ -633,8 +593,6 @@ class UserGroupsTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         cu = self.db.cursor()
         cu.execute("""SELECT userGroupId FROM UserGroups
@@ -651,7 +609,7 @@ class UserGroupsTable(database.KeyedTable):
         """
         try:
             mintAdminId = self.getIdByColumn('userGroup', 'MintAdmin')
-        except database.ItemNotFound:
+        except ItemNotFound:
             mintAdminId = self.new(userGroup = 'MintAdmin')
         except:
             raise
@@ -664,8 +622,6 @@ class UserGroupMembersTable(database.DatabaseTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg._options and cfg.authDbPath:
-            self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
 
     def getGroupsForUser(self, userId):
@@ -689,10 +645,7 @@ def newPassword(length = 6):
     @returns: returns a character string of random letters and digits.
     @rtype: str
     """
-    choices = string.letters + string.digits
-    pw = "".join([random.choice(choices) for x in range(length)])
-    return pw
-
+    return helperfuncs.genPassword(length)
 
 def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
     validateEmailDomain(toEmail)

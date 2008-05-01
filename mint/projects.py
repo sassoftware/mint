@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -11,13 +11,14 @@ import time
 from mint import buildtypes
 from mint import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies
+        hostPortParse, configureClientProxies, getProjectText, \
+        addUserToRepository
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
 from mint import userlevels
 from mint import builds
-from mint.mint_error import MintError
+from mint.mint_error import *
 
 from conary import dbstore
 from conary import sqlite3
@@ -28,28 +29,6 @@ from conary.conarycfg import ConaryConfiguration, UserInformation, \
         EntitlementList
 
 
-class InvalidHostname(MintError):
-    def __str__(self):
-        return "Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
-
-class DuplicateHostname(MintError):
-    def __str__(self):
-        return "A project using this hostname already exists"
-
-class DuplicateName(MintError):
-    def __str__(self):
-        return "A project using this project title already exists"
-
-class LabelMissing(MintError):
-    def __str__(self):
-        return "Project label does not exist"
-
-class DuplicateLabel(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "Label already exists"):
-        self.reason = reason
-
 # functions to convert a repository name to a database-safe name string
 transTables = {
     'sqlite': string.maketrans("", ""),
@@ -59,12 +38,12 @@ transTables = {
 
 
 class Project(database.TableObject):
-    # XXX: disabled is slated for removal next schema upgrade --sgp
+    # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail',
-                 'backupExternal')
+                 'timeCreated', 'timeModified', 'commitEmail', 'shortname',
+                 'prodtype', 'version', 'backupExternal')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -105,16 +84,28 @@ class Project(database.TableObject):
     def getTimeModified(self):
         return self.timeModified
 
+    def getShortname(self):
+        return self.shortname
+
+    def getProdType(self):
+        return self.prodtype
+
+    def getVersion(self):
+        return self.version
+
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
 
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
 
+    def getCommitEmail(self):
+        return self.commitEmail
+
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)
-        except database.ItemNotFound:
+        except ItemNotFound:
             return userlevels.NONMEMBER
 
     def updateUserLevel(self, userId, level):
@@ -233,13 +224,16 @@ class Project(database.TableObject):
         else:
             return "yes"
 
+    def getProductVersionList(self):
+        return self.server.getProductVersionListForProduct(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
               'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail', 'backupExternal']
+              'timeModified', 'commitEmail', 'backupExternal',
+              'shortname', 'prodtype', 'version']
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -255,7 +249,7 @@ class ProjectsTable(database.KeyedTable):
     def new(self, **kwargs):
         try:
             id = database.KeyedTable.new(self, **kwargs)
-        except database.DuplicateItem, e:
+        except DuplicateItem, e:
             cu = self.db.cursor()
             cu.execute("SELECT projectId FROM Projects WHERE hostname=?", kwargs['hostname'])
             results = cu.fetchall()
@@ -291,7 +285,7 @@ class ProjectsTable(database.KeyedTable):
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         else:
             return r[0]
 
@@ -302,7 +296,7 @@ class ProjectsTable(database.KeyedTable):
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         else:
             return r[0]
 
@@ -503,17 +497,21 @@ class ProjectsTable(database.KeyedTable):
         repos = netserver.NetworkRepositoryServer(cfg, '')
 
         if username:
-            repos.auth.addUser(username, password)
-            repos.auth.addAcl(username, None, None, True, False,
-                              self.cfg.projectAdmin)
+            addUserToRepository(repos, username, password, username)
+            repos.auth.addAcl(username, None, None, write=True, remove=False)
+            repos.auth.setAdmin(username, True)
 
-        repos.auth.addUser("anonymous", "anonymous")
-        repos.auth.addAcl("anonymous", None, None, False, False, False)
+        anon = "anonymous"
+        addUserToRepository(repos, anon, anon, anon)
+        repos.auth.addAcl(anon, None, None, write=False, remove=False)
 
         # add the mint auth user so we can add additional permissions
         # to this repository
-        repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
-        repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+        addUserToRepository(repos, self.cfg.authUser, self.cfg.authPass, 
+            self.cfg.authUser)
+        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, 
+            remove=False)
+        repos.auth.setAdmin(self.cfg.authUser, True)
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:
             repos.auth.setMirror(username, True)
@@ -767,7 +765,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         if createDb:
             cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
@@ -798,7 +796,59 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
                 # raise an error that alomst certainly won't be trapped,
                 # so that a traceback will be generated.
                 raise AssertionError( \
-                    "Attempted to delete an existing project database.")
+                    "Attempted to delete an existing %s database."%getProjectText().lower())
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
+
+class ProductVersions(database.TableObject):
+
+    __slots__ = ( 'productVersionId',
+                  'projectId',
+                  'name',
+                  'description',
+                )
+
+    def getItem(self, id):
+        return self.server.getProductVersion(id)
+
+    def _getProductDefinitionTroveForVersion(self):
+        project = Project(self.server, self.id)
+        # XXX fill in with real trove name
+        return ('proddef:source',
+                '%s.%s@%s:proddef-%s' % \
+                (project.shortname,
+                 project.domainname,
+                 self.cfg.namespace,
+                 self.name), None)
+
+    def getProdDefLabel(self):
+        project = Project(self.server, self.projectId)
+        label = versions.Label(project.getLabel())
+
+        return "%s@%s:proddef-%s" % (project.getFQDN(),
+                                     label.getNamespace(),
+                                     self.name)
+
+
+class ProductVersionsTable(database.KeyedTable):
+    name = 'ProductVersions'
+    key = 'productVersionId'
+    fields = [ 'productVersionId',
+               'projectId',
+               'name',
+               'description',
+             ]
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
+
+    def getProductVersionListForProduct(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT %s FROM %s
+                      WHERE projectId = ?""" % (', '.join(self.fields),
+                            self.name),
+                      projectId)
+        return [ list(x) for x in cu.fetchall() ]
+

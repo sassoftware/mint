@@ -1,21 +1,21 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 kid_files =			\
-        add_group.kid           \
 	browse.kid		\
 	error.kid		\
 	files.kid		\
 	group_contents.kid	\
-	lic_crypto_report.kid		\
+	lic_crypto_report.kid	\
 	notice.kid		\
-        permission.kid          \
 	pgp_admin.kid		\
 	shadow_diff.kid		\
-	trove_info.kid          \
+	trove_info.kid		\
+        add_role.kid		\
+        permission.kid		\
         user_admin.kid
 
 python_files = __init__.py

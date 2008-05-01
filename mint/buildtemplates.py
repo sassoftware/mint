@@ -4,16 +4,23 @@
 import sys
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint import buildtypes
+from mint.mint_error import InvalidBuildOption, BuildOptionValidationException
 
 class BuildOption(tuple):
-    def __new__(self):
-        return tuple.__new__(tuple, (self.type, self.default, self.prompt))
+    errordesc = None
+    def __new__(cls):
+        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc))
+    def validate(self, value):
+        pass
 
 class StringOption(BuildOption):
     type = RDT_STRING
 
 class IntegerOption(BuildOption):
     type = RDT_INT
+    def validate(self, value):
+        if not value or not value.isdigit() or value < 0:
+            raise InvalidBuildOption(self[3])
 
 class BooleanOption(BuildOption):
     type = RDT_BOOL
@@ -25,7 +32,7 @@ class EnumOption(BuildOption):
     type = RDT_ENUM
 
     def __new__(self):
-        return tuple.__new__(tuple, (self.type, self.default, self.prompt, self.options))
+        return tuple.__new__(EnumOption, (self.type, self.default, self.prompt, self.options))
 
 
 optionNameMap = {
@@ -45,6 +52,32 @@ class Template(dict):
             newOption = optionNameMap.get(option, option)
             dict.__setitem__(self, newOption,
                              sys.modules[__name__].__dict__[option]())
+
+    def iteroptions(self):
+        for optionName in self.__slots__:
+            optionName = optionNameMap.get(optionName, optionName)
+            option = self.get(optionName)
+            yield optionName, option
+
+    def validate(self, **kwargs):
+        errors = []
+        for optionName, option in self.iteroptions():
+            if optionName not in kwargs:
+                continue
+            try:
+                option.validate(kwargs[optionName])
+            except InvalidBuildOption, e:
+                errors.append(str(e))
+
+        if len(errors):
+            raise BuildOptionValidationException(errors)
+
+    def getDefaultDict(self):
+        d = {}
+        for optionName, option in self.iteroptions():
+            d[optionName] = option[1]
+        return d
+
 
 # *** Extremely Important ***
 # Changing the names or semantic meanings of option classes or templates is
@@ -72,7 +105,7 @@ class autoResolve(BooleanOption):
 
 class baseFileName(StringOption):
     default = ''
-    prompt = 'Custom output filename prefix (replaces name-version-arch)'
+    prompt = 'Custom image file name (replaces name-version-arch)'
 
 class showMediaCheck(BooleanOption):
     default = False
@@ -80,7 +113,7 @@ class showMediaCheck(BooleanOption):
 
 class betaNag(BooleanOption):
     default = False
-    prompt = 'This build is considered a beta'
+    prompt = 'This image is considered a beta'
 
 class maxIsoSize(EnumOption):
     default = '681574400'
@@ -90,14 +123,17 @@ class maxIsoSize(EnumOption):
 class freespace(IntegerOption):
     default = 250
     prompt = 'How many MB of free space should be allocated in the image?'
+    errordesc = "free space"
 
 class swapSize(IntegerOption):
     default = 128
     prompt = 'How many MB swap space should be reserved in this image?'
+    errordesc = "swap space"
 
 class vmMemory(IntegerOption):
     default = 256
     prompt = 'How much memory should be used when running this image?'
+    errordesc = "vmware memory"
 
 class vmSnapshots(BooleanOption):
     default = False
@@ -138,6 +174,7 @@ class stringArg(StringOption):
 class intArg(IntegerOption):
     default = 0
     prompt = 'Garbage Integer'
+    errordesc = "garbage error"
 
 class enumArg(EnumOption):
     default = '2'
@@ -168,27 +205,32 @@ class amiHugeDiskMountpoint(StringOption):
 class StubImageTemplate(Template):
     __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
     id = buildtypes.STUB_IMAGE
+    xmlName = 'stubImage'
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'installLabelPath', 'swapSize']
     id = buildtypes.RAW_HD_IMAGE
+    xmlName = 'rawHdImage'
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'installLabelPath', 'swapSize']
     id = buildtypes.RAW_FS_IMAGE
+    xmlName = 'rawFsImage'
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
                  'diskAdapter', 'vmSnapshots']
     id = buildtypes.VMWARE_IMAGE
+    xmlName = 'vmwareImage'
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking']
     id = buildtypes.VMWARE_ESX_IMAGE
+    xmlName = 'vmwareEsxImage'
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
@@ -196,44 +238,52 @@ class InstallableIsoTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove']
     id = buildtypes.INSTALLABLE_ISO
+    xmlName = 'installableIsoImage'
 
 class UpdateIsoTemplate(Template):
     __slots__ = ['baseFileName', 'mediaTemplateTrove']
     id = buildtypes.UPDATE_ISO
-
+    xmlName = 'updateIsoImage'
 
 class NetbootTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath']
     id = buildtypes.NETBOOT_IMAGE
+    xmlName = 'netbootImage'
 
 class LiveIsoTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'zisofs',
                  'unionfs']
     id = buildtypes.LIVE_ISO
+    xmlName = 'liveIsoImage'
 
 class TarballTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize']
     id = buildtypes.TARBALL
+    xmlName = 'tarballImage'
 
 class VirtualPCTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_PC_IMAGE
+    xmlName = 'vpcImage'
 
 class XenOVATemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vmMemory']
     id = buildtypes.XEN_OVA
+    xmlName = 'xenOvaImage'
 
 class VirtualIronVHDTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_IRON
+    xmlName = 'virtualIronImage'
 
 class AMITemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'amiHugeDiskMountpoint', 'installLabelPath']
     id = buildtypes.AMI
+    xmlName = 'amiImage'
 
 class ApplianceISOTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'bugsUrl',
@@ -241,11 +291,18 @@ class ApplianceISOTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove']
     id = buildtypes.APPLIANCE_ISO
+    xmlName = 'applianceIsoImage'
+
+class ImagelessTemplate(Template):
+    __slots__ = []
+    id = buildtypes.IMAGELESS
+    xmlName = 'nakedGroup'
 
 ########################
 
 dataHeadings = {}
 dataTemplates = {}
+dataTemplatesByXmlName = {}
 
 for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
                      if x.endswith('Template') and x != 'Template']:
@@ -253,6 +310,7 @@ for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
     dataHeadings[template.id] = buildtypes.typeNames[template.id] + \
                                 ' Settings'
     dataTemplates[template.id] = template
+    dataTemplatesByXmlName[template.xmlName] = template
 
 
 def getDataTemplate(buildType):
@@ -261,9 +319,21 @@ def getDataTemplate(buildType):
     else:
         return {}
 
+def getDataTemplateByXmlName(xmlName):
+    return dataTemplatesByXmlName.get(xmlName, {})
+
 def getDisplayTemplates():
     return [(x, dataHeadings[x], dataTemplates[x]) \
             for x in dataTemplates.keys()]
+
+def getValueToTemplateIdMap():
+    templateIdMap = dict()
+    for id, dataHeading, dataTemplate in getDisplayTemplates():
+        for optionName, option in dataTemplate.items():
+            if optionName not in templateIdMap.keys():
+                templateIdMap[optionName] = ([], option)
+            templateIdMap[optionName][0].append(id)
+    return templateIdMap
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript

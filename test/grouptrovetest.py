@@ -24,8 +24,7 @@ from mint import jobstatus
 from mint import grouptrove
 from mint import server
 from mint import userlevels
-from mint.database import ItemNotFound, DuplicateItem
-from mint.mint_error import PermissionDenied, ParameterError
+from mint.mint_error import *
 # from mint.distro import group_trove
 from mint.jobs import DuplicateJob
 
@@ -65,22 +64,6 @@ groupsRecipe = """class GroupTest(GroupRecipe):
         else:
             r.add('group-core', flavor = 'is: x86', groupName = 'group-test')
 """ % ((MINT_PROJECT_DOMAIN,) * 2)
-
-groupsRecipeNoAddons = """class GroupTest(GroupRecipe):
-    name = 'group-test'
-    version = '1.0.0'
-
-    autoResolve = False
-
-    def setup(r):
-        r.setLabelPath('testproject.%s@rpl:devel', 'conary.rpath.com@rpl:1')
-        r.add('testcase', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
-        if Arch.x86_64:
-            r.add('group-core', flavor = 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test')
-        else:
-            r.add('group-core', flavor = 'is: x86', groupName = 'group-test')
-""" % ((MINT_PROJECT_DOMAIN,) * 2)
-
 
 refRedirRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
@@ -416,8 +399,14 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
         addTestTrove(groupTrove, "testcase", trvVersion = trvVersion)
         addTestTrove(groupTrove, "testcase2", trvVersion = trvVersion)
-        assert (groupTrove.getLabelPath() == ['foo.' + \
-                MINT_PROJECT_DOMAIN + '@rpl:devel'])
+        if self.cfg.rBuilderOnline:
+            assert (groupTrove.getLabelPath() == ['foo.' + \
+                    MINT_PROJECT_DOMAIN + '@rpl:devel'])
+        else:
+            assert (groupTrove.getLabelPath() == [
+                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                        client.server._server.cfg.namespace + ':foo-1.0-devel',
+                    'foo.' + MINT_PROJECT_DOMAIN + '@rpl:devel'])
 
     @fixtures.fixture("Full")
     def testEmptyCook(self, db, data):
@@ -682,7 +671,12 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
     def testLabelPath(self, db, data):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
-        assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
+        if self.cfg.rBuilderOnline:
+            assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
+        else:
+            assert groupTrove.getLabelPath() == [
+                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                        client.server._server.cfg.namespace + ':foo-1.0-devel']
 
         client = self.getClient('user')
         # bogus call to prime client
@@ -936,11 +930,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
             'group-core', '/conary.rpath.com@rpl:devel//1/1.0-0.5-10',
             '1#x86', 'group-test', False, True, True)
 
-        assert(groupTrove.getRecipe() == groupsRecipeNoAddons)
-
-        client.server._server.cfg.addonsHost = "addons.rpath.com"
-        assert(groupTrove.getRecipe() == groupsRecipe)
-        client.server._server.cfg.addonsHost = None
+        self.failUnlessEqual(groupTrove.getRecipe(), groupsRecipe)
 
     def testGetRecipeRedir(self):
         raise testsuite.SkipTestException("MCP broke it")

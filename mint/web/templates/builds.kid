@@ -1,19 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
-from mint.web.templatesupport import downloadTracker
+from mint.web.templatesupport import downloadTracker, projectText
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <head>
-        <title>${formatTitle('Builds: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Images: %s' % project.getNameForDisplay())}</title>
         <link py:if="builds" rel="alternate" type="application/rss+xml"
-              title="${project.getName()} Builds" href="${basePath}rss" />
+              title="${project.getName()} Images" href="${basePath}rss" />
     </head>
 
     <div py:strip="True" py:def="buildsTableRow(build, rowNumber)">
@@ -34,7 +34,8 @@ from mint.web.templatesupport import downloadTracker
         </tr>
         <tr py:attrs="rowAttrs">
             <td class="buildInfo">${build.getTroveName()}<br />${"%s/%s" % (build.getTroveVersion().trailingLabel(), build.getTroveVersion().trailingRevision())}</td>
-            <td class="buildInfo">${build.getArch()}&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
+            <td py:if="build.getBuildType() != buildtypes.IMAGELESS" class="buildInfo">${build.getArch()}&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
+            <td py:if="build.getBuildType() == buildtypes.IMAGELESS" class="buildInfo">&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
             <td class="buildInfo">&nbsp;<input py:if="not isPublished" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
@@ -48,10 +49,10 @@ from mint.web.templatesupport import downloadTracker
                         ${buildsTableRow(build, rowNumber)}
                     </div>
                 </table>
-                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Builds</button></p>
+                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Images</button></p>
             </form>
         </div>
-        <p py:if="not builds">This project contains no builds.</p>
+        <p py:if="not builds">This ${projectText().lower()} contains no images.</p>
     </div>
 
     <body>
@@ -84,8 +85,8 @@ from mint.web.templatesupport import downloadTracker
                     </div>
                 </div>
 
-                <h2>Individual Builds</h2>
-                <p py:if="isWriter"><strong><a href="newBuild">Create a new build</a></strong></p>
+                <h2>Individual Images</h2>
+                <p py:if="isWriter"><strong><a href="newBuild">Create a new image</a></strong></p>
                 ${buildsTable(builds)}
             </div>
         </div>

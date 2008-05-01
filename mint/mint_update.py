@@ -4,6 +4,7 @@ import traceback
 
 from mint import config
 from mint import maintenance
+from mint.mint_error import *
 
 from conary.lib import util
 
@@ -15,12 +16,6 @@ def migrateTo_1():
 
 def commonPostCommands():
     util.execute('/sbin/service sendmail start')
-
-class SchemaMigrationError(Exception):
-    def __init__(self, msg):
-            self.msg = msg
-    def __str__(self):
-        return self.msg
 
 def handleUpdate(fromVer, toVer):
     if toVer > fromVer:
