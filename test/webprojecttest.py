@@ -414,6 +414,16 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                       server=self.getProjectServerHostname())
         assert 'This is a fledgling %s'%pText in page.body
 
+    def testProjectPageManage(self):
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'Manage Your Product' not in page.body
+
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()
         projectHandler.cfg = self.mintCfg

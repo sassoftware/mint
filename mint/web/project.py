@@ -128,16 +128,28 @@ class ProjectHandler(WebHandler):
             mirrored = bool(self.client.getInboundMirror(self.project.id))
 
             # anonymous external projects can't be mirrored
-            _, _, userMap, entMap = self.client.getLabelsForProject(self.project.id)
+            _, _, userMap, entMap = self.client.getLabelsForProject(
+                                                                self.project.id)
             anonymous = len(userMap) == 0 and len(entMap) == 0
         else:
             mirrored = False
             anonymous = False
         if self.cfg.VAMUser:
-            vmtnId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
+            vmtnId = self.client.getCommunityId(self.project.getId(), 
+                                                communitytypes.VMWARE_VAM)
         else:
             vmtnId = None
-        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous, vmtnId = vmtnId)
+            
+        if self.userLevel == userlevels.OWNER:
+            # get the versions associated with a product
+            versions = self.client.getProductVersionListForProduct(
+                                                                self.project.id)
+        else:
+            versions = []
+            
+        return self._write("projectPage", mirrored = mirrored, 
+                           anonymous = anonymous, vmtnId = vmtnId,
+                           versions = versions)
 
     def releases(self, auth):
         return self._write("pubreleases")

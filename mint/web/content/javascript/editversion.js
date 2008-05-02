@@ -1,8 +1,6 @@
 /*
     Copyright (c) 2008 rPath, Inc.
     All Rights Reserved
-    
-    This code is used in the edit versions template.
 */
 var currentBdefSerial = 0;
 var currentUsourceSerial = 0;
@@ -126,3 +124,18 @@ jQuery(document).ready(function () {
         jQuery('#pd-usource-empty').hide();
     });
 });
+
+// given a project path (i.e. /project/foo) and version id, redirect to the 
+// proper edit version page
+function editVersionRedirect(projectPath, versionId) {
+                
+    if(versionId >= 0) {
+    
+       // makes sure projectPath ends in slash
+       if(projectPath.charAt(projectPath.length -1) != '/') {
+           projectPath += '/';
+       }
+    
+       location = projectPath + 'editVersion?id=' + versionId;
+    }
+}
