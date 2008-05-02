@@ -8,6 +8,8 @@ import testsuite
 testsuite.setup()
 
 import os
+import re
+import copy
 
 import mint_rephelp
 import fixtures
@@ -465,16 +467,17 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                 'group-test testproject.rpath.local@rpl:devel/1.0.1-1-2 []'])
         assert not projectHandler.session['errorMsgList']
 
-    testsuite.context('more_cowbell')
-    def testBadGroupParams(self):
+
+    def _setupProjectHandler(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
         projectHandler = project.ProjectHandler()
+        projectHandler.projectId = projectId
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
         projectHandler.client = client
+        projectHandler.session = {}
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
         projectHandler.auth = users.Authorization(\
@@ -482,12 +485,18 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.isWriter = True
         projectHandler.isOwner = True
         projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
+        projectHandler.basePath = self.mintCfg.basePath
         projectHandler.searchType = None
         projectHandler.searchTerms = ''
         projectHandler.inlineMime = None
         projectHandler.infoMsg = None
         projectHandler.errorMsgList = []
 
+        return projectHandler
+
+    testsuite.context('more_cowbell')
+    def testBadGroupParams(self):
+        projectHandler = self._setupProjectHandler()
         page = projectHandler.createGroup(auth = ('testuser', 'testpass'),
                                           groupName = '', version = '',
                                           description = '', initialTrove = [])
@@ -495,6 +504,118 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
             ['Error parsing version string: ',
              'Invalid group trove name: group-']
 
+    testsuite.context('more_cowbell')
+    def testPackageCreatorUI(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        self.webLogin('testuser', 'testpass')
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        assert 'action="createPackage"' in page.body
+        match = re.search('upload_iframe\?id=([^;]+);', page.body)
+        assert match, "Did not find an id in the page body"
+        id = match.groups()[0]
+        assert id, "What ID?"
+        #Make sure it actually did what we asked
+        #Get the tempPath
+        tmppath = os.path.join(self.mintCfg.dataPath, 'tmp', 'rb-pc-upload-%s' % id)
+        assert os.path.isdir(tmppath)
+
+    def testPackageCreatorIframe(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        self.webLogin('testuser', 'testpass')
+        page = self.fetch('/project/testproject/upload_iframe?id=foobarbaz;fieldname=upldfile',
+                server=self.getProjectServerHostname())
+        assert 'action="/cgi-bin/fileupload.cgi?id=foobarbaz;fieldname=upldfile"' in page.body
+        assert not 'input type="submit"' in page.body.lower(), "Did you forget to remove the submit button?"
+        assert 'input type="file" name="uploadfile"' in page.body, 'The file field name is fixed'
+        assert 'name="project" value="testproject"' in page.body, 'Make sure the project name is in the form'
+
+    def testPackageCreatorInterview(self):
+        from packagecreatortest import expectedFactories1
+        from factorydatatest import dictDef
+
+        from types import MethodType
+        ### All this, just to monkeypatch the client
+        projectHandler = self._setupProjectHandler()
+        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', '/testproject/createPackage')
+        fields = {
+            'id': 'foobarbaz',
+            'versionId': '1',
+            'uploadfile': 'UPLOADED',
+        }
+        auth = projectHandler.client.checkAuth()
+        projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
+        projectHandler.projectDict = {}
+        context = {'auth': auth, 'cmd': 'testproject/createPackage', 'client': projectHandler.client, 'fields': fields}
+        def fakecreatepackage(s, *args):
+            self.assertEquals(args[0], projectHandler.projectId)
+            self.assertEquals(args[1], 'foobarbaz')
+            self.assertEquals(args[2], 1)
+            self.assertEquals(args[3], '')
+            return self.dictDef
+        self.mock(projectHandler.client, 'createPackage', MethodType(fakecreatepackage, projectHandler.client))
+
+        self.dictDef = expectedFactories1
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        self.failUnless('form action="savePackage"' in page)
+        self.failUnless('input type="text" id="name_id" value="tags" name="name"' in page)
+
+        #now for a single factory with multiples and ranges
+        d = copy.deepcopy(dictDef)
+        self.dictDef = [('fakefactory01', None, d, {})]
+        page = func(auth=auth, **fields)
+        self.failUnless('input type="text" id="multiTest_id" value="4" name="multiTest' in page)
+
+        # Get rid of some constraints
+        d['dataFields'][0]['constraints'] = [('range', (3, 6))]
+
+        self.dictDef = [('fakefactory01', None, d, {})]
+        page = func(auth=auth, **fields)
+        self.failUnless('input type="checkbox" id="multiTest_3" value="3" name="multiTest"' in page)
+        self.failUnless('input checked="checked" type="checkbox" id="multiTest_4" value="4" name="multiTest"' in page)
+        self.failUnless('input type="checkbox" id="multiTest_5" value="5" name="multiTest"' in page)
+        self.failIf('input type="checkbox" id="multiTest_2" value="2" name="multiTest"' in page)
+        self.failIf('input type="checkbox" id="multiTest_6" value="6" name="multiTest"' in page)
+
+        #take off the multi
+        d['dataFields'][0]['multiple'] = False
+
+        self.dictDef = [('fakefactory01', None, d, {})]
+        page = func(auth=auth, **fields)
+        self.failUnless('input type="radio" id="multiTest_3" value="3" name="multiTest"' in page)
+        self.failUnless('input checked="checked" type="radio" id="multiTest_4" value="4" name="multiTest"' in page)
+        self.failUnless('input type="radio" id="multiTest_5" value="5" name="multiTest"' in page)
+        self.failIf('input type="radio" id="multiTest_2" value="2" name="multiTest"' in page)
+        self.failIf('input type="radio" id="multiTest_6" value="6" name="multiTest"' in page)
+
+        #Now a select box
+        d['dataFields'][0]['constraints'] = [('range', (1, 31))]
+        self.dictDef = [('fakefactory01', None, d, {})]
+        page = func(auth=auth, **fields)
+        self.failUnless('select name="multiTest" id="multiTest_id"' in page)
+        self.failUnless('<option selected="selected" value="4">4</option>' in page)
+        self.failUnless('<option value="30">30</option>' in page)
+
+        #Reset multi
+        d['dataFields'][0]['multiple'] = True
+        self.dictDef = [('fakefactory01', None, d, {})]
+        page = func(auth=auth, **fields)
+        self.failUnless('select multiple="multiple" name="multiTest" id="multiTest_id"' in page)
+        self.failUnless('<option selected="selected" value="4">4</option>' in page)
+        self.failUnless('<option value="30">30</option>' in page)
+
+        #Now use a prefilled instead of a default
+        d['dataFields'][0]['default'] = None
+        self.dictDef = [('fakefactory01', None, d, {'multiTest': 9})]
+        page = func(auth=auth, **fields)
+        self.failUnless('<option value="4">4</option>' in page)
+        self.failUnless('<option selected="selected" value="9">9</option>' in page)
+        self.failUnless('<option value="30">30</option>' in page)
 
 class DirectProjectTest(testsuite.TestCase):
     testsuite.context('more_cowbell')

@@ -36,7 +36,6 @@ transTables = {
     'postgresql': string.maketrans("-.:", "___")
 }
 
-
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',

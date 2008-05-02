@@ -348,6 +348,33 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
+    def createPackageTmpDir(self):
+        """
+        Create a new temporary location for storing package data
+        @returns: an ID that uniquely references this temporary location
+        @rtype: str
+        """
+        return self.server.createPackageTmpDir()
+
+    def getPackageFactories(self, projectId, id, versionId, upload_url):
+        """
+        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
+        @param projectId: Project ID
+        @type projectId: int
+        @param id: ID returned from L{createPackageTmpDir}
+        @type id: str
+        @param versionId: ID of the version chosen
+        @type versionId: int
+        @param upload_url: URL of a package or ''.  Not currently used
+        @type upload_url: str
+        @returns: a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @rtype: tuple(tuple, str)
+        """
+        return self.server.getPackageFactories(projectId, id, versionId, upload_url)
+
+    def savePackage(self, projectId, id, versionId, fileHandle, factoryHandle, data, build=True):
+        return self.server.savePackage(projectId, id, versionId, fileHandle, factoryHandle, data, build)
+
     def newBuildsFromXml(self, projectId, label, buildXml):
         """
         Create a series of new builds from xml input.

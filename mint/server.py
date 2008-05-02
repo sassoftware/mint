@@ -4728,6 +4728,107 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
 
+    @requiresAuth
+    def createPackageTmpDir(self):
+        path = tempfile.mkdtemp('', 'rb-pc-upload-',
+            dir=os.path.join(self.cfg.dataPath, 'tmp'))
+        id = os.path.basename(path).replace('rb-pc-upload-', '')
+        return id
+
+    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
+    @requiresAuth
+    def getPackageFactories(self, projectId, id, versionId, upload_url):
+        from mint.web import whizzyupload
+        import packagecreator
+        from conary import versions as conaryVer
+        # Check to see if there's a file
+        ## Connect up to the tmpdir
+        path = packagecreator.getWorkingDir(self.cfg, id)
+        fileuploader = whizzyupload.fileuploader(path, 'uploadfile')
+        try:
+            info = fileuploader.parseManifest()
+        except IOError, e:
+            raise RuntimeError("unable to parse uploaded file's manifest: %s" % str(e))
+        #TODO: Check for a URL
+        #Now go ahead and start the Package Creator Service
+        #Register the file
+        project = projects.Project(self, projectId)
+        pc = packagecreator.DirectLibraryBackend(path)
+        fhandle = pc.uploadFile(info['tempfile'])
+        pc.writeMetaFile(fhandle, info['filename'], info['content-type'])
+        # Now set up the confirmation interview
+        # TODO: Grab the factories label from somewhere
+        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
+        factGroup = "group-factories-package-creator=%s" % factLabel
+
+        cfg = project.getConaryConfig()
+        searchPath = ['group-dist=conary.rpath.com@rpl:1', factGroup, ]
+        cfg.searchPath = searchPath
+        factories = pc.getCandidateBuildFactories(fhandle, project.getConaryConfig(), [factGroup])
+        return factories, fhandle
+
+    def savePackage(self, projectId, id, versionId, fhandle, factoryHandle, data, build):
+        import packagecreator
+        from conary import versions as conaryVer
+        path = packagecreator.getWorkingDir(self.cfg, id)
+        project = projects.Project(self, projectId)
+        pc = packagecreator.DirectLibraryBackend(path)
+        mincfg = project.getConaryConfig()
+        # TODO: Get the target label
+        destLabel = 'fakeproduct.rdu.rpath.com@jtate:fakeproduct-1-devel'
+        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
+        factGroup = "group-factories-package-creator=%s" % factLabel
+        searchPath = [conaryVer.Label('conary.rpath.com@rpl:1'), factLabel, conaryVer.Label(destLabel)]
+        mincfg.searchPath = searchPath
+        mincfg.buildLabel = conaryVer.Label(destLabel)
+        srcHandle = pc.makeSourceTrove(mincfg, fhandle, factoryHandle, destLabel, data)
+        jobHandle = pc.build(mincfg, srcHandle, commit=True)
+        return jobHandle
+
+
+    #@typeCheck((int, ((str,unicode),), ((str,unicode),)))
+    @requiresAuth
+    def getPackageBuildStatus(self, projectId, id, jobHandle):
+        import packagecreator
+        path = packagecreator.getWorkingDir(self.cfg, id)
+        project = projects.Project(self, projectId)
+        pc = packagecreator.DirectLibraryBackend(path)
+        mincfg = project.getConaryConfig()
+        try:
+            return pc.isBuildFinished(mincfg, jobHandle, commit=True)
+        except packagecreator.errors.PackageCreatorError, e:
+            # TODO: Get a real error status code
+            return [True, -1, str(e)]
+
+ 
+    @typeCheck(((str,unicode),), ((str,unicode),))
+    @requiresAuth
+    def pollUploadStatus(self, id, fieldname):
+        from mint.web import whizzyupload
+        fieldname = str(fieldname)
+        ## Connect up to the tmpdir
+        path = os.path.join(self.cfg.dataPath, 'tmp', 'rb-pc-upload-%s' %
+            str(id))
+
+        if os.path.isdir(path):
+            #Look for the status and metadata files
+            return whizzyupload.fileuploader(path, fieldname).pollStatus()
+        else:
+            raise PermissionDenied("You are not allowed to check status on this file")
+
+    @typeCheck(((str,unicode),), (list, ((str,unicode),)))
+    @requiresAuth
+    def cancelUploadProcess(self, id, fieldnames):
+        from mint.web import whizzyupload
+        str_fieldnames = [str(x) for x in fieldnames]
+        path = os.path.join(self.cfg.dataPath, 'tmp', 'rb-pc-upload-%s' %
+            str(id))
+        if os.path.isdir(path):
+            for fieldname in str_fieldnames:
+                whizzyupload.fileuploader(path, fieldname).cancelUpload()
+            return True
+        else:
+            return False
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

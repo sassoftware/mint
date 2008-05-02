@@ -7,8 +7,8 @@ import email
 import os
 import re
 import sys
-import tempfile
 import time
+import tempfile
 from mod_python import apache
 
 from mint import buildxml
@@ -22,6 +22,7 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
+from mint import packagecreator
 from mint.mint_error import *
 
 from mint import buildtemplates
@@ -639,6 +640,33 @@ class ProjectHandler(WebHandler):
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
+    @writersOnly
+    def newPackage(self, auth):
+        #Create the temporary storage
+        #### If the directory prefix changes, you must change the cgi script
+        #### and the poller too
+        id = self.client.createPackageTmpDir()
+        versions = self.project.getProductVersionList()
+        return self._write('createPackage', message='', id=id, versions=versions, versionId=-1)
+
+    @writersOnly
+    def upload_iframe(self, auth, id, fieldname):
+        return self._write('uploadPackageFrame', id=id, fieldname=fieldname, project=self.project.hostname)
+
+    @writersOnly
+    @strFields(id=None, uploadfile='', upload_url='')
+    @intFields(versionId=None)
+    def getPackageFactories(self, auth, id, versionId, uploadfile, upload_url):
+        # uploadfile is a dummy field, the file, if it exists is stored in the location keyed by id
+        factories, fileHandle = self.client.getPackageFactories(self.project.getId(), id, versionId, upload_url)
+        return self._write('createPackageInterview', id=id, fileHandle=fileHandle, versionId=versionId, factories=factories, message=None)
+
+    @writersOnly
+    @strFields(id=None, factoryHandle=None, fileHandle=None)
+    @intFields(versionId=None)
+    def savePackage(self, auth, id, versionId, fileHandle, factoryHandle, **kwargs):
+        jobHandle = self.client.savePackage(self.project.getId(), id, versionId, fileHandle, factoryHandle, kwargs)
+        return self._write('buildPackage', projectId=self.project.getId(), id=id, versionId=versionId, jobHandle=jobHandle, message=None)
 
     @ownerOnly
     @strFields(label = None)
