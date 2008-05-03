@@ -61,6 +61,14 @@ table.pretty-fullwidth tr td input.reversed {
     margin-left: 30px;
 }
 
+table.pretty-fullwidth input.field-text-string {
+    width: 48%;    
+}
+
+table.pretty-fullwidth input.field-text-int {
+    width: 10%;    
+}
+
 table.pretty-fullwidth input.field,
 table.pretty-fullwidth select.field {
     width: auto;

@@ -100,7 +100,7 @@
                                               'type': 'text',
                                               'name': elementName,
                                               'value': dataValue,
-                                              'class': 'field',
+                                              'class': (dataRow[0] == RDT_STRING) and 'field-text-string' or 'field-text-int',
                                               'disabled': elementDisabled}" />
                             <div class="clearleft">&nbsp;</div>
                         </div>
