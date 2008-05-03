@@ -172,7 +172,8 @@
                 If kwargs['linked'] exists, we were sent here after creating a 
                 new product.  Add the transitional help text.
                 -->
-                TRANSITIONAL TEXT GOES HERE
+                Next enter the additional data necessary to define version
+                '${kwargs['name']}' of your ${projectText().lower()}.
             </p>
             <!--! Only new ones have a required field for now -->
             <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>
