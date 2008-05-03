@@ -10,9 +10,13 @@ import testsuite
 testsuite.setup()
 
 import fixtures
+import mint_rephelp
 
 from conary import conaryclient
 from mint import mint_error
+from mint import helperfuncs
+from mint import userlevels
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import proddef
 
@@ -260,6 +264,109 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
         finally:
             # Unmock repository interaction
             conaryclient.ConaryClient.getRepos = oldGetRepos
+
+class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
+
+    def testProductVersionCreateNewNotOwner(self):
+        """
+        Must be owner to create new product version
+        """
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        page = self.fetchWithRedirect('/project/testproject/editVersion',
+                                      server=self.getProjectServerHostname())
+        assert 'permission denied' in page.body.lower()
+
+    def testProductVersionCreateNew(self):
+        """
+        Ensure owner can create product version
+        """
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        self.webLogin('testuser', 'testpass')
+
+        page = self.fetchWithRedirect('/project/testproject/editVersion',
+                                      server=self.getProjectServerHostname())
+        assert 'create new %s version'%pText in page.body.lower()
+
+    def testProductVersionEditNotOwner(self):
+        """
+        Must be owner to edit product version
+        """
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        # add product version
+        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+
+        page = self.fetchWithRedirect(
+            '/project/testproject/editVersion?id=%d'%versionId,
+            server=self.getProjectServerHostname())
+        assert 'permission denied' in page.body.lower()
+
+    def testProductVersionEdit(self):
+        """
+        Ensure owner can edit a product version
+        """
+        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        self.webLogin('testuser', 'testpass')
+
+        # add product version
+        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+
+        page = self.fetchWithRedirect(
+           '/project/testproject/editVersion?id=%d'%versionId,
+           server=self.getProjectServerHostname())
+        assert 'edit %s version'%pText in page.body.lower()
+
+    def testProductVersionEditLinkedNotOwner(self):
+        """
+        Must be owner to edit product version linked to creating product
+        """
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        # add product version
+        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+
+        page = self.fetchWithRedirect(
+            '/project/testproject/editVersion?id=%d?linked=true'%versionId,
+            server=self.getProjectServerHostname())
+        assert 'permission denied' in page.body.lower()
+
+
+    def testProductVersionEditLinked(self):
+        """
+        Ensure owner can edit a product version linked to creating a product
+        """
+        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        self.webLogin('testuser', 'testpass')
+
+        # add product version
+        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+
+        page = self.fetchWithRedirect(
+           '/project/testproject/editVersion?id=%d&linked=true'%versionId,
+           server=self.getProjectServerHostname())
+        assert 'update initial %s version'%pText in page.body.lower()
 
 
 if __name__ == "__main__":

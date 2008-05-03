@@ -414,7 +414,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                       server=self.getProjectServerHostname())
         assert 'This is a fledgling %s'%pText in page.body
 
-    def testProjectPageManage(self):
+    def testProjectPageManageNotOwner(self):
         pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -422,7 +422,20 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'Manage Your Product' not in page.body
+        assert 'manage your %s'%pText.lower() not in page.body.lower()
+
+    def testProjectPageManageOwner(self):
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        self.webLogin('testuser', 'testpass')
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'manage your %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()
