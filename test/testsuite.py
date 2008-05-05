@@ -137,7 +137,7 @@ def main(argv=None, individual=True):
         suiteClass = testhelp.ConaryTestSuite
 
         def getCoverageDirs(self, environ):
-            return environ['mint']
+            return os.getenv('MINT_PATH')
 
         def getCoverageExclusions(self, environ):
             return EXCLUDED_PATHS
