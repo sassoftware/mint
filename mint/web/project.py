@@ -1063,48 +1063,29 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
-            'desc': self.project.getDesc(),
-            'branch': self.project.getLabel().split('@')[1],
-            'appliance': self.project.getApplianceValue()
+            'desc': self.project.getDesc()
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @strFields(projecturl = '', desc = '', name = '', branch = '',
-               appliance = 'unknown', commitEmail = '')
+    @strFields(projecturl = '', desc = '', name = '',
+               commitEmail = '')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           branch, appliance, commitEmail):
+                           commitEmail):
         pText = getProjectText()
         if not name:
             self._addErrors("You must supply a %s title"%pText.lower())
-        try:
-            host = versions.Label(self.project.getLabel()).getHost()
-            label = host + '@' + branch
-            versions.Label(label)
-        except ParseError:
-            self._addErrors("Invalid branch name")
 
         if not self._getErrors():
             try:
-                self.project.editProject(projecturl, desc, name, appliance)
+                self.project.editProject(projecturl, desc, name)
                 self.project.setCommitEmail(commitEmail)
-
-                # this is a little bit nasty because the label API
-                # needs some work.
-                oldLabel = self.project.getLabel()
-                if oldLabel != label:
-                    labelId = self.project.getLabelIdMap()[oldLabel]
-                    labelInfo = self.client.server.getLabel(labelId)
-                    self.project.editLabel(labelId, label, labelInfo['url'],
-                        labelInfo['authType'], labelInfo['username'],
-                        labelInfo['password'], labelInfo['entitlement'])
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'branch': self.project.getLabel().split('@')[1],
-                      'appliance': appliance, 'commitEmail': commitEmail}
+                      'commitEmail': commitEmail}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))

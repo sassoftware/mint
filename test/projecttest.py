@@ -81,12 +81,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         sData = re.split("\.", socket.gethostname(), 1)
         self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
                               sData[0], sData[1], shortname='bar3')
-        if not self.cfg.rBuilderOnline:
-            self.failUnlessRaises(InvalidShortname, client.newProject, "Test", 
-                              'barbar', MINT_PROJECT_DOMAIN, shortname="&bar")
-            self.failUnlessRaises(InvalidVersion, client.newProject, "Test", 
-                              'barbar', MINT_PROJECT_DOMAIN, 
-                               shortname="barbara", version="")
+        self.failUnlessRaises(InvalidShortname, client.newProject, "Test", 
+                          'barbar', MINT_PROJECT_DOMAIN, shortname="&bar")
+        self.failUnlessRaises(InvalidVersion, client.newProject, "Test", 
+                          'barbar', MINT_PROJECT_DOMAIN, 
+                           shortname="barbara", version="")
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
@@ -200,9 +199,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testBadShortname(self, db, data):
-        if self.cfg.rBuilderOnline:
-            raise testsuite.SkipTestException("test skipped because short names apply to rBA only")
-
         client = self.getClient("owner")
         for shortname in ('admin', 'a bad name', '', 'a_bad_name', 'a.bad.name'):
             try:
@@ -250,10 +246,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                       version="1.0")
         project = client.getProject(projectId)
         assert(project.getProdType() == "Component")
-        if not self.cfg.rBuilderOnline:
-            assert(project.getApplianceValue() == "no")
-        else:
-            assert(project.getApplianceValue() == "unknown")
+        assert(project.getApplianceValue() == "no")
 
     @fixtures.fixture("Full")
     def testProdTypeComponentApplianceValNo(self, db, data):
@@ -1048,10 +1041,7 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
                     '%s.' % hostname + MINT_PROJECT_DOMAIN, {})
             self.assertEquals(trvLeaves.keys(), ['group-%s-appliance:source' % hostname])
             labels = trvLeaves['group-%s-appliance:source' % hostname]
-            if self.mintCfg.rBuilderOnline:
-                branch = '/%s.%s@%s'%(hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.defaultBranch)
-            else:
-                branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
+            branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
             self.assertEquals(len(labels), 1)
             self.assertEquals(str(labels.keys()[0].branch()), branch)
             self.assertEquals(str(labels.keys()[0].trailingRevision()), '1-1')

@@ -458,13 +458,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
 
-        if self.mintCfg.rBuilderOnline:
-            for troveName in refNamesRaa:
-                assert troveName in troveNames['raa.rpath.org@rpath:raa-2']
-
-            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
-        else:
-            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
 
 
     testsuite.context('more_cowbell')

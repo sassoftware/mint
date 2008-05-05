@@ -491,31 +491,20 @@ class SiteHandler(WebHandler):
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version, commitEmail):
-        if not self.cfg.rBuilderOnline:
-            # for rBA, hostname is same as short name
-            hostname = shortname
-        else:
-            # for rBO, just shortname is same as hostname
-            shortname = hostname
-        hostname = hostname.lower()
+        
         shortname = shortname.lower()
+        if not hostname:
+            hostname = shortname
+        
         pText = getProjectText().lower()
         if not title:
             self._addErrors("You must supply a %s title"%pText)
-        if not self.cfg.rBuilderOnline:
-            # only applies to rBA
-            if not shortname:
-                self._addErrors("You must supply a %s short name"%pText)
-            if not prodtype or prodtype == 'unknown':
-                self._addErrors("You must select a %s type"%pText)
-            if not version or len(version) <= 0:
-                self._addErrors("You must supply a %s version"%pText)
-        else:
-            # only applies to rBO
-            if not hostname:
-                self._addErrors("You must supply a %s hostname"%pText)
-            if not domainname:
-                self._addErrors("You must supply a %s domain name"%pText)
+        if not shortname:
+            self._addErrors("You must supply a %s short name"%pText)
+        if not prodtype or prodtype == 'unknown':
+            self._addErrors("You must select a %s type"%pText)
+        if not version or len(version) <= 0:
+            self._addErrors("You must supply a %s version"%pText)
 
         if not self._getErrors():
             try:

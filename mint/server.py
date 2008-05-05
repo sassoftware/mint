@@ -712,45 +712,29 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        if self.cfg.rBuilderOnline:
-            # make sure the hostname is valid
-            self._validateHostname(hostname, domainname, reservedHosts)
-        else:
-            # make sure the shortname, version, and prodtype are valid, and
-            # validate the hostname also in case it ever splits from being
-            # the same as the short name
-            self._validateShortname(shortname, domainname, reservedHosts)
-            self._validateHostname(hostname, domainname, reservedHosts)
-            if not version or len(version) <= 0:
-                raise projects.InvalidVersion
-            if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
-                raise projects.InvalidProdType
+        # make sure the shortname, version, and prodtype are valid, and
+        # validate the hostname also in case it ever splits from being
+        # the same as the short name
+        self._validateShortname(shortname, domainname, reservedHosts)
+        self._validateHostname(hostname, domainname, reservedHosts)
+        if not version or len(version) <= 0:
+            raise projects.InvalidVersion
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
+            raise projects.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
-        if self.cfg.rBuilderOnline:
-            if appliance == "yes":
-                applianceValue = 1
-            elif appliance == "no":
-                applianceValue = 0
-            else:
-                applianceValue = None
+        if prodtype == 'Appliance':
+            appliance = "yes"
+            applianceValue = 1
         else:
-            if prodtype == 'Appliance':
-                appliance = "yes"
-                applianceValue = 1
-            else:
-                appliance = "no"
-                applianceValue = 0
+            appliance = "no"
+            applianceValue = 0
 
-        if not self.cfg.rBuilderOnline:
-            # if rBA 
-            label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
-                 self.cfg.namespace, hostname, version) 
-        else:
-            label = fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch
+        label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
+             self.cfg.namespace, hostname, version)
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
@@ -1190,23 +1174,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    @typeCheck(int, str, str, str, str)
+    @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def editProject(self, projectId, projecturl, desc, name, appliance):
+    def editProject(self, projectId, projecturl, desc, name):
         if projecturl and not (projecturl.startswith('https://') or \
                                projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
-        if appliance == "yes":
-            applianceValue = 1
-        elif appliance == "no":
-            applianceValue = 0
-        else:
-            applianceValue = None
         return self.projects.update(projectId, projecturl=projecturl,
-                                    description = desc, name = name,
-                                    isAppliance = applianceValue)
+                                    description = desc, name = name)
 
     @typeCheck(int, str)
     @requiresAuth

@@ -79,16 +79,10 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('admin', 'admin')
         self.setMaintenanceMode(maintenance.LOCKED_MODE)
         page = self.fetchWithRedirect('/newProject')
-        if self.mintCfg.rBuilderOnline:
-            page = page.postForm(1, self.post, {'title': 'Bar Project',
-                                                'hostname': 'bar',
-                                                'version': '1.0',
-                                                'prodtype': 'Component'})
-        else:
-            page = page.postForm(1, self.post, {'title': 'Bar Project',
-                                                'shortname': 'bar',
-                                                'prodtype': 'Appliance',
-                                                'version': '1.0'})
+        page = page.postForm(1, self.post, {'title': 'Bar Project',
+                                            'shortname': 'bar',
+                                            'prodtype': 'Appliance',
+                                            'version': '1.0'})
         self.failIf("Repositories are currently offline" not in page.body,
                     "Admin user was allowed to create a project")
 

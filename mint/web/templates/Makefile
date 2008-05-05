@@ -19,7 +19,6 @@ kid_files = \
 	editProject.kid		\
 	editBuild.kid		\
 	editPubrelease.kid	\
-	editProduct.kid		\
 	editVersion.kid		\
 	error.kid		\
 	findRefs.kid		\

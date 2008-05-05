@@ -395,23 +395,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if self.mintCfg.rBuilderOnline:
-            page = page.postForm(1, self.fetchWithRedirect,
-                    {'title': 'Test Project', 'hostname': 'test'})
-        else:
-            page = page.postForm(1, self.fetchWithRedirect,
-                    {'title': 'Test Project', 'shortname': 'test',
-                     'prodtype': 'Component', 'version': '1.0'})
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project', 'shortname': 'test',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
-        if self.mintCfg.rBuilderOnline:
-            self.failUnlessEqual(project.getApplianceValue(), 'unknown')
-        else:
-            self.failUnlessEqual(project.getApplianceValue(), 'no')
-            self.failUnlessEqual(project.getLabel(),
-                "test." + MINT_PROJECT_DOMAIN +
-                '@yournamespace:test-1.0-devel')
+        self.failUnlessEqual(project.getApplianceValue(), 'no')
+        self.failUnlessEqual(project.getLabel(),
+            "test." + MINT_PROJECT_DOMAIN +
+            '@yournamespace:test-1.0-devel')
 
 
     def testApplianceFlagYesNewProject(self):
@@ -435,14 +428,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if self.mintCfg.rBuilderOnline:
-            page = page.postForm(1, self.fetchWithRedirect,
-                    {'title': 'Test Project 2', 'hostname': 'test2',
-                     'appliance': 'no'})
-        else:
-            page = page.postForm(1, self.fetchWithRedirect,
-                    {'title': 'Test Project 2', 'shortname': 'test2',
-                     'prodtype': 'Component', 'version': '1.0'})
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project 2', 'shortname': 'test2',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test2")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -454,20 +442,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        if self.mintCfg.rBuilderOnline:
-            page = page.postForm(1, self.fetchWithRedirect,
-                   {'title': 'Test Project 3', 'hostname': 'test3',
-                     'appliance': 'unknown'})
-        else:
-            page = page.postForm(1, self.fetchWithRedirect,
-                    {'title': 'Test Project 3', 'shortname': 'test3',
-                     'prodtype': 'Component', 'version': '1.0'})
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project 3', 'shortname': 'test3',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test3")
-        if self.mintCfg.rBuilderOnline:
-            self.failUnlessEqual(project.getApplianceValue(), 'unknown')
-        else:
-            self.failUnlessEqual(project.getApplianceValue(), 'no')
+        self.failUnlessEqual(project.getApplianceValue(), 'no')
 
     def testEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -481,53 +461,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertCode('/project/foo/editProject', code = 200)
 
-    def testApplianceFlagYesEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'yes'})
-
-        project = client.getProjectByHostname("foo")
-        self.failUnlessEqual(project.getApplianceValue(), 'yes')
-
-    def testApplianceFlagNoEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'no'})
-
-    def testApplianceFlagUnknownEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'unknown'})
-        project = client.getProjectByHostname("foo")
-        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
-
     def testProcessEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
         hostname = 'foo'
@@ -540,37 +473,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'branch' : 'foo:bar',
                            'commitEmail': 'email@example.com'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
-        self.failUnlessEqual(project.getLabel(), 'foo.' + MINT_PROJECT_DOMAIN + '@foo:bar')
         self.failUnlessEqual(project.commitEmail, 'email@example.com')
-
-    def testEditProjectBranch(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        page = self.webLogin('foouser', 'foopass')
-
-        # edit the project label to something not related to project fqdn
-        cu = self.db.cursor()
-        cu.execute("UPDATE Labels SET label=? WHERE projectId=?",
-                   'bar.rpath.com@rpl:devel', projectId)
-        self.db.commit()
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.fetch('/project/foo/processEditProject', postdata =
-                          {'name'   : 'foo',
-                           'branch' : 'foo:bar'})
-
-        project = client.getProject(projectId)
-        self.assertEquals(project.getLabel(), 'bar.rpath.com@foo:bar')
 
     @testsuite.context("quick")
     def testSearchProjects(self):
@@ -964,16 +872,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                  server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
-        
-        if self.mintCfg.rBuilderOnline:
-            page = self.assertContent('/project/foo/', code = [200],
-                                     content = "Group Builder",
-                                     server = self.getProjectServerHostname())
-        else:
-            # disabled on rBA
-            page = self.assertNotContent('/project/foo/', code = [200],
-                                     content = "Group Builder",
-                                     server = self.getProjectServerHostname())
+
+        page = self.assertNotContent('/project/foo/', code = [200],
+                                 content = "Group Builder",
+                                 server = self.getProjectServerHostname())
 
     def testUploadKeyPage(self):
         pText = helperfuncs.getProjectText().lower()
