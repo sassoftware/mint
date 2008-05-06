@@ -13,8 +13,10 @@ jQuery(document).ready(function () {
     jQuery('select.pd-builddef-picker-buildType').change(function() {
         var builddefElement = jQuery(this).parents('tr').get(0);
         var builddefmoreElement= jQuery(builddefElement).next().get(0);
+        var archSelectorElement = jQuery(builddefElement).children('td').get(2);
         var buildtype = this.value;
         var buildtypeclass = '.it-'+buildtype;
+        var archtypeclass = '.arch-'+buildtype;
 
         jQuery(builddefmoreElement).find('div.it-'+buildtype).each(function () {
             jQuery(this).show();
@@ -25,6 +27,18 @@ jQuery(document).ready(function () {
                 jQuery(this).hide();
             }
             jQuery(this).find(':input').attr('disabled', 'disabled');
+        });
+        
+        // handle arch selectors
+        jQuery(archSelectorElement).find('select:not(.arch-'+buildtype+')').each(function () {
+            if (jQuery(this).is(':not(.clearleft)')) {
+                jQuery(this).hide();
+                jQuery(this).attr('disabled', 'disabled');
+            }
+        });
+        jQuery(archSelectorElement).find('select.arch-'+buildtype).each(function () {
+            jQuery(this).show();
+            jQuery(this).removeAttr('disabled');
         });
     });
 

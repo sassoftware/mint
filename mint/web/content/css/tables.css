@@ -69,6 +69,10 @@ table.pretty-fullwidth input.field-text-int {
     width: 10%;    
 }
 
+table.pretty-fullwidth select {
+    width: 100%;	
+}
+	
 table.pretty-fullwidth input.field,
 table.pretty-fullwidth select.field {
     width: auto;
