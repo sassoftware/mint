@@ -60,8 +60,8 @@ from mint.web.templatesupport import projectText
                     <h2>Manage Your ${projectText().title()}</h2>
                     <ul>
                         <li><a href="${basePath}editProject">Edit</a> ${projectText().lower()} settings</li>
-                        <li><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
-                        <li py:if="versions">
+                        <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
+                        <li py:if="versions and not external">
                             Edit product version
                             <select py:attrs="{'id': 'version', 'name': 'version', 'class': 'field'}" onchange="editVersionRedirect('${basePath}', this.options[this.selectedIndex].value);">
                                 <option py:if="versions" py:content="'--'" value="-1" selected="selected"/>

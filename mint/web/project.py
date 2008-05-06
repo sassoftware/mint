@@ -140,7 +140,12 @@ class ProjectHandler(WebHandler):
         else:
             vmtnId = None
             
-        if self.userLevel == userlevels.OWNER:
+        if self.project.external:
+            external = True
+        else:
+            external = False
+            
+        if self.userLevel == userlevels.OWNER and not external:
             # get the versions associated with a product
             versions = self.client.getProductVersionListForProduct(
                                                                 self.project.id)
@@ -149,7 +154,8 @@ class ProjectHandler(WebHandler):
             
         return self._write("projectPage", mirrored = mirrored, 
                            anonymous = anonymous, vmtnId = vmtnId,
-                           versions = versions)
+                           versions = versions,
+                           external = external)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -1096,6 +1102,10 @@ class ProjectHandler(WebHandler):
     @intFields(id = -1)
     def editVersion(self, auth, id, *args, **kwargs):
         isNew = (id == -1)
+        
+        # external projects can't use this yet
+        if self.project.external:
+            raise ProductDefinitionVersionExternalNotSup();
         
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
