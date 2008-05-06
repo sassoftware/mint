@@ -219,6 +219,7 @@ buildDefinitionSupportedFlavorsMap = {
     VMWARE_IMAGE       : [BD_VMWARE_X86, BD_VMWARE_X86_64],
     VMWARE_ESX_IMAGE   : [BD_VMWARE_X86, BD_VMWARE_X86_64],
     XEN_OVA            : [BD_DOMU_X86, BD_DOMU_X86_64],
+    AMI                : [BD_DOMU_X86, BD_DOMU_X86_64],
 }
 
 # code generator run by make to generate javascript constants
