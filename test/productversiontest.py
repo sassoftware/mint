@@ -18,7 +18,7 @@ from mint import helperfuncs
 from mint import userlevels
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-import proddef
+from rpath_common.proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedUnitTest):
     
@@ -202,7 +202,7 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
             return {'proddef.xml' : data}
 
         class ProductDefinition:
-            def __init__(self, xml):
+            def __init__(self, fromStream):
                 pass
             def getBaseFlavor(*args):
                 result.append('getBaseFlavor')
@@ -213,8 +213,8 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
             def getUpstreamSources(*args):
                 result.append('getUpstreamSources')
                 return ''
-            def getBuildDefinition(*args):
-                result.append('getBuildDefinition')
+            def getBuildDefinitions(*args):
+                result.append('getBuildDefinitions')
                 return ''
 
         oldGetRepos = conaryclient.ConaryClient.getRepos
@@ -233,8 +233,8 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
             proddef.ProductDefinition = oldProductDefinition
 
         self.assertEquals(['getTroveLatestByLabel', 'getFilesFromTrove',
-                           'getBaseFlavor', 'getStages', 'getUpstreamSources',
-                           'getBuildDefinition'], result)
+                           'getStages', 'getUpstreamSources',
+                           'getBuildDefinitions', 'getBaseFlavor'] , result)
 
     @fixtures.fixture("Full")
     def testGetProductDefinitionForNonExistantVersion(self, db, data):
