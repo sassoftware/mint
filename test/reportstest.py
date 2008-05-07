@@ -146,6 +146,7 @@ class ReportTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPrecompiledReports(self, db, data):
+        raise testsuite.SkipTestException('Modifying the codebase is not a valid test')
         # compile a test report
         mintDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-2])
         testDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-1])
