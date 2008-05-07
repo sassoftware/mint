@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -7,9 +7,14 @@
 from conary import versions
 from conary.deps import deps
 from mint import constants
+from mint import buildtypes
+from mint.config import isRBO
+from conary.repository.errors import RoleAlreadyExists
 
 import htmlentitydefs
 import re
+import random
+import string
 import time
 import urlparse
 
@@ -138,6 +143,9 @@ def getVersionForCacheFakeout():
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
+def generateMirrorUserName(rbuilderHostname, updateServiceHostname):
+    # Generate a mirrorUser for this rBuilder
+    return "-mirroruser-%s-%s" % (rbuilderHostname, updateServiceHostname)
 
 def cleanseUrl(protocol, url):
     if url.find('@') != -1:
@@ -221,16 +229,148 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
     return conaryCfg
 
-def hashMirrorRepositoryUser(hostName, siteDomainName, mirrorUrl,
-        projectId, labels, matchStrings):
+def getProjectText():
+    """Returns project if rBO and product if rBA"""
+    return isRBO() and "project" or "product"
 
-    userPrefix = '%s.%s-%s' % (hostName, siteDomainName,
-            mirrorUrl)
-    trailingBits = '%s%s%s' % (projectId,
-            labels and labels or 'ALL',
-            matchStrings and matchStrings or 'ALL')
-    import md5
-    m = md5.new()
-    m.update(userPrefix+trailingBits)
-    userHash = m.hexdigest()[:8]
-    return '%s_%s' % (userPrefix, userHash)
+def genPassword(length):
+    """
+    @param length: length of random password generated
+    @returns: returns a character string of random letters and digits.
+    @rtype: str
+    """
+    choices = string.letters + string.digits
+    pw = "".join([random.choice(choices) for x in range(length)])
+    return pw
+
+def getBuildIdFromUuid(uuid):
+        """
+        Get the build id from the specified uuid
+        """
+        buildId = None
+        if uuid:
+            chunks = uuid.split("-build-")
+            if chunks and chunks[1]:
+                parts = chunks[1].split('-')
+                if parts:
+                    buildId = parts[0]
+
+        return string.atoi(buildId)
+
+def collateDictByKeyPrefix(fields, coerceValues=False):
+    """
+    Take a dict of fields that looks like this:
+
+        { 'prefix-idx1-key1': 'value1', 'prefix-idx2-key2': 'value2', ... ]
+
+    and collate it into a nested dict that looks like this:
+
+        { 'prefix': [{'key1': 'value1', 'key2': 'value2', ... ] }
+
+    Note: this ignores anything that doesn't match the pattern (i.e.
+    all keys must be in the form 'prefix-index-value'
+
+    Specifying coerceValues as True will coerce all values to Strings.
+    """
+    dicts = {}
+    for key, value in sorted(fields.iteritems()):
+        try:
+            # Split on prefix-index-key from the right; this
+            # allows for the prefix to contain '-'s, too
+            prefix, index, name = key.rsplit('-', 2)
+            index = int(index)
+        except ValueError:
+            # ignore anything that doesn't conform
+            continue
+        pd = dicts.setdefault(prefix, {})
+        d = pd.setdefault(index, {})
+        if coerceValues:
+            value = str(value)
+        d[name] = value
+
+    for key, value in dicts.iteritems():
+        value = [ x[1] for x in sorted(value.iteritems()) ]
+        dicts[key] = value 
+
+
+    return dicts
+
+def addUserToRepository(repos, username, password, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUser(label, username, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUser(username, password)
+        repos.auth.updateRoleMembers(role, [username])
+
+def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
+    """
+    Add a user to the repository
+    """
+    if label:
+        try:
+            repos.addRole(label, role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.addUserByMD5(label, username, salt, password)
+        repos.updateRoleMembers(label, role, [username])
+    else:
+        try:
+            repos.auth.addRole(role)
+        except RoleAlreadyExists:
+            # who cares
+            pass
+        repos.auth.addUserByMD5(username, salt, password)
+        repos.auth.updateRoleMembers(role, [username])
+        
+def setProductVersionDefaultKWArgs(kwargs=None):
+        """
+        Set the default kwargs for product version
+        """
+        if not kwargs:
+            kwargs = dict()
+            
+        kwargs.setdefault('id', -1)
+        kwargs.setdefault('name', '')
+        kwargs.setdefault('description', '')
+        kwargs.setdefault('baseFlavor', 'is: x86')
+        kwargs.setdefault('stages', getProductVersionDefaultStagesList())
+        kwargs.setdefault('upstreamSources', {})
+        kwargs.setdefault('buildDefinition', [])
+        
+        return kwargs
+
+def getProductVersionDefaultStagesList():
+        """
+        Build a list containing the default stages
+        """
+        return [dict(name='Development',
+                     label='-devel'),
+                dict(name='QA',
+                     label='-qa'),
+                dict(name='Release',
+                     label='')]
+        
+def getBuildDefsAvaliableBuildTypes(allBuildTypes):
+        """
+        Get a list of the available build types for build defs
+        """
+        # get the build types to allow
+        #    remove online update builds (i.e. imageless)
+        allBuildTypes.remove(buildtypes.IMAGELESS)
+        
+        return allBuildTypes

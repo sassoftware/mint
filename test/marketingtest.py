@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -429,9 +429,12 @@ class MarketingTest(fixtures.FixturedUnitTest):
         topProjects = selections.TopProjectsTable(db)
         client = self.getClient('admin')
 
-        p1 = client.newProject('p1', 'p1', 'localhost')
-        p2 = client.newProject('p2', 'p2', 'localhost')
-        p3 = client.newProject('p3', 'p3', 'localhost')
+        p1 = client.newProject('p1', 'p1', 'localhost', shortname='p1',
+                version="1.0", prodtype="Component")
+        p2 = client.newProject('p2', 'p2', 'localhost', shortname='p2',
+                version="1.0", prodtype="Component")
+        p3 = client.newProject('p3', 'p3', 'localhost', shortname='p3',
+                version="1.0", prodtype="Component")
 
         topProjects.setList([p1, p3, p2])
         self.failUnlessEqual(topProjects.getList(),
@@ -442,8 +445,10 @@ class MarketingTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testProjectCalculation(self, db, data):
         client = self.getClient('admin')
-        p2 = client.newProject('p2', 'p2', 'localhost')
-        p3 = client.newProject('p3', 'p3', 'localhost')
+        p2 = client.newProject('p2', 'p2', 'localhost', shortname="p2",
+                version="1.0", prodtype="Component")
+        p3 = client.newProject('p3', 'p3', 'localhost', shortname="p3",
+                version="1.0", prodtype="Component")
 
         projects = [data['projectId'], p3, p2]
         builds = [data['buildId'], data['pubBuildId'], data['anotherBuildId']]

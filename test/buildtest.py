@@ -17,10 +17,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes, buildtemplates
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
-from mint.database import ItemNotFound
-from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
-     PublishedReleaseMissing, PublishedReleasePublished, \
-     JobserverVersionMismatch, PermissionDenied
+from mint.mint_error import *
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
 from mint import urltypes
@@ -58,9 +55,9 @@ class BuildTest(fixtures.FixturedUnitTest):
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
-                'fileUrls': [(4, 0, 'file1')], 'idx': 0, 'fileId': 4},
+                'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
-                 'fileUrls': [(5, 0, 'file2')], 'idx': 1, 'fileId': 5}]
+                 'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6}]
         )
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
@@ -129,6 +126,53 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, build.setDataValue, 'enumArg', '5')
+    
+    @fixtures.fixture("Full")
+    def testImagelessBuild(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['imagelessBuildId'])
+        dataTemplate = build.getDataTemplate()
+        assert(dataTemplate == {})
+        assert(build.getName() == "Test Imageless Build")
+        assert(build.getTrove() ==\
+            ('group-dist',
+             "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2",
+             '1#x86'))
+        assert(build.getTroveName() == 'group-dist')
+        assert(build.getTroveVersion().asString() == \
+               "/testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-2")
+        assert(build.getTroveFlavor().freeze() == '1#x86')
+        assert(build.getArch() == "x86")
+    
+    @fixtures.fixture("Full")
+    def testBuildDataIntegerValidation(self, db, data):
+        
+        # get a template, doesn't matter what build type is used
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        dataTemplate = build.getDataTemplate()
+
+        # test freespace
+        buildtemplates.freespace().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.freespace().validate, "-1")
+
+        # test vmMemory
+        buildtemplates.vmMemory().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.vmMemory().validate, "-1")
+
+        # test swap size
+        buildtemplates.swapSize().validate("3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "s3")
+        self.assertRaises(InvalidBuildOption, 
+            buildtemplates.swapSize().validate, "-1")
 
     @fixtures.fixture("Full")
     def testMaxIsoSize(self, db, data):
@@ -268,7 +312,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testGetBuildsForProjectOrder(self, db, data):
         # FIXME broken w/r/t new release arch
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -290,7 +336,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testFlavorFlags(self, db, data):
         client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, "rpath.org",
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'build 1')
         build.setTrove("group-trove",
@@ -529,6 +577,11 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setBuildType(buildtypes.AMI)
         self.failUnless(build.setPublished(pubRel.id, True))
 
+        # IMAGELESS shouldn't throw BuildEmpty, as it's expected that they
+        # don't have any files
+        build.setBuildType(buildtypes.IMAGELESS)
+        self.failUnless(build.setPublished(pubRel.id, True))
+
     @fixtures.fixture('Full')
     def testGetImageTypesCompat(self, db, data):
         client = self.getClient('owner')
@@ -624,7 +677,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.refresh()
         self.failUnlessEqual(build.getFiles(),
             [{'sha1': 'abcd', 'idx': 0, 'title': 'bar', 
-              'fileUrls': [(4, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 4, 'size': 10}]
+              'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 5, 'size': 10}]
         )
 
         # make sure the outputTokengets removed from the build data
@@ -726,8 +779,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(len(fileUrls), 3)
         self.failUnlessEqual(fileUrls,
                 [(2, urltypes.LOCAL, 'file'),
-                 (4, urltypes.AMAZONS3, 'http://a.test.url/'),
-                 (5, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
+                 (5, urltypes.AMAZONS3, 'http://a.test.url/'),
+                 (6, urltypes.AMAZONS3TORRENT, 'http://a.test.url/?torrent')])
 
 
     @fixtures.fixture('Full')
@@ -792,7 +845,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         client = self.getClient('admin')
 
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         build = client.newBuild(projectId, "Test Build")
@@ -924,7 +979,9 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # Create a second project owned by a different user
         nobody = self.getClient('nobody')
-        otherProjectId = nobody.newProject('bar', 'bar', MINT_PROJECT_DOMAIN)
+        hostname = "bar"
+        otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
@@ -970,6 +1027,84 @@ class BuildTest(fixtures.FixturedUnitTest):
         for build in builds:
             self.failIf(builds[0].troveName != 'group-dummy',
                         "trove name was not assigned")
+
+    @fixtures.fixture('FullProdDef')
+    def testBuildsFromProductDefinition(self, db, data):
+        def getRepos(self):
+            class Repo:
+                def findTrove(*args, **kwargs):
+                    return [('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('is: x86')),
+                            ('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('is: x86_64'))]
+
+            return Repo()
+
+        client = self.getClient('admin')
+
+        from mint.server import MintServer
+        oldGetProdDef = MintServer.getProductDefinitionForVersion
+        MintServer.getProductDefinitionForVersion = \
+            lambda *args, **kwargs: data['proddef']
+
+        oldGetRepos = conaryclient.ConaryClient.getRepos
+        conaryclient.ConaryClient.getRepos = getRepos
+
+        try:
+            buildIds = \
+                client.newBuildsFromProductDefinition(data['versionId'], 
+                    'group-dummy=test.rpath.local@rpl:devel')
+        finally:
+            conaryclient.ConaryClient.getRepos = oldGetRepos
+            MintServer.getProductDefinitionForVersion = oldGetProdDef
+
+        # Should have created 2 builds.
+        self.assertEquals(2, len(buildIds))
+
+    @fixtures.fixture('FullProdDef')
+    def testBuildsFromProductDefinitionNoTrove(self, db, data):
+        def getRepos(self):
+            class Repo:
+                def findTrove(*args, **kwargs):
+                    return [('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('~xen')),
+                            ('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('~vmware'))]
+
+            return Repo()
+
+        client = self.getClient('admin')
+
+        from mint.server import MintServer
+        oldGetProdDef = MintServer.getProductDefinitionForVersion
+        MintServer.getProductDefinitionForVersion = \
+            lambda *args, **kwargs: data['proddef']
+
+        oldGetRepos = conaryclient.ConaryClient.getRepos
+        conaryclient.ConaryClient.getRepos = getRepos
+
+        try:
+            # Should raise an exception
+            self.assertRaises(TroveNotFoundForBuildDefinition,
+                              client.newBuildsFromProductDefinition,
+                                  data['versionId'],
+                                  'group-dummy=test.rpath.local@rpl:devel')
+        finally:
+            conaryclient.ConaryClient.getRepos = oldGetRepos
+            MintServer.getProductDefinitionForVersion = oldGetProdDef
+
 
     @fixtures.fixture('Full')
     def testCommitBuildXml(self, db, data):
@@ -1052,6 +1187,88 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(data != '<buildDefinition version="1.0"/>\n',
                     "unexpected data from checkoutBuildXml: %s" % data)
 
+
+class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
+
+    @fixtures.fixture("Empty")
+    def testApplyTemplatesNoBuildOptionsSpecified(self, db, data):
+
+        # One build definition specified.
+        buildDefinition = [dict(baseFlavor='is: x86',
+                                installableIsoImage=dict())]
+        templBuildDefs = \
+            builds.applyTemplatesToBuildDefinitions(buildDefinition)
+        isoTemplate = \
+            buildtemplates.getDataTemplateByXmlName('installableIsoImage')
+        isoTemplate = isoTemplate.getDefaultDict().copy()
+        self.assertEquals(isoTemplate,
+                          templBuildDefs[0]['installableIsoImage'])
+
+        # Multiple build definitions at once.
+        buildDefinition = [dict(baseFlavor='is: x86',
+                                installableIsoImage=dict()),
+                           dict(baseFlavor='is: x86_64',
+                                vmwareEsxImage=dict())]
+        templBuildDefs = \
+            builds.applyTemplatesToBuildDefinitions(buildDefinition)
+        esxTemplate = \
+            buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
+        esxTemplate = esxTemplate.getDefaultDict().copy()
+        self.assertEquals(isoTemplate,
+                          templBuildDefs[0]['installableIsoImage'])
+        self.assertEquals(esxTemplate,
+                          templBuildDefs[1]['vmwareEsxImage'])
+
+    @fixtures.fixture("Empty")
+    def testApplyTemplatesBuildOptionsSpecified(self, db, data):
+
+        # Multiple build definitions overriding build option defaults
+        buildDefinition = [dict(baseFlavor='is: x86',
+                                installableIsoImage=dict(autoResolve=False,
+                                        maxIsoSize='99999999')),
+                           dict(baseFlavor='is: x86_64',
+                                vmwareEsxImage=dict(freespace='42',
+                                        natNetworking='True',
+                                        baseFileName='/chupacabra/linux'))]
+        templBuildDefs = \
+            builds.applyTemplatesToBuildDefinitions(buildDefinition)
+        # verify that set options were preserved.
+        self.assertEquals(templBuildDefs[0]['installableIsoImage']['autoResolve'],
+                          'False')
+        self.assertEquals(templBuildDefs[0]['installableIsoImage']['maxIsoSize'],
+                          '99999999')
+        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['freespace'],
+                          '42')
+        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['natNetworking'],
+                          'True')
+        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['baseFileName'],
+                          '/chupacabra/linux')
+        isoTemplate = \
+            buildtemplates.getDataTemplateByXmlName('installableIsoImage')
+        isoTemplate = isoTemplate.getDefaultDict().copy()
+
+        esxTemplate = \
+            buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
+        esxTemplate = esxTemplate.getDefaultDict().copy()
+        # pop the set option from each, and verify that everything else is the
+        # same.
+        templBuildDefs[0]['installableIsoImage'].pop('autoResolve')
+        templBuildDefs[0]['installableIsoImage'].pop('maxIsoSize')
+        templBuildDefs[1]['vmwareEsxImage'].pop('freespace')
+        templBuildDefs[1]['vmwareEsxImage'].pop('natNetworking')
+        templBuildDefs[1]['vmwareEsxImage'].pop('baseFileName')
+
+        isoTemplate.pop('autoResolve')
+        isoTemplate.pop('maxIsoSize')
+
+        esxTemplate.pop('freespace')
+        esxTemplate.pop('natNetworking')
+        esxTemplate.pop('baseFileName')
+
+        self.assertEquals(isoTemplate,
+                          templBuildDefs[0]['installableIsoImage'])
+        self.assertEquals(esxTemplate,
+                          templBuildDefs[1]['vmwareEsxImage'])
 
 class BuildTestConaryRepository(MintRepositoryHelper):
     def testBuildTroves(self):

@@ -30,8 +30,8 @@ python_files = \
                newstest.py \
                buildtest.py \
                projecttest.py \
+	       productversiontest.py \
                pubreleasetest.py \
-			   rapapasswordtests.py \
                recipes.py \
                repostest.py \
                reportstest.py \
@@ -40,6 +40,7 @@ python_files = \
                sessionstest.py \
                spidertest.py \
                testsuite.py \
+	       updateservicetest.py \
                usertest.py \
                xmltest.py \
                webtest.py \

@@ -80,7 +80,9 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.setMaintenanceMode(maintenance.LOCKED_MODE)
         page = self.fetchWithRedirect('/newProject')
         page = page.postForm(1, self.post, {'title': 'Bar Project',
-                                            'hostname': 'bar'})
+                                            'shortname': 'bar',
+                                            'prodtype': 'Appliance',
+                                            'version': '1.0'})
         self.failIf("Repositories are currently offline" not in page.body,
                     "Admin user was allowed to create a project")
 

@@ -23,8 +23,10 @@
             <div id="spanleft">
                 <h2>Create an Account</h2>
                 <p>
-                  Please read the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')} before you create a new
-                 ${cfg.productName} account.  Once you have completed the
+                    <span py:if="cfg.rBuilderOnline or cfg.tosLink">Please read the
+                        <a href="${cfg.tosLink}" title="Terms of Service">Terms of Service</a>
+                        before you create a new ${cfg.productName} account.</span>
+                 Once you have completed the
                  form below, click <tt>Create</tt> and you will receive a
                  confirmation email containing a link required to complete
                  creation of your account.
@@ -67,9 +69,9 @@
                                     You may need to enable email from ${cfg.adminMail} in your spam filtering software.
                                     You will not be able to access your account until you have confirmed your e-mail address.
                                 </p>
-                                <p class="help">This email address will not be displayed on the ${cfg.productName} website
+                                <p py:if="cfg.rBuilderOnline or cfg.privacyPolicyLink" class="help">This email address will not be displayed on the ${cfg.productName} website
                                     and will never be shared or sold. More information can be found in our
-                                    ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.
+                                    <a href="${cfg.privacyPolicyLink}" title="Privacy Policy">Privacy Policy</a>.
                                 </p>
                             </td>
                         </tr>
@@ -95,7 +97,7 @@
                             <td>
                                 <textarea rows="3" type="text" name="displayEmail">${kwargs['displayEmail']}</textarea>
 
-                                <p class="help">Please enter alternate email addresses, web sites, IRC channels, IRC
+                                <p py:if="cfg.rBuilderOnline" class="help">Please enter alternate email addresses, web sites, IRC channels, IRC
                                 nicks, and any other information that will help members of the ${cfg.productName} 
                                 community contact you.</p>
                             </td>
@@ -105,7 +107,7 @@
                             <td>
                                 <textarea rows="6" name="blurb">${kwargs['blurb']}</textarea><br/>
 
-                                <p class="help">Please enter a short
+                                <p py:if="cfg.rBuilderOnline" class="help">Please enter a short
                                 biography or any other relevant information
                                 about yourself that you'd like to share
                                 with the ${cfg.productName} community.</p>
@@ -114,8 +116,8 @@
                     </table>
 
 
-                    <p><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')}</em></p>
-                    <p><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}</em></p>
+                    <p py:if="cfg.rBuilderOnline or cfg.tosLink"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.tosLink}" title="Terms of Service">Terms of Service</a></em></p>
+                    <p py:if="cfg.rBuilderOnline or cfg.privacyPolicyLink"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.privacyPolicyLink}" title="Privacy Policy">Privacy Policy</a></em></p>
                     <p><button id="createAccountSubmit" class="img" type="submit">
                         <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                     </button></p>

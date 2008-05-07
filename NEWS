@@ -4,17 +4,63 @@ Changes in @NEW@
 Web Front End Changes
 ---------------------
 
-* A bug that prevented a group trove from being cooked more than one
-  time by Group Builder has been corrected. (RBL-2570)
 * External projects configured for inbound mirroring can now be backed
   up. (RBL-2038)
+* "Projects" are now referred to as "products" in rBuilder Appliance.
+  (RBL-1641)
+* "Builds" are now referred to as "images". (RBL-2645)
+* The form for creating new products has been updated to ask for the project
+  title, short name, type (Appliance or Component) and initial version number
+  (RBL-2508), and the Repository Commits Email address (RBL-2590)
+* The initial setup page has a new option under "Repository Setup" to specify
+  the namespace to be used by products. (RBL-2564)
+* New products will have an initial development label created in the format
+  <shortname>.<domainname>@<namespace>:<shortname>-<version>-devel. (RBL-2508)
+* A bug that prevented a group trove from being cooked more than one time
+  by Group Builder has been corrected (rBuilder Online only). (RBL-2570)
+* The Group Builder has been removed from rBA, to be replaced by a different
+  mechanism to get appliances built quickly. (RBL-2514)
+* The Conary repository permission management web user interface has
+  been modified to use the term "Role" instead of "Group". (RBL-2580)
+* New appliance projects will be prepopulated with a sample group recipe ready
+  for extending. (RBL-2515)
+* The License and Crypto report has been improved.  Now only the
+  information is only displayed for packages, instead of displaying
+  the same information for every package component.  A link to the
+  full text of the license is provided if available. (RBL-2521)
+* The footer "Help" link has been replaced with a link for the User Guide, and
+  a link to the Administration Guide has been added for admin users. (RBL-2622)
+* It is now possible to choose a different anaconda-template,
+  anaconda-custom or media-template when editing an existing build.
+  (RBL-2172)
+* Groups can be added to releases now by creating an image-less build and then
+  adding it to a release (RBL-2665)
+* When publishing a release, there is now a checkbox option to publish the 
+  release to an Update Service (RBL-2541)
 * Xen-compatible Hard Disk images are no longer labelled as QEMU or
   Parallels-compatible. (RBL-1589)
+* Creating new products is now a two step guided process, with the secondstep 
+  consisting of creating an initial version for the product.  Each product
+  version can contain its own build definitions for launching multiple builds
+  at the same time. (RBL-2715)
 
 Build System Changes
 --------------------
 
 * Citrix XenServer (TM) is now an available image type. (RBL-2642)
+
+Internal Changes
+----------------
+* rBuilder now requires Conary 2.0. (RBL-2580)
+* New rBuilder installations are created using PostgreSQL as the repository
+  database.  Existing installations are given a new plugin that will migrate
+  existing Sqlite repositories to PostgreSQL.  (RBL-2650)
+* The same rBuilder codebase may be built for rBuilder Online as well as
+  rBuilder Appliance; for rBuilder Online, this means that the 'rBuilderOnline'
+  configuration parameter must be set to True. Additionally, links to legal
+  information is now managed outside the codebase; use "legaleseLink",
+  "privacyPolicyLink", and "tosLink" to point to legal information,
+  privacy policy and terms of service home pages, respectively.
 
 Command-Line Client Changes
 ---------------------------
@@ -27,8 +73,11 @@ Command-Line Client Changes
 Bug Fixes
 ---------
 
-* A bug that prevents image builds from succeeding if a project is
+* A bug that prevented image builds from succeeding when a project is
   hidden has been fixed. (RBL-2619)
+* A bug that would cause an Internal Server Error when attempting to
+  generate a License and Crypto report if the underlying Conary
+  repository operation failed has been fixed. (RBL-2595)
 * Commit mail, recent commits, and other data on installations migrated
   from rBuilder 3.x will now update correctly. (RBL-2648)
 * An error that occured when creating builds with custom

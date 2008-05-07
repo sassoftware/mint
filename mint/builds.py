@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -16,30 +16,12 @@ from mint import helperfuncs
 from mint import jobs
 
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
-from mint.mint_error import MintError, ParameterError
+from mint.mint_error import *
 
 from conary import versions
 from conary.deps import deps
 
 PROTOCOL_VERSION = 1
-
-class TroveNotSet(MintError):
-    def __str__(self):
-        return "This build is not associated with a group."
-
-class BuildMissing(MintError):
-    def __str__(self):
-        return "The requested build does not exist."
-
-class BuildDataNameError(MintError):
-    def __str__(self):
-        return self.str
-
-    def __init__(self, reason = None):
-        if reason is None:
-            self.str = "Named value is not in data template."
-        else:
-            self.str = reason
 
 class UrlDownloadsTable(database.DatabaseTable):
     name = "UrlDownloads"
@@ -198,6 +180,67 @@ def getImportantFlavors(buildFlavor):
             flavors.append(buildtypes.flavorFlagsFromId[id])
 
     return flavors
+
+
+def applyTemplatesToBuildDefinitions(buildDefinitions):
+    """
+    Applies default options (if not overridden) and validates the list of
+    buildDefinitions.
+
+    buildDefinition should be a list of dicts in a similar format as is
+    returned from proddef.ProductDefinition.getBuildDefinition.  The only
+    difference is that each dict should have _buildType key corrosponding to
+    build type id placed there by the web side.
+
+    Returns a modified list of dicts.
+    """
+    templatedBuildDefinitions = []
+    validationErrors = []
+
+    for buildDef in buildDefinitions:
+
+        imageKey = [k for k in buildDef.keys() if k.endswith('Image') or k == 'nakedGroup']
+
+        if not imageKey:
+            # Check for _buildType.
+            if buildDef.has_key('_buildType'):
+                imageKey = \
+                    buildtemplates.getDataTemplate(buildDef['_buildType']).xmlName
+                buildDef[imageKey] = buildDef.pop('_builddef', {})
+            else:
+                raise NoBuildImageTypeInBuildDefinition()
+        else:
+            imageKey = imageKey[0]
+
+        buildDefTemplate = buildtemplates.getDataTemplateByXmlName(imageKey)
+        buildDef['_buildType'] = buildDefTemplate.id
+        buildDef['_xmlName'] = buildDefTemplate.xmlName
+
+        buildOptionsUnicode = buildDef[imageKey]
+        buildOptions = {}
+        for k, v in buildOptionsUnicode.items():
+            buildOptions[str(k)] = str(v)
+
+        # Save all errors so that we can report them all at once.
+        try:
+            buildDefTemplate.validate(**buildOptions)
+        except BuildOptionValidationException, e:
+            validationErrors += e.errlist
+
+        # apply the default options to buildDef only if they aren't already
+        # specified.
+        for k, v in buildDefTemplate.getDefaultDict().items():
+            if not buildOptions.has_key(k):
+                buildOptions[k] = v
+
+        buildDef[imageKey] = buildOptions
+        templatedBuildDefinitions.append(buildDef)
+
+    # If we encountered any errors, throw an exception
+    if len(validationErrors) > 0:
+        raise BuildOptionValidationException(validationErrors)
+
+    return templatedBuildDefinitions
 
 
 class Build(database.TableObject):

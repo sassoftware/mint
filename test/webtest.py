@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -21,6 +21,7 @@ from mint import database
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
+from mint import helperfuncs
 
 from repostest import testRecipe
 
@@ -204,7 +205,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLogout(self):
         client, userid = self.quickMintUser('foouser', 'foopass')
         self.setOptIns('foouser')
-        self.newProject(client, 'Foo', 'foo')
+        hostname = "foo"
+        self.newProject(client, 'Foo', hostname)
 
         page = self.fetch('/')
         page = page.postForm(1, self.fetchWithRedirect,
@@ -335,10 +337,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Registration error not detected.')
         self.failIf('Password must be 6 characters or longer.' not in page.body,
                     'Registration error not detected.')
-        self.failIf('You must accept the Terms of Service' not in page.body,
-                    'Registration error not detected.')
-        self.failIf('You must accept the Privacy Policy' not in page.body,
-                    'Registration error not detected.')
+        if self.mintCfg.rBuilderOnline or self.mintCfg.tosLink:
+            self.failIf('You must accept the Terms of Service' not in page.body,
+                        'Registration error not detected.')
+        if self.mintCfg.rBuilderOnline or self.mintCfg.privacyPolicyLink:
+            self.failIf('You must accept the Privacy Policy' not in page.body,
+                        'Registration error not detected.')
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
@@ -385,20 +389,26 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(page.url.endswith(startUrl))
 
     def testNewProject(self):
+        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
         page = page.postForm(1, self.fetchWithRedirect,
-                {'title': 'Test Project', 'hostname': 'test'})
+                {'title': 'Test Project', 'shortname': 'test',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
-        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
+        self.failUnlessEqual(project.getApplianceValue(), 'no')
+        self.failUnlessEqual(project.getLabel(),
+            "test." + MINT_PROJECT_DOMAIN +
+            '@yournamespace:test-1.0-devel')
 
 
     def testApplianceFlagYesNewProject(self):
+        raise testsuite.SkipTestException("Skipping until fixed")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
@@ -412,85 +422,50 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(project.getApplianceValue(), 'yes')
 
     def testApplianceFlagNoNewProject(self):
+        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
         page = page.postForm(1, self.fetchWithRedirect,
-                {'title': 'Test Project 2', 'hostname': 'test2',
-                 'appliance': 'no'})
+                {'title': 'Test Project 2', 'shortname': 'test2',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test2")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
 
     def testApplianceFlagUnknownNewProject(self):
+        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
         page = page.postForm(1, self.fetchWithRedirect,
-                {'title': 'Test Project 3', 'hostname': 'test3',
-                 'appliance': 'unknown'})
+                {'title': 'Test Project 3', 'shortname': 'test3',
+                 'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test3")
-        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
+        self.failUnlessEqual(project.getApplianceValue(), 'no')
 
     def testEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         page = self.webLogin('foouser', 'foopass')
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertCode('/project/foo/editProject', code = 200)
-
-    def testApplianceFlagYesEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'yes'})
-
-        project = client.getProjectByHostname("foo")
-        self.failUnlessEqual(project.getApplianceValue(), 'yes')
-
-    def testApplianceFlagNoEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'no'})
-
-    def testApplianceFlagUnknownEditProject(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        page = self.webLogin('foouser', 'foopass')
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.assertCode('/project/foo/editProject', code = 200)
-        page = page.postForm(1, self.fetch,
-                {'name': 'Test Project', 'appliance': 'unknown'})
-        project = client.getProjectByHostname("foo")
-        self.failUnlessEqual(project.getApplianceValue(), 'unknown')
 
     def testProcessEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         page = self.webLogin('foouser', 'foopass')
 
         # we are working with the project server right now
@@ -498,40 +473,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'branch' : 'foo:bar',
                            'commitEmail': 'email@example.com'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
-        self.failUnlessEqual(project.getLabel(), 'foo.' + MINT_PROJECT_DOMAIN + '@foo:bar')
         self.failUnlessEqual(project.commitEmail, 'email@example.com')
-
-    def testEditProjectBranch(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
-        page = self.webLogin('foouser', 'foopass')
-
-        # edit the project label to something not related to project fqdn
-        cu = self.db.cursor()
-        cu.execute("UPDATE Labels SET label=? WHERE projectId=?",
-                   'bar.rpath.com@rpl:devel', projectId)
-        self.db.commit()
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.fetch('/project/foo/processEditProject', postdata =
-                          {'name'   : 'foo',
-                           'branch' : 'foo:bar'})
-
-        project = client.getProject(projectId)
-        self.assertEquals(project.getLabel(), 'bar.rpath.com@foo:bar')
 
     @testsuite.context("quick")
     def testSearchProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         project = client.getProject(projectId)
         project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
@@ -559,7 +513,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
@@ -570,7 +526,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testMembersPage(self):
         self.quickMintUser('testuser','testpass')
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         self.webLogin('foouser', 'foopass')
 
@@ -583,9 +541,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'level' : 0})
 
 
-    def testEmptyBuildsPage(self):
+    def testEmptyImagesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                            shortname=hostname, version="1.0", prodtype="Component")
 
         self.webLogin('foouser', 'foopass')
 
@@ -593,13 +553,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent('/project/foo/builds/',
-                                  content = 'contains no builds',
+                                  content = 'contains no images',
                                   code = [200])
 
     def testBuildsPage(self):
         raise testsuite.SkipTestException("Need MCP mocked in web environment somehow")
         client, userId = self.quickMintUser('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -631,7 +593,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testBuildsPageMultipleFileUrls(self):
         raise testsuite.SkipTestException("Need MCP mocked in web environment somehow")
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -674,7 +638,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testEmptyReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         self.webLogin('foouser', 'foopass')
 
@@ -689,7 +655,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -728,7 +696,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testReleasesPageMultipleFileUrls(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -777,7 +747,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testOldReleasePage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -818,7 +790,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
@@ -888,7 +862,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testGroupBuilderInResources(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         # test for group builder while not logged in
         page = self.assertNotContent('/project/foo/', code = [200],
@@ -896,18 +872,22 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                  server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
-        page = self.assertContent('/project/foo/', code = [200],
+
+        page = self.assertNotContent('/project/foo/', code = [200],
                                  content = "Group Builder",
                                  server = self.getProjectServerHostname())
 
     def testUploadKeyPage(self):
+        pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
         page = self.assertContent('/uploadKey', code = [200],
-                               content = "you are not a member of any projects")
+                               content = "you are not a member of any %ss"%pText)
         page = page.fetchWithRedirect('/logout')
 
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         page = self.assertContent('/uploadKey', code = [200],
                                  content = "Permission Denied")
@@ -923,7 +903,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         page = self.webLogin('foouser', 'foopass')
 
@@ -935,7 +917,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testCreateGroup(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         page = self.webLogin('foouser', 'foopass')
 
@@ -954,7 +938,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # the basic issue is a mixing of hidden and checkbox fields on the page
         raise testsuite.SkipTestException("webunit bug: mixing of hidden and checkbox fields on the page")
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         page = self.webLogin('foouser', 'foopass')
 
@@ -965,7 +951,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testPickArch(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         group = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
                                         'no desc', False)
@@ -982,7 +970,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         page = self.webLogin('foouser', 'foopass')
 
@@ -1055,7 +1045,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testUnconfirmedAccess(self):
         # make a project for later then forget this user
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = self.newProject(client, 'Foo', 'foo')
+        hostname = 'foo'
+        projectId = self.newProject(client, 'Foo', hostname)
 
         project = client.getProject(projectId)
 
@@ -1146,7 +1137,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testDownloadISO(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
         build.setFiles([[self.mintCfg.imagesPath + '/test.iso', 'Test Image']])
@@ -1174,7 +1167,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         if not os.path.exists("/usr/bin/curl"):
             raise testsuite.SkipTestException("please install curl")
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
         build.setFiles([[self.mintCfg.imagesPath + '/huge.iso', 'Test Image']])
@@ -1193,7 +1188,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testDownloadISOWithUrlType(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
         build.setFiles([[self.mintCfg.imagesPath + '/test.iso', 'Test Image']])
@@ -1251,7 +1248,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testDownloadISOWithAmazonOverride(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         build = client.newBuild(projectId, "Test Build")
         build.setBuildType(0)
         build.setFiles([['test.iso', 'Test Image']])
@@ -1299,7 +1298,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         project.editProject("http://example.com/",
@@ -1556,22 +1557,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             '/repos/testproject/troveInfo?t=foo:data',
             'Add to group-foo')
 
-    def testDocJail(self):
-        # ensure the legal pages implement a jail for documents. 404 on error
-        page = self.fetch("/legal?page=SOMETHING_NOT_THERE", ok_codes = [404])
-        page = self.fetch('/legal')
-        refPage = self.fetch('/legal?page=legal')
-
-        self.failIf(page.body != refPage.body,
-                    "Withholding page argument did not redirect to legal page")
-
-        # ensure help pages implement a jail for documents. redir to overview.
-        page = self.fetch('/help?page=../frontPage')
-        refPage = self.fetch('/help?page=overview')
-
-        self.failIf(page.body != refPage.body,
-                    "Illegal page reference was not contained.")
-
     def testBuild(self):
         raise testsuite.SkipTestException("MCP not stubbed in web code")
         client, userId = self.quickMintUser('foouser', 'foopass')
@@ -1656,10 +1641,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/userInfo?id=%d" % userId, code = [200],
             content = 'test at example.com')
 
-        projectId1 = client2.newProject("Foo", "testproject",
-                                        MINT_PROJECT_DOMAIN)
-        projectId2 = client2.newProject("Bar", "Barproject", 
-                                        MINT_PROJECT_DOMAIN)
+        hostname = 'testproject'
+        projectId1 = client2.newProject("Foo", hostname,
+                                        MINT_PROJECT_DOMAIN,
+                                        shortname=hostname,
+                                        version="1.0", prodtype="Component")
+        hostname="Barproject"
+        projectId2 = client2.newProject("Bar", hostname,
+                                        MINT_PROJECT_DOMAIN,
+                                        shortname=hostname,
+                                        version="1.0", prodtype="Component")
         adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
         adminClient.hideProject(projectId1)
         page = self.fetch('/userInfo?id=%d' % userId2)
@@ -1694,7 +1685,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('testuser', 'testpass')
         self.webLogin('testuser', 'testpass')
 
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        hostname="testproject"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
         project = client.getProject(projectId)
         project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
 
@@ -1705,7 +1698,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertCode("/rss?feed=newProjects", code = 200)
 
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Bar', 'foo', MINT_PROJECT_DOMAIN)
+        hostname="foo"
+        projectId = client.newProject('Bar', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")

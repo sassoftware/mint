@@ -1,7 +1,7 @@
 #!/usr/bin/python2.4
 # -*- mode: python -*-
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All rights reserved
 #
 
@@ -16,6 +16,7 @@ import tempfile
 import rephelp
 import mint_rephelp
 
+from mint import helperfuncs
 from conary import versions
 from conary import deps
 from conary.conaryclient import ConaryClient
@@ -30,9 +31,10 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
     def createMirrorUser(self, repos,
                          labelStr = "localhost.other.host@rpl:devel"):
         label = versions.Label(labelStr)
-        repos.addUser(label, "mirror", "mirror")
-        repos.addAcl(label, "mirror", None, None, True, False, False)
-        repos.setUserGroupCanMirror(label, "mirror", True)
+        user = 'mirror'
+        helperfuncs.addUserToRepository(repos, user, user, user, label)
+        repos.addAcl(label, "mirror", None, None, write=True, remove=False)
+        repos.setRoleCanMirror(label, "mirror", True)
 
     def createTroves(self, repos, start, count):
         for i in range(start, start + count):

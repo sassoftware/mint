@@ -6,7 +6,9 @@ javascript_files =\
 	mirror.js \
 	rpc.js	\
 	trovepicker.js \
-	repobrowser.js
+	repobrowser.js \
+	editversion.js \
+	jquery-1.2.3.min.js
 
 generated_files =\
 	buildtypes.js \

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2006 rPath, Inc
+// Copyright (C) 2006-2008 rPath, Inc
 // All Rights Reserved
 //
 
@@ -32,7 +32,13 @@ function disabledReturn() {
 }
 
 function buildTroveSpec(n, v, f) {
-    return n + "=" + v + "[" + f + "]";
+    var ts = n + "=" + v;
+    // flavor may be null for "all flavors"
+    if(f) {
+        ts += "[" + f + "]";
+    }
+
+    return ts;
 }
 
 function trailingRevision(v) {
@@ -42,13 +48,15 @@ function trailingRevision(v) {
 }
 
 // ctor
-function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath, allowNone) {
+function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath, 
+                     allowNone, forceAllFlavors) {
     this.projectId = projectId;
     this.serverName = serverName;
     this.troveName = troveName;
     this.elId = pickerId;
     staticPath = mintStaticPath;
     this.allowNone = allowNone;
+    this.forceAllFlavors = forceAllFlavors;
 
     if(troveName) {
         this.allowNameChoice = false;
@@ -64,12 +72,13 @@ TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
 TrovePicker.prototype.domCache = {};
 TrovePicker.prototype.allowNameChoice = true;
-TrovePicker.prototype.aloowNone = false;
+TrovePicker.prototype.allowNone = false;
 TrovePicker.prototype.archFilter = Array();
 TrovePicker.prototype.flavFilter = Array();
 TrovePicker.prototype.buildChange = null;
 TrovePicker.prototype.stage = null;
 TrovePicker.prototype.customSpec = null;
+TrovePicker.prototype.forceAllFlavors = false;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -136,9 +145,9 @@ TrovePicker.prototype.pickFlavor = function(e) {
     replaceChildNodes($(this.elId + 'return'), returnLink);
     replaceChildNodes($(this.elId + 'prompt'), "Selected group:");
 
+    var sb = $('submitButton');
+    sb.disabled = false;
     if(this.elId == "distTrove") {
-        var sb = $('submitButton');
-        sb.disabled = false;
         handleBuildTypes(f);
     }
 }
@@ -159,41 +168,55 @@ TrovePicker.prototype.pickNoTrove = function(e) {
     returnLink.troveName = n;
     connect(returnLink, "onclick", this, "getAllTroveLabels");
     replaceChildNodes($(this.elId + 'return'), returnLink);
+    var sb = $('submitButton');
+    sb.disabled = false;
 }
 
 // Display flavors in the dom
 TrovePicker.prototype.displayFlavors = function() {
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
-
-    for(var i in this.flavorCache[this.version]) {
-        var omitFlavor = false;
-        // Filter by arch
-        for (var j in this.archFilter) {
-            if (String(this.flavorCache[this.version][i]).match(this.archFilter[j]) != null) {
-                omitFlavor = true;;
-            }
-        }
-        // Filter by flavor
-        for (var j in this.flavFilter) {
-            if (String(this.flavorCache[this.version][i]).split(',').indexOf(this.flavFilter[j]) != -1) {
-                omitFlavor = true;
-            }
-        }
-        if (omitFlavor) {
-            continue;
-        }
-        flavor = this.flavorCache[this.version][i];
-        var myId = "flavorId" + i;
-        link = forwardLink({'id': myId}, flavor[0]);
+    
+    if(this.forceAllFlavors) {
+        var myId = "flavorId" + 0;
+        link = forwardLink({'id': myId}, 'All Flavors');
         link.name = this.troveName;
         link.version = this.version;
-        link.flavor = flavor[1];
-        link.shortFlavor = flavor[0];
+        link.flavor = null;  //we want all flavors
+        link.shortFlavor = 'All Flavors';
         link.label = this.label;
         connect(link, "onclick", this, "pickFlavor");
         appendChildNodes(ul, link);
-    }
+    } else {
+	    for(var i in this.flavorCache[this.version]) {
+	        var omitFlavor = false;
+	        // Filter by arch
+	        for (var j in this.archFilter) {
+	            if (String(this.flavorCache[this.version][i]).match(this.archFilter[j]) != null) {
+	                omitFlavor = true;;
+	            }
+	        }
+	        // Filter by flavor
+	        for (var j in this.flavFilter) {
+	            if (String(this.flavorCache[this.version][i]).split(',').indexOf(this.flavFilter[j]) != -1) {
+	                omitFlavor = true;
+	            }
+	        }
+	        if (omitFlavor) {
+	            continue;
+	        }
+	        flavor = this.flavorCache[this.version][i];
+	        var myId = "flavorId" + i;
+	        link = forwardLink({'id': myId}, flavor[0]);
+	        link.name = this.troveName;
+	        link.version = this.version;
+	        link.flavor = flavor[1];
+	        link.shortFlavor = flavor[0];
+	        link.label = this.label;
+	        connect(link, "onclick", this, "pickFlavor");
+	        appendChildNodes(ul, link);
+	    }
+	}
     swapDOM(oldList, ul);
 }
 
@@ -221,6 +244,9 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     this.label = e.src().label;
     var par = this;
     var key = this.label + "=" + this.troveName;
+
+    var sb = $('submitButton');
+    sb.disabled = true;
 
     var setupList = function(req) {
         var versionDict = req[0];
@@ -276,6 +302,9 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 TrovePicker.prototype.getCustomVersion = function(e) {
     this.stage = 'custom_version';
 
+    var sb = $('submitButton');
+    sb.disabled = true;
+
     oldList = $(this.elId + 'selectionList');
     newList = UL({ 'id': this.elId + 'selectionList' });
 
@@ -317,6 +346,8 @@ TrovePicker.prototype.pickCustomVersion = function(e) {
     returnLink = A(null, returnImg(), " Back");
     connect(returnLink, "onclick", this, "getCustomVersion");
     replaceChildNodes($(this.elId + 'return'), returnLink);
+    var sb = $('submitButton');
+    sb.disabled = false;
 }
 
 // Fetch all labels a trove exists on a given server
@@ -327,6 +358,9 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
     }
     var key = this.serverName + "=" + this.troveName;
     var par = this; // save the parent for the subfunction's use
+
+    var sb = $('submitButton');
+    sb.disabled = true;
 
     var setupList = function(labelList) {
         oldList = $(par.elId + 'selectionList');
@@ -389,12 +423,14 @@ TrovePicker.prototype.getGroupTroves = function() {
     this.stage = 'group';
     var par = this;
 
+    var sb = $('submitButton');
+    sb.disabled = true;
     var setupList = function(troveList) {
         oldList = $(par.elId + 'selectionList');
         ul = UL({'id': par.elId + 'selectionList'});
 
         if(troveList.length < 1) {
-            appendChildNodes(ul, LI(null, "No groups found. Cook a group with the Group Builder and try again."));
+            appendChildNodes(ul, LI(null, "No groups found. Cook a group and try again."));
         }
         for(var i in troveList) {
             link = forwardLink(null, troveList[i]);

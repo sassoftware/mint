@@ -9,7 +9,7 @@ This mock object implementation is meant to be very forgiving - it returns a
 new child Mock Object for every attribute accessed, and a mock object is
 returned from every method call.
 
-It is the tester's job to enabled the calls that they are interested in
+It is the tester's job to enable the calls that they are interested in
 testing, all calls where the return value of the call and side effects are not
 recorded (logging, for example) are likely to succeed w/o effort.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -132,18 +132,6 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertRaises(HttpNotFound, self.sh.handle, context)
 
     @testsuite.context("more_cowbell")
-    @fixtures.fixture("Full")
-    def testSetupConfig(self, db, data):
-        """ Test configuration generation """
-        self.sh.req = FakeRequest('foo.test.local', 'GET', '/config')
-        client = self.getClient('admin')
-        auth = client.checkAuth()
-        context = {'auth': auth, 'cmd': 'config', 'client': client}
-        func = self.sh.handle(context)
-        ret = func(auth)
-        self.failUnless('configured' in ret)
-
-    @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")
     def testProcessSetupAndRestart(self, db, data):
         """ Test process setup"""
@@ -151,6 +139,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'siteDomainName': 'rpath.local',
                    'corpSite': 'http://foo.bar.baz',
                    'defaultBranch': 'foo:bar',
+                   'namespace': 'foospace',
                    'new_username': 'fooadmin',
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
@@ -187,11 +176,14 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.hostName, 'foo')
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
-        self.assertEqual(newCfg.defaultBranch, 'foo:bar')
+        self.assertEqual(newCfg.namespace, 'foospace')
+        self.assertEqual(newCfg.defaultBranch, self.cfg.defaultBranch)
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
+        self.assertTrue(len(newCfg.mirrorRolePass) == 128)
+        for x in newCfg.mirrorRolePass:
+            self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")

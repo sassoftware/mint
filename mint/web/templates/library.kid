@@ -6,7 +6,7 @@ from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
 
-from mint.web.templatesupport import injectVersion, dictToJS
+from mint.web.templatesupport import injectVersion, dictToJS, projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -58,7 +58,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
               <thead>
                 <tr>
                     <th colspan="2">Trove</th>
-                    <th>Project</th>
+                    <th>${projectText().title()}</th>
                     <th>Del</th>
                 </tr>
               </thead>
@@ -75,7 +75,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 <tr id="groupbuilder-example" style="display:none">
                     <td id="groupbuilder-example versionLock"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
                     <td id="groupbuilder-example name"><a href="#">Trove</a></td>
-                    <td id="groupbuilder-example projectName">Project</td>
+                    <td id="groupbuilder-example projectName">${projectText().title()}</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 </tbody>
@@ -94,7 +94,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
       <div id="builds" class="palette" py:if="builds">
         <h3 onclick="javascript:toggle_display('recentBuild_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Recently Published Builds
+            Recently Published Images
         </h3>
         <div id="recentBuild_items" style="display: $display">
           <ul>

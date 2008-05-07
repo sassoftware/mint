@@ -19,6 +19,7 @@ kid_files = \
 	editProject.kid		\
 	editBuild.kid		\
 	editPubrelease.kid	\
+	editVersion.kid		\
 	error.kid		\
 	findRefs.kid		\
 	forgotPassword.kid	\
@@ -51,7 +52,7 @@ kid_files = \
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid		\
-	viewJoinRequest.kid \
+	viewJoinRequest.kid	\
 	confirmPublish.kid
 
 python_files = __init__.py

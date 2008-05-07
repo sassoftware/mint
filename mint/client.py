@@ -9,22 +9,23 @@ import sys
 import time
 import xmlrpclib
 
+from mint import builds
 from mint import database
 from mint import ec2
 from mint import grouptrove
 from mint import jobs
+from mint import mint_error
 from mint import projects
-from mint import builds
 from mint import pubreleases
 from mint import users
 from mint.mint_error import *
-from mint.searcher import SearchTermsError
 
 from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
 
-CLIENT_VERSIONS = [4, 5]
+# server.py has a history of XMLRPC API changes
+CLIENT_VERSIONS = [6]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -45,7 +46,7 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown"):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version="", commitEmail=""):
         """
         Create a new project.
         @param name: name of new project
@@ -55,9 +56,13 @@ class MintClient:
         @param desc: description of new project
         @param appliance: whether or not this project represents a
                a software appliance ('yes', 'no', 'unknown')
+        @param shortname: the shortname of the product being created
+        @param prodtype: the type of product being created.
+        @param version:  the initial product version.
+        @param commitEmail: email address to which commit messages are sent.
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -351,6 +356,7 @@ class MintClient:
         @param buildXml: xml data describing the builds
         @returns: a list of objects representing the new builds
         """
+        # TODO refactor to work with product definitions
         buildIds = self.server.newBuildsFromXml(projectId, label, buildXml)
         return [self.getBuild(x) for x in buildIds]
 
@@ -361,6 +367,7 @@ class MintClient:
         @param label: the label to store the trove on.
         @param buildXml: xml data describing the builds
         """
+        # TODO refactor to work with product definitions
         return self.server.commitBuildXml(projectId, label, buildXml)
 
     def checkoutBuildXml(self, projectId, label):
@@ -370,6 +377,7 @@ class MintClient:
         @param label: the label to store the trove on.
         @returns: a string containing xml
         """
+        # TODO refactor to work with product definitions
         return self.server.checkoutBuildXml(projectId, label)
 
     def getBuildFilenames(self, buildId):
@@ -581,13 +589,9 @@ class MintClient:
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
                 allLabels, recurse, id)
 
-    def addOutboundMirrorTarget(self, outboundMirrorId, targetUrl,
-            mirroruser, mirrorpass):
-        return self.server.addOutboundMirrorTarget(outboundMirrorId,
-                targetUrl, mirroruser, mirrorpass)
-
-    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.server.delOutboundMirrorTarget(outboundMirrorTargetId)
+    def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
+        return self.server.setOutboundMirrorTargets(outboundMirrorId,
+                updateServiceIds)
 
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
@@ -614,9 +618,6 @@ class MintClient:
     def getOutboundMirror(self, outboundMirrorId):
         return self.server.getOutboundMirror(outboundMirrorId)
 
-    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.server.getOutboundMirrorTarget(outboundMirrorTargetId)
-
     def getOutboundMirrorTargets(self, outboundMirrorId):
         return self.server.getOutboundMirrorTargets(outboundMirrorId)
 
@@ -631,6 +632,23 @@ class MintClient:
 
     def getOutboundMirrorGroups(self, outboundMirrorId):
         return self.server.getOutboundMirrorGroups(outboundMirrorId)
+
+    def addUpdateService(self, hostname, adminUser, adminPassword,
+            description):
+        return self.server.addUpdateService(hostname, adminUser,
+                adminPassword, description)
+
+    def getUpdateService(self, upsrvId):
+        return self.server.getUpdateService(upsrvId)
+
+    def editUpdateService(self, upsrvId, newDesc):
+        return self.server.editUpdateService(upsrvId, newDesc)
+
+    def delUpdateService(self, upsrvId):
+        return self.server.delUpdateService(upsrvId)
+
+    def getUpdateServiceList(self):
+        return self.server.getUpdateServiceList()
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
@@ -738,6 +756,32 @@ class MintClient:
         return self.server.setBuildAMIDataSafe(buildId, outputToken,
                 amiId, amiManifestName)
 
+    def addProductVersion(self, projectId, name, description=''):
+        return self.server.addProductVersion(projectId, name, description)
+
+    def getProductVersion(self, versionId):
+        return self.server.getProductVersion(versionId)
+
+    def getProductDefinitionForVersion(self, versionId):
+        return self.server.getProductDefinitionForVersion(versionId)
+
+    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+        return self.server.setProductDefinitionForVersion(versionId,
+                productDefinitionDict)
+
+    def editProductVersion(self, versionId, newDesc):
+        return self.server.editProductVersion(versionId, newDesc)
+
+    def getProductVersionListForProduct(self, projectId):
+        return self.server.getProductVersionListForProduct(projectId)
+
+    def getProductVersionProdDefLabel(self, versionId):
+        return self.server.getProductVersionProdDefLabel(versionId)
+
+    def newBuildsFromProductDefinition(self, versionId, troveSpec):
+        return self.server.newBuildsFromProductDefinition(versionId, troveSpec)
+
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
@@ -759,84 +803,12 @@ class _Method(xmlrpclib._Method):
             self.handleError(result)
 
     def handleError(self, result):
-        exceptionName = result[0]
-        exceptionArgs = result[1:]
-
-        if exceptionName == "UserAlreadyExists":
-            raise users.UserAlreadyExists
-        elif exceptionName == "DuplicateItem":
-            raise database.DuplicateItem(exceptionArgs[0])
-        elif exceptionName == "DuplicateHostname":
-            raise projects.DuplicateHostname()
-        elif exceptionName == "DuplicateName":
-            raise projects.DuplicateName()
-        elif exceptionName == "ItemNotFound":
-            raise database.ItemNotFound(exceptionArgs[0])
-        elif exceptionName == "FileMissing":
-            raise FileMissing(exceptionArgs[0])
-        elif exceptionName == "MethodNotSupported":
-            raise MethodNotSupported(exceptionArgs[0])
-        elif exceptionName == "SearchTermsError":
-            raise SearchTermsError(exceptionArgs[0])
-        elif exceptionName == "AlreadyConfirmed":
-            raise users.AlreadyConfirmed(exceptionArgs[0])
-        elif exceptionName == "GroupAlreadyExists":
-            raise users.GroupAlreadyExists(exceptionArgs[0])
-        elif exceptionName == "InvalidHostname":
-            raise projects.InvalidHostname(exceptionArgs[0])
-        elif exceptionName == "MailError":
-            raise users.MailError(exceptionArgs[0])
-        elif exceptionName == "DuplicateJob":
-            raise jobs.DuplicateJob(exceptionArgs[0])
-        elif exceptionName == "OpenError":
-            raise repository.OpenError(exceptionArgs[0])
-        elif exceptionName == "PermissionDenied":
-            raise PermissionDenied(exceptionArgs[0])
-        elif exceptionName == "LastOwner":
-            raise users.LastOwner(exceptionArgs[0])
-        elif exceptionName == "UserInduction":
-            raise users.UserInduction(exceptionArgs[0])
-        elif exceptionName == "UserNotFound":
-            raise UserNotFound(exceptionArgs[0])
-        elif exceptionName == "BuildPublished":
-            raise BuildPublished(exceptionArgs[0])
-        elif exceptionName == "BuildMissing":
-            raise BuildMissing(exceptionArgs[0])
-        elif exceptionName == "BuildEmpty":
-            raise BuildEmpty(exceptionArgs[0])
-        elif exceptionName == "AuthRepoError":
-            raise users.AuthRepoError(exceptionArgs[0])
-        elif exceptionName == "LabelMissing":
-            raise projects.LabelMissing(exceptionArgs[0])
-        elif exceptionName == "UserAlreadyAdmin":
-            raise UserAlreadyAdmin(exceptionArgs[0])
-        elif exceptionName == "AdminSelfDemotion":
-            raise AdminSelfDemotion(exceptionArgs[0])
-        elif exceptionName == "JobserverVersionMismatch":
-            raise JobserverVersionMismatch(exceptionArgs[0])
-        elif exceptionName == "MaintenanceMode":
-            raise MaintenanceMode(exceptionArgs[0])
-        elif exceptionName == "LastOwner":
-            raise users.LastOwner(exceptionArgs[0])
-        elif exceptionName == "ParameterError":
-            raise ParameterError(exceptionArgs[0])
-        elif exceptionName == "AMIBuildNotConfigured":
-            raise AMIBuildNotConfigured(exceptionArgs[0])
-        elif exceptionName == "DatabaseTableMissing":
-            raise DatabaseTableMissing(exceptionArgs[0])
-        elif exceptionName == "DatabaseVersionMismatch":
-            raise DatabaseVersionMismatch(exceptionArgs[0])
-        elif exceptionName == "NotEntitledError":
-            raise NotEntitledError(exceptionArgs[0])
+        exceptionName, exceptionArgs = result
+        if exceptionName in mint_error.__all__:
+            cls = getattr(mint_error, exceptionName)
+            raise cls.thaw(exceptionArgs)
         else:
             raise UnknownException(exceptionName, exceptionArgs)
-
-class MethodNotSupported(MintError):
-    def __init__(self, method):
-        self.method = method
-
-    def __str__(self):
-        return "method not supported by XMLRPC server: %s" % self.method
 
 def upstream(version):
     """
