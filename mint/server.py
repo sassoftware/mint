@@ -81,6 +81,8 @@ from conary.dbstore import sqlerrors, sqllib
 from conary import checkin
 from conary.build import use
 
+from rpath_common.proddef import api1 as proddef
+
 try:
     # Conary 2
     from conary.repository.netrepos.reposlog \
@@ -4620,9 +4622,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
-        # TODO figure out where the real imports are going to be
-        import proddef
-
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         projectCfg = project.getConaryConfig()
@@ -4649,12 +4648,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except KeyError:
             raise ProductDefinitionVersionNotFound()
 
-        pd = proddef.ProductDefinition(xml=xml)
+        pd = proddef.ProductDefinition(fromStream=xml)
 
-        pdDict = dict(baseFlavor=pd.getBaseFlavor(),
-                      stages=pd.getStages(),
-                      upstreamSources=pd.getUpstreamSources(),
-                      buildDefinition=pd.getBuildDefinition())
+        stages = [dict(name=s.name, label=s.label) for s in pd.getStages()]
+        sources = [dict(troveName=s.troveName, label=s.label) \
+                   for s in pd.getUpstreamSources()]
+        buildDefs = [{'name' : b.name,
+                      'baseFlavor' : b.baseFlavor,
+                      'byDefault' : b.byDefault,
+                      b.imageType.tag : b.imageType.fields}
+                     for b in pd.getBuildDefinitions()]
+
+        pdDict = dict(baseFlavor=pd.getBaseFlavor() or '',
+                      stages=stages,
+                      upstreamSources=sources,
+                      buildDefinition=buildDefs)
 
         return pdDict
 
@@ -4662,12 +4670,33 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(int, dict)
     def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
-        # TODO figure out where the real imports are going to be
-        import proddef
-
         # Convert productDefinitionDict to Xml.
-        pd = proddef.ProductDefinition(productDefinitionDict)
-        pdXml = pd.toXml()
+        pd = proddef.ProductDefinition()
+
+        pd.setBaseFlavor(productDefinitionDict.get('baseFlavor', ''))
+
+        # Add each stage defined in the dict to pd.
+        for stage in productDefinitionDict.get('stages', []):
+            pd.addStage(stage['name'], stage['label'])
+
+        # Add each build definition defined in the dict to pd.
+        for buildDefn in productDefinitionDict.get('buildDefinition', []):
+            name = buildDefn.get('name', '')
+            baseFlavor = buildDefn.get('baseFlavor', '')
+            imageKey = buildDefn.get('_xmlName', '')
+            imageType = proddef.ProductDefinition.imageType(imageKey, 
+                            buildDefn.get(imageKey, {})) 
+            pd.addBuildDefinition(name=name, baseFlavor=baseFlavor, 
+                                  imageType=imageType)
+
+        # Add each upstream source defined in the dict to pd.
+        for us in productDefinitionDict.get('upstreamSources', []):
+            pd.addUpstreamSource(us['troveName'], us['label'])
+
+        # Create an empty StringIO object for the serialization of pd.
+        pdStream = StringIO.StringIO()
+        pd.serialize(pdStream)
+        pdXml = pdStream.getvalue()
 
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
