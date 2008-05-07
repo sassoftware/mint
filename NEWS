@@ -43,6 +43,9 @@ Web Front End Changes
   consisting of creating an initial version for the product.  Each product
   version can contain its own build definitions for launching multiple builds
   at the same time. (RBL-2715)
+* Published releases can now be marked for mirroring. When the project
+  is configured appropriately, this will result in only published
+  releases being mirrored to the Update Service. (RBL-2546)
 
 Build System Changes
 --------------------
