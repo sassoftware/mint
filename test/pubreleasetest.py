@@ -33,12 +33,6 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         self.failUnless(pubRelease.id == pubRelease.pubReleaseId,
                 "id and pubReleaseId should be identical")
 
-        # make sure the mirror role exists and it can mirror
-        label = versions.Label(project.getLabel())
-        repo = client.server._server._getProjectRepo(project)
-        self.assertTrue('mirror' in repo.listRoles(label))
-        self.assertTrue(self.getMirrorAcl(project, 'mirror'))
-
         # check the timeCreated and createdBy fields
         # fixture creates the published release using the owner's id
         self.failUnless(pubRelease.timeCreated > 0, "timeCreated not set")
@@ -185,6 +179,39 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         self.failUnlessEqual(pubRelease.publishedBy, data['owner'],
                 "Release wasn't marked with the appropriate publisher")
         self.failUnless(pubRelease.isPublished())
+
+    @fixtures.fixture("Full")
+    def testGetMirrorableReleases(self, db, data):
+        '''
+        Check that publishing and unpublishing sets the mirrorability
+        of the associated releases and that
+        I{getMirrorableReleasesByProject} reflects this.
+
+        @tests: RBL-2546
+        '''
+        client = self.getClient("owner")
+
+        # Check that there is nothing mirrorable initially
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [])
+
+        # Publish a release
+        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease.publish(shouldMirror=True)
+
+        # Now check that it shows up in the mirrorable list
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [data['pubReleaseId']])
+
+        # Unpublish it
+        pubRelease.unpublish()
+
+        # And check that it's not mirrorable anymore
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [])
 
     @fixtures.fixture("Full")
     def testDeleteBuildFromPublishedRelease(self, db, data):
@@ -527,9 +554,9 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         client = self.getClient('owner')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         pubRel.publish()
-        pubRel.unpublish(unpubtorus=False)
+        pubRel.unpublish()
         try:
-            pubRel.unpublish(unpubtorus=False)
+            pubRel.unpublish()
             self.fail("Should have failed with PublishedReleaseNotPublished")
         except PublishedReleaseNotPublished:
             # do nothing, expected
@@ -551,86 +578,6 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
         client = self.getClient('owner')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         assert(pubRel.getUniqueBuildTypes() == [(2, 'x86_64', [])])
-
-class PublishedReleaseRepoTest(MintRepositoryHelper):
-    def testPublishTorUS(self):
-
-        repos = self.openRepository()        
-        client, userId = MintRepositoryHelper.quickMintUser(self, 
-            "testuser", "testpass")
-        projectId = MintRepositoryHelper.newProject(self, client)
-        project = client.getProject(projectId)
-        cfg = project.getConaryConfig()
-        nc = ConaryClient(cfg).getRepos()
-        
-        # add an x86 trove
-        flavor = "is:x86"
-        self.addComponent("test:runtime", "1.0", flavor=flavor)
-        self.addCollection("test", "1.0", [(":runtime", "1.0", flavor) ])
-        self.addCollection("group-core", "1.0", [("test", "1.0" , flavor)])
-        self.addCollection("group-core", "1.0-1-2", [("test", "1.0" , flavor)])
-
-        # add and x86_64 trove
-        flavor = "is:x86_64"
-        self.addComponent("test:runtime", "1.0", flavor=flavor)
-        self.addCollection("test", "1.0", [(":runtime", "1.0", flavor) ])
-        self.addCollection("group-dist", "1.0", [("test", "1.0" , flavor)])
-        self.addCollection("group-dist", "1.0-1-2", [("test", "1.0" , flavor)])
-        
-        # create some builds
-        build = client.newBuild(projectId, "Test Imageless Build")
-        build.setTrove("group-core", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
-        build.setBuildType(buildtypes.IMAGELESS)
-        build.setFiles([["file", "file title 1"]])
-
-        build2 = client.newBuild(projectId, "Test Build 2")
-        build2.setTrove("group-dist", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86_64")
-        build2.setBuildType(buildtypes.INSTALLABLE_ISO)
-        build2.setFiles([["file2", "file title 2"]])
-
-        # create a release and publish it
-        pubRel = client.newPublishedRelease(projectId)
-        pubRel.name = "Some release"
-        pubRel.version = "1.0"
-        pubRel.addBuild(build.id)
-        pubRel.addBuild(build2.id)
-        pubRel.save()
-        pubRel.publish()
-
-        # make sure mirror user does not have trove access
-        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
-            'mirror')
-        self.assertTrue(troves == [])
-
-        # re-publish as mirror-able
-        pubRel.unpublish()
-        pubRel.publish(pubtorus=True)
-
-        # make sure mirror user has trove access
-        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
-            'mirror')
-        gt1 = troves[0][0]
-        version1 = troves[0][1].asString()
-        flavor1 = str(troves[0][2])
-        gt2 = troves[1][0]
-        version2 = troves[1][1].asString()
-        flavor2 = str(troves[1][2])
-        self.assertTrue(gt1 == 'group-core')
-        self.assertTrue(version1 == "/testproject." + MINT_PROJECT_DOMAIN \
-            + "@rpl:devel/1.0-1-2")
-        self.assertTrue(flavor1 == 'is: x86')
-        self.assertTrue(gt2 == 'group-dist')
-        self.assertTrue(version2 == "/testproject." + MINT_PROJECT_DOMAIN \
-            + "@rpl:devel/1.0-1-2")
-        self.assertTrue(flavor2 == 'is: x86_64')
-
-        # unpublish and make sure trove access has been removed
-        pubRel.unpublish()
-        troves = nc.listTroveAccess("testproject." + MINT_PROJECT_DOMAIN,
-            'mirror')
-        self.assertTrue(troves == [])
 
 
 if __name__ == "__main__":

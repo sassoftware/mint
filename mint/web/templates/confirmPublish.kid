@@ -33,8 +33,11 @@ from mint.web.templatesupport import projectText
             <table>
                 <tr>
                     <td>
-                        <input id="pubTorUS" class="check" type="checkbox" name="pubTorUS" value="${pubtorus}" py:attrs="{'checked': pubtorus and 'checked' or None}" />
-                        <label for="pubTorUS" style="width: 50%;">Publish this release to the Update Service</label>
+                        <label>
+                            <input id="shouldMirror" name="shouldMirror" class="check" type="checkbox"
+                                value="1" py:attrs="{'checked': shouldMirror and 'checked' or None}" />
+                            Publish this release to the Update Service
+                        </label>
                     </td>
                 </tr>
                 <tr><td>

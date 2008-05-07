@@ -233,7 +233,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 1)
+    Version = (45, 2)
 
     # 45.0
     # - Create UpdateServices table
@@ -348,6 +348,16 @@ class MigrateTo_45(SchemaMigration):
                                     "prodtype VARCHAR(128) DEFAULT ''",
                                     "version VARCHAR(128) DEFAULT ''")
 
+        return True
+
+    # 45.2
+    # - Add columns to support mirroring of published releases
+    def migrate2(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'PublishedReleases', "shouldMirror INTEGER NOT NULL DEFAULT 0",
+                                             "timeMirrored INTEGER")
+        add_columns(cu, 'OutboundMirrors',
+            "useReleases INTEGER NOT NULL DEFAULT 0")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

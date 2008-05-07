@@ -915,7 +915,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         rel2 = client.getPublishedRelease(2)
         # don't try to remove trove access during unpub since the trove doesn't
         # really exist
-        rel2.unpublish(unpubtorus=False)
+        rel2.unpublish()
         rel2.removeBuild(2)
         rel1.addBuild(2)
 

@@ -537,15 +537,15 @@ class AdminHandler(WebHandler):
     def outbound(self, *args, **kwargs):
         rows = []
         mirrors = self.client.getOutboundMirrors()
-        for i, x in enumerate(mirrors):
-            outboundMirrorId, projectId, label, \
-                allLabels, recurse, matchStrings, order, fullSync = x
+        for i, (outboundMirrorId, projectId, label, allLabels, recurse, \
+          matchStrings, order, fullSync, useReleases) in enumerate(mirrors):
             project = self.client.getProject(projectId)
             mirrorData = {}
             mirrorData['id'] = outboundMirrorId
             mirrorData['projectName'] = project.name
             mirrorData['projectUrl'] = project.getUrl()
             mirrorData['orderHTML'] = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
+            mirrorData['useReleases'] = int(useReleases)
             mirrorData['allLabels'] = allLabels
             if not allLabels:
                 mirrorData['labels'] = label.split(' ')
@@ -569,6 +569,7 @@ class AdminHandler(WebHandler):
             obmt = self.client.getOutboundMirrorTargets(id)
             kwargs.update({'projectId': obm['sourceProjectId'],
                            'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
+                           'useReleases': int(obm['useReleases']),
                            'allLabels': obm['allLabels'],
                            'selectedLabels': simplejson.dumps(obm['targetLabels'].split()),
                            'selectedGroups': simplejson.dumps(obmg),
@@ -578,6 +579,7 @@ class AdminHandler(WebHandler):
         else:
             kwargs.update({'projectId': -1,
                            'mirrorSources': 0,
+                           'useReleases': 1,
                            'allLabels': 1,
                            'selectedLabels': simplejson.dumps([]),
                            'selectedGroups': simplejson.dumps([]),
@@ -588,48 +590,52 @@ class AdminHandler(WebHandler):
 
 
     @intFields(projectId = None, id = -1)
-    @boolFields(mirrorSources = False, allLabels = False)
+    @boolFields(mirrorSources=False, allLabels=False, useReleases=True)
     @listFields(str, labelList=[])
     @listFields(str, groups=[])
     @listFields(int, selectedTargets=[])
     @strFields(mirrorBy = 'label', action = "Cancel")
     def processEditOutbound(self, projectId, mirrorSources, allLabels,
             labelList, id, mirrorBy, groups, action, selectedTargets,
-            *args, **kwargs):
+            useReleases, *args, **kwargs):
 
         if action == "Cancel":
             self._redirect("http://%s%sadmin/outbound" %
                 (self.cfg.siteHost, self.cfg.basePath))
 
-        inputKwargs = {'projectId': projectId,
-            'mirrorSources': mirrorSources, 'allLabels': allLabels,
-            'selectedLabels': labelList, 'id': id, 'selectedGroups': groups,
-            'mirrorBy': mirrorBy, 'selectedTargets': selectedTargets }
+        inputKwargs = {}
+        for key in ('projectId', 'mirrorSources', 'allLabels', 'id',
+          'mirrorBy', 'selectedTargets', 'useReleases'):
+            inputKwargs[key] = locals()[key]
+        inputKwargs['selectedLabels'] = labelList
+        inputKwargs['selectedGroups'] = groups
 
-        if not labelList and not allLabels:
-            self._addErrors("No labels were selected")
+        if not useReleases:
+            if not labelList and not allLabels:
+                self._addErrors("No labels were selected")
 
-        # compute the match troves expression
-        matchTroveList = []
-        if not mirrorSources:
-            matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
-        if mirrorBy == 'group':
-            if not groups:
-                self._addErrors("No groups were selected")
+            # compute the match troves expression
+            matchTroveList = []
+            if not mirrorSources:
+                matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+            if mirrorBy == 'group':
+                if not groups:
+                    self._addErrors("No groups were selected")
+                else:
+                    matchTroveList.extend(['+%s' % (g,) for g in groups])
             else:
-                matchTroveList.extend(['+%s' % (g,) for g in groups])
-        else:
-            # make sure we include everything else if we are not in
-            # mirror by group mode
-            matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
+                # make sure we include everything else if we are not in
+                # mirror by group mode
+                matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
             project = self.client.getProject(projectId)
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
-                    labelList, allLabels, recurse, id=id)
-            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                               matchTroveList)
+                    labelList, allLabels, recurse, useReleases, id=id)
+            if not useReleases:
+                self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                    matchTroveList)
             self.client.setOutboundMirrorTargets(outboundMirrorId,
                     selectedTargets)
             self._redirect("http://%s%sadmin/outbound" %

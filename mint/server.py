@@ -458,30 +458,6 @@ class MintServer(object):
                 conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
 
-    def _addMirrorRoleToProject(self, project):
-        role = 'mirror'
-        user = 'mirror'
-        repo = self._getProjectRepo(project)
-        label = versions.Label(project.getLabel())
-        try:
-            try:
-                self._addUserToProject(project, user, self.cfg.mirrorRolePass, 
-                    role, label=label, repo=repo)
-            except UserAlreadyExists:
-                # don't care
-                pass
-            repo.setRoleCanMirror(label, role, True)
-        except Exception, e:
-            raise PublishedReleaseMirrorRole(str(e))
-
-    def _addUserToProject(self, project, user, password, role, label=None, repo=None):
-        if not label:
-            label = versions.Label(project.getLabel())
-        if not repo:
-            repo = self._getProjectRepo(project)
-        
-        helperfuncs.addUserToRepository(repo, user, password, role, label)
-
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -2588,84 +2564,28 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'updatedBy': self.auth.userId})
             return self.publishedReleases.update(pubReleaseId, **valDict)
 
-    @typeCheck(int)
+    @typeCheck(int, bool)
     @requiresAuth
     @private
-    def publishPublishedRelease(self, pubReleaseId):
+    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
         
-        # add the mirror role to the project
-        self._addMirrorRoleToProject(project)
-
         valDict = {'timePublished': time.time(),
-                   'publishedBy': self.auth.userId}
+                   'publishedBy': self.auth.userId,
+                   'shouldMirror': int(shouldMirror),
+                   }
         return self.publishedReleases.update(pubReleaseId, **valDict)
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def allowReleaseGroupsPublishTorUS(self, pubReleaseId):
-        """
-        Set all builds in the release to allow mirroring so they can
-        be published to rUS
-        """
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        project = projects.Project(self, projectId)
-
-        # do sanity checks, but don't raise an exception if the release is
-        # already published since that is the norm (i.e. we get called after
-        # publish)
-        self._checkPublishedRelease(pubReleaseId, projectId, 
-            checkPublished=False)
-        
-        repo = self._getProjectRepo(project)
-        self._updateTroveAccess(repo, pubReleaseId, 'mirror')
-
-        return True
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def disallowReleaseGroupsPublishTorUS(self, pubReleaseId):
-        """
-        Set all builds in the release to disallow mirroring so they can not
-        be published to rUS
-        """
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        project = projects.Project(self, projectId)
-
-        self._checkUnpublishedRelease(pubReleaseId, projectId, 
-            failIfNotPub=False)
-        
-        repo = self._getProjectRepo(project)
-        self._updateTroveAccess(repo, pubReleaseId, 'mirror', addAccess = False)
-
-        return True
-
-    def _updateTroveAccess(self, repo, pubReleaseId, role, addAccess = True):
-        
-        builds = self.getBuildsForPublishedRelease(pubReleaseId)
-        troveList = []
-        for bId in builds:
-            b = self.getBuild(bId)
-            name = b['troveName']
-            version = versions.ThawVersion(b['troveVersion'])
-            flavor = deps.ThawFlavor(b['troveFlavor'])
-            troveList.append((name, version, flavor))
-
-        if troveList:
-            if addAccess:
-                repo.addTroveAccess('mirror', troveList)
-            else:
-                repo.deleteTroveAccess('mirror', troveList)
-
-        return True
+    def getMirrorableReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.publishedReleases.getMirrorableReleasesByProject(projectId)
 
     def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
         """
@@ -4141,15 +4061,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
 
     @private
-    @typeCheck(int, (list, str), bool, bool, int)
+    @typeCheck(int, (list, str), bool, bool, bool, int)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels, recurse, id):
+            allLabels, recurse, useReleases, id):
         if id != -1:
             self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = allLabels,
                                        recurse = recurse,
+                                       useReleases=useReleases,
                                        fullSync = True)
         else:
             cu = self.db.cursor()
@@ -4159,6 +4080,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                            targetLabels = ' '.join(targetLabels),
                                            allLabels = allLabels,
                                            recurse = recurse,
+                                           useReleases=useReleases,
                                            mirrorOrder = mirrorOrder,
                                            fullSync = True)
         return id
