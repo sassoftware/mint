@@ -91,7 +91,12 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
             missing = True
         return missing
 
-    @testsuite.context("quick")
+    # Unfriendly because testing against an installed system negates
+    # the usefulness of this test. If there are files not being installed
+    # correctly, the entire testsuite will explode. Also, this doesn't
+    # work against an installed system anyway because there are no
+    # makefiles on an installed system.
+    @testsuite.context("quick", "unfriendly")
     def testMakefiles(self):
         missing = False
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
@@ -273,6 +278,10 @@ Much like Powdermilk Biscuits[tm]."""
         self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'http', 20000),
                 'http://vault.fortknox.gov:20000/')
 
+    # Unfriendly because javascript is installed to a different location
+    # when testing against installed rbuilder; this is more useful on
+    # the developer's system anyway.
+    @testsuite.context("unfriendly")
     def testJavascript(self):
         whiteList = ['json.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
