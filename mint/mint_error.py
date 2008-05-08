@@ -64,6 +64,9 @@ class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
 class ConfigurationMissing(MintError):
     "The rBuilder configuration is missing."
+    # this init must be in here because this gets thrown from config.py
+    def __init__(self):
+        self.msg = self.__doc__
 class ConfirmError(MintError):
     "Your registration could not be confirmed"
 class DeleteLocalUrlError(MintError):
