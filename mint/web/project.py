@@ -906,13 +906,17 @@ class ProjectHandler(WebHandler):
                 previewData = self._getPreviewData(pubrelease, build)
             else:
                 previewData = False
+                
+            mirroredByRelease = self.client.isProjectMirroredByRelease(
+                                    self.project.getId())
             return self._write("confirmPublish",
                     message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (e.g. add/remove images, update description, etc.) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
                     noLink = "releases", previewData = previewData, 
-                    shouldMirror=False)
+                    shouldMirror=False, 
+                    mirroredByRelease=mirroredByRelease)
 
     @ownerOnly
     @dictFields(yesArgs = {})

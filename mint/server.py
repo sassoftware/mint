@@ -2587,6 +2587,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.publishedReleases.getMirrorableReleasesByProject(projectId)
 
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def isProjectMirroredByRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.outboundMirrors.isProjectMirroredByRelease(projectId)
+
     def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
         """
         Performs some sanity checks on the published release

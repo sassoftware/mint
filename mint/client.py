@@ -624,6 +624,15 @@ class MintClient:
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
 
+    def isProjectMirroredByRelease(self, projectId):
+        '''
+        Returns True if the given project is configured for outbound
+        mirroring and is using "mirror by release".
+
+        @param projectId: id of project to check
+        '''
+        return self.server.isProjectMirroredByRelease(projectId)
+
     def getInboundMirrors(self):
         return self.server.getInboundMirrors()
 
