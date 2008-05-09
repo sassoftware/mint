@@ -173,13 +173,13 @@
                     <label for="pd-stages-${ordinal}-name" py:content="relstage.get('name')" />
                 </td>
                 <td>
-                    <label for="pd-stages-${ordinal}-label" py:content="relstage.get('label')" />
+                    <label for="pd-stages-${ordinal}-labelSuffix" py:content="relstage.get('labelSuffix')" />
                 </td>
                 <td>
                     <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstage.get('name')}"/>
                 </td>
                 <td>
-                    <input type="hidden" name="pd-stages-${ordinal}-label" value="${relstage.get('label')}"/>
+                    <input type="hidden" name="pd-stages-${ordinal}-labelSuffix" value="${relstage.get('labelSuffix')}"/>
                 </td>
             </tr>
         </div>

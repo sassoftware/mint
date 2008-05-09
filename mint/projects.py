@@ -227,6 +227,9 @@ class Project(database.TableObject):
     def getProductVersionList(self):
         return self.server.getProductVersionListForProduct(self.id)
 
+    def getDefaultImageGroupName(self):
+        return "group-%s-dist" % self.shortname.lower()
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'

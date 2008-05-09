@@ -359,11 +359,11 @@ def getProductVersionDefaultStagesList():
         Build a list containing the default stages
         """
         return [dict(name='Development',
-                     label='-devel'),
+                     labelSuffix='-devel'),
                 dict(name='QA',
-                     label='-qa'),
+                     labelSuffix='-qa'),
                 dict(name='Release',
-                     label='')]
+                     labelSuffix='')]
         
 def getBuildDefsAvaliableBuildTypes(allBuildTypes):
         """

@@ -1239,9 +1239,10 @@ class ProjectHandler(WebHandler):
             if not stage.has_key('name'):
                 raise ProductDefinitionInvalidStage(
                     'The release stage name must be specified')
-            # make sure all stages have a label value since we allow it to be empty
-            if not stage.has_key('label'):
-                stage['label'] = ""
+            # make sure all stages have a labelSuffix
+            # value since we allow it to be empty
+            if not stage.has_key('labelSuffix'):
+                stage['labelSuffix'] = ""
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

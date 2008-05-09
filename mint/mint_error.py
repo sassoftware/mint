@@ -89,6 +89,7 @@ class FailedToLaunchAMIInstance(MintError):
     "Failed to launch AMI instance."
 class FileMissing(MintError): "The referenced file does not exist."
 class GroupAlreadyExists(MintError): "Group already exists"
+class GroupTroveTemplateExists(MintError): "Template group trove already exists"
 class GroupTroveEmpty(MintError): "Group cannot be empty"
 class GroupTroveNameError(MintError):
     "Invalid name for group: letters, numbers, hyphens allowed."
