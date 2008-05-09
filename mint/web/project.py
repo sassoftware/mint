@@ -1156,7 +1156,11 @@ class ProjectHandler(WebHandler):
                 buildDefs.append(dict(name=builddef.pop('name'),
                                  baseFlavor=builddef.pop('baseFlavorType'),
                                  _buildType=int(builddef.pop('_buildType')),
-                                 _builddef=builddef))
+                                 _builddef=builddef,
+                                 # TODO:
+                                 # These are hardcoded for now and will be
+                                 # fixed later.
+                                 stages=['Development', 'QA', 'Release']))
 
         # Apply the build templates to the buildDefs list of dicts.  The
         # returned dict is used in the dict sent to
@@ -1178,10 +1182,13 @@ class ProjectHandler(WebHandler):
     
         if not self._getErrors():
             
+            # TODO: Fix this later. Read this data from collatedDict
+            imageGroup = 'group-core'
             pdDict = dict(baseFlavor=baseFlavor,
                           stages=stages,
                           upstreamSources=usources,
-                          buildDefinition=templBuildDefs)
+                          buildDefinition=templBuildDefs,
+                          imageGroup=imageGroup)
             
             if id == -1:
                 id = self.client.addProductVersion(self.project.id, name,
