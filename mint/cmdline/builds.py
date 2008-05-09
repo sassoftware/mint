@@ -293,17 +293,15 @@ class BuildCreateCommand(commands.RBuilderCommand):
 commands.register(BuildCreateCommand)
 
 def buildProdDefHelp():
-    msg = '<product name> <version name> <trove spec>\n'
-    msg += '  <trove spec> should be in the format "name=label/version".\n'
-    msg += '  Do not specify a flavor for <trove spec>, flavors for a product\n'
-    msg += '  build are defined in the product definition.\n'
+    msg = '<product name> <version name> <stage name>\n'
     return msg
 
 class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
     commands = ['build-product']
     paramHelp = buildProdDefHelp()
 
-    docs = {'wait' :    'wait until a build job finishes',
+    docs = {'force' : 'Continue running builds in the definition even if a previous one failed.',
+            'wait' : 'wait until a build job finishes',
             'timeout' : ('time to wait before ending, even if the job is not done', 
                          'seconds'),
             'quiet':    'suppress job status output',
@@ -315,30 +313,28 @@ class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
          argDef["wait"] = options.NO_PARAM
          argDef["timeout"] = options.ONE_PARAM
          argDef["quiet"] = options.NO_PARAM
+         argDef["force"] = options.NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
         timeout = int(argSet.pop('timeout', 0))
         quiet = argSet.pop('quiet', False)
+        force = argSet.pop('force', False)
 
         if len(args) < 4:
             return self.usage()
 
         productName = args[1]
         versionName = args[2]
-        troveSpec = args[3]
-
-        # Verify that troveSpec is valid.  If raised, we want the exception to
-        # propogate up.
-        cmdline.parseTroveSpec(troveSpec)
+        stageName = args[3]
 
         project = client.getProjectByHostname(productName)
-
         versionList = client.getProductVersionListForProduct(project.id)
-        
         # Pick the version id that matches versionName
         versionId = [v[0] for v in versionList if v[2] == versionName][0]
-        buildIds = client.newBuildsFromProductDefinition(versionId, troveSpec)
+
+        buildIds = client.newBuildsFromProductDefinition(versionId, stageName,
+                                                         force)
 
         for buildId in buildIds:
             print "BUILD_ID=%d" % (buildId)
@@ -347,6 +343,7 @@ class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
                 waitForBuild(client, buildId, timeout=timeout, quiet=quiet)
 
         return 0
+
 commands.register(BuildCreateFromProdDefCommand)
 
 class BuildWaitCommand(commands.RBuilderCommand):

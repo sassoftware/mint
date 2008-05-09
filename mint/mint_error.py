@@ -103,8 +103,10 @@ class InvalidProdType(MintError):
     "The selected %(project)s type is invalid."
 class InvalidUsername(MintError):
     "Username may contain only letters, digits, '-', '_', and '.'"
+class InvalidTroveSpecForProductDefinition(MintError):
+    "The trove spec %s for the product definition is invalid."
 class InvalidTroveSpecForBuildDefinition(MintError):
-    "The trove spec for the build definition is invalid."
+    "The trove spec %s for the build definition %s is invalid."
 class JobserverVersionMismatch(MintError): # LEGACY
     "Image job cannot be run."
 class LastAdmin(MintError):
@@ -123,6 +125,8 @@ class NoBuildImageTypeInBuildDefinition(MintError):
     "No build image set in build definition."
 class NoBuildsDefinedInBuildDefinition(MintError):
     "No builds defined in build definition."
+class NoImageGroupSpecifiedForProductDefinition(MintError):
+    "No imageGroup specified to build in the product definition."
 class NotEntitledError(MintError):
     "The rBuilder is not entitled to a required resource. Please " \
         "contact your administrator."
@@ -144,6 +148,8 @@ class PublishedReleaseNotPublished(MintError):
 class PublishedReleasePublished(MintError):
     "Release has already been published."
 class SchemaMigrationError(MintError): pass
+class StageNotFoundInProductDefinition(MintError):
+    "Stage %s was not found in the product definition."
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."

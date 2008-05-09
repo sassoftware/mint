@@ -2005,64 +2005,86 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, troveSpec, force=False):
+    def newBuildsFromProductDefinition(self, versionId, stageName, force=False):
         """
-        Create a build for troveSpec for each build definied in the product
-        definition for the version specified by versionId.
+        Launch the image builds defined in the product definition for the
+        given version id and stage.  If provided, use troveSpec as the top
+        level group for the image, otherwise use the top level group defined
+        in the
+        product defintion.
         """
-
         version = projects.ProductVersions(self, versionId)
         projectId = version.projectId
 
-        # We expect a troveSpec as a string the format
-        # name=label/version
-        if '=' not in troveSpec:
-            raise InvalidTroveSpecForBuildDefinition(troveSpec)
-        else:
-            troveName, troveLabel = troveSpec.split('=')
-
         # Read build definition from product definition.
-        productDefinition = self.getProductDefinitionForVersion(versionId)
-        buildDefinition = productDefinition['buildDefinition']
+        pd = self.getProductDefinitionForVersion(versionId)
+
+        # Look up the label for the stage name that was passed in.
+        stageLabel = None
+        for stage in pd.get('stages', []):
+            if stage['name'] == stageName:
+                stageLabel = stage['label']
+        if not stageLabel:
+            raise StageNotFoundInProductDefinition(stageName)
+
+        # Read the top level group defined in the prod def.
+        try:
+            imageGroup = pd['imageGroup']
+        except KeyError:
+            raise NoImageGroupSpecifiedForProductDefinition()
+
+        buildDefinition = pd.get('buildDefinition', [])
+        if len(buildDefinition) < 1:
+            raise NoBuildsDefinedInBuildDefinition()
 
         # Validate the data in the buildDefinition against build templates.
         buildDefinition = \
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
 
-        if len(buildDefinition) < 1:
-            raise NoBuildsDefinedInBuildDefinition()
-
         # Create buildId's for each defined build.
         buildIds = []
         buildErrors = []
         for build in buildDefinition:
-            buildFlavor = deps.parseFlavor(str(build.get('baseFlavor', '')))
-            nvfs = self._resolveTrove(projectId, troveName, troveLabel, buildFlavor)
+            buildFlavor = deps.parseFlavor(build.get('baseFlavor', ''))
 
-            # Raise error if no troves found.
-            if not nvfs:
+            # Check whether the top level group to build the image from has
+            # been overridden at the build def level.
+            try:
+                buildGroup = build[build['_xmlName']]['imageGroup']
+            except KeyError:
+                buildGroup = imageGroup
+      
+            # Returns a list of troves that satisfy buildFlavor.
+            nvfs = self._resolveTrove(projectId, buildName, 
+                                      stageLabel, buildFlavor)
+
+            if nvfs:
+                # Create a build with options for each trove found.
+                for nvf in nvfs:
+                    buildId = self.newBuild(projectId, build['name'])
+                    self.setBuildTrove(buildId, nvf[0], nvf[1].freeze(), 
+                                       nvf[2].freeze())
+                    self.setBuildType(buildId, build['_buildType'])
+
+                    # Look up the build options.
+                    buildOptions = build['_xmlName']
+                    self._setCustomTrovesForBuildId(buildId, buildOptions)
+
+                    # Add build data from the buildDefinition to the 
+                    # build object.
+                    for k, v in buildOptions.items():
+                        self.setBuildDataValue(buildId, k, str(v),
+                                               data.RDT_STRING) 
+
+                    buildIds.append(buildId)
+            else:
+                # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
                     (troveName, buildFlavor))))
-            else:
-                # Create a build with options for each trove found.
-                for nvf in nvfs:
-                    buildId = self.newBuild(projectId, str(build.get('name', '')))
-                    self.setBuildTrove(buildId, nvf[0], nvf[1].freeze(), nvf[2].freeze())
-                    self.setBuildType(buildId, build['_buildType'])
-
-                    # Add build data from the buildDefinition to the build object.
-                    buildData = \
-                        build[buildtemplates.getDataTemplate(build['_buildType']).xmlName]
-
-                    for k, v in buildData.items():
-                        self.setBuildDataValue(buildId, k, str(v), 0)
-
-                    self._setAnacondaTemplatesForBuildId(buildId)
-                    buildIds.append(buildId)
 
         if buildErrors and not force:
-            raise TroveNotFoundForBuildDefinition(str(buildErrors))
+            raise TroveNotFoundForBuildDefinition(buildErrors)
 
         # Start each build.
         for buildId in buildIds:
@@ -2085,15 +2107,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([x for x in troveList if x[2].satisfies(filterFlavor)],
                       key=lambda x: x[1])
 
-    def _setAnacondaTemplatesForBuildId(self, buildId):
+    def _setCustomTrovesForBuildId(self, buildId, buildData):
         """
-        Add anaconda-templates as a resolved trove to the given buildId.
+        Add various custom troves as a resolved trove to the given buildId.
         """
-        # anaconda-templates?
-        # TODO: fix this hack
-        name = 'anaconda-templates'
-        value = 'anaconda-templates=/conary.rpath.com@rpl:devel//1/1.0.7-0.3-2[is: x86]'
-        self.setBuildDataValue(buildId, name, value, 4)
+        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
+                            'anacondaCustomTrove' : 'anaconda-custom',
+                            'anacondaTemplatesTrove' : 'anaconda-templates'}
+
+        for customTrove in ['mediaTemplateTrove', 'anacondaCustomTrove',
+                            'anacondaTemplatesTrove']:
+            if buildOptions.has_key(customTrove):
+                troveName = customTroveDict[customTrove]
+                value = '%s=%s' % (troveName, buildOptions[customTrove])
+                self.setBuildDataValue(buildId, troveName, value,
+                                       data.RDT_TROVE)
+            else:
+                continue
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     @requiresAuth
@@ -4550,7 +4580,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
-    def getProductDefinitionForVersion(self, versionId):
+    def getProductDefinitionForVersionObj(self, versionId):
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         projectCfg = project.getConaryConfig()
@@ -4577,21 +4607,34 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except KeyError:
             raise ProductDefinitionVersionNotFound()
 
-        pd = proddef.ProductDefinition(fromStream=xml)
+        return proddef.ProductDefinition(fromStream=xml)
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductDefinitionForVersion(self, versionId):
+        pd = self.getProductDefinitionForVersionObj(versionId)
 
         stages = [dict(name=s.name, label=s.label) for s in pd.getStages()]
         sources = [dict(troveName=s.troveName, label=s.label) \
                    for s in pd.getUpstreamSources()]
         buildDefs = [{'name' : b.name,
                       'baseFlavor' : b.baseFlavor,
-                      'byDefault' : b.byDefault,
+                      'imageGroup' : b.imageGroup,
+                      'stages' : b.stages,
                       b.imageType.tag : b.imageType.fields}
                      for b in pd.getBuildDefinitions()]
 
-        pdDict = dict(baseFlavor=pd.getBaseFlavor() or '',
-                      stages=stages,
+        pdDict = dict(stages=stages,
                       upstreamSources=sources,
                       buildDefinition=buildDefs)
+
+        baseFlavor = pd.getBaseFlavor()
+        if baseFlavor:
+            pdDict['baseFlavor'] = baseFlavor
+        imageGroup = pd.getImageGroup()
+        if imageGroup:
+            pdDict['imageGroup'] = imageGroup
 
         return pdDict
 
@@ -4602,7 +4645,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Convert productDefinitionDict to Xml.
         pd = proddef.ProductDefinition()
 
+        # Set some basic attributes on pd.
         pd.setBaseFlavor(productDefinitionDict.get('baseFlavor', ''))
+        pd.setImageGroup(productDefinitionDict.get('imageGroup', ''))
 
         # Add each stage defined in the dict to pd.
         for stage in productDefinitionDict.get('stages', []):
@@ -4616,7 +4661,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             imageType = proddef.ProductDefinition.imageType(imageKey, 
                             buildDefn.get(imageKey, {})) 
             pd.addBuildDefinition(name=name, baseFlavor=baseFlavor, 
-                                  imageType=imageType)
+                                  imageType=imageType,
+                                  stages=buildDefn['stages'])
 
         # Add each upstream source defined in the dict to pd.
         for us in productDefinitionDict.get('upstreamSources', []):
