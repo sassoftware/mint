@@ -23,7 +23,7 @@
             function PkgCreatorFileUploadForm()
             {
                 this.base = FileUploadForm;
-                this.base('${id}', 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
+                this.base('${sessionHandle}', 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
             }
             PkgCreatorFileUploadForm.prototype = new FileUploadForm();
 
@@ -84,20 +84,20 @@
                 <input type="hidden" name="${fieldname}" value="" id="${fieldname}"/>
             </div>
             <form name="getPackageFactories" method="post" action="getPackageFactories" enctype="multipart/form-data" id="getPackageFactories">
-                <input type="hidden" name="id" value="${id}"/>
+                <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                   <tr>
                   <th>Select Product Version</th>
                   <td>
                     <select name="versionId">
-                      <option py:for="(vId, projectId, version_str, desc) in versions" value="${vId}" py:attr="{'selected': vId==versionId and 'selected' or None}" py:content="version_str"/>
+                      <option py:for="(vId, projectId, version_str, desc) in versions" value="${vId}" py:attr="'selected': ${vId==versionId and 'selected' or None}" py:content="version_str"/>
                     </select>
                   </td>
                   </tr>
                   <tr>
                   <th>Upload File</th>
                   <td>
-                ${fileupload_iframe("upload_iframe?id=%s;fieldname=uploadfile" % id, 'uploadfile')}
+                      ${fileupload_iframe("upload_iframe?sessionHandle=%s;fieldname=uploadfile" % sessionHandle, 'uploadfile')}
                   </td>
                   </tr>
                   <!--<tr>

@@ -356,7 +356,7 @@ class MintClient:
         """
         return self.server.createPackageTmpDir()
 
-    def getPackageFactories(self, projectId, id, versionId, upload_url):
+    def getPackageFactories(self, projectId, sessionHandle, versionId, upload_url):
         """
         Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
         @param projectId: Project ID
@@ -370,10 +370,12 @@ class MintClient:
         @returns: a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
         @rtype: tuple(tuple, str)
         """
-        return self.server.getPackageFactories(projectId, id, versionId, upload_url)
+        from pcreator import factorydata
+        factories =  self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
+        return [(x[0], x[1], factorydata.factoryDataDefToDict(x[1]), x[2]) for x in factories]
 
-    def savePackage(self, projectId, id, versionId, fileHandle, factoryHandle, data, build=True):
-        return self.server.savePackage(projectId, id, versionId, fileHandle, factoryHandle, data, build)
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
 
     def newBuildsFromXml(self, projectId, label, buildXml):
         """

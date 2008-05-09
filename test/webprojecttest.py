@@ -9,6 +9,7 @@ testsuite.setup()
 
 import os
 import re
+import shutil
 import copy
 
 import mint_rephelp
@@ -494,7 +495,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         return projectHandler
 
-    testsuite.context('more_cowbell')
+    @testsuite.context('more_cowbell')
     def testBadGroupParams(self):
         projectHandler = self._setupProjectHandler()
         page = projectHandler.createGroup(auth = ('testuser', 'testpass'),
@@ -504,7 +505,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
             ['Error parsing version string: ',
              'Invalid group trove name: group-']
 
-    testsuite.context('more_cowbell')
+    @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -512,63 +513,103 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('testuser', 'testpass')
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
-        assert 'action="createPackage"' in page.body
-        match = re.search('upload_iframe\?id=([^;]+);', page.body)
+        assert 'value="Create Package"' in page.body
+        match = re.search('upload_iframe\?sessionHandle=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
-        id = match.groups()[0]
-        assert id, "What ID?"
+        sessionHandle = match.groups()[0]
+        assert sessionHandle, "expected sessionHandle"
         #Make sure it actually did what we asked
         #Get the tempPath
-        tmppath = os.path.join(self.mintCfg.dataPath, 'tmp', 'rb-pc-upload-%s' % id)
+        tmppath = os.path.join(self.mintCfg.dataPath, 'tmp', 'rb-pc-upload-%s' % sessionHandle)
         assert os.path.isdir(tmppath)
 
+    @testsuite.context('more_cowbell')
     def testPackageCreatorIframe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
         self.webLogin('testuser', 'testpass')
-        page = self.fetch('/project/testproject/upload_iframe?id=foobarbaz;fieldname=upldfile',
+        page = self.fetch('/project/testproject/upload_iframe?sessionHandle=foobarbaz;fieldname=upldfile',
                 server=self.getProjectServerHostname())
-        assert 'action="/cgi-bin/fileupload.cgi?id=foobarbaz;fieldname=upldfile"' in page.body
+        assert 'action="/cgi-bin/fileupload.cgi?sessionHandle=foobarbaz;fieldname=upldfile"' in page.body
         assert not 'input type="submit"' in page.body.lower(), "Did you forget to remove the submit button?"
         assert 'input type="file" name="uploadfile"' in page.body, 'The file field name is fixed'
         assert 'name="project" value="testproject"' in page.body, 'Make sure the project name is in the form'
 
+    @testsuite.context('more_cowbell')
     def testPackageCreatorInterview(self):
+        pcsPath = os.environ.get('PACKAGE_CREATOR_SERVICE_PATH')
+        if not pcsPath:
+            raise testsuite.SkipTestException( \
+                    'Please define PACKAGE_CREATOR_SERVICE_PATH for this test')
         from packagecreatortest import expectedFactories1
         from factorydatatest import dictDef
+        from pcreator import factorydata
 
         from types import MethodType
+        self.mock(factorydata, 'defaultSchemaDir',
+                os.path.join(pcsPath, 'data'))
+
         ### All this, just to monkeypatch the client
         projectHandler = self._setupProjectHandler()
-        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', '/testproject/createPackage')
-        fields = {
-            'id': 'foobarbaz',
-            'versionId': '1',
-            'uploadfile': 'UPLOADED',
-        }
+        # we need a product version
+        # use a nutty word that isn't likely to collide if product version is
+        # subsumed into _setupProjectHandler
+        versionName = 'supersecretpassword'
+        versionId = projectHandler.client.addProductVersion(\
+                projectHandler.projectId, versionName, 'this is just a test...')
+
+        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', '/testproject/newPackage')
+        fields = {}
         auth = projectHandler.client.checkAuth()
         projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
         projectHandler.projectDict = {}
-        context = {'auth': auth, 'cmd': 'testproject/createPackage', 'client': projectHandler.client, 'fields': fields}
+        context = {'auth': auth, 'cmd': 'testproject/newPackage', 'client': projectHandler.client, 'fields': fields}
         def fakecreatepackage(s, *args):
             self.assertEquals(args[0], projectHandler.projectId)
             self.assertEquals(args[1], 'foobarbaz')
             self.assertEquals(args[2], 1)
             self.assertEquals(args[3], '')
             return self.dictDef
-        self.mock(projectHandler.client, 'createPackage', MethodType(fakecreatepackage, projectHandler.client))
+        self.mock(projectHandler.client, 'newPackage', MethodType(fakecreatepackage, projectHandler.client))
 
         self.dictDef = expectedFactories1
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
-        self.failUnless('form action="savePackage"' in page)
-        self.failUnless('input type="text" id="name_id" value="tags" name="name"' in page)
+        self.failUnless('form action="getPackageFactories"' in page)
+        match = re.search('name="sessionHandle" value="[^"]*"', page)
+
+        sessionHandle = match.group().split('"')[-2]
+        fields = {
+            'sessionHandle': sessionHandle,
+            'versionId': str(versionId),
+        }
+        # our web forms can't do javascript, so we'll fake the upload
+        uploadDir = os.path.join(self.mintCfg.dataPath, 'tmp',
+                                'rb-pc-upload-%s' % sessionHandle)
+        manifestPath = os.path.join(uploadDir, 'uploadfile-index')
+        tempfile = os.path.join(uploadDir, 'uploadfile')
+        fileName = 'foo-0.1-1.i386.rpm'
+        # put a real file there
+        shutil.copyfile(os.path.join(self.archiveDir, fileName), tempfile)
+
+        util.mkdirChain(os.path.dirname(manifestPath))
+        open(manifestPath, 'w').write('\n'.join(('fieldname=uploadfile',
+            'filename=%s' % fileName,
+            'tempfile=%s' % tempfile,
+            'content-type=multipart/whatever')))
+
+        context = {'auth': auth, 'cmd': 'testproject/getPackageFactories', 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
 
         #now for a single factory with multiples and ranges
         d = copy.deepcopy(dictDef)
         self.dictDef = [('fakefactory01', None, d, {})]
         page = func(auth=auth, **fields)
+        import epdb; epdb.st()
+
+        # FIXME: nothing past this point can be tested until we can properly
+        # control where the factories come from. right now that's rb
         self.failUnless('input type="text" id="multiTest_id" value="4" name="multiTest' in page)
 
         # Get rid of some constraints

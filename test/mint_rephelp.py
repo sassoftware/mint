@@ -190,6 +190,10 @@ class MintApacheServer(rephelp.ApacheServer):
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
                 (os.path.join(self.mintPath, "mint", "web", "content"),
                  self.serverRoot))
+            scriptPath = os.path.join( \
+                    os.path.dirname(os.path.dirname(__file__)), 'scripts')
+            os.system("sed -i 's|@SCRIPTSPATH@|%s|g' %s/httpd.conf" % \
+                    (scriptPath, self.serverRoot))
         f.close()
 
         if not self.sslDisabled:

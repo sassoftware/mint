@@ -18,9 +18,7 @@ from mint.helperfuncs import truncateForDisplay
         <script type="text/javascript">
             <![CDATA[
 var polldata = {
-    projectId: ${simplejson.dumps(projectId)},
-    id: ${simplejson.dumps(id)},
-    jobHandle: ${simplejson.dumps(jobHandle)}
+    sessionHandle: ${simplejson.dumps(sessionHandle)},
 };
 
 var buildlength = '';
@@ -60,7 +58,7 @@ function makeRequest()
     var req = new JsonRpcRequest('jsonrpc/', 'getPackageBuildStatus')
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processResponse)
-    req.send(false, [polldata.projectId, polldata.id, polldata.jobHandle])
+    req.send(false, [polldata.sessionHandle])
 }
 
 addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});

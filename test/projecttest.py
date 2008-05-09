@@ -52,6 +52,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
 
+        import epdb
+        epdb.st()
+
         assert(project.getFQDN() == "foo.%s" % MINT_PROJECT_DOMAIN)
         assert(project.getHostname() == "foo")
         assert(project.getShortname() == "foo")

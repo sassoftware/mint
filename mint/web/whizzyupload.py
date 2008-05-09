@@ -223,11 +223,11 @@ def handle_cgi_request(stdin, stdout, basedir, prefix, env=os.environ):
 
     #Get the ID and fieldname from the query string
     try:
-        id = cgi.parse_qs(env['QUERY_STRING'])['id'][0]
+        id = cgi.parse_qs(env['QUERY_STRING'])['sessionHandle'][0]
         fieldname = cgi.parse_qs(env['QUERY_STRING'])['fieldname'][0]
     except:
         print >>stdout, "Status: 400 Bad request\n"
-        print >>stdout, "Invalid request, id and fieldname must be specified in the query string"
+        print >>stdout, "Invalid request, sessionHandle and fieldname must be specified in the query string"
         stdout.flush()
         return
 

@@ -75,8 +75,6 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         projectId = data['projectId']
 
-        self.assertRaises(RuntimeError, self.client.createPackage, projectId, self.id, '1', 'uploadfile', '')
-
         #Create the manifest files
         wd = packagecreator.getWorkingDir(self.cfg, self.id)
         fup = whizzyupload.fileuploader(wd, 'uploadfile')
@@ -103,8 +101,12 @@ content-type=text/plain
             return 'real data'
         self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', vacuum)
         try:
-            factories = self.client.createPackage(projectId, self.id, '1', 'uploadfile', '')
+            factories = self.client.savePackage(projectId, self.id, '1', 'uploadfile', '')
         finally:
             packagecreator.DirectLibraryBackend = oldBackend
         self.assertEquals("real data", factories)
+
+
+if __name__ == '__main__':
+    testsuite.main()
 

@@ -4644,7 +4644,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
         # TODO figure out where the real imports are going to be
-        import proddef
+        from rpath_common.proddef import api1 as proddef
 
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
@@ -4686,7 +4686,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, dict)
     def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
         # TODO figure out where the real imports are going to be
-        import proddef
+        from rpath_common.proddef import api1 as proddef
 
         # Convert productDefinitionDict to Xml.
         pd = proddef.ProductDefinition(productDefinitionDict)
@@ -4731,19 +4731,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def createPackageTmpDir(self):
         path = tempfile.mkdtemp('', 'rb-pc-upload-',
-            dir=os.path.join(self.cfg.dataPath, 'tmp'))
-        id = os.path.basename(path).replace('rb-pc-upload-', '')
-        return id
+            dir = os.path.join(self.cfg.dataPath, 'tmp'))
+        return os.path.basename(path).replace('rb-pc-upload-', '')
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
     @requiresAuth
-    def getPackageFactories(self, projectId, id, versionId, upload_url):
+    def getPackageFactories(self, projectId, sessionHandle, versionId,
+            upload_url):
         from mint.web import whizzyupload
         import packagecreator
         from conary import versions as conaryVer
+        # TODO: Grab the factories label from somewhere
+        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
+        factGroup = "group-factories-package-creator=%s" % factLabel
+
         # Check to see if there's a file
         ## Connect up to the tmpdir
-        path = packagecreator.getWorkingDir(self.cfg, id)
+
+        path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         fileuploader = whizzyupload.fileuploader(path, 'uploadfile')
         try:
             info = fileuploader.parseManifest()
@@ -4752,50 +4757,52 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
         #Register the file
-        project = projects.Project(self, projectId)
         pc = packagecreator.DirectLibraryBackend(path)
-        fhandle = pc.uploadFile(info['tempfile'])
-        pc.writeMetaFile(fhandle, info['filename'], info['content-type'])
-        # Now set up the confirmation interview
-        # TODO: Grab the factories label from somewhere
-        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
-        factGroup = "group-factories-package-creator=%s" % factLabel
-
+        project = projects.Project(self, projectId)
         cfg = project.getConaryConfig()
         searchPath = ['group-dist=conary.rpath.com@rpl:1', factGroup, ]
         cfg.searchPath = searchPath
-        factories = pc.getCandidateBuildFactories(fhandle, project.getConaryConfig(), [factGroup])
-        return factories, fhandle
+        cfg.buildLabel = versions.Label(project.getLabel())
+        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
 
-    def savePackage(self, projectId, id, versionId, fhandle, factoryHandle, data, build):
+        pc = packagecreator.DirectLibraryBackend(path)
+        # we're using the session handle for both the dirname and the filename
+        # of this instance, so we don't need the return value
+        pc.startSession('XXX put NVF to proddef here it comes from versionId', mincfg)
+
+        pc.uploadData(sessionHandle, info['tempfile'])
+        pc.writeMetaFile(sessionHandle, info['filename'], info['content-type'])
+        # Now set up the confirmation interview
+
+        factories = pc.getCandidateBuildFactories(sessionHandle, [factGroup])
+        [x[1].seek(0) for x in factories]
+        return [(x[0], x[1].read(), x[3]) for x in factories]
+
+    @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
+    @requiresAuth
+    def savePackage(self, sessionHandle, factoryHandle, data, build):
         import packagecreator
         from conary import versions as conaryVer
-        path = packagecreator.getWorkingDir(self.cfg, id)
-        project = projects.Project(self, projectId)
+        path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         pc = packagecreator.DirectLibraryBackend(path)
-        mincfg = project.getConaryConfig()
+
         # TODO: Get the target label
         destLabel = 'fakeproduct.rdu.rpath.com@jtate:fakeproduct-1-devel'
         factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
         factGroup = "group-factories-package-creator=%s" % factLabel
         searchPath = [conaryVer.Label('conary.rpath.com@rpl:1'), factLabel, conaryVer.Label(destLabel)]
-        mincfg.searchPath = searchPath
-        mincfg.buildLabel = conaryVer.Label(destLabel)
-        srcHandle = pc.makeSourceTrove(mincfg, fhandle, factoryHandle, destLabel, data)
-        jobHandle = pc.build(mincfg, srcHandle, commit=True)
-        return jobHandle
+        srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, destLabel, data)
+        if build:
+            pc.build(sessionHandle, commit=True)
 
-
-    #@typeCheck((int, ((str,unicode),), ((str,unicode),)))
+    @typeCheck(((str,unicode),))
     @requiresAuth
-    def getPackageBuildStatus(self, projectId, id, jobHandle):
+    def getPackageBuildStatus(self, sessionHandle):
         import packagecreator
-        path = packagecreator.getWorkingDir(self.cfg, id)
-        project = projects.Project(self, projectId)
+        path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         pc = packagecreator.DirectLibraryBackend(path)
-        mincfg = project.getConaryConfig()
         try:
-            return pc.isBuildFinished(mincfg, jobHandle, commit=True)
+            return pc.isBuildFinished(sessionHandle, commit=True)
         except packagecreator.errors.PackageCreatorError, e:
             # TODO: Get a real error status code
             return [True, -1, str(e)]

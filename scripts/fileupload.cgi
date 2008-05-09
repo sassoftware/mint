@@ -27,14 +27,30 @@ def cancel_signal(num, frame):
 
 signal.signal(signal.SIGUSR1, cancel_signal)
 
+open('/tmp/tickler.log', 'a').write('started\n')
+
 #Make this script testable
 if "GATEWAY_INTERFACE" in os.environ:
+    open('/tmp/tickler.log', 'a').write('uploading\n')
     cgitb.enable()
 
+    open('/tmp/tickler.log', 'a').write(str(os.environ) + '\n')
+    open('/tmp/tickler.log', 'a').write(os.getcwd() + '\n')
+
     #Read the mint configuration
+    # XXX this is wrong. we need a way to use the same config settings as
+    # the python code is using. without that code
     cfg = config.MintConfig()
-    cfg.read(config.RBUILDER_CONFIG)
+    docRoot = os.environ.get('DOCUMENT_ROOT', '')
+    cfgPath = os.path.join(docRoot, 'rbuilder.conf')
+
+    if docRoot and os.path.exists(cfgPath):
+        cfg.read(cfgPath)
+    else:
+        cfg.read(config.RBUILDER_CONFIG)
 
     wkdir = os.path.join(cfg.dataPath, 'tmp')
+    open('/tmp/tickler.log', 'a').write('whizzing\n')
     whizzyupload.handle_cgi_request(sys.stdin, sys.stdout, wkdir, 'rb-pc-upload-', os.environ)
+    open('/tmp/tickler.log', 'a').write('postwhizzing\n')
 

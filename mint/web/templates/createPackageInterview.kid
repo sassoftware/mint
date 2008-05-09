@@ -103,9 +103,7 @@ lang = '';
             <h1>Package Creator - Confirm Package Details</h1>
             <h3>Step 2 of 3</h3>
             <form name="savePackage" method="post" action="savePackage" id="savePackage">
-                <input type="hidden" name="id" value="${id}"/>
-                <input type="hidden" name="fileHandle" value="${fileHandle}"/>
-                <input type="hidden" name="versionId" value="${versionId}"/>
+                <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
                 <div class="formgroupTitle">Package Details</div>
                 <div class="formgroup">
                   <label for="factoryHandle">Package Type</label>

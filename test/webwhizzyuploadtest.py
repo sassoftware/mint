@@ -1,3 +1,10 @@
+#!/usr/bin/python2.4
+#
+# Copyright (c) 2005-2008 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import testsuite
 testsuite.setup()
 import unittest
@@ -320,3 +327,7 @@ class TestWhizzyCGI(unittest.TestCase):
             p = struct.unpack("!Q", d)
             assert p > lastread, 'The status file is malformed'
             lastread = p
+
+
+if __name__ == '__main__':
+    testsuite.main()

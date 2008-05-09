@@ -4,6 +4,9 @@
 #
 
 import os
+import simplejson
+from StringIO import StringIO
+
 from pcreator.backend import errors
 import pcreator.backend
 import pcreator.factorydata
@@ -68,12 +71,22 @@ class _Method(object):
         #We don't care about authentication for the DirectBackend
         return self.realMethod(*args, **kwargs)
 
-class MinimalConaryConfiguration:
+class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
+    fields = ['name', 'contact', 'repositoryMap', 'buildLabel', 'user',
+            'installLabelPath', 'searchPath']
     def __init__(self, conarycfg):
-        self.cfg = conarycfg
-
-    def createConaryConfig(self):
-        return self.cfg
+        hidePasswords = conarycfg.getDisplayOption('hidePasswords')
+        try:
+            conarycfg.setDisplayOptions(hidePasswords = False)
+            self.lines = []
+            for key in self.fields:
+                if not conarycfg[key]:
+                    continue
+                strio = StringIO()
+                conarycfg.displayKey(key, out = strio)
+                self.lines.extend(strio.getvalue().splitlines())
+        finally:
+            conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
 class DirectLibraryBackend(pcreator.backend.BaseBackend):
     methodClass = _Method
@@ -88,18 +101,34 @@ class DirectLibraryBackend(pcreator.backend.BaseBackend):
         return self.cfg.tmpFileStorage
 
     @pcreator.backend.public
-    def _uploadFile(self, file):
-        return file
+    def _startSession(self, prodDefTroveSpec, mincfg):
+        # this class already is already based in a tmpdir, so we'll just
+        # re-use the tmpname for the session name. this alleviates the need
+        # to track pointless data
+        storageDir = self._getStorageDir()
+        data = {'productDefinition' : prodDefTroveSpec,
+                'mincfg': mincfg.freeze()}
+        fileName = os.path.basename(storageDir).replace('rb-pc-upload-', '')
+        path = os.path.join(storageDir, fileName)
+        f = open(path, 'w')
+        f.write(simplejson.dumps(data))
+        f.close()
+        return fileName
 
     @pcreator.backend.public
-    def _makeSourceTrove(self, mincfg, fileHandle, factoryHandle, destLabel, data):
+    def _uploadData(self, sessionHandle, filePath):
+        self._storeSessionValue(sessionHandle, 'filePath', filePath)
+
+    @pcreator.backend.public
+    def _makeSourceTrove(self, sessionHandle, factoryHandle, destLabel, data):
+        # XXX destLabel is probably bogus. shouldn't that come from prod def?
         #convert the datadict to the XML document
-        castData = self.castFactoryData(factoryHandle, mincfg, data)
+        cfgData = str(self._getSessionValue(sessionHandle, 'mincfg'))
+        mincfg = MinimalConaryConfiguration.thaw(cfgData)
+
+        castData = self.castFactoryData(sessionHandle, factoryHandle, data)
 
         #Create the xml document
-        factoryData=pcreator.factorydata.dictToFactoryData(data)
+        factoryData=pcreator.factorydata.dictToFactoryData(castData)
 
-        sourcehandle = pcreator.backend.BaseBackend._makeSourceTrove(self, mincfg, factoryHandle, fileHandle, destLabel, factoryData)
-
-        return sourcehandle
-
+        pcreator.backend.BaseBackend._makeSourceTrove(self, sessionHandle, factoryHandle, destLabel, factoryData)
