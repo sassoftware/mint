@@ -57,7 +57,6 @@ class BuildDataNameError(MintError):
 class BuildFileMissing(MintError):
     "The referenced build file doesn't exist."
 class BuildMissing(MintError): "The referenced build does not exist."
-class BuildXmlInvalid(MintError): "Invalid Build XML"
 class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):

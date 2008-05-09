@@ -11,7 +11,6 @@ import tempfile
 import time
 from mod_python import apache
 
-from mint import buildxml
 from mint.web import basictroves
 from mint import communitytypes
 from mint import database
@@ -657,22 +656,6 @@ class ProjectHandler(WebHandler):
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
-
-    @ownerOnly
-    @strFields(label = None)
-    def buildDefs(self, auth, label):
-        # this is not the method you are looking for (RBL-1911)
-        # TODO: REFACTOR ME to fit product definitions
-        raise HttpNotFound
-
-        buildsXml = self.client.checkoutBuildXml(self.project.id, label)
-        builds = buildxml.buildsFromXml(buildsXml, splitDefault = True)
-
-        visibleTypes = self.client.getAvailableBuildTypes()
-
-        return self._write("buildDefs", builds = builds,
-            buildsJson = simplejson.dumps(builds),
-            label = label, visibleTypes = visibleTypes)
 
     @ownerOnly
     def newRelease(self, auth):

@@ -996,38 +996,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnless(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should be in conaryrc')
 
-    def getBuildXml(self):
-        f = open('archive/build.xml')
-        return f.read()
-
-    @fixtures.fixture('Full')
-    def testBuildsFromXml(self, db, data):
-        class DummyRepo(object):
-            def findTrove(*args, **kwargs):
-                return [('group-dummy', \
-                             versions._VersionFromString( \
-                            '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                            frozen=True),
-                         deps.parseFlavor('domU,xen is: x86'))]
-        client = self.getClient('admin')
-        getProjectRepo = client.server._server._getProjectRepo
-        try:
-            client.server._server._getProjectRepo = \
-                lambda *args, **kwargs: DummyRepo()
-
-            buildXml = self.getBuildXml()
-
-            builds = client.newBuildsFromXml(data['projectId'],
-                                             'test.rpath.local@rpl:devel',
-                                             buildXml)
-        finally:
-            pass
-
-        assert len(builds) == 5
-        for build in builds:
-            self.failIf(builds[0].troveName != 'group-dummy',
-                        "trove name was not assigned")
-
     @fixtures.fixture('FullProdDef')
     def testBuildsFromProductDefinition(self, db, data):
         def getRepos(self):
@@ -1104,88 +1072,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         finally:
             conaryclient.ConaryClient.getRepos = oldGetRepos
             MintServer.getProductDefinitionForVersion = oldGetProdDef
-
-
-    @fixtures.fixture('Full')
-    def testCommitBuildXml(self, db, data):
-        client = self.getClient('admin')
-        project = client.getProject(data['projectId'])
-
-        from conary import checkin
-        fork = os.fork
-        os.fork = lambda *args, **kwargs: 0
-
-        _exit = os._exit
-        os._exit = lambda *args, **kwargs: None
-
-        waitpid = os.waitpid
-        os.waitpid = lambda *args, **kwargs: (0, 0)
-
-        chdir = os.chdir
-        os.chdir = lambda *args, **kwargs: None
-
-        checkout = checkin.checkout
-        checkin.checkout = lambda *args, **kwargs: None
-
-        addFiles = checkin.addFiles
-        checkin.addFiles = lambda *args, **kwargs: None
-
-        commit = checkin.commit
-        checkin.commit = lambda *args, **kwargs: None
-
-        newTrove = checkin.newTrove
-        checkin.newTrove = lambda *args, **kwargs: None
-
-        class DummyClient(object):
-            def __init__(self, *args, **kwargs):
-                pass
-            def getRepos(self):
-                return self
-            def getTroveLeavesByLabel(self, *args, **kwargs):
-                return {}
-
-        ConaryClient = conaryclient.ConaryClient
-        conaryclient.ConaryClient = DummyClient
-
-        try:
-            client.commitBuildXml( \
-                data['projectId'], project.getLabel(),
-                '<buildDefinition version="1.0"></buildDefinition>\n')
-        finally:
-            os.fork = fork
-            os._exit = _exit
-            os.waitpid = waitpid
-            os.chdir = chdir
-            checkin.checkout = checkout
-            checkin.addFiles = addFiles
-            checkin.commit = commit
-            checkin.newTrove = newTrove
-            conaryclient.ConaryClient = ConaryClient
-
-    @fixtures.fixture('Full')
-    def testCheckoutBuildXml(self, db, data):
-        client = self.getClient('admin')
-        project = client.getProject(data['projectId'])
-
-        class DummyClient(object):
-            def __init__(self, *args, **kwargs):
-                pass
-            def getRepos(self):
-                return self
-            def getTroveLeavesByLabel(self, *args, **kwargs):
-                return {}
-
-        ConaryClient = conaryclient.ConaryClient
-        conaryclient.ConaryClient = DummyClient
-
-        try:
-            data = client.checkoutBuildXml( \
-                data['projectId'], project.getLabel())
-        finally:
-            conaryclient.ConaryClient = ConaryClient
-
-        self.failIf(data != '<buildDefinition version="1.0"/>\n',
-                    "unexpected data from checkoutBuildXml: %s" % data)
 
 
 class BuildTestApplyTemplates(fixtures.FixturedUnitTest):

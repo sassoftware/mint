@@ -12,7 +12,6 @@ python_files =			\
 	builds.py		\
 	buildtemplates.py	\
 	buildtypes.py		\
-	buildxml.py             \
 	charts.py		\
 	checkhtml.py		\
 	client.py		\
