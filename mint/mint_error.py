@@ -152,9 +152,7 @@ class StageNotFoundInProductDefinition(MintError):
     "Stage %s was not found in the product definition."
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
-        "address. Please try again later."
-class TroveNotFoundForBuildDefinition(MintError):
-    "The trove for a build definition was not found."
+        "address. Please try again later."    
 class TroveNotSet(MintError):
     "This build is not associated with a group."
 class UserAlreadyAdmin(MintError): "User is already an administrator."
@@ -239,6 +237,17 @@ class InvalidBuildOption(MintError):
         return "Invalid value for %s" % self.desc
 
 class BuildOptionValidationException(MintError):
+    def __init__(self, errlist):
+        MintError.__init__(self)
+        self.errlist = errlist
+
+    def freeze(self): return (self.errlist,)
+
+    def __str__(self):
+        return "The following errors occurred: %s" % ", ".join(self.errlist)
+    
+class TroveNotFoundForBuildDefinition(MintError):
+    "The trove for one or more build definitions was not found."
     def __init__(self, errlist):
         MintError.__init__(self)
         self.errlist = errlist

@@ -348,9 +348,11 @@ class FixtureCache(object):
                            dict(troveName='group-postgres',
                                 label='products.rpath.com@rpath:postgres-8.2')]
 
-        buildDefinition = [dict(name='ISO 32', baseFlavor='is: x86',
+        buildDefinition = [dict(name='ISO 32', 
+                                baseFlavor='is: x86',
                                 installableIsoImage=dict()),
-                           dict(name='ISO 64', baseFlavor='is: x86_64',
+                           dict(name='ISO 64', 
+                                baseFlavor='is: x86_64',
                                 installableIsoImage=dict())
                           ]
 

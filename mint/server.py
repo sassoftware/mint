@@ -2101,7 +2101,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     self.setBuildType(buildId, build['_buildType'])
 
                     # Look up the build options.
-                    buildOptions = build['_xmlName']
+                    buildOptions = build[build['_xmlName']]
                     self._setCustomTrovesForBuildId(buildId, buildOptions)
 
                     # Add build data from the buildDefinition to the 
@@ -2115,7 +2115,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
-                    (troveName, buildFlavor))))
+                    (imageGroup, buildFlavor))))
 
         if buildErrors and not force:
             raise TroveNotFoundForBuildDefinition(buildErrors)
