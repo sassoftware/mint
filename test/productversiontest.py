@@ -210,6 +210,9 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
             def getStages(*args):
                 result.append('getStages')
                 return ''
+            def getImageGroup(*args):
+                result.append('getImageGroup')
+                return ''
             def getUpstreamSources(*args):
                 result.append('getUpstreamSources')
                 return ''
@@ -234,7 +237,8 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
 
         self.assertEquals(['getTroveLatestByLabel', 'getFilesFromTrove',
                            'getStages', 'getUpstreamSources',
-                           'getBuildDefinitions', 'getBaseFlavor'] , result)
+                           'getBuildDefinitions', 'getBaseFlavor', 
+                           'getImageGroup'] , result)
 
     @fixtures.fixture("Full")
     def testGetProductDefinitionForNonExistantVersion(self, db, data):

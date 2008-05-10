@@ -1027,7 +1027,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         try:
             buildIds = \
                 client.newBuildsFromProductDefinition(data['versionId'], 
-                    'group-dummy=test.rpath.local@rpl:devel')
+                    'Development', False)
         finally:
             conaryclient.ConaryClient.getRepos = oldGetRepos
             MintServer.getProductDefinitionForVersion = oldGetProdDef
@@ -1068,7 +1068,7 @@ class BuildTest(fixtures.FixturedUnitTest):
             self.assertRaises(TroveNotFoundForBuildDefinition,
                               client.newBuildsFromProductDefinition,
                                   data['versionId'],
-                                  'group-dummy=test.rpath.local@rpl:devel')
+                                  'Development', False)
         finally:
             conaryclient.ConaryClient.getRepos = oldGetRepos
             MintServer.getProductDefinitionForVersion = oldGetProdDef

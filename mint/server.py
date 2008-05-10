@@ -2039,7 +2039,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, stageName, force=False):
+    def newBuildsFromProductDefinition(self, versionId, stageName, force):
         """
         Launch the image builds defined in the product definition for the
         given version id and stage.  If provided, use troveSpec as the top
@@ -2074,7 +2074,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Validate the data in the buildDefinition against build templates.
         buildDefinition = \
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
-
+            
         # Create buildId's for each defined build.
         buildIds = []
         buildErrors = []
@@ -2089,7 +2089,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildGroup = imageGroup
       
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(projectId, buildName, 
+            nvfs = self._resolveTrove(projectId, buildGroup, 
                                       stageLabel, buildFlavor)
 
             if nvfs:
@@ -2151,9 +2151,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         for customTrove in ['mediaTemplateTrove', 'anacondaCustomTrove',
                             'anacondaTemplatesTrove']:
-            if buildOptions.has_key(customTrove):
+            if buildData.has_key(customTrove):
                 troveName = customTroveDict[customTrove]
-                value = '%s=%s' % (troveName, buildOptions[customTrove])
+                value = '%s=%s' % (troveName, buildData[customTrove])
                 self.setBuildDataValue(buildId, troveName, value,
                                        data.RDT_TROVE)
             else:
@@ -4467,6 +4467,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         baseFlavor = pd.getBaseFlavor()
         if baseFlavor:
             pdDict['baseFlavor'] = baseFlavor
+
         imageGroup = pd.getImageGroup()
         if imageGroup:
             pdDict['imageGroup'] = imageGroup

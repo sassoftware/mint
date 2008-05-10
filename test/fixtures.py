@@ -335,12 +335,12 @@ class FixtureCache(object):
             ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
             ~!xen, ~!xfce, ~!xorg-x11.xprint
             """
-        stages = [dict(name='devel',
-                       label='product.example.com@exm:product-1-devel'),
-                  dict(name='qa',
-                       label='product.example.com@exm:product-1-qa'),
-                  dict(name='release',
-                       label='product.example.com@exm:product-1')]
+        stages = [dict(name='Development',
+                       labelSuffix='-devel'),
+                  dict(name='QA',
+                       labelSuffix='-qa'),
+                  dict(name='Release',
+                       labelSuffix='')]
 
 
         upstreamSources = [dict(troveName='group-rap-standard',
@@ -348,16 +348,17 @@ class FixtureCache(object):
                            dict(troveName='group-postgres',
                                 label='products.rpath.com@rpath:postgres-8.2')]
 
-        buildDefinition = [dict(baseFlavor='is: x86',
+        buildDefinition = [dict(name='ISO 32', baseFlavor='is: x86',
                                 installableIsoImage=dict()),
-                           dict(baseFlavor='is: x86_64',
+                           dict(name='ISO 64', baseFlavor='is: x86_64',
                                 installableIsoImage=dict())
                           ]
 
         proddef = dict(baseFlavor=baseFlavor,
                        stages=stages,
                        upstreamSources=upstreamSources,
-                       buildDefinition=buildDefinition)
+                       buildDefinition=buildDefinition,
+                       imageGroup='group-dist')
 
         data['proddef'] = proddef
 

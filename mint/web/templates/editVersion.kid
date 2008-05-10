@@ -241,7 +241,7 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Tag Suffix</th>
+                                        <th>Label Suffix</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>

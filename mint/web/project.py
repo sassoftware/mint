@@ -1140,6 +1140,7 @@ class ProjectHandler(WebHandler):
                     self._addErrors("Missing name for build definition(s)")
                     errCounter += 1
             else:
+                stageNames = helperfuncs.getProductVersionDefaultStagesNames()
                 buildDefs.append(dict(name=builddef.pop('name'),
                                  baseFlavor=builddef.pop('baseFlavorType'),
                                  _buildType=int(builddef.pop('_buildType')),
@@ -1147,7 +1148,7 @@ class ProjectHandler(WebHandler):
                                  # TODO:
                                  # These are hardcoded for now and will be
                                  # fixed later.
-                                 stages=['Development', 'QA', 'Release']))
+                                 stages=stageNames))
 
         # Apply the build templates to the buildDefs list of dicts.  The
         # returned dict is used in the dict sent to

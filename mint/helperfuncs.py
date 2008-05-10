@@ -353,24 +353,35 @@ def setProductVersionDefaultKWArgs(kwargs=None):
         kwargs.setdefault('buildDefinition', [])
         
         return kwargs
+    
+def getProductVersionDefaultStagesNames():
+    """
+    Build a list containing the default stage names
+    """
+    names = []
+    stagesList = getProductVersionDefaultStagesList()
+    for stage in stagesList:
+        names.append(stage['name'])
+        
+    return names
 
 def getProductVersionDefaultStagesList():
-        """
-        Build a list containing the default stages
-        """
-        return [dict(name='Development',
-                     labelSuffix='-devel'),
-                dict(name='QA',
-                     labelSuffix='-qa'),
-                dict(name='Release',
-                     labelSuffix='')]
+    """
+    Build a list containing the default stages
+    """        
+    return [dict(name='Development',
+                 labelSuffix='-devel'),
+            dict(name='QA',
+                 labelSuffix='-qa'),
+            dict(name='Release',
+                 labelSuffix='')]
         
 def getBuildDefsAvaliableBuildTypes(allBuildTypes):
-        """
-        Get a list of the available build types for build defs
-        """
-        # get the build types to allow
-        #    remove online update builds (i.e. imageless)
-        allBuildTypes.remove(buildtypes.IMAGELESS)
+    """
+    Get a list of the available build types for build defs
+    """
+    # get the build types to allow
+    #    remove online update builds (i.e. imageless)
+    allBuildTypes.remove(buildtypes.IMAGELESS)
         
-        return allBuildTypes
+    return allBuildTypes
