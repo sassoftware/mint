@@ -591,7 +591,15 @@ Much like Powdermilk Biscuits[tm]."""
             for k, v in i.iteritems():
                 self.failUnlessEqual(k, 'wargh', 'Unexpected key %s' % k)
                 self.failUnless(isinstance(v, str),
-                                'Should be str value')        
+                                'Should be str value')
+                
+    def testGetBuildDefsAvaliableBuildTypes(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        buildTypes = getBuildDefsAvaliableBuildTypes(
+                         client.getAvailableBuildTypes())
+        
+        # make sure imageless is not in there
+        self.assertTrue(buildtypes.IMAGELESS not in buildTypes)
         
 
 if __name__ == "__main__":

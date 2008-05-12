@@ -365,12 +365,18 @@ def getProductVersionDefaultStagesNames():
         
     return names
 
+def getProductVersionDefaultStage():
+    """
+    Get the default stage 
+    """
+    return dict(name='Development', labelSuffix='-devel')
+
 def getProductVersionDefaultStagesList():
     """
     Build a list containing the default stages
-    """        
-    return [dict(name='Development',
-                 labelSuffix='-devel'),
+    """       
+    defaultStage = getProductVersionDefaultStage() 
+    return [defaultStage,
             dict(name='QA',
                  labelSuffix='-qa'),
             dict(name='Release',

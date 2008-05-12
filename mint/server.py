@@ -712,6 +712,21 @@ class MintServer(object):
         if (shortname + "." + domainname) == socket.gethostname():
             raise InvalidShortname
         return None
+    
+    def _getInitialProductDefinition(self, version, shortname, hostname,
+                                     domainname):
+        """
+        Get the initial proddef for a new project
+        """
+        pd = proddef.ProductDefinition()
+        pd.setProductVersion(version)
+        pd.setProductShortname(shortname)
+        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setConaryRepositoryHostname("%s.%s" % (hostname, domainname))
+        defStage = helperfuncs.getProductVersionDefaultStage()
+        pd.addStage(defStage['name'], defStage['labelSuffix'])
+        
+        return pd
 
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
@@ -741,8 +756,12 @@ class MintServer(object):
             appliance = "no"
             applianceValue = 0
 
-        label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
-             self.cfg.namespace, hostname, version)
+        # get the initial proddef
+        pd = self._getInitialProductDefinition(version, shortname, hostname,
+                                     domainname)
+        
+        # get the default label
+        label = pd.getDefaultLabel()
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
