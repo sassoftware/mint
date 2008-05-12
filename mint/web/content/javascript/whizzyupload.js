@@ -162,6 +162,15 @@ FileUploadForm.prototype = {
         this.enableSubmit();
     },
 
+    showUploadFinished: function()
+    {
+        //hideStatistics has already been called
+        if (this.cancel_event)
+        {
+            disconnect(this.cancel_event);
+        }
+    },
+
     showStatistics: function(sTime, cTime, read, total)
     {
         logDebug("Showing statistics");
@@ -291,7 +300,7 @@ FileUploadForm.prototype = {
             //TODO: add message updating progress
             logDebug("Finished uploading all subframes, submitting main form");
             $(this.form_key).submit()
-            this.finishUpload();
+            this.showUploadFinished();
             return true;
     },
 
