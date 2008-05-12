@@ -2098,8 +2098,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDefinition = \
             builds.applyTemplatesToBuildDefinitions(buildDefinition)
             
-        # Create buildId's for each defined build.
-        buildIds = []
+        # Create build data for each defined build so we can create the builds
+        # later
+        buildsData = []
         buildErrors = []
         for build in buildDefinition:
             
@@ -2121,38 +2122,52 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                       stageLabel, buildFlavor)
 
             if nvfs:
-                # Create a build with options for each trove found.
+                # Store a build with options for each trove found.
                 for nvf in nvfs:
-                    buildId = self.newBuild(projectId, build['name'])
-                    self.setBuildTrove(buildId, nvf[0], nvf[1].freeze(), 
-                                       nvf[2].freeze())
-                    self.setBuildType(buildId, build['_buildType'])
-
-                    # Look up the build options.
-                    buildOptions = build[build['_xmlName']]
-                    self._setCustomTrovesForBuildId(buildId, buildOptions)
-
-                    # Add build data from the buildDefinition to the 
-                    # build object.
-                    for k, v in buildOptions.items():
-                        self.setBuildDataValue(buildId, k, str(v),
-                                               data.RDT_STRING) 
-
-                    buildIds.append(buildId)
+                    buildData = dict()
+                    buildData['projectId'] = projectId
+                    buildData['buildName'] = build['name']
+                    buildData['nvf'] = nvf
+                    buildData['buildType'] = build['_buildType']
+                    buildData['buildOptions'] = build[build['_xmlName']]
+                    buildsData.append(buildData)
             else:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
-                    (imageGroup, buildFlavor))))
+                    (buildGroup, buildFlavor))))
 
         if buildErrors and not force:
             raise TroveNotFoundForBuildDefinition(buildErrors)
 
-        # Start each build.
-        for buildId in buildIds:
+        # Create/start each build.
+        buildIds = []
+        for build in buildsData:
+            buildId = self._createBuildDefBuild(build)
+            buildIds.append(buildId)
             self.startImageJob(buildId)
 
         return buildIds
+    
+    def _createBuildDefBuild(self, buildData):
+        """
+        Create a new build from build definition info
+        @return: the build id
+        """
+        buildId = self.newBuild(buildData['projectId'], buildData['buildName'])
+        self.setBuildTrove(buildId, buildData['nvf'][0], 
+                           buildData['nvf'][1].freeze(), 
+                           buildData['nvf'][2].freeze())
+        self.setBuildType(buildId, buildData['buildType'])
+
+        self._setCustomTrovesForBuildId(buildId, buildData['buildOptions'])
+
+        # Add build data from the buildDefinition to the 
+        # build object.
+        for k, v in buildData['buildOptions'].items():
+            self.setBuildDataValue(buildId, k, str(v), data.RDT_STRING) 
+            
+        return buildId
 
     def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
         """
