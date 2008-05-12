@@ -1028,12 +1028,17 @@ class BuildTest(fixtures.FixturedUnitTest):
             buildIds = \
                 client.newBuildsFromProductDefinition(data['versionId'], 
                     'Development', False)
+            # Should have created 2 builds for Development stage
+            self.assertEquals(2, len(buildIds))
+            
+            buildIds = \
+                client.newBuildsFromProductDefinition(data['versionId'], 
+                    'Booya', False)
+            # Should have created 1 build for Booya stage
+            self.assertEquals(1, len(buildIds))
         finally:
             conaryclient.ConaryClient.getRepos = oldGetRepos
             MintServer.getProductDefinitionForVersion = oldGetProdDef
-
-        # Should have created 2 builds.
-        self.assertEquals(2, len(buildIds))
 
     @fixtures.fixture('FullProdDef')
     def testBuildsFromProductDefinitionNoTrove(self, db, data):

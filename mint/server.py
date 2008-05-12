@@ -2074,10 +2074,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Look up the label for the stage name that was passed in.
         stageLabel = None
+        stageLabelSet = False
+
         for stage in pd.get('stages', []):
             if stage['name'] == stageName:
                 stageLabel = stage['labelSuffix']
-        if not stageLabel:
+                # need to mark it as set because we allow '' for a suffix
+                stageLabelSet = True
+        if not stageLabelSet:
             raise StageNotFoundInProductDefinition(stageName)
 
         # Read the top level group defined in the prod def.
@@ -2098,6 +2102,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildIds = []
         buildErrors = []
         for build in buildDefinition:
+            
+            if stageName not in build['stages']:
+                # we only want builds for this stage
+                continue
+            
             buildFlavor = deps.parseFlavor(build.get('baseFlavor', ''))
 
             # Check whether the top level group to build the image from has

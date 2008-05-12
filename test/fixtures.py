@@ -340,8 +340,16 @@ class FixtureCache(object):
                   dict(name='QA',
                        labelSuffix='-qa'),
                   dict(name='Release',
-                       labelSuffix='')]
-
+                       labelSuffix=''),
+                  dict(name='Booya',
+                       labelSuffix='-booya')]
+        
+        stageNames = []
+        for stage in stages:
+            # don't add booya for all build def stages since that is our 
+            # special case
+            if stage['name'] != "Booya":
+                stageNames.append(stage['name'])
 
         upstreamSources = [dict(troveName='group-rap-standard',
                                 label='rap.rpath.com@rpath:linux-1'),
@@ -350,10 +358,16 @@ class FixtureCache(object):
 
         buildDefinition = [dict(name='ISO 32', 
                                 baseFlavor='is: x86',
-                                installableIsoImage=dict()),
+                                installableIsoImage=dict(),
+                                stages=stageNames),
                            dict(name='ISO 64', 
                                 baseFlavor='is: x86_64',
-                                installableIsoImage=dict())
+                                installableIsoImage=dict(),
+                                stages=stageNames),
+                           dict(name='ISO 64 II', 
+                                baseFlavor='is: x86_64',
+                                installableIsoImage=dict(),
+                                stages=['Booya'])
                           ]
 
         proddef = dict(baseFlavor=baseFlavor,
