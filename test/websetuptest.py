@@ -176,17 +176,10 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertEqual(newCfg.hostName, 'foo')
         self.assertEqual(newCfg.siteDomainName, 'rpath.local')
         self.assertEqual(newCfg.corpSite, 'http://foo.bar.baz')
-        if self.cfg.rBuilderOnline:
-            self.assertEqual(newCfg.defaultBranch, 'foo:bar')
-            self.assertEqual(newCfg.namespace, self.cfg.namespace)
-        else:
-            self.assertEqual(newCfg.namespace, 'foospace')
-            self.assertEqual(newCfg.defaultBranch, self.cfg.defaultBranch)
+        self.assertEqual(newCfg.namespace, 'foospace')
+        self.assertEqual(newCfg.defaultBranch, self.cfg.defaultBranch)
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
-            self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        self.assertTrue(len(newCfg.mirrorRolePass) == 128)
-        for x in newCfg.mirrorRolePass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
     @testsuite.context("more_cowbell")

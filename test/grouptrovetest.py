@@ -399,14 +399,10 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
         addTestTrove(groupTrove, "testcase", trvVersion = trvVersion)
         addTestTrove(groupTrove, "testcase2", trvVersion = trvVersion)
-        if self.cfg.rBuilderOnline:
-            assert (groupTrove.getLabelPath() == ['foo.' + \
-                    MINT_PROJECT_DOMAIN + '@rpl:devel'])
-        else:
-            assert (groupTrove.getLabelPath() == [
-                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                        client.server._server.cfg.namespace + ':foo-1.0-devel',
-                    'foo.' + MINT_PROJECT_DOMAIN + '@rpl:devel'])
+        assert (groupTrove.getLabelPath() == [
+                'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                    client.server._server.cfg.namespace + ':foo-1.0-devel',
+                'foo.' + MINT_PROJECT_DOMAIN + '@rpl:devel'])
 
     @fixtures.fixture("Full")
     def testEmptyCook(self, db, data):
@@ -671,12 +667,9 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
     def testLabelPath(self, db, data):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
-        if self.cfg.rBuilderOnline:
-            assert groupTrove.getLabelPath() == ['foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN]
-        else:
-            assert groupTrove.getLabelPath() == [
-                    'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                        client.server._server.cfg.namespace + ':foo-1.0-devel']
+        assert groupTrove.getLabelPath() == [
+                'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                    client.server._server.cfg.namespace + ':foo-1.0-devel']
 
         client = self.getClient('user')
         # bogus call to prime client

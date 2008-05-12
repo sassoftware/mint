@@ -366,6 +366,22 @@ function processListActiveJobs(aReq) {
     swapDOM(oldJobTable, jobTable);
 }
 
+function addOutboundMirror_setUseReleases (value, doHooks) {
+    // Update radio buttons for useReleases
+    $('useReleases').checked = value ? "selected" : "";
+    $('useLabels').checked = value ? "" : "selected";
+
+    // Disable the other elements if useReleases is on
+    var elements = ['allLabels', 'selectLabels', 'mirrorByLabel', 'mirrorByGroup'];
+    for (var i in elements)
+        $(elements[i]).disabled = value;
+
+    if (doHooks) {
+        connect('useReleases', 'onclick', addOutboundMirror_onUseReleases);
+        connect('useLabels', 'onclick', addOutboundMirror_onUseReleases);
+    }
+}
+
 // RPC calls ----------------------------------------------------------------
 
 function getBuildStatus(buildId, hasFiles) {
@@ -587,6 +603,13 @@ function addOutboundMirror_onProjectChange (e) {
     } else {
         $('submitButton').disabled = true;
     }
+}
+
+function addOutboundMirror_onUseReleases (e) {
+    if (e.src().id == 'useReleases')
+        addOutboundMirror_setUseReleases(true, false);
+    else
+        addOutboundMirror_setUseReleases(false, false);
 }
 
 // Front Page

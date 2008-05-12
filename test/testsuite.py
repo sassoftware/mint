@@ -142,8 +142,13 @@ def main(argv=None, individual=True):
     class rBuilderTestSuiteHandler(testhelp.TestSuiteHandler):
         suiteClass = testhelp.ConaryTestSuite
 
+        def __init__(self, *args, **kwargs):
+            self.mintDir = kwargs.pop('mintDir')
+            self.pluginDir = kwargs.pop('pluginDir')
+            testhelp.TestSuiteHandler.__init__(self, *args, **kwargs)
+
         def getCoverageDirs(self, environ):
-            return environ['mint']
+            return [self.mintDir, self.pluginDir]
 
         def getCoverageExclusions(self, environ):
             return EXCLUDED_PATHS
@@ -160,8 +165,12 @@ def main(argv=None, individual=True):
     if cwd != topdir and cwd not in sys.path:
         sys.path.insert(0, cwd)
 
+    mintDir = os.path.join(os.getenv('MINT_PATH'), 'mint')
+    pluginDir = os.path.join(os.getenv('RAA_PLUGINS_PATH'), 'rPath')
+
     handler = rBuilderTestSuiteHandler(individual=individual, topdir=topdir,
-                                       testPath=testPath, conaryDir=conaryDir)
+                                       testPath=testPath, conaryDir=conaryDir,
+                                       mintDir=mintDir, pluginDir=pluginDir)
     _handler = handler
     results = handler.main(argv)
 

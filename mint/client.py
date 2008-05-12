@@ -461,6 +461,34 @@ class MintClient:
         """
         return self.server.deletePublishedRelease(pubReleaseId)
 
+    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
+        """
+        Publish a published release. The release will become visible on
+        the project homepage and RSS feed, and users without read
+        access will be able to download the images. Depending on the
+        value of I{shouldMirror}, the release may be mirrored to
+        all configured Update Services.
+
+        @param pubReleaseId: the id of the published release
+        @param shouldMirror: if True, the release will be marked for
+            mirroring
+        @type shouldMirror: bool
+        """
+        return self.server.publishPublishedRelease(pubReleaseId, shouldMirror)
+
+    def unpublishPublishedRelease(self, pubReleaseId):
+        """
+        Unpublish a published release. The release will no longer be
+        visible on the project homepage and RSS feed, and
+        unprivileged users will not be able to see the associated
+        builds. If the release was marked for mirroring, it will no
+        longer be mirrored, although if it has already been mirrored
+        the troves will not be removed from the mirror.
+
+        @param pubReleaseId: the id of the published release
+        """
+        return self.server.unpublishPublishedRelease(pubReleaseId)
+
     def getCommunityId(self, projectId, communityType):
         return self.server.getCommunityId(projectId, communityType)
 
@@ -614,9 +642,9 @@ class MintClient:
                 sourceEntitlement, allLabels)
 
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels = False, recurse = False, id = -1):
+            allLabels = False, recurse = False, useReleases = False, id = -1):
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
-                allLabels, recurse, id)
+                allLabels, recurse, useReleases, id)
 
     def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
         return self.server.setOutboundMirrorTargets(outboundMirrorId,
@@ -661,6 +689,12 @@ class MintClient:
 
     def getOutboundMirrorGroups(self, outboundMirrorId):
         return self.server.getOutboundMirrorGroups(outboundMirrorId)
+
+    def getBuildsForPublishedRelease(self, pubReleaseId):
+        return self.server.getBuildsForPublishedRelease(pubReleaseId)
+
+    def getMirrorableReleasesByProject(self, projectId):
+        return self.server.getMirrorableReleasesByProject(projectId)
 
     def addUpdateService(self, hostname, adminUser, adminPassword,
             description):

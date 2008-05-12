@@ -34,7 +34,20 @@
                     </tr>
                     <div py:strip="True" py:for="data in rows">
                         <tr>
-                            <td><a href="editOutbound?id=${data.get('id')}">${data.get('projectName')}</a><br /><div style="font-size: smaller;"><span py:if="not data.get('groups')" py:strip="True">All packages<br /></span><div py:for="g in data.get('groups',[])" py:strip="True">${g}<br /></div><span py:if="data.get('allLabels')" py:strip="True">All labels</span><div py:for="l in data.get('labels', [])" py:strip="True">${l}<br /></div></div></td>
+                            <td>
+                                <a href="editOutbound?id=${data.get('id')}">${data.get('projectName')}</a>
+                                <br />
+                                <div style="font-size: smaller;">
+                                    <span py:if="data['useReleases']" py:strip="True">All releases</span>
+                                    <span py:if="not data['useReleases']" py:strip="True">
+                                        <span py:if="not data['groups']" py:strip="True">All packages<br /></span>
+                                        <div py:for="g in data.get('groups',[])" py:strip="True">${g}<br /></div>
+
+                                        <span py:if="data['allLabels']" py:strip="True">All labels</span>
+                                        <div py:for="l in data.get('labels', [])" py:strip="True">${l}<br /></div>
+                                    </span>
+                                </div>
+                            </td>
                             <td style="font-size: smaller;"><div py:if="not data.get('targets', [])" style="color: red;">No targets defined</div><div py:for="tId, tUrl in data.get('targets', [])">${tUrl}<br /></div></td>
                             <td py:content="data.get('mirrorSources') and 'Yes' or 'No'" />
                             <td py:content="data.get('orderHTML')" />

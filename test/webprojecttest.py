@@ -417,6 +417,29 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                       server=self.getProjectServerHostname())
         assert 'This is a fledgling %s'%pText in page.body
 
+    def testProjectPageManageNotOwner(self):
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'manage your %s'%pText.lower() not in page.body.lower()
+
+    def testProjectPageManageOwner(self):
+        pText = helperfuncs.getProjectText().lower()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        self.webLogin('testuser', 'testpass')
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'manage your %s'%pText.lower() in page.body.lower()
+
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()
         projectHandler.cfg = self.mintCfg
@@ -438,13 +461,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
 
-        if self.mintCfg.rBuilderOnline:
-            for troveName in refNamesRaa:
-                assert troveName in troveNames['raa.rpath.org@rpath:raa-2']
-
-            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1'] + troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
-        else:
-            self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
 
 
     testsuite.context('more_cowbell')

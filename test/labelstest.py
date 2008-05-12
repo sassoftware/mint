@@ -25,15 +25,10 @@ class LabelsTest(fixtures.FixturedUnitTest):
         newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
 
-        if self.cfg.rBuilderOnline:
-            assert(project.getLabelIdMap() ==\
-                {'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId,
-                 'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
-        else:
-            assert(project.getLabelIdMap() ==\
-                 {'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                     adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1,
-                 'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId})
+        assert(project.getLabelIdMap() ==\
+             {'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                 adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1,
+             'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId})
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "userpass",
@@ -48,13 +43,9 @@ class LabelsTest(fixtures.FixturedUnitTest):
                     )
 
         project.removeLabel(newLabelId)
-        if self.cfg.rBuilderOnline:
-            assert(project.getLabelIdMap() ==\
-                {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
-        else:
-            assert(project.getLabelIdMap() ==\
-                {'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                     adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1})
+        assert(project.getLabelIdMap() ==\
+            {'foo.' + MINT_PROJECT_DOMAIN + '@' +
+                 adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1})
 
         try:
             adminClient.server.getLabel(newLabelId)

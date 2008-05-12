@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(45, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 2)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -238,7 +238,9 @@ def _createBuilds(db):
             timeUpdated         DOUBLE,
             updatedBy           INTEGER,
             timePublished       DOUBLE,
-            publishedBy         INTEGER
+            publishedBy         INTEGER,
+            shouldMirror        INTEGER NOT NULL DEFAULT 0,
+            timeMirrored        INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         commit = True
@@ -589,6 +591,7 @@ def _createMirrorInfo(db):
             matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
             mirrorOrder      INT DEFAULT 0,
             fullSync         INT NOT NULL DEFAULT 0,
+            useReleases      INTEGER NOT NULL DEFAULT 0,
             CONSTRAINT OutboundMirrors_sourceProjectId_fk
                 FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE ON UPDATE CASCADE

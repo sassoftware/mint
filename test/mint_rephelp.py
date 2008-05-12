@@ -254,7 +254,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintDb.reset()
 
     def getTestDir(self):
-        return os.environ.get("MINT_PATH", "")  + "/test/"
+        return os.environ.get("MINT_TEST_PATH", "") + '/'
 
     def getMap(self):
         return { self.name: 'http://localhost:%d/conary/' %self.port }

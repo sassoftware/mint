@@ -59,12 +59,39 @@
                     </select>
                 </td>
                 <td>
-                    <select id="pd-builddef-picker-baseFlavorType" name="pd-builddef-${ordinal}-baseFlavorType">
-                        <option py:for="v in sorted(buildtypes.buildDefinitionFlavorTypes.values())"
-                            py:attrs="{'value': buildtypes.buildDefinitionFlavorMap[v],
-                                       'selected': (bdef.get('baseFlavor', '') == buildtypes.buildDefinitionFlavorMap[v]) and 'selected' or None}"
-                            py:content="buildtypes.buildDefinitionFlavorNameMap[v]" />
-                    </select>
+                    <div py:strip="True" py:for="key in visibleBuildTypes">
+                        <?python
+                            elementClasses = 'arch-%d' % key
+                            elementName = 'pd-builddef-%s-baseFlavorType' % (ordinal)
+                            elementId = 'pd-builddef-buildtype%s-%s-baseFlavorType' % (key, ordinal)
+
+                            # get the supported arch types for this build type
+                            if buildtypes.buildDefinitionSupportedFlavorsMap.has_key(key):
+                                suppArchTypes = dict()
+                                typesList = buildtypes.buildDefinitionSupportedFlavorsMap[key]
+                                for type in typesList:
+                                    suppArchTypes[type] = buildtypes.buildDefinitionFlavorMap[type]
+                            else:
+                                # not in the map, so allow all
+                                suppArchTypes = buildtypes.buildDefinitionFlavorMap
+
+                            elementDisabled = buildType != key and 'disabled' or None
+                            elementStyle = buildType != key and 'display: none' or None
+
+                            # get a default flavor to work with in case build type hasn't been set
+                            # this is just the first value in the supported archs dict
+                            defaultVal = ''
+                            for val in suppArchTypes.itervalues():
+                                defaultVal = val
+                                break
+                        ?>
+                        <select py:attrs="{'id': elementId, 'name': elementName, 'disabled': elementDisabled}" style="${elementStyle}" class="${elementClasses}">
+                            <option py:for="v in sorted(suppArchTypes)"
+                                py:attrs="{'value': buildtypes.buildDefinitionFlavorMap[v],
+                                           'selected': (bdef.get('baseFlavor', defaultVal) == buildtypes.buildDefinitionFlavorMap[v]) and 'selected' or None}"
+                                py:content="buildtypes.buildDefinitionFlavorNameMap[v]" />
+                        </select>
+                    </div>
                 </td>
                 <td class="row-button"><a class="pd-builddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" title="Edit" /></a></td>
                 <td class="row-button"><a class="pd-builddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
@@ -100,7 +127,7 @@
                                               'type': 'text',
                                               'name': elementName,
                                               'value': dataValue,
-                                              'class': 'field',
+                                              'class': (dataRow[0] == RDT_STRING) and 'field-text-string' or 'field-text-int',
                                               'disabled': elementDisabled}" />
                             <div class="clearleft">&nbsp;</div>
                         </div>
@@ -172,7 +199,8 @@
                 If kwargs['linked'] exists, we were sent here after creating a 
                 new product.  Add the transitional help text.
                 -->
-                TRANSITIONAL TEXT GOES HERE
+                Next enter the additional data necessary to define version
+                '${kwargs['name']}' of your ${projectText().lower()}.
             </p>
             <!--! Only new ones have a required field for now -->
             <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>

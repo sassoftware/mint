@@ -81,6 +81,8 @@ from conary.dbstore import sqlerrors, sqllib
 from conary import checkin
 from conary.build import use
 
+from rpath_common.proddef import api1 as proddef
+
 try:
     # Conary 2
     from conary.repository.netrepos.reposlog \
@@ -456,30 +458,6 @@ class MintServer(object):
                 conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
 
-    def _addMirrorRoleToProject(self, project):
-        role = 'mirror'
-        user = 'mirror'
-        repo = self._getProjectRepo(project)
-        label = versions.Label(project.getLabel())
-        try:
-            try:
-                self._addUserToProject(project, user, self.cfg.mirrorRolePass, 
-                    role, label=label, repo=repo)
-            except UserAlreadyExists:
-                # don't care
-                pass
-            repo.setRoleCanMirror(label, role, True)
-        except Exception, e:
-            raise PublishedReleaseMirrorRole(str(e))
-
-    def _addUserToProject(self, project, user, password, role, label=None, repo=None):
-        if not label:
-            label = versions.Label(project.getLabel())
-        if not repo:
-            repo = self._getProjectRepo(project)
-        
-        helperfuncs.addUserToRepository(repo, user, password, role, label)
-
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -712,45 +690,29 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        if self.cfg.rBuilderOnline:
-            # make sure the hostname is valid
-            self._validateHostname(hostname, domainname, reservedHosts)
-        else:
-            # make sure the shortname, version, and prodtype are valid, and
-            # validate the hostname also in case it ever splits from being
-            # the same as the short name
-            self._validateShortname(shortname, domainname, reservedHosts)
-            self._validateHostname(hostname, domainname, reservedHosts)
-            if not version or len(version) <= 0:
-                raise projects.InvalidVersion
-            if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
-                raise projects.InvalidProdType
+        # make sure the shortname, version, and prodtype are valid, and
+        # validate the hostname also in case it ever splits from being
+        # the same as the short name
+        self._validateShortname(shortname, domainname, reservedHosts)
+        self._validateHostname(hostname, domainname, reservedHosts)
+        if not version or len(version) <= 0:
+            raise projects.InvalidVersion
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
+            raise projects.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
-        if self.cfg.rBuilderOnline:
-            if appliance == "yes":
-                applianceValue = 1
-            elif appliance == "no":
-                applianceValue = 0
-            else:
-                applianceValue = None
+        if prodtype == 'Appliance':
+            appliance = "yes"
+            applianceValue = 1
         else:
-            if prodtype == 'Appliance':
-                appliance = "yes"
-                applianceValue = 1
-            else:
-                appliance = "no"
-                applianceValue = 0
+            appliance = "no"
+            applianceValue = 0
 
-        if not self.cfg.rBuilderOnline:
-            # if rBA 
-            label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
-                 self.cfg.namespace, hostname, version) 
-        else:
-            label = fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch
+        label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
+             self.cfg.namespace, hostname, version)
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
@@ -1190,23 +1152,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    @typeCheck(int, str, str, str, str)
+    @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def editProject(self, projectId, projecturl, desc, name, appliance):
+    def editProject(self, projectId, projecturl, desc, name):
         if projecturl and not (projecturl.startswith('https://') or \
                                projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
-        if appliance == "yes":
-            applianceValue = 1
-        elif appliance == "no":
-            applianceValue = 0
-        else:
-            applianceValue = None
         return self.projects.update(projectId, projecturl=projecturl,
-                                    description = desc, name = name,
-                                    isAppliance = applianceValue)
+                                    description = desc, name = name)
 
     @typeCheck(int, str)
     @requiresAuth
@@ -2609,84 +2564,28 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'updatedBy': self.auth.userId})
             return self.publishedReleases.update(pubReleaseId, **valDict)
 
-    @typeCheck(int)
+    @typeCheck(int, bool)
     @requiresAuth
     @private
-    def publishPublishedRelease(self, pubReleaseId):
+    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
         
-        # add the mirror role to the project
-        self._addMirrorRoleToProject(project)
-
         valDict = {'timePublished': time.time(),
-                   'publishedBy': self.auth.userId}
+                   'publishedBy': self.auth.userId,
+                   'shouldMirror': int(shouldMirror),
+                   }
         return self.publishedReleases.update(pubReleaseId, **valDict)
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def allowReleaseGroupsPublishTorUS(self, pubReleaseId):
-        """
-        Set all builds in the release to allow mirroring so they can
-        be published to rUS
-        """
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        project = projects.Project(self, projectId)
-
-        # do sanity checks, but don't raise an exception if the release is
-        # already published since that is the norm (i.e. we get called after
-        # publish)
-        self._checkPublishedRelease(pubReleaseId, projectId, 
-            checkPublished=False)
-        
-        repo = self._getProjectRepo(project)
-        self._updateTroveAccess(repo, pubReleaseId, 'mirror')
-
-        return True
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def disallowReleaseGroupsPublishTorUS(self, pubReleaseId):
-        """
-        Set all builds in the release to disallow mirroring so they can not
-        be published to rUS
-        """
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        project = projects.Project(self, projectId)
-
-        self._checkUnpublishedRelease(pubReleaseId, projectId, 
-            failIfNotPub=False)
-        
-        repo = self._getProjectRepo(project)
-        self._updateTroveAccess(repo, pubReleaseId, 'mirror', addAccess = False)
-
-        return True
-
-    def _updateTroveAccess(self, repo, pubReleaseId, role, addAccess = True):
-        
-        builds = self.getBuildsForPublishedRelease(pubReleaseId)
-        troveList = []
-        for bId in builds:
-            b = self.getBuild(bId)
-            name = b['troveName']
-            version = versions.ThawVersion(b['troveVersion'])
-            flavor = deps.ThawFlavor(b['troveFlavor'])
-            troveList.append((name, version, flavor))
-
-        if troveList:
-            if addAccess:
-                repo.addTroveAccess('mirror', troveList)
-            else:
-                repo.deleteTroveAccess('mirror', troveList)
-
-        return True
+    def getMirrorableReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.publishedReleases.getMirrorableReleasesByProject(projectId)
 
     def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
         """
@@ -4162,15 +4061,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
 
     @private
-    @typeCheck(int, (list, str), bool, bool, int)
+    @typeCheck(int, (list, str), bool, bool, bool, int)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels, recurse, id):
+            allLabels, recurse, useReleases, id):
         if id != -1:
             self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = allLabels,
                                        recurse = recurse,
+                                       useReleases=useReleases,
                                        fullSync = True)
         else:
             cu = self.db.cursor()
@@ -4180,6 +4080,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                            targetLabels = ' '.join(targetLabels),
                                            allLabels = allLabels,
                                            recurse = recurse,
+                                           useReleases=useReleases,
                                            mirrorOrder = mirrorOrder,
                                            fullSync = True)
         return id
@@ -4643,9 +4544,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
-        # TODO figure out where the real imports are going to be
-        from rpath_common.proddef import api1 as proddef
-
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         projectCfg = project.getConaryConfig()
@@ -4672,12 +4570,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except KeyError:
             raise ProductDefinitionVersionNotFound()
 
-        pd = proddef.ProductDefinition(xml=xml)
+        pd = proddef.ProductDefinition(fromStream=xml)
 
-        pdDict = dict(baseFlavor=pd.getBaseFlavor(),
-                      stages=pd.getStages(),
-                      upstreamSources=pd.getUpstreamSources(),
-                      buildDefinition=pd.getBuildDefinition())
+        stages = [dict(name=s.name, label=s.label) for s in pd.getStages()]
+        sources = [dict(troveName=s.troveName, label=s.label) \
+                   for s in pd.getUpstreamSources()]
+        buildDefs = [{'name' : b.name,
+                      'baseFlavor' : b.baseFlavor,
+                      'byDefault' : b.byDefault,
+                      b.imageType.tag : b.imageType.fields}
+                     for b in pd.getBuildDefinitions()]
+
+        pdDict = dict(baseFlavor=pd.getBaseFlavor() or '',
+                      stages=stages,
+                      upstreamSources=sources,
+                      buildDefinition=buildDefs)
 
         return pdDict
 
@@ -4685,12 +4592,33 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(int, dict)
     def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
-        # TODO figure out where the real imports are going to be
-        from rpath_common.proddef import api1 as proddef
-
         # Convert productDefinitionDict to Xml.
-        pd = proddef.ProductDefinition(productDefinitionDict)
-        pdXml = pd.toXml()
+        pd = proddef.ProductDefinition()
+
+        pd.setBaseFlavor(productDefinitionDict.get('baseFlavor', ''))
+
+        # Add each stage defined in the dict to pd.
+        for stage in productDefinitionDict.get('stages', []):
+            pd.addStage(stage['name'], stage['label'])
+
+        # Add each build definition defined in the dict to pd.
+        for buildDefn in productDefinitionDict.get('buildDefinition', []):
+            name = buildDefn.get('name', '')
+            baseFlavor = buildDefn.get('baseFlavor', '')
+            imageKey = buildDefn.get('_xmlName', '')
+            imageType = proddef.ProductDefinition.imageType(imageKey, 
+                            buildDefn.get(imageKey, {})) 
+            pd.addBuildDefinition(name=name, baseFlavor=baseFlavor, 
+                                  imageType=imageType)
+
+        # Add each upstream source defined in the dict to pd.
+        for us in productDefinitionDict.get('upstreamSources', []):
+            pd.addUpstreamSource(us['troveName'], us['label'])
+
+        # Create an empty StringIO object for the serialization of pd.
+        pdStream = StringIO.StringIO()
+        pd.serialize(pdStream)
+        pdXml = pdStream.getvalue()
 
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)

@@ -212,6 +212,16 @@ buildDefinitionFlavorNameMap = {
     BD_VMWARE_X86_64    : 'VMware x86 (64-bit)',
 }
 
+# a mapping of build types to supported flavors.  If a build type does not
+# exist in this map, it is assumed it supports all flavors.  The first flavor
+# is assumed to be the default.
+buildDefinitionSupportedFlavorsMap = {
+    VMWARE_IMAGE       : [BD_VMWARE_X86, BD_VMWARE_X86_64],
+    VMWARE_ESX_IMAGE   : [BD_VMWARE_X86, BD_VMWARE_X86_64],
+    XEN_OVA            : [BD_DOMU_X86, BD_DOMU_X86_64],
+    AMI                : [BD_DOMU_X86, BD_DOMU_X86_64],
+}
+
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
 def codegen():

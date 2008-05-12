@@ -182,12 +182,12 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
         adminClient.setOutboundMirrorTargets(omid, [usid])
 
         labels = adminClient.getOutboundMirrors()
-        assert(labels ==
-                [[1, projectId, sourceLabel, False, False, [], 0, True]])
+        self.failUnlessEqual(labels,
+            [[1, projectId, sourceLabel, False, False, [], 0, True, False]])
 
         adminClient.delOutboundMirror(1)
         labels = adminClient.getOutboundMirrors()
-        assert(labels == [])
+        self.failUnlessEqual(labels, [])
 
     @fixtures.fixture("Full")
     def testOutboundMirrorAllLabels(self, db, data):

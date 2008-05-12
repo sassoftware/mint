@@ -31,7 +31,9 @@ class OutboundMirrorsTable(database.KeyedTable):
     key = 'outboundMirrorId'
 
     fields = ['outboundMirrorId', 'sourceProjectId', 'targetLabels',
-              'allLabels', 'recurse', 'matchStrings', 'mirrorOrder']
+              'allLabels', 'recurse', 'matchStrings', 'mirrorOrder',
+              'useReleases',
+              ]
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -67,11 +69,12 @@ class OutboundMirrorsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("""SELECT outboundMirrorId, sourceProjectId,
                         targetLabels, allLabels, recurse,
-                        matchStrings, mirrorOrder, fullSync
+                        matchStrings, mirrorOrder, fullSync,
+                        useReleases
                         FROM OutboundMirrors
                         ORDER by mirrorOrder""")
         return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
-                x[6], bool(x[7])] \
+                x[6], bool(x[7]), bool(x[8])] \
                 for x in cu.fetchall()]
 
 class OutboundMirrorsUpdateServicesTable(database.DatabaseTable):

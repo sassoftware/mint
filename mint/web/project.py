@@ -129,16 +129,34 @@ class ProjectHandler(WebHandler):
             mirrored = bool(self.client.getInboundMirror(self.project.id))
 
             # anonymous external projects can't be mirrored
-            _, _, userMap, entMap = self.client.getLabelsForProject(self.project.id)
+            _, _, userMap, entMap = self.client.getLabelsForProject(
+                                                                self.project.id)
             anonymous = len(userMap) == 0 and len(entMap) == 0
         else:
             mirrored = False
             anonymous = False
         if self.cfg.VAMUser:
-            vmtnId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
+            vmtnId = self.client.getCommunityId(self.project.getId(), 
+                                                communitytypes.VMWARE_VAM)
         else:
             vmtnId = None
-        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous, vmtnId = vmtnId)
+            
+        if self.project.external:
+            external = True
+        else:
+            external = False
+            
+        if self.userLevel == userlevels.OWNER and not external:
+            # get the versions associated with a product
+            versions = self.client.getProductVersionListForProduct(
+                                                                self.project.id)
+        else:
+            versions = []
+            
+        return self._write("projectPage", mirrored = mirrored, 
+                           anonymous = anonymous, vmtnId = vmtnId,
+                           versions = versions,
+                           external = external)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -871,9 +889,9 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @dictFields(yesArgs = {})
-    @boolFields(confirmed = False)
+    @boolFields(confirmed=False, shouldMirror=False)
     @strFields(vmtn = '')
-    def publishRelease(self, auth, confirmed, vmtn, pubtorus = False, **yesArgs):
+    def publishRelease(self, auth, confirmed, vmtn, shouldMirror, **yesArgs):
         pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
         if confirmed:
             vmtnError = ''
@@ -907,7 +925,7 @@ class ProjectHandler(WebHandler):
                                                    communitytypes.VMWARE_VAM,
                                                    vamId)
 
-            pubrelease.publish(pubtorus=pubtorus)
+            pubrelease.publish(shouldMirror=shouldMirror)
             if vmtnError:
                 self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version) + '.  ' + vmtnError)
             else:
@@ -928,7 +946,7 @@ class ProjectHandler(WebHandler):
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
                     noLink = "releases", previewData = previewData, 
-                    pubtorus = False)
+                    shouldMirror=False)
 
     @ownerOnly
     @dictFields(yesArgs = {})
@@ -1085,48 +1103,29 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
-            'desc': self.project.getDesc(),
-            'branch': self.project.getLabel().split('@')[1],
-            'appliance': self.project.getApplianceValue()
+            'desc': self.project.getDesc()
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @strFields(projecturl = '', desc = '', name = '', branch = '',
-               appliance = 'unknown', commitEmail = '')
+    @strFields(projecturl = '', desc = '', name = '',
+               commitEmail = '')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           branch, appliance, commitEmail):
+                           commitEmail):
         pText = getProjectText()
         if not name:
             self._addErrors("You must supply a %s title"%pText.lower())
-        try:
-            host = versions.Label(self.project.getLabel()).getHost()
-            label = host + '@' + branch
-            versions.Label(label)
-        except ParseError:
-            self._addErrors("Invalid branch name")
 
         if not self._getErrors():
             try:
-                self.project.editProject(projecturl, desc, name, appliance)
+                self.project.editProject(projecturl, desc, name)
                 self.project.setCommitEmail(commitEmail)
-
-                # this is a little bit nasty because the label API
-                # needs some work.
-                oldLabel = self.project.getLabel()
-                if oldLabel != label:
-                    labelId = self.project.getLabelIdMap()[oldLabel]
-                    labelInfo = self.client.server.getLabel(labelId)
-                    self.project.editLabel(labelId, label, labelInfo['url'],
-                        labelInfo['authType'], labelInfo['username'],
-                        labelInfo['password'], labelInfo['entitlement'])
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'branch': self.project.getLabel().split('@')[1],
-                      'appliance': appliance, 'commitEmail': commitEmail}
+                      'commitEmail': commitEmail}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
@@ -1137,6 +1136,10 @@ class ProjectHandler(WebHandler):
     @intFields(id = -1)
     def editVersion(self, auth, id, *args, **kwargs):
         isNew = (id == -1)
+        
+        # external projects can't use this yet
+        if self.project.external:
+            raise ProductDefinitionVersionExternalNotSup();
         
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))

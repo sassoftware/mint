@@ -188,7 +188,6 @@ class SetupHandler(WebHandler):
             newCfg.requireSigs = True
 
         newCfg.authPass = helperfuncs.genPassword(32)
-        newCfg.mirrorRolePass = helperfuncs.genPassword(128)
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 

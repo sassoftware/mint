@@ -21,6 +21,7 @@
                 getProjectLabels(getElement('projectId').value,
                     ${kwargs['selectedLabels']});
                 connect('projectId', 'onchange', addOutboundMirror_onProjectChange);
+                addOutboundMirror_setUseReleases(${kwargs['useReleases']}, true);
             });
         </script>
     </head>
@@ -52,10 +53,14 @@
                                 Choose one or more Update Services
                                 to publish the content for this project.
                             </p>
-                            <div py:strip="True" py:for="upsrvId, hostname, _, _, description in kwargs['allTargets']">
-                                <input id="upsrv_${upsrvId}" class="check" type="checkbox" name="selectedTargets" value="${upsrvId}" py:attrs="{'checked': (upsrvId in kwargs['selectedTargets']) and 'checked' or None}" />
-                                <label for="upsrv_${upsrvId}">${hostname}<span py:strip="True" py:if="description"> (${helperfuncs.truncateForDisplay(description)})</span></label><br />
-                            </div>
+                            <ul class="plainlist indent">
+                                <li py:for="upsrvId, hostname, _, _, description in kwargs['allTargets']"><label>
+                                    <input id="upsrv_${upsrvId}" name="selectedTargets" class="check" type="checkbox" value="${upsrvId}"
+                                        py:attrs="{'checked': (upsrvId in kwargs['selectedTargets']) and 'checked' or None}" />
+                                    ${hostname}
+                                    <span py:strip="True" py:if="description"> (${helperfuncs.truncateForDisplay(description)})</span>
+                                </label></li>
+                            </ul>
                             <div class="help" py:if="not kwargs['allTargets']">
                                 No Update Services have been configured for this
                                 instance of ${cfg.productName}. You may still
@@ -74,6 +79,32 @@
                         </td>
                     </tr>
                     <tr>
+                        <th><em class="required">Method:</em></th>
+                        <td>
+                            <p class="help notopmargin">
+                                Select a method by which appliances will be
+                                mirrored.  Release-based publishing is the
+                                preferred method, as it will mirror precisely
+                                the groups from which you have built images.
+                                Label-based mirroring is also available for
+                                backwards compatibility and for certain
+                                scenarios in which it is more applicable.
+                            </p>
+                            <ul class="plainlist indent">
+                                <li><label>
+                                    <input py:attrs="{'checked': kwargs['useReleases'] and 'checked' or None}" class="radio" type="radio"
+                                        name="useReleases" id="useReleases" value="1" />
+                                    Mirror published releases
+                                </label></li>
+                                <li><label>
+                                    <input py:attrs="{'checked': not kwargs['useReleases'] and 'checked' or None}" class="radio" type="radio"
+                                        name="useReleases" id="useLabels" value="0" />
+                                    Mirror labels
+                                </label></li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
                         <th><em class="required">Labels:</em></th>
                         <td>
                             <p class="help notopmargin">
@@ -82,10 +113,18 @@
                                 or you may choose to restrict publishing content
                                 to one or more labels.
                             </p>
-                            <input py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" class="radio" type="radio" name="allLabels" value="1" id="allLabels" />
-                            <label for="allLabels">Mirror all labels</label><br />
-                            <input py:attrs="{'checked': not kwargs['allLabels'] and 'checked' or None}" class="radio" type="radio" name="allLabels" value="0" id="selectLabels" />
-                            <label for="selectLabels">Mirror only selected labels</label>
+                            <ul class="plainlist indent">
+                                <li><label>
+                                    <input name="allLabels" id="allLabels" value="1" class="radio" type="radio"
+                                        py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" />
+                                    Mirror all labels
+                                </label></li>
+                                <li><label>
+                                    <input name="allLabels" id="selectLabels" value="0" class="radio" type="radio"
+                                        py:attrs="{'checked': not kwargs['allLabels'] and 'checked' or None}" />
+                                    Mirror only selected labels
+                                </label></li>
+                            </ul>
                             <div id="chklist_labelList" />
                         </td>
                     </tr>
@@ -99,10 +138,18 @@
                                 group chosen including all of the packages
                                 contained within the group.
                             </p>
-                            <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'label') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="label" id="mirrorByLabel" />
-                                <label for="mirrorByLabel">Mirror all contents</label><br />
-                            <input py:attrs="{'checked': (kwargs['mirrorBy'] == 'group') and 'checked' or None}" class="radio" type="radio" name="mirrorBy" value="group" id="mirrorByGroup" />
-                            <label for="mirrorByGroup">Mirror groups and their referenced packages</label>
+                            <ul class="plainlist indent">
+                                <li><label>
+                                    <input name="mirrorBy" id="mirrorByLabel" value="label" class="radio" type="radio"
+                                        py:attrs="{'checked': (kwargs['mirrorBy'] == 'label') and 'checked' or None}" />
+                                    Mirror all contents
+                                </label></li>
+                                <li><label>
+                                    <input name="mirrorBy" id="mirrorByGroup" value="group" class="radio" type="radio"
+                                        py:attrs="{'checked': (kwargs['mirrorBy'] == 'group') and 'checked' or None}" />
+                                    Mirror groups and their referenced packages
+                                </label></li>
+                            </ul>
                             <div id="chklist_groups" />
                         </td>
                     </tr>

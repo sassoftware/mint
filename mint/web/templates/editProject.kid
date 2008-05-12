@@ -25,33 +25,13 @@
                 <form method="post" action="${basePath}processEditProject">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
-                            <th>${projectText().title()} Title</th>
+                            <th>
+                                <em class="required">${projectText().title()} Title</em>
+                            </th>
                             <td>
                                 <input type="text" name="name" value="${kwargs['name']}" />
                                 <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}, such as "<strong>Mail server appliance</strong>."
                                 </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Default Branch Name</th>
-                            <td>
-                                <input type="text" name="branch" value="${kwargs['branch']}" />
-                                <p class="help">The default Conary branch name for your ${projectText().lower()}.
-                                    A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. Refer to
-                                    <a href="http://wiki.rpath.com/wiki/Conary:Concepts?version=${constants.mintVersion}">Conary Concepts</a>
-                                        for more information about branch names.
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Is This a Software Appliance?</th>
-                            <td>
-                                <select style="width: auto;" name="appliance">
-                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'unknown') or None}" value="unknown">---</option>
-                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'yes') or None}" value="yes">Yes</option>
-                                    <option py:attrs="{'selected': 'selected' and (kwargs['appliance'] == 'no') or None}" value="no">No</option>
-                                </select>
-                                <p class="help">Please select "yes" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
                             </td>
                         </tr>
                         <tr>
