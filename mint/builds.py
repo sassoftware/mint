@@ -370,7 +370,7 @@ class Build(database.TableObject):
 
         return {}
 
-    def getMarketingName(self):
+    def getMarketingName(self, buildFile=None):
         '''
         Return the marketing name for display on build or release pages
         taking into account any variations related to the flavors the
@@ -384,8 +384,8 @@ class Build(database.TableObject):
         else:
             name = buildtypes.typeNamesMarketing[self.getBuildType()]
 
-        if 'CD/DVD' in name:
-            disc_type = file['size'] > 734003200 and 'DVD' or 'CD'
+        if 'CD/DVD' in name and buildFile and buildFile.has_key('size'):
+            disc_type = buildFile['size'] > 734003200 and 'DVD' or 'CD'
             name = name.replace('CD/DVD', disc_type)
 
         return name

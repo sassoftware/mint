@@ -1052,6 +1052,33 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(data != '<buildDefinition version="1.0"/>\n',
                     "unexpected data from checkoutBuildXml: %s" % data)
 
+    @fixtures.fixture('Full')
+    @testsuite.tests('RBL-2827')
+    def testMarketingName(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        
+        # validate CD
+        build.setFiles([["cd_iso", "CD iso file", 734003200, ''],
+                        ["dvd_iso", "DVD iso file", 734003201, '']])
+        
+        # ensure no errors without passing in file
+        build.getMarketingName()
+        
+        # ensure no errors passing in file without size
+        fakeBf = {'sha1': '', 'idx': 0, 'title': 'foo', 
+                  'fileUrls': [(5, 0, 'cd_iso')], 'fileId': 5}
+        build.getMarketingName(fakeBf)
+        
+        buildFiles = build.getFiles()
+        for bf in buildFiles:
+            mName = build.getMarketingName(bf)
+            if bf['title'] =="CD iso file":
+                self.assertTrue('DVD' not in mName)
+            elif bf['title'] =="DVD iso file":
+                self.assertTrue('CD' not in mName)
+
 
 class BuildTestConaryRepository(MintRepositoryHelper):
     def testBuildTroves(self):

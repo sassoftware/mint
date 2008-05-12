@@ -229,7 +229,7 @@
                             fileUrl = cfg.basePath + 'downloadImage?fileId=%d' % file['fileId']
                             extraFlags = getExtraFlags(build.troveFlavor)
                         ?>
-                        <a href="$fileUrl">${build.getArch()} ${build.getMarketingName()}: ${title}</a>
+                        <a href="$fileUrl">${build.getArch()} ${build.getMarketingName(file)}: ${title}</a>
                         <span py:omit="True" py:if="extraFlags">(${", ".join(extraFlags)})</span>
                     </li>
                 </div>
