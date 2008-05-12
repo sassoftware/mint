@@ -4573,6 +4573,48 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
+    
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def getBuildTaskListForDisplay(self, versionId, stageName):
+        """
+        Get a list of build tasks to be completed for display purposes only
+        @param versionId: the product version id
+        @param stageName: the name of the stage to use
+        @return: a list of task dicts as 
+                 {buildName, buildTypeName, buildFlavorName, imageGroup}
+        """
+        taskList = []
+        pd = self.client.getProductDefinitionForVersionObj(versionId)
+        builds = pd.getBuildsForStage(stageName)
+        for build in builds:
+            task = dict()
+            
+            # set the build name
+            task['buildName'] = build.name
+            
+            # set the build type
+            buildTypeDt = buildtemplates.getDataTemplateByXmlName(
+                              build.imageType.getTag())
+            task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
+            
+            # get the name of the flavor.  If we don't have a name mapped to
+            # it, specify that it is custom
+            flavor = "foobar"#build.baseFlavor
+            if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
+                index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
+                buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
+            else:
+                buildFlavor = "Custom Flavor: %s" % flavor
+            task['buildFlavorName'] = buildFlavor
+            
+            # set the image group
+            task['imageGroup'] = build.imageGroup
+            
+            taskList.append(task)
+            
+        return taskList
 
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):

@@ -201,6 +201,10 @@ buildDefinitionFlavorMap = {
     BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
 
+# generate mapping of flavors to flavor names
+buildDefinitionFlavorToFlavorMapRev = \
+    dict((x[1], x[0]) for x in buildDefinitionFlavorMap.iteritems())
+
 buildDefinitionFlavorNameMap = {
     BD_GENERIC_X86      : 'Generic x86 (32-bit)',
     BD_GENERIC_X86_64   : 'Generic x86 (64-bit)',

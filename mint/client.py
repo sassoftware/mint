@@ -775,6 +775,9 @@ class MintClient:
 
     def getProductDefinitionForVersion(self, versionId):
         return self.server.getProductDefinitionForVersion(versionId)
+    
+    def getProductDefinitionForVersionObj(self, versionId):
+        return self.server.getProductDefinitionForVersionObj(versionId)
 
     def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
         return self.server.setProductDefinitionForVersion(versionId,
@@ -792,6 +795,16 @@ class MintClient:
     def newBuildsFromProductDefinition(self, versionId, stage, force):
         return self.server.newBuildsFromProductDefinition(versionId, stage,
                                                           force)
+        
+    def getBuildTaskListForDisplay(self, versionId, stageName):
+        """
+        Get a list of build tasks to be completed for display purposes only
+        @param versionId: the product version id
+        @param stageName: the name of the stage to use
+        @return: a list of task dicts as 
+                 {buildName, buildTypeName, buildFlavorName, imageGroup}
+        """
+        return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):
