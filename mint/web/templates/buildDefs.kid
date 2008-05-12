@@ -17,10 +17,10 @@
             Flavors = {
                 '32-bit (x86)': '~!domU,~!kernel.pae,~!vmware,~!xen is: x86',
                 '32-bit (x86) VMware': '~!domU,!kernel.pae,vmware,~!xen is: x86',
-                '32-bit (x86) Xen DomU': 'domU,~kernel.pae,~!vmware,xen is: x86',
+                '32-bit (x86) DomU': 'domU,~kernel.pae,~!vmware,xen is: x86',
                 '64-bit (x86-64)': '~!domU,~!vmware,~!xen is: x86_64',
                 '64-bit (x86-64) VMware': '~!domU,vmware,~!xen is: x86_64',
-                '64-bit (x86-64) Xen DomU': 'domU,~!vmware,xen is: x86_64',
+                '64-bit (x86-64) DomU': 'domU,~!vmware,xen is: x86_64',
                 'Other (enter below...)': '',
             };
 

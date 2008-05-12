@@ -96,7 +96,6 @@ from mint import constants
                                     must support booting from USB to use this
                                     file with any USB device.</li>
                                 </ul>
-                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -137,8 +136,6 @@ from mint import constants
                                 GNU zip.  Before using this image, you must
                                 first uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
-
-                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -156,8 +153,6 @@ from mint import constants
                                 GNU zip.  Before using this image, you must
                                 first uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
-
-                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -170,8 +165,6 @@ from mint import constants
                                 Before using this image, you must first
                                 uncompress it (using the <tt>gunzip</tt>
                                 command).</p>
-
-                                ${xenHelp()}
                             </div>
                         </div>
 
@@ -225,15 +218,6 @@ from mint import constants
                 <h3>Notes</h3>
                 <div py:for="note in notes.splitlines()" py:content="truncateForDisplay(note, 10000000, 70)" />
                 <div py:if="not notes">This build has no notes.</div>
-
-                <div py:def="xenHelp">
-                    <p py:if="'Xen Virtual Appliance' in extraFlags">
-                        This file can be installed as a Xen&trade; DomU. See rPath's
-                        <a href="http://wiki.rpath.com/wiki/Xen_DomU_Guide?version=${constants.mintVersion}" target="_blank">Xen DomU Guide</a>
-                        for information and instructions.
-                    </p>
-                </div>
-
                 </div>
             </div>
         </div>

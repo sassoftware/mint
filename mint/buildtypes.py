@@ -59,7 +59,7 @@ flavorFlagFlavors = {
 }
 
 flavorFlagNames = {
-    XEN_DOMU:   "Xen Virtual Appliance",
+    XEN_DOMU:   "DomU",
     APPLIANCE:  "Appliance",
 }
 
@@ -125,7 +125,7 @@ typeNamesMarketing = {
     APPLIANCE_ISO:      "Appliance Installable ISO",
 
     # flavor flags here
-    XEN_DOMU:           "Xen DomU",
+    XEN_DOMU:           "DomU",
     APPLIANCE:          "Appliance",
 }
 
