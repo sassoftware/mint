@@ -21,6 +21,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQD
 from mint import shimclient
 from mint import config
 from mint import buildtypes
+from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -33,6 +34,8 @@ from conary.dbstore import sqlerrors
 import mcp_helper
 from mcp import queue
 from mcp_helper import MCPTestMixin
+
+from rpath_common.proddef import api1 as proddef
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -377,6 +380,81 @@ class FixtureCache(object):
                        imageGroup='group-dist')
 
         data['proddef'] = proddef
+
+        return cfg, data
+    
+    def fixtureFullProdDefObj(self, cfg):
+        cfg, data = self.fixtureFull(cfg)
+        
+        pd = proddef.ProductDefinition()
+        pd.setProductName('test')
+        pd.setProductDescription('test description')
+        pd.setProductShortname(MINT_HOST)
+        pd.setProductVersion('1')
+        pd.setProductVersionDescription('version description')
+        pd.setConaryRepositoryHostname("%s.%s" % \
+                                       (MINT_HOST, MINT_PROJECT_DOMAIN))
+        pd.setConaryNamespace('rpl')
+        pd.setImageGroup('group-dist')
+        pd.setBaseFlavor(
+            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86])
+        
+        stages = helperfuncs.getProductVersionDefaultStagesList()
+        stages.append(dict(name='Booya', labelSuffix='-booya'))
+        for stage in stages:
+            pd.addStage(stage['name'], stage['labelSuffix'])
+        
+        upstreamSources = [dict(troveName='group-rap-standard',
+                                label='rap.rpath.com@rpath:linux-1'),
+                           dict(troveName='group-postgres',
+                                label='products.rpath.com@rpath:postgres-8.2')]
+        for us in upstreamSources:
+            pd.addUpstreamSource(us['troveName'], us['label'])
+            
+        stageNames = []
+        for stage in pd.getStages():
+            # don't add booya for all build def stages since that is our 
+            # special case
+            if stage.name != "Booya":
+                stageNames.append(stage.name)
+
+        isoImageType = pd.imageType('installableIsoImage', dict())
+        vmwareImageType = pd.imageType('vmwareImage', dict())
+        xenImageType = pd.imageType('xenOvaImage', dict())
+
+        buildDefs = \
+            [dict(name='ISO 32', 
+                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
+                                 buildtypes.BD_GENERIC_X86],
+                  imageType=isoImageType,
+                  stages=stageNames),
+             dict(name='ISO 64', 
+                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
+                                 buildtypes.BD_GENERIC_X86_64],
+                  imageType=isoImageType,
+                  stages=stageNames),
+             dict(name='VMWare 64', 
+                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
+                                 buildtypes.BD_VMWARE_X86_64],
+                  imageType=vmwareImageType,
+                  stages=stageNames),
+             dict(name='XEN 64', 
+                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
+                                 buildtypes.BD_DOMU_X86_64],
+                  imageType=xenImageType,
+                  stages=stageNames),
+             dict(name='ISO 64 II', 
+                  baseFlavor='is: x86_64',
+                  imageType=isoImageType,
+                  stages=['Booya'])
+             ]
+            
+        for bd in buildDefs:
+            pd.addBuildDefinition(bd['name'], bd['baseFlavor'], 
+                                  bd['imageType'], 
+                                  bd['stages'])
+
+        data['proddefObj'] = pd
 
         return cfg, data
 

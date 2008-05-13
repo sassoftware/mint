@@ -4609,23 +4609,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: a list of task dicts as 
                  {buildName, buildTypeName, buildFlavorName, imageGroup}
         """
+
         taskList = []
-        pd = self.client.getProductDefinitionForVersionObj(versionId)
+        pd = self.getProductDefinitionForVersionObj(versionId)
         builds = pd.getBuildsForStage(stageName)
         for build in builds:
             task = dict()
             
             # set the build name
-            task['buildName'] = build.name
+            task['buildName'] = build.getBuildName()
             
             # set the build type
             buildTypeDt = buildtemplates.getDataTemplateByXmlName(
-                              build.imageType.getTag())
+                              build.getBuildImageType().getTag())
             task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
             
             # get the name of the flavor.  If we don't have a name mapped to
             # it, specify that it is custom
-            flavor = "foobar"#build.baseFlavor
+            flavor = build.getBuildBaseFlavor()
             if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
                 index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
                 buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
@@ -4634,7 +4635,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             task['buildFlavorName'] = buildFlavor
             
             # set the image group
-            task['imageGroup'] = build.imageGroup
+            task['imageGroup'] = build.getBuildImageGroup()
             
             taskList.append(task)
             

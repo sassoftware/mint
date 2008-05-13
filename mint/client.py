@@ -797,13 +797,6 @@ class MintClient:
                                                           force)
         
     def getBuildTaskListForDisplay(self, versionId, stageName):
-        """
-        Get a list of build tasks to be completed for display purposes only
-        @param versionId: the product version id
-        @param stageName: the name of the stage to use
-        @return: a list of task dicts as 
-                 {buildName, buildTypeName, buildFlavorName, imageGroup}
-        """
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
 

@@ -1039,6 +1039,96 @@ class BuildTest(fixtures.FixturedUnitTest):
         finally:
             conaryclient.ConaryClient.getRepos = oldGetRepos
             MintServer.getProductDefinitionForVersion = oldGetProdDef
+            
+    @fixtures.fixture('FullProdDefObj')
+    def testBuildsFromProductDefinitionObj(self, db, data):
+        def getRepos(self):
+            class Repo:
+                def findTrove(*args, **kwargs):
+                    return [('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('is: x86')),
+                            ('group-dummy', 
+                             versions._VersionFromString( \
+                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
+                                 frozen=True), 
+                             deps.parseFlavor('is: x86_64'))]
+
+            return Repo()
+
+        pd = data['proddefObj']
+        versionId = data['versionId']
+        client = self.getClient('admin')
+
+        from mint.server import MintServer
+        oldGetProdDef = MintServer.getProductDefinitionForVersionObj
+        MintServer.getProductDefinitionForVersionObj = \
+            lambda *args, **kwargs: pd
+
+        oldGetRepos = conaryclient.ConaryClient.getRepos
+        conaryclient.ConaryClient.getRepos = getRepos
+        
+        def validateTaskList(self, versionId, stageName, goldTaskList):
+            """
+            Get a task list by versionId and stage name and validate it
+            """
+            tl = client.getBuildTaskListForDisplay(versionId, stageName)
+            self.assertTrue(tl == goldTaskList)
+            return True
+        
+        # golden data for development stage task list
+        goldTaskListDevel = [
+            {'buildName'      : 'ISO 32', 
+             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
+                                buildtypes.BD_GENERIC_X86],
+             'buildTypeName'  : buildtypes.typeNamesMarketing[\
+                                buildtypes.INSTALLABLE_ISO],
+             'imageGroup'     : 'group-dist'
+            }, 
+            {'buildName'      : 'ISO 64', 
+             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
+                                buildtypes.BD_GENERIC_X86_64],
+             'buildTypeName'  : buildtypes.typeNamesMarketing[\
+                                buildtypes.INSTALLABLE_ISO],
+             'imageGroup'     : 'group-dist'
+             },
+             {'buildName'     : 'VMWare 64', 
+             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
+                                buildtypes.BD_VMWARE_X86_64],
+             'buildTypeName'  : buildtypes.typeNamesMarketing[\
+                                buildtypes.VMWARE_IMAGE],
+             'imageGroup'     : 'group-dist'
+             },
+             {'buildName'     : 'XEN 64', 
+             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
+                                buildtypes.BD_DOMU_X86_64],
+             'buildTypeName'  : buildtypes.typeNamesMarketing[\
+                                buildtypes.XEN_OVA],
+             'imageGroup'     : 'group-dist'
+             }
+        ]
+        
+        # golden data for booya stage task list
+        goldTaskListBooya = [
+            {'buildName'      : 'ISO 64 II', 
+             'buildFlavorName': 'Custom Flavor: is: x86_64', 
+             'buildTypeName'  : buildtypes.typeNamesMarketing[\
+                                buildtypes.INSTALLABLE_ISO],
+             'imageGroup'     : 'group-dist'
+            }
+        ]
+
+        try:
+            # validate task list for development label
+            validateTaskList(self, versionId, 'Development', goldTaskListDevel)
+            
+            # validate task list for booya label
+            validateTaskList(self, versionId, 'Booya', goldTaskListBooya)
+        finally:
+            conaryclient.ConaryClient.getRepos = oldGetRepos
+            MintServer.getProductDefinitionForVersionObj = oldGetProdDef
 
     @fixtures.fixture('FullProdDef')
     def testBuildsFromProductDefinitionNoTrove(self, db, data):
