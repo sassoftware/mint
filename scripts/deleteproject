@@ -82,7 +82,7 @@ def deleteProject(cfg, projectName):
                     if e.args[0][1] != 1008:
                         raise
             elif cfg.reposDBDriver == 'postgresql':
-                pdb = dbstore.connect('postgres@localhost/postgres', 'postgresql')
+                pdb = dbstore.connect('postgres@localhost:5439/postgres', 'postgresql')
                 pcu = pdb.cursor()
                 try:
                     pcu.execute("DROP DATABASE %s" % dbName)

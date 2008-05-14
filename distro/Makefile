@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+SUBDIRS = postgresql
+
 extra_dist = schema.in.py
 
 generated_files = schema custom.cfg rbuilder.conf
@@ -28,9 +30,9 @@ install: default-install
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
-	install -D -m0644 postgres.cron $(DESTDIR)/etc/cron.d/postgres.cron
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
+	install -D -m0644 postgresql.conf $(DESTDIR)/etc/postgresql.conf.rba
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
@@ -39,7 +41,6 @@ install: default-install
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
-	echo '# chkconfig: 345 21 36' > $(DESTDIR)/etc/chkconfig.d/postgresql
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 
 clean: default-clean
