@@ -32,7 +32,6 @@ install: default-install
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
-	install -D -m0644 postgresql.conf $(DESTDIR)/etc/postgresql.conf.rba
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
