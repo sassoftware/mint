@@ -63,7 +63,7 @@ def backup(cfg, out, backupMirrors = False):
             rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
                          reposDbName)
             if rcu.fetchone():
-                util.execute("pg_dump -U %s -c --disable-triggers %s > %s" %\
+                util.execute("pg_dump -U %s -p 5439 -c --disable-triggers %s > %s" %\
                              (dbUser, reposDbName, dumpPath))
                 print >> out, reposContentsDir[0] % reposDir
             rdb.close()
@@ -124,7 +124,7 @@ def restore(cfg):
                 rdb.close()
 
                 dbUser = cfg.reposDBPath.split('@')[0]
-                util.execute('psql -f %s -U %s %s'% (dumpPath, dbUser, pgRepo))
+                util.execute('psql -f %s -U %s -p 5439 %s'% (dumpPath, dbUser, pgRepo))
                 rdb = dbstore.connect('%s' % (cfg.reposDBPath % pgRepo),
                                       cfg.reposDBDriver)
                 conary.server.schema.loadSchema(rdb, doMigrate=True)

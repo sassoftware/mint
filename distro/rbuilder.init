@@ -5,6 +5,12 @@
 # Copyright (c) 2008 rPath, Inc
 # All rights reserved
 
+. /etc/sysconfig/pgsql/postgresql-rbuilder
+export PGDATA PGPORT
+
+pgsql_config="/etc/postgresql.conf.rbuilder"
+pgsql_config_target="$PGDATA/postgresql.conf"
+
 function waitForPg()
 {
   echo "Waiting for postgres startup to complete"
@@ -45,10 +51,23 @@ start)
     exit 1
   fi
 
-  if [ ! -f /var/lock/subsys/postgresql ]
+  if [ ! -f /var/lock/subsys/postgresql-rbuilder ]
   then
-    service postgresql start
+    service postgresql-rbuilder start
   fi
+
+  # Copy our config file over the one generated during initialization
+  # and restart PostgreSQL. The DB must already be initialized, or it
+  # will fail to do so once the config is written, hence we still must
+  # start it above.
+  if [ "$pgsql_config" -nt "$pgsql_config_target" ]
+  then
+    echo "Updating PostgreSQL configuration"
+    waitForPg
+    cp "$pgsql_config" "$pgsql_config_target"
+    service postgresql restart
+  fi
+
 
   waitForPg
   createPgDb

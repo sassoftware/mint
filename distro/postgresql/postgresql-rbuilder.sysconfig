@@ -1,0 +1,12 @@
+PGPORT="5439"
+PGDATA="/srv/pgsql/8.2-rba"
+PGOPTS=""
+PGLOG="/var/log/pgsql"
+PGTZ="/usr/share/zoneinfo"
+
+# Set the maximum shared memory to 500MB before postmaster starts
+SHMMAX=524288000
+if [ `sysctl -n kernel.shmmax` -lt $SHMMAX ]
+then
+    sysctl -w "kernel.shmmax=$SHMMAX" -q
+fi
