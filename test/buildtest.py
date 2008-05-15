@@ -20,6 +20,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError
+from mint import helperfuncs
 from mint import urltypes
 from mint import userlevels
 from mint import jobstatus
@@ -31,6 +32,7 @@ from conary.deps import deps
 from conary import conaryclient
 from conary import conarycfg
 
+from rpath_common.proddef import api1 as proddef
 import fixtures
 
 class BuildTest(fixtures.FixturedUnitTest):
@@ -996,80 +998,156 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnless(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should be in conaryrc')
 
-    @fixtures.fixture('FullProdDef')
-    def testBuildsFromProductDefinition(self, db, data):
+    @fixtures.fixture('Full')
+    @testsuite.tests('RBL-2827')
+    def testMarketingName(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
+        
+        # validate CD
+        build.setFiles([["cd_iso", "CD iso file", 734003200, ''],
+                        ["dvd_iso", "DVD iso file", 734003201, '']])
+        
+        # ensure no errors without passing in file
+        build.getMarketingName()
+        
+        # ensure no errors passing in file without size
+        fakeBf = {'sha1': '', 'idx': 0, 'title': 'foo', 
+                  'fileUrls': [(5, 0, 'cd_iso')], 'fileId': 5}
+        build.getMarketingName(fakeBf)
+        
+        buildFiles = build.getFiles()
+        for bf in buildFiles:
+            mName = build.getMarketingName(bf)
+            if bf['title'] =="CD iso file":
+                self.assertTrue('DVD' not in mName)
+            elif bf['title'] =="DVD iso file":
+                self.assertTrue('CD' not in mName)
+                
+
+class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
+
+    def setUp(self):
+        fixtures.FixturedProductVersionTest.setUp(self)
+
+        # This product definition is based on the "Full" fixture
+        pd = helperfuncs.getInitialProductDefinition('The Foo Project',
+                'foo', MINT_PROJECT_DOMAIN, 'foo', 'fooV1',
+                'yournamespace')
+        pd.setBaseFlavor("~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap, ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU, ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug, ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl, ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl, ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux, ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware, ~!xen, ~!xfce, ~!xorg-x11.xprint")
+        pd.setImageGroup('group-dist')
+        # getInitialProductDefinition currently adds stages, but
+        # this may change in the future; we'll add "Booya" here.
+        pd.addStage('Booya', '-booya')
+        pd.addStage('Elsewhere', '-nada')
+        stageNames = [x.name for x in pd.getStages() \
+                if x.name not in ('Booya', 'Elsewhere')]
+
+        pd.addUpstreamSource('group-rap-standard',
+                'rap.rpath.com@rpath:linux-1')
+        pd.addUpstreamSource('group-postgres',
+                    'products.rpath.com@rpath:postgres-8.2')
+
+        pd.addBuildDefinition(name='ISO 32',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                              imageType=pd.imageType('installableIsoImage'),
+                              stages=stageNames,
+                              imageGroup='group-dist')
+
+        pd.addBuildDefinition(name='ISO 64',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
+                              imageType=pd.imageType('installableIsoImage'),
+                              stages=stageNames)
+        pd.addBuildDefinition(name='VMWare 64',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64],
+                              imageType=pd.imageType('vmwareImage'),
+                              stages=stageNames)
+        pd.addBuildDefinition(name='XEN 64',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_DOMU_X86_64],
+                              imageType=pd.imageType('xenOvaImage'),
+                              stages=stageNames)
+        pd.addBuildDefinition(name='ISO 64 II',
+                              baseFlavor='~superfunk.bootsy is: x86_64',
+                              imageType=pd.imageType('installableIsoImage'),
+                              stages=['Booya'],
+                              imageGroup='group-other')
+        pd.addBuildDefinition(name='Cannot be built',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                              imageType=pd.imageType('installableIsoImage'),
+                              stages=['Elsewhere'],
+                              imageGroup='group-fgsfds')
+        pd.addBuildDefinition(name='...but this can',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                              imageType=pd.imageType('installableIsoImage'),
+                              stages=['Elsewhere'],
+                              imageGroup='group-dist')
+
+        # mocked out call to save to memory
+        pd.saveToRepository()
+
+        # Mock out call to getRepos so we can properly test builds
         def getRepos(self):
             class Repo:
-                def findTrove(*args, **kwargs):
-                    return [('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('is: x86')),
-                            ('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('is: x86_64'))]
+                def findTrove(self, t1, t2, *args, **kwargs):
+                    tn, tv, tf = t2
+                    flava_flavs = []
+                    if tn == 'group-dist':
+                        flava_flavs = [ \
+                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
+                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64],
+                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_DOMU_X86_64],
+                        ]
+                    elif tn == 'group-other':
+                        flava_flavs = [ '~superfunk.bootsy is: x86_64', ]
+                    else:
+                        return []
 
+                    return [(tn,
+                             versions._VersionFromString( \
+                                '/%s/12345.6:1-1-1' % tv,
+                                frozen=True),
+                             deps.parseFlavor(f)) \
+                                     for f in flava_flavs]
             return Repo()
 
-        client = self.getClient('admin')
-
-        from mint.server import MintServer
-        oldGetProdDef = MintServer.getProductDefinitionForVersion
-        MintServer.getProductDefinitionForVersion = \
-            lambda *args, **kwargs: data['proddef']
-
-        oldGetRepos = conaryclient.ConaryClient.getRepos
+        self.oldGetRepos = conaryclient.ConaryClient.getRepos
         conaryclient.ConaryClient.getRepos = getRepos
 
-        try:
-            buildIds = \
-                client.newBuildsFromProductDefinition(data['versionId'], 
-                    'Development', False)
-            # Should have created 2 builds for Development stage
-            self.assertEquals(2, len(buildIds))
-            
-            buildIds = \
-                client.newBuildsFromProductDefinition(data['versionId'], 
-                    'Booya', False)
-            # Should have created 1 build for Booya stage
-            self.assertEquals(1, len(buildIds))
-        finally:
-            conaryclient.ConaryClient.getRepos = oldGetRepos
-            MintServer.getProductDefinitionForVersion = oldGetProdDef
-            
-    @fixtures.fixture('FullProdDefObj')
-    def testBuildsFromProductDefinitionObj(self, db, data):
-        def getRepos(self):
-            class Repo:
-                def findTrove(*args, **kwargs):
-                    return [('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('is: x86')),
-                            ('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('is: x86_64'))]
+    def tearDown(self):
+        fixtures.FixturedProductVersionTest.tearDown(self)
 
-            return Repo()
+        # Restore conary client calls that were mocked
+        conaryclient.ConaryClient.getRepos = self.oldGetRepos
 
-        pd = data['proddefObj']
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinition(self, db, data):
         versionId = data['versionId']
         client = self.getClient('admin')
+        buildIds = \
+            client.newBuildsFromProductDefinition(data['versionId'],
+                'Development', False)
+        # Should have created 4 builds for Development stage
+        self.assertEquals(4, len(buildIds))
 
-        from mint.server import MintServer
-        oldGetProdDef = MintServer.getProductDefinitionForVersionObj
-        MintServer.getProductDefinitionForVersionObj = \
-            lambda *args, **kwargs: pd
+        buildIds = \
+            client.newBuildsFromProductDefinition(data['versionId'], 
+                'Booya', False)
+        # Should have created 1 build for Booya stage
+        self.assertEquals(1, len(buildIds))
 
-        oldGetRepos = conaryclient.ConaryClient.getRepos
-        conaryclient.ConaryClient.getRepos = getRepos
-        
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionBadStage(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        self.assertRaises(ProductDefinitionError,
+            client.newBuildsFromProductDefinition, data['versionId'],
+                'fgsfds', False)
+
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionObj(self, db, data):
+
         def validateTaskList(self, versionId, stageName, goldTaskList):
             """
             Get a task list by versionId and stage name and validate it
@@ -1077,7 +1155,10 @@ class BuildTest(fixtures.FixturedUnitTest):
             tl = client.getBuildTaskListForDisplay(versionId, stageName)
             self.assertTrue(tl == goldTaskList)
             return True
-        
+
+        versionId = data['versionId']
+        client = self.getClient('admin')
+
         # golden data for development stage task list
         goldTaskListDevel = [
             {'buildName'      : 'ISO 32', 
@@ -1113,94 +1194,40 @@ class BuildTest(fixtures.FixturedUnitTest):
         # golden data for booya stage task list
         goldTaskListBooya = [
             {'buildName'      : 'ISO 64 II', 
-             'buildFlavorName': 'Custom Flavor: is: x86_64', 
+             'buildFlavorName': 'Custom Flavor: ~superfunk.bootsy is: x86_64', 
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : 'group-dist'
+             'imageGroup'     : 'group-other'
             }
         ]
 
-        try:
-            # validate task list for development label
-            validateTaskList(self, versionId, 'Development', goldTaskListDevel)
-            
-            # validate task list for booya label
-            validateTaskList(self, versionId, 'Booya', goldTaskListBooya)
-        finally:
-            conaryclient.ConaryClient.getRepos = oldGetRepos
-            MintServer.getProductDefinitionForVersionObj = oldGetProdDef
+        # validate task list for development label
+        validateTaskList(self, versionId, 'Development', goldTaskListDevel)
 
-    @fixtures.fixture('FullProdDef')
-    def testBuildsFromProductDefinitionNoTrove(self, db, data):
-        def getRepos(self):
-            class Repo:
-                def findTrove(*args, **kwargs):
-                    return [('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('~xen')),
-                            ('group-dummy', 
-                             versions._VersionFromString( \
-                                 '/test.rpath.local@rpl:devel/12345.6:1-1-1',
-                                 frozen=True), 
-                             deps.parseFlavor('~vmware'))]
+        # validate task list for booya label
+        validateTaskList(self, versionId, 'Booya', goldTaskListBooya)
 
-            return Repo()
-
-        client = self.getClient('admin')
-
-        from mint.server import MintServer
-        oldGetProdDef = MintServer.getProductDefinitionForVersion
-        MintServer.getProductDefinitionForVersion = \
-            lambda *args, **kwargs: data['proddef']
-
-        oldGetRepos = conaryclient.ConaryClient.getRepos
-        conaryclient.ConaryClient.getRepos = getRepos
-
-        try:
-            # Should raise an exception
-            self.assertRaises(TroveNotFoundForBuildDefinition,
-                              client.newBuildsFromProductDefinition,
-                                  data['versionId'],
-                                  'Development', False)
-        finally:
-            conaryclient.ConaryClient.getRepos = oldGetRepos
-            MintServer.getProductDefinitionForVersion = oldGetProdDef
-    
     @fixtures.fixture('Full')
-    @testsuite.tests('RBL-2827')
-    def testMarketingName(self, db, data):
-        client = self.getClient("owner")
-        build = client.getBuild(data['buildId'])
-        build.setBuildType(buildtypes.INSTALLABLE_ISO)
-        
-        # validate CD
-        build.setFiles([["cd_iso", "CD iso file", 734003200, ''],
-                        ["dvd_iso", "DVD iso file", 734003201, '']])
-        
-        # ensure no errors without passing in file
-        build.getMarketingName()
-        
-        # ensure no errors passing in file without size
-        fakeBf = {'sha1': '', 'idx': 0, 'title': 'foo', 
-                  'fileUrls': [(5, 0, 'cd_iso')], 'fileId': 5}
-        build.getMarketingName(fakeBf)
-        
-        buildFiles = build.getFiles()
-        for bf in buildFiles:
-            mName = build.getMarketingName(bf)
-            if bf['title'] =="CD iso file":
-                self.assertTrue('DVD' not in mName)
-            elif bf['title'] =="DVD iso file":
-                self.assertTrue('CD' not in mName)
-                
+    def testBuildsFromProductDefinitionNoTrove(self, db, data):
+        client = self.getClient('owner')
+        # Should raise an exception
+        self.assertRaises(TroveNotFoundForBuildDefinition,
+                          client.newBuildsFromProductDefinition,
+                          data['versionId'],
+                          'Elsewhere', False)
+        # Let's FORCE IT
+        buildIds = \
+            client.newBuildsFromProductDefinition(data['versionId'], 
+                'Elsewhere', True)
+        # Should have created 1 build for Elsewhere stage
+        self.assertEquals(1, len(buildIds))
 
 
-class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
+class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture("Empty")
     def testApplyTemplatesNoBuildOptionsSpecified(self, db, data):
+        raise testsuite.SkipTestException("This may have been refactored out... skipping")
 
         # One build definition specified.
         buildDefinition = [dict(baseFlavor='is: x86',
@@ -1230,7 +1257,7 @@ class BuildTestApplyTemplates(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Empty")
     def testApplyTemplatesBuildOptionsSpecified(self, db, data):
-
+        raise testsuite.SkipTestException("This may have been refactored out... skipping")
         # Multiple build definitions overriding build option defaults
         buildDefinition = [dict(baseFlavor='is: x86',
                                 installableIsoImage=dict(autoResolve=False,

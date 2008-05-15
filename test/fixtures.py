@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import pwd
+import StringIO
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 
@@ -325,139 +326,6 @@ class FixtureCache(object):
                       'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
     
-    def fixtureFullProdDef(self, cfg):
-        cfg, data = self.fixtureFull(cfg)
-
-        baseFlavor = """
-            ~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap,
-            ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU,
-            ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug,
-            ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl,
-            ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl,
-            ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux,
-            ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
-            ~!xen, ~!xfce, ~!xorg-x11.xprint
-            """
-        stages = [dict(name='Development',
-                       labelSuffix='-devel'),
-                  dict(name='QA',
-                       labelSuffix='-qa'),
-                  dict(name='Release',
-                       labelSuffix=''),
-                  dict(name='Booya',
-                       labelSuffix='-booya')]
-        
-        stageNames = []
-        for stage in stages:
-            # don't add booya for all build def stages since that is our 
-            # special case
-            if stage['name'] != "Booya":
-                stageNames.append(stage['name'])
-
-        upstreamSources = [dict(troveName='group-rap-standard',
-                                label='rap.rpath.com@rpath:linux-1'),
-                           dict(troveName='group-postgres',
-                                label='products.rpath.com@rpath:postgres-8.2')]
-
-        buildDefinition = [dict(name='ISO 32', 
-                                baseFlavor='is: x86',
-                                installableIsoImage=dict(),
-                                stages=stageNames),
-                           dict(name='ISO 64', 
-                                baseFlavor='is: x86_64',
-                                installableIsoImage=dict(),
-                                stages=stageNames),
-                           dict(name='ISO 64 II', 
-                                baseFlavor='is: x86_64',
-                                installableIsoImage=dict(),
-                                stages=['Booya'])
-                          ]
-
-        proddef = dict(baseFlavor=baseFlavor,
-                       stages=stages,
-                       upstreamSources=upstreamSources,
-                       buildDefinition=buildDefinition,
-                       imageGroup='group-dist')
-
-        data['proddef'] = proddef
-
-        return cfg, data
-    
-    def fixtureFullProdDefObj(self, cfg):
-        cfg, data = self.fixtureFull(cfg)
-        
-        pd = proddef.ProductDefinition()
-        pd.setProductName('test')
-        pd.setProductDescription('test description')
-        pd.setProductShortname(MINT_HOST)
-        pd.setProductVersion('1')
-        pd.setProductVersionDescription('version description')
-        pd.setConaryRepositoryHostname("%s.%s" % \
-                                       (MINT_HOST, MINT_PROJECT_DOMAIN))
-        pd.setConaryNamespace('rpl')
-        pd.setImageGroup('group-dist')
-        pd.setBaseFlavor(
-            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86])
-        
-        stages = helperfuncs.getProductVersionDefaultStagesList()
-        stages.append(dict(name='Booya', labelSuffix='-booya'))
-        for stage in stages:
-            pd.addStage(stage['name'], stage['labelSuffix'])
-        
-        upstreamSources = [dict(troveName='group-rap-standard',
-                                label='rap.rpath.com@rpath:linux-1'),
-                           dict(troveName='group-postgres',
-                                label='products.rpath.com@rpath:postgres-8.2')]
-        for us in upstreamSources:
-            pd.addUpstreamSource(us['troveName'], us['label'])
-            
-        stageNames = []
-        for stage in pd.getStages():
-            # don't add booya for all build def stages since that is our 
-            # special case
-            if stage.name != "Booya":
-                stageNames.append(stage.name)
-
-        isoImageType = pd.imageType('installableIsoImage', dict())
-        vmwareImageType = pd.imageType('vmwareImage', dict())
-        xenImageType = pd.imageType('xenOvaImage', dict())
-
-        buildDefs = \
-            [dict(name='ISO 32', 
-                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
-                                 buildtypes.BD_GENERIC_X86],
-                  imageType=isoImageType,
-                  stages=stageNames),
-             dict(name='ISO 64', 
-                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
-                                 buildtypes.BD_GENERIC_X86_64],
-                  imageType=isoImageType,
-                  stages=stageNames),
-             dict(name='VMWare 64', 
-                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
-                                 buildtypes.BD_VMWARE_X86_64],
-                  imageType=vmwareImageType,
-                  stages=stageNames),
-             dict(name='XEN 64', 
-                  baseFlavor=buildtypes.buildDefinitionFlavorMap[\
-                                 buildtypes.BD_DOMU_X86_64],
-                  imageType=xenImageType,
-                  stages=stageNames),
-             dict(name='ISO 64 II', 
-                  baseFlavor='is: x86_64',
-                  imageType=isoImageType,
-                  stages=['Booya'])
-             ]
-            
-        for bd in buildDefs:
-            pd.addBuildDefinition(bd['name'], bd['baseFlavor'], 
-                                  bd['imageType'], 
-                                  bd['stages'])
-
-        data['proddefObj'] = pd
-
-        return cfg, data
-
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
@@ -1116,6 +984,39 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             self.cfg and util.rmtree(self.cfg.dataPath)
         except OSError:
             pass
+
+class FixturedProductVersionTest(FixturedUnitTest):
+
+    global _testxmldata
+    _testxmldata = None
+
+    class _MockProductDefinition(proddef.ProductDefinition):
+        def saveToRepository(self, *args, **kwargs):
+            sio = StringIO.StringIO()
+            self.serialize(sio)
+            global _testxmldata
+            _testxmldata = sio.getvalue()
+
+        def loadFromRepository(self, *args, **kwargs):
+            global _testxmldata
+            if not _testxmldata:
+                raise proddef.ProductDefinitionTroveNotFound
+            sio = StringIO.StringIO(_testxmldata)
+            sio.seek(0)
+            self.parseStream(sio)
+
+    def setUp(self):
+        self.oldProductDefinition = proddef.ProductDefinition
+        proddef.ProductDefinition = self._MockProductDefinition
+        FixturedUnitTest.setUp(self)
+        global _testxmldata
+        _testxmldata = None
+
+    def tearDown(self):
+        FixturedUnitTest.tearDown(self)
+        proddef.ProductDefinition = self.oldProductDefinition
+        global _testxmldata
+        _testxmldata = None
 
 
 driver = os.environ.get("CONARY_REPOS_DB", "sqlite")

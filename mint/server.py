@@ -506,6 +506,23 @@ class MintServer(object):
         if not cclient:
             del client
 
+    def _getProductDefinitionForVersionObj(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+        cclient = conaryclient.ConaryClient(projectCfg)
+
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setProductVersion(version.name)
+        try:
+            pd.loadFromRepository(cclient)
+        except Exception, e:
+            raise ProductDefinitionVersionNotFound
+        return pd
+
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -713,21 +730,6 @@ class MintServer(object):
             raise InvalidShortname
         return None
     
-    def _getInitialProductDefinition(self, version, shortname, hostname,
-                                     domainname):
-        """
-        Get the initial proddef for a new project
-        """
-        pd = proddef.ProductDefinition()
-        pd.setProductVersion(version)
-        pd.setProductShortname(shortname)
-        pd.setConaryNamespace(self.cfg.namespace)
-        pd.setConaryRepositoryHostname("%s.%s" % (hostname, domainname))
-        defStage = helperfuncs.getProductVersionDefaultStage()
-        pd.addStage(defStage['name'], defStage['labelSuffix'])
-        
-        return pd
-
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
@@ -756,11 +758,11 @@ class MintServer(object):
             appliance = "no"
             applianceValue = 0
 
-        # get the initial proddef
-        pd = self._getInitialProductDefinition(version, shortname, hostname,
-                                     domainname)
-        
-        # get the default label
+        # initial product definition
+        pd = helperfuncs.getInitialProductDefinition(projectName,
+                hostname, domainname, shortname, version,
+                self.cfg.namespace)
+
         label = pd.getDefaultLabel()
 
         # validate the label, which will be added later.  This is done
@@ -2067,70 +2069,41 @@ If you would not like to be %s %s of this project, you may resign from this proj
         product defintion.
         """
         version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
         projectId = version.projectId
 
         # Read build definition from product definition.
-        pd = self.getProductDefinitionForVersion(versionId)
+        pd = self._getProductDefinitionForVersionObj(versionId)
 
         # Look up the label for the stage name that was passed in.
-        stageLabel = None
-        stageLabelSet = False
-
-        for stage in pd.get('stages', []):
-            if stage['name'] == stageName:
-                stageLabel = stage['labelSuffix']
-                # need to mark it as set because we allow '' for a suffix
-                stageLabelSet = True
-        if not stageLabelSet:
-            raise StageNotFoundInProductDefinition(stageName)
-
-        # Read the top level group defined in the prod def.
         try:
-            imageGroup = pd['imageGroup']
-        except KeyError:
-            raise NoImageGroupSpecifiedForProductDefinition()
+            stageLabel = str(pd.getLabelForStage(stageName))
+        except proddef.StageNotFoundError, snfe:
+            raise ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+        except proddef.MissingInformationError, mie:
+            raise ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
-        buildDefinition = pd.get('buildDefinition', [])
-        if len(buildDefinition) < 1:
-            raise NoBuildsDefinedInBuildDefinition()
+        # Filter builds by stage
+        builds = pd.getBuildsForStage(stageName)
+        if not builds:
+            raise NoBuildsDefinedInBuildDefinition
 
-        # Validate the data in the buildDefinition against build templates.
-        buildDefinition = \
-            builds.applyTemplatesToBuildDefinitions(buildDefinition)
-            
         # Create build data for each defined build so we can create the builds
         # later
-        buildsData = []
+        filteredBuilds = []
         buildErrors = []
-        for build in buildDefinition:
-            
-            if stageName not in build['stages']:
-                # we only want builds for this stage
-                continue
-            
-            buildFlavor = deps.parseFlavor(build.get('baseFlavor', ''))
+        for build in builds:
+            buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
+            buildGroup = str(build.getBuildImageGroup())
 
-            # Check whether the top level group to build the image from has
-            # been overridden at the build def level.
-            try:
-                buildGroup = build[build['_xmlName']]['imageGroup']
-            except KeyError:
-                buildGroup = imageGroup
-      
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(projectId, buildGroup, 
+            nvfs = self._resolveTrove(projectId, buildGroup,
                                       stageLabel, buildFlavor)
 
             if nvfs:
                 # Store a build with options for each trove found.
                 for nvf in nvfs:
-                    buildData = dict()
-                    buildData['projectId'] = projectId
-                    buildData['buildName'] = build['name']
-                    buildData['nvf'] = nvf
-                    buildData['buildType'] = build['_buildType']
-                    buildData['buildOptions'] = build[build['_xmlName']]
-                    buildsData.append(buildData)
+                    filteredBuilds.append((build, nvf))
             else:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
@@ -2142,31 +2115,36 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Create/start each build.
         buildIds = []
-        for build in buildsData:
-            buildId = self._createBuildDefBuild(build)
-            buildIds.append(buildId)
-            self.startImageJob(buildId)
+        for build, nvf in filteredBuilds:
+            try:
+                buildId = self._createBuildDefBuild(projectId, build,
+                        nvf, project.getName())
+                buildIds.append(buildId)
+            except Exception, e:
+                raise MintError(str(e))
+            else:
+                self.startImageJob(buildId)
 
         return buildIds
-    
-    def _createBuildDefBuild(self, buildData):
+
+    def _createBuildDefBuild(self, projectId, build, nvf, buildName):
         """
         Create a new build from build definition info
         @return: the build id
         """
-        buildId = self.newBuild(buildData['projectId'], buildData['buildName'])
-        self.setBuildTrove(buildId, buildData['nvf'][0], 
-                           buildData['nvf'][1].freeze(), 
-                           buildData['nvf'][2].freeze())
-        self.setBuildType(buildId, buildData['buildType'])
+        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+        buildId = self.newBuild(projectId, buildName)
+        newBuild = builds.Build(self, buildId)
+        newBuild.setTrove(n, v, f)
+        buildType = buildtypes.xmlTagNameImageTypeMap[build.getBuildImageType().tag]
+        newBuild.setBuildType(buildType)
+        for k, v in build.getBuildImageType().fields:
+            newBuild.setDataValue(k, str(v))
 
-        self._setCustomTrovesForBuildId(buildId, buildData['buildOptions'])
+        # TODO: need custom troves
+        #self._setCustomTrovesForBuildId(buildId,
+        #        buildData['buildOptions'])
 
-        # Add build data from the buildDefinition to the 
-        # build object.
-        for k, v in buildData['buildOptions'].items():
-            self.setBuildDataValue(buildId, k, str(v), data.RDT_STRING) 
-            
         return buildId
 
     def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
@@ -4450,140 +4428,37 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
-    def getProductVersionProdDefLabel(self, versionId):
-        version = projects.ProductVersions(self, versionId)
-        return version.getProdDefLabel()
-
-    @private
-    @requiresAuth
-    @typeCheck(int)
-    def getProductDefinitionForVersionObj(self, versionId):
-        version = projects.ProductVersions(self, versionId)
-        project = projects.Project(self, version.projectId)
-        projectCfg = project.getConaryConfig()
-
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
-
-        proddefLabel = versions.Label(version.getProdDefLabel())
-
-        latestTrove = repos.getTroveLatestByLabel(
-                          [('proddef:source', proddefLabel, None)])
-
-        # latestTrove is now a tuple of lists of lists of tuples...
-        # If it's not the structure we expect, throw an exception.
-        try:
-            proddefVersion = latestTrove[0][0][0][1]
-        except:
-            raise ProductDefinitionVersionNotFound()
-
-        try:
-            proddefData = client.getFilesFromTrove('proddef:source', 
-                proddefVersion, deps.Flavor())
-            xml = proddefData['proddef.xml'].read()
-        except KeyError:
-            raise ProductDefinitionVersionNotFound()
-
-        return proddef.ProductDefinition(fromStream=xml)
+    def getStagesForProductVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        return [s.name for s in pd.getStages()]
 
     @private
     @requiresAuth
     @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
-        pd = self.getProductDefinitionForVersionObj(versionId)
-
-        stages = [dict(name=s.name, labelSuffix=s.labelSuffix) \
-                for s in pd.getStages()]
-        sources = [dict(troveName=s.troveName, label=s.label) \
-                   for s in pd.getUpstreamSources()]
-        buildDefs = [{'name' : b.name,
-                      'baseFlavor' : b.baseFlavor,
-                      'imageGroup' : b.imageGroup,
-                      'stages' : b.stages,
-                      b.imageType.tag : b.imageType.fields}
-                     for b in pd.getBuildDefinitions()]
-
-        pdDict = dict(stages=stages,
-                      upstreamSources=sources,
-                      buildDefinition=buildDefs)
-
-        baseFlavor = pd.getBaseFlavor()
-        if baseFlavor:
-            pdDict['baseFlavor'] = baseFlavor
-
-        imageGroup = pd.getImageGroup()
-        if imageGroup:
-            pdDict['imageGroup'] = imageGroup
-
-        return pdDict
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        sio = StringIO.StringIO()
+        pd.serialize(sio)
+        return sio.getvalue()
 
     @private
     @requiresAuth
-    @typeCheck(int, dict)
-    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
-        # Convert productDefinitionDict to Xml.
-        pd = proddef.ProductDefinition()
-
+    @typeCheck(int, ((str, unicode),))
+    def setProductDefinitionForVersion(self, versionId,
+            productDefinitionXMLString):
+        # XXX: Need exception handling here
+        pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
 
-        # Set some basic attributes on pd based data in rBuilder
-        pd.setProductName(project.name)
-        pd.setProductShortname(project.shortname)
-        pd.setProductDescription(project.description)
-        pd.setProductVersion(version.name)
-        pd.setProductVersionDescription(version.description)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(self.cfg.namespace)
+        # TODO put back overrides
 
-        # Set imagegroup to generated top level group
-        # TODO: make UI able to edit this; for now, it's generated
-        pd.setImageGroup(project.getDefaultImageGroupName())
-
-        # Set baseflavor
-        # TODO: need to hard code this to something reasonable for first cut
-        pd.setBaseFlavor(productDefinitionDict.get('baseFlavor', ''))
-
-        # Add each stage defined in the dict to pd.
-        for stage in productDefinitionDict.get('stages', []):
-            pd.addStage(stage['name'], stage['labelSuffix'])
-
-        # Add each build definition defined in the dict to pd.
-        for buildDefn in productDefinitionDict.get('buildDefinition', []):
-            name = buildDefn.get('name', '')
-            baseFlavor = buildDefn.get('baseFlavor', '')
-            imageKey = buildDefn.get('_xmlName', '')
-            imageType = proddef.ProductDefinition.imageType(imageKey, 
-                            buildDefn.get(imageKey, {})) 
-            pd.addBuildDefinition(name=name, baseFlavor=baseFlavor, 
-                                  imageType=imageType,
-                                  stages=buildDefn['stages'])
-
-        # Add each upstream source defined in the dict to pd.
-        for us in productDefinitionDict.get('upstreamSources', []):
-            pd.addUpstreamSource(us['troveName'], us['label'])
-
-
-        # Create an empty StringIO object for the serialization of pd.
-        pdStream = StringIO.StringIO()
-        pd.serialize(pdStream)
-
-        # Create a recipe to allow cvc to be able to use this source trove
-        from mint.templates import dummyProddefRecipe
-        recipeStream = StringIO.StringIO()
-        recipeStream.write(templates.write(dummyProddefRecipe,
-                projectName=project.getHostname()))
-        recipeStream.write('\n')
-
-        # Write it to the repository
-        self._createSourceTrove(project, 'proddef',
-                version.getProdDefLabel(),
-                '1.0', {'proddef.xml': pdStream,
-                    'proddef.recipe': recipeStream},
-                'Product Definition commit from rBuilder')
-
-        pdStream.close()
-        recipeStream.close()
+        projectCfg = project.getConaryConfig()
+        projectCfg['name'] = self.auth.username
+        projectCfg['contact'] = self.auth.fullName or ''
+        cclient = conaryclient.ConaryClient(projectCfg)
+        pd.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
         return True
 
     @private
@@ -4611,7 +4486,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
 
         taskList = []
-        pd = self.getProductDefinitionForVersionObj(versionId)
+        pd = self._getProductDefinitionForVersionObj(versionId)
         builds = pd.getBuildsForStage(stageName)
         for build in builds:
             task = dict()

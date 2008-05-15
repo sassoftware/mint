@@ -20,8 +20,8 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from rpath_common.proddef import api1 as proddef
 
-class ProductVersionTest(fixtures.FixturedUnitTest):
-    
+class ProductVersionTest(fixtures.FixturedProductVersionTest):
+
     @fixtures.fixture("Full")
     def testAddProductVersion_Normal(self, db, data):
         """ Test adding a product version to the database. """
@@ -141,133 +141,33 @@ class ProductVersionTest(fixtures.FixturedUnitTest):
         self.assertEquals(0, len(productVersions))
 
     @fixtures.fixture("Full")
-    def testGetProdDefLabel(self, db, data):
-        ownerClient = self.getClient('owner')
-        versionId = data['versionId']
-        proddefLabel = ownerClient.getProductVersionProdDefLabel(versionId)
-        self.assertEquals('foo.rpath.local2@yournamespace:proddef-FooV1',
-                          proddefLabel)
-
-    @fixtures.fixture("Full")
-    def testSetProductDefinitionForVersion(self, db, data):
+    def testGetandSetProductDefinitionForVersion(self, db, data):
         ownerClient = self.getClient('owner')
         versionId = data['versionId']
 
-        # Mock repository interaction
-        result = []
-        def getRepos(self):
-            class Repo:
-                def commitChangeSet(*args):
-                    return result.append('commitChangeSet')
-            return Repo()
+        pd = proddef.ProductDefinition()
+        pd.addStage('devel', '-devel')
+        pd.addStage('qa', '-qa')
+        pd.addStage('release', '')
 
-        def createSourceTrove(*args):
-            return result.append('createSourceTrove')
+        ownerClient.setProductDefinitionForVersion(versionId, pd)
+        npd = ownerClient.getProductDefinitionForVersion(versionId)
 
-        oldGetRepos = conaryclient.ConaryClient.getRepos
-        conaryclient.ConaryClient.getRepos = getRepos
-        oldCreateSourceTrove = conaryclient.ConaryClient.createSourceTrove
-        conaryclient.ConaryClient.createSourceTrove = createSourceTrove
-
-        try:
-            ownerClient.setProductDefinitionForVersion(versionId, {})
-        finally:
-            # Unmock repository interaction
-            conaryclient.ConaryClient.getRepos = oldGetRepos
-            conaryclient.ConaryClient.createSourceTrove = oldCreateSourceTrove
-
-        self.assertEquals(['createSourceTrove', 'commitChangeSet'], result)
-
-
-    @fixtures.fixture("Full")
-    def testGetProductDefinitionForVersion(self, db, data):
-        ownerClient = self.getClient('owner')
-        versionId = data['versionId']
-
-        # Mock repository interaction
-        result = []
-        def getRepos(self):
-
-            class Repo:
-
-                def getTroveLatestByLabel(*args):
-                    result.append('getTroveLatestByLabel')
-                    return ([[(0, 0)]],)
-
-            return Repo()
-
-        def getFilesFromTrove(*args):
-            data = StringIO.StringIO()
-            result.append('getFilesFromTrove')
-            return {'proddef.xml' : data}
-
-        class ProductDefinition:
-            def __init__(self, fromStream):
-                pass
-            def getBaseFlavor(*args):
-                result.append('getBaseFlavor')
-                return ''
-            def getStages(*args):
-                result.append('getStages')
-                return ''
-            def getImageGroup(*args):
-                result.append('getImageGroup')
-                return ''
-            def getUpstreamSources(*args):
-                result.append('getUpstreamSources')
-                return ''
-            def getBuildDefinitions(*args):
-                result.append('getBuildDefinitions')
-                return ''
-
-        oldGetRepos = conaryclient.ConaryClient.getRepos
-        conaryclient.ConaryClient.getRepos = getRepos
-        oldGetFilesFromTrove = conaryclient.ConaryClient.getFilesFromTrove
-        conaryclient.ConaryClient.getFilesFromTrove = getFilesFromTrove
-        oldProductDefinition = proddef.ProductDefinition
-        proddef.ProductDefinition = ProductDefinition
-
-        try:
-            pdDict = ownerClient.getProductDefinitionForVersion(versionId)
-        finally:
-            # Unmock repository interaction
-            conaryclient.ConaryClient.getRepos = oldGetRepos
-            conaryclient.ConaryClient.getFilesFromTrove = oldGetFilesFromTrove
-            proddef.ProductDefinition = oldProductDefinition
-
-        self.assertEquals(['getTroveLatestByLabel', 'getFilesFromTrove',
-                           'getStages', 'getUpstreamSources',
-                           'getBuildDefinitions', 'getBaseFlavor', 
-                           'getImageGroup'] , result)
+        self.failUnlessEqual(npd.getStage('devel').name, 'devel')
+        self.failUnlessEqual(npd.getStage('devel').labelSuffix, '-devel')
+        self.failUnlessEqual(npd.getStage('qa').name, 'qa')
+        self.failUnlessEqual(npd.getStage('qa').labelSuffix, '-qa')
+        self.failUnlessEqual(npd.getStage('release').name, 'release')
+        self.failUnlessEqual(npd.getStage('release').labelSuffix, '')
 
     @fixtures.fixture("Full")
     def testGetProductDefinitionForNonExistantVersion(self, db, data):
         ownerClient = self.getClient('owner')
         versionId = data['versionId']
 
-        # Mock repository interaction
-        result = []
-        def getRepos(self):
-
-            class Repo:
-
-                def getTroveLatestByLabel(*args):
-                    result.append('getTroveLatestByLabel')
-                    # Return a bad structure
-                    return ([[(0)]],)
-
-            return Repo()
-
-        oldGetRepos = conaryclient.ConaryClient.getRepos
-        conaryclient.ConaryClient.getRepos = getRepos
-
-        try:
-            self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
+        self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
                               ownerClient.getProductDefinitionForVersion,
                               versionId)
-        finally:
-            # Unmock repository interaction
-            conaryclient.ConaryClient.getRepos = oldGetRepos
 
 class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
 

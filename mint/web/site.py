@@ -533,8 +533,11 @@ class SiteHandler(WebHandler):
             creatingVersion = True
             try:
                 versionId = self.client.addProductVersion(projectId, version);
-                self.client.setProductDefinitionForVersion(versionId, 
-                    {'stages': helperfuncs.getProductVersionDefaultStagesList()})
+                pd = helperfuncs.getInitialProductDefinition(title,
+                        hostname, domainname, shortname, version,
+                        self.cfg.namespace)
+                self.client.setProductDefinitionForVersion(versionId, pd)
+
             except projects.DuplicateProductVersion, e: 
                 self._addErrors(str(e))
                 
