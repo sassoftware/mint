@@ -11,6 +11,8 @@ from mint import buildtypes
 from mint.config import isRBO
 from conary.repository.errors import RoleAlreadyExists
 
+from rpath_common.proddef import api1 as proddef
+
 import htmlentitydefs
 import re
 import random
@@ -336,24 +338,7 @@ def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
             pass
         repos.auth.addUserByMD5(username, salt, password)
         repos.auth.updateRoleMembers(role, [username])
-        
-def setProductVersionDefaultKWArgs(kwargs=None):
-        """
-        Set the default kwargs for product version
-        """
-        if not kwargs:
-            kwargs = dict()
-            
-        kwargs.setdefault('id', -1)
-        kwargs.setdefault('name', '')
-        kwargs.setdefault('description', '')
-        kwargs.setdefault('baseFlavor', 'is: x86')
-        kwargs.setdefault('stages', getProductVersionDefaultStagesList())
-        kwargs.setdefault('upstreamSources', {})
-        kwargs.setdefault('buildDefinition', [])
-        
-        return kwargs
-    
+
 def getProductVersionDefaultStagesNames():
     """
     Build a list containing the default stage names
@@ -391,3 +376,29 @@ def getBuildDefsAvaliableBuildTypes(allBuildTypes):
     allBuildTypes.remove(buildtypes.IMAGELESS)
         
     return allBuildTypes
+
+def addDefaultStagesToProductDefinition(productDefinitionObj):
+    """
+    Given a product definition object, add the canned set of
+    stages to it. This function modifies the original object.
+    """
+    for stage in getProductVersionDefaultStagesList():
+        productDefinitionObj.addStage(stage['name'],
+                stage['labelSuffix'])
+    return
+
+def getInitialProductDefinition(projectName, hostname, domainname, shortname, version, namespace):
+    """
+    Get the initial proddef for a new project
+    """
+    pd = proddef.ProductDefinition()
+    pd.setProductName(projectName)
+    pd.setProductShortname(shortname)
+    pd.setProductVersion(version)
+    pd.setConaryNamespace(namespace)
+    pd.setConaryRepositoryHostname("%s.%s" % (shortname, domainname))
+    pd.setImageGroup('group-%s-dist' % shortname)
+    addDefaultStagesToProductDefinition(pd)
+    # TODO: add baseFlavor
+    # TODO: add meaningful upstream sources
+    return pd
