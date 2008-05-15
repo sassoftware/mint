@@ -83,7 +83,6 @@ jQuery(document).ready(function () {
     });
 
     jQuery('.pd-builddef-adder').click(function () {
-        currentBdefSerial++;
         var templateDomBits = jQuery('#pd-builddef-bt-all > tbody').clone(true);
         templateDomBits.find(':disabled').removeAttr('disabled');
         templateDomBits.find('label').each(function () {
@@ -92,6 +91,7 @@ jQuery(document).ready(function () {
         templateDomBits.find('input,select').each(function () {
             if (this.id) { this.id = this.id.replace('bt', String(currentBdefSerial)); }
             if (this.name) { this.name = this.name.replace('bt', String(currentBdefSerial)); }
+            if (this.value == 'NEWBUILD') { this.value = "New Build " + currentBdefSerial; }
         });
         templateDomBits.find('tr').each(function () {
             if (this.id) { this.id = this.id.replace('bt', String(currentBdefSerial)); }
@@ -101,6 +101,7 @@ jQuery(document).ready(function () {
         
         // hide the no entries found message
         jQuery('#pd-builddef-empty').hide();
+        currentBdefSerial++;
     });
 
     jQuery('.pd-usource-deleter').click(function () {
