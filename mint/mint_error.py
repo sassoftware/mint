@@ -103,10 +103,6 @@ class InvalidProdType(MintError):
     "The selected %(project)s type is invalid."
 class InvalidUsername(MintError):
     "Username may contain only letters, digits, '-', '_', and '.'"
-class InvalidTroveSpecForProductDefinition(MintError):
-    "The trove spec %s for the product definition is invalid."
-class InvalidTroveSpecForBuildDefinition(MintError):
-    "The trove spec %s for the build definition %s is invalid."
 class JobserverVersionMismatch(MintError): # LEGACY
     "Image job cannot be run."
 class LastAdmin(MintError):
@@ -148,8 +144,6 @@ class PublishedReleaseNotPublished(MintError):
 class PublishedReleasePublished(MintError):
     "Release has already been published."
 class SchemaMigrationError(MintError): pass
-class StageNotFoundInProductDefinition(MintError):
-    "Stage %s was not found in the product definition."
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    
@@ -204,6 +198,15 @@ class MethodNotSupported(MintError):
 
     def __str__(self):
         return "Method not supported by XMLRPC server: %s" % self.method
+
+class ProductDefinitionError(MintError):
+    def __init__(self, reason):
+        self.reason = reason
+
+    def freeze(self): return (self.reason,)
+
+    def __str__(self):
+        return "There is was a problem that occurred when tryin to access the product definition for %s" % self.reason
 
 class UnmountFailed(MintError):
     def __init__(self, dev):
