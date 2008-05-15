@@ -1202,7 +1202,7 @@ class ProjectHandler(WebHandler):
                         stages = stageNames)
 
         for ve in validationErrors:
-            self._addError(str(ve))
+            self._addErrors(str(ve))
 
         if not self._getErrors():
             if id == -1:
