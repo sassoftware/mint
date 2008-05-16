@@ -15,6 +15,7 @@ function waitForPg()
 {
   echo "Waiting for postgres startup to complete"
   ready="false"
+  retries=4
   while [ "$ready" == "false" ]
   do
     psql -U postgres -l >/dev/null
@@ -22,8 +23,9 @@ function waitForPg()
     if [ "$rc" -eq 0 ]
     then
       ready="true"
-    elif [ "$rc" -eq 2 ]
+    elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
     then
+      retries=$(( $retries - 1 ))
       sleep 4
     else
       echo "Failed waiting for Postgres"

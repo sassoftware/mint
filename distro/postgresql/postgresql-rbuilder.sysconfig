@@ -8,5 +8,5 @@ PGTZ="/usr/share/zoneinfo"
 SHMMAX=524288000
 if [ `sysctl -n kernel.shmmax` -lt $SHMMAX ]
 then
-    sysctl -w "kernel.shmmax=$SHMMAX" -q
+    sysctl -q -w "kernel.shmmax=$SHMMAX"
 fi
