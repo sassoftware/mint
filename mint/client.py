@@ -7,6 +7,7 @@ import base64
 import os
 import sys
 import time
+import StringIO
 import xmlrpclib
 
 from mint import builds
@@ -23,6 +24,8 @@ from mint.mint_error import *
 from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
+
+from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
 CLIENT_VERSIONS = [6]
@@ -774,14 +777,14 @@ class MintClient:
         return self.server.getProductVersion(versionId)
 
     def getProductDefinitionForVersion(self, versionId):
-        return self.server.getProductDefinitionForVersion(versionId)
-    
-    def getProductDefinitionForVersionObj(self, versionId):
-        return self.server.getProductDefinitionForVersionObj(versionId)
+        pdXMLString = self.server.getProductDefinitionForVersion(versionId)
+        return proddef.ProductDefinition(fromStream=pdXMLString)
 
-    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+    def setProductDefinitionForVersion(self, versionId, productDefinition):
+        sio = StringIO.StringIO()
+        productDefinition.serialize(sio)
         return self.server.setProductDefinitionForVersion(versionId,
-                productDefinitionDict)
+                sio.getvalue())
 
     def editProductVersion(self, versionId, newDesc):
         return self.server.editProductVersion(versionId, newDesc)
