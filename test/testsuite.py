@@ -75,10 +75,14 @@ def setup():
     proddefPath     = os.getenv('PRODDEF_PATH',     os.path.realpath('../../proddef'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
 
+    #Package creator
+    packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath('../../package-creator-service'))
+    conaryFactoryTestPath = os.getenv('CONARY_FACTORY_TEST_PATH',    os.path.realpath('../../conary-factory-test'))
+
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
-        raaPath, raaTestPath, raaPluginsPath, proddefPath,
-        coveragePath)] + sys.path
+        raaPath, raaTestPath, raaPluginsPath, proddefPath, coveragePath,
+        packageCreatorPath, conaryFactoryTestPath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
@@ -87,6 +91,8 @@ def setup():
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
         PRODDEF_PATH=proddefPath,
         COVERAGE_PATH=coveragePath, 
+        PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
+        CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,
         PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp

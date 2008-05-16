@@ -351,6 +351,70 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
+<<<<<<< local
+    def createPackageTmpDir(self):
+        """
+        Create a new temporary location for storing package data
+        @returns: an ID that uniquely references this temporary location
+        @rtype: str
+        """
+        return self.server.createPackageTmpDir()
+
+    def getPackageFactories(self, projectId, sessionHandle, versionId, upload_url):
+        """
+        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
+        @param projectId: Project ID
+        @type projectId: int
+        @param id: ID returned from L{createPackageTmpDir}
+        @type id: str
+        @param versionId: ID of the version chosen
+        @type versionId: int
+        @param upload_url: URL of a package or ''.  Not currently used
+        @type upload_url: str
+        @returns: a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @rtype: tuple(tuple, str)
+        """
+        from pcreator import factorydata
+        factories =  self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
+        return [(x[0], x[1], factorydata.factoryDataDefToDict(x[1]), x[2]) for x in factories]
+
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
+
+    def newBuildsFromXml(self, projectId, label, buildXml):
+        """
+        Create a series of new builds from xml input.
+        @param projectId: the project to be associated with the new build.
+        @param label: the label to associate the builds with
+        @param buildXml: xml data describing the builds
+        @returns: a list of objects representing the new builds
+        """
+        # TODO refactor to work with product definitions
+        buildIds = self.server.newBuildsFromXml(projectId, label, buildXml)
+        return [self.getBuild(x) for x in buildIds]
+
+    def commitBuildXml(self, projectId, label, buildXml):
+        """
+        Commit a source trove to the given label, storing the xml input.
+        @param projectId: the project to be associated with the new build.
+        @param label: the label to store the trove on.
+        @param buildXml: xml data describing the builds
+        """
+        # TODO refactor to work with product definitions
+        return self.server.commitBuildXml(projectId, label, buildXml)
+
+    def checkoutBuildXml(self, projectId, label):
+        """
+        Check out a source trove from the given label, returning the build xml.
+        @param projectId: the project to be associated with the new build.
+        @param label: the label to store the trove on.
+        @returns: a string containing xml
+        """
+        # TODO refactor to work with product definitions
+        return self.server.checkoutBuildXml(projectId, label)
+
+=======
+>>>>>>> other
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
