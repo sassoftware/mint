@@ -11,7 +11,6 @@ import time
 import tempfile
 from mod_python import apache
 
-from mint import buildxml
 from mint.web import basictroves
 from mint import communitytypes
 from mint import database
@@ -46,6 +45,8 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.errors import TroveNotFound, ParseError
 
 from mcp import mcp_error
+
+from rpath_common.proddef import api1 as proddef
 
 import simplejson
 
@@ -693,22 +694,6 @@ class ProjectHandler(WebHandler):
                 message = None)
 
     @ownerOnly
-    @strFields(label = None)
-    def buildDefs(self, auth, label):
-        # this is not the method you are looking for (RBL-1911)
-        # TODO: REFACTOR ME to fit product definitions
-        raise HttpNotFound
-
-        buildsXml = self.client.checkoutBuildXml(self.project.id, label)
-        builds = buildxml.buildsFromXml(buildsXml, splitDefault = True)
-
-        visibleTypes = self.client.getAvailableBuildTypes()
-
-        return self._write("buildDefs", builds = builds,
-            buildsJson = simplejson.dumps(builds),
-            label = label, visibleTypes = visibleTypes)
-
-    @ownerOnly
     def newRelease(self, auth):
         currentBuilds = []
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
@@ -940,13 +925,17 @@ class ProjectHandler(WebHandler):
                 previewData = self._getPreviewData(pubrelease, build)
             else:
                 previewData = False
+                
+            mirroredByRelease = self.client.isProjectMirroredByRelease(
+                                    self.project.getId())
             return self._write("confirmPublish",
                     message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (e.g. add/remove images, update description, etc.) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
                     noLink = "releases", previewData = previewData, 
-                    shouldMirror=False)
+                    shouldMirror=False, 
+                    mirroredByRelease=mirroredByRelease)
 
     @ownerOnly
     @dictFields(yesArgs = {})
@@ -1143,19 +1132,18 @@ class ProjectHandler(WebHandler):
         
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
-            prodDef = self.client.getProductDefinitionForVersion(id)
-            prodDef['buildDefinition'] = \
-                builds.applyTemplatesToBuildDefinitions(prodDef['buildDefinition'])
-            kwargs.update(prodDef)   
+            pd = self.client.getProductDefinitionForVersion(id)
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
-            kwargs = self._productVersionDefaultKWArgs(kwargs)
+            pd = proddef.ProductDefinition()
+            helperfuncs.addDefaultStagesToProductDefinition(pd)
 
         return self._write("editVersion",
                 isNew = isNew,
                 id=id,
                 visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                 buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+                productDefinition = pd,
                 kwargs = kwargs)
 
     @intFields(id = -1)
@@ -1166,65 +1154,99 @@ class ProjectHandler(WebHandler):
             **kwargs):
 
         isNew = (id == -1)
-        
+
         if not name:
             self._addErrors("Missing version")
+
+        # Load the current project definition for this version
+        # If this is new, use our template product definition
+        # generator. Otherwise, just get it from the repository.
+        if isNew:
+            pd = helperfuncs.getInitialProductDefinition(
+                    self.project.name,
+                    self.project.hostname,
+                    self.project.domainname,
+                    self.project.shortname,
+                    name,
+                    self.cfg.namespace)
+        else:
+            version = self.client.getProductVersion(id)
+            pd = self.client.getProductDefinitionForVersion(id)
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
                 coerceValues=True)
-                
-        # Create and save a list of dicts that we can send to
-        # applyTemplatesToBuildDefinitions
-        buildDefs = []
-        buildDefsList = collatedDict.get('pd-builddef',[])
-        errCounter = 0
-        for builddef in buildDefsList:
-            
-            if not builddef.has_key('name'):
-                # only add this error once
-                if errCounter == 0:
-                    self._addErrors("Missing name for build definition(s)")
-                    errCounter += 1
-            else:
-                buildDefs.append(dict(name=builddef.pop('name'),
-                                 baseFlavor=builddef.pop('baseFlavorType'),
-                                 _buildType=int(builddef.pop('_buildType')),
-                                 _builddef=builddef))
 
-        # Apply the build templates to the buildDefs list of dicts.  The
-        # returned dict is used in the dict sent to
-        # setProductDefinitionForVersion
-        try:
-            templBuildDefs = builds.applyTemplatesToBuildDefinitions(buildDefs)
-        except BuildOptionValidationException, e:
-            self._addErrors(str(e))
-            
-        # get/validate the stages
+        # Process stages
         stages = collatedDict.get('pd-stages', {})
         try:
             self._validateStages(stages)
         except ProductDefinitionInvalidStage, e:
             self._addErrors(str(e))
-            
-        # get the upstream sources
+
+        # XXX ProductDefinition object needs clearStages()
+        pd.stages = proddef._Stages()
+        for s in stages:
+            pd.addStage(s['name'], s['labelSuffix'])
+
+        # Process upstream sources
         usources = collatedDict.get('pd-usources',{})
-    
+        # TODO: Include upstream sources, baseFlavor, etc.
+        #       from the UI (which needs to be invented).
+        #       Until then, we'll leave any changes a user
+        #       makes in the repos alone.
+
+        # Process build definitions
+        buildDefsList = collatedDict.get('pd-builddef',[])
+
+        # Currently, stageNames for each build is
+        # defined as the full set of stages.
+        stageNames = [x.name for x in pd.getStages()]
+
+        # XXX ProductDefinition object needs clearBuildDefinitions()
+        pd.buildDefinition = proddef._BuildDefinition()
+
+        validationErrors = []
+        warnedNoNameAlready = False
+        for builddef in buildDefsList:
+            buildType = int(builddef.get('_buildType'))
+            xmlTagName = buildtypes.imageTypeXmlTagNameMap[buildType]
+            proposedBuildSettings = dict(x for x in builddef.iteritems() if not x[0].startswith('_'))
+            bTmpl = buildtemplates.getDataTemplate(buildType)
+            buildSettings = bTmpl.getDefaultDict()
+            buildSettings.update(proposedBuildSettings)
+
+            buildName = builddef.get('name', '')
+
+            # only add this error once
+            if not buildName and not warnedNoNameAlready:
+                self._addErrors("Missing name for build definition(s)")
+                warnedNoNameAlready = True
+            else:
+                try:
+                    bTmpl.validate(**buildSettings)
+                except BuildOptionValidationException, e:
+                    validationErrors.extend(e.errlist)
+                else:
+                    pd.addBuildDefinition(
+                        name=builddef.get('name'),
+                        baseFlavor=builddef.get('baseFlavor'),
+                        imageType=pd.imageType(
+                            xmlTagName, buildSettings),
+                        stages = stageNames)
+
+        for ve in validationErrors:
+            self._addErrors(str(ve))
+
         if not self._getErrors():
-            
-            pdDict = dict(baseFlavor=baseFlavor,
-                          stages=stages,
-                          upstreamSources=usources,
-                          buildDefinition=templBuildDefs)
-            
             if id == -1:
-                id = self.client.addProductVersion(self.project.id, name,
-                        description)
+                id = self.client.addProductVersion(self.project.id,
+                        name, description)
             else:
                 self.client.editProductVersion(id, description)
 
             assert(id != -1)
-            self.client.setProductDefinitionForVersion(id, pdDict)
+            self.client.setProductDefinitionForVersion(id, pd)
 
             if kwargs.has_key('linked'):
                 # we got here from the "create a product menu" so output
@@ -1242,16 +1264,12 @@ class ProjectHandler(WebHandler):
                               (action, getProjectText().lower(), name))
             self._predirect()
         else:
-            kwargs.update(id=id, name=name, description=description,
-                          baseFlavor=baseFlavor, stages=stages,
-                          upstreamSources=usources, 
-                          buildDefinition=templBuildDefs)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
-               kwargs = kwargs)
+               productDefinition = pd, kwargs = kwargs)
             
     def _productVersionAvaliableBuildTypes(self):
         """
@@ -1260,12 +1278,6 @@ class ProjectHandler(WebHandler):
         return helperfuncs.getBuildDefsAvaliableBuildTypes(
             self.client.getAvailableBuildTypes())
             
-    def _productVersionDefaultKWArgs(self, kwargs):
-        """
-        Get the default kwargs for product version
-        """
-        return helperfuncs.setProductVersionDefaultKWArgs(kwargs);
-        
     def _validateStages(self, stagesList):
         """
         Validate the release stages
@@ -1279,9 +1291,10 @@ class ProjectHandler(WebHandler):
             if not stage.has_key('name'):
                 raise ProductDefinitionInvalidStage(
                     'The release stage name must be specified')
-            # make sure all stages have a label value since we allow it to be empty
-            if not stage.has_key('label'):
-                stage['label'] = ""
+            # make sure all stages have a labelSuffix
+            # value since we allow it to be empty
+            if not stage.has_key('labelSuffix'):
+                stage['labelSuffix'] = ""
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

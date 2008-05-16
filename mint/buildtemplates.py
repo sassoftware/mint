@@ -205,32 +205,27 @@ class amiHugeDiskMountpoint(StringOption):
 class StubImageTemplate(Template):
     __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
     id = buildtypes.STUB_IMAGE
-    xmlName = 'stubImage'
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'installLabelPath', 'swapSize']
     id = buildtypes.RAW_HD_IMAGE
-    xmlName = 'rawHdImage'
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'installLabelPath', 'swapSize']
     id = buildtypes.RAW_FS_IMAGE
-    xmlName = 'rawFsImage'
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
                  'diskAdapter', 'vmSnapshots']
     id = buildtypes.VMWARE_IMAGE
-    xmlName = 'vmwareImage'
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking']
     id = buildtypes.VMWARE_ESX_IMAGE
-    xmlName = 'vmwareEsxImage'
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
@@ -238,52 +233,43 @@ class InstallableIsoTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove']
     id = buildtypes.INSTALLABLE_ISO
-    xmlName = 'installableIsoImage'
 
 class UpdateIsoTemplate(Template):
     __slots__ = ['baseFileName', 'mediaTemplateTrove']
     id = buildtypes.UPDATE_ISO
-    xmlName = 'updateIsoImage'
 
 class NetbootTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath']
     id = buildtypes.NETBOOT_IMAGE
-    xmlName = 'netbootImage'
 
 class LiveIsoTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'zisofs',
                  'unionfs']
     id = buildtypes.LIVE_ISO
-    xmlName = 'liveIsoImage'
 
 class TarballTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize']
     id = buildtypes.TARBALL
-    xmlName = 'tarballImage'
 
 class VirtualPCTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_PC_IMAGE
-    xmlName = 'vpcImage'
 
 class XenOVATemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vmMemory']
     id = buildtypes.XEN_OVA
-    xmlName = 'xenOvaImage'
 
 class VirtualIronVHDTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
                  'swapSize', 'vhdDiskType']
     id = buildtypes.VIRTUAL_IRON
-    xmlName = 'virtualIronImage'
 
 class AMITemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
                  'amiHugeDiskMountpoint', 'installLabelPath']
     id = buildtypes.AMI
-    xmlName = 'amiImage'
 
 class ApplianceISOTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'bugsUrl',
@@ -291,18 +277,15 @@ class ApplianceISOTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove']
     id = buildtypes.APPLIANCE_ISO
-    xmlName = 'applianceIsoImage'
 
 class ImagelessTemplate(Template):
     __slots__ = []
     id = buildtypes.IMAGELESS
-    xmlName = 'nakedGroup'
 
 ########################
 
 dataHeadings = {}
 dataTemplates = {}
-dataTemplatesByXmlName = {}
 
 for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
                      if x.endswith('Template') and x != 'Template']:
@@ -310,7 +293,6 @@ for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
     dataHeadings[template.id] = buildtypes.typeNames[template.id] + \
                                 ' Settings'
     dataTemplates[template.id] = template
-    dataTemplatesByXmlName[template.xmlName] = template
 
 
 def getDataTemplate(buildType):
@@ -320,7 +302,8 @@ def getDataTemplate(buildType):
         return {}
 
 def getDataTemplateByXmlName(xmlName):
-    return dataTemplatesByXmlName.get(xmlName, {})
+    buildType = buildtypes.xmlTagNameImageTypeMap.get(xmlName)
+    return dataTemplates.get(buildType, {})
 
 def getDisplayTemplates():
     return [(x, dataHeadings[x], dataTemplates[x]) \

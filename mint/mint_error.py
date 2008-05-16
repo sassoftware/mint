@@ -57,13 +57,15 @@ class BuildDataNameError(MintError):
 class BuildFileMissing(MintError):
     "The referenced build file doesn't exist."
 class BuildMissing(MintError): "The referenced build does not exist."
-class BuildXmlInvalid(MintError): "Invalid Build XML"
 class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
 class ConfigurationMissing(MintError):
     "The rBuilder configuration is missing."
+    # this init must be in here because this gets thrown from config.py
+    def __init__(self):
+        self.msg = self.__doc__
 class ConfirmError(MintError):
     "Your registration could not be confirmed"
 class DeleteLocalUrlError(MintError):
@@ -87,6 +89,7 @@ class FailedToLaunchAMIInstance(MintError):
     "Failed to launch AMI instance."
 class FileMissing(MintError): "The referenced file does not exist."
 class GroupAlreadyExists(MintError): "Group already exists"
+class GroupTroveTemplateExists(MintError): "Template group trove already exists"
 class GroupTroveEmpty(MintError): "Group cannot be empty"
 class GroupTroveNameError(MintError):
     "Invalid name for group: letters, numbers, hyphens allowed."
@@ -100,8 +103,6 @@ class InvalidProdType(MintError):
     "The selected %(project)s type is invalid."
 class InvalidUsername(MintError):
     "Username may contain only letters, digits, '-', '_', and '.'"
-class InvalidTroveSpecForBuildDefinition(MintError):
-    "The trove spec for the build definition is invalid."
 class JobserverVersionMismatch(MintError): # LEGACY
     "Image job cannot be run."
 class LastAdmin(MintError):
@@ -120,6 +121,8 @@ class NoBuildImageTypeInBuildDefinition(MintError):
     "No build image set in build definition."
 class NoBuildsDefinedInBuildDefinition(MintError):
     "No builds defined in build definition."
+class NoImageGroupSpecifiedForProductDefinition(MintError):
+    "No imageGroup specified to build in the product definition."
 class NotEntitledError(MintError):
     "The rBuilder is not entitled to a required resource. Please " \
         "contact your administrator."
@@ -143,9 +146,7 @@ class PublishedReleasePublished(MintError):
 class SchemaMigrationError(MintError): pass
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
-        "address. Please try again later."
-class TroveNotFoundForBuildDefinition(MintError):
-    "The trove for a build definition was not found."
+        "address. Please try again later."    
 class TroveNotSet(MintError):
     "This build is not associated with a group."
 class UserAlreadyAdmin(MintError): "User is already an administrator."
@@ -198,6 +199,15 @@ class MethodNotSupported(MintError):
     def __str__(self):
         return "Method not supported by XMLRPC server: %s" % self.method
 
+class ProductDefinitionError(MintError):
+    def __init__(self, reason):
+        self.reason = reason
+
+    def freeze(self): return (self.reason,)
+
+    def __str__(self):
+        return "There is was a problem that occurred when tryin to access the product definition for %s" % self.reason
+
 class UnmountFailed(MintError):
     def __init__(self, dev):
         MintError.__init__(self)
@@ -230,6 +240,17 @@ class InvalidBuildOption(MintError):
         return "Invalid value for %s" % self.desc
 
 class BuildOptionValidationException(MintError):
+    def __init__(self, errlist):
+        MintError.__init__(self)
+        self.errlist = errlist
+
+    def freeze(self): return (self.errlist,)
+
+    def __str__(self):
+        return "The following errors occurred: %s" % ", ".join(self.errlist)
+    
+class TroveNotFoundForBuildDefinition(MintError):
+    "The trove for one or more build definitions was not found."
     def __init__(self, errlist):
         MintError.__init__(self)
         self.errlist = errlist

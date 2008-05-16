@@ -8,13 +8,9 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
+    from rpath_common.proddef import api1 as proddef
     for var in [ 'name',
-                 'description',
-                 'baseFlavor',
-                 'buildDefinition',
-                 'upstreamSources'
-                 'stages'
-                ]:
+                 'description' ]:
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
@@ -40,16 +36,25 @@
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/editversion.js?v=${cacheFakeoutVersion}"/>
     </head>
     <body>
-        <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef={})" py:strip="True">
+        <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef=None)" py:strip="True">
             <?python
                 from mint import buildtypes
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
-                buildType = bdef.get('_buildType', visibleBuildTypes[0])
-                buildSettings = bdef.get(bdef.get('_xmlName'), {})
+                if bdef:
+                    imageType = bdef.getBuildImageType()
+                    buildType = buildtypes.xmlTagNameImageTypeMap.get(imageType.tag)
+                    buildSettings = imageType.fields
+                    buildName = bdef.getBuildName()
+                    buildBaseFlavor = bdef.getBuildBaseFlavor()
+                else:
+                    buildType = visibleBuildTypes[0]
+                    buildSettings = {}
+                    buildName = 'NEWBUILD'
+                    buildBaseFlavor = ''
             ?>
             <tr id="pd-builddef-${ordinal}">
                 <td>
-                    <input type="text" name="pd-builddef-${ordinal}-name" value="${bdef.get('name','')}" />
+                    <input type="text" name="pd-builddef-${ordinal}-name" value="${buildName}" />
                 </td>
                 <td>
                     <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-_buildType">
@@ -62,8 +67,8 @@
                     <div py:strip="True" py:for="key in visibleBuildTypes">
                         <?python
                             elementClasses = 'arch-%d' % key
-                            elementName = 'pd-builddef-%s-baseFlavorType' % (ordinal)
-                            elementId = 'pd-builddef-buildtype%s-%s-baseFlavorType' % (key, ordinal)
+                            elementName = 'pd-builddef-%s-baseFlavor' % (ordinal)
+                            elementId = 'pd-builddef-buildtype%s-%s-baseFlavor' % (key, ordinal)
 
                             # get the supported arch types for this build type
                             if buildtypes.buildDefinitionSupportedFlavorsMap.has_key(key):
@@ -80,15 +85,12 @@
 
                             # get a default flavor to work with in case build type hasn't been set
                             # this is just the first value in the supported archs dict
-                            defaultVal = ''
-                            for val in suppArchTypes.itervalues():
-                                defaultVal = val
-                                break
+                            defaultVal = suppArchTypes and suppArchTypes.values()[0] or ''
                         ?>
                         <select py:attrs="{'id': elementId, 'name': elementName, 'disabled': elementDisabled}" style="${elementStyle}" class="${elementClasses}">
                             <option py:for="v in sorted(suppArchTypes)"
                                 py:attrs="{'value': buildtypes.buildDefinitionFlavorMap[v],
-                                           'selected': (bdef.get('baseFlavor', defaultVal) == buildtypes.buildDefinitionFlavorMap[v]) and 'selected' or None}"
+                                           'selected': ((buildBaseFlavor or defaultVal) == buildtypes.buildDefinitionFlavorMap[v]) and 'selected' or None}"
                                 py:content="buildtypes.buildDefinitionFlavorNameMap[v]" />
                         </select>
                     </div>
@@ -161,7 +163,11 @@
             </tr>
         </div>
         
-        <div py:def="releaseStagesOptions(relstage={}, ordinal='bt')" py:strip="True">
+        <div py:def="releaseStagesOptions(relstage=None, ordinal='bt')" py:strip="True">
+            <?python
+                relstageName = relstage and relstage.name or ''
+                relstageLabelSuffix = relstage and relstage.labelSuffix or ''
+            ?>
             <tr id="pd-stages-${ordinal}">
                 <!--!
                    We add labels and hidden fields so the user can not edit
@@ -170,16 +176,12 @@
                    fields text fields.
                 -->
                 <td>
-                    <label for="pd-stages-${ordinal}-name" py:content="relstage.get('name')" />
+                    <label for="pd-stages-${ordinal}-name" py:content="relstageName" />
+                    <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstageName}"/>
                 </td>
                 <td>
-                    <label for="pd-stages-${ordinal}-label" py:content="relstage.get('label')" />
-                </td>
-                <td>
-                    <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstage.get('name')}"/>
-                </td>
-                <td>
-                    <input type="hidden" name="pd-stages-${ordinal}-label" value="${relstage.get('label')}"/>
+                    <label for="pd-stages-${ordinal}-labelSuffix" py:content="relstageLabelSuffix" />
+                    <input type="hidden" name="pd-stages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
                 </td>
             </tr>
         </div>
@@ -241,16 +243,16 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Tag Suffix</th>
+                                        <th>Label Suffix</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <div py:strip="True" py:for="ordinal, relstage in enumerate(kwargs['stages'])"
+                                    <div py:strip="True" py:for="ordinal, relstage in enumerate(productDefinition.getStages())"
                                          py:content="releaseStagesOptions(relstage, ordinal)" />
-                                    <tr id="pd-stages-empty" py:if="not len(kwargs['stages'])">
+                                    <tr id="pd-stages-empty" py:if="not productDefinition.getStages()">
                                         <td colspan="4">No release stages defined.</td>
                                     </tr>
                                 </tbody>
@@ -307,9 +309,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <div py:strip="True" py:for="ordinal, bdef in enumerate(kwargs['buildDefinition'])"
+                                    <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
-                                    <tr id="pd-builddef-empty" py:if="not len(kwargs['buildDefinition'])">
+                                    <tr id="pd-builddef-empty" py:if="not productDefinition.getBuildDefinitions()">
                                         <td colspan="5">No builds defined.</td>
                                     </tr>
                                 </tbody>
@@ -336,7 +338,6 @@
                     </button>
                 </p>
                 <input type="hidden" name="id" value="${id}" />
-                <input type="hidden" name="baseFlavor" value="${kwargs['baseFlavor']}" />
                 <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
             </form>
         </div>

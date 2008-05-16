@@ -15,12 +15,14 @@ import os
 import sys
 import time
 import pwd
+import StringIO
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 
 from mint import shimclient
 from mint import config
 from mint import buildtypes
+from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -33,6 +35,8 @@ from conary.dbstore import sqlerrors
 import mcp_helper
 from mcp import queue
 from mcp_helper import MCPTestMixin
+
+from rpath_common.proddef import api1 as proddef
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -322,47 +326,6 @@ class FixtureCache(object):
                       'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
     
-    def fixtureFullProdDef(self, cfg):
-        cfg, data = self.fixtureFull(cfg)
-
-        baseFlavor = """
-            ~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap,
-            ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU,
-            ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug,
-            ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl,
-            ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl,
-            ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux,
-            ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
-            ~!xen, ~!xfce, ~!xorg-x11.xprint
-            """
-        stages = [dict(name='devel',
-                       label='product.example.com@exm:product-1-devel'),
-                  dict(name='qa',
-                       label='product.example.com@exm:product-1-qa'),
-                  dict(name='release',
-                       label='product.example.com@exm:product-1')]
-
-
-        upstreamSources = [dict(troveName='group-rap-standard',
-                                label='rap.rpath.com@rpath:linux-1'),
-                           dict(troveName='group-postgres',
-                                label='products.rpath.com@rpath:postgres-8.2')]
-
-        buildDefinition = [dict(baseFlavor='is: x86',
-                                installableIsoImage=dict()),
-                           dict(baseFlavor='is: x86_64',
-                                installableIsoImage=dict())
-                          ]
-
-        proddef = dict(baseFlavor=baseFlavor,
-                       stages=stages,
-                       upstreamSources=upstreamSources,
-                       buildDefinition=buildDefinition)
-
-        data['proddef'] = proddef
-
-        return cfg, data
-
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
@@ -1021,6 +984,39 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             self.cfg and util.rmtree(self.cfg.dataPath)
         except OSError:
             pass
+
+class FixturedProductVersionTest(FixturedUnitTest):
+
+    global _testxmldata
+    _testxmldata = None
+
+    class _MockProductDefinition(proddef.ProductDefinition):
+        def saveToRepository(self, *args, **kwargs):
+            sio = StringIO.StringIO()
+            self.serialize(sio)
+            global _testxmldata
+            _testxmldata = sio.getvalue()
+
+        def loadFromRepository(self, *args, **kwargs):
+            global _testxmldata
+            if not _testxmldata:
+                raise proddef.ProductDefinitionTroveNotFound
+            sio = StringIO.StringIO(_testxmldata)
+            sio.seek(0)
+            self.parseStream(sio)
+
+    def setUp(self):
+        self.oldProductDefinition = proddef.ProductDefinition
+        proddef.ProductDefinition = self._MockProductDefinition
+        FixturedUnitTest.setUp(self)
+        global _testxmldata
+        _testxmldata = None
+
+    def tearDown(self):
+        FixturedUnitTest.tearDown(self)
+        proddef.ProductDefinition = self.oldProductDefinition
+        global _testxmldata
+        _testxmldata = None
 
 
 driver = os.environ.get("CONARY_REPOS_DB", "sqlite")

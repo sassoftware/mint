@@ -32,12 +32,12 @@ def _startPostgresql():
     started = False
     while True:
         try:
-            dbm = dbstore.connect('postgres@localhost.localdomain/template1', 'postgresql')
+            dbm = dbstore.connect('postgres@localhost.localdomain:5439/template1', 'postgresql')
         except pgsql.ProgrammingError, e:
             log.warning("PostgreSQL was not running, attempting to start it")
             if not started:
                 try:
-                    raa.lib.command.runCommand(['/sbin/service', 'postgresql', 'start'], close_fds=True)
+                    raa.lib.command.runCommand(['/sbin/service', 'postgresql-rbuilder', 'start'], close_fds=True)
                 except rpath_error.UnknownException, e:
                     log.error("An error occured when attempting to start the PostgreSQL service")
                     raise
@@ -86,7 +86,7 @@ class reportCallback:
 class SqliteToPgsql(rAASrvPlugin):
     convertScript = '/usr/share/conary/migration/db2db.py'
     #This follows the assumption that the pg database is on localhost
-    pgConnectString = '%s@localhost.localdomain/%%s'
+    pgConnectString = '%s@localhost.localdomain:5439/%%s'
     pgConnectUser = 'rbuilder'
 
     def _runScriptAndReportOutput(self, execId, cmd, messagePrefix = '', reporter = None):

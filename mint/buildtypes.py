@@ -109,6 +109,37 @@ typeNamesShort = {
     IMAGELESS:          "Online Update",
 }
 
+# To be used to map image types ids from XML tag names
+# used the build definition contained within the
+# product definition.
+#
+# Note: Only supported image types are contained here.
+# Thus you will not see XML tags for the following:
+#   - STUB_IMAGE
+#   - PARALLELS
+#
+# Furthermore, we don't support IMAGELESS builds
+# in the context of a product definition.
+#
+xmlTagNameImageTypeMap = {
+    'amiImage':            AMI,
+    'applianceIsoImage':   APPLIANCE_ISO,
+    'installableIsoImage': INSTALLABLE_ISO,
+    'liveIsoImage':        LIVE_ISO,
+    'netbootImage':        NETBOOT_IMAGE,
+    'rawFsImage':          RAW_FS_IMAGE,
+    'rawHdImage':          RAW_HD_IMAGE,
+    'tarballImage':        TARBALL,
+    'updateIsoImage':      UPDATE_ISO,
+    'vhdImage':            VIRTUAL_PC_IMAGE,
+    'virtualIronImage':    VIRTUAL_IRON,
+    'vmwareImage':         VMWARE_IMAGE,
+    'vmwareEsxImage':      VMWARE_ESX_IMAGE,
+    'xenOvaImage':         XEN_OVA,
+}
+
+imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
+
 typeNamesMarketing = {
     NETBOOT_IMAGE:      "Netboot Image",
     INSTALLABLE_ISO:    "Installable CD/DVD",
@@ -200,6 +231,10 @@ buildDefinitionFlavorMap = {
     BD_VMWARE_X86       : '!dom0, !domU, !xen, vmware is: x86',
     BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
+
+# generate mapping of flavors to flavor names
+buildDefinitionFlavorToFlavorMapRev = \
+    dict((x[1], x[0]) for x in buildDefinitionFlavorMap.iteritems())
 
 buildDefinitionFlavorNameMap = {
     BD_GENERIC_X86      : 'Generic x86 (32-bit)',

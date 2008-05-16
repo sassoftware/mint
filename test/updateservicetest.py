@@ -181,6 +181,9 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
                 "adminpass", "This is mah mirror!")
         adminClient.setOutboundMirrorTargets(omid, [usid])
 
+        # not using releases
+        self.assertFalse(adminClient.isProjectMirroredByRelease(projectId))
+
         labels = adminClient.getOutboundMirrors()
         self.failUnlessEqual(labels,
             [[1, projectId, sourceLabel, False, False, [], 0, True, False]])
@@ -188,6 +191,30 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
         adminClient.delOutboundMirror(1)
         labels = adminClient.getOutboundMirrors()
         self.failUnlessEqual(labels, [])
+
+    @fixtures.fixture("Full")
+    def testOutboundMirrorUseReleases(self, db, data):
+        projectId = data['projectId']
+        adminClient = self.getClient("admin")
+        project = adminClient.getProject(projectId)
+        sourceLabel = project.getLabel()
+        omid = adminClient.addOutboundMirror(projectId, [sourceLabel], 
+            useReleases=True)
+        usid = adminClient.addUpdateService("www.example.com", "adminuser",
+                "adminpass", "This is mah mirror!")
+        adminClient.setOutboundMirrorTargets(omid, [usid])
+
+        # using releases
+        self.assertTrue(adminClient.isProjectMirroredByRelease(projectId))
+
+        labels = adminClient.getOutboundMirrors()
+        self.failUnlessEqual(labels,
+            [[1, projectId, sourceLabel, False, False, [], 0, True, True]])
+
+        adminClient.delOutboundMirror(1)
+        labels = adminClient.getOutboundMirrors()
+        self.failUnlessEqual(labels, [])
+
 
     @fixtures.fixture("Full")
     def testOutboundMirrorAllLabels(self, db, data):

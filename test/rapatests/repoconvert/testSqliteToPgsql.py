@@ -328,7 +328,7 @@ exit %d
             mc = config.MintConfig()
             mc.read(config.RBUILDER_GENERATED_CONFIG)
             self.assertEqual(mc.reposDBDriver, 'postgresql')
-            self.assertEqual(mc.reposDBPath, 'postgres@localhost.localdomain/%s')
+            self.assertEqual(mc.reposDBPath, 'postgres@localhost.localdomain:5439/%s')
         finally:
             self.srvPlugin.reportMessage = oldreportMessage
             repoconvert._startPostgresql = oldStartPgsql

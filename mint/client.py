@@ -7,6 +7,7 @@ import base64
 import os
 import sys
 import time
+import StringIO
 import xmlrpclib
 
 from mint import builds
@@ -23,6 +24,8 @@ from mint.mint_error import *
 from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
+
+from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
 CLIENT_VERSIONS = [6]
@@ -348,6 +351,7 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
+<<<<<<< local
     def createPackageTmpDir(self):
         """
         Create a new temporary location for storing package data
@@ -409,6 +413,8 @@ class MintClient:
         # TODO refactor to work with product definitions
         return self.server.checkoutBuildXml(projectId, label)
 
+=======
+>>>>>>> other
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
@@ -653,6 +659,15 @@ class MintClient:
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
 
+    def isProjectMirroredByRelease(self, projectId):
+        '''
+        Returns True if the given project is configured for outbound
+        mirroring and is using "mirror by release".
+
+        @param projectId: id of project to check
+        '''
+        return self.server.isProjectMirroredByRelease(projectId)
+
     def getInboundMirrors(self):
         return self.server.getInboundMirrors()
 
@@ -826,11 +841,14 @@ class MintClient:
         return self.server.getProductVersion(versionId)
 
     def getProductDefinitionForVersion(self, versionId):
-        return self.server.getProductDefinitionForVersion(versionId)
+        pdXMLString = self.server.getProductDefinitionForVersion(versionId)
+        return proddef.ProductDefinition(fromStream=pdXMLString)
 
-    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
+    def setProductDefinitionForVersion(self, versionId, productDefinition):
+        sio = StringIO.StringIO()
+        productDefinition.serialize(sio)
         return self.server.setProductDefinitionForVersion(versionId,
-                productDefinitionDict)
+                sio.getvalue())
 
     def editProductVersion(self, versionId, newDesc):
         return self.server.editProductVersion(versionId, newDesc)
@@ -841,8 +859,12 @@ class MintClient:
     def getProductVersionProdDefLabel(self, versionId):
         return self.server.getProductVersionProdDefLabel(versionId)
 
-    def newBuildsFromProductDefinition(self, versionId, troveSpec):
-        return self.server.newBuildsFromProductDefinition(versionId, troveSpec)
+    def newBuildsFromProductDefinition(self, versionId, stage, force):
+        return self.server.newBuildsFromProductDefinition(versionId, stage,
+                                                          force)
+        
+    def getBuildTaskListForDisplay(self, versionId, stageName):
+        return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

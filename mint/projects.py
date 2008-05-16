@@ -226,6 +226,9 @@ class Project(database.TableObject):
     def getProductVersionList(self):
         return self.server.getProductVersionListForProduct(self.id)
 
+    def getDefaultImageGroupName(self):
+        return "group-%s-dist" % self.shortname.lower()
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
@@ -810,24 +813,6 @@ class ProductVersions(database.TableObject):
 
     def getItem(self, id):
         return self.server.getProductVersion(id)
-
-    def _getProductDefinitionTroveForVersion(self):
-        project = Project(self.server, self.id)
-        # XXX fill in with real trove name
-        return ('proddef:source',
-                '%s.%s@%s:proddef-%s' % \
-                (project.shortname,
-                 project.domainname,
-                 self.cfg.namespace,
-                 self.name), None)
-
-    def getProdDefLabel(self):
-        project = Project(self.server, self.projectId)
-        label = versions.Label(project.getLabel())
-
-        return "%s@%s:proddef-%s" % (project.getFQDN(),
-                                     label.getNamespace(),
-                                     self.name)
 
 
 class ProductVersionsTable(database.KeyedTable):

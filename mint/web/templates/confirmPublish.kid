@@ -31,7 +31,7 @@ from mint.web.templatesupport import projectText
             <p>${message}</p>
                     <form method="post" action="${yesArgs['func']}">
             <table>
-                <tr>
+                <tr py:if="mirroredByRelease">
                     <td>
                         <label>
                             <input id="shouldMirror" name="shouldMirror" class="check" type="checkbox"

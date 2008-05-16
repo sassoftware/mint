@@ -21,7 +21,6 @@ from urlparse import urlparse
 import StringIO
 
 from mint import buildtypes
-from mint import buildxml
 from mint import charts
 from mint import communityids
 from mint import data
@@ -458,6 +457,72 @@ class MintServer(object):
                 conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
 
+    def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
+
+        # Get repository + client
+        # XXX: Make this use a shimclient for rBuilder-managed
+        #      repositories so we can run web-based functional tests
+        #      against a single-threaded Apache server.
+        #      Until the shimclient can commit, we cannot do that
+        #      (see CNY-2545)
+
+        if not cclient:
+            projectCfg = project.getConaryConfig()
+            projectCfg['buildLabel'] = buildLabel
+            client = conaryclient.ConaryClient(projectCfg)
+        else:
+            client = cclient
+
+        repos = client.getRepos()
+
+        projectCfg = project.getConaryConfig()
+        projectCfg.buildLabel = buildLabel
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        # ensure that the changelog message ends with a newline
+        if not changeLogMessage.endswith('\n'):
+            changeLogMessage += '\n'
+
+        # create a pathdict out of the streamMap
+        pathDict = {}
+        for filename, filestream in streamMap.iteritems():
+            pathDict[filename] = filetypes.RegularFile(contents=filestream)
+
+        # create the changelog message using the currently
+        # logged-on user's username and fullname, if available
+        newchangelog = changelog.ChangeLog(self.auth.username,
+                             self.auth.fullName or '',
+                             changeLogMessage)
+
+        # create a change set object from our source data
+        changeSet = client.createSourceTrove('%s:source' % trovename,
+                        projectCfg.buildLabel,
+                        upstreamVersion, pathDict, newchangelog)
+
+        # commit the change set to the repository
+        repos.commitChangeSet(changeSet)
+
+        if not cclient:
+            del client
+
+    def _getProductDefinitionForVersionObj(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+        cclient = conaryclient.ConaryClient(projectCfg)
+
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setProductVersion(version.name)
+        try:
+            pd.loadFromRepository(cclient)
+        except Exception, e:
+            raise ProductDefinitionVersionNotFound
+        return pd
+
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -606,52 +671,34 @@ class MintServer(object):
     def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
         if groupName is None:
             groupName = 'group-%s-appliance' % project.getHostname()
-        #Create the new trove
-        cfg = self._setupCheckin(project, buildLabel)
 
-        repos = conaryclient.ConaryClient(cfg).getRepos()
         label = versions.Label(buildLabel)
+
+        projectCfg = project.getConaryConfig()
+        projectCfg.buildLabel = buildLabel
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
         trvLeaves = repos.getTroveLeavesByLabel(\
                 {groupName: {label: None} }).get(groupName, [])
-        if not trvLeaves:
-            pid = os.fork()
-            if not pid:
-                try:
-                    origdir = os.getcwd()
-                    path = tempfile.mkdtemp(dir = os.path.join(
-                        self.cfg.dataPath, 'tmp'))
-                    try:
-                        os.chdir(path)
-                        checkin.newTrove(repos, cfg, groupName, path)
-                        recipePath = os.path.join(path, groupName + '.recipe')
-                        f = open(recipePath, 'w')
-                        from mint.templates import groupTemplate
-                        recipe = templates.write(groupTemplate,
-                            cfg = self.cfg, 
-                            groupApplianceLabel=self.cfg.groupApplianceLabel,
-                            projectName=project.getHostname(), 
-                            groupName=groupName,
-                            rapaLabel=self.cfg.rapaLabel, version=version)
-                        f.write(recipe)
-                        f.write('\n') #Force a blank line at the end for cvc add's sake
-                        f.close()
-                        checkin.addFiles([groupName + '.recipe'])
-                        use.setBuildFlagsFromFlavor(groupName, cfg.buildFlavor)
-                        checkin.commit(repos, cfg, 'Autogenerated appliance group recipe')
-                    finally:
-                        os.chdir(origdir)
-                        util.rmtree(path, ignore_errors=True)
-                except Exception, e:
-                    import traceback
-                    print >>sys.stderr, traceback.format_exc(sys.exc_info()[2])
-                    os._exit(1)
-                else:
-                    os._exit(0)
-            pid, status = os.waitpid(pid, 0)
-            return bool(status)
-        else:
-            #XXX: raise an exception
-            return False
+        if trvLeaves:
+            raise GroupTroveTemplateExists
+
+        from mint.templates import groupTemplate
+        recipeStream = StringIO.StringIO()
+        recipeStream.write(templates.write(groupTemplate,
+                    cfg = self.cfg,
+                    groupApplianceLabel=self.cfg.groupApplianceLabel,
+                    projectName=project.getHostname(),
+                    groupName=groupName,
+                    rapaLabel=self.cfg.rapaLabel, version=version))
+        recipeStream.write('\n')
+        self._createSourceTrove(project, groupName,
+                buildLabel, '1', {'%s.recipe' % groupName: recipeStream},
+                'Initial appliance image group template',
+                client)
+        recipeStream.close()
+        return True
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
@@ -682,7 +729,7 @@ class MintServer(object):
         if (shortname + "." + domainname) == socket.gethostname():
             raise InvalidShortname
         return None
-
+    
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
@@ -711,8 +758,12 @@ class MintServer(object):
             appliance = "no"
             applianceValue = 0
 
-        label = "%s.%s@%s:%s-%s-devel"%(hostname, domainname, 
-             self.cfg.namespace, hostname, version)
+        # initial product definition
+        pd = helperfuncs.getInitialProductDefinition(projectName,
+                hostname, domainname, shortname, version,
+                self.cfg.namespace)
+
+        label = pd.getDefaultLabel()
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
@@ -757,7 +808,11 @@ class MintServer(object):
             project.setCommitEmail(commitEmail)
 
         if applianceValue:
-            self._createGroupTemplate(project, label, version)
+            try:
+                self._createGroupTemplate(project, label, version)
+            except GroupTroveTemplateExists:
+                pass # really, this is OK -- and even if it weren't,
+                     # there's nothing you can do about it, anyway
 
         if self.cfg.hideNewProjects:
             repos = self._getProjectRepo(project)
@@ -2005,70 +2060,92 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, troveSpec, force=False):
+    def newBuildsFromProductDefinition(self, versionId, stageName, force):
         """
-        Create a build for troveSpec for each build definied in the product
-        definition for the version specified by versionId.
+        Launch the image builds defined in the product definition for the
+        given version id and stage.  If provided, use troveSpec as the top
+        level group for the image, otherwise use the top level group defined
+        in the
+        product defintion.
         """
-
         version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
         projectId = version.projectId
 
-        # We expect a troveSpec as a string the format
-        # name=label/version
-        if '=' not in troveSpec:
-            raise InvalidTroveSpecForBuildDefinition(troveSpec)
-        else:
-            troveName, troveLabel = troveSpec.split('=')
-
         # Read build definition from product definition.
-        productDefinition = self.getProductDefinitionForVersion(versionId)
-        buildDefinition = productDefinition['buildDefinition']
+        pd = self._getProductDefinitionForVersionObj(versionId)
 
-        # Validate the data in the buildDefinition against build templates.
-        buildDefinition = \
-            builds.applyTemplatesToBuildDefinitions(buildDefinition)
+        # Look up the label for the stage name that was passed in.
+        try:
+            stageLabel = str(pd.getLabelForStage(stageName))
+        except proddef.StageNotFoundError, snfe:
+            raise ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+        except proddef.MissingInformationError, mie:
+            raise ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
-        if len(buildDefinition) < 1:
-            raise NoBuildsDefinedInBuildDefinition()
+        # Filter builds by stage
+        builds = pd.getBuildsForStage(stageName)
+        if not builds:
+            raise NoBuildsDefinedInBuildDefinition
 
-        # Create buildId's for each defined build.
-        buildIds = []
+        # Create build data for each defined build so we can create the builds
+        # later
+        filteredBuilds = []
         buildErrors = []
-        for build in buildDefinition:
-            buildFlavor = deps.parseFlavor(str(build.get('baseFlavor', '')))
-            nvfs = self._resolveTrove(projectId, troveName, troveLabel, buildFlavor)
+        for build in builds:
+            buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
+            buildGroup = str(build.getBuildImageGroup())
 
-            # Raise error if no troves found.
-            if not nvfs:
+            # Returns a list of troves that satisfy buildFlavor.
+            nvfs = self._resolveTrove(projectId, buildGroup,
+                                      stageLabel, buildFlavor)
+
+            if nvfs:
+                # Store a build with options for each trove found.
+                for nvf in nvfs:
+                    filteredBuilds.append((build, nvf))
+            else:
+                # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
-                    (troveName, buildFlavor))))
-            else:
-                # Create a build with options for each trove found.
-                for nvf in nvfs:
-                    buildId = self.newBuild(projectId, str(build.get('name', '')))
-                    self.setBuildTrove(buildId, nvf[0], nvf[1].freeze(), nvf[2].freeze())
-                    self.setBuildType(buildId, build['_buildType'])
-
-                    # Add build data from the buildDefinition to the build object.
-                    buildData = \
-                        build[buildtemplates.getDataTemplate(build['_buildType']).xmlName]
-
-                    for k, v in buildData.items():
-                        self.setBuildDataValue(buildId, k, str(v), 0)
-
-                    self._setAnacondaTemplatesForBuildId(buildId)
-                    buildIds.append(buildId)
+                    (buildGroup, buildFlavor))))
 
         if buildErrors and not force:
-            raise TroveNotFoundForBuildDefinition(str(buildErrors))
+            raise TroveNotFoundForBuildDefinition(buildErrors)
 
-        # Start each build.
-        for buildId in buildIds:
-            self.startImageJob(buildId)
+        # Create/start each build.
+        buildIds = []
+        for build, nvf in filteredBuilds:
+            try:
+                buildId = self._createBuildDefBuild(projectId, build,
+                        nvf, project.getName())
+                buildIds.append(buildId)
+            except Exception, e:
+                raise MintError(str(e))
+            else:
+                self.startImageJob(buildId)
 
         return buildIds
+
+    def _createBuildDefBuild(self, projectId, build, nvf, buildName):
+        """
+        Create a new build from build definition info
+        @return: the build id
+        """
+        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+        buildId = self.newBuild(projectId, buildName)
+        newBuild = builds.Build(self, buildId)
+        newBuild.setTrove(n, v, f)
+        buildType = buildtypes.xmlTagNameImageTypeMap[build.getBuildImageType().tag]
+        newBuild.setBuildType(buildType)
+        for k, v in build.getBuildImageType().fields:
+            newBuild.setDataValue(k, str(v))
+
+        # TODO: need custom troves
+        #self._setCustomTrovesForBuildId(buildId,
+        #        buildData['buildOptions'])
+
+        return buildId
 
     def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
         """
@@ -2085,215 +2162,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([x for x in troveList if x[2].satisfies(filterFlavor)],
                       key=lambda x: x[1])
 
-    def _setAnacondaTemplatesForBuildId(self, buildId):
+    def _setCustomTrovesForBuildId(self, buildId, buildData):
         """
-        Add anaconda-templates as a resolved trove to the given buildId.
+        Add various custom troves as a resolved trove to the given buildId.
         """
-        # anaconda-templates?
-        # TODO: fix this hack
-        name = 'anaconda-templates'
-        value = 'anaconda-templates=/conary.rpath.com@rpl:devel//1/1.0.7-0.3-2[is: x86]'
-        self.setBuildDataValue(buildId, name, value, 4)
+        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
+                            'anacondaCustomTrove' : 'anaconda-custom',
+                            'anacondaTemplatesTrove' : 'anaconda-templates'}
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def newBuildsFromXml(self, projectId, label, buildXml):
-        # TODO refactor to work with product definitions
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        cc = self._getProjectRepo(project)
-
-        try:
-            mc = self._getMcpClient()
-            jsVersion = mc.getJSVersion()
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
-
-        buildDicts = buildxml.buildsFromXml(buildXml)
-
-        buildIds = []
-
-        # validate the input all at once to ensure this operation is atomic
-        for buildDict in buildDicts:
-            if 'type' not in buildDict:
-                raise ParameterError('XML build is missing type')
-            template = buildtemplates.getDataTemplate(buildDict['type'])
-
-            # For each key in the data dict, verify that there is class named
-            # with that key in the buildtemplates module. If there isn't,
-            # throw an exception.
-            for name in buildDict.get('data', {}):
-                option = buildtemplates.__dict__.get(name)
-                if not(option and option.__base__.__base__ == \
-                           buildtemplates.BuildOption):
-                    raise ParameterError('illegal data value: %s' % name)
-
-        troveNameCache = {}
-
-        for buildDict in buildDicts:
-            troveName = buildDict['troveName']
-            baseFlavor = deps.parseFlavor(buildDict.get('baseFlavor', ''))
-            if troveName not in troveNameCache:
-                troveList = \
-                    cc.findTrove(None, (troveName, label, None))
-                troveNameCache[troveName] = troveList
+        for customTrove in ['mediaTemplateTrove', 'anacondaCustomTrove',
+                            'anacondaTemplatesTrove']:
+            if buildData.has_key(customTrove):
+                troveName = customTroveDict[customTrove]
+                value = '%s=%s' % (troveName, buildData[customTrove])
+                self.setBuildDataValue(buildId, troveName, value,
+                                       data.RDT_TROVE)
             else:
-                troveList = troveNameCache[troveName]
-            NVF = sorted([x for x in troveList \
-                              if x[2].stronglySatisfies(baseFlavor)],
-                         key = lambda x: x[1])
-            if not NVF:
-                raise conary_errors.TroveNotFound(\
-                    "Trove '%s' has no matching flavors for '%s'" % \
-                        (troveName, baseFlavor))
-            else:
-                NVF = NVF[-1]
-
-            buildId = self.builds.new( \
-                projectId = projectId,
-                name = buildDict.get('name', ''),
-                timeCreated = time.time(),
-                description = buildDict.get('description', ''),
-                buildType = buildDict['type'],
-                troveName = NVF[0],
-                troveVersion = NVF[1].freeze(),
-                troveFlavor = NVF[2].freeze())
-            buildIds.append(buildId)
-
-            template = buildtemplates.getDataTemplate(buildDict['type'])
-            data = dict([(x[0], x[1][1]) for x in template.iteritems()])
-            # the template is the set of all legal names for settings for this
-            # type, so we must be careful not to set new values.
-            for name, value in buildDict.get('data', {}).iteritems():
-                if name in data:
-                    data[name] = value
-            for name, value in data.iteritems():
-                dataType = template[name][0]
-                self.buildData.setDataValue(buildId, name, value, dataType)
-
-        return buildIds
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitAndBuild(self, projectId, labelStr, buildJson):
-        # TODO refactor to work with product definitions
-        xml = buildxml.xmlFromData(simplejson.loads(buildJson))
-        self.commitBuildXml(projectId, labelStr, xml)
-        return self.newBuildsFromXml(projectId, labelStr, xml)
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitBuildJson(self, projectId, labelStr, buildJson):
-        # TODO refactor to work with product definitions
-        xml = buildxml.xmlFromData(simplejson.loads(buildJson))
-        return self.commitBuildXml(projectId, labelStr, xml)
-
-    def _setupCheckin(self, project, buildLabel):
-        # TODO refactor to work with product definitions
-        cfg = project.getConaryConfig()
-        cfg.configLine("buildLabel %s" % buildLabel)
-        cfg.configLine('name %s' % self.auth.username)
-        cfg.configLine('contact http://www.rpath.org/')
-        cfg.configLine('quiet True')
-        cfg.initializeFlavors()
-
-        return cfg
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitBuildXml(self, projectId, labelStr, buildXml):
-        # TODO refactor to work with product definitions
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        label = versions.Label(labelStr)
-        
-        cfg = self._setupCheckin(project, labelStr)
-
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        recipeName = 'build-definition'
-        sourceName = recipeName + ":source"
-
-        trvLeaves = repos.getTroveLeavesByLabel(\
-                {sourceName : {label : None} }).get(sourceName, [])
-
-        pid = os.fork()
-        if not pid:
-            try:
-                path = tempfile.mkdtemp( \
-                    dir = os.path.join(self.cfg.dataPath, 'tmp'))
-                os.chdir(path)
-                if trvLeaves:
-                    checkin.checkout(repos, cfg, path, [recipeName])
-                else:
-                    checkin.newTrove(repos, cfg, recipeName, path)
-                    # create recipe
-                    recipePath = os.path.join(path, recipeName + '.recipe')
-                    f = open(recipePath, 'w')
-                    f.write( \
-                        '\n'.join(( \
-                        '# This file was automatically generated by rBuilder.',
-                        'class BuildDefinition(PackageRecipe):',
-                        "    name = '%s'" % recipeName,
-                        "    version = '0'",
-                        '',
-                        '    def setup(r):',
-                        '        pass', ''
-                        )))
-                    f.close()
-                    checkin.addFiles([recipeName + '.recipe'])
-                f = open(os.path.join(path, 'build.xml'), 'w')
-                f.write(buildXml)
-                f.close()
-                checkin.addFiles(['build.xml'], ignoreExisting = True)
-                use.setBuildFlagsFromFlavor(None, cfg.buildFlavor, error=False)
-                checkin.commit(repos, cfg,
-                               'Automatic commit from rBuilder Online')
-                util.rmtree(path, ignore_errors = True)
-            except:
-                os._exit(1)
-            else:
-                os._exit(0)
-        pid, status = os.waitpid(pid, 0)
-        return bool(status)
-
-    @typeCheck(int, str)
-    @requiresAuth
-    def checkoutBuildXml(self, projectId, labelStr):
-        # TODO refactor to work with product definitions
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        label = versions.Label(labelStr)
-
-        cfg = project.getConaryConfig()
-        cfg.configLine("buildLabel %s" % labelStr)
-        cfg.configLine('name %s' % self.auth.username)
-        cfg.configLine('contact http://www.rpath.org/')
-        cfg.configLine('quiet True')
-        cfg.initializeFlavors()
-
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        recipeName = 'build-definition'
-        sourceName = recipeName + ":source"
-
-        trvLeaves = repos.getTroveLeavesByLabel(\
-                {sourceName : {label : None} }).get(sourceName, [])
-
-        defaultXml = '<buildDefinition version="1.0"/>\n'
-
-        if trvLeaves:
-            path = tempfile.mkdtemp( \
-                dir = os.path.join(self.cfg.dataPath, 'tmp'))
-            try:
-                checkin.checkout(repos, cfg, path, [recipeName])
-                try:
-                    f = open(os.path.join(path, 'build.xml'))
-                    return f.read()
-                except:
-                    return defaultXml
-            finally:
-                util.rmtree(path, ignore_errors = True)
-        else:
-            return defaultXml
+                continue
 
     @typeCheck(int)
     @requiresAuth
@@ -2586,6 +2471,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getMirrorableReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)
         return self.publishedReleases.getMirrorableReleasesByProject(projectId)
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def isProjectMirroredByRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.outboundMirrors.isProjectMirroredByRelease(projectId)
 
     def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
         """
@@ -4536,112 +4428,37 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
-    def getProductVersionProdDefLabel(self, versionId):
-        version = projects.ProductVersions(self, versionId)
-        return version.getProdDefLabel()
+    def getStagesForProductVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        return [s.name for s in pd.getStages()]
 
     @private
     @requiresAuth
     @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
-        version = projects.ProductVersions(self, versionId)
-        project = projects.Project(self, version.projectId)
-        projectCfg = project.getConaryConfig()
-
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
-
-        proddefLabel = versions.Label(version.getProdDefLabel())
-
-        latestTrove = repos.getTroveLatestByLabel(
-                          [('proddef:source', proddefLabel, None)])
-
-        # latestTrove is now a tuple of lists of lists of tuples...
-        # If it's not the structure we expect, throw an exception.
-        try:
-            proddefVersion = latestTrove[0][0][0][1]
-        except:
-            raise ProductDefinitionVersionNotFound()
-
-        try:
-            proddefData = client.getFilesFromTrove('proddef:source', 
-                proddefVersion, deps.Flavor())
-            xml = proddefData['proddef.xml'].read()
-        except KeyError:
-            raise ProductDefinitionVersionNotFound()
-
-        pd = proddef.ProductDefinition(fromStream=xml)
-
-        stages = [dict(name=s.name, label=s.label) for s in pd.getStages()]
-        sources = [dict(troveName=s.troveName, label=s.label) \
-                   for s in pd.getUpstreamSources()]
-        buildDefs = [{'name' : b.name,
-                      'baseFlavor' : b.baseFlavor,
-                      'byDefault' : b.byDefault,
-                      b.imageType.tag : b.imageType.fields}
-                     for b in pd.getBuildDefinitions()]
-
-        pdDict = dict(baseFlavor=pd.getBaseFlavor() or '',
-                      stages=stages,
-                      upstreamSources=sources,
-                      buildDefinition=buildDefs)
-
-        return pdDict
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        sio = StringIO.StringIO()
+        pd.serialize(sio)
+        return sio.getvalue()
 
     @private
     @requiresAuth
-    @typeCheck(int, dict)
-    def setProductDefinitionForVersion(self, versionId, productDefinitionDict):
-        # Convert productDefinitionDict to Xml.
-        pd = proddef.ProductDefinition()
-
-        pd.setBaseFlavor(productDefinitionDict.get('baseFlavor', ''))
-
-        # Add each stage defined in the dict to pd.
-        for stage in productDefinitionDict.get('stages', []):
-            pd.addStage(stage['name'], stage['label'])
-
-        # Add each build definition defined in the dict to pd.
-        for buildDefn in productDefinitionDict.get('buildDefinition', []):
-            name = buildDefn.get('name', '')
-            baseFlavor = buildDefn.get('baseFlavor', '')
-            imageKey = buildDefn.get('_xmlName', '')
-            imageType = proddef.ProductDefinition.imageType(imageKey, 
-                            buildDefn.get(imageKey, {})) 
-            pd.addBuildDefinition(name=name, baseFlavor=baseFlavor, 
-                                  imageType=imageType)
-
-        # Add each upstream source defined in the dict to pd.
-        for us in productDefinitionDict.get('upstreamSources', []):
-            pd.addUpstreamSource(us['troveName'], us['label'])
-
-        # Create an empty StringIO object for the serialization of pd.
-        pdStream = StringIO.StringIO()
-        pd.serialize(pdStream)
-        pdXml = pdStream.getvalue()
-
+    @typeCheck(int, ((str, unicode),))
+    def setProductDefinitionForVersion(self, versionId,
+            productDefinitionXMLString):
+        # XXX: Need exception handling here
+        pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
+
+        # TODO put back overrides
+
         projectCfg = project.getConaryConfig()
-
-        # Set to the special proddef label.
-        projectCfg.buildLabel = version.getProdDefLabel()                           
-        client = conaryclient.ConaryClient(projectCfg)
-
-        troveXmlFile = filetypes.RegularFile(contents=pdXml)
-        troveChangeLog = changelog.ChangeLog('rBuilder', 
-                             'https://issues.rpath.com',
-                             'Product Definition commit from rBuilder\n')
-
-        # Create a change set object from our source data.
-        changeSet = client.createSourceTrove('proddef:source', 
-                        projectCfg.buildLabel,
-                        '1.0', {'proddef.xml' : troveXmlFile}, troveChangeLog)
-        
-        # Commit the change set to the repo.
-        repos = client.getRepos()
-        repos.commitChangeSet(changeSet)                            
-
+        projectCfg['name'] = self.auth.username
+        projectCfg['contact'] = self.auth.fullName or ''
+        cclient = conaryclient.ConaryClient(projectCfg)
+        pd.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
         return True
 
     @private
@@ -4655,6 +4472,49 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
+    
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def getBuildTaskListForDisplay(self, versionId, stageName):
+        """
+        Get a list of build tasks to be completed for display purposes only
+        @param versionId: the product version id
+        @param stageName: the name of the stage to use
+        @return: a list of task dicts as 
+                 {buildName, buildTypeName, buildFlavorName, imageGroup}
+        """
+
+        taskList = []
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        builds = pd.getBuildsForStage(stageName)
+        for build in builds:
+            task = dict()
+            
+            # set the build name
+            task['buildName'] = build.getBuildName()
+            
+            # set the build type
+            buildTypeDt = buildtemplates.getDataTemplateByXmlName(
+                              build.getBuildImageType().getTag())
+            task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
+            
+            # get the name of the flavor.  If we don't have a name mapped to
+            # it, specify that it is custom
+            flavor = build.getBuildBaseFlavor()
+            if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
+                index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
+                buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
+            else:
+                buildFlavor = "Custom Flavor: %s" % flavor
+            task['buildFlavorName'] = buildFlavor
+            
+            # set the image group
+            task['imageGroup'] = build.getBuildImageGroup()
+            
+            taskList.append(task)
+            
+        return taskList
 
     @requiresAuth
     def createPackageTmpDir(self):

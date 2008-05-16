@@ -182,67 +182,6 @@ def getImportantFlavors(buildFlavor):
     return flavors
 
 
-def applyTemplatesToBuildDefinitions(buildDefinitions):
-    """
-    Applies default options (if not overridden) and validates the list of
-    buildDefinitions.
-
-    buildDefinition should be a list of dicts in a similar format as is
-    returned from proddef.ProductDefinition.getBuildDefinition.  The only
-    difference is that each dict should have _buildType key corrosponding to
-    build type id placed there by the web side.
-
-    Returns a modified list of dicts.
-    """
-    templatedBuildDefinitions = []
-    validationErrors = []
-
-    for buildDef in buildDefinitions:
-
-        imageKey = [k for k in buildDef.keys() if k.endswith('Image') or k == 'nakedGroup']
-
-        if not imageKey:
-            # Check for _buildType.
-            if buildDef.has_key('_buildType'):
-                imageKey = \
-                    buildtemplates.getDataTemplate(buildDef['_buildType']).xmlName
-                buildDef[imageKey] = buildDef.pop('_builddef', {})
-            else:
-                raise NoBuildImageTypeInBuildDefinition()
-        else:
-            imageKey = imageKey[0]
-
-        buildDefTemplate = buildtemplates.getDataTemplateByXmlName(imageKey)
-        buildDef['_buildType'] = buildDefTemplate.id
-        buildDef['_xmlName'] = buildDefTemplate.xmlName
-
-        buildOptionsUnicode = buildDef[imageKey]
-        buildOptions = {}
-        for k, v in buildOptionsUnicode.items():
-            buildOptions[str(k)] = str(v)
-
-        # Save all errors so that we can report them all at once.
-        try:
-            buildDefTemplate.validate(**buildOptions)
-        except BuildOptionValidationException, e:
-            validationErrors += e.errlist
-
-        # apply the default options to buildDef only if they aren't already
-        # specified.
-        for k, v in buildDefTemplate.getDefaultDict().items():
-            if not buildOptions.has_key(k):
-                buildOptions[k] = v
-
-        buildDef[imageKey] = buildOptions
-        templatedBuildDefinitions.append(buildDef)
-
-    # If we encountered any errors, throw an exception
-    if len(validationErrors) > 0:
-        raise BuildOptionValidationException(validationErrors)
-
-    return templatedBuildDefinitions
-
-
 class Build(database.TableObject):
     __slots__ = BuildsTable.fields
 
@@ -413,7 +352,7 @@ class Build(database.TableObject):
 
         return {}
 
-    def getMarketingName(self):
+    def getMarketingName(self, file = None):
         '''
         Return the marketing name for display on build or release pages
         taking into account any variations related to the flavors the
@@ -427,7 +366,7 @@ class Build(database.TableObject):
         else:
             name = buildtypes.typeNamesMarketing[self.getBuildType()]
 
-        if 'CD/DVD' in name:
+        if 'CD/DVD' in name and file and file.has_key('size'):
             disc_type = file['size'] > 734003200 and 'DVD' or 'CD'
             name = name.replace('CD/DVD', disc_type)
 
