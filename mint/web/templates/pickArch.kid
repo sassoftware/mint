@@ -48,12 +48,12 @@
                         </dd>
                         <dt>
                             <input name="flavor" type="checkbox" value="5#use:domU:xen" id="domU" />
-                            <label id="domULabel" for="domU">Xen DomU (unprivileged guest) support</label>
+                            <label id="domULabel" for="domU">DomU (unprivileged guest) support</label>
                         </dt>
                         <dd class="help">
-                            Check this box to add Xen guest domain (DomU)
+                            Check this box to add paravirtualization (DomU)
                             support to this group. See the <a href="http://wiki.rpath.com/?version=${constants.mintVersion}">rPath Wiki</a> for more
-                            information about Xen and rBuilder.
+                            information about paravirtualization and rBuilder.
                         </dd>
                         <dt>
                             <input name="flavor" type="checkbox" value="5#use:kernel.pae" id="pae" />
@@ -61,8 +61,8 @@
                             </label>
                         </dt>
                         <dd class="help">
-                            Check this box to use a PAE-enabled kernel for this group. This is
-                            required for Xen Enterprise guests and some other Xen Dom0 hypervisors.
+                            Check this box to use a PAE-enabled kernel for this group. This may
+                            be required for some 32-bit Dom0.
                         </dd>
                     </dl>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
