@@ -115,7 +115,7 @@
                             <input py:attrs="{'class': 'reversed',
                                               'id': elementName,
                                               'type': 'checkbox',
-                                              'checked': (dataValue=='True') and 'checked' or None,
+                                              'checked': (dataValue) and 'checked' or None,
                                               'name': elementName,
                                               'value': 'True',
                                               'class': 'check field',
