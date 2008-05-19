@@ -266,6 +266,9 @@ class MintConfig(ConfigFile):
     tosLink                 = (cfgtypes.CfgString, '')
     privacyPolicyLink       = (cfgtypes.CfgString, '')
 
+    # anaconda-templates fallback label
+    anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

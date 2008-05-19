@@ -1311,16 +1311,14 @@ class BuildTestConaryRepository(MintRepositoryHelper):
         client, userid = self.quickMintUser("test", "testpass")
 
         projectId = self.newProject(client)
-        build = client.newBuild(projectId, "build 1")
-        build.setBuildType(buildtypes.INSTALLABLE_ISO)
-
-        build.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        project = client.getProject(projectId)
 
         self.addComponent("anaconda-templates:runtime", "1.0")
         self.addCollection("anaconda-templates", "1.0", [(":runtime", "1.0")])
 
-        x = build.resolveExtraTrove("anaconda-templates", None, None,
-            [versions.Label("testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)])
+        x = project.resolveExtraTrove("anaconda-templates",
+                "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
+                "testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)
         self.failUnlessEqual(x, "anaconda-templates=/testproject.%s@rpl:devel/1.0-1-1[]" % MINT_PROJECT_DOMAIN)
 
 

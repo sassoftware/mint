@@ -2240,43 +2240,54 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
+    @typeCheck(int, str, str, str, str, str)
     @private
     @requiresAuth
-    def resolveExtraBuildTrove(self, buildId, trvName, trvVersion, trvFlavor, searchPath):
-        build = builds.Build(self, buildId)
-        project = projects.Project(self, build.projectId)
+    def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
+            specialTroveFlavor, imageGroupVersion, imageGroupFlavor):
 
-        arch = build.getArchFlavor()
+        # Get the project that the build is going to be on
+        project = projects.Project(self, projectId)
+
+        searchPath = []
+        if imageGroupVersion:
+            # Get the image group label as the first part of the searchpath
+            igV = versions.ThawVersion(imageGroupVersion)
+
+            # Determine search path; start with imageGroup's label
+            searchPath.append(igV.branch().label())
+
+        # Handle anacond-templates using a fallback
+        if specialTroveName == 'anaconda-templates':
+            # Need to search our system-wide fallback for anaconda templates
+            searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
+
+        # if no flavor specified, use the top level group's flavor
+        if imageGroupFlavor and not specialTroveFlavor:
+            specialTroveFlavor = helperfuncs.getMajorArchFlavor(imageGroupFlavor)
+
+        # Sanitize bits
+        if specialTroveVersion == '' or specialTroveFlavor == '':
+            specialTroveVersion = None
+        if specialTroveFlavor == '':
+            specialTroveFlavor = None
+
+        # Get a Conary client
         cfg = project.getConaryConfig()
-        cfg.installLabelPath = searchPath + cfg.installLabelPath
-        cfg.buildFlavor = getStockFlavor(arch)
-        cfg.flavor = getStockFlavorPath(arch)
+        cfg.installLabelPath = searchPath
         cfg.initializeFlavors()
-
         cfg.dbPath = cfg.root = ":memory:"
         cfg.proxy = self.cfg.proxy
         cclient = conaryclient.ConaryClient(cfg)
 
-        if trvVersion is None or trvFlavor == '':
-            trvVersion = None
-        if trvFlavor is None or trvFlavor == '':
-            trvFlavor = None
-
-        itemList = [(trvName, (None, None), (trvVersion, trvFlavor), True)]
         try:
-            uJob, suggMap = cclient.updateChangeSet(itemList,
-                                                    resolveDeps = False)
+            matches = cclient.getRepos().findTrove(searchPath,
+                    (specialTroveName, specialTroveVersion, specialTroveFlavor),
+                    cfg.flavor)
+            strSpec = '%s=%s[%s]' % matches[0]
 
-            # Use the most recent job on the label; we sort the versions
-            # returned to pick the most recent one (fix for RBL-2216).
-            job = sorted([x for x in uJob.getPrimaryJobs()],
-                    key=lambda x: x[2], reverse=True)[0]
-            strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
-                                     str(job[2][1]))
-
-            build.setDataValue(trvName, strSpec, validate = True)
         except TroveNotFound:
-            return None
+            return ''
 
         return strSpec
 
@@ -2772,6 +2783,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # they just get stuffed into the DB
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
+
         if buildType != buildtypes.IMAGELESS:
             mc = self._getMcpClient()
             data = self.serializeBuild(buildId)

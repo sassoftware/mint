@@ -334,9 +334,6 @@ class Build(database.TableObject):
     def deleteBuild(self):
         return self.server.deleteBuild(self.getId())
 
-    def resolveExtraTrove(self, trvName, trvVersion = '', trvFlavor = '', searchPath = []):
-        return self.server.resolveExtraBuildTrove(self.id, trvName, trvVersion, trvFlavor, searchPath)
-
     def _getOverride(self):
         buildFlavor = self.getTrove()[2]
         if type(buildFlavor) == str:

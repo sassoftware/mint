@@ -512,9 +512,8 @@ class ProjectHandler(WebHandler):
             self._predirect("editBuild?buildId=%d" % build.id)
             return
 
-        searchPath = [build.getTroveVersion().branch().label()]
-        fallbackPath = [versions.Label(basictroves.baseConaryLabel)]
-        fallbackTroves = basictroves.fallbackTroves
+        buildTroveVersion = build.getTroveVersion().freeze()
+        buildTroveFlavor  = build.getTroveFlavor().freeze()
 
         for name in list(template):
             try:
@@ -529,17 +528,21 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
-                        thisSearchPath = searchPath + fallbackPath
                         if not n or not v or (f is None):
                             # incomplete spec from XMLRPC client
-                            val = build.resolveExtraTrove(n, v, f, thisSearchPath)
+                            val = self.project.resolveExtraTrove(n,
+                                buildTroveVersion, buildTroveFlavor,
+                                v, f)
+                            val = self.project.resolveBuildTrove(n, v, f,
+                                    buildTroveVersion, buildTroveFlavor)
                         else:
                             try:
-                                # attept to un-freeze the version
+                                # attempt to un-freeze the version
                                 versions.ThawVersion(v)
                             except (ValueError, ParseError):
                                 # spec with non-frozen version
-                                val = build.resolveExtraTrove(n, v, f)
+                                val = self.project.resolveExtraTrove(n,
+                                    buildTroveVersion, buildTroveFlavor, v, f)
                             else:
                                 # frozen version from picker
                                 val = "%s=%s[%s]" % (n, v, f)
@@ -547,10 +550,8 @@ class ProjectHandler(WebHandler):
                 if template[name][0] == RDT_BOOL:
                     val = False
                 elif template[name][0] == RDT_TROVE:
-                    thisSearchPath = list(searchPath)
-                    if name in fallbackTroves:
-                        thisSearchPath += fallbackPath
-                    val = build.resolveExtraTrove(name, searchPath = thisSearchPath)
+                    val = self.project.resolveExtraTrove(name,
+                            buildTroveVersion, buildTroveFlavor)
                 else:
                     val = template[name][1]
             if val:
