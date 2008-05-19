@@ -5,11 +5,12 @@
 # Copyright (c) 2008 rPath, Inc
 # All rights reserved
 
-. /etc/sysconfig/pgsql/postgresql-rbuilder
-export PGDATA PGPORT
-
 pgsql_config="/etc/postgresql.conf.rbuilder"
 pgsql_config_target="$PGDATA/postgresql.conf"
+pgsql_service=postgresql-rbuilder
+
+. /etc/sysconfig/pgsql/$pgsql_service
+export PGDATA PGPORT
 
 function waitForPg()
 {
@@ -53,26 +54,33 @@ start)
     exit 1
   fi
 
-  if [ ! -f /var/lock/subsys/postgresql-rbuilder ]
+  # PostgreSQL must be running for initialization
+  if [ ! -f /var/lock/subsys/$pgsql_service ]
   then
-    service postgresql-rbuilder start
+    stop_after_init=1
+    service $pgsql_service start
   fi
 
-  # Copy our config file over the one generated during initialization
-  # and restart PostgreSQL. The DB must already be initialized, or it
-  # will fail to do so once the config is written, hence we still must
-  # start it above.
-  if [ "$pgsql_config" -nt "$pgsql_config_target" ]
+  # Copy our config file over the one generated during initialization.
+  # If we aren't going to stop PostgreSQL at the end of this script,
+  # then restart it so the new config will take effect.
+  cp "$pgsql_config" "$pgsql_config_target"
+  if [ "$stop_after_init" != "1" ]
   then
-    echo "Updating PostgreSQL configuration"
-    waitForPg
-    cp "$pgsql_config" "$pgsql_config_target"
-    service postgresql restart
+    service $pgsql_service restart
   fi
-
 
   waitForPg
   createPgDb
+
+  # If PostgreSQL wasn't running before, we're probably running in a
+  # tag handler, possibly even in a jobslave. Don't leave postmaster
+  # running.
+  if [ "$stop_after_init" == 1 ]
+  then
+    service $pgsql_service stop
+  fi
+
   ;;
 stop)
   ;;

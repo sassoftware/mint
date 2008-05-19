@@ -1,5 +1,5 @@
 PGPORT="5439"
-PGDATA="/srv/pgsql/8.2-rba"
+PGDATA="/srv/pgsql/8.2-rbuilder"
 PGOPTS=""
 PGLOG="/var/log/pgsql"
 PGTZ="/usr/share/zoneinfo"
