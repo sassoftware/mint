@@ -1193,13 +1193,12 @@ class ProjectHandler(WebHandler):
                     bTmpl.validate(**buildSettings)
                 except BuildOptionValidationException, e:
                     validationErrors.extend(e.errlist)
-                else:
-                    pd.addBuildDefinition(
-                        name=builddef.get('name'),
-                        baseFlavor=builddef.get('baseFlavor'),
-                        imageType=pd.imageType(
-                            xmlTagName, buildSettings),
-                        stages = stageNames)
+            # add regardless of errors.  if an error occurred, we want the user
+            # to see what they entered.
+            pd.addBuildDefinition(name=buildName,
+                baseFlavor=builddef.get('baseFlavor'),
+                imageType=pd.imageType(xmlTagName, buildSettings),
+                stages = stageNames)
 
         for ve in validationErrors:
             self._addErrors(str(ve))
@@ -1230,6 +1229,7 @@ class ProjectHandler(WebHandler):
                               (action, getProjectText().lower(), name))
             self._predirect()
         else:
+            kwargs.update(name=name, description=description)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
