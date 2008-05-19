@@ -103,27 +103,21 @@ class RBuilderMain(options.MainHandler):
             ret = options.MainHandler.runCommand(self,
                 thisCommand, client, cfg, argSet, args[1:])
         except MintError, e:
-            if argSet.debug:
-                import epdb; epdb.post_mortem(sys.exc_info()[2])
             log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error("response from rBuilder server: %s" % str(e))
             sys.exit(3)
         except RuntimeError, e:
-            if argSet.debug:
-                import epdb; epdb.post_mortem(sys.exc_info()[2])
             log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error(str(e))
             sys.exit(3)
         except errors.ConaryError, e:
-            if argSet.debug:
-                import epdb; epdb.post_mortem(sys.exc_info()[2])
             log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error(str(e))
             sys.exit(3)
         return ret
 
 def main():
-    log.setVerbosity(log.DEBUG)
+    log.setVerbosity(log.INFO)
     socket.setdefaulttimeout(60.0)
 
     rb = RBuilderMain()
