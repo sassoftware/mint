@@ -39,7 +39,6 @@ class ErrorHandler(WebHandler):
         return self.errorPage
 
     def errorPage(self, *args, **kwargs):
-        self.req.status = 500
         return self._write('error', error = ' An unknown error occurred while handling your request. Site maintainers have been notified.')
 
 
@@ -151,7 +150,6 @@ class MintApp(WebHandler):
             tb = logTraceback()
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
-            self.req.status = 500
             output = self._write("error", shortError = err_name, error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:

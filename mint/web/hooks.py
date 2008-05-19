@@ -590,9 +590,10 @@ def handler(req):
                     exception, e, bt = sys.exc_info()
                     logErrorAndEmail(req, cfg, exception, e, bt)
 
-                    # Send an error page to the user. This will also
-                    # change the status code to 500.
+                    # Send an error page to the user and set the status
+                    # code to 500 (internal server error).
                     urlHandler(req, cfg, '/unknownError')
+                    req.status = 500
                 break
     finally:
         prof.stopHttp(req.uri)
