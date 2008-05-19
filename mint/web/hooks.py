@@ -572,7 +572,7 @@ def handler(req):
                     # this is a conary client, or an unknown python browser
                     if 'User-agent' in req.headers_in and \
                            req.headers_in['User-agent'] == Transport.user_agent:
-                        return apache.HTTP_FORBIDDEN
+                        return apache.HTTP_SERVICE_UNAVAILABLE
                     else:
                         # this page offers a way to log in. vice standard error
                         # we must force a redirect to ensure half finished
@@ -584,12 +584,15 @@ def handler(req):
                     # we only want to handle errors in production mode
                     if cfg.debugMode or req.bytes_sent > 0:
                         raise
-                    # only handle actual mint errors
-                    if match !='^/':
-                        raise
+
+                    # Generate a nice traceback and email it to
+                    # interested parties
                     exception, e, bt = sys.exc_info()
                     logErrorAndEmail(req, cfg, exception, e, bt)
-                    ret = urlHandler(req, cfg, '/unknownError')
+
+                    # Send an error page to the user. This will also
+                    # change the status code to 500.
+                    urlHandler(req, cfg, '/unknownError')
                 break
     finally:
         prof.stopHttp(req.uri)
