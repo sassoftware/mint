@@ -21,8 +21,8 @@
         </div>
         <style>
             <![CDATA[
-            a:hover.pd-usources-adder,
-            a:hover.pd-usources-deleter,
+            a:hover.pd-usource-adder,
+            a:hover.pd-usource-deleter,
             a:hover.pd-builddef-adder,
             a:hover.pd-builddef-expander,
             a:hover.pd-builddef-deleter {
@@ -151,23 +151,15 @@
             </tr>
         </div>
         
-        <div py:def="upstreamSourcesOptions(usource=None, ordinal='bt')" py:strip="True">
-        <?python
-            if usource:
-                troveName = usource.troveName or ''
-                label = usource.label or ''
-            else:
-                troveName = ''
-                label = ''
-        ?>
-            <tr id="pd-usources-${ordinal}">
+        <div py:def="upstreamSourcesOptions(ordinal='bt')" py:strip="True">
+            <tr id="pd-usource-${ordinal}">
                 <td>
-                    <input type="text" name="pd-usources-${ordinal}-troveName" value="${troveName}" />
+                    <input type="text" name="pd-usource-${ordinal}-package" value="foo 1 package" />
                 </td>
                 <td>
-                    <input type="text" name="pd-usources-${ordinal}-label" value="${label}" />
+                    <input type="text" name="pd-usource-${ordinal}-label" value="foo1 label" />
                 </td>
-                <td class="row-button"><a class="pd-usources-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
+                <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
             </tr>
         </div>
         
@@ -270,33 +262,33 @@
                             </table>
                         </td>
                     </tr>
-                    
-                    <tr>
+                    <!--  Upstream Sources currently disabled -->
+                    <tr py:if="False">
                         <th>Upstream Sources:</th>
                         <td>
-                            <table id="pd-usources" class="pretty-fullwidth">
+                            <table id="pd-usource" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
-                                        <th>Trove Name</th>
-                                        <th>Label</th>
+                                        <th>Project</th>
+                                        <th>Version</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <div py:strip="True" py:for="ordinal, us in enumerate(productDefinition.getUpstreamSources())"
-                                         py:content="upstreamSourcesOptions(us, ordinal)" />
-                                    <tr id="pd-usources-empty" py:if="not productDefinition.getUpstreamSources()">
+                                    <div py:strip="True" py:for="us in kwargs['upstreamSources']"
+                                         py:content="upstreamSourcesOptions()" />
+                                    <tr id="pd-usource-empty" py:if="not len(kwargs['upstreamSources'])">
                                         <td colspan="4">No upstream sources defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <table id="pd-usources-bt-all" style="display: none">
+                            <table id="pd-usource-bt-all" style="display: none">
                                 <tbody py:content="upstreamSourcesOptions()" />
                             </table>
                             <p>
-                                <a class="pd-usources-adder">
+                                <a class="pd-usource-adder">
                                     <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />
                                     Add a new upstream source
                                 </a>

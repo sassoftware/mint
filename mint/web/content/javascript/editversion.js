@@ -8,7 +8,7 @@ var currentUsourceSerial = 0;
 jQuery(document).ready(function () {
 
     currentBdefSerial = jQuery(".pd-builddef-deleter").length;
-    currentUsourceSerial = jQuery(".pd-usources-deleter").length;
+    currentUsourceSerial = jQuery(".pd-usource-deleter").length;
 
     jQuery('select.pd-builddef-picker-buildType').change(function() {
         var builddefElement = jQuery(this).parents('tr').get(0);
@@ -42,7 +42,7 @@ jQuery(document).ready(function () {
         });
     });
 
-    jQuery('.pd-builddef-adder,.pd-builddef-expander,.pd-builddef-deleter,.pd-usources-adder,.pd-usources-deleter').hover(function () {
+    jQuery('.pd-builddef-adder,.pd-builddef-expander,.pd-builddef-deleter,.pd-usource-adder,.pd-usource-deleter').hover(function () {
             var imgbutton = jQuery(this).find('img').get(0);
             imgbutton.src = imgbutton.src.replace('.gif', '_h.gif');
         }, function() {
@@ -104,23 +104,23 @@ jQuery(document).ready(function () {
         currentBdefSerial++;
     });
 
-    jQuery('.pd-usources-deleter').click(function () {
+    jQuery('.pd-usource-deleter').click(function () {
             var usourceId = "#" + jQuery(this).parents().get(1).id;
             jQuery(usourceId).remove();
             // show the no entries found if last one removed
-            var templateDomBits = jQuery('#pd-usources > tbody').clone(true);
+            var templateDomBits = jQuery('#pd-usource > tbody').clone(true);
             var numEntries = 0;
             templateDomBits.find('tr').each(function () {
                 numEntries += 1;
             });
             if(numEntries <= 1) {
-                jQuery('#pd-usources-empty').show();
+                jQuery('#pd-usource-empty').show();
             }
     });
     
-    jQuery('.pd-usources-adder').click(function () {
+    jQuery('.pd-usource-adder').click(function () {
         currentUsourceSerial++;
-        var templateDomBits = jQuery('#pd-usources-bt-all > tbody').clone(true);
+        var templateDomBits = jQuery('#pd-usource-bt-all > tbody').clone(true);
         templateDomBits.find(':disabled').removeAttr('disabled');
         templateDomBits.find('label').each(function () {
             this.htmlFor = this.htmlFor.replace('bt', String(currentUsourceSerial));
@@ -133,10 +133,10 @@ jQuery(document).ready(function () {
             if (this.id) { this.id = this.id.replace('bt', String(currentUsourceSerial)); }
         });
         templateDomBits.find('select').change();
-        templateDomBits.children().appendTo('#pd-usources > tbody');
+        templateDomBits.children().appendTo('#pd-usource > tbody');
         
         // hide the no entries found message
-        jQuery('#pd-usources-empty').hide();
+        jQuery('#pd-usource-empty').hide();
     });
 });
 
