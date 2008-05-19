@@ -64,6 +64,12 @@ Internal Changes
   information is now managed outside the codebase; use "legaleseLink",
   "privacyPolicyLink", and "tosLink" to point to legal information,
   privacy policy and terms of service home pages, respectively.
+* All special image troves (e.g. anaconda-templates) are now resolved
+  on the server-side using a call to resolveExtraTroves in the 
+  project object (RBL-2878)
+* A new configuration option, anacondaTemplatesFallback, may be
+  used to change the default label that gets searched when trying
+  to find anaconda-templates (RBL-2757).
 
 Command-Line Client Changes
 ---------------------------
