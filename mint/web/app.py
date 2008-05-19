@@ -160,6 +160,7 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
 
+        self.req.set_content_length(len(output))
         self.req.write(output)
         self._clearAllMessages()
         return apache.OK

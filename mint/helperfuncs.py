@@ -5,7 +5,7 @@
 #
 
 from conary import versions
-from conary.deps import deps
+from conary.deps import arch, deps
 from mint import constants
 from mint import buildtypes
 from mint.config import isRBO
@@ -13,6 +13,7 @@ from conary.repository.errors import RoleAlreadyExists
 
 from rpath_common.proddef import api1 as proddef
 
+import copy
 import htmlentitydefs
 import re
 import random
@@ -109,17 +110,55 @@ def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
 
     return urlparse.urlunsplit((newProtocol, hostname) + spliturl[2:])
 
-def getArchFromFlavor(flavor):
-    fs = ""
-    if type(flavor) == str:
-        flavor = deps.ThawFlavor(flavor)
-    if flavor.members:
-        try:
-            fs = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-        except KeyError:
-            pass
 
-    return fs
+def _getMajorArch(flavor):
+    if not isinstance(flavor, deps.Flavor):
+        flavor = deps.ThawFlavor(flavor)
+
+    if flavor.members and deps.DEP_CLASS_IS in flavor.members:
+        depClass = flavor.members[deps.DEP_CLASS_IS]
+        return arch.getMajorArch(depClass.getDeps())
+
+    return None
+
+
+def getMajorArchFlavor(flavor):
+    '''
+    Return a new flavor with just the major architecture in I{flavor}.
+
+    @param flavor: A flavor object or a string containing a frozen
+                   flavor
+    @type flavor: str or unicode or L{conary.deps.Flavor}
+    @rtype: L{conary.deps.Flavor}
+    '''
+
+    ret = deps.Flavor()
+    majorDep = _getMajorArch(flavor)
+    if majorDep:
+        # Make a copy of the dep before stripping off flags
+        shortDep = copy.deepcopy(majorDep)
+        shortDep.flags = {}
+        ret.addDep(deps.InstructionSetDependency, shortDep)
+
+    return ret
+
+
+def getArchFromFlavor(flavor):
+    '''
+    Return the major architecture (e.g. "x86_64") found in I{flavor}.
+    
+    @param flavor: A flavor object or a string containing a frozen
+                   flavor
+    @type flavor: str or unicode or L{conary.deps.Flavor}
+    @rtype: str
+    '''
+
+    majorDep = _getMajorArch(flavor)
+    if majorDep:
+        return majorDep.name
+    else:
+        return ''
+
 
 def fixentities(htmltext):
     # replace HTML character entities with numerical references
