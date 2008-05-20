@@ -95,8 +95,8 @@
                         </select>
                     </div>
                 </td>
-                <td class="row-button"><a class="pdbuilddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" title="Edit" /></a></td>
-                <td class="row-button"><a class="pdbuilddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
+                <td class="row-button"><a class="pdbuilddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit-n.gif" title="Edit" /></a></td>
+                <td class="row-button"><a class="pdbuilddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete-n.gif" title="Delete" /></a></td>
             </tr>
             <tr id="pdbuilddef-${ordinal}-more" style="display: none">
                 <td colspan="5">
@@ -159,7 +159,7 @@
                 <td>
                     <input type="text" name="pdusource-${ordinal}-label" value="foo1 label" />
                 </td>
-                <td class="row-button"><a class="pdusource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
+                <td class="row-button"><a class="pdusource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete-n.gif" title="Delete" /></a></td>
             </tr>
         </div>
         
@@ -289,7 +289,7 @@
                             </table>
                             <p>
                                 <a class="pdusource-adder">
-                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />
+                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />
                                     Add a new upstream source
                                 </a>
                             </p>
@@ -319,7 +319,7 @@
                             <table id="pdbuilddef-bt-all" style="display: none">
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
-                            <p><a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />Add a new build definition</a></p>
+                            <p><a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />Add a new build definition</a></p>
                         </td>
                     </tr>
                 </table>

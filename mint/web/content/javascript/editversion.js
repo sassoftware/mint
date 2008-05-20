@@ -44,10 +44,10 @@ jQuery(document).ready(function () {
 
     jQuery('.pdbuilddef-adder,.pdbuilddef-expander,.pdbuilddef-deleter,.pdusource-adder,.pdusource-deleter').hover(function () {
             var imgbutton = jQuery(this).find('img').get(0);
-            imgbutton.src = imgbutton.src.replace('.gif', '_h.gif');
+            imgbutton.src = imgbutton.src.replace('-n.gif', '-h.gif');
         }, function() {
             var imgbutton = jQuery(this).find('img').get(0);
-            imgbutton.src = imgbutton.src.replace('_h.gif', '.gif');
+            imgbutton.src = imgbutton.src.replace('-h.gif', '-n.gif');
     });
 
     jQuery('.pdbuilddef-expander').click(function () {
