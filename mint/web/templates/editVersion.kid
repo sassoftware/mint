@@ -252,7 +252,7 @@
                                 <tbody>
                                     <div py:strip="True" py:for="ordinal, relstage in enumerate(productDefinition.getStages())"
                                          py:content="releaseStagesOptions(relstage, ordinal)" />
-                                    <tr id="pdstages-empty" py:if="not productDefinition.getStages()">
+                                     <tr id="pdstages-empty" py:attrs="{'style': productDefinition.getStages() and 'display: none;' or None}">
                                         <td colspan="4">No release stages defined.</td>
                                     </tr>
                                 </tbody>
@@ -279,7 +279,7 @@
                                 <tbody>
                                     <div py:strip="True" py:for="us in kwargs['upstreamSources']"
                                          py:content="upstreamSourcesOptions()" />
-                                    <tr id="pdusource-empty" py:if="not len(kwargs['upstreamSources'])">
+                                     <tr id="pdusource-empty" py:attrs="{'style': len(kwargs['upstreamSources']) and 'display: none;' or None}">
                                         <td colspan="4">No upstream sources defined.</td>
                                     </tr>
                                 </tbody>
@@ -311,7 +311,7 @@
                                 <tbody>
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
-                                    <tr id="pdbuilddef-empty" py:if="not productDefinition.getBuildDefinitions()">
+                                     <tr id="pdbuilddef-empty" py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
                                         <td colspan="5">No builds defined.</td>
                                     </tr>
                                 </tbody>
