@@ -2178,7 +2178,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
         """
         Return a list of trove specs named troveName on troveLabel that
-        satisfy filterFavor.
+        strongly satisfy filterFavor.
         """
         project = projects.Project(self, projectId)
         projectCfg = project.getConaryConfig()
@@ -2187,8 +2187,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Find the troves that satisfy the build.
         troveList = repos.findTrove(None, (troveName, troveLabel, None))
-        return sorted([x for x in troveList if x[2].stronglySatisfies(filterFlavor)],
-                      key=lambda x: x[1])
+        return sorted([x for x in troveList if \
+                     filterFlavor.stronglySatisfies(x[2])], key=lambda x: x[1])
 
     @typeCheck(int)
     @requiresAuth

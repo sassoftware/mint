@@ -1322,7 +1322,49 @@ class BuildTestConaryRepository(MintRepositoryHelper):
                 "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
                 "testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)
         self.failUnlessEqual(x, "anaconda-templates=/testproject.%s@rpl:devel/1.0-1-1[]" % MINT_PROJECT_DOMAIN)
+        
+    @testsuite.tests('RBL-2879')
+    def testResolveTrove(self):
+        client, userid = self.quickMintUser("test", "testpass")
 
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+        group = "group-moar-appliance"
+        
+        def addTroves(flavors):
+            for f in flavors:
+                self.addComponent("test:runtime", "1.0", flavor=f)
+                self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
+                self.addCollection(group, "1.0", [("test", "1.0" , f)])
+
+        # add some troves using our stock flavors
+        flavors = (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
+                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86],
+                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64])
+        addTroves(flavors)
+            
+        # now add a few custom flavors
+        cFlavors = ('dietlibc,~glibc.tls,~!grub.static,~kernel.pae,sasl,~!vmware is: x86(~!sse2)',
+                    'dietlibc,~glibc.tls,~!grub.static,~!kernel.pae,sasl,vmware is: x86(~!sse2)',
+                    '~!dietlibc,~glibc.tls,~grub.static,~!kernel.pae,sasl,~!vmware is: x86 x86_64')
+        addTroves(cFlavors)
+
+        # make sure our stock flavors are filtered properly.  i.e. we should
+        # get 1 match per flavor even though there are custom flavors.
+        server = client.server._server
+        for f in flavors:
+            filterFlavor = deps.parseFlavor(f)
+            troves = server._resolveTrove(projectId, group, 
+                         "testproject.%s@rpl:devel/1.0" % MINT_PROJECT_DOMAIN, 
+                         filterFlavor)
+            self.assertTrue(len(troves) == 1)
+            name, version, flavor = troves[0]
+            self.assertTrue(name == group)
+            self.assertTrue(str(version) == \
+                '/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN)
+            self.assertTrue(flavor.freeze() == filterFlavor.freeze())
+            
 
 if __name__ == "__main__":
     testsuite.main()
