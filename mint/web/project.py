@@ -1199,7 +1199,7 @@ class ProjectHandler(WebHandler):
         # Process upstream sources
         # XXX ProductDefinition object needs clearUpstreamSources()
         pd.upstreamSources = proddef._UpstreamSources()
-        usources = collatedDict.get('pdusources',{})
+        usources = collatedDict.get('pdusource',{})
         for us in usources:
             troveName, label = self._getValidatedUpstreamSource(us)
             # add regardless of errors.  if an error occurred, we want the user
