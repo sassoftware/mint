@@ -188,11 +188,11 @@
                    fields text fields.
                 -->
                 <td>
-                    <label for="pdstages-${ordinal}-name" py:content="relstageName" />
+                    ${relstageName}
                     <input type="hidden" name="pdstages-${ordinal}-name" value="${relstageName}"/>
                 </td>
-                <td>
-                    <label for="pdstages-${ordinal}-labelSuffix" py:content="relstageLabelSuffix" />
+                <td colspan="3">
+                    ${relstageLabelSuffix}
                     <input type="hidden" name="pdstages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
                 </td>
             </tr>
@@ -256,7 +256,6 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Label Suffix</th>
-                                        <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                     </tr>
