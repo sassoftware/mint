@@ -311,14 +311,16 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
     Note: this ignores anything that doesn't match the pattern (i.e.
     all keys must be in the form 'prefix-index-value'
 
+    Note: values may contain hyphens, but prefixes cannot!
+
     Specifying coerceValues as True will coerce all values to Strings.
     """
     dicts = {}
     for key, value in sorted(fields.iteritems()):
         try:
-            # Split on prefix-index-key from the right; this
-            # allows for the prefix to contain '-'s, too
-            prefix, index, name = key.rsplit('-', 2)
+            # Split on prefix-index-key. Prefix cannot contain
+            # any hyphens!
+            prefix, index, name = key.split('-', 2)
             index = int(index)
         except ValueError:
             # ignore anything that doesn't conform

@@ -555,15 +555,22 @@ Much like Powdermilk Biscuits[tm]."""
                  'prefix1-1-foo':       'foovalue1',
                  'prefix1-1-bar':       'barvalue1',
                  'prefix1-1-baz':       'bazvalue1',
+                 'prefix1-1-oh-noes':   'oh-noes-value1',
                  'prefix1-2-foo':       'foovalue2',
                  'prefix1-2-bar':       'barvalue2',
                  'prefix1-2-baz':       'bazvalue2',
+                 'prefix1-2-oh-noes':   'oh-noes-value2',
                  'otherprefix-1-quux':  'quuxvalue1',
                  'otherprefix-2-quux':  'quuxvalue2',
                  'otherprefix-3-quux':  'quuxvalue3',
                  'nonconformist':       'fightthapowa!',
                  'klass-1-wargh':       KlassToStr('mine'),
                  'klass-2-wargh':       KlassToStr('yours'),
+                 'bad-prefix-1':        'ignored',
+                 '-bad-prefix-2':       'ignored',
+                 '--':                  'ignored',
+                 '-':                   'ignored',
+                 '':                    'ignored',
                  }
                 
         collatedDict = collateDictByKeyPrefix(dict_typical, False)
@@ -579,6 +586,14 @@ Much like Powdermilk Biscuits[tm]."""
 
         self.failUnlessEqual(collatedEmptyDict, {})
         
+        self.failUnlessEqual([k for k in collatedDict if k.find('-') >= 0], [],
+                "Key with hyphens should not be let through")
+
+        self.failUnlessEqual([k for k in collatedDict if k.find('bad') >= 0], [],
+                "Bad prefix allowed")
+
+        self.failUnlessEqual(len([i['oh-noes'] for i in collatedDict.get('prefix1')]), 2)
+
         klassesNonCoerced = collatedDict.get('klass')
         for i in klassesNonCoerced:
             for k, v in i.iteritems():
