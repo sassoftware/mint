@@ -14,6 +14,7 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint import data
+from mint.mint_error import *
 from mint.cmdline import commands
 
 from conary import versions
@@ -297,8 +298,13 @@ class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
         # Pick the version id that matches versionName
         versionId = [v[0] for v in versionList if v[2] == versionName][0]
 
-        buildIds = client.newBuildsFromProductDefinition(versionId, stageName,
+        try:
+            buildIds = client.newBuildsFromProductDefinition(versionId, stageName,
                                                          force)
+        except TroveNotFoundForBuildDefinition, tnf:
+            print "\n" +str(tnf) + "\n"
+            print "To submit the partial set of builds, re-run this command with --force"
+            return 1
 
         for buildId in buildIds:
             print "BUILD_ID=%d" % (buildId)
