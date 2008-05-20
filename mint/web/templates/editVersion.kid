@@ -21,11 +21,11 @@
         </div>
         <style>
             <![CDATA[
-            a:hover.pd-usource-adder,
-            a:hover.pd-usource-deleter,
-            a:hover.pd-builddef-adder,
-            a:hover.pd-builddef-expander,
-            a:hover.pd-builddef-deleter {
+            a:hover.pdusource-adder,
+            a:hover.pdusource-deleter,
+            a:hover.pdbuilddef-adder,
+            a:hover.pdbuilddef-expander,
+            a:hover.pdbuilddef-deleter {
                 color: inherit;
                 background-color: inherit;
                 cursor: pointer;
@@ -52,12 +52,12 @@
                     buildName = 'NEWBUILD'
                     buildBaseFlavor = ''
             ?>
-            <tr id="pd-builddef-${ordinal}">
+            <tr id="pdbuilddef-${ordinal}">
                 <td>
-                    <input type="text" name="pd-builddef-${ordinal}-name" value="${buildName}" />
+                    <input type="text" name="pdbuilddef-${ordinal}-name" value="${buildName}" />
                 </td>
                 <td>
-                    <select class="pd-builddef-picker-buildType" name="pd-builddef-${ordinal}-_buildType">
+                    <select class="pdbuilddef-picker-buildType" name="pdbuilddef-${ordinal}-_buildType">
                         <option py:for="key in visibleBuildTypes"
                             py:attrs="{'value': key, 'selected': (buildType == key) and 'selected' or None}"
                             py:content="buildtypes.typeNames[key]" />
@@ -67,8 +67,8 @@
                     <div py:strip="True" py:for="key in visibleBuildTypes">
                         <?python
                             elementClasses = 'arch-%d' % key
-                            elementName = 'pd-builddef-%s-baseFlavor' % (ordinal)
-                            elementId = 'pd-builddef-buildtype%s-%s-baseFlavor' % (key, ordinal)
+                            elementName = 'pdbuilddef-%s-baseFlavor' % (ordinal)
+                            elementId = 'pdbuilddef-buildtype%s-%s-baseFlavor' % (key, ordinal)
 
                             # get the supported arch types for this build type
                             if buildtypes.buildDefinitionSupportedFlavorsMap.has_key(key):
@@ -95,10 +95,10 @@
                         </select>
                     </div>
                 </td>
-                <td class="row-button"><a class="pd-builddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" title="Edit" /></a></td>
-                <td class="row-button"><a class="pd-builddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
+                <td class="row-button"><a class="pdbuilddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit.gif" title="Edit" /></a></td>
+                <td class="row-button"><a class="pdbuilddef-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
             </tr>
-            <tr id="pd-builddef-${ordinal}-more" style="display: none">
+            <tr id="pdbuilddef-${ordinal}-more" style="display: none">
                 <td colspan="5">
                     <fieldset>
                         <legend>Build Definition Settings</legend>
@@ -107,7 +107,7 @@
                             validFor, dataRow = data
                             elementClasses = ' '.join(['it-%d' % x for x in validFor])       
                             dataValue = buildSettings.get(name, dataRow[1])
-                            elementName = 'pd-builddef-%s-%s' % (ordinal, name)
+                            elementName = 'pdbuilddef-%s-%s' % (ordinal, name)
                             elementDisabled = buildType not in validFor and 'disabled' or None
                             elementStyle    = buildType not in validFor and 'display: none' or None
                         ?>
@@ -152,14 +152,14 @@
         </div>
         
         <div py:def="upstreamSourcesOptions(ordinal='bt')" py:strip="True">
-            <tr id="pd-usource-${ordinal}">
+            <tr id="pdusource-${ordinal}">
                 <td>
-                    <input type="text" name="pd-usource-${ordinal}-package" value="foo 1 package" />
+                    <input type="text" name="pdusource-${ordinal}-package" value="foo 1 package" />
                 </td>
                 <td>
-                    <input type="text" name="pd-usource-${ordinal}-label" value="foo1 label" />
+                    <input type="text" name="pdusource-${ordinal}-label" value="foo1 label" />
                 </td>
-                <td class="row-button"><a class="pd-usource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
+                <td class="row-button"><a class="pdusource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete.gif" title="Delete" /></a></td>
             </tr>
         </div>
         
@@ -168,7 +168,7 @@
                 relstageName = relstage and relstage.name or ''
                 relstageLabelSuffix = relstage and relstage.labelSuffix or ''
             ?>
-            <tr id="pd-stages-${ordinal}">
+            <tr id="pdstages-${ordinal}">
                 <!--!
                    We add labels and hidden fields so the user can not edit
                    the stages.  This will need to be changed when the stages
@@ -176,12 +176,12 @@
                    fields text fields.
                 -->
                 <td>
-                    <label for="pd-stages-${ordinal}-name" py:content="relstageName" />
-                    <input type="hidden" name="pd-stages-${ordinal}-name" value="${relstageName}"/>
+                    <label for="pdstages-${ordinal}-name" py:content="relstageName" />
+                    <input type="hidden" name="pdstages-${ordinal}-name" value="${relstageName}"/>
                 </td>
                 <td>
-                    <label for="pd-stages-${ordinal}-labelSuffix" py:content="relstageLabelSuffix" />
-                    <input type="hidden" name="pd-stages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
+                    <label for="pdstages-${ordinal}-labelSuffix" py:content="relstageLabelSuffix" />
+                    <input type="hidden" name="pdstages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
                 </td>
             </tr>
         </div>
@@ -239,7 +239,7 @@
                     <tr>
                         <th>Release Stages:</th>
                         <td>
-                            <table id="pd-stages" class="pretty-fullwidth">
+                            <table id="pdstages" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -252,12 +252,12 @@
                                 <tbody>
                                     <div py:strip="True" py:for="ordinal, relstage in enumerate(productDefinition.getStages())"
                                          py:content="releaseStagesOptions(relstage, ordinal)" />
-                                    <tr id="pd-stages-empty" py:if="not productDefinition.getStages()">
+                                    <tr id="pdstages-empty" py:if="not productDefinition.getStages()">
                                         <td colspan="4">No release stages defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <table id="pd-stages-bt-all" style="display: none">
+                            <table id="pdstages-bt-all" style="display: none">
                                 <tbody py:content="releaseStagesOptions()" />
                             </table>
                         </td>
@@ -266,7 +266,7 @@
                     <tr py:if="False">
                         <th>Upstream Sources:</th>
                         <td>
-                            <table id="pd-usource" class="pretty-fullwidth">
+                            <table id="pdusource" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
                                         <th>Project</th>
@@ -279,16 +279,16 @@
                                 <tbody>
                                     <div py:strip="True" py:for="us in kwargs['upstreamSources']"
                                          py:content="upstreamSourcesOptions()" />
-                                    <tr id="pd-usource-empty" py:if="not len(kwargs['upstreamSources'])">
+                                    <tr id="pdusource-empty" py:if="not len(kwargs['upstreamSources'])">
                                         <td colspan="4">No upstream sources defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <table id="pd-usource-bt-all" style="display: none">
+                            <table id="pdusource-bt-all" style="display: none">
                                 <tbody py:content="upstreamSourcesOptions()" />
                             </table>
                             <p>
-                                <a class="pd-usource-adder">
+                                <a class="pdusource-adder">
                                     <img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />
                                     Add a new upstream source
                                 </a>
@@ -298,7 +298,7 @@
                     <tr>
                         <th>Build Definitions:</th>
                         <td>
-                            <table id="pd-builddefs" class="pretty-fullwidth">
+                            <table id="pdbuilddefs" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
                                         <th class="builddef-name">Name</th>
@@ -311,15 +311,15 @@
                                 <tbody>
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
-                                    <tr id="pd-builddef-empty" py:if="not productDefinition.getBuildDefinitions()">
+                                    <tr id="pdbuilddef-empty" py:if="not productDefinition.getBuildDefinitions()">
                                         <td colspan="5">No builds defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <table id="pd-builddef-bt-all" style="display: none">
+                            <table id="pdbuilddef-bt-all" style="display: none">
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
-                            <p><a class="pd-builddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />Add a new build definition</a></p>
+                            <p><a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add.gif" title="Add" />Add a new build definition</a></p>
                         </td>
                     </tr>
                 </table>

@@ -1145,7 +1145,7 @@ class ProjectHandler(WebHandler):
                 coerceValues=True)
 
         # Process stages
-        stages = collatedDict.get('pd-stages', {})
+        stages = collatedDict.get('pdstages', {})
         try:
             self._validateStages(stages)
         except ProductDefinitionInvalidStage, e:
@@ -1157,14 +1157,14 @@ class ProjectHandler(WebHandler):
             pd.addStage(s['name'], s['labelSuffix'])
 
         # Process upstream sources
-        usources = collatedDict.get('pd-usources',{})
+        usources = collatedDict.get('pdusources',{})
         # TODO: Include upstream sources, baseFlavor, etc.
         #       from the UI (which needs to be invented).
         #       Until then, we'll leave any changes a user
         #       makes in the repos alone.
 
         # Process build definitions
-        buildDefsList = collatedDict.get('pd-builddef',[])
+        buildDefsList = collatedDict.get('pdbuilddef',[])
 
         # Currently, stageNames for each build is
         # defined as the full set of stages.
