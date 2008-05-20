@@ -28,6 +28,8 @@ install: default-install
 	# rAPA bits
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
+	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
+	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
