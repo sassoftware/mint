@@ -46,6 +46,8 @@ Web Front End Changes
 * Published releases can now be marked for mirroring. When the project
   is configured appropriately, this will result in only published
   releases being mirrored to the Update Service. (RBL-2546)
+* It is now possible to launch a set of builds for a product definition
+  given a version and a stage from the web interface (RBL-2798).
 
 Build System Changes
 --------------------
@@ -70,6 +72,8 @@ Internal Changes
 * A new configuration option, anacondaTemplatesFallback, may be
   used to change the default label that gets searched when trying
   to find anaconda-templates (RBL-2757).
+* Enhanced the server backend to allow for sets of builds to be launched
+  (RBL-2799).
 
 Command-Line Client Changes
 ---------------------------
