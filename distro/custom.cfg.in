@@ -13,3 +13,6 @@ logs.num_lines = 20
 [/configure/Network]
 # A list of interfaces that should be excluded from display.
 configure.network.ifsExclude = ["vif", "lo", "sit", "tun", "vmnet", "ird"]
+
+[/collectiontool]
+collectiontool.vendorInformationPath = "/usr/share/raa/content/collectiontool.html"
