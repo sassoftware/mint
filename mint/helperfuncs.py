@@ -9,6 +9,7 @@ from conary.deps import arch, deps
 from mint import constants
 from mint import buildtypes
 from mint.config import isRBO
+from mint.mint_error import MintError
 from conary.repository.errors import RoleAlreadyExists
 
 from rpath_common.proddef import api1 as proddef
@@ -333,7 +334,7 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
 
     for key, value in dicts.iteritems():
         value = [ x[1] for x in sorted(value.iteritems()) ]
-        dicts[key] = value 
+        dicts[key] = value
 
 
     return dicts
@@ -428,18 +429,39 @@ def addDefaultStagesToProductDefinition(productDefinitionObj):
                 stage['labelSuffix'])
     return
 
-def getInitialProductDefinition(projectName, hostname, domainname, shortname, version, namespace):
+def getDefaultImageGroupName(shortname):
     """
-    Get the initial proddef for a new project
+    Given the project's shortname, give the default image group name
+    (e.g. group-<shortname>-appliance).
     """
-    pd = proddef.ProductDefinition()
-    pd.setProductName(projectName)
-    pd.setProductShortname(shortname)
-    pd.setProductVersion(version)
-    pd.setConaryNamespace(namespace)
-    pd.setConaryRepositoryHostname("%s.%s" % (shortname, domainname))
-    pd.setImageGroup('group-%s-dist' % shortname)
-    addDefaultStagesToProductDefinition(pd)
+    if not shortname:
+        raise MintError("Shortname missing when trying to determine default image group name")
+    return 'group-%s-appliance' % shortname
+
+def sanitizeProductDefinition(projectName, projectDescription,
+        hostname, domainname, shortname, version,
+        versionDescription, namespace, productDefinition=None):
+    """
+    Sanitize a product definition object to make sure that 
+    bits filled in by rBuilder are appropriately set.
+    If a productDefinition object isn't passed in, one is
+    created and returned.
+    """
+    if not productDefinition:
+        productDefinition = proddef.ProductDefinition()
+    productDefinition.setProductName(projectName)
+    productDefinition.setProductDescription(projectDescription)
+    productDefinition.setProductShortname(shortname)
+    productDefinition.setProductVersion(version)
+    productDefinition.setProductVersionDescription(versionDescription)
+    productDefinition.setConaryNamespace(namespace)
+    productDefinition.setConaryRepositoryHostname("%s.%s" % \
+            (shortname, domainname))
+    productDefinition.setImageGroup(getDefaultImageGroupName(shortname))
+
+    addDefaultStagesToProductDefinition(productDefinition)
+
     # TODO: add baseFlavor
     # TODO: add meaningful upstream sources
-    return pd
+
+    return productDefinition

@@ -776,6 +776,9 @@ class MintClient:
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
 
+    def getStagesForProductVersion(self, versionId):
+        return self.server.getStagesForProductVersion
+
     def getProductDefinitionForVersion(self, versionId):
         pdXMLString = self.server.getProductDefinitionForVersion(versionId)
         return proddef.ProductDefinition(fromStream=pdXMLString)

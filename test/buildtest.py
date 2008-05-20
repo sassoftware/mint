@@ -1032,8 +1032,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         fixtures.FixturedProductVersionTest.setUp(self)
 
         # This product definition is based on the "Full" fixture
-        pd = helperfuncs.getInitialProductDefinition('The Foo Project',
+        pd = helperfuncs.sanitizeProductDefinition('The Foo Project',
+                'The foo project is TEH AWESOME',
                 'foo', MINT_PROJECT_DOMAIN, 'foo', 'fooV1',
+                'Version one is not vaporware',
                 'yournamespace')
         pd.setBaseFlavor("~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap, ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU, ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug, ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl, ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl, ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux, ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware, ~!xen, ~!xfce, ~!xorg-x11.xprint")
         pd.setImageGroup('group-dist')

@@ -670,7 +670,7 @@ class MintServer(object):
 
     def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
         if groupName is None:
-            groupName = 'group-%s-appliance' % project.getHostname()
+            groupName = helperfuncs.getDefaultImageGroupName(project.shortname)
 
         label = versions.Label(buildLabel)
 
@@ -759,9 +759,9 @@ class MintServer(object):
             applianceValue = 0
 
         # initial product definition
-        pd = helperfuncs.getInitialProductDefinition(projectName,
-                hostname, domainname, shortname, version,
-                self.cfg.namespace)
+        pd = helperfuncs.sanitizeProductDefinition(projectName,
+                desc, hostname, domainname, shortname, version,
+                '', self.cfg.namespace)
 
         label = pd.getDefaultLabel()
 
@@ -2057,7 +2057,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise NotEntitledError()
         return buildId
 
-    @typeCheck(int, str, bool)
+    @typeCheck(int, ((str, unicode),), bool)
     @requiresAuth
     @private
     def newBuildsFromProductDefinition(self, versionId, stageName, force):
@@ -2115,35 +2115,63 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Create/start each build.
         buildIds = []
-        for build, nvf in filteredBuilds:
-            try:
-                buildId = self._createBuildDefBuild(projectId, build,
-                        nvf, project.getName())
-                buildIds.append(buildId)
-            except Exception, e:
-                raise MintError(str(e))
-            else:
-                self.startImageJob(buildId)
+        for buildDefinition, nvf in filteredBuilds:
+            buildId = self._createBuildDefBuild(projectId, buildDefinition,
+                    nvf, project.getName())
+            buildIds.append(buildId)
+            self.startImageJob(buildId)
 
         return buildIds
 
-    def _createBuildDefBuild(self, projectId, build, nvf, buildName):
+    def _createBuildDefBuild(self, projectId, buildDefinition, nvf, buildName):
         """
         Create a new build from build definition info
         @return: the build id
         """
+        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
+                            'anacondaCustomTrove' : 'anaconda-custom',
+                            'anacondaTemplatesTrove' : 'anaconda-templates'}
+
         n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+
+        project = projects.Project(self, projectId)
         buildId = self.newBuild(projectId, buildName)
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(n, v, f)
-        buildType = buildtypes.xmlTagNameImageTypeMap[build.getBuildImageType().tag]
+        buildType = buildtypes.xmlTagNameImageTypeMap[buildDefinition.getBuildImageType().tag]
         newBuild.setBuildType(buildType)
-        for k, v in build.getBuildImageType().fields:
-            newBuild.setDataValue(k, str(v))
 
-        # TODO: need custom troves
-        #self._setCustomTrovesForBuildId(buildId,
-        #        buildData['buildOptions'])
+        buildImageType = buildDefinition.getBuildImageType()
+        buildSettings = buildImageType.fields.copy()
+
+        template = newBuild.getDataTemplate()
+
+        # handle custom troves
+        for customTroveSetting in ['mediaTemplateTrove', 'anacondaCustomTrove',
+                            'anacondaTemplatesTrove']:
+            if buildSettings.has_key(customTroveSetting):
+                troveName = customTroveDict[customTroveSetting]
+                troveVersion = str(buildSettings.pop(customTroveSetting))
+                customTroveSpec = project.resolveExtraTrove(troveName, v, f,
+                        troveVersion)
+                if customTroveSpec:
+                    newBuild.setDataValue(troveName, customTroveSpec)
+
+        # handle the rest
+        for k, v in buildSettings.iteritems():
+            try:
+                if template[k][0] == data.RDT_BOOL:
+                    v = (str(v) == 'true')
+                elif template[k][0] in (data.RDT_STRING, data.RDT_ENUM):
+                    v = str(v)
+                elif template[k][0] == data.RDT_INT:
+                    v = int(v)
+                else:
+                    continue
+            except KeyError:
+                pass # if it's not int the template, no matter
+            else:
+                newBuild.setDataValue(k, v)
 
         return buildId
 
@@ -2159,26 +2187,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Find the troves that satisfy the build.
         troveList = repos.findTrove(None, (troveName, troveLabel, None))
-        return sorted([x for x in troveList if x[2].satisfies(filterFlavor)],
+        return sorted([x for x in troveList if x[2].stronglySatisfies(filterFlavor)],
                       key=lambda x: x[1])
-
-    def _setCustomTrovesForBuildId(self, buildId, buildData):
-        """
-        Add various custom troves as a resolved trove to the given buildId.
-        """
-        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
-                            'anacondaCustomTrove' : 'anaconda-custom',
-                            'anacondaTemplatesTrove' : 'anaconda-templates'}
-
-        for customTrove in ['mediaTemplateTrove', 'anacondaCustomTrove',
-                            'anacondaTemplatesTrove']:
-            if buildData.has_key(customTrove):
-                troveName = customTroveDict[customTrove]
-                value = '%s=%s' % (troveName, buildData[customTrove])
-                self.setBuildDataValue(buildId, troveName, value,
-                                       data.RDT_TROVE)
-            else:
-                continue
 
     @typeCheck(int)
     @requiresAuth
@@ -4447,6 +4457,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
+    def getStagesForProductVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        return [s.name for s in pd.getStages()]
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
         pd = self._getProductDefinitionForVersionObj(versionId)
         sio = StringIO.StringIO()
@@ -4484,7 +4501,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
-    
+
     @private
     @requiresAuth
     @typeCheck(int, ((str, unicode),))
@@ -4502,15 +4519,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
         builds = pd.getBuildsForStage(stageName)
         for build in builds:
             task = dict()
-            
+
             # set the build name
             task['buildName'] = build.getBuildName()
-            
+
             # set the build type
             buildTypeDt = buildtemplates.getDataTemplateByXmlName(
                               build.getBuildImageType().getTag())
             task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
-            
+
             # get the name of the flavor.  If we don't have a name mapped to
             # it, specify that it is custom
             flavor = build.getBuildBaseFlavor()
@@ -4520,12 +4537,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             else:
                 buildFlavor = "Custom Flavor: %s" % flavor
             task['buildFlavorName'] = buildFlavor
-            
+
             # set the image group
             task['imageGroup'] = build.getBuildImageGroup()
-            
+
             taskList.append(task)
-            
+
         return taskList
 
 

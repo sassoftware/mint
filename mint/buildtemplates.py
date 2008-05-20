@@ -41,6 +41,8 @@ optionNameMap = {
     'mediaTemplateTrove': 'media-template',
 }
 
+reversedOptionNameMap = dict([(v,k) for k,v in optionNameMap.iteritems()])
+
 diskAdapters = {
     'IDE' : 'ide',
     'SCSI (LSILogic)' : 'lsilogic',
