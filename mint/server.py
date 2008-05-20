@@ -70,7 +70,6 @@ from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.lib import xmldata
 from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
 from conary.repository import netclient
 from conary.repository import shimclient
