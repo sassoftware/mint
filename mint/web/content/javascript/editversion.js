@@ -72,12 +72,8 @@ jQuery(document).ready(function () {
             jQuery(builddefmoreId).remove();
             
             // show the no entries found if last one removed
-            var templateDomBits = jQuery('#pdbuilddefs > tbody').clone(true);
-            var numEntries = 0;
-            templateDomBits.find('tr').each(function () {
-                numEntries += 1;
-            });
-            if(numEntries <= 1) {
+            var tbody = jQuery('#pdbuilddefs > tbody');
+            if (tbody.find('tr').length <= 1) {
                 jQuery('#pdbuilddef-empty').show();
             }
     });
@@ -108,12 +104,8 @@ jQuery(document).ready(function () {
             var usourceId = "#" + jQuery(this).parents().get(1).id;
             jQuery(usourceId).remove();
             // show the no entries found if last one removed
-            var templateDomBits = jQuery('#pdusource > tbody').clone(true);
-            var numEntries = 0;
-            templateDomBits.find('tr').each(function () {
-                numEntries += 1;
-            });
-            if(numEntries <= 1) {
+            var tbody = jQuery('#pdusource > tbody');
+            if (tbody.find('tr').length <= 1) {
                 jQuery('#pdusource-empty').show();
             }
     });
