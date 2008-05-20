@@ -32,6 +32,7 @@ kid_files = \
 	mailingLists.kid	\
 	maintenance.kid		\
 	members.kid		\
+	newBuildsFromProductDefinition.kid	\
 	newGroup.kid		\
 	newProject.kid		\
 	passwordReset.kid	\

@@ -39,11 +39,13 @@
         <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef=None)" py:strip="True">
             <?python
                 from mint import buildtypes
+                from mint import buildtemplates
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                 if bdef:
                     imageType = bdef.getBuildImageType()
                     buildType = buildtypes.xmlTagNameImageTypeMap.get(imageType.tag)
-                    buildSettings = imageType.fields
+                    # Map XML names to optionNameMap
+                    buildSettings = dict([(buildtemplates.optionNameMap.get(k,k),v) for k, v in imageType.fields.iteritems()])
                     buildName = bdef.getBuildName()
                     buildBaseFlavor = bdef.getBuildBaseFlavor()
                 else:
@@ -83,7 +85,7 @@
                             elementDisabled = buildType != key and 'disabled' or None
                             elementStyle = buildType != key and 'display: none' or None
 
-                            # get a default flavor to work with in case build type hasn't been set
+                            # get a default flavor to work with in case build type has not been set
                             # this is just the first value in the supported archs dict
                             defaultVal = suppArchTypes and suppArchTypes.values()[0] or ''
                         ?>
@@ -141,9 +143,19 @@
                                                'disabled': elementDisabled}">
                                 <option py:for="prompt, val in sorted(dataRow[3].iteritems())"
                                     py:content="prompt" value="${val}"
-                                    py:attrs="{'selected' : val == dataValue and 'selected' or None}" />
+                                    py:attrs="{'selected' : val == str(dataValue) and 'selected' or None}" />
                             </select>
                             <div class="clearleft">&nbsp;</div> 
+                        </div>
+                        <div py:if="(dataRow[0] == RDT_TROVE)" style="${elementStyle}" class="${elementClasses}">
+                            <label for="${elementName}" py:content="dataRow[2]" />
+                            <input py:attrs="{'id': elementName,
+                                              'type': 'text',
+                                              'name': elementName,
+                                              'value': dataValue,
+                                              'class': 'field-text-string',
+                                              'disabled': elementDisabled}" />
+                            <div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
                     </fieldset>

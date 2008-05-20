@@ -197,8 +197,7 @@ else:
 <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
 <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/yui/build/treeview/assets/tree.css"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/treeview/treeview-min.js" ></script>
-    <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}" />
-        
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}"></script>
 
     </head>
     <body>

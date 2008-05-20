@@ -69,24 +69,8 @@ from mint.web.templatesupport import downloadTracker, projectText
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
 
-                <div py:omit="True" py:if="False and isWriter"> <!-- disable until build definitions are complete (RBL-1911) -->
-                    <h2>Build Sets</h2>
-                    <div>
-
-                        <form method="get" action="buildDefs">
-                            <div>Choose a label to edit the default set of builds:</div>
-                            <div>
-                                <select name="label">
-                                    <option py:for="label in projectLabels" py:content="label" value="$label" />
-                                </select>
-                                <button>Manage</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
                 <h2>Individual Images</h2>
-                <p py:if="isWriter"><strong><a href="newBuild">Create a new image</a></strong></p>
+                <p py:if="isWriter">You may <a href="newBuild">create a new image</a> or <a href="newBuildsFromProductDefinition">create a set of images from a product definition</a>.</p>
                 ${buildsTable(builds)}
             </div>
         </div>

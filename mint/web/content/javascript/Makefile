@@ -4,6 +4,7 @@ javascript_files =\
 	groupbuilder.js \
 	library.js \
 	mirror.js \
+	newbuildsfromproductdefinition.js \
 	rpc.js	\
 	trovepicker.js \
 	repobrowser.js \

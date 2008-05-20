@@ -374,6 +374,41 @@ class ProjectHandler(WebHandler):
             curGroupTrove = curGroupTrove)
 
     @writersOnly
+    def newBuildsFromProductDefinition(self, auth):
+        return self._write("newBuildsFromProductDefinition",
+            productVersions = self.client.getProductVersionListForProduct(self.project.id))
+
+    @intFields(productVersionId = -1)
+    @strFields(action = "cancel", productStageName = None)
+    @boolFields(force = False)
+    @dictFields(yesArgs = None)
+    @writersOnly
+    def processNewBuildsFromProductDefinition(self, auth, productVersionId, productStageName, action, force, **yesArgs):
+
+        if action.lower() == 'cancel':
+            self._predirect('builds')
+
+        try:
+            self.client.newBuildsFromProductDefinition(productVersionId,
+                    productStageName, force)
+        except TroveNotFoundForBuildDefinition, tnffbd:
+            return self._write("confirm",
+                    message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
+                    yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
+                                'productVersionId': productVersionId,
+                                'productStageName': productStageName,
+                                'action': 'submit',
+                                'force': '1'},
+                    noLink = "builds")
+        except Exception, e:
+            self._addErrors("Problem encountered when creating builds: %s" % str(e))
+            self._predirect('newBuildsFromProductDefinition')
+        else:
+            self._setInfo("Builds created.")
+            self._predirect('builds')
+
+
+    @writersOnly
     def newBuild(self, auth):
         return self._write("editBuild",
             buildId = None,
@@ -1129,16 +1164,21 @@ class ProjectHandler(WebHandler):
         # If this is new, use our template product definition
         # generator. Otherwise, just get it from the repository.
         if isNew:
-            pd = helperfuncs.getInitialProductDefinition(
+            pd = proddef.ProductDefinition()
+        else:
+            version = self.client.getProductVersion(id)
+            pd = self.client.getProductDefinitionForVersion(id)
+
+        pd = helperfuncs.sanitizeProductDefinition(
                     self.project.name,
+                    self.project.description,
                     self.project.hostname,
                     self.project.domainname,
                     self.project.shortname,
                     name,
-                    self.cfg.namespace)
-        else:
-            version = self.client.getProductVersion(id)
-            pd = self.client.getProductDefinitionForVersion(id)
+                    description,
+                    self.cfg.namespace,
+                    pd)
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1178,12 +1218,12 @@ class ProjectHandler(WebHandler):
         for builddef in buildDefsList:
             buildType = int(builddef.get('_buildType'))
             xmlTagName = buildtypes.imageTypeXmlTagNameMap[buildType]
+            buildName = builddef.pop('name', '')
             proposedBuildSettings = dict(x for x in builddef.iteritems() if not x[0].startswith('_'))
             bTmpl = buildtemplates.getDataTemplate(buildType)
             buildSettings = bTmpl.getDefaultDict()
             buildSettings.update(proposedBuildSettings)
 
-            buildName = builddef.get('name', '')
 
             # only add this error once
             if not buildName and not warnedNoNameAlready:
@@ -1196,6 +1236,10 @@ class ProjectHandler(WebHandler):
                     validationErrors.extend(e.errlist)
             # add regardless of errors.  if an error occurred, we want the user
             # to see what they entered.
+
+            # Coerce trove type options back to their class name
+            buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
+
             pd.addBuildDefinition(name=buildName,
                 baseFlavor=builddef.get('baseFlavor'),
                 imageType=pd.imageType(xmlTagName, buildSettings),
