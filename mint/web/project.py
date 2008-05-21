@@ -568,8 +568,6 @@ class ProjectHandler(WebHandler):
                             val = self.project.resolveExtraTrove(n,
                                 buildTroveVersion, buildTroveFlavor,
                                 v, f)
-                            val = self.project.resolveExtraTrove(n, v, f,
-                                    buildTroveVersion, buildTroveFlavor)
                         else:
                             try:
                                 # attempt to un-freeze the version
