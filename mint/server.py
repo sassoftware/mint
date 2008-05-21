@@ -2293,7 +2293,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             matches = cclient.getRepos().findTrove(searchPath,
                     (specialTroveName, specialTroveVersion, specialTroveFlavor),
                     cfg.flavor)
-            strSpec = '%s=%s[%s]' % matches[0]
+            if matches:
+                strSpec = '%s=%s[%s]' % matches[0]
+            else:
+                strSpec = ''
 
         except TroveNotFound:
             return ''
