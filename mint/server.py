@@ -4516,6 +4516,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         taskList = []
         pd = self._getProductDefinitionForVersionObj(versionId)
         builds = pd.getBuildsForStage(stageName)
+        stageLabel = pd.getLabelForStage(stageName)
         for build in builds:
             task = dict()
 
@@ -4538,7 +4539,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             task['buildFlavorName'] = buildFlavor
 
             # set the image group
-            task['imageGroup'] = build.getBuildImageGroup()
+            task['imageGroup'] = "%s=%s" % (build.getBuildImageGroup(),
+                    stageLabel)
 
             taskList.append(task)
 
