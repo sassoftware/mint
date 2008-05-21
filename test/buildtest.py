@@ -1323,6 +1323,29 @@ class BuildTestConaryRepository(MintRepositoryHelper):
                 "testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN)
         self.failUnlessEqual(x, "anaconda-templates=/testproject.%s@rpl:devel/1.0-1-1[]" % MINT_PROJECT_DOMAIN)
         
+    @testsuite.tests('RBL-2881')
+    def testBuildTroves2(self):
+        client, userid = self.quickMintUser("test", "testpass")
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        self.addComponent("anaconda-templates:runtime", "1.0")
+        self.addCollection("anaconda-templates", "1.0", [(":runtime", "1.0")])
+        
+        # ensure special trove flavor of None is handled properly
+        x = project.resolveExtraTrove("anaconda-templates",
+                "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
+                "testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN, 
+                None)
+        self.failUnlessEqual(x, "anaconda-templates=/testproject.%s@rpl:devel/1.0-1-1[]" % MINT_PROJECT_DOMAIN)
+        
+        # ensure special trove version of None is handled properly
+        x = project.resolveExtraTrove("anaconda-templates",
+                "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
+                None, '')
+        self.assertTrue("anaconda-templates=/conary.rpath.com@rpl:devel" in x)
+        
     @testsuite.tests('RBL-2879')
     def testResolveTrove(self):
         client, userid = self.quickMintUser("test", "testpass")

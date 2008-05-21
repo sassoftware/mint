@@ -271,6 +271,10 @@ class Project(database.TableObject):
             imageGroupVersion = ''
         if imageGroupFlavor is None:
             imageGroupFlavor = ''
+        if specialTroveVersion is None:
+            specialTroveVersion = ''
+        if specialTroveFlavor is None:
+            specialTroveFlavor = ''
         return self.server.resolveExtraTrove(self.id,
                 specialTroveName, specialTroveVersion, specialTroveFlavor,
                 imageGroupVersion, imageGroupFlavor)
