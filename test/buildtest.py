@@ -1043,8 +1043,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         # this may change in the future; we'll add "Booya" here.
         pd.addStage('Booya', '-booya')
         pd.addStage('Elsewhere', '-nada')
+        pd.addStage('Custom', '-sodapopinski')
         stageNames = [x.name for x in pd.getStages() \
-                if x.name not in ('Booya', 'Elsewhere')]
+                if x.name not in ('Booya', 'Elsewhere', 'Custom')]
 
         pd.addUpstreamSource('group-rap-standard',
                 'rap.rpath.com@rpath:linux-1')
@@ -1084,7 +1085,18 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                               imageType=pd.imageType('installableIsoImage'),
                               stages=['Elsewhere'],
                               imageGroup='group-dist')
-
+        pd.addBuildDefinition(name='me custom',
+                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                              imageType=pd.imageType('installableIsoImage',
+                                  {'anacondaCustomTrove':\
+                                   '/conary.rpath.com@rpl:devel/0.0:1.0-1-1',
+                                   'anacondaTemplatesTrove':\
+                                   '/conary.rpath.com@rpl:devel/0.0:1.0-1-2',
+                                   'mediaTemplateTrove':\
+                                   '/conary.rpath.com@rpl:devel/0.0:1.0-1-3'}),
+                              stages=['Custom'],
+                              imageGroup='group-dist')
+        
         # mocked out call to save to memory
         pd.saveToRepository()
 
@@ -1103,6 +1115,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                         ]
                     elif tn == 'group-other':
                         flava_flavs = [ '~superfunk.bootsy is: x86_64', ]
+                    elif tn in ['anaconda-custom', 'anaconda-templates', 'media-template']:
+                        return [(tn,
+                             versions._VersionFromString(tv, frozen=True),
+                                deps.parseFlavor('is: x86_64'))]
                     else:
                         return []
 
@@ -1138,6 +1154,35 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                 'Booya', False)
         # Should have created 1 build for Booya stage
         self.assertEquals(1, len(buildIds))
+        
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionCustom(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        server = client.server._server
+        
+        # get custom builds
+        buildIds = \
+            client.newBuildsFromProductDefinition(data['versionId'], 
+                'Custom', False)
+            
+        # Should have created 1 build for Custom stage
+        self.assertEquals(1, len(buildIds))
+        
+        # validate anaconda-custom
+        aCustom = server.getBuildDataValue(buildIds[0], "anaconda-custom")
+        self.assertTrue(aCustom == (True, \
+            'anaconda-custom=/conary.rpath.com@rpl:devel/1.0-1-1[is: x86_64]'))
+        
+        # validate anaconda-template
+        aTemplate = server.getBuildDataValue(buildIds[0], "anaconda-templates")
+        self.assertTrue(aTemplate == (True, \
+            'anaconda-templates=/conary.rpath.com@rpl:devel/1.0-1-2[is: x86_64]'))
+        
+        # validate media-template
+        mTemplate = server.getBuildDataValue(buildIds[0], "media-template")
+        self.assertTrue(mTemplate == (True, \
+            'media-template=/conary.rpath.com@rpl:devel/1.0-1-3[is: x86_64]'))
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionBadStage(self, db, data):
@@ -1148,7 +1193,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                 'fgsfds', False)
 
     @fixtures.fixture('Full')
-    def testBuildsFromProductDefinitionObj(self, db, data):
+    def testValidateBuildDefinitionTaskList(self, db, data):
 
         def validateTaskList(self, versionId, stageName, goldTaskList):
             """
