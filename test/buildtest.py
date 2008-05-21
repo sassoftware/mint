@@ -1208,43 +1208,43 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
         # golden data for development stage task list
         goldTaskListDevel = [
-            {'buildName'      : 'ISO 32', 
+            {'buildName'      : u'ISO 32', 
              'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
                                 buildtypes.BD_GENERIC_X86],
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : 'group-dist'
+             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
             }, 
-            {'buildName'      : 'ISO 64', 
+            {'buildName'      : u'ISO 64', 
              'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
                                 buildtypes.BD_GENERIC_X86_64],
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : 'group-dist'
+             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
-             {'buildName'     : 'VMWare 64', 
+             {'buildName'     : u'VMWare 64', 
              'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
                                 buildtypes.BD_VMWARE_X86_64],
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.VMWARE_IMAGE],
-             'imageGroup'     : 'group-dist'
+             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
-             {'buildName'     : 'XEN 64', 
+             {'buildName'     : u'XEN 64', 
              'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
                                 buildtypes.BD_DOMU_X86_64],
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.XEN_OVA],
-             'imageGroup'     : 'group-dist'
+             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              }
         ]
         
         # golden data for booya stage task list
         goldTaskListBooya = [
-            {'buildName'      : 'ISO 64 II', 
+            {'buildName'      : u'ISO 64 II', 
              'buildFlavorName': 'Custom Flavor: ~superfunk.bootsy is: x86_64', 
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : 'group-other'
+             'imageGroup'     : u'group-other=foo.%s@yournamespace:foo-fooV1-booya' % MINT_PROJECT_DOMAIN
             }
         ]
 
