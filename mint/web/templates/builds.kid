@@ -69,7 +69,7 @@ from mint.web.templatesupport import downloadTracker, projectText
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
 
-                <h2>Individual Images</h2>
+                <h2>Images</h2>
                 <p py:if="isWriter">You may <a href="newBuild">create a new image</a> or <a href="newBuildsFromProductDefinition">create a set of images from a product definition</a>.</p>
                 ${buildsTable(builds)}
             </div>
