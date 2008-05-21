@@ -233,7 +233,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 2)
+    Version = (45, 3)
 
     # 45.0
     # - Create UpdateServices table
@@ -358,6 +358,14 @@ class MigrateTo_45(SchemaMigration):
                                              "timeMirrored INTEGER")
         add_columns(cu, 'OutboundMirrors',
             "useReleases INTEGER NOT NULL DEFAULT 0")
+        return True
+    
+    # 45.3
+    # - Set shortname to hostname if it isn't set to anything
+    def migrate3(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Projects SET shortname=hostname
+                    WHERE shortname is NULL""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
