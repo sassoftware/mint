@@ -1194,11 +1194,14 @@ class ProjectHandler(WebHandler):
             pd.addStage(s['name'], s['labelSuffix'])
 
         # Process upstream sources
-        usources = collatedDict.get('pdusources',{})
-        # TODO: Include upstream sources, baseFlavor, etc.
-        #       from the UI (which needs to be invented).
-        #       Until then, we'll leave any changes a user
-        #       makes in the repos alone.
+        # XXX ProductDefinition object needs clearUpstreamSources()
+        pd.upstreamSources = proddef._UpstreamSources()
+        usources = collatedDict.get('pdusource',{})
+        for us in usources:
+            troveName, label = self._getValidatedUpstreamSource(us)
+            # add regardless of errors.  if an error occurred, we want the user
+            # to see what they entered.
+            pd.addUpstreamSource(troveName, label)
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
@@ -1271,6 +1274,7 @@ class ProjectHandler(WebHandler):
                               (action, getProjectText().lower(), name))
             self._predirect()
         else:
+            kwargs.update(name=name, description=description)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
@@ -1302,6 +1306,35 @@ class ProjectHandler(WebHandler):
             # value since we allow it to be empty
             if not stage.has_key('labelSuffix'):
                 stage['labelSuffix'] = ""
+                
+    def _getValidatedUpstreamSource(self, us):
+        """
+        Return the validated troveName and label for the specified upstream
+        sources dict.  Any keys missing from the dict will be set to '' so 
+        that errors can be properly handled.
+        """
+        
+        # validate the trove name
+        if not us.has_key('troveName'):
+            troveName = ''
+            self._addErrors("Missing trove name for upstream source")
+        else:
+            troveName = us['troveName']
+            
+        # validate the label
+        if not us.has_key('label'):
+            label = ''
+            self._addErrors("Missing label for upstream source")
+        else:
+            try:
+                labelObj = versions.Label(us['label'])
+                label = labelObj.freeze()
+            except Exception ,e:
+                label = us['label']
+                self._addErrors("Invalid label for upstream source: %s" \
+                                % str(e))
+            
+        return troveName, label
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()
