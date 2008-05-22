@@ -57,7 +57,7 @@ lang = None;
         function shrinkToTextInput(e)
         {
             swapDOM(e, INPUT({name: e.name, id: e.id, value: e.value}, null));
-            img = document.getElementById(tid + "_expander");
+            img = document.getElementById(e.id + "_expander");
             if(img != null)
             {
                 img.src = img.src.replace('collapse', 'expand');
@@ -67,7 +67,7 @@ lang = None;
         function expandToTextArea(e)
         {
             swapDOM(e, TEXTAREA({name: e.name, id: e.id, rows: 5}, e.value));
-            img = document.getElementById(tid + "_expander");
+            img = document.getElementById(e.id + "_expander");
             if(img != null)
             {
                 img.src = img.src.replace('expand', 'collapse');
@@ -111,7 +111,8 @@ lang = None;
                     <option py:for="(factoryHandle, factoryDef, values) in factories" value="${factoryHandle}">${str(factoryDef.getDisplayName())}</option>
                   </select>
                   <p py:if="len(factories) == 1" py:strip="True">
-                      <input id="factoryHandle" type="text" name="factoryHandle" value="factories[0][0]" disabled="disabled"/>
+                      ${factories[0][1].getDisplayName()}
+                      <input id="factoryHandle" type="hidden" name="factoryHandle" value="${factories[0][0]}"/>
                   </p>
                   <p py:if="1 > len(factories)" py:strip="True">
                       Shouldn't get here, should show an error instead.
