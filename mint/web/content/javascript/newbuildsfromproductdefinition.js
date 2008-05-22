@@ -43,7 +43,7 @@ var onProductStageSelection = function () {
         }
     };
 
-    jQuery('#step3-error,#step3-confirm,#action-buttons').hide()
+    jQuery('#step3-error,#step3-confirm,#action-buttons').hide();
 
     var productVersionSelector = jQuery('#productVersionSelector').get(0);
     var productStageSelector = jQuery('#productStageSelector').get(0);
