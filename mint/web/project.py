@@ -566,10 +566,7 @@ class ProjectHandler(WebHandler):
                         if not n or not v or (f is None):
                             # incomplete spec from XMLRPC client
                             val = self.project.resolveExtraTrove(n,
-                                buildTroveVersion, buildTroveFlavor,
-                                v, f)
-                            val = self.project.resolveBuildTrove(n, v, f,
-                                    buildTroveVersion, buildTroveFlavor)
+                                v, f, buildTroveVersion, buildTroveFlavor)
                         else:
                             try:
                                 # attempt to un-freeze the version

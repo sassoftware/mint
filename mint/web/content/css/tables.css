@@ -11,6 +11,10 @@ table.pretty-fullwidth {
     width: 100%;
 }
 
+table.pretty-fullwidth input {
+    background-color: white;
+}
+
 table.pretty-fullwidth tr td {
     font-size: small;
 }
@@ -21,13 +25,13 @@ table.pretty-fullwidth tr td {
     border-bottom: 1px solid #e0e0e0;
 }
 
-table.pretty-fullwidth tr.pd-builddef-expanded td,
-table.pretty-fullwidth tr.pd-builddef-more td {
+table.pretty-fullwidth tr.pdbuilddef-expanded td,
+table.pretty-fullwidth tr.pdbuilddef-more td {
     background: #fffded;
     border-bottom: none;
 }
 
-table.pretty-fullwidth tr.pd-builddef-more td {
+table.pretty-fullwidth tr.pdbuilddef-more td {
     border-bottom: 1px solid #e0e0e0;
 }
 
@@ -42,37 +46,10 @@ table.pretty-fullwidth tr td input {
     width: 100%;
 }
 
-table.pretty-fullwidth tr td label {
-    text-align: right;
-    width: 30%;
-    margin-left: 10px;
-    padding-right: 10px;
-}
-
-table.pretty-fullwidth tr td label.reversed {
-    text-align: left;
-    width: 65%;
-    padding-left: 5px;
-    padding-right: 0;
-}
-
-table.pretty-fullwidth tr td input.reversed {
-    width: 14px;
-    margin-left: 30px;
-}
-
-table.pretty-fullwidth input.field-text-string {
-    width: 48%;    
-}
-
-table.pretty-fullwidth input.field-text-int {
-    width: 10%;    
-}
-
 table.pretty-fullwidth select {
-    width: 100%;	
+    width: 100%;
 }
-	
+
 table.pretty-fullwidth input.field,
 table.pretty-fullwidth select.field {
     width: auto;
@@ -81,4 +58,36 @@ table.pretty-fullwidth select.field {
 table.pretty-fullwidth td.row-button {
     width: 20px;
 }
+
+div.field-row {
+    margin: 0 0 1em 0;
+    padding: 0 0 1em 0;
+}
+
+div.field-row label {
+    float: left;
+    width: 400px;
+    text-align: right;
+    margin: 0.1em 1em 0 0;
+}
+
+div.field-row input,
+div.field-row select {
+    margin: 0;
+    padding: 0;
+
+}
+
+div.field-row input.field-text-string {
+    width: 250px;
+}
+
+div.field-row input.field-text-int {
+    width: 40px;
+}
+
+div.field-row br {
+    clear: left;
+}
+
 /***************************** PRETTY FULLWIDTH *****************************/

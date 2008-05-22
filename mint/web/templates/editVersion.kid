@@ -104,26 +104,26 @@
                 <td colspan="5">
                     <fieldset>
                         <legend>Build Definition Settings</legend>
-                        <div py:strip="True" py:for="name, data in valueToTemplateIdMap.items()">
+                        <?python # funky lambda is to sort by datatype ?>
+                        <div py:strip="True" py:for="name, data in sorted(valueToTemplateIdMap.items(), key=lambda y: y[1][1][0])">
                         <?python
                             validFor, dataRow = data
-                            elementClasses = ' '.join(['it-%d' % x for x in validFor])       
+                            elementClasses = ' '.join(['field-row'] + ['it-%d' % x for x in validFor])       
                             dataValue = buildSettings.get(name, dataRow[1])
                             elementName = 'pdbuilddef-%s-%s' % (ordinal, name)
                             elementDisabled = buildType not in validFor and 'disabled' or None
                             elementStyle    = buildType not in validFor and 'display: none' or None
                         ?>
                         <div py:if="(dataRow[0] == RDT_BOOL)" style="${elementStyle}" class="${elementClasses}">
-                            <input py:attrs="{'class': 'reversed',
-                                              'id': elementName,
+                            <label for="${elementName}" py:content="dataRow[2]" />
+                            <input py:attrs="{'id': elementName,
                                               'type': 'checkbox',
                                               'checked': (dataValue) and 'checked' or None,
                                               'name': elementName,
                                               'value': 'True',
                                               'class': 'check field',
                                               'disabled': elementDisabled}" />
-                            <label class="reversed" for="${elementName}" py:content="dataRow[2]" />
-                            <div class="clearleft">&nbsp;</div> 
+                            <br />
                         </div>
                         <div py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)" style="${elementStyle}" class="${elementClasses}">
                             <label for="${elementName}" py:content="dataRow[2]" />
@@ -133,7 +133,7 @@
                                               'value': dataValue,
                                               'class': (dataRow[0] == RDT_STRING) and 'field-text-string' or 'field-text-int',
                                               'disabled': elementDisabled}" />
-                            <div class="clearleft">&nbsp;</div>
+                            <br />
                         </div>
                         <div py:if="(dataRow[0] == RDT_ENUM)" style="${elementStyle}" class="${elementClasses}">
                             <label for="${elementName}" py:content="dataRow[2]" />
@@ -145,7 +145,7 @@
                                     py:content="prompt" value="${val}"
                                     py:attrs="{'selected' : val == str(dataValue) and 'selected' or None}" />
                             </select>
-                            <div class="clearleft">&nbsp;</div> 
+                            <br />
                         </div>
                         <div py:if="(dataRow[0] == RDT_TROVE)" style="${elementStyle}" class="${elementClasses}">
                             <label for="${elementName}" py:content="dataRow[2]" />
@@ -155,7 +155,7 @@
                                               'value': dataValue,
                                               'class': 'field-text-string',
                                               'disabled': elementDisabled}" />
-                            <div class="clearleft">&nbsp;</div>
+                            <br />
                         </div>
                     </div>
                     </fieldset>
@@ -196,11 +196,11 @@
                    fields text fields.
                 -->
                 <td>
-                    <label for="pdstages-${ordinal}-name" py:content="relstageName" />
+                    ${relstageName}
                     <input type="hidden" name="pdstages-${ordinal}-name" value="${relstageName}"/>
                 </td>
-                <td>
-                    <label for="pdstages-${ordinal}-labelSuffix" py:content="relstageLabelSuffix" />
+                <td colspan="3">
+                    ${relstageLabelSuffix}
                     <input type="hidden" name="pdstages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
                 </td>
             </tr>
@@ -264,7 +264,6 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Label Suffix</th>
-                                        <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
                                     </tr>

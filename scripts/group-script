@@ -63,10 +63,13 @@ fi
 
 ### Extra Steps
 
-# Re-add postgresql initscript so that it picks up a new chkconfig.d entry
+# Re-add postgresql initscripts so that it picks up a new chkconfig.d entry
 #   -- pre-4.1.0 - 2008-05-16
-if [ -f /etc/init.d/postgresql ]
-then
-    /sbin/chkconfig --del postgresql
-    /sbin/chkconfig --add postgresql
-fi
+for initscript in postgresql postgresql-rbuilder
+do
+    if [ -f /etc/init.d/$initscript ]
+    then
+        /sbin/chkconfig --del $initscript
+        /sbin/chkconfig --add $initscript
+    fi
+done

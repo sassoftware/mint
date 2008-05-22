@@ -2293,7 +2293,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             matches = cclient.getRepos().findTrove(searchPath,
                     (specialTroveName, specialTroveVersion, specialTroveFlavor),
                     cfg.flavor)
-            strSpec = '%s=%s[%s]' % matches[0]
+            if matches:
+                strSpec = '%s=%s[%s]' % matches[0]
+            else:
+                strSpec = ''
 
         except TroveNotFound:
             return ''
@@ -4456,13 +4459,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @requiresAuth
     @typeCheck(int)
-    def getStagesForProductVersion(self, versionId):
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        return [s.name for s in pd.getStages()]
-
-    @private
-    @requiresAuth
-    @typeCheck(int)
     def getProductDefinitionForVersion(self, versionId):
         pd = self._getProductDefinitionForVersionObj(versionId)
         sio = StringIO.StringIO()
@@ -4516,6 +4512,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         taskList = []
         pd = self._getProductDefinitionForVersionObj(versionId)
         builds = pd.getBuildsForStage(stageName)
+        stageLabel = pd.getLabelForStage(stageName)
         for build in builds:
             task = dict()
 
@@ -4538,7 +4535,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             task['buildFlavorName'] = buildFlavor
 
             # set the image group
-            task['imageGroup'] = build.getBuildImageGroup()
+            task['imageGroup'] = "%s=%s" % (build.getBuildImageGroup(),
+                    stageLabel)
 
             taskList.append(task)
 
