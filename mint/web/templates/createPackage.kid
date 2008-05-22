@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+import simplejson
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -23,7 +26,7 @@
             function PkgCreatorFileUploadForm()
             {
                 this.base = FileUploadForm;
-                this.base('${sessionHandle}', 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
+                this.base(${simplejson.dumps(sessionHandle)}, 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
             }
             PkgCreatorFileUploadForm.prototype = new FileUploadForm();
 
@@ -97,7 +100,7 @@
                   <tr>
                   <th>Upload File</th>
                   <td>
-                      ${fileupload_iframe("upload_iframe?sessionHandle=%s;fieldname=uploadfile" % sessionHandle, 'uploadfile')}
+                      ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % sessionHandle, 'uploadfile')}
                   </td>
                   </tr>
                   <!--<tr>

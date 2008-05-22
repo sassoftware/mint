@@ -8,6 +8,7 @@ testsuite.setup()
 
 import os
 
+import StringIO
 import conary.lib.util
 
 import fixtures
@@ -17,6 +18,8 @@ from mint.web import whizzyupload
 from mint.server import deriveBaseFunc
 import mint.mint_error
 from conary.conarycfg import ConaryConfiguration
+from factory_test.factorydatatest import basicXmlDef
+from pcreator.factorydata import FactoryDefinition
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
 
@@ -30,6 +33,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         if self.id:
             conary.lib.util.rmtree(packagecreator.getWorkingDir(self.cfg, self.id))
             self.id = None
+        fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
     @testsuite.context('more_cowbell')
@@ -69,6 +73,10 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
+    #
+    ## Tests for the package creator backend
+    #
+
     @fixtures.fixture('Full')
     def testCreatePackage(self, db, data):
         self._set_up_path()
@@ -90,21 +98,24 @@ content-type=text/plain
         i.write('a' * 350)
         i.close()
 
-        oldBackend = packagecreator.DirectLibraryBackend
-        def vacuum(s, *args, **kwargs):
-            self.assertEquals(args[0], {'user': 'someuser'})
-            self.assertEquals(args[1], 'asdfasdf')
-            assert isinstance(args[2], ConaryConfiguration)
-            self.assertEquals(args[3], ['package-creator.rb.rpath.com@factories:devel'])
-            self.assertEquals(len(args), 4)
+        def startSession(s, *args, **kwargs):
+            self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'yournamespace', 'hostname': 'foo.rpath.local2'})
+            self.assertEquals(len(args), 2)
             self.assertEquals(kwargs, {})
-            return 'real data'
+            return self.id
+
+        def vacuum(s, *args, **kwargs):
+            self.assertEquals(args[0], self.id)
+            self.assertEquals(len(args), 1)
+            self.assertEquals(kwargs, {})
+            return [('rpm', StringIO.StringIO(basicXmlDef), {}, {'a': 'b'})]
         self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', vacuum)
-        try:
-            factories = self.client.savePackage(projectId, self.id, '1', 'uploadfile', '')
-        finally:
-            packagecreator.DirectLibraryBackend = oldBackend
-        self.assertEquals("real data", factories)
+        self.mock(packagecreator.DirectLibraryBackend, 'startSession', startSession)
+
+        factories = self.client.getPackageFactories(projectId, self.id, 1, 'uploadfile')
+        self.assertEquals(factories[0][0], 'rpm')
+        assert isinstance(factories[0][1], FactoryDefinition)
+        self.assertEquals(factories[0][2], {'a': 'b'})
 
 
 if __name__ == '__main__':

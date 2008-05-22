@@ -26,25 +26,25 @@ def isSelected(field, value, prefilled):
     if prefilled is not None:
         v = prefilled
     else:
-        v = field.get('default', '')
+        v = field.default
     return str(v) == str(value)
 
 def drawField(factoryIndex, field, values, drawingMethods): 
     """
-    @param field: the field to draw (output from the package creator factories list)
-    @type field: dict
+    @param field: the field to draw
+    @type field: X{pcreator.factorydata.PresentationField}
     @param values: the prefilled values
     @type values: dict
     @param drawingMethods: a dictionary of available drawing methods.  Used keys include C{unconstrained}, C{small_enumeration}, C{medium_enumeration}, C{large_enumeration} for the different types of fields.  The appropriate method will be called and the output returned
     @type drawingMethods: dict of method references
     """
-    name = field['name']
+    name = field.name
     prefilled = values.get(name, None)
     fieldId= "%d_%s_id" % (factoryIndex, name)
-    constraints = field['constraints']
+    constraints = field.constraints
     if len(constraints) != 1:
         return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
-    if set(('regexp', 'length')).intersection(set([x[0] for x in field['constraints']])):
+    if set(('regexp', 'length')).intersection(set([x[0] for x in constraints])):
         return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
 
     #We only have one constraint, and it's an Enumeration, or a range
@@ -100,35 +100,28 @@ class DirectLibraryBackend(pcreator.backend.BaseBackend):
     def _getStorageDir(self):
         return self.cfg.tmpFileStorage
 
-    @pcreator.backend.public
-    def _startSession(self, prodDefTroveSpec, mincfg):
+    def _createSessionDir(self):
         # this class already is already based in a tmpdir, so we'll just
         # re-use the tmpname for the session name. this alleviates the need
         # to track pointless data
         storageDir = self._getStorageDir()
-        data = {'productDefinition' : prodDefTroveSpec,
-                'mincfg': mincfg.freeze()}
-        fileName = os.path.basename(storageDir).replace('rb-pc-upload-', '')
-        path = os.path.join(storageDir, fileName)
-        f = open(path, 'w')
-        f.write(simplejson.dumps(data))
-        f.close()
-        return fileName
+        return os.path.basename(storageDir).replace('rb-pc-upload-', '')
 
     @pcreator.backend.public
     def _uploadData(self, sessionHandle, filePath):
         self._storeSessionValue(sessionHandle, 'filePath', filePath)
 
     @pcreator.backend.public
-    def _makeSourceTrove(self, sessionHandle, factoryHandle, destLabel, data):
-        # XXX destLabel is probably bogus. shouldn't that come from prod def?
-        #convert the datadict to the XML document
-        cfgData = str(self._getSessionValue(sessionHandle, 'mincfg'))
-        mincfg = MinimalConaryConfiguration.thaw(cfgData)
+    def _makeSourceTrove(self, sessionHandle, factoryHandle, dataDict):
+        #Grab the XML factory definition from the PC
+        xmlstream = self._getFactoryDataDefinitionStream(sessionHandle, factoryHandle)
+        xmlstream.seek(0)
+        factoryDef = pcreator.factorydata.FactoryDefinition(fromStream = xmlstream)
+        factoryData = pcreator.factorydata.FactoryData(factoryDefinition = factoryDef)
 
-        castData = self.castFactoryData(sessionHandle, factoryHandle, data)
+        for k, v in dataDict.items():
+            factoryData.addField(k, v)
 
-        #Create the xml document
-        factoryData=pcreator.factorydata.dictToFactoryData(castData)
-
-        pcreator.backend.BaseBackend._makeSourceTrove(self, sessionHandle, factoryHandle, destLabel, factoryData)
+        #TODO: What exceptions should we catch?
+        pcreator.backend.BaseBackend._makeSourceTroveFromFactoryData(self,
+            sessionHandle, factoryHandle, factoryData)

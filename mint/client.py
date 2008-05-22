@@ -374,8 +374,9 @@ class MintClient:
         @rtype: tuple(tuple, str)
         """
         from pcreator import factorydata
-        factories =  self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
-        return [(x[0], x[1], factorydata.factoryDataDefToDict(x[1]), x[2]) for x in factories]
+        factories = self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
+        #Factories comes across as an xml file, need to parse that to something useable
+        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
 
     def savePackage(self, sessionHandle, factoryHandle, data, build=True):
         return self.server.savePackage(sessionHandle, factoryHandle, data, build)

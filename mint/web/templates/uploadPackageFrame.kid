@@ -8,7 +8,7 @@
   <head>
   </head>
   <body style="padding: 0px; margin: 0px">
-    <form enctype="multipart/form-data" method="POST" action="/cgi-bin/fileupload.cgi?sessionHandle=${sessionHandle};fieldname=${fieldname}">
+    <form enctype="multipart/form-data" method="POST" action="/cgi-bin/fileupload.cgi?uploadId=${uploadId};fieldname=${fieldname}">
         <input name="project" type="hidden" value="${project}"/>
         <input name="uploadfile" type="file"/>
         <input name="fieldname" type="hidden" value="${fieldname}"/>

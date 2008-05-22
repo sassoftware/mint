@@ -38,8 +38,8 @@ if "GATEWAY_INTERFACE" in os.environ:
     open('/tmp/tickler.log', 'a').write(os.getcwd() + '\n')
 
     #Read the mint configuration
-    # XXX this is wrong. we need a way to use the same config settings as
-    # the python code is using. without that code
+    # RBUILDER_CONFIG is not always going to be defined to the proper path, so look it up
+    # from the DOCUMENT_ROOT if available there.
     cfg = config.MintConfig()
     docRoot = os.environ.get('DOCUMENT_ROOT', '')
     cfgPath = os.path.join(docRoot, 'rbuilder.conf')

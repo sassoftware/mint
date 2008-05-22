@@ -709,8 +709,8 @@ class ProjectHandler(WebHandler):
                 versions = versions, versionId = -1)
 
     @writersOnly
-    def upload_iframe(self, auth, sessionHandle, fieldname):
-        return self._write('uploadPackageFrame', sessionHandle = sessionHandle,
+    def upload_iframe(self, auth, uploadId, fieldname):
+        return self._write('uploadPackageFrame', uploadId = uploadId,
                 fieldname = fieldname, project = self.project.hostname)
 
     @writersOnly
@@ -725,6 +725,7 @@ class ProjectHandler(WebHandler):
     @writersOnly
     @strFields(sessionHandle=None, factoryHandle=None)
     def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+        #It is assumed that the package creator service will validate the input
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return self._write('buildPackage', sessionHandle = sessionHandle,
                 message = None)

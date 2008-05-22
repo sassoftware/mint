@@ -23,6 +23,20 @@ var polldata = {
 
 var buildlength = '';
 
+function buildSuccess()
+{
+    hideElement('building');
+    showElement('complete');
+    showElement('start_over');
+}
+
+function buildFail()
+{
+    hideElement('building');
+    showElement('complete_fail');
+    showElement('resubmit_data');
+}
+
 function processResponse(res)
 {
     logDebug('[JSON] response: ', res.responseText);
@@ -44,11 +58,12 @@ function processResponse(res)
     {
         if (isFinished[1] == 2){
             updateStatusArea({status: STATUS_FINISHED, message: "Build finished, package committed."});
-            // TODO: Set up a "start over" form
+            buildSuccess();
         }
         else {
             // TODO: Print the failure
             updateStatusArea({status: STATUS_ERROR, message: "An error occurred while building: " + isFinished[1] + ": " + isFinished[2]});
+            buildFail();
         }
     }
 }
@@ -82,8 +97,11 @@ addLoadEvent(makeRequest);
             <!-- the poller -->
 
             <h3 style="color:#FF7001;">Step 3: Build package</h3>
-            <p>Your package is building.  Please be patient while this process completes.</p>
-
+            <p id="building">Your package is building.  Please be patient while this process completes.</p>
+            <p id="complete" style="display:none">Your package has built successfully</p>
+            <p id="complete_fail" style="display:none">Your package did not build successfully</p>
+            <p id="start_over" style="display:none"><a href="newPackage">Create a new package</a></p>
+            <p id="resubmit_data" style="display:none"><a href="getPackageFactories">Review package data</a></p>
             </div>
         </div>
     </body>

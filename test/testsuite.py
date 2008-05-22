@@ -62,17 +62,17 @@ def setup():
     global testPath
     global archivePath
 
-    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary-2.0'))
-    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test-2.0')))
+    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary'))
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test')))
     mcpPath         = os.getenv('MCP_PATH',         os.path.realpath('../../mcp'))
     mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.realpath(os.path.join(mcpPath, 'test')))
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath('../../jobslave'))
     mintPath        = os.getenv('MINT_PATH',        os.path.realpath('..'))
     mintTestPath    = os.getenv('MINT_TEST_PATH',   os.path.realpath('.'))
-    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa'))
-    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test'))
+    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa-2.1'))
+    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test-2.1'))
     raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
-    proddefPath     = os.getenv('PRODDEF_PATH',     os.path.realpath('../../proddef'))
+    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../product-definition'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
 
     #Package creator
@@ -89,7 +89,7 @@ def setup():
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
         JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
-        PRODDEF_PATH=proddefPath,
+        PRODUCT_DEFINITION_PATH=proddefPath,
         COVERAGE_PATH=coveragePath, 
         PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
         CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,

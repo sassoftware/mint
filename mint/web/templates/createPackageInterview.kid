@@ -7,7 +7,7 @@ from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
 from mint.packagecreator import drawField, isSelected
-lang = '';
+lang = None;
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -108,7 +108,7 @@ lang = '';
                 <div class="formgroup">
                   <label for="factoryHandle">Package Type</label>
                   <select py:if="len(factories) > 1" name="factoryHandle" id="factoryHandle" onchange="javascript:changeFactory()">
-                    <option py:for="(factoryHandle, datastream, parseddata, values) in factories" value="${factoryHandle}">${parseddata['metadata']['displayName']}</option>
+                    <option py:for="(factoryHandle, factoryDef, values) in factories" value="${factoryHandle}">${str(factoryDef.getDisplayName())}</option>
                   </select>
                   <p py:if="len(factories) == 1" py:strip="True">
                       <input id="factoryHandle" type="text" name="factoryHandle" value="factories[0][0]" disabled="disabled"/>
@@ -119,26 +119,26 @@ lang = '';
                   <div class="clearleft">&nbsp;</div>
                   <!-- The factory interview -->
         <div py:def="drawLabel(fieldId, field)" py:strip="True">
-          <label for="${fieldId}" id="${fieldId}_label">${field['descriptions'][lang]}</label>
+          <label for="${fieldId}" id="${fieldId}_label">${field.descriptions[lang]}</label>
         </div>
         <div py:def="drawTextField(fieldId, field, possibles, prefilled)" py:strip="True">
 ${drawLabel(fieldId, field)}
           <?python
-              value = (not prefilled is None) and prefilled or str(field.get('default', ''))
+              value = (not prefilled is None) and prefilled or str(field.default)
           ?>
           <div py:if="'\n' not in value" py:strip="True">
-          <input type="text" id="${fieldId}" name="${field['name']}"
+          <input type="text" id="${fieldId}" name="${field.name}"
               value="${value}"/>
           <div style="cursor: pointer;" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
             <img id="${fieldId}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />
           </div>
           </div>
-          <textarea py:if="'\n' in value" id="${fieldId}" name="${field['name']}" rows="5">${value}</textarea>
+          <textarea py:if="'\n' in value" id="${fieldId}" name="${field.name}" rows="5">${value}</textarea>
         </div>
 
         <div py:def="drawSelectField(fieldId, field, possibles, prefilled)" py:strip="True">
 ${drawLabel(fieldId, field)}
-          <select name="${field['name']}" id="${fieldId}" py:attrs="{'multiple': field['multiple'] and 'multiple' or None}">
+          <select name="${field.name}" id="${fieldId}" py:attrs="{'multiple': field.multiple and 'multiple' or None}">
             <option py:for="val in sorted(possibles)" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled) and 'selected' or None}" py:content="val"/>
           </select>
         </div>
@@ -149,7 +149,7 @@ ${drawLabel(fieldId, field)}
 ${drawLabel(fieldId, field)}
           <div class="formgroupItems">
           <div py:for="val in sorted(possibles)">
-            <input id="${fieldId}_${val}" name="${field['name']}" class="check fieldgroup_check" py:attrs="{'type': field['multiple'] and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled) and 'checked' or None}" value="${val}"/>
+            <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" py:attrs="{'type': field.multiple and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled) and 'checked' or None}" value="${val}"/>
             <label class="check_label" for="${fieldId}_${val}">${val}</label>
           </div>
           </div>
@@ -166,8 +166,8 @@ ${drawLabel(fieldId, field)}
             </form>
 
             <div style="display: none" id="factory_dumping_ground">
-        <div py:for="(factoryIndex, (factoryHandle, datastream, parseddata, values)) in enumerate(factories)" id="${factoryHandle}">
-          <div py:for="field in parseddata['dataFields']" py:strip="True">
+        <div py:for="(factoryIndex, (factoryHandle, factoryDef, values)) in enumerate(factories)" id="${factoryHandle}">
+          <div py:for="field in factoryDef.getDataFields()" py:strip="True">
 ${drawField(factoryIndex, field, values, dict(unconstrained = drawTextField, medium_enumeration=drawSelectField, small_enumeration=drawCheckBoxes, large_enumeration=drawTextField))}
             <div class="clearleft">&nbsp;</div>
           </div>

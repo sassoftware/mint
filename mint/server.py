@@ -4552,17 +4552,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
     @requiresAuth
-    def getPackageFactories(self, projectId, sessionHandle, versionId,
-            upload_url):
+    def getPackageFactories(self, projectId, sessionHandle, versionId, upload_url):
         from mint.web import whizzyupload
         import packagecreator
         from conary import versions as conaryVer
-        # TODO: Grab the factories label from somewhere
-        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
-        factGroup = "group-factories-package-creator=%s" % factLabel
-
-        # Check to see if there's a file
-        ## Connect up to the tmpdir
 
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         fileuploader = whizzyupload.fileuploader(path, 'uploadfile')
@@ -4572,27 +4565,33 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise RuntimeError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
+        #Get the version object
+        version = projects.ProductVersions(self, versionId)
+
         #Register the file
         pc = packagecreator.DirectLibraryBackend(path)
         project = projects.Project(self, projectId)
         cfg = project.getConaryConfig()
-        searchPath = ['group-dist=conary.rpath.com@rpl:1', factGroup, ]
-        cfg.searchPath = searchPath
-        cfg.buildLabel = versions.Label(project.getLabel())
+        cfg['name'] = self.auth.username
+        cfg['contact'] = self.auth.fullName or ''
+        #package creator service should get the searchpath from the product definition
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
 
-        pc = packagecreator.DirectLibraryBackend(path)
         # we're using the session handle for both the dirname and the filename
         # of this instance, so we don't need the return value
-        pc.startSession('XXX put NVF to proddef here it comes from versionId', mincfg)
+        pc.startSession(dict(hostname=project.getFQDN(),
+            shortname=project.shortname, namespace=self.cfg.namespace,
+            version=version.name), mincfg)
 
+        # Start the PCS session, and "upload" the data
         pc.uploadData(sessionHandle, info['tempfile'])
         pc.writeMetaFile(sessionHandle, info['filename'], info['content-type'])
-        # Now set up the confirmation interview
 
-        factories = pc.getCandidateBuildFactories(sessionHandle, [factGroup])
+        # Now set up the confirmation interview
+        factories = pc.getCandidateBuildFactories(sessionHandle)
         [x[1].seek(0) for x in factories]
-        return [(x[0], x[1].read(), x[3]) for x in factories]
+        ret = [(x[0],x[1].read(),x[3]) for x in factories]
+        return ret
 
     @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
     @requiresAuth
@@ -4602,12 +4601,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         pc = packagecreator.DirectLibraryBackend(path)
 
-        # TODO: Get the target label
-        destLabel = 'fakeproduct.rdu.rpath.com@jtate:fakeproduct-1-devel'
-        factLabel = conaryVer.Label('package-creator.rb.rpath.com@factories:devel')
-        factGroup = "group-factories-package-creator=%s" % factLabel
-        searchPath = [conaryVer.Label('conary.rpath.com@rpl:1'), factLabel, conaryVer.Label(destLabel)]
-        srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, destLabel, data)
+        srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, data)
         if build:
             pc.build(sessionHandle, commit=True)
 

@@ -24,9 +24,6 @@ _envName = 'PACKAGE_CREATOR_SERVICE_PATH'
 if _envName in os.environ:
     from pcreator import backend as pcreatorBackend
     from pcreator import factorydata as pcreatorFactoryData
-    _havePcreatorSchemas = True
-else:
-    _havePcreatorSchemas = False
 
 class TestPackageCreator(unittest.TestCase):
     @testsuite.context('more_cowbell')
@@ -64,20 +61,24 @@ class TestPackageCreator(unittest.TestCase):
         self.assertEquals(cfg2.user, cfg.user)
         self.assertEquals(cfg2.signatureKey, None)
 
-class XmlRpcTest(fixtures.FixturedUnitTest):
+class XmlRpcTest(mint_rephelp.WebRepositoryHelper, packagecreatortest.BaseTest):
     def setUp(self):
-        fixtures.FixturedUnitTest.setUp(self)
         factdatapath = os.environ.get(_envName)
         if not factdatapath:
             raise testsuite.SkipTestException( \
                     "Please set PACKAGE_CREATOR_SERVICE_PATH")
-        self._savedSchemaDir = pcreatorFactoryData.defaultSchemaDir
-        pcreatorFactoryData.defaultSchemaDir = \
-                os.path.join(factdatapath, 'data')
 
-    def tearDown(self):
-        pcreatorFactoryData.defaultSchemaDir = self._savedSchemaDir
-
+#        #Set up two products
+#        self.client, userID = self.quickMintUser('testuser', 'testpass')
+#
+#        self.prodId1 = self.newProject(self.client, 'Factories', 'factories',
+#            mint_rephelp.MINT_PROJECT_DOMAIN)
+#        self.prodId1 = self.newProject(self.client, 'Product', 'product',
+#            mint_rephelp.MINT_PROJECT_DOMAIN)
+#
+#        #Add factories and a factory group to the factories repository
+#
+#        #Add a version to the product repository
 
     @testsuite.context('more_cowbell')
     @fixtures.fixture('Full')
@@ -104,20 +105,13 @@ class XmlRpcTest(fixtures.FixturedUnitTest):
             util.mkdirChain(os.path.dirname(uploadfile))
             open(uploadfile, 'w').write('\n'.join(('tempfile=%s' % tmpFile,
                     'filename=foo.rpm', 'content-type=/xmime-trash')))
-            factories = client.getPackageFactories(projectId, sessionHandle, 0, '', '')
-            data = {'license': 'BSD',
-                    'name': 'foo',
-                    'version': '0.1',
-                    'summary': '',
-                    'description': ''}
+            factories = client.getPackageFactories(projectId, sessionHandle, 1, '')
             factoryHandle = factories[0][0]
-            client.savePackage(sessionHandle, factoryHandle, data)
+            factoryPrefilledData = factories[0][2]
+            client.savePackage(sessionHandle, factoryHandle, factoryPrefilledData)
         finally:
             util.rmtree(tmpFile, ignore_errors = True)
 
         
-        import epdb; epdb.st()
-
-
 if __name__ == '__main__':
     testsuite.main()

@@ -70,7 +70,14 @@ from mint.web.templatesupport import projectText
                         </li>
                     </ul>
                 </div>
-
+                <div py:if="isWriter" py:strip="True">
+                    <h2>Add ${projectText().title()} Contents</h2>
+                    <ul>
+                        <li>Create a <a href="newBuild">new Image</a></li>
+                        <li>Create a <a href="newRelease">new Release</a></li>
+                        <li>Create a <a href="newPackage">new Package</a></li>
+                    </ul>
+                </div>
                 <div py:if="auth.admin" py:strip="True">
                     <h2>Administrative Options</h2>
 

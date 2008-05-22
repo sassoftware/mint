@@ -275,7 +275,7 @@ class TestWhizzyCGI(unittest.TestCase):
         sin = multipart_template % data
         env = dict(multipart_environ)
         env['CONTENT_LENGTH'] = str(len(sin))
-        env['QUERY_STRING'] = 'id=%s;fieldname=uploadfile' % self.id
+        env['QUERY_STRING'] = 'uploadId=%s;fieldname=uploadfile' % self.id
         headers = multipart_headers_template % len(sin)
 
         stdin = StringIO(headers + sin)
@@ -292,13 +292,13 @@ class TestWhizzyCGI(unittest.TestCase):
         env['QUERY_STRING'] = ''
 
         whizzyupload.handle_cgi_request(stdin, stdout, self.basedir, self.prefix, env)
-        self.assertEquals(stdout.getvalue(), 'Content-Type: text/html\nStatus: 400 Bad request\n\nInvalid request, id and fieldname must be specified in the query string\n')
+        self.assertEquals(stdout.getvalue(), 'Content-Type: text/html\nStatus: 400 Bad request\n\nInvalid request, uploadId and fieldname must be specified in the query string\n')
 
-        env['QUERY_STRING'] = 'id=%s' % self.id
+        env['QUERY_STRING'] = 'uploadId=%s' % self.id
         stdin.seek(0)
         stdout.seek(0)
         whizzyupload.handle_cgi_request(stdin, stdout, self.basedir, self.prefix, env)
-        self.assertEquals(stdout.getvalue(), 'Content-Type: text/html\nStatus: 400 Bad request\n\nInvalid request, id and fieldname must be specified in the query string\n')
+        self.assertEquals(stdout.getvalue(), 'Content-Type: text/html\nStatus: 400 Bad request\n\nInvalid request, uploadId and fieldname must be specified in the query string\n')
 
     def testCgiHandler(self):
         filedata = "line\n" * 40
