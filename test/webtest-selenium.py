@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -86,8 +86,8 @@ class WebPageTest(SeleniumHelper):
         self.createTestGroup(client)
 
         self.clickAndWait("link=Test Project")
-        self.clickAndWait("link=Manage Builds")
-        self.clickAndWait("link=Create a new build")
+        self.clickAndWait("link=Manage Images")
+        self.clickAndWait("link=Create a new image")
 
         # Create Build button should be disabled
         self.failUnless(not self.s.is_editable("submitButton"))
@@ -108,7 +108,7 @@ class WebPageTest(SeleniumHelper):
         self.failUnless("Build: Test Project" in self.s.get_body_text())
 
 
-    def testDeleteMultipleBuilds(self):
+    def testDeleteMultipleImages(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
@@ -155,7 +155,7 @@ class WebPageTest(SeleniumHelper):
         self.failUnless("Edit my account" in self.s.get_body_text())
 
         self.clickAndWait("link=Foo")
-        self.clickAndWait("link=Manage Builds")
+        self.clickAndWait("link=Manage Images")
 
         self.failUnless("Build 1" in self.s.get_body_text())
         self.failUnless("Build 2" in self.s.get_body_text())
@@ -163,7 +163,7 @@ class WebPageTest(SeleniumHelper):
 
         self.clickAndWait("deleteBuildsSubmit")
 
-        self.failUnless("No builds specified" in self.s.get_body_text())
+        self.failUnless("No images specified" in self.s.get_body_text())
 
         self.s.check("name=buildIdsToDelete value=%d" % build.id)
         self.s.check("name=buildIdsToDelete value=%d" % build3.id)
@@ -175,7 +175,7 @@ class WebPageTest(SeleniumHelper):
 
         self.clickAndWait("yes")
 
-        self.failUnless("Builds deleted" in self.s.get_body_text())
+        self.failUnless("Images deleted" in self.s.get_body_text())
         self.failIf("Build 1" in self.s.get_body_text())
         self.failUnless("Build 2" in self.s.get_body_text())
         self.failIf("Build 3" in self.s.get_body_text())
@@ -190,7 +190,7 @@ class WebPageTest(SeleniumHelper):
         self.clickAndWait("yes")
 
         self.failIf("Build 3" in self.s.get_body_text())
-        self.failUnless("no builds" in self.s.get_body_text())
+        self.failUnless("no images" in self.s.get_body_text())
 
 if __name__ == "__main__":
     testsuite.main()

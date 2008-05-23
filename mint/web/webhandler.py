@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -23,6 +23,17 @@ from mint import users
 from mint.session import SqlSession
 from mint.web.cache import pageCache, reqHash
 
+
+class HttpError(Exception):
+    def __str__(self):
+        return "HTTP error %d" % self.code
+class HttpOK(HttpError):                code = 200
+class HttpPartialContent(HttpError):    code = 206
+class HttpMoved(HttpError):             code = 301
+class HttpMovedTemporarily(HttpError):  code = 302
+class HttpForbidden(HttpError):         code = 403
+class HttpNotFound(HttpError):          code = 404
+class HttpMethodNotAllowed(HttpError):  code = 405
 
 class WebHandler(object):
     """Mixin class for various helpful web methods."""
@@ -323,29 +334,3 @@ def make_i18n_filter(localeDir, locale = 'en'):
             yield (ev, item)
 
     return i18n_filter
-
-
-class HttpError(Exception): #pragma: no cover
-    def __str__(self):
-        return "HTTP error %d" % self.code
-
-class HttpNotFound(HttpError): #pragma: no cover
-    code = 404
-
-class HttpForbidden(HttpError): #pragma: no cover
-    code = 403
-
-class HttpMoved(HttpError): #pragma: no cover
-    code = 301
-
-class HttpMovedTemporarily(HttpError): #pragma: no cover
-    code = 302
-
-class HttpOK(HttpError): #pragma: no cover
-    code = 200
-
-class HttpPartialContent(HttpError): #pragma: no cover
-    code = 206
-
-class HttpMethodNotAllowed(HttpError): #pragma: no cover
-    code = 405

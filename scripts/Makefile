@@ -9,10 +9,10 @@ static_files =				\
 	check-repository		\
 	deleteproject			\
 	ec2-terminator			\
+	group-script			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
-	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
 	rbuilder-database		\

@@ -1,0 +1,2 @@
+0 0 * * * postgres /usr/bin/vacuumdb -azq -U postgres -p 5439 >& /dev/null
+

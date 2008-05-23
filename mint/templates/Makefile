@@ -5,6 +5,8 @@
 #
 
 kid_files = \
+	dummyProddefRecipe.kid	\
+	groupTemplate.kid	\
 	joinRequest.kid		\
 	registerNewUser.kid	\
 	validateNewEmail.kid

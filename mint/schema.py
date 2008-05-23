@@ -17,7 +17,7 @@ from conary.dbstore import migration, sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(44, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 3)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -131,6 +131,7 @@ def _createProjects(db):
             creatorId       INT,
             name            varchar(128) UNIQUE,
             hostname        varchar(128) UNIQUE,
+            shortname       varchar(128),
             domainname      varchar(128) DEFAULT '' NOT NULL,
             projecturl      varchar(128) DEFAULT '' NOT NULL,
             description     text,
@@ -141,11 +142,14 @@ def _createProjects(db):
             timeCreated     INT,
             timeModified    INT DEFAULT 0,
             commitEmail     varchar(128) DEFAULT '',
+            prodtype        varchar(128) DEFAULT '',
+            version         varchar(128) DEFAULT '',
             backupExternal  INT DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True
     db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 
@@ -234,7 +238,9 @@ def _createBuilds(db):
             timeUpdated         DOUBLE,
             updatedBy           INTEGER,
             timePublished       DOUBLE,
-            publishedBy         INTEGER
+            publishedBy         INTEGER,
+            shouldMirror        INTEGER NOT NULL DEFAULT 0,
+            timeMirrored        INTEGER
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         commit = True
@@ -561,6 +567,20 @@ def _createMirrorInfo(db):
     db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
             'targetProjectId')
 
+    if 'UpdateServices' not in db.tables:
+        cu.execute("""
+        CREATE TABLE UpdateServices (
+            updateServiceId         %(PRIMARYKEY)s,
+            hostname                VARCHAR(767) NOT NULL,
+            description             TEXT,
+            mirrorUser              VARCHAR(254) NOT NULL,
+            mirrorPassword          VARCHAR(254) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['UpdateServices'] = []
+        commit = True
+    db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
+            'hostname', unique = True)
+
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
             outboundMirrorId %(PRIMARYKEY)s,
@@ -571,6 +591,7 @@ def _createMirrorInfo(db):
             matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
             mirrorOrder      INT DEFAULT 0,
             fullSync         INT NOT NULL DEFAULT 0,
+            useReleases      INTEGER NOT NULL DEFAULT 0,
             CONSTRAINT OutboundMirrors_sourceProjectId_fk
                 FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
                 ON DELETE CASCADE ON UPDATE CASCADE
@@ -580,34 +601,24 @@ def _createMirrorInfo(db):
     db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
-    if 'OutboundMirrorTargets' not in db.tables:
+    if 'OutboundMirrorsUpdateServices' not in db.tables:
         cu.execute("""
-        CREATE TABLE OutboundMirrorTargets (
-            outboundMirrorTargetsId %(PRIMARYKEY)s,
+        CREATE TABLE OutboundMirrorsUpdateServices (
             outboundMirrorId        INT NOT NULL,
-            url                     VARCHAR(767) NOT NULL,
-            username                VARCHAR(254) NOT NULL,
-            password                VARCHAR(254) NOT NULL,
-            CONSTRAINT OutboundMirrorTargets_omi_fk
+            updateServiceId         INT NOT NULL,
+            CONSTRAINT omt_omi_fk
                 FOREIGN KEY (outboundMirrorId)
                     REFERENCES OutboundMirrors(outboundMirrorId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+                ON DELETE CASCADE,
+            CONSTRAINT omt_usi_fk
+                FOREIGN KEY (updateServiceId)
+                    REFERENCES UpdateServices(updateServiceId)
+                ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['OutboundMirrorTargets'] = []
+        db.tables['OutboundMirrorsUpdateServices'] = []
         commit = True
-    db.createIndex('OutboundMirrorTargets',
-            'outboundMirrorTargets_outboundMirrorIdIdx', 'outboundMirrorId')
-
-    if 'rAPAPasswords' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rAPAPasswords (
-            host            VARCHAR(255),
-            user            VARCHAR(255),
-            password        VARCHAR(255),
-            role            VARCHAR(255)
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['rAPAPasswords'] = []
-        commit = True
+    db.createIndex('OutboundMirrorsUpdateServices', 'omt_omi_usi_uq',
+            'outboundMirrorId, updateServiceId', unique = True)
 
     if commit:
         db.commit()
@@ -788,7 +799,31 @@ def _createSessions(db):
 
     if commit:
         db.commit()
-        db.loadSchema
+        db.loadSchema()
+
+def _createProductVersions(db):
+    cu = db.cursor()
+    commit = False
+
+    if 'ProductVersions' not in db.tables:
+        cu.execute("""
+            CREATE TABLE ProductVersions (
+                productVersionId    %(PRIMARYKEY)s,
+                projectId           INT NOT NULL,
+                name                VARCHAR(16),
+                description         TEXT,
+            CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
+                REFERENCES Projects(projectId) ON DELETE CASCADE
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['ProductVersions'] = []
+        commit = True
+    db.createIndex('ProductVersions', 'ProductVersionsProjects',
+            'projectId,name', unique = True)
+
+    if commit:
+        db.commit()
+        db.loadSchema()
+
 
 # create the (permanent) server repository schema
 def createSchema(db):
@@ -809,6 +844,7 @@ def createSchema(db):
     _createFrontPageStats(db)
     _createEC2Data(db)
     _createSessions(db)
+    _createProductVersions(db)
 
 #############################################################################
 # The following code was adapted from Conary's Database Migration schema
@@ -825,25 +861,12 @@ def checkVersion(db):
 
     # test for no version
     if version == 0:
-        # TODO: Better message
-        raise sqlerrors.SchemaVersionError("""
-        Your database schema is not initalized or it is too old.  Please
-        run the standalone server with the --migrate argument to
-        upgrade/initialize the database schema for the Conary Repository.
+        raise sqlerrors.SchemaVersionError('Uninitialized database', version)
 
-        Current schema version is %s; Required schema version is %s.
-        """ % (version, RBUILDER_DB_VERSION), version)
+    # the major and minor versions must match
+    if version != RBUILDER_DB_VERSION:
+        raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
-    # the major versions must match
-    if version.major != RBUILDER_DB_VERSION.major:
-        # XXX better message
-        raise sqlerrors.SchemaVersionError("""
-        This code schema version does not match the Conary repository
-        database schema that you are running.
-
-        Current schema version is %s; Required schema version is %s.
-        """ % (version, RBUILDER_DB_VERSION), version)
-    # the minor numbers are considered compatible up and down across a major
     return version
 
 # run through the schema creation and migration (if required)
@@ -866,20 +889,23 @@ def loadSchema(db, cfg=None, should_migrate=False):
         db.loadSchema()
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
+
     # test if  the repo schema is newer than what we understand
     # (by major schema number)
-    if version.major > RBUILDER_DB_VERSION.major:
+    if version > RBUILDER_DB_VERSION:
         raise sqlerrors.SchemaVersionError("""
         The rBuilder database schema version is newer and incompatible with
         this code base. You need to update rBuilder to a version
         that understands schema %s""" % version, version)
+
     # now we need to perform a schema migration
-    if version.major < RBUILDER_DB_VERSION.major and not should_migrate:
+    if version < RBUILDER_DB_VERSION and not should_migrate:
         raise sqlerrors.SchemaVersionError("""
-        The rBuilder database schema needs to have a major schema update
-        performed.  Please run rbuilder-database with the --migrate option to
-        perform this upgrade.
+        The rBuilder database schema needs to have a schema update
+        performed.  Please run rbuilder-database with the --migrate
+        option to perform this upgrade.
         """, version, RBUILDER_DB_VERSION)
+
     # now the version.major is smaller than RBUILDER_DB_VERSION.major - but is it too small?
     # we only support migrations from schema 37 on
     if version < 37:
@@ -888,13 +914,15 @@ def loadSchema(db, cfg=None, should_migrate=False):
         than version 3.1.4. Schema migrations from this database schema
         version are longer supported. Please contact rPath for help 
         converting the rBuilder database to a supported version.""", version)
+
     # if we reach here, a schema migration is needed/requested
     version = migrate.migrateSchema(db, cfg)
     db.loadSchema()
+
     # run through the schema creation to create any missing objects
     logMe(2, "checking for/initializing missing schema elements...")
     createSchema(db)
-    if version > 0 and version.major != RBUILDER_DB_VERSION.major:
+    if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
         raise sqlerrors.SchemaVersionError("""
         Schema migration process has failed to bring the database
@@ -903,6 +931,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
 
         Current schema version is %s; Required schema version is %s.
         """ % (version, RBUILDER_DB_VERSION))
+
     db.loadSchema()
     return RBUILDER_DB_VERSION
 

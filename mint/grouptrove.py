@@ -9,20 +9,12 @@ import re
 import time
 
 from mint import jobs
-from mint import mint_error
+from mint.mint_error import *
 
 from conary import versions
 from conary.deps import deps
 
 PROTOCOL_VERSION = 1
-
-class GroupTroveNameError(mint_error.MintError):
-    def __str__(self):
-        return "Invalid name for group: letters, numbers, hyphens allowed."
-
-class GroupTroveVersionError(mint_error.MintError):
-    def __str__(self):
-        return "Invalid version for group: letters, numbers, periods allowed."
 
 ############ Server Side ##############
 
@@ -175,7 +167,7 @@ class GroupTroveItemsTable(database.KeyedTable):
                             AND groupTroveId=?""",
             trvName, trvVersion, trvFlavor, groupTroveId)
         if cu.fetchone()[0] > 0:
-            raise database.DuplicateItem
+            raise DuplicateItem
 
         cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
 
@@ -349,7 +341,7 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
         cu = self.db.cursor()
         for comp in components:
             if comp not in KNOWN_COMPONENTS:
-                raise mint_error.ParameterError( \
+                raise ParameterError( \
                     "Unkown component specified: %s" % comp)
 
             cu.execute("""SELECT componentId

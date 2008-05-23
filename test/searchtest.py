@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 import time
 
@@ -150,13 +150,17 @@ class BrowseTest(fixtures.FixturedUnitTest):
         client3, userId3 = self.quickMintUser("testuser3", "testpass")
         client4, userId4 = self.quickMintUser("testuser4", "testpass")
 
-        barId = client.newProject("Bar", "bar", "rpath.org")
+        barId = client.newProject("Bar", "bar", "rpath.org", 
+                        shortname="bar", version="1.0", prodtype="Component")
         self._changeTimestamps(barId, 1124540046, 1124540046)
-        bazId = client.newProject("Baz", "baz", "rpath.org")
+        bazId = client.newProject("Baz", "baz", "rpath.org",
+                        shortname="baz", version="1.0", prodtype="Component")
         self._changeTimestamps(bazId, 1126540046, 1126640046)
-        balId = client.newProject("Bal", "bal", "rpath.org")
+        balId = client.newProject("Bal", "bal", "rpath.org",
+                        shortname="bal", version="1.0", prodtype="Component")
         self._changeTimestamps(balId, 1128540003, 1129540003)
-        bizId = client.newProject("Biz", "biz", "rpath.org")
+        bizId = client.newProject("Biz", "biz", "rpath.org",
+                        shortname="biz", version="1.0", prodtype="Component")
         self._changeTimestamps(bizId, 1128540003, 1129540003)
 
         self.failUnlessEqual(client.getNewProjects(10, True),
@@ -175,13 +179,17 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self.db = db
         client, userId = self.getClient('test'), data['test']
 
-        fooId = client.newProject("Foo Project", "foo", "rpath.org")
+        fooId = client.newProject("Foo Project", "foo", "rpath.org",
+                        shortname="foo", version="1.0", prodtype="Component")
         self._changeTimestamps(fooId, 1128540046, 1128540046)
-        booId = client.newProject("Boo Project", "boo", "rpath.org")
+        booId = client.newProject("Boo Project", "boo", "rpath.org",
+                        shortname="boo", version="1.0", prodtype="Component")
         self._changeTimestamps(booId, 1124540046, 1124540046)
-        snoozeId = client.newProject("Snooze Project", "snooze", "rpath.org")
+        snoozeId = client.newProject("Snooze Project", "snooze", "rpath.org",
+                        shortname="snooze", version="1.0", prodtype="Component")
         self._changeTimestamps(snoozeId, 1126540046, 1126640046)
-        snoofId = client.newProject("Snoof Project", "snoof", "rpath.org")
+        snoofId = client.newProject("Snoof Project", "snoof", "rpath.org",
+                        shortname="snoof", version="1.0", prodtype="Component")
         self._changeTimestamps(snoofId, 1128540003, 1129540003)
 
         if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046, 4, 0]], 1):
@@ -199,14 +207,19 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self.db = db
         client, userId = self.getClient('test'), data['test']
 
-        zId = client.newProject("Zarumba Project", "zarumba", "rpath.org")
+        zId = client.newProject("Zarumba Project", "zarumba", "rpath.org",
+                        shortname="zarumba", version="1.0", 
+                        prodtype="Component")
         self._changeTimestamps(zId, 1128540046, 1128540046)
-        bId = client.newProject("Banjo Project", "banjo", "rpath.org")
+        bId = client.newProject("Banjo Project", "banjo", "rpath.org",
+                        shortname="banjo", version="1.0", prodtype="Component")
         self._changeTimestamps(bId, 1124540046, 1124540046)
-        aId = client.newProject("Animal Project", "animal", "rpath.org")
+        aId = client.newProject("Animal Project", "animal", "rpath.org",
+                        shortname="animal", version="1.0", prodtype="Component")
         self._changeTimestamps(aId, 1124540046, 1124540046)
 
-        rId = client.newProject("rPath Project", "rpath1", "rpath.org")
+        rId = client.newProject("rPath Project", "rpath1", "rpath.org",
+                        shortname="rpath1", version="1.0", prodtype="Component")
         self._changeTimestamps(rId, 1124540046, 1124540046)
 
         projectList, len= client.getProjectSearchResults('Project', byPopularity = False)
@@ -233,7 +246,8 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self.db = db
         client, userId = self.getClient('test'), data['test']
 
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        projectId = client.newProject("Foo", "foo", "rpath.org",
+                        shortname="foo", version="1.0", prodtype="Component")
         self._fakePackage(projectId, "brokenPackage")
         self._fakePackage(projectId, "foomatic")
         self._fakePackage(projectId, "barmatic")
@@ -269,7 +283,8 @@ class BrowseTest(fixtures.FixturedUnitTest):
         pubRelease.publish()
 
         # create another project
-        projectId = client.newProject("Bar", "bar", "rpath.org")
+        projectId = client.newProject("Bar", "bar", "rpath.org",
+                        shortname="bar", version="1.0", prodtype="Component")
         rel2 = client.newPublishedRelease(projectId)
         build = client.newBuild(projectId, "Test Published Build")
         build.setTrove("group-dist", "localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance")

@@ -79,7 +79,7 @@ else:
         </a>
     </span>
 
-    <tr py:def="referencesLink(title, n, v)" py:if="auth.authorized and cfg.allowTroveRefSearch">
+    <tr py:def="referencesLink(title, n, v)" py:if="auth.authorized and cfg.allowTroveRefSearch and not cfg.rBuilderOnline">
         <th>Find references</th>
         <td>
             <a href="http://${SITE}findRefs?trvName=${quote(n)};trvVersion=${quote(str(v))}">
@@ -197,8 +197,7 @@ else:
 <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/event/event-min.js" ></script>
 <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/yui/build/treeview/assets/tree.css"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/treeview/treeview-min.js" ></script>
-    <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}" />
-        
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/repobrowser.js?v=${cacheFakeoutVersion}"></script>
 
     </head>
     <body>

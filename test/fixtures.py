@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
 import copy
 import inspect
-import unittest
+import testhelp
 import tempfile
 import mysqlharness
 import pgsqlharness
@@ -15,12 +15,14 @@ import os
 import sys
 import time
 import pwd
+import StringIO
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 
 from mint import shimclient
 from mint import config
 from mint import buildtypes
+from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -28,10 +30,13 @@ from mint import userlevels
 from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
+from conary.dbstore import sqlerrors
 
 import mcp_helper
 from mcp import queue
 from mcp_helper import MCPTestMixin
+
+from rpath_common.proddef import api1 as proddef
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -123,11 +128,19 @@ class FixtureCache(object):
         email = "%s@example.com" % username
         contactInfo = "%s at example.com" % username
 
+        cu = db.cursor()
+
+        # create the public group
+        try:
+            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
+            db.commit()
+        except sqlerrors.ColumnNotUnique:
+            db.rollback()
+
         userId = client.registerNewUser(username, password, fullname,
             email, contactInfo, "", active=True)
 
         if isAdmin:
-            cu = db.cursor()
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
@@ -165,7 +178,6 @@ class FixtureCache(object):
                 - C{admin} - the id of the user "admin"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         testId = self.createUser(cfg, db, "test")
         adminId = self.createUser(cfg, db, "admin", isAdmin=True)
@@ -186,6 +198,9 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
+            - Two Versions
+                - 'FooV1', 'FooV1Description'
+                - 'FooV2', 'FooV2Description'
             - Two published release objects
                 - One publishd, or published, containing one build
                 - One not publishd, containing another build
@@ -208,7 +223,6 @@ class FixtureCache(object):
 
         # connect to the database and open a MintServer instance
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         # create the users
         adminId = self.createUser(cfg, db, username = "admin", isAdmin = True)
@@ -219,7 +233,10 @@ class FixtureCache(object):
 
         # create the project
         client = shimclient.ShimMintClient(cfg, ("owner", "ownerpass"))
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+        hostname = shortname = "foo"
+        projectId = client.newProject("Foo", hostname, MINT_PROJECT_DOMAIN,
+                                      shortname=shortname, 
+                                      version="1.0", prodtype="Component")
         project = client.getProject(projectId)
 
         # add the developer
@@ -270,6 +287,24 @@ class FixtureCache(object):
         anotherBuild.setFiles([["file", "file title 1"]])
         stockBuildFlavor(db, anotherBuild.id, "x86")
 
+        # create an imageless group trove build and release
+        imagelessBuild = client.newBuild(projectId, "Test Imageless Build")
+        imagelessBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        imagelessBuild.setBuildType(buildtypes.IMAGELESS)
+        imagelessBuild.setFiles([["file", "file title 1"]])
+        imagelessRelease = client.newPublishedRelease(projectId)
+        imagelessRelease.name = "Published Imageless Release"
+        imagelessRelease.version = "1.0"
+        imagelessRelease.addBuild(imagelessBuild.id)
+        imagelessRelease.save()
+
+        # create 2 product versions in the project
+        versionId = client.addProductVersion(projectId, 'FooV1',
+                'FooV1Description')
+        versionId2 = client.addProductVersion(projectId, 'FooV2',
+                'FooV2Description')
+
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -285,8 +320,12 @@ class FixtureCache(object):
                       'pubReleaseId':   pubRelease.id,
                       'pubReleaseFinalId':   pubReleaseFinal.id,
                       'anotherBuildId': anotherBuild.id,
+                      'imagelessBuildId': imagelessBuild.id,
+                      'imagelessReleaseId':   imagelessRelease.id,
+                      'versionId' : versionId,
+                      'versionId2' : versionId2,
                       'groupTroveId':   groupTrove.id }
-
+    
     def fixtureCookJob(self, cfg):
         """
         CookJob fixture.
@@ -306,7 +345,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         userId = self.createUser(cfg, db, 'test')
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
@@ -348,7 +386,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
         testId = self.createUser(cfg, db, 'test')
 
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
@@ -383,7 +420,6 @@ class FixtureCache(object):
                 - C{test} - the id of the user "test"
         """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         testId = self.createUser(cfg, db, 'test')
 
@@ -418,7 +454,6 @@ class FixtureCache(object):
 
     def fixtureEC2(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
 
         adminId = self.createUser(cfg, db, username = 'admin', isAdmin = True)
         client = shimclient.ShimMintClient(cfg, ('admin', 'adminpass'))
@@ -808,9 +843,12 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
             util.rmtree(f[0].dataPath)
 
 
-class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
+class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     adminClient = None
     cfg = None
+
+    # apply default context of "fixtured" to all children of this class
+    contexts = ("fixtured",)
 
     def listFixtures(self):
         return fixtureCache.list()
@@ -887,25 +925,33 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
         return canMirror
 
     def getWriteAcl(self, project, username):
-        return self.getPermission('canWrite', project, username)
-
-    def getAdminAcl(self, project, username):
-        return self.getPermission('admin', project, username)
-
-    def getPermission(self, column, project, username):
         dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
             project.getFQDN())
         db = dbstore.connect(dbCon[1], dbCon[0])
 
         cu = db.cursor()
 
-        cu.execute("""SELECT MAX(%s)
+        cu.execute("""SELECT MAX(canWrite)
                           FROM Users
                           LEFT JOIN UserGroupMembers ON Users.userId =
                                   UserGroupMembers.userId
                           LEFT JOIN Permissions ON Permissions.userGroupId =
                                   UserGroupMembers.userGroupId
-                          WHERE Users.username=?""" % column, username)
+                          WHERE Users.username=?""", username)
+        return cu.fetchone()[0]
+
+    def getAdminAcl(self, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+        cu.execute("""SELECT MAX(admin) FROM Users
+                      JOIN UserGroupMembers ON
+                          Users.userId = UserGroupMembers.userId
+                      JOIN UserGroups ON
+                          UserGroups.userGroupId = UserGroupMembers.userGroupId
+                      WHERE Users.username=?""", username)
         return cu.fetchone()[0]
 
     def captureAllOutput(self, func, *args, **kwargs):
@@ -927,16 +973,50 @@ class FixturedUnitTest(unittest.TestCase, MCPTestMixin):
                 self.archiveDir = thisdir
                 break
 
-        unittest.TestCase.setUp(self)
+        testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
+        testhelp.TestCase.tearDown(self)
         MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()
             self.cfg and util.rmtree(self.cfg.dataPath)
         except OSError:
             pass
+
+class FixturedProductVersionTest(FixturedUnitTest):
+
+    global _testxmldata
+    _testxmldata = None
+
+    class _MockProductDefinition(proddef.ProductDefinition):
+        def saveToRepository(self, *args, **kwargs):
+            sio = StringIO.StringIO()
+            self.serialize(sio)
+            global _testxmldata
+            _testxmldata = sio.getvalue()
+
+        def loadFromRepository(self, *args, **kwargs):
+            global _testxmldata
+            if not _testxmldata:
+                raise proddef.ProductDefinitionTroveNotFound
+            sio = StringIO.StringIO(_testxmldata)
+            sio.seek(0)
+            self.parseStream(sio)
+
+    def setUp(self):
+        self.oldProductDefinition = proddef.ProductDefinition
+        proddef.ProductDefinition = self._MockProductDefinition
+        FixturedUnitTest.setUp(self)
+        global _testxmldata
+        _testxmldata = None
+
+    def tearDown(self):
+        FixturedUnitTest.tearDown(self)
+        proddef.ProductDefinition = self.oldProductDefinition
+        global _testxmldata
+        _testxmldata = None
 
 
 driver = os.environ.get("CONARY_REPOS_DB", "sqlite")

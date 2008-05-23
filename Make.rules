@@ -54,7 +54,7 @@ ifdef python_files
 	cp $(python_files) $(DESTDIR)$(STATICDEST)/
 endif
 ifdef kid_files
-	cp $(kid_files) $(DESTDIR)$(STATICDEST)/
+	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
 endif
 
 pyfiles-install:
@@ -63,10 +63,7 @@ pyfiles-install:
 
 kid-install:
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
-	for kidfile in $(kid_files); do \
-		pycfile=`echo $$kidfile | sed -e s,kid$$,pyc,` ; \
-		cp $$kidfile $$pycfile $(DESTDIR)$(PYDIR)/$(PYDEST)/ ; \
-	done
+	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 static-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)

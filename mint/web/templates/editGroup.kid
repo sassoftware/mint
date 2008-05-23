@@ -3,14 +3,14 @@
 from urllib import quote
 from conary import versions
 from mint.helperfuncs import truncateForDisplay
-from mint.web.templatesupport import injectVersion
+from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -115,21 +115,21 @@ from mint.grouptrove import KNOWN_COMPONENTS
 
             <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
             <p>You have a group. Now add packages to it from any
-            ${cfg.productName} project. To add a package, search or browse for
+            ${cfg.productName} ${projectText().lower()}. To add a package, search or browse for
             the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
             link.</p>
 
             <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
             <p>"Cooking" the group assembles your chosen packages, resolves any
             library dependencies, and creates a binary representation of the group
-            that is committed into your project's repository.</p>
+            that is committed into your ${projectText().lower()}'s repository.</p>
 
-            <h3 style="color:#ff7001;">Step 3: Create A Build</h3>
+            <h3 style="color:#ff7001;">Step 3: Create An Image</h3>
             <p>Once your group has cooked successfully, create a
-            <a href="builds"><b>New Build</b></a> by selecting the name of
+            <a href="builds"><b>New Image</b></a> by selecting the name of
             the group you just cooked. Select a version, architecture, and a
-            handful of other options, and you will have an installable ISO-9660
-            image in minutes!
+            handful of other options, and you will have an installable
+            CD/DVD image in minutes!
             </p>
             </div>
         </div>

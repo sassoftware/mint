@@ -12,7 +12,6 @@
 import sys
 import os
 from os import _exit
-import urllib
 import xmlrpclib
 
 from conary.conaryclient import mirror
@@ -20,6 +19,7 @@ from conary import conaryclient, conarycfg
 from conary import dbstore
 from conary import trove
 from conary import versions
+from conary.deps import deps
 from conary.repository import errors
 from conary.lib import util, log
 
@@ -44,10 +44,9 @@ class MirrorOutbound(MirrorScript):
 
         mirrorMarks = {}
 
-        for outboundMirrorId, sourceProjectId, targetLabels, \
-                allLabels, recurse, matchStrings, order, \
-                fullSync in outboundMirrors:
-
+        for (outboundMirrorId, sourceProjectId, targetLabels, allLabels,
+          recurse, matchStrings, order, fullSync, useReleases,
+          ) in outboundMirrors:
             cfg = mirror.MirrorFileConfiguration()
 
             sourceProject = client.getProject(int(sourceProjectId))
@@ -57,152 +56,179 @@ class MirrorOutbound(MirrorScript):
             try:
                 labelInfo = client.getLabel(sourceLabelId)
                 labelStr = labelInfo['label']
-                reposHost = versions.Label(labelStr).getHost()
-                cfg.host = reposHost
-                sourceUrl = sourceProject.getConaryConfig().repositoryMap[reposHost]
+                cfg.host = reposHost = versions.Label(labelStr).getHost()
+
+                sourceUrl = sourceProject.getConaryConfig() \
+                    .repositoryMap[reposHost]
                 repositoryMap = client.getFullRepositoryMap()
 
-                if allLabels:
-                    cfg.labels = []
-                else:
-                    cfg.labels = [versions.Label(labelStr) for labelStr in targetLabels.split(" ")]
-                cfg.configLine('matchTroves ' + ' '.join(matchStrings))
-                cfg.configLine('recurseGroups %s' % bool(recurse))
+                # Note that the mirror role must be named differently so that
+                # conary does not delete it when the user is deleted at the
+                # end of the mirror process. Otherwise we lose the ACLs we
+                # already ate the cost of adding.
+                mirrorUser = 'mirror'
+                mirrorRole = 'mirror-role'
 
-                sourceRepos = None
-                targetRepos = []
-
-                labelPath, repoMap, userMap, entMap = client.getAllLabelsForProjects()
-
+                # Configure source
                 sourceCfg = cfg.setSection("source")
                 sourceCfg.repositoryMap.update(repositoryMap)
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
-                serverNamesSet = set([reposHost])
-                authHosts = set([reposHost])
+                cfg.setSection('') # Switch back to the main config
+
+                # Add user/entitlement information from all projects
+                labelPath, repoMap, userMap, entMap = client.getAllLabelsForProjects()
                 for host, authInfo in userMap:
                     sourceCfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-                    authHosts.add(host)
                 for host, entitlement in entMap:
                     sourceCfg.entitlement.addEntitlement(host, entitlement[1])
-                    authHosts.add(host)
 
+                # Get a repository client for the mirror function
                 sourceCCfg = conarycfg.ConaryConfiguration()
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
                 sourceCCfg.user = sourceCfg.user
                 sourceCCfg.entitlement = sourceCfg.entitlement
                 sourceCCfg.proxy = proxy
-                sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
+                # privRepos is a privileged netclient for managing the
+                # mirror user and its permissions
+                privRepos = sourceRepos = \
+                    conaryclient.ConaryClient(sourceCCfg).getRepos()
 
+                if useReleases:
+                    # Using published release based mirroring
+                    releases = client.getMirrorableReleasesByProject(
+                        int(sourceProjectId))
+
+                    # Create the mirror user, deleting it if it already
+                    # exists
+                    try:
+                        privRepos.deleteUserByName(reposHost, mirrorUser)
+                    except errors.UserNotFound:
+                        pass
+                    mirrorPassword = helperfuncs.genPassword(64)
+                    privRepos.addUser(reposHost, mirrorUser, mirrorPassword)
+
+                    # Create the mirror role if it doesn't exist yet
+                    try:
+                        privRepos.addRole(reposHost, mirrorRole)
+                        privRepos.addAcl(reposHost, mirrorRole, 'ravenous-bugblatter-beast',
+                            reposHost + '@dummy:label')
+                    except errors.RoleAlreadyExists:
+                        pass
+                    privRepos.setRoleCanMirror(reposHost, mirrorRole, True)
+                    privRepos.updateRoleMembers(reposHost, mirrorRole,
+                        [mirrorUser])
+
+                    # Get the list of troves that *should* be mirrored
+                    newTroves = set()
+                    for pubReleaseId in releases:
+                        builds = client.getBuildsForPublishedRelease(
+                          pubReleaseId)
+                        for buildId in builds:
+                            build = client.getBuild(buildId)
+                            name = build.troveName
+                            # troveVersion has a timestamp;
+                            # listTroveAccess will not. "un-freeze"
+                            #the version to make sure they match.
+                            version = str(versions.ThawVersion(
+                                build.troveVersion))
+                            flavor = deps.ThawFlavor(build.troveFlavor)
+                            newTroves.add((name, version, flavor))
+
+                    # Get the list of troves that *are* marked for mirroring
+                    oldTroves = set()
+                    for name, version, flavor in privRepos.listTroveAccess(
+                      reposHost, mirrorRole):
+                        oldTroves.add((name, str(version), flavor))
+
+                    # Add and remove trove access as needed to make
+                    # trove access match the mirrorable published
+                    # release list.
+                    removeAccess = [(n, versions.VersionFromString(v), f)
+                        for (n, v, f) in oldTroves - newTroves]
+                    if removeAccess:
+                        privRepos.deleteTroveAccess(mirrorRole, removeAccess)
+
+                    addAccess = [(n, versions.VersionFromString(v), f)
+                        for (n, v, f) in newTroves - oldTroves]
+                    if addAccess:
+                        privRepos.addTroveAccess(mirrorRole, addAccess)
+
+                    # Now that we've brought trove access up to date,
+                    # delete our admin access to this project's
+                    # repository and replace it with the mirror user.
+                    user = conarycfg.UserInformation(data for data in
+                        sourceCfg.user if data[0] != reposHost)
+                    entitlement = conarycfg.EntitlementList(data for data in
+                        sourceCfg.entitlement if data[0] != reposHost)
+                    user.insert(0, (reposHost, (mirrorUser, mirrorPassword)))
+                    sourceCfg.user = sourceCCfg.user = user
+                    sourceCfg.entitlement = sourceCCfg.entitlement = entitlement
+
+                    # And re-open the repository
+                    sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
+
+                    # Configure for recursive mirroring of available groups
+                    names = set('+' + x[0] for x in newTroves)
+                    cfg.labels = []
+                    cfg.configLine('matchTroves ' + ' '.join(names))
+                    cfg.configLine('recurseGroups True')
+
+                    # For now, always force a full sync, as older
+                    # releases may have been added to the mirrorable
+                    # list since the last mirror. Later we might be
+                    # able to only force a sync if the oldest
+                    # unmirrored group is newer than the oldest
+                    # mirror mark, but this would require a new repos
+                    # call (to get the trove timestamp).
+                    fullSync = True
+                else:
+                    # Using label+group based mirroring
+                    if allLabels:
+                        cfg.labels = []
+                    else:
+                        cfg.labels = [versions.Label(labelStr) for labelStr in targetLabels.split(" ")]
+                    cfg.configLine('matchTroves ' + ' '.join(matchStrings))
+                    cfg.configLine('recurseGroups %s' % bool(recurse))
+
+                # Configure targets
                 obmt = client.getOutboundMirrorTargets(outboundMirrorId)
                 if not obmt:
-                    self.log.warning("Skipping mirror of %s; no targets specified" % \
+                    self.log.warning("Skipping %s, no Update Services specified" % \
                             sourceProject.name)
                     continue
 
-                if recurse:
-                    # XXX This entire body of code is really too slow, and doesn't need
-                    # XXX to be done every single pass for group mirrors. Its only purpose
-                    # XXX is to set up the rUS to accept the list of servernames needed
-                    # XXX to properly mirror the group.
-                    groups = client.getOutboundMirrorGroups(outboundMirrorId)
-                    self.log.info("Mirroring the following groups %s" % groups)
-                    for group in groups:
-                        self.log.info("Recursing %s to find serverNames..." % group)
-                        groupNVFs = []
-                        groupVersions = sourceRepos.getTroveVersionList(reposHost, {group:None})
-                        for n, verDict in groupVersions.items():
-                            for v, flavorList in verDict.items():
-                                if cfg.labels and v.trailingLabel() not in cfg.labels:
-                                    continue
-                                for f in flavorList:
-                                    groupNVFs.append((n,v,f))
-
-                        nDone = 0
-                        for n1, v1, f1 in groupNVFs:
-                            self.log.debug("Getting troveVersion for %s=%s[%s]" % (n,v,f))
-                            groupCs = sourceRepos.createChangeSet(
-                                [(n1, (None, None), (v1, f1), True)],
-                                      withFiles=False,
-                                      withFileContents = False,
-                                      recurse = False)
-                            tcs = groupCs.getNewTroveVersion(n1, v1, f1)
-                            t = trove.Trove(tcs)
-                            for n2, v2, f2 in t.iterTroveList(strongRefs=False, weakRefs=True):
-                                serverNamesSet.add(v2.getHost())
-                            nDone += 1
-                            percentDone = int(float(nDone) / float(len(groupNVFs)) * 100.0)
-                            if (nDone % 10) == 0:
-                                self.log.info("Recursing %s to find serverNames (%d%% complete)" % (group, percentDone))
-
-                serverNames = list(serverNamesSet)
-                self.log.info("serverNames needed for mirroring: %s" % ', '.join(serverNames))
-
-                # XXX This is a best-effort attempt to catch if we have servers we need to
-                # contact during the course of mirroring where we didn't specify any
-                # permissions, either via user or entitlements. It will miss cases where
-                # filecontents are spread across two repositories, and it may warn
-                # unnecessarily if the source repository has mirroring enabled for the
-                # anonymous group. A more complete test would be too slow to run every
-                # time, so this will have to do. --sgp
-                neededHosts = serverNamesSet - authHosts
-                for n in neededHosts:
-                    self.log.warning("No authentication was given for server %s; this may cause problems when attempting to mirror troves from that server to the Update Service. Make sure that your rBuilder has an external project with this hostname set up with a valid user or entitlement with mirror permissions." % n)
-
                 targetOrdinal = 0
-                for _, targetUrl, targetUser, targetPass in obmt:
-                    _, url = urllib.splittype(targetUrl)
-                    rapa_host, _ = urllib.splithost(url)
+                targetReposes = []
+                for _, hostname, targetUser, targetPass, _ in obmt:
+                    targetUrl = 'https://%s/conary/' % hostname
 
-                    if recurse:
-                        rapa_user = client.getrAPAPassword(rapa_host, 'serverNames')
-                        if rapa_user:
-                            try:
-                                sp = xmlrpclib.ServerProxy('https://%s:%s@%s:8003/rAA/xmlrpc/' % (rapa_user[0], rapa_user[1], rapa_host))
-                                sp.conaryserver.ConaryServer.addServerName(serverNames)
-                            except:
-                                raise
                     if cfg.hasSection("target"):
                         targetOrdinal += 1
                         targetCfg = cfg.setSection("target%d" % targetOrdinal)
                     else:
                         targetCfg = cfg.setSection("target")
-                    targetCfg.repositoryMap.update(repositoryMap)
-                    for x in serverNames:
-                        targetCfg.repositoryMap.update({x:targetUrl})
+                    targetCfg.repositoryMap = []
+                    targetCfg.configLine('repositoryMap * %s' % targetUrl)
                     targetCfg.user.addServerGlob('*', targetUser, targetPass)
-
-                    for k in targetCfg.repositoryMap.keys():
-                        targetCfg.repositoryMap[k] = targetUrl
 
                     targetCCfg = conarycfg.ConaryConfiguration()
                     targetCCfg.repositoryMap.update(targetCfg.repositoryMap)
                     targetCCfg.user = targetCfg.user
                     targetCCfg.proxy = proxy
                     t = conaryclient.ConaryClient(targetCCfg).getRepos()
-                    targetRepos.append(t)
+                    targetReposes.append(t)
 
-                    # If we have multiple sources for the same host,
-                    # reset the mirror mark
-                    try:
-                        mm = t.getMirrorMark(reposHost)
-                    except errors.OpenError:
-                        # No mirrormark for reposHost on this target
-                        mirrorMarks.update({targetUrl:{reposHost:-1}})
-                    else:
-                        if mirrorMarks.get(targetUrl):
-                            oldMark = mirrorMarks[targetUrl].get(reposHost)
-                            if oldMark and oldMark < mm:
-                                t.setMirrorMark(reposHost, oldMark)
-                            else:
-                                mirrorMarks[targetUrl].update({reposHost:mm})
-                        else:
-                            mirrorMarks.update({targetUrl:{reposHost:mm}})
-
+                # Do the mirror
                 try:
-                    self._doMirror(cfg, sourceRepos, targetRepos, fullSync)
+                    self._doMirror(cfg, sourceRepos, targetReposes, fullSync)
                 finally:
                     if fullSync:
                         client.setOutboundMirrorSync(outboundMirrorId, False)
+
+                if useReleases:
+                    # Delete temporary mirror user
+                    privRepos.deleteUserByName(reposHost, mirrorUser)
+
             except KeyboardInterrupt, ke:
                 self.log.info("Outbound mirror killed by user")
                 break

@@ -104,7 +104,6 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
 
 <Location /conary/>
     Options FollowSymLinks
-    AllowOverride None
 
     AddHandler python-program .cnr
     PythonHandler conary.server.apachehooks

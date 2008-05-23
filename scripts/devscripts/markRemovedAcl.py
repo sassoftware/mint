@@ -40,7 +40,7 @@ def setAcl(db, userGroup, canRemove):
                userGroup, cfg.authUser)
     res = cu.fetchall()
     if not res:
-        raise database.ItemNotFound('user')
+        raise ItemNotFound('user')
     userGroupId = res[0][0]
     try:
         cu.execute('UPDATE Permissions SET canRemove=? WHERE userGroupId=?',

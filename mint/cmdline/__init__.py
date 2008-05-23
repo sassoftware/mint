@@ -1,12 +1,13 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
 import os
 import sys
 import socket
+import traceback
 
 from conary.lib import options, util, log, cfgtypes
 from conary.lib.cfg import ConfigFile
@@ -84,11 +85,12 @@ class RBuilderMain(options.MainHandler):
         print 'rbuilder: command-line interface to an rBuilder Server'
         print ''
         print 'usage:'
-        print '  build-create <project name> <trove spec> <image type>        - create a new build'
+        print '  build-create <product name> <trove spec> <image type>        - create a new build'
+        print '  build-product <product name> <version name> <stage name>     - create a new build from the version''s product definition'
         print '  build-wait <build id>                                        - wait for a build to finish building'
         print '  build-url <build id>                                         - show all urls related to a build'
         print '  user-create <username> <email> [--password <password>]       - create a new user'
-        print '  project-add <username> <project hostname> <owner|developer>  - add a user to a project'
+        print '  project-add <username> <project hostname> <owner|developer>  - add a user to a product'
         print '  config                                                       - dump configuration'
         return rc
 
@@ -101,12 +103,15 @@ class RBuilderMain(options.MainHandler):
             ret = options.MainHandler.runCommand(self,
                 thisCommand, client, cfg, argSet, args[1:])
         except MintError, e:
+            log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error("response from rBuilder server: %s" % str(e))
             sys.exit(3)
         except RuntimeError, e:
+            log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error(str(e))
             sys.exit(3)
         except errors.ConaryError, e:
+            log.debug(traceback.format_exc(sys.exc_info()[2]))
             log.error(str(e))
             sys.exit(3)
         return ret

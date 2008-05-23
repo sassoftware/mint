@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -14,6 +14,7 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint import data
+from mint.mint_error import *
 from mint.cmdline import commands
 
 from conary import versions
@@ -22,9 +23,6 @@ from conary.conaryclient import cmdline
 from conary import conarycfg
 from conary import conaryclient
 from conary import errors
-
-# Fallback in case we have no other choice
-RPL = versions.Label("conary.rpath.com@rpl:1")
 
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     try:
@@ -145,29 +143,6 @@ def genHelp():
     h += "Note: all build types may not be supported by all rBuilder servers."
     return h
 
-
-def resolveExtraTrove(cclient, trvName, trvVersion = None, trvFlavor = None, searchPath = []):
-    itemList = [(trvName, (None, None), (trvVersion, trvFlavor), True)]
-    try:
-        uJob, suggMap = cclient.updateChangeSet(itemList,
-                                                resolveDeps = False)
-
-        job = [x for x in uJob.getPrimaryJobs()][0]
-        strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
-                                 str(job[2][1]))
-
-        return strSpec
-    except errors.TroveNotFound:
-        log.warning("Trove not found for %s" % trvName)
-        return None
-
-def getLabelPath(cclient, trove):
-    """Retrieve label path from group for anaconda-templates resolution."""
-    repos = cclient.getRepos()
-    trv = repos.getTroves([trove])
-    return [versions.Label(x) for x in trv[0].getTroveInfo().labelPath]
-
-
 class BuildCreateCommand(commands.RBuilderCommand):
     commands = ['build-create']
     paramHelp = genHelp()
@@ -212,7 +187,7 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
         for x in buildOptions:
             if x not in buildtemplates.dataTemplates[buildTypeId]:
-                raise RuntimeError, "%s is not a valid option for %s. See --help." % (x, buildType.upper())
+                raise RuntimeError, "%s is not a valid option fer %s. See --help." % (x, buildType.upper())
 
         if 'build-notes' in argSet and 'build-notes-file' in argSet:
             raise RuntimeError('--build-notes and --build-notes-file may not'
@@ -248,36 +223,24 @@ class BuildCreateCommand(commands.RBuilderCommand):
                 "All parts must be fully specified. Use conary rq --full-versions --flavors <trove name>\n" \
                 "to find a valid trove spec."
 
-        build.setTrove(n, v.freeze(), f.freeze())
+        buildTroveVersion = v.freeze()
+        buildTroveFlavor = f.freeze()
+        build.setTrove(n, buildTroveVersion, buildTroveFlavor)
         build.setBuildType(buildTypeId)
 
-        # resolve extra troves
-        searchPath = [build.getTroveVersion().branch().label()]
         template = buildtemplates.dataTemplates[buildTypeId]
         for name in list(template):
             if template[name][0] == data.RDT_TROVE:
-
-                # we have to handle anaconda-templates differently because
-                # it's not likely that they will have a build on the group's
-                # label, but we don't want to accidently pull in any other
-                # extra troves from different labels.
-                if name == "anaconda-templates":
-                    cc.cfg.installLabelPath = getLabelPath(cc, (n, v, f)) + [RPL]
-                else:
-                    cc.cfg.installLabelPath = searchPath
-                # set on the command line, perhaps partially
                 if name in buildOptions:
                     val = buildOptions[name]
                     if val != "NONE":
                         n2, v2, f2 = cmdline.parseTroveSpec(str(val))
-                        if not f2:
-                            # if not flavor was specified, use the
-                            # flavor from the top level group (RBL-2760)
-                            f2 = f
-                        val = resolveExtraTrove(cc, n2, v2, f2, searchPath)
+                        val = project.resolveExtraTrove(name,
+                                buildTroveVersion, buildTroveFlavor,
+                                v2, f2)
                 else:
                     # not specified at all, resolve it ourselves from just the name
-                    val = resolveExtraTrove(cc, name, None, f, searchPath = searchPath)
+                    val = project.resolveExtraTrove(name, buildTroveVersion, buildTroveFlavor)
                 if val:
                     print "Setting %s to %s" % (name, val)
                     buildOptions[name] = val
@@ -294,6 +257,64 @@ class BuildCreateCommand(commands.RBuilderCommand):
 
 commands.register(BuildCreateCommand)
 
+def buildProdDefHelp():
+    msg = '<product name> <version name> <stage name>\n'
+    return msg
+
+class BuildCreateFromProdDefCommand(commands.RBuilderCommand):
+    commands = ['build-product']
+    paramHelp = buildProdDefHelp()
+
+    docs = {'force' : 'Continue running builds in the definition even if a previous one failed.',
+            'wait' : 'wait until a build job finishes',
+            'timeout' : ('time to wait before ending, even if the job is not done', 
+                         'seconds'),
+            'quiet':    'suppress job status output',
+    }
+
+
+    def addParameters(self, argDef):
+         commands.RBuilderCommand.addParameters(self, argDef)
+         argDef["wait"] = options.NO_PARAM
+         argDef["timeout"] = options.ONE_PARAM
+         argDef["quiet"] = options.NO_PARAM
+         argDef["force"] = options.NO_PARAM
+
+    def runCommand(self, client, cfg, argSet, args):
+        wait = argSet.pop('wait', False)
+        timeout = int(argSet.pop('timeout', 0))
+        quiet = argSet.pop('quiet', False)
+        force = argSet.pop('force', False)
+
+        if len(args) < 4:
+            return self.usage()
+
+        productName = args[1]
+        versionName = args[2]
+        stageName = args[3]
+
+        project = client.getProjectByHostname(productName)
+        versionList = client.getProductVersionListForProduct(project.id)
+        # Pick the version id that matches versionName
+        versionId = [v[0] for v in versionList if v[2] == versionName][0]
+
+        try:
+            buildIds = client.newBuildsFromProductDefinition(versionId, stageName,
+                                                         force)
+        except TroveNotFoundForBuildDefinition, tnf:
+            print "\n" +str(tnf) + "\n"
+            print "To submit the partial set of builds, re-run this command with --force"
+            return 1
+
+        for buildId in buildIds:
+            print "BUILD_ID=%d" % (buildId)
+            sys.stdout.flush()
+            if wait:
+                waitForBuild(client, buildId, timeout=timeout, quiet=quiet)
+
+        return 0
+
+commands.register(BuildCreateFromProdDefCommand)
 
 class BuildWaitCommand(commands.RBuilderCommand):
     commands = ['build-wait']
