@@ -42,36 +42,34 @@ class Group${projectName.capitalize()}Dist(ApplianceGroupRecipe):
     # END CUSTOMIZE
     
     def addPackages(r):
+        '''
+        This is where you can specify the things that make your appliance
+        unique.  Some examples of tasks you may wish to perform:
         
-        # CUSTOMIZE: ADD PACKAGES
-        # Adding "localpackage" that is built on the appliance
-        # label specifically for this appliance (this is the
-        # core software that defines your appliance):
-        # r.add('localpackage').  Note that 'foundation-config'
-        # is added only as an example.
-        r.add('foundation-config')
-        # END CUSTOMIZE
+        Adding a Package:
+           Adding "foundation-config" that is built on the appliance
+           label specifically for this appliance (this is the
+           core software that defines your appliance):
+           r.add('foundation-config')
         
-        # CUSTOMIZE: REPLACE PACKAGES
-        # Replacing the distro-release package with a customized
-        # version build specifically for this appliance (this is
-        # usually not necessary):
-        # r.replace('distro-release')
-        # END CUSTOMIZE
+        Replacing a Package:
+           Replacing the distro-release package with a customized
+           version build specifically for this appliance (this is
+           usually not necessary):
+           r.replace('distro-release')
         
-        # CUSTOMIZE: REMOVE UNWANTED RAPA COMPONENTS
-        # To remove plugins that you do not wish to be included in the
-        # appliance, but that are included in the default distribution of rAPA,
-        # remove them as illustrated below
-        # r.remove('raa-plugin-flipflop')
-        # END CUSTOMIZE
+        Removing Unwanted rAPA Components:
+           To remove plugins that you do not wish to be included in the
+           appliance, but that are included in the default distribution of rAPA,
+           remove them as illustrated below
+           r.remove('raa-plugin-flipflop')
 
-        # CUSTOMIZE: POST UPDATE SCRIPTS
-        # This is a script that will execute after the updates
-        # for the group are applied to a running system.  This should be 
-        # modified to match the needs of your appliance.
-        #r.addPostUpdateScript(
-        #    contents = '#!/bin/bash\n/sbin/service foundation-config condrestart\n')
-        # END CUSTOMIZE
+        Adding a Post Update Script:
+           This is a script that will execute after the updates
+           for the group are applied to a running system.  This should be 
+           modified to match the needs of your appliance.
+           r.addPostUpdateScript(
+              contents = '#!/bin/bash\n/sbin/service foundation-config condrestart\n')
+        '''
 
 </plain>

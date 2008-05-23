@@ -13,6 +13,7 @@ import zlib
 import re
 import stat
 import shutil
+import socket
 import sys
 import tempfile
 import time
@@ -394,14 +395,14 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
     # send email
     try:
+        extra = {'hostname': socket.getfqdn()}
+        subject = cfg.bugsEmailSubject % extra
         if cfg.bugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.bugsEmail, cfg.bugsEmailSubject,
-                                     large.read())
+                                     cfg.bugsEmail, subject, large.read())
         if cfg.smallBugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.smallBugsEmail,
-                                     cfg.bugsEmailSubject, small.read())
+                                     cfg.smallBugsEmail, subject, small.read())
     except MailError, e:
         apache.log_error("Failed to send e-mail to %s, reason: %s" % \
             (cfg.bugsEmail, str(e)))
