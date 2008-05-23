@@ -43,13 +43,16 @@ class Group${projectName.capitalize()}Dist(ApplianceGroupRecipe):
     
     def addPackages(r):
         
+        # This 'pass' is included to make this method valid Python.  If anything
+        # is added to this method (or uncommented from below) you must remove
+        # this.
+        pass
+        
         # CUSTOMIZE: ADD PACKAGES
-        # Adding "localpackage" that is built on the appliance
+        # Adding "foundation-config" that is built on the appliance
         # label specifically for this appliance (this is the
         # core software that defines your appliance):
-        # r.add('localpackage').  Note that 'foundation-config'
-        # is added only as an example.
-        r.add('foundation-config')
+        # r.add('foundation-config')
         # END CUSTOMIZE
         
         # CUSTOMIZE: REPLACE PACKAGES
