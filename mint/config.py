@@ -98,7 +98,7 @@ class MintConfig(ConfigFile):
     cookieSecretKey         = None
     bugsEmail               = None
     bugsEmailName           = 'rBuilder Bugs'
-    bugsEmailSubject        = 'rBuilder Unhandled Exception Report'
+    bugsEmailSubject        = 'rBuilder Unhandled Exception Report from %(hostname)s'
     smallBugsEmail          = None
     debugMode               = (cfgtypes.CfgBool, False)
     sendNotificationEmails  = (cfgtypes.CfgBool, True)
