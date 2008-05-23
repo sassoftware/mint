@@ -14,6 +14,8 @@ import pcreator.config
 
 PCREATOR_TMPDIR_PREFIX = 'rb-pc-upload-'
 
+from mint import mint_error
+
 def getWorkingDir(cfg, id):
     """
     @param cfg: Mint Configuration Object

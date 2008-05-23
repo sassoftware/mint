@@ -710,7 +710,11 @@ class ProjectHandler(WebHandler):
     @strFields(sessionHandle=None, upload_url='')
     @intFields(versionId=None)
     def getPackageFactories(self, auth, sessionHandle, versionId, upload_url):
-        factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
+        try:
+            factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage')
         return self._write('createPackageInterview',
                 sessionHandle = sessionHandle, factories = factories,
                 message = None)
