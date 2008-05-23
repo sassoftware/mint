@@ -4544,9 +4544,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def createPackageTmpDir(self):
-        path = tempfile.mkdtemp('', 'rb-pc-upload-',
+        import packagecreator
+        path = tempfile.mkdtemp('', packagecreator.PCREATOR_TMPDIR_PREFIX,
             dir = os.path.join(self.cfg.dataPath, 'tmp'))
-        return os.path.basename(path).replace('rb-pc-upload-', '')
+        return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
     @requiresAuth
@@ -4620,10 +4621,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def pollUploadStatus(self, id, fieldname):
         from mint.web import whizzyupload
+        import packagecreator
         fieldname = str(fieldname)
         ## Connect up to the tmpdir
-        path = os.path.join(self.cfg.dataPath, 'tmp', 'rb-pc-upload-%s' %
-            str(id))
+        path = packagecreator.getWorkingDir(self.cfg, id)
 
         if os.path.isdir(path):
             #Look for the status and metadata files
@@ -4635,9 +4636,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def cancelUploadProcess(self, id, fieldnames):
         from mint.web import whizzyupload
+        import packagecreator
         str_fieldnames = [str(x) for x in fieldnames]
-        path = os.path.join(self.cfg.dataPath, 'tmp', 'rb-pc-upload-%s' %
-            str(id))
+        path = packagecreator.getWorkingDir(self.cfg, id)
         if os.path.isdir(path):
             for fieldname in str_fieldnames:
                 whizzyupload.fileuploader(path, fieldname).cancelUpload()

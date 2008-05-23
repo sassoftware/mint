@@ -695,11 +695,6 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     def newPackage(self, auth):
-        # XXX a test case had params passed into this thing. figure out which one's busted
-        #Create the temporary storage
-        #### If the directory prefix changes, you must change the cgi script
-        #### and the poller too
-
         sessionHandle = self.client.createPackageTmpDir()
         versions = self.project.getProductVersionList()
         return self._write('createPackage', message = '',

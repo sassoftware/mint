@@ -12,6 +12,8 @@ import pcreator.backend
 import pcreator.factorydata
 import pcreator.config
 
+PCREATOR_TMPDIR_PREFIX = 'rb-pc-upload-'
+
 def getWorkingDir(cfg, id):
     """
     @param cfg: Mint Configuration Object
@@ -19,15 +21,23 @@ def getWorkingDir(cfg, id):
     @param id: upload ID
     @type id: str
     """
-    path = os.path.join(cfg.dataPath, 'tmp', 'rb-pc-upload-%s' % id)
+    path = os.path.join(cfg.dataPath, 'tmp', '%s%s' % (PCREATOR_TMPDIR_PREFIX, id))
     return path
 
 def isSelected(field, value, prefilled):
-    if prefilled is not None:
-        v = prefilled
-    else:
-        v = field.default
+    v = workingValue(field, prefilled)
+    if v is None:
+        return False
     return str(v) == str(value)
+
+def workingValue(field, prefilled):
+    '''
+    In order to display the proper value when displaying UI elements, we have to determine which value should be given.  Prefer the prefilled value, but if it's not given, use the field's default.
+    '''
+    if prefilled is not None:
+        return prefilled
+    else:
+        return field.default
 
 def drawField(factoryIndex, field, values, drawingMethods): 
     """
@@ -44,16 +54,16 @@ def drawField(factoryIndex, field, values, drawingMethods):
     constraints = field.constraints
     if len(constraints) != 1:
         return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
-    if set(('regexp', 'length')).intersection(set([x[0] for x in constraints])):
+    if set(('regexp', 'length')).intersection(set([x['constraintName'] for x in constraints])):
         return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
 
-    #We only have one constraint, and it's an Enumeration, or a range
+    #We only have one constraint, and it's a legalValues, or a range
     # Blow up the possible list
     constraint = constraints[0]
-    if constraint[0] == 'range':
-        possibles = range(constraint[1][0], constraint[1][1])
-    elif constraint[0] == 'legalValues':
-        possibles = constraint[1]
+    if constraint['constraintName'] == 'range':
+        possibles = range(constraint['min'], constraint['max'])
+    elif constraint['constraintName'] == 'legalValues':
+        possibles = constraint['values']
     if len(possibles) <= 7:
         return drawingMethods['small_enumeration'](fieldId, field, possibles, prefilled)
     elif 7 < len(possibles) and len(possibles) < 40:
@@ -105,7 +115,7 @@ class DirectLibraryBackend(pcreator.backend.BaseBackend):
         # re-use the tmpname for the session name. this alleviates the need
         # to track pointless data
         storageDir = self._getStorageDir()
-        return os.path.basename(storageDir).replace('rb-pc-upload-', '')
+        return os.path.basename(storageDir).replace(PCREATOR_TMPDIR_PREFIX, '')
 
     @pcreator.backend.public
     def _uploadData(self, sessionHandle, filePath):

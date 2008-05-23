@@ -6,7 +6,7 @@ import simplejson
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
-from mint.packagecreator import drawField, isSelected
+from mint.packagecreator import drawField, isSelected, workingValue
 lang = None;
 
 ?>
@@ -125,22 +125,22 @@ lang = None;
         <div py:def="drawTextField(fieldId, field, possibles, prefilled)" py:strip="True">
 ${drawLabel(fieldId, field)}
           <?python
-              value = (not prefilled is None) and prefilled or str(field.default)
+            value = workingValue(field, prefilled)
           ?>
-          <div py:if="'\n' not in value" py:strip="True">
+          <div py:if="value is None or '\n' not in value" py:strip="True">
           <input type="text" id="${fieldId}" name="${field.name}"
-              value="${value}"/>
+              value="${workingValue(field, prefilled)}"/>
           <div style="cursor: pointer;" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
             <img id="${fieldId}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />
           </div>
           </div>
-          <textarea py:if="'\n' in value" id="${fieldId}" name="${field.name}" rows="5">${value}</textarea>
+          <textarea py:if="value is not None and '\n' in workingValue(field, prefilled)" id="${fieldId}" name="${field.name}" rows="5">${workingValue(field, prefilled)}</textarea>
         </div>
 
         <div py:def="drawSelectField(fieldId, field, possibles, prefilled)" py:strip="True">
 ${drawLabel(fieldId, field)}
           <select name="${field.name}" id="${fieldId}" py:attrs="{'multiple': field.multiple and 'multiple' or None}">
-            <option py:for="val in sorted(possibles)" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled) and 'selected' or None}" py:content="val"/>
+            <option py:for="val in sorted(possibles)" id="${fieldId}_${val}" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled) and 'selected' or None}" py:content="val"/>
           </select>
         </div>
 
