@@ -3,6 +3,8 @@
 #
 # All rights reserved
 #
+
+import inspect
 import sys
 
 from mod_python import apache
@@ -13,12 +15,30 @@ from mint import mint_error
 from mint import userlevels
 from mint.web import webhandler
 
+
+def weak_signature_call(func, *args, **kwargs):
+    '''
+    Call a function without any keyword arguments it doesn't support.
+
+    If the function does not directly accept an argument, and also
+    does not have a magic keyword argument, the argument is dropped
+    from the call.
+    '''
+
+    argnames, varname, varkwname, _ = inspect.getargspec(func)
+    for kwarg in kwargs.keys():
+        if kwarg not in argnames and varkwname is None:
+            del kwargs[kwarg]
+
+    return func(*args, **kwargs)
+
+
 def requiresHttps(func):
     def requiresHttpsWrapper(self, *args, **kwargs):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on' and self.cfg.SSL:
             raise mint_error.PermissionDenied
         else:
-            return func(self, *args, **kwargs)
+            return weak_signature_call(func, self, *args, **kwargs)
 
     requiresHttpsWrapper.__wrapped_func__ = func
     return requiresHttpsWrapper
@@ -30,7 +50,7 @@ def redirectHttp(func):
                 self.req.headers_in.get('host', self.req.hostname),
                 self.req.unparsed_uri))
         else:
-            return func(self, *args, **kwargs)
+            return weak_signature_call(func, self, *args, **kwargs)
 
     redirectHttpWrapper.__wrapped_func__ = func
     return redirectHttpWrapper
@@ -48,7 +68,7 @@ def redirectHttps(func):
             return self._redirect('https://%s%s' % \
                     (self.cfg.secureHost, self.req.unparsed_uri))
         else:
-            return func(self, *args, **kwargs)
+            return weak_signature_call(func, self, *args, **kwargs)
 
     redirectHttpsWrapper.__wrapped_func__ = func
     return redirectHttpsWrapper
@@ -58,7 +78,7 @@ def requiresAdmin(func):
         if not kwargs['auth'].admin:
             raise mint_error.PermissionDenied
         else:
-            return func(self, *args, **kwargs)
+            return weak_signature_call(func, self, *args, **kwargs)
 
     requiresAdminWrapper.__wrapped_func__ = func
     return requiresAdminWrapper
@@ -68,7 +88,7 @@ def requiresAuth(func):
         if not kwargs['auth'].authorized:
             raise mint_error.PermissionDenied
         else:
-            return func(self, **kwargs)
+            return weak_signature_call(func, self, **kwargs)
 
     requiresAuthWrapper.__wrapped_func__ = func
     return requiresAuthWrapper
@@ -81,7 +101,7 @@ def ownerOnly(func):
         if not self.project:
             raise database.ItemNotFound("project")
         if self.userLevel == userlevels.OWNER or self.auth.admin:
-            return func(self, **kwargs)
+            return weak_signature_call(func, self, **kwargs)
         else:
             raise mint_error.PermissionDenied
 
@@ -96,7 +116,7 @@ def writersOnly(func):
         if not self.project:
             raise database.ItemNotFound("project")
         if self.userLevel in userlevels.WRITERS or self.auth.admin:
-            return func(self, **kwargs)
+            return weak_signature_call(func, self, **kwargs)
         else:
             raise mint_error.PermissionDenied
 
@@ -111,7 +131,7 @@ def postOnly(func):
         if self.req.method != 'POST':
             raise webhandler.HttpForbidden
         else:
-            return func(self, *args, **kwargs)
+            return weak_signature_call(func, self, *args, **kwargs)
 
     postOnlyWrapper.__wrapped_func__ = func
     return postOnlyWrapper
@@ -124,7 +144,7 @@ def mailList(func):
     def mailListWrapper(self, **kwargs):
         mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'RPC2')
         try:
-            return func(self, mlists=mlists, **kwargs)
+            return weak_signature_call(func, self, mlists=mlists, **kwargs)
         except mailinglists.MailingListException, e:
             return self._write("error", shortError = "Mailing List Error",
                 error = "An error occurred while talking to the mailing list server: %s" % str(e))
