@@ -591,8 +591,8 @@ def handler(req):
 
                     # Send an error page to the user and set the status
                     # code to 500 (internal server error).
-                    urlHandler(req, cfg, '/unknownError')
                     req.status = 500
+                    ret = urlHandler(req, cfg, '/unknownError')
                 break
     finally:
         prof.stopHttp(req.uri)
