@@ -22,7 +22,8 @@ python_files = \
 	webhandler.py	\
 	templatesupport.py \
 	basictroves.py	\
-	vmtn.py
+	vmtn.py		\
+	whizzyupload.py
 
 all: default-all
 

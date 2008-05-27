@@ -151,7 +151,6 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
 
     @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
-    @fixtures.fixture("Full")
     def testGetandSetProductDefinitionForVersion(self, db, data):
         ownerClient = self.getClient('owner')
         versionId = data['versionId']
