@@ -8,13 +8,19 @@ function getIframeDocument(node)
    var doc;
    // FF, etc ...
    if ( node.contentDocument )
+   {
       doc = node.contentDocument;
+   }
    // IE5.5 and later
    else if (node.contentWindow)
+   {
       doc = node.contentWindow.document;
+   }
    // IE5
    else if (node.document)
+   {
       doc = node.document;
+   }
    return doc;
 }
 
@@ -23,10 +29,13 @@ function objectHasProperties(obj)
     var numProps = 0;
     for (var prop in obj)
     {
-        numProps += 1;
-        break;
+        if (true)
+        {
+            numProps += 1;
+            break;
+        }
     }
-    return numProps != 0;
+    return numProps !== 0;
 }
 
 function zeropad(num)
@@ -61,7 +70,8 @@ function format_eta(secs)
     return ret;
 }
 
-var FileUploadForm = function(upload_id, formkey, statusuri, canceluri) {
+var FileUploadForm = function(upload_id, formkey, statusuri, canceluri)
+{
     this.id=upload_id;
     this.form_key = formkey;
     this.status_uri = statusuri;
@@ -72,9 +82,10 @@ var FileUploadForm = function(upload_id, formkey, statusuri, canceluri) {
     this.numfiles = 0;
 
     bindMethods(this);
-}
+};
 
-FileUploadForm.prototype = {
+FileUploadForm.prototype =
+{
     disableSubmit: function()
     {
         var d = $('submitButton_' + this.form_key);
@@ -141,7 +152,7 @@ FileUploadForm.prototype = {
         this.cancelled = true;
 
         //Update the message
-        this.hideStatistics()
+        this.hideStatistics();
 
         //Send the cancel request (this should clean up after it's finished)
         this.cancelUploadRequest();
@@ -151,7 +162,8 @@ FileUploadForm.prototype = {
     {
         logDebug("Cleaning up the progress dialog");
         //Hide the progress dialog, and call the cancel method
-        if (this.progressDialog != null){
+        if (this.progressDialog !== null)
+        {
             this.progressDialog.destroy();
         }
         // kill the cancel button event
@@ -177,11 +189,11 @@ FileUploadForm.prototype = {
         $('upload_progress_cancel_button').disabled=false;
         var percent = Math.floor(100*read/total);
         $('progress_indicator_bar').style.width= "" + percent + "%";
-        $('upload_progress_percent_complete').innerHTML = "" + percent + "%"
-        var rate = read/(cTime-sTime)
+        $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
+        var rate = read/(cTime-sTime);
         $('upload_progress_rate').innerHTML = ""  + Math.round(rate/1024) + " KB/s";
         $('upload_progress_bytes').innerHTML = "uploaded " + Math.floor(read/1024) + " of " + Math.floor(total/1024) + " KB";
-        $('upload_progress_eta').innerHTML = format_eta(Math.ceil((total-read)/rate))
+        $('upload_progress_eta').innerHTML = format_eta(Math.ceil((total-read)/rate));
         $('upload_progress_statistics').style.display='block';
         $('upload_progress_wait').style.display='none';
 
@@ -222,8 +234,13 @@ FileUploadForm.prototype = {
         //Get a list of all the iframes
         var iframes = this.getIframes();
 
+        function filterElem(element_id, elem)
+        {
+            return getNodeAttribute(elem, 'name') == element_id;
+        }
+
         var k=0;
-        for(k; k < iframes.length; k++)
+        for(k=0; k < iframes.length; k++)
         {
             element_id = iframes[k].id.replace('_iframe', '');
             var iframedoc = getIframeDocument(iframes[k]);
@@ -231,10 +248,7 @@ FileUploadForm.prototype = {
             if ($(element_id).value != 'UPLOADED')
             {
                 //Make sure there's data to submit
-                var fn = function(elem){
-                    return getNodeAttribute(elem, 'name') == element_id;
-                }
-                var e = filter(fn, getElementsByTagAndClassName('input', null, iframedoc))[0];
+                var e = filter(partial(filterElem, element_id), getElementsByTagAndClassName('input', null, iframedoc))[0];
                 if(e.value)
                 {
                     this.numfiles++;
@@ -253,11 +267,11 @@ FileUploadForm.prototype = {
     uploadStatusCallFinished: function(key, req)
     {
         if (! this.cancelled){
-            if (req.starttime != null)
+            if (req.starttime !== null)
             {
                 this.showStatistics(req.starttime, req.currenttime, req.read, req.totalsize);
             }
-            if ((req.finished != null) && objectHasProperties(req.finished))
+            if ((req.finished !== null) && objectHasProperties(req.finished))
             {
                 //We're done, clean up
                 //Set the hidden value to "UPLOADED" to prevent it from being resubmitted
@@ -277,7 +291,7 @@ FileUploadForm.prototype = {
         if (! this.cancelled) // This catches the case where we're not in a callback
         {
             //Poll the upload uri for a status update, at the end, either schedule another poll, or trigger uploadsComplete
-            logDebug("Checking for status on " + this.id)
+            logDebug("Checking for status on " + this.id);
             var d = loadJSONDoc(this.status_uri, {'sessionHandle': this.id, 'fieldname': key});
             //Add error handling for resiliency
             //Check to see if it's done
@@ -295,13 +309,17 @@ FileUploadForm.prototype = {
         //done via overrides
         wedoneyet = this.doNextUpload();
         if (!wedoneyet)
+        {
             return wedoneyet;
+        }
         else
+        {
             //TODO: add message updating progress
             logDebug("Finished uploading all subframes, submitting main form");
-            $(this.form_key).submit()
+            $(this.form_key).submit();
             this.showUploadFinished();
             return true;
+        }
     },
 
     submitFormData: function(form)
@@ -327,4 +345,4 @@ FileUploadForm.prototype = {
             return false;
         }
     }
-}
+};

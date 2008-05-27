@@ -73,6 +73,19 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
+    @fixtures.fixture('Full')
+    def testSavePackage(self, db, data):
+        self.client = self.getClient('owner')
+        self.id = self.client.createPackageTmpDir()
+        refH = 'bogusFactoryHandle'
+        def validateParams(x, sesH, factH, data):
+            self.assertEquals(sesH, self.id)
+            self.assertEquals(factH, refH)
+        self.mock(packagecreator.DirectLibraryBackend, 'makeSourceTrove',
+                validateParams)
+
+        self.client.savePackage(self.id, refH, {}, build = False)
+
     #
     ## Tests for the package creator backend
     #
