@@ -93,7 +93,13 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
             self.lines = []
             for key in self.fields:
                 if not conarycfg[key]:
-                    continue
+                    # list constructs always get displayed.
+                    # this block protects against things like repositoryMap []
+                    # however, contact must always be set, even to empty string.
+                    if key == 'contact':
+                        conarycfg.configLine('contact')
+                    else:
+                        continue
                 strio = StringIO()
                 conarycfg.displayKey(key, out = strio)
                 self.lines.extend(strio.getvalue().splitlines())

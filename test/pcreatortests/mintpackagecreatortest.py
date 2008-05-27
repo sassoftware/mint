@@ -18,6 +18,7 @@ import fixtures
 from mint import packagecreator
 
 from conary import conarycfg
+from conary import changelog
 from conary.lib import util
 
 _envName = 'PACKAGE_CREATOR_SERVICE_PATH'
@@ -72,6 +73,25 @@ class TestPackageCreator(unittest.TestCase):
         field.default = 'asdf'
         self.failUnless(packagecreator.isSelected(field, 'asdf', None))
         self.failUnless(packagecreator.isSelected(field, 'asdf', 'asdf'))
+
+    def testMinCfgMarshalling(self):
+        cfg = conarycfg.ConaryConfiguration()
+        cfg.contact = None
+        mincfg = packagecreator.MinimalConaryConfiguration(cfg)
+        self.assertEquals([x.split()[0] for x in mincfg.lines], ['contact'])
+        self.assertEquals(mincfg.createConaryConfig().contact, '')
+
+        # repeat with ''
+        cfg.configLine('contact')
+        mincfg = packagecreator.MinimalConaryConfiguration(cfg)
+        self.assertEquals([x.split()[0] for x in mincfg.lines], ['contact'])
+        self.assertEquals(mincfg.createConaryConfig().contact, '')
+
+        cfg = mincfg.createConaryConfig()
+        # instantiate a changelog object to ensure it won't backtrace
+        changelog.ChangeLog(name = cfg.name, contact = cfg.contact,
+                message = "doesn't matter\n")
+
 
 #class XmlRpcTest(mint_rephelp.WebRepositoryHelper, packagecreatortest.BaseTest):
 #    def setUp(self):
