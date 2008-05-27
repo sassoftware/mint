@@ -20,6 +20,9 @@ from factory_test.factorydatatest import basicXmlDef
 
 import re, os, StringIO
 
+import mint.mint_error
+import mint.web.webhandler
+
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
@@ -85,6 +88,13 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
         func = projectHandler.handle(context)
         return func, context
+
+    def testErrorRetrievingFactoriesInterviewTemplate(self):
+        ret = []
+        def fakepackagefactories(s, *args):
+            raise mint.mint_error.PackageCreatorError("No idea why this happened")
+        func,context = self._setupInterviewEnvironment(fakepackagefactories)
+        self.assertRaises(mint.web.webhandler.HttpMovedTemporarily, func, auth=context['auth'], **context['fields'])
 
     def testMultipleFactoriesInterviewTemplate(self):
         self.factorystream = StringIO.StringIO(basicXmlDef)

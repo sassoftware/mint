@@ -714,7 +714,7 @@ class ProjectHandler(WebHandler):
             factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
         except MintError, e:
             self._addErrors(str(e))
-            self._predirect('newPackage')
+            self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 sessionHandle = sessionHandle, factories = factories,
                 message = None)
