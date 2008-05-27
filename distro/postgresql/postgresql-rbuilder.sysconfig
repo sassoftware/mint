@@ -1,6 +1,6 @@
 PGPORT="5439"
 PGDATA="/srv/pgsql/8.2-rbuilder"
-PGOPTS=""
+PGOPTS="-c config_file=/etc/postgresql.conf.rbuilder"
 PGLOG="/var/log/pgsql"
 PGTZ="/usr/share/zoneinfo"
 

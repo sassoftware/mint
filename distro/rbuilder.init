@@ -5,8 +5,6 @@
 # Copyright (c) 2008 rPath, Inc
 # All rights reserved
 
-pgsql_config="/etc/postgresql.conf.rbuilder"
-pgsql_config_target="$PGDATA/postgresql.conf"
 pgsql_service=postgresql-rbuilder
 
 . /etc/sysconfig/pgsql/$pgsql_service
@@ -59,15 +57,6 @@ start)
   then
     stop_after_init=1
     service $pgsql_service start
-  fi
-
-  # Copy our config file over the one generated during initialization.
-  # If we aren't going to stop PostgreSQL at the end of this script,
-  # then restart it so the new config will take effect.
-  cp "$pgsql_config" "$pgsql_config_target"
-  if [ "$stop_after_init" != "1" ]
-  then
-    service $pgsql_service restart
   fi
 
   waitForPg
