@@ -77,22 +77,20 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
     ## Tests for the package creator client (ui backend)
     #
 
-    @fixtures.fixture('Full')
-    def testCreatePackage(self, db, data):
+    def _setup_mocks(self, getPackageFactoriesMethod, writeManifest=True):
         self._set_up_path()
-
-        projectId = data['projectId']
 
         #Create the manifest files
         wd = packagecreator.getWorkingDir(self.cfg, self.id)
-        fup = whizzyupload.fileuploader(wd, 'uploadfile')
-        i = open(fup.manifestfile, 'wt')
-        i.write('''fieldname='uploadfile'
+        if writeManifest:
+            fup = whizzyupload.fileuploader(wd, 'uploadfile')
+            i = open(fup.manifestfile, 'wt')
+            i.write('''fieldname='uploadfile'
 filename=garbage.txt
 tempfile=asdfasdf
 content-type=text/plain
 ''')
-        i.close()
+            i.close()
 
         i = open(os.path.join(wd, 'asdfasdf'), 'wt')
         i.write('a' * 350)
@@ -104,18 +102,37 @@ content-type=text/plain
             self.assertEquals(kwargs, {})
             return self.id
 
-        def vacuum(s, *args, **kwargs):
-            self.assertEquals(args[0], self.id)
-            self.assertEquals(len(args), 1)
-            self.assertEquals(kwargs, {})
-            return [('rpm', StringIO.StringIO(basicXmlDef), {}, {'a': 'b'})]
-        self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', vacuum)
+        self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', getPackageFactoriesMethod)
         self.mock(packagecreator.DirectLibraryBackend, 'startSession', startSession)
 
+    @fixtures.fixture('Full')
+    def testCreatePackage(self, db, data):
+        def getCandidateBuildFactories(s, sesH):
+            self.assertEquals(sesH, self.id)
+            return [('rpm', StringIO.StringIO(basicXmlDef), {}, {'a': 'b'})]
+
+        self._setup_mocks(getCandidateBuildFactories)
+        projectId = data['projectId']
         factories = self.client.getPackageFactories(projectId, self.id, 1, 'uploadfile')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})
+
+    @fixtures.fixture('Full')
+    def testCreatePackageNoManifest(self, db, data):
+        self._setup_mocks(None, writeManifest=False)
+        projectId = data['projectId']
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.id, 1, 'uploadfile')
+
+    @fixtures.fixture('Full')
+    def testCreatePackageFactoriesError(self, db, data):
+        def raises(x, sesH):
+            self.assertEquals(sesH, self.id)
+            raise packagecreator.errors.UnsupportedFileFormat('bogus error')
+        self._setup_mocks(raises)
+        projectId = data['projectId']
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.id, 1, 'uploadfile')
+
 
     @fixtures.fixture('Full')
     def testSavePackage(self, db, data):
@@ -151,6 +168,26 @@ content-type=text/plain
         finally:
             del self.validateCalled
             del self.buildCalled
+
+    @fixtures.fixture('Full')
+    def testGetPackageBuildStatusFailedBuild(self, db, data):
+        self._set_up_path()
+        def validateParams(x, sesH, commit):
+            self.assertEquals(sesH, self.id)
+            self.failUnless(commit, 'True should have been passed as the commit parameter')
+            raise packagecreator.errors.BuildFailedError('fake build error')
+        self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
+        self.assertEquals(self.client.server.getPackageBuildStatus(self.id), [True, -1, "fake build error"])
+
+    @fixtures.fixture('Full')
+    def testGetPackageBuildStatus(self, db, data):
+        self._set_up_path()
+        def validateParams(x, sesH, commit):
+            self.assertEquals(sesH, self.id)
+            self.failUnless(commit, 'True should have been passed as the commit parameter')
+            return 'Some data'
+        self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
+        self.assertEquals(self.client.server.getPackageBuildStatus(self.id), 'Some data')
 
 
 if __name__ == '__main__':

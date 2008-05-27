@@ -4561,7 +4561,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             info = fileuploader.parseManifest()
         except IOError, e:
-            raise RuntimeError("unable to parse uploaded file's manifest: %s" % str(e))
+            raise PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
         #Get the version object
