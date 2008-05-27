@@ -74,6 +74,9 @@ Internal Changes
   to find anaconda-templates (RBL-2757).
 * Enhanced the server backend to allow for sets of builds to be launched
   (RBL-2799).
+* Upgrades from versions before 4.0.0 will no longer be possible with
+  this version. Installations predating 4.0.0 will need to first
+  be upgraded to version 4.0.1, then to this version.
 
 Command-Line Client Changes
 ---------------------------

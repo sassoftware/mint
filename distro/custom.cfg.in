@@ -3,8 +3,6 @@ plugins.disable = ['/configure/ConaryConf', '/services/Services']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 
-postmigrate.rBuilderMigration.hidden="property"
-
 [/logs]
 logs.files = {'Appliance Agent: Web Service': '/var/log/raa/web', 'Appliance Agent: Backend Service': '/var/log/raa/raa-service.log', 'Conary': '/var/log/conary', 'Inbound Mirroring': '/var/log/rbuilder/mirror-inbound.log', 'Outbound Mirroring': '/var/log/rbuilder/mirror-outbound.log', 'Jobmaster': '/var/log/rbuilder/jobmaster.log', 'MCP': '/var/log/rbuilder/mcp.log', 'Mirror Preloading': '/var/log/rbuilder/load-mirror.log', 'Package Indexer': '/var/log/rbuilder/package-index.log', 'External Package Indexer': '/var/log/rbuilder/package-index-external.log', 'Apache Access': '/var/log/httpd/access_log', 'Apache Errors': '/var/log/httpd/error_log'}
 
