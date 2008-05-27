@@ -4606,6 +4606,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, data)
         if build:
             pc.build(sessionHandle, commit=True)
+        return True
 
     @typeCheck(((str,unicode),))
     @requiresAuth

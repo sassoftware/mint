@@ -73,21 +73,8 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
-    @fixtures.fixture('Full')
-    def testSavePackage(self, db, data):
-        self.client = self.getClient('owner')
-        self.id = self.client.createPackageTmpDir()
-        refH = 'bogusFactoryHandle'
-        def validateParams(x, sesH, factH, data):
-            self.assertEquals(sesH, self.id)
-            self.assertEquals(factH, refH)
-        self.mock(packagecreator.DirectLibraryBackend, 'makeSourceTrove',
-                validateParams)
-
-        self.client.savePackage(self.id, refH, {}, build = False)
-
     #
-    ## Tests for the package creator backend
+    ## Tests for the package creator client (ui backend)
     #
 
     @fixtures.fixture('Full')
@@ -129,6 +116,41 @@ content-type=text/plain
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})
+
+    @fixtures.fixture('Full')
+    def testSavePackage(self, db, data):
+        self.client = self.getClient('owner')
+        self.id = self.client.createPackageTmpDir()
+        refH = 'bogusFactoryHandle'
+        self.validateCalled = False
+        self.buildCalled = False
+        try:
+            def validateParams(x, sesH, factH, data):
+                self.validateCalled = True
+                self.assertEquals(sesH, self.id)
+                self.assertEquals(factH, refH)
+            self.mock(packagecreator.DirectLibraryBackend, 'makeSourceTrove',
+                    validateParams)
+
+            def buildParams(x, sesH, commit):
+                self.buildCalled = True
+                self.assertEquals(sesH, self.id)
+                self.assertEquals(commit, True)
+            self.mock(packagecreator.DirectLibraryBackend, 'build',
+                    buildParams)
+
+            self.client.savePackage(self.id, refH, {}, build = False)
+            self.failUnless(self.validateCalled, "The validate method was never called")
+            self.failIf(self.buildCalled, "The Build method was called, but shouldn't have been")
+
+            #Try again with build
+            self.validateCalled = False
+            self.client.savePackage(self.id, refH, {}, build = True)
+            self.failUnless(self.validateCalled, "The validate method was never called")
+            self.failUnless(self.buildCalled, "The Build method was never called")
+        finally:
+            del self.validateCalled
+            del self.buildCalled
 
 
 if __name__ == '__main__':
