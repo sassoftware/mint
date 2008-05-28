@@ -16,7 +16,7 @@ from mint import userlevels
 from mint.web import webhandler
 
 
-def weak_signature_call(func, *args, **kwargs):
+def weak_signature_call(_func, *args, **kwargs):
     '''
     Call a function without any keyword arguments it doesn't support.
 
@@ -25,12 +25,12 @@ def weak_signature_call(func, *args, **kwargs):
     from the call.
     '''
 
-    argnames, varname, varkwname, _ = inspect.getargspec(func)
+    argnames, varname, varkwname, _ = inspect.getargspec(_func)
     for kwarg in kwargs.keys():
         if kwarg not in argnames and varkwname is None:
             del kwargs[kwarg]
 
-    return func(*args, **kwargs)
+    return _func(*args, **kwargs)
 
 
 def requiresHttps(func):
