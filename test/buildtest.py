@@ -1270,6 +1270,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         self.assertEquals(1, len(buildIds))
 
 
+
 class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture("Empty")
@@ -1390,49 +1391,59 @@ class BuildTestConaryRepository(MintRepositoryHelper):
                 "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
                 None, '')
         self.assertTrue("anaconda-templates=/conary.rpath.com@rpl:devel" in x)
-        
+
     @testsuite.tests('RBL-2879')
     def testResolveTrove(self):
         client, userid = self.quickMintUser("test", "testpass")
-
+        group = "group-moar-appliance"
+ 
         projectId = self.newProject(client)
         project = client.getProject(projectId)
         group = "group-moar-appliance"
+
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0",
+            [(":runtime", "1.0", deps.Flavor())])
         
-        def addTroves(flavors):
-            for f in flavors:
-                self.addComponent("test:runtime", "1.0", flavor=f)
-                self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
-                self.addCollection(group, "1.0", [("test", "1.0" , f)])
+        def addTrove(flavor):
+            self.addCollection(group, "1.0",
+                [("test", "1.0" , deps.Flavor())], flavor=flavor)
 
-        # add some troves using our stock flavors
-        flavors = (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
-                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86],
-                   buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64])
-        addTroves(flavors)
+        # Lots of options to pick from
+        addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86')
+        addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86 x86_64')
+        addTrove('!foo,!bar,baz,bork,xen,~!domU,~!dom0,~!vmware is: x86')
+        addTrove('!foo,!bar,baz,bork,xen,~!domU,~!dom0,~!vmware is: x86 x86_64')
+        addTrove('!foo,!bar,baz,bork,xen,~!domU,dom0,~!vmware is: x86')
+        addTrove('!foo,!bar,baz,bork,xen,~!domU,dom0,~!vmware is: x86 x86_64')
+        addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86')
+        addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86 x86_64')
+
+        # Selection of flavors to look for. Tuple of (filter, expected).
+        flavors = [
+            (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
+                '!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86'),
+            (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
+                '!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86 x86_64'),
+            (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86],
+                '!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86'),
+            (buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64],
+                '!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86 x86_64'),
+            ]
             
-        # now add a few custom flavors
-        cFlavors = ('dietlibc,~glibc.tls,~!grub.static,~kernel.pae,sasl,~!vmware is: x86(~!sse2)',
-                    'dietlibc,~glibc.tls,~!grub.static,~!kernel.pae,sasl,vmware is: x86(~!sse2)',
-                    '~!dietlibc,~glibc.tls,~grub.static,~!kernel.pae,sasl,~!vmware is: x86 x86_64')
-        addTroves(cFlavors)
-
         # make sure our stock flavors are filtered properly.  i.e. we should
         # get 1 match per flavor even though there are custom flavors.
         server = client.server._server
-        for f in flavors:
-            filterFlavor = deps.parseFlavor(f)
+        for filter, expected in flavors:
+            filter, expected = deps.parseFlavor(filter), deps.parseFlavor(expected)
+
             troves = server._resolveTrove(projectId, group, 
                          "testproject.%s@rpl:devel/1.0" % MINT_PROJECT_DOMAIN, 
-                         filterFlavor)
-            self.assertTrue(len(troves) == 1)
-            name, version, flavor = troves[0]
-            self.assertTrue(name == group)
-            self.assertTrue(str(version) == \
-                '/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN)
-            self.assertTrue(flavor.freeze() == filterFlavor.freeze())
-            
+                         filter)
+            self.failUnlessEqual(troves, [(group, versions.VersionFromString(
+                '/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN),
+                expected)])
+
 
 if __name__ == "__main__":
     testsuite.main()

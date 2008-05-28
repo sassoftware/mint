@@ -2175,19 +2175,41 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return buildId
 
     def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
-        """
-        Return a list of trove specs named troveName on troveLabel that
-        strongly satisfy filterFavor.
-        """
+        '''
+        Return a list of trove tuples matching C{troveName},
+        C{troveLabel}, satisfying C{filterFlavor} and also matching its
+        architecture. The repository backing the project at C{projectId}
+        will be used.
+
+        @return: List of trove tuples matching the query
+        @rtype: list
+        '''
+
         project = projects.Project(self, projectId)
         projectCfg = project.getConaryConfig()
         client = conaryclient.ConaryClient(projectCfg)
         repos = client.getRepos()
 
+        # Get the major architecture from filterFlavor
+        filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
+
         # Find the troves that satisfy the build.
-        troveList = repos.findTrove(None, (troveName, troveLabel, None))
-        return sorted([x for x in troveList if \
-                     filterFlavor.stronglySatisfies(x[2])], key=lambda x: x[1])
+        ret = []
+        matches = repos.findTrove(None, (troveName, troveLabel, None))
+        for name, version, flavor in matches:
+            if not flavor.stronglySatisfies(filterFlavor):
+                continue
+
+            # If filterFlavor has an instruction set, the major
+            # architecture must match that of the group, so
+            # an is: x86 filter does not match is: x86 x86_64 groups.
+            thisArch = helperfuncs.getArchFromFlavor(flavor)
+            if filterArch and filterArch != thisArch:
+                continue
+
+            ret.append((name, version, flavor))
+
+        return ret
 
     @typeCheck(int)
     @requiresAuth
