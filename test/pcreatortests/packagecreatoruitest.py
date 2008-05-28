@@ -22,6 +22,8 @@ from factory_test.factorydatatest import basicXmlDef
 from pcreator.factorydata import FactoryDefinition
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
+    """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
+    out certain pcreator.backend methods."""
 
     def _set_up_path(self):
         self.id = u'99999'

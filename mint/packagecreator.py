@@ -140,6 +140,5 @@ class DirectLibraryBackend(pcreator.backend.BaseBackend):
         for k, v in dataDict.items():
             factoryData.addField(k, v)
 
-        #TODO: What exceptions should we catch?
         pcreator.backend.BaseBackend._makeSourceTroveFromFactoryData(self,
             sessionHandle, factoryHandle, factoryData)

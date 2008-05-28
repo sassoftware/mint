@@ -24,6 +24,8 @@ import mint.mint_error
 import mint.web.webhandler
 
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
+    """ Unit tests for the web ui pieces of the Package Creator """
+
     @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
