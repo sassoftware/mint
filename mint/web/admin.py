@@ -641,7 +641,7 @@ class AdminHandler(WebHandler):
             self._redirect("http://%s%sadmin/outbound" %
                 (self.cfg.siteHost, self.cfg.basePath))
         else:
-            return self.addOutbound(**inputKwargs)
+            return self.editOutbound(**inputKwargs)
 
     @listFields(int, remove = [])
     @boolFields(confirmed = False)
