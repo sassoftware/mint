@@ -35,6 +35,7 @@ function buildFail()
     hideElement('building');
     showElement('complete_fail');
     showElement('resubmit_data');
+    showElement('start_over');
 }
 
 function processResponse(res)
@@ -100,8 +101,8 @@ addLoadEvent(makeRequest);
             <p id="building">Your package is building.  Please be patient while this process completes.</p>
             <p id="complete" style="display:none">Your package has built successfully</p>
             <p id="complete_fail" style="display:none">Your package did not build successfully</p>
+            <p id="resubmit_data" style="display:none"><a href="javascript: history.go(-1);">Review package data</a></p>
             <p id="start_over" style="display:none"><a href="newPackage">Create a new package</a></p>
-            <p id="resubmit_data" style="display:none"><a href="getPackageFactories">Review package data</a></p>
             </div>
         </div>
     </body>
