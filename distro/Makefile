@@ -4,9 +4,11 @@
 # All Rights Reserved
 #
 
+SUBDIRS = postgresql
+
 extra_dist = schema.in.py
 
-generated_files = schema jobslave_set custom.cfg rbuilder.conf
+generated_files = schema custom.cfg rbuilder.conf
 
 .PHONY: all install $(generated_files)
 
@@ -17,9 +19,8 @@ install: default-install
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
+	install -D -m0644 rbuilder-generated.conf $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
-	echo '# This file will be overwritten by rBuilder first-time setup' \
-		> $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	echo '# Custom configuration overrides for rBuilder may be placed here' \
 		> $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
 	# rBuilder misc
@@ -27,6 +28,8 @@ install: default-install
 	# rAPA bits
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
+	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
+	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
@@ -34,13 +37,12 @@ install: default-install
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
+	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
-	# freeze jobslave set
-	if [ -f jobslave_set ]; then install -D -m0644 jobslave_set $(DESTDIR)/srv/rbuilder/mcp/config.d/05_jobslave_set; fi
 
 clean: default-clean
 
@@ -52,16 +54,6 @@ custom.cfg: custom.cfg.in
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e s,@VERSION@,$(VERSION), rbuilder.conf.in >rbuilder.conf
-
-jobslave_set:
-	if [ -n "$$JOBSLAVE_SET_LABEL" ]; then \
-		echo -n 'slaveSetVersion ' >jobslave_set ; \
-		conary rq --all-flavors --full-versions \
-			group-jobslave-set=$$JOBSLAVE_SET_LABEL \
-			|tail -n 1 \
-			|perl -pe 's{^.*/(.*?)-.*$$}{$$1}' \
-			>>jobslave_set ; \
-	fi
 
 
 include ../Make.rules

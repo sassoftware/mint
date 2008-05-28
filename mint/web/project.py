@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -11,7 +11,6 @@ import tempfile
 import time
 from mod_python import apache
 
-from mint import buildxml
 from mint.web import basictroves
 from mint import communitytypes
 from mint import database
@@ -22,10 +21,11 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
-from mint.mint_error import NotEntitledError
+from mint.mint_error import *
 
 from mint import buildtemplates
 from mint import helperfuncs
+from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
@@ -44,6 +44,8 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.errors import TroveNotFound, ParseError
 
 from mcp import mcp_error
+
+from rpath_common.proddef import api1 as proddef
 
 import simplejson
 
@@ -64,7 +66,7 @@ class ProjectHandler(WebHandler):
 
         try:
             self.project = self.client.getProjectByHostname(cmds[0])
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise HttpNotFound
 
         # redirect endorsed (external) projects
@@ -127,16 +129,34 @@ class ProjectHandler(WebHandler):
             mirrored = bool(self.client.getInboundMirror(self.project.id))
 
             # anonymous external projects can't be mirrored
-            _, _, userMap, entMap = self.client.getLabelsForProject(self.project.id)
+            _, _, userMap, entMap = self.client.getLabelsForProject(
+                                                                self.project.id)
             anonymous = len(userMap) == 0 and len(entMap) == 0
         else:
             mirrored = False
             anonymous = False
         if self.cfg.VAMUser:
-            vmtnId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
+            vmtnId = self.client.getCommunityId(self.project.getId(), 
+                                                communitytypes.VMWARE_VAM)
         else:
             vmtnId = None
-        return self._write("projectPage", mirrored = mirrored, anonymous = anonymous, vmtnId = vmtnId)
+            
+        if self.project.external:
+            external = True
+        else:
+            external = False
+            
+        if self.userLevel == userlevels.OWNER and not external:
+            # get the versions associated with a product
+            versions = self.client.getProductVersionListForProduct(
+                                                                self.project.id)
+        else:
+            versions = []
+            
+        return self._write("projectPage", mirrored = mirrored, 
+                           anonymous = anonymous, vmtnId = vmtnId,
+                           versions = versions,
+                           external = external)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -354,6 +374,41 @@ class ProjectHandler(WebHandler):
             curGroupTrove = curGroupTrove)
 
     @writersOnly
+    def newBuildsFromProductDefinition(self, auth):
+        return self._write("newBuildsFromProductDefinition",
+            productVersions = self.client.getProductVersionListForProduct(self.project.id))
+
+    @intFields(productVersionId = -1)
+    @strFields(action = "cancel", productStageName = None)
+    @boolFields(force = False)
+    @dictFields(yesArgs = None)
+    @writersOnly
+    def processNewBuildsFromProductDefinition(self, auth, productVersionId, productStageName, action, force, **yesArgs):
+
+        if action.lower() == 'cancel':
+            self._predirect('builds')
+
+        try:
+            self.client.newBuildsFromProductDefinition(productVersionId,
+                    productStageName, force)
+        except TroveNotFoundForBuildDefinition, tnffbd:
+            return self._write("confirm",
+                    message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
+                    yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
+                                'productVersionId': productVersionId,
+                                'productStageName': productStageName,
+                                'action': 'submit',
+                                'force': '1'},
+                    noLink = "builds")
+        except Exception, e:
+            self._addErrors("Problem encountered when creating builds: %s" % str(e))
+            self._predirect('newBuildsFromProductDefinition')
+        else:
+            self._setInfo("Builds created.")
+            self._predirect('builds')
+
+
+    @writersOnly
     def newBuild(self, auth):
         return self._write("editBuild",
             buildId = None,
@@ -373,10 +428,10 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     @intFields(buildId = -1)
-    @strFields(action = "Edit Build")
+    @strFields(action = "Edit Image")
     def editBuild(self, auth, buildId, action):
 
-        if action == "Edit Build":
+        if action == "Edit Image":
             build = self.client.getBuild(buildId)
 
             troveName, versionStr, flavor = build.getTrove()
@@ -399,7 +454,7 @@ class ProjectHandler(WebHandler):
                 arch = arch,
                 visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
-        elif action == "Recreate Build":
+        elif action == "Recreate Image":
             try:
                 job = self.client.startImageJob(buildId)
             except mcp_error.JobConflict:
@@ -449,7 +504,7 @@ class ProjectHandler(WebHandler):
         jobStatus, msg = res['status'], res['message']
         if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
                              jobstatus.FAILED):
-            self._addErrors("You cannot alter this build because a "
+            self._addErrors("You cannot alter this image because a "
                             "conflicting image is currently being generated.")
             self._predirect("build?id=%d" % buildId)
             return
@@ -483,9 +538,17 @@ class ProjectHandler(WebHandler):
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
         template = build.getDataTemplate()
-        searchPath = [build.getTroveVersion().branch().label()]
-        fallbackPath = [versions.Label(basictroves.baseConaryLabel)]
-        fallbackTroves = basictroves.fallbackTroves
+
+        # validate the template options
+        try:
+            template.validate(**kwargs)
+        except BuildOptionValidationException, e:
+            self._addErrors(str(e))
+            self._predirect("editBuild?buildId=%d" % build.id)
+            return
+
+        buildTroveVersion = build.getTroveVersion().freeze()
+        buildTroveFlavor  = build.getTroveFlavor().freeze()
 
         for name in list(template):
             try:
@@ -500,17 +563,19 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
-                        thisSearchPath = searchPath + fallbackPath
                         if not n or not v or (f is None):
                             # incomplete spec from XMLRPC client
-                            val = build.resolveExtraTrove(n, v, f, thisSearchPath)
+                            val = self.project.resolveExtraTrove(n,
+                                buildTroveVersion, buildTroveFlavor,
+                                v, f)
                         else:
                             try:
-                                # attept to un-freeze the version
+                                # attempt to un-freeze the version
                                 versions.ThawVersion(v)
                             except (ValueError, ParseError):
                                 # spec with non-frozen version
-                                val = build.resolveExtraTrove(n, v, f)
+                                val = self.project.resolveExtraTrove(n,
+                                    buildTroveVersion, buildTroveFlavor, v, f)
                             else:
                                 # frozen version from picker
                                 val = "%s=%s[%s]" % (n, v, f)
@@ -518,10 +583,8 @@ class ProjectHandler(WebHandler):
                 if template[name][0] == RDT_BOOL:
                     val = False
                 elif template[name][0] == RDT_TROVE:
-                    thisSearchPath = list(searchPath)
-                    if name in fallbackTroves:
-                        thisSearchPath += fallbackPath
-                    val = build.resolveExtraTrove(name, searchPath = thisSearchPath)
+                    val = self.project.resolveExtraTrove(name,
+                            buildTroveVersion, buildTroveFlavor)
                 else:
                     val = template[name][1]
             if val:
@@ -547,8 +610,8 @@ class ProjectHandler(WebHandler):
             message = ""
             if build.pubReleaseId:
                 pubRelease = self.client.getPublishedRelease(build.pubReleaseId)
-                message += "This build is part of the unpublished release %s (version %s). Deleting the build will automatically delete the build from the release. " % (pubRelease.name, pubRelease.version)
-            message += "Are you sure you want to delete this build?"
+                message += "This image is part of the unpublished release %s (version %s). Deleting the image will automatically remove the image from the release. " % (pubRelease.name, pubRelease.version)
+            message += "Are you sure you want to delete this image?"
             return self._write("confirm",
                     message = message,
                     yesArgs = { 'func': 'deleteBuild',
@@ -566,11 +629,11 @@ class ProjectHandler(WebHandler):
             for buildId in buildIds:
                 build = self.client.getBuild(int(buildId))
                 build.deleteBuild()
-            self._setInfo("Builds deleted")
+            self._setInfo("Images deleted")
             self._predirect("builds")
         else:
             if not buildIdsToDelete:
-                self._addErrors("No builds specified.")
+                self._addErrors("No images specified.")
                 self._predirect("builds")
             numToDelete = len(buildIdsToDelete)
             numPublished = 0
@@ -580,9 +643,9 @@ class ProjectHandler(WebHandler):
                 if build.pubReleaseId:
                     numPublished += 1
             if numPublished:
-                message += "One or more of the builds you have specified are a part of a release. Deleting these builds will automatically delete the builds from their corresponding release(s). "
+                message += "One or more of the images you have specified are a part of a release. Deleting these images will automatically remove the images from their corresponding release(s). "
 
-            message += "Are you sure you want to delete these builds?"
+            message += "Are you sure you want to delete these images?"
             # we use JSON to serialize that list because confirm.kid
             # will eat the list.
             return self._write("confirm",
@@ -631,25 +694,10 @@ class ProjectHandler(WebHandler):
 
 
     @ownerOnly
-    @strFields(label = None)
-    def buildDefs(self, auth, label):
-        # this is not the method you are looking for (RBL-1911)
-        raise HttpNotFound
-
-        buildsXml = self.client.checkoutBuildXml(self.project.id, label)
-        builds = buildxml.buildsFromXml(buildsXml, splitDefault = True)
-
-        visibleTypes = self.client.getAvailableBuildTypes()
-
-        return self._write("buildDefs", builds = builds,
-            buildsJson = simplejson.dumps(builds),
-            label = label, visibleTypes = visibleTypes)
-
-    @ownerOnly
     def newRelease(self, auth):
         currentBuilds = []
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI or y.buildType == buildtypes.IMAGELESS)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \
@@ -671,7 +719,7 @@ class ProjectHandler(WebHandler):
         currentBuilds = [self.client.getBuild(x) for x in \
                 pubrelease.getBuilds()]
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI)]
+                self.project.getUnpublishedBuilds()) if (y.getFiles() or y.buildType == buildtypes.AMI or y.buildType == buildtypes.IMAGELESS)]
 
         availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
                              y.getTroveVersion()) == 0 and \
@@ -739,7 +787,7 @@ class ProjectHandler(WebHandler):
             self._predirect("releases")
         else:
             return self._write("confirm",
-                    message = "Are you sure you want to delete this release? All builds associated with this release will be put back in the pool of unpublished releases.",
+                    message = "Are you sure you want to delete this release? All images associated with this release will be put back in the pool of unpublished images.",
                     yesArgs = { 'func': 'deleteRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1' },
@@ -826,9 +874,9 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @dictFields(yesArgs = {})
-    @boolFields(confirmed = False)
+    @boolFields(confirmed=False, shouldMirror=False)
     @strFields(vmtn = '')
-    def publishRelease(self, auth, confirmed, vmtn, **yesArgs):
+    def publishRelease(self, auth, confirmed, vmtn, shouldMirror, **yesArgs):
         pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
         if confirmed:
             vmtnError = ''
@@ -862,7 +910,7 @@ class ProjectHandler(WebHandler):
                                                    communitytypes.VMWARE_VAM,
                                                    vamId)
 
-            pubrelease.publish()
+            pubrelease.publish(shouldMirror=shouldMirror)
             if vmtnError:
                 self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version) + '.  ' + vmtnError)
             else:
@@ -877,12 +925,17 @@ class ProjectHandler(WebHandler):
                 previewData = self._getPreviewData(pubrelease, build)
             else:
                 previewData = False
+                
+            mirroredByRelease = self.client.isProjectMirroredByRelease(
+                                    self.project.getId())
             return self._write("confirmPublish",
-                    message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (i.e. add/remove builds, update metadata) you will need to unpublish it first. Are you sure you want to publish this release?",
+                    message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (e.g. add/remove images, update description, etc.) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
-                    noLink = "releases", previewData = previewData)
+                    noLink = "releases", previewData = previewData, 
+                    shouldMirror=False, 
+                    mirroredByRelease=mirroredByRelease)
 
     @ownerOnly
     @dictFields(yesArgs = {})
@@ -913,7 +966,7 @@ class ProjectHandler(WebHandler):
             builds = (not buildType) and  builds or \
                 ([x for x in builds if x.buildType in buildType or \
                       flaggedBuilds.intersection(x.getDataDict())])
-        except database.ItemNotFound:
+        except ItemNotFound:
             self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
         else:
             return self._write("pubrelease", release = release, builds = builds)
@@ -924,11 +977,11 @@ class ProjectHandler(WebHandler):
                          buildtypes.deprecatedBuildTypes.get(x) \
                          or buildtypes.flavorFlags.get(x) for x in buildType]
         if None in buildType:
-            self._addErrors("Invalid build type")
+            self._addErrors("Invalid image type")
             self._predirect(temporary = True)
             return
         if not self.latestPublishedRelease:
-            self._addErrors("This project does not have any published releases.")
+            self._addErrors("This %s does not have any published releases."%getProjectText().lower())
             self._predirect(temporary = True)
         else:
             if buildType:
@@ -1039,51 +1092,217 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
-            'desc': self.project.getDesc(),
-            'branch': self.project.getLabel().split('@')[1],
-            'appliance': self.project.getApplianceValue()
+            'desc': self.project.getDesc()
         }
         return self._write("editProject", kwargs = kwargs)
 
-    @strFields(projecturl = '', desc = '', name = '', branch = '',
-               appliance = 'unknown', commitEmail = '')
+    @strFields(projecturl = '', desc = '', name = '',
+               commitEmail = '')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           branch, appliance, commitEmail):
+                           commitEmail):
+        pText = getProjectText()
         if not name:
-            self._addErrors("You must supply a project title")
-        try:
-            host = versions.Label(self.project.getLabel()).getHost()
-            label = host + '@' + branch
-            versions.Label(label)
-        except ParseError:
-            self._addErrors("Invalid branch name")
+            self._addErrors("You must supply a %s title"%pText.lower())
 
         if not self._getErrors():
             try:
-                self.project.editProject(projecturl, desc, name, appliance)
+                self.project.editProject(projecturl, desc, name)
                 self.project.setCommitEmail(commitEmail)
-
-                # this is a little bit nasty because the label API
-                # needs some work.
-                oldLabel = self.project.getLabel()
-                if oldLabel != label:
-                    labelId = self.project.getLabelIdMap()[oldLabel]
-                    labelInfo = self.client.server.getLabel(labelId)
-                    self.project.editLabel(labelId, label, labelInfo['url'],
-                        labelInfo['authType'], labelInfo['username'],
-                        labelInfo['password'], labelInfo['entitlement'])
-            except database.DuplicateItem:
-                self._addErrors("Project title conflicts with another project")
+            except DuplicateItem:
+                self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'branch': self.project.getLabel().split('@')[1],
-                      'appliance': appliance, 'commitEmail': commitEmail}
+                      'commitEmail': commitEmail}
             return self._write("editProject", kwargs = kwargs)
         else:
-            self._setInfo("Updated project %s" % name)
+            self._setInfo("Updated %s %s" % (pText.lower(), name))
             self._predirect()
+
+    @requiresAuth
+    @ownerOnly
+    @intFields(id = -1)
+    def editVersion(self, auth, id, *args, **kwargs):
+        isNew = (id == -1)
+        
+        # external projects can't use this yet
+        if self.project.external:
+            raise ProductDefinitionVersionExternalNotSup();
+        
+        if not isNew:
+            kwargs.update(self.client.getProductVersion(id))
+            pd = self.client.getProductDefinitionForVersion(id)
+        else:
+            valueToIdMap = buildtemplates.getValueToTemplateIdMap();
+            pd = proddef.ProductDefinition()
+            helperfuncs.addDefaultStagesToProductDefinition(pd)
+
+        return self._write("editVersion",
+                isNew = isNew,
+                id=id,
+                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
+                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+                productDefinition = pd,
+                kwargs = kwargs)
+
+    @intFields(id = -1)
+    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @requiresAuth
+    @ownerOnly
+    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+            **kwargs):
+
+        isNew = (id == -1)
+
+        if not name:
+            self._addErrors("Missing version")
+
+        # Load the current project definition for this version
+        # If this is new, use our template product definition
+        # generator. Otherwise, just get it from the repository.
+        if isNew:
+            pd = proddef.ProductDefinition()
+        else:
+            version = self.client.getProductVersion(id)
+            pd = self.client.getProductDefinitionForVersion(id)
+
+        pd = helperfuncs.sanitizeProductDefinition(
+                    self.project.name,
+                    self.project.description,
+                    self.project.hostname,
+                    self.project.domainname,
+                    self.project.shortname,
+                    name,
+                    description,
+                    self.cfg.namespace,
+                    pd)
+
+        # Gather all grouped inputs
+        collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
+                coerceValues=True)
+
+        # Process stages
+        stages = collatedDict.get('pdstages', {})
+        try:
+            self._validateStages(stages)
+        except ProductDefinitionInvalidStage, e:
+            self._addErrors(str(e))
+
+        # XXX ProductDefinition object needs clearStages()
+        pd.stages = proddef._Stages()
+        for s in stages:
+            pd.addStage(s['name'], s['labelSuffix'])
+
+        # Process upstream sources
+        usources = collatedDict.get('pdusources',{})
+        # TODO: Include upstream sources, baseFlavor, etc.
+        #       from the UI (which needs to be invented).
+        #       Until then, we'll leave any changes a user
+        #       makes in the repos alone.
+
+        # Process build definitions
+        buildDefsList = collatedDict.get('pdbuilddef',[])
+
+        # Currently, stageNames for each build is
+        # defined as the full set of stages.
+        stageNames = [x.name for x in pd.getStages()]
+
+        # XXX ProductDefinition object needs clearBuildDefinitions()
+        pd.buildDefinition = proddef._BuildDefinition()
+
+        validationErrors = []
+        warnedNoNameAlready = False
+        for builddef in buildDefsList:
+            buildType = int(builddef.get('_buildType'))
+            xmlTagName = buildtypes.imageTypeXmlTagNameMap[buildType]
+            buildName = builddef.pop('name', '')
+            proposedBuildSettings = dict(x for x in builddef.iteritems() if not x[0].startswith('_'))
+            bTmpl = buildtemplates.getDataTemplate(buildType)
+            buildSettings = bTmpl.getDefaultDict()
+            buildSettings.update(proposedBuildSettings)
+
+
+            # only add this error once
+            if not buildName and not warnedNoNameAlready:
+                self._addErrors("Missing name for build definition(s)")
+                warnedNoNameAlready = True
+            else:
+                try:
+                    bTmpl.validate(**buildSettings)
+                except BuildOptionValidationException, e:
+                    validationErrors.extend(e.errlist)
+            # add regardless of errors.  if an error occurred, we want the user
+            # to see what they entered.
+
+            # Coerce trove type options back to their class name
+            buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
+
+            pd.addBuildDefinition(name=buildName,
+                baseFlavor=builddef.get('baseFlavor'),
+                imageType=pd.imageType(xmlTagName, buildSettings),
+                stages = stageNames)
+
+        for ve in validationErrors:
+            self._addErrors(str(ve))
+
+        if not self._getErrors():
+            if id == -1:
+                id = self.client.addProductVersion(self.project.id,
+                        name, description)
+            else:
+                self.client.editProductVersion(id, description)
+
+            assert(id != -1)
+            self.client.setProductDefinitionForVersion(id, pd)
+
+            if kwargs.has_key('linked'):
+                # we got here from the "create a product menu" so output
+                # accordingly.  Note that the value of linked is the name
+                # of the project.
+                self._setInfo("Successfully created %s '%s' version '%s'" % \
+                              (getProjectText().lower(), self.project.name,
+                               name))
+            else:
+                if isNew:
+                    action = "Created"
+                else:
+                    action = "Updated"
+                self._setInfo("%s %s version '%s'" % \
+                              (action, getProjectText().lower(), name))
+            self._predirect()
+        else:
+            return self._write("editVersion", 
+               isNew = isNew,
+               id=id,
+               visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
+               buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+               productDefinition = pd, kwargs = kwargs)
+            
+    def _productVersionAvaliableBuildTypes(self):
+        """
+        Get a list of the available build types for build defs
+        """
+        return helperfuncs.getBuildDefsAvaliableBuildTypes(
+            self.client.getAvailableBuildTypes())
+            
+    def _validateStages(self, stagesList):
+        """
+        Validate the release stages
+        """
+        if not stagesList:
+            raise ProductDefinitionInvalidStage(
+                    'You must have one or more release stages defined')
+        
+        for stage in stagesList:
+            # name is required
+            if not stage.has_key('name'):
+                raise ProductDefinitionInvalidStage(
+                    'The release stage name must be specified')
+            # make sure all stages have a labelSuffix
+            # value since we allow it to be empty
+            if not stage.has_key('labelSuffix'):
+                stage['labelSuffix'] = ""
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()
@@ -1179,12 +1398,13 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):
+        pText = getProjectText().lower()
         user = self.client.getUser(userId)
         if self.cfg.sendNotificationEmails:
             subject = "Membership Rejection Notice"
-            body = "Your request to join the following project on %s:\n\n" % self.cfg.productName
+            body = "Your request to join the following %s on %s:\n\n" % (pText, self.cfg.productName)
             body += "%s\n\n" % self.project.getName()
-            body += " has been rejected by the project's owner.\n\n"
+            body += " has been rejected by the %s's owner.\n\n"%pText
             if comments:
                 body += "Owner's comments:\n%s" % comments
             else:
@@ -1192,8 +1412,8 @@ class ProjectHandler(WebHandler):
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
         self._setInfo("Join request for user %s has been rejected " \
-                "for project %s" % (user.getUsername(), \
-                self.project.getNameForDisplay()))
+                "for %s %s" % (user.getUsername(), \
+                pText, self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -1205,8 +1425,8 @@ class ProjectHandler(WebHandler):
     def editMember(self, auth, userId, level):
         user = self.client.getUser(userId)
         self.project.updateUserLevel(userId, level)
-        self._setInfo("User %s has been updated for project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._setInfo("User %s has been updated for %s %s" % \
+                (user.getUsername(), getProjectText(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
@@ -1222,8 +1442,8 @@ class ProjectHandler(WebHandler):
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
                     self._setInfo("User %s promoted" % user.getUsername())
                     self._predirect("members")
-        self._addErrors("User %s not a member of project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._addErrors("User %s not a member of %s %s" % \
+                (user.getUsername(), getProjectText().lower(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
@@ -1239,8 +1459,8 @@ class ProjectHandler(WebHandler):
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
                     self._setInfo("User %s demoted" % user.getUsername())
                     self._predirect("members")
-        self._addErrors("User %s not a member of project %s" % \
-                (user.getUsername(), self.project.getNameForDisplay()))
+        self._addErrors("User %s not a member of %s %s" % \
+                (user.getUsername(), getProjectText().lower(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -1273,11 +1493,11 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed, **yesArgs):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            self._setInfo("You have resigned from project %s" % \
-                    self.project.getNameForDisplay())
+            self._setInfo("You have resigned from %s %s" % \
+                    (getProjectText().lower(), self.project.getNameForDisplay()))
             self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
         else:
-            return self._write("confirm", message = "Are you sure you want to resign from this project?",
+            return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
     @strFields(feed= "releases")
@@ -1296,7 +1516,7 @@ class ProjectHandler(WebHandler):
                 item['title'] = "%s (version %s)" % (release.name, release.version)
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \
                     (self.cfg.siteHost, self.cfg.basePath, hostname, release.getId())
-                item['content']  = "This release contains the following builds:"
+                item['content']  = "This release contains the following images:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
                 for build in builds:
@@ -1341,21 +1561,22 @@ class ProjectHandler(WebHandler):
     @strFields(operation = None)
     @requiresAdmin
     def processProjectAction(self, auth, projectId, operation):
+        pText = getProjectText()
         project = self.client.getProject(projectId)
 
         if operation == "project_hide":
             if not project.hidden:
                 self.client.hideProject(projectId)
-                self._setInfo("Project hidden")
+                self._setInfo("%s hidden"%pText.title())
             else:
-                self._addErrors("Project is already hidden")
+                self._addErrors("%s is already hidden"%pText.title())
         elif operation == "project_unhide":
             if project.hidden:
                 self.client.unhideProject(projectId)
-                self._setInfo("Project is now visible")
+                self._setInfo("%s is now visible"%pText.title())
             else:
-                self._addErrors("Project is already visible")
+                self._addErrors("%s is already visible"%pText.title())
         else:
-            self._addErrors("Please select a valid project administration option from the menu")
+            self._addErrors("Please select a valid %s administration option from the menu"%pText.lower())
 
         return self._predirect()

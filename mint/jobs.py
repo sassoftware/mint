@@ -1,19 +1,11 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
 from mint import database
 from mint import urltypes
-from mint.mint_error import MintError
-
-class FileMissing(MintError):
-    def __str__(self):
-        return "The requested file does not exist"
-
-class DuplicateJob(MintError):
-    def __str__(self):
-        return "A conflicting job is already in progress"
+from mint.mint_error import *
 
 class JobsTable(database.KeyedTable):
     name = 'Jobs'

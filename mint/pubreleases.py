@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -7,7 +7,7 @@
 from mint import builds
 from mint import database
 from mint import helperfuncs
-from conary.deps import deps
+from mint.mint_error import ItemNotFound
 
 class PublishedReleasesTable(database.KeyedTable):
 
@@ -16,7 +16,7 @@ class PublishedReleasesTable(database.KeyedTable):
 
     fields = [ 'pubReleaseId', 'projectId', 'name', 'version', 'description',
                'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
-               'timePublished', 'publishedBy' ]
+               'timePublished', 'publishedBy', 'shouldMirror', 'timeMirrored' ]
 
     indexes = { "PubReleasesProjectIdIdx": \
                    """CREATE INDEX PubReleasesProjectIdIdx
@@ -32,7 +32,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def publishedReleaseExists(self, pubReleaseId):
         try:
             pubRelease = self.get(pubReleaseId, fields=['pubReleaseId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return False
         return True
 
@@ -88,6 +88,17 @@ class PublishedReleasesTable(database.KeyedTable):
 
         return uniqueBuildTypes
 
+    def getMirrorableReleasesByProject(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT pubReleaseId FROM PublishedReleases
+                WHERE projectId = ?
+                    AND timePublished IS NOT NULL
+                    AND shouldMirror = 1
+                ORDER BY timePublished ASC
+            """, projectId)
+        return [x[0] for x in cu.fetchall()]
+
 class PublishedRelease(database.TableObject):
 
     __slots__ = PublishedReleasesTable.fields
@@ -116,8 +127,10 @@ class PublishedRelease(database.TableObject):
                    'description': self.description}
         return self.server.updatePublishedRelease(self.pubReleaseId, valDict)
 
-    def publish(self):
-        return self.server.publishPublishedRelease(self.pubReleaseId)
+    def publish(self, shouldMirror=False):
+        self.server.publishPublishedRelease(self.pubReleaseId, shouldMirror)
+        return True
 
     def unpublish(self):
-        return self.server.unpublishPublishedRelease(self.pubReleaseId)
+        self.server.unpublishPublishedRelease(self.pubReleaseId)
+        return True

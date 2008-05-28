@@ -5,74 +5,134 @@
 # All rights reserved
 #
 
-import os, sys
+import logging
+import os
+import optparse
+import sys
 
 from mint import config
+from mint import scriptlibrary
 from mint import maintenance
 from mint.projects import transTables
 from conary import dbstore
+from conary.lib import tracelog
 from conary.server import schema
 
-cfg = config.MintConfig()
-cfg.read(config.RBUILDER_CONFIG)
 
-# check a few important things
-ec = os.system('/sbin/service httpd status > /dev/null')
-isRunningHttpd = bool((ec >> 8) == 0)
-isRunningInMaintenanceMode = (maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE)
+class MigrateAllProjects(scriptlibrary.SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+    logFileName = "conary-db-migration.log"
+    options = None
+    args = None
+    oldLogMe = tracelog.logMe
+    currentProjectName = None
 
-if isRunningHttpd and not isRunningInMaintenanceMode:
-    print >> sys.stderr, """
-rBuilder repositories are not locked. You must place the site in
-maintenance mode or shut down the Apache Web Server (httpd) before
-continuing."""
-    sys.exit(1)
+    def _newLogMe(self, level, *args):
+        """
+        This is used to hijack the method that the migration scripts use
+        in conary.lib.tracelog. We want to format things our way and have
+        it printed out to stderr as INFO messages to get meaningful
+        messages inside of rAPA.
+        """
+        if level <= 2:
+            if len(args):
+                msgPrefix = self.currentProjectName and \
+                        "[%s] " % self.currentProjectName or ""
+                self.log.info(msgPrefix + \
+                        " ".join([str(x) for x in args]))
 
-print "Migrating Conary repository databases for all projects..."
+    def handle_args(self):
+        usage = "%prog"
+        op = optparse.OptionParser(usage=usage)
+        op.add_option("-c", "--rbuilder-config",
+                dest = "cfgPath", default = None,
+                help = "use a different configuration file")
+        (self.options, self.args) = op.parse_args()
 
-db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-cu = db.cursor()
+        # read the configuration
+        self.cfg = config.MintConfig()
+        if self.options.cfgPath:
+            self.cfg.read(self.options.cfgPath)
+        else:
+            self.cfg.read(self.cfgPath)
+        if self.logFileName:
+            self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
+        return True
 
-# get repname map used to help find the local Conary repository
-# for external locally-mirrored projects
-repnamemap = {}
-cu.execute("SELECT fromname, toname FROM RepNameMap")
-for fromName, toName in cu.fetchall():
-    fromName = fromName.translate(transTables[cfg.reposDBDriver])
-    toName = toName.translate(transTables[cfg.reposDBDriver])
-    repnamemap[fromName] = toName
+    def action(self):
+        scriptlibrary.setupScriptLogger(self.logPath,
+                consoleLevel=logging.INFO)
+        self.log = scriptlibrary.getScriptLogger()
 
-# get all projects which are not external OR are external, but are locally mirrored
-cu.execute("""SELECT hostname, domainname FROM Projects WHERE
-              external = 0 or EXISTS(SELECT * FROM InboundMirrors 
-              WHERE Projects.projectId=InboundMirrors.targetProjectId)""")
+        # check a few important things
+        ec = os.system('/sbin/service httpd status > /dev/null')
+        isRunningHttpd = bool((ec >> 8) == 0)
+        isRunningInMaintenanceMode = \
+                (maintenance.getMaintenanceMode(self.cfg)==maintenance.LOCKED_MODE)
 
-dbNames = [(x[0] + "." + x[1]).translate(transTables[cfg.reposDBDriver]) for x in cu.fetchall()]
+        if isRunningHttpd and not isRunningInMaintenanceMode:
+            self.log.error("rBuilder repositories are not locked. You must place the site in maintenance mode or shut down the Apache Web Server (httpd) before continuing.")
+            return 1
 
-errors = 0
-for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
-    # lookup things in the repnamemap to resolve external local
-    # mirrors
-    actualDbName = repnamemap.get(dbName, dbName)
-    try:
-        reposDb = dbstore.connect(cfg.reposDBPath % actualDbName,
-                                  driver = cfg.reposDBDriver)
-        schema.loadSchema(reposDb, doMigrate=True)
-    except:
-        errors += 1
-        e = sys.exc_info()[1]
-        if str(e).startswith('Unknown database'):
-            continue
-        if str(e) == 'unable to open database file':
-            continue
-        print "error in database: %s\n %s" % (dbName, str(e))
+        self.log.info("Migrating Conary repository databases...")
 
-    print "Completed %d of %d" % (count, len(dbNames)), chr(13),
-    sys.stdout.flush()
+        db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
+        cu = db.cursor()
 
-if errors:
-    print "\nConary repository migration completed with errors."
-    sys.exit(1)
+        # get repname map used to help find the local Conary repository
+        # for external locally-mirrored projects
+        repnamemap = {}
+        cu.execute("SELECT fromname, toname FROM RepNameMap")
+        for fromName, toName in cu.fetchall():
+            fromName = fromName.translate(transTables[self.cfg.reposDBDriver])
+            toName = toName.translate(transTables[self.cfg.reposDBDriver])
+            repnamemap[fromName] = toName
 
-print "\nConary repository migration complete."
-sys.exit(0)
+        # get all projects which are not external OR are external,
+        # but are locally mirrored
+        cu.execute("""SELECT hostname, domainname FROM Projects WHERE
+                      external = 0 or EXISTS(SELECT * FROM InboundMirrors 
+                      WHERE Projects.projectId=InboundMirrors.targetProjectId)""")
+
+        # hijack the logMe method
+        tracelog.logMe = self._newLogMe
+
+        dbNames = [(x[0] + "." + x[1]).translate(transTables[self.cfg.reposDBDriver]) for x in cu.fetchall()]
+
+        errors = 0
+        for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
+            # lookup things in the repnamemap to resolve external local
+            # mirrors
+            actualDbName = repnamemap.get(dbName, dbName)
+            self.currentProjectName = dbName.split('.')[0]
+            try:
+                db_path = self.cfg.reposDBPath % actualDbName
+                reposDb = dbstore.connect(db_path, driver = self.cfg.reposDBDriver)
+                self.log.info('[%s] Migrating (%d of %d)' % \
+                        (self.currentProjectName, count, len(dbNames)))
+                self.log.info('[%s] Using database at %s' % \
+                        (self.currentProjectName, db_path))
+                schema.loadSchema(reposDb, doMigrate=True)
+            except:
+                errors += 1
+                e = sys.exc_info()[1]
+                if str(e).startswith('Unknown database'):
+                    continue
+                if str(e) == 'unable to open database file':
+                    continue
+                self.log.error("[%s] %s" % (self.currentProjectName,
+                    str(e)))
+
+            self.log.info("[%s] Completed (%d of %d)" % \
+                    (self.currentProjectName, count, len(dbNames)))
+
+        if errors:
+            self.log.error("Conary repository migration completed with errors.")
+            return 1
+
+        self.log.info("Conary repository migration complete.")
+        return 0
+
+if __name__ == "__main__":
+    mig = MigrateAllProjects()
+    os._exit(mig.run())

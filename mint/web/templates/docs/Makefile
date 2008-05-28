@@ -6,12 +6,8 @@
 
 kid_files =			\
 	dev-tutorial.kid	\
-        feedback.kid            \
         minihelp.kid            \
-        privacy.kid             \
-        tos.kid                 \
-	user-tutorial.kid	\
-	legal.kid		
+	user-tutorial.kid
 
 python_files = __init__.py
 

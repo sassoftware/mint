@@ -12,7 +12,6 @@ python_files =			\
 	builds.py		\
 	buildtemplates.py	\
 	buildtypes.py		\
-	buildxml.py             \
 	charts.py		\
 	checkhtml.py		\
 	client.py		\
@@ -42,8 +41,8 @@ python_files =			\
 	pkgindexer.py		\
 	profile.py		\
 	projects.py		\
+	proxiedtransport.py	\
 	pubreleases.py		\
-	rapapasswords.py	\
 	rbuilderaction.py	\
 	requests.py		\
 	schema.py		\

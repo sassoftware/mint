@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 import os
 
@@ -68,6 +68,27 @@ class CmdLineTest(unittest.TestCase):
             [None, None, None, {'option': ['key val', 'anotherkey anotherval']},
             ['build-create', 'testproject', troveSpec, 'installable_iso']])
 
+    def testBuildCreateFromProductDefinition(self):
+        troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1' % \
+                    MINT_PROJECT_DOMAIN
+
+        self.checkRBuilder('build-product testproject 1 %s' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --wait' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'wait' : True}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --timeout 10' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'timeout' : '10'}, ['build-product',
+                           'testproject', '1', troveSpec]])
+        self.checkRBuilder('build-product testproject 1 %s --quiet' % troveSpec,
+                           'mint.cmdline.builds.BuildCreateFromProdDefCommand.runCommand',
+                           [None, None, None, {'quiet' : True}, ['build-product',
+                           'testproject', '1', troveSpec]])
+
     def testBuildWait(self):
         self.checkRBuilder('build-wait 111',
             'mint.cmdline.builds.BuildWaitCommand.runCommand',
@@ -101,7 +122,9 @@ class CmdLineFuncTest(MintRepositoryHelper):
         raise testsuite.SkipTestException("Un-logged internal server error")
         client, userId = self.quickMintUser("test", "testpass")
 
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
+                        shortname="testproject", version="1.0", 
+                        prodtype="Component")
 
         cmd = builds.BuildCreateCommand()
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
@@ -135,7 +158,8 @@ class CmdLineFuncTest(MintRepositoryHelper):
     def testUserMembershipCMD(self):
         adminClient, userId = self.quickMintAdmin("adminuser", "adminpass")
         newProjectId = adminClient.newProject("testproject", "testproject",
-            MINT_PROJECT_DOMAIN)
+            MINT_PROJECT_DOMAIN, shortname="testproject",
+            version="1.0", prodtype="Component")
 
         client, userId = self.quickMintUser("testuser", "testpass")
 
@@ -151,7 +175,9 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cfg = RBuilderShellConfig(False)
         cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
 
-        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN,
+                        shortname="testproject", version="1.0", 
+                        prodtype="Component")
         b = client.newBuild(projectId, 'build 1')
         b.setBuildType(buildtypes.INSTALLABLE_ISO)
         b.setFiles([["file1", "File Title 1"],

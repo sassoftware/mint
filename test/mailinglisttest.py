@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 import re
 import testsuite
@@ -8,7 +8,7 @@ import unittest
 testsuite.setup()
 
 from mint import mailinglists
-from mint.mailinglists import MailingListException
+from mint.mint_error import *
 
 class StubServer:
     fail = False

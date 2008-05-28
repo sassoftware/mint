@@ -1506,3 +1506,32 @@ table.buildDefs tr.dialogButtons td button {
     text-decoration: underline;
     background-color: transparent;
 }
+
+.indented {
+    margin-left: 2em;
+}
+
+.notopmargin {
+    margin-top: 0;
+}
+
+#taskList dl {
+    margin-left: 1em;
+}
+
+#taskList dt {
+    margin-left: inherit;
+    font-size: larger;
+    border-bottom: 1px solid;
+}
+
+#taskList dd {
+    margin-left: inherit;
+    margin-bottom: 1em;
+}
+
+#taskList dd span.imagegroup {
+    font-size: smaller;
+    font-style: italic;
+}
+

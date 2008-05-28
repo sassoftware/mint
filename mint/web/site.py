@@ -15,11 +15,13 @@ import simplejson
 
 from mod_python import apache
 
+from mint import buildtemplates
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
 from mint import database
 from mint import data
+from mint import helperfuncs
 from mint import mint_error
 from mint import jobs
 from mint import maintenance
@@ -30,6 +32,7 @@ from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint.client import timeDelta
+from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
 from mint.web.cache import cache
@@ -166,9 +169,9 @@ class SiteHandler(WebHandler):
             errors.append("Passwords do not match.")
         if len(password) < 6:
             errors.append("Password must be 6 characters or longer.")
-        if not tos:
+        if self.cfg.rBuilderOnline or self.cfg.tosLink and not tos:
             errors.append("You must accept the Terms of Service to create an account")
-        if not privacy:
+        if self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink and not privacy:
             errors.append("You must accept the Privacy Policy to create an account")
         if not errors:
             try:
@@ -202,12 +205,6 @@ class SiteHandler(WebHandler):
     @redirectHttps
     def confirmEmail(self, auth, **kwargs):
         return self._write("confirmEmail", email=auth.email)
-
-    @strFields(page = 'legal')
-    def legal(self, auth, page):
-        if not helpDocument(page):
-            raise HttpNotFound
-        return self._write("docs/" + page)
 
     @strFields(message = "")
     @redirectHttps
@@ -394,7 +391,7 @@ class SiteHandler(WebHandler):
         if fullName != auth.fullName:
             self.user.setFullName(fullName)
 
-        for key, (dType, default, prompt) in \
+        for key, (dType, default, prompt, errordesc) in \
                 self.user.getDataTemplate().iteritems():
             if dType == data.RDT_BOOL:
                 val = bool(kwargs.get(key, False))
@@ -429,15 +426,17 @@ class SiteHandler(WebHandler):
         if self.projectList:
             return self._write("uploadKey", kwargs={}, projects=projectList)
         else:
-            return self._write("error", shortError="Not a project member",
-                error = "You may not upload a key as you are not a member of any projects. "
-                        "Create a project, or ask a project owner to add you to their "
-                        "project and then come back")
+            pText = getProjectText().lower()
+            return self._write("error", shortError="Not a %s member"%pText,
+                error = "You may not upload a key as you are not a member of any %ss. "
+                        "Create a %s, or ask a %s owner to add you to their "
+                        "%s and then come back"%(pText,pText,pText,pText))
 
     @requiresAuth
     @listFields(str, projects=None)
     @strFields(keydata=None)
     def processKey(self, auth, projects, keydata):
+        pText = getProjectText().lower()
         projectList = sorted((
                 (x[0].getName(), x[0].getHostname())
                 for x in self.projectList
@@ -458,12 +457,12 @@ class SiteHandler(WebHandler):
                     added.append(project)
 
         c = len(added)
-        self._setInfo("Added key to %d %s" % (c, (c == 1) and "project" or "projects"))
+        self._setInfo("Added key to %d %s" % (c, (c == 1) and pText or "%ss"%pText))
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown'})
+        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance'})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -488,22 +487,31 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '', commitEmail='')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance):
-        hostname = hostname.lower()
-        if not title:
-            self._addErrors("You must supply a project title")
+    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version, commitEmail):
+        
+        shortname = shortname.lower()
         if not hostname:
-            self._addErrors("You must supply a project hostname")
-        if not domainname:
-            self._addErrors("You must supply a project domain name")
+            hostname = shortname
+        
+        pText = getProjectText().lower()
+        if not title:
+            self._addErrors("You must supply a %s title"%pText)
+        if not shortname:
+            self._addErrors("You must supply a %s short name"%pText)
+        if not prodtype or prodtype == 'unknown':
+            self._addErrors("You must select a %s type"%pText)
+        if not version or len(version) <= 0:
+            self._addErrors("You must supply a %s version"%pText)
+
         if not self._getErrors():
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance)
+                    domainname, projecturl, blurb, appliance, shortname, prodtype, version, commitEmail)
+                
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
                     if not self._createProjectLists(auth=auth,
@@ -518,11 +526,27 @@ class SiteHandler(WebHandler):
                 self._addErrors(str(e))
             except mint_error.MintError, e:
                 self._addErrors(str(e))
+                
+        creatingVersion = False
         if not self._getErrors():
-            self._setInfo("Project %s successfully created" % title)
-            self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            # attempt to create the project version
+            creatingVersion = True
+            try:
+                versionId = self.client.addProductVersion(projectId, version);
+                pd = helperfuncs.sanitizeProductDefinition(title,
+                        blurb, hostname, domainname, shortname, version,
+                        '', self.cfg.namespace)
+                self.client.setProductDefinitionForVersion(versionId, pd)
+
+            except projects.DuplicateProductVersion, e: 
+                self._addErrors(str(e))
+                
+        if not self._getErrors():
+            # don't output status here since we now move on the updating the 
+            # version.  Status will be updated after that.
+            self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance}
+            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
             return self._write("newProject", kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
@@ -555,7 +579,7 @@ class SiteHandler(WebHandler):
                     userProjects.append(x)
             return self._write("userInfo", user = user, userProjects = userProjects, userIsAdmin = userIsAdmin)
         else:
-            raise database.ItemNotFound('userid')
+            raise ItemNotFound('userid')
 
     @strFields(search = "", type = None)
     @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0, byPopularity = 0)
@@ -626,10 +650,11 @@ class SiteHandler(WebHandler):
     #
 
     def _formatPackageSearch(self, results):
+        pText = getProjectText().title()
         if self.groupTrove:
-            columns = ('Package', 'Project', '')
+            columns = ('Package', pText, '')
         else:
-            columns = ('Package', 'Project')
+            columns = ('Package', pText)
 
         formattedRows = []
         for troveName, troveVersionStr, projectId in results:
@@ -683,7 +708,8 @@ class SiteHandler(WebHandler):
     # Project search
     # 
     def _formatProjectSearch(self, results):
-        columns = ('Project', 'Last Commit', 'Last Release')
+        pText = getProjectText().title()
+        columns = (pText, 'Last Commit', 'Last Release')
         formattedRows = []
         for x in results:
             p = self.client.getProject(x[0])
@@ -697,6 +723,7 @@ class SiteHandler(WebHandler):
         return formattedRows, columns
 
     def _projectSearch(self, terms, modified, limit, offset, limitsRemoved = False, filterNoDownloads = True):
+        pText = getProjectText()
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset,
             filterNoDownloads = filterNoDownloads)
 
@@ -706,7 +733,7 @@ class SiteHandler(WebHandler):
 
         def describeFn(key, val):
             if key == "buildtype":
-                return "projects containing %s builds" % buildtypes.typeNamesMarketing[int(val)]
+                return "%s containing %s builds" % (pText.lower(),buildtypes.typeNamesMarketing[int(val)])
             else:
                 return ""
 
@@ -726,7 +753,7 @@ class SiteHandler(WebHandler):
         else:
             extraParams = ";showAll=1"
         
-        return self._write("searchResults", searchType = "Projects",
+        return self._write("searchResults", searchType = pText.title(),
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
                 columns = columns, count = count, limit = limit,
@@ -847,12 +874,13 @@ class SiteHandler(WebHandler):
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
+        pText = getProjectText()
         if feed == "newProjects":
             results = self.client.getNewProjects(10, showFledgling = False)
 
-            title = "%s - New Projects" % self.cfg.productName
+            title = "%s - New %ss" % (self.cfg.productName,pText.title())
             link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New projects created on %s" % self.cfg.productName
+            desc = "New %ss created on %s" % (pText.lower(),self.cfg.productName) 
 
             items = []
             for p in results:
@@ -861,11 +889,11 @@ class SiteHandler(WebHandler):
 
                 item['title'] = project.getName()
                 item['link'] = project.getUrl()
-                item['content'] = "<p>A new project named <a href=\"%s\">%s</a> has been created.</p>" % \
-                    (project.getUrl(), project.getName())
+                item['content'] = "<p>A new %s named <a href=\"%s\">%s</a> has been created.</p>" % \
+                    (pText.lower(),project.getUrl(), project.getName())
                 desc = project.getDesc().strip()
                 if desc:
-                    item['content'] += "Project description:"
+                    item['content'] += "%s description:"%pText.title()
                     item['content'] += "<blockquote>%s</blockquote>" % desc
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
@@ -884,7 +912,7 @@ class SiteHandler(WebHandler):
                 if release.version:
                     item['title'] += " (version %s)" % (release.version)
                 item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, release.getId())
-                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, projectName)
+                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> %s.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, projectName, pText.lower())
                 item['content']  += "This release contains the following builds:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
@@ -960,7 +988,7 @@ class SiteHandler(WebHandler):
     def tryItNow(self, auth, id):
         try:
             bami = self.client.getBlessedAMI(id)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise HttpNotFound
 
         if not bami.isAvailable:

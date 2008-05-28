@@ -3,9 +3,13 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2007 rPath, Inc.
+    Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
+<?python
+from mint.web.templatesupport import projectText
+?>
+
     <head>
         <title>${formatTitle('Please Confirm')}</title>
         <script type="text/javascript">
@@ -27,6 +31,15 @@
             <p>${message}</p>
                     <form method="post" action="${yesArgs['func']}">
             <table>
+                <tr py:if="mirroredByRelease">
+                    <td>
+                        <label>
+                            <input id="shouldMirror" name="shouldMirror" class="check" type="checkbox"
+                                value="1" py:attrs="{'checked': shouldMirror and 'checked' or None}" />
+                            Publish this release to the Update Service
+                        </label>
+                    </td>
+                </tr>
                 <tr><td>
                     <p style="width: 50%;">
                         <a class="imageButton" href="${noLink}"><img src="${cfg.staticPath}apps/mint/images/no_button.png" alt="No" /></a>
@@ -62,7 +75,7 @@ Appliance Marketplace</a></label>
                                     <td>${previewData['oneLiner']}</td>
                                 </tr>
                                 <tr>
-                                    <td style="text-align: right; padding-right: 30px;">Project Description:</td>
+                                    <td style="text-align: right; padding-right: 30px;">${projectText().title()} Description:</td>
                                     <td>${previewData['longDesc']}</td>
                                 </tr>
                                 <tr><td/></tr>

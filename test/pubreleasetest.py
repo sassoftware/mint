@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 
 import testsuite
@@ -9,16 +9,17 @@ testsuite.setup()
 import time
 
 import fixtures
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
+import mint_rephelp
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, MintRepositoryHelper
 
 from mint import buildtypes
 from mint import pubreleases
-from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, \
-     BuildEmpty, PublishedReleasePublished, PublishedReleaseEmpty, \
-     PublishedReleaseNotPublished
-from mint.database import ItemNotFound
+from mint.mint_error import *
 
-class PublishedReleaseTest(fixtures.FixturedUnitTest):
+from conary import versions
+from conary.conaryclient import ConaryClient
+
+class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
     @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testPublishedReleaseCreation(self, db, data):
@@ -26,6 +27,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         # The full fixture actually creates a published release; we'll
         # use this already created object as a starting point.
         client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         pubReleaseId = pubRelease.id
         self.failUnless(pubRelease.id == pubRelease.pubReleaseId,
@@ -132,13 +134,16 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testGetPublishedReleasesByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseFinalId'], data['pubReleaseId'] ])
+        self.failUnlessEqual(project.getPublishedReleases(), 
+            [ data['pubReleaseFinalId'], data['imagelessReleaseId'], 
+            data['pubReleaseId'] ])
 
     @fixtures.fixture("Full")
     def testGetUnpublishedBuildsByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getUnpublishedBuilds(), [ data['anotherBuildId'] ])
+        self.failUnlessEqual(project.getUnpublishedBuilds(), 
+            [ data['anotherBuildId']])
 
     @fixtures.fixture("Full")
     def testDeletePublishedRelease(self, db, data):
@@ -146,8 +151,8 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         client.deletePublishedRelease(data['pubReleaseId'])
 
-        self.failUnlessEqual(len(project.getPublishedReleases()), 1,
-                "There should be only one published release in the project")
+        self.failUnlessEqual(len(project.getPublishedReleases()), 2,
+                "There should be only two published releases in the project")
 
         self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
                 "Previously published builds should now be unpublished")
@@ -174,6 +179,39 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(pubRelease.publishedBy, data['owner'],
                 "Release wasn't marked with the appropriate publisher")
         self.failUnless(pubRelease.isPublished())
+
+    @fixtures.fixture("Full")
+    def testGetMirrorableReleases(self, db, data):
+        '''
+        Check that publishing and unpublishing sets the mirrorability
+        of the associated releases and that
+        I{getMirrorableReleasesByProject} reflects this.
+
+        @tests: RBL-2546
+        '''
+        client = self.getClient("owner")
+
+        # Check that there is nothing mirrorable initially
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [])
+
+        # Publish a release
+        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease.publish(shouldMirror=True)
+
+        # Now check that it shows up in the mirrorable list
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [data['pubReleaseId']])
+
+        # Unpublish it
+        pubRelease.unpublish()
+
+        # And check that it's not mirrorable anymore
+        mirrorableReleases = client.server.getMirrorableReleasesByProject(
+            data['projectId'])
+        self.failUnlessEqual(mirrorableReleases, [])
 
     @fixtures.fixture("Full")
     def testDeleteBuildFromPublishedRelease(self, db, data):
@@ -285,7 +323,9 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         # create an unrelated project using a seperate admin client
         adminClient = self.getClient("admin")
-        otherProjectId = adminClient.newProject('Quux', 'quux', 'rpath.org')
+        hostname = "quux"
+        otherProjectId = adminClient.newProject('Quux', hostname, 'rpath.org',
+                       shortname=hostname, version="1.0", prodtype="Component")
 
         for (user, (allowed, exc)) in acls.items():
             client = self.getClient(user)
@@ -416,9 +456,12 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         client = self.getClient("owner")
         adminClient = self.getClient("admin")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        project2Id = client.newProject("Bar", "bar", "rpath.org")
-        project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
+        projectId = client.newProject("Foo", "foo", "rpath.org",
+                        shortname="foo", version="1.0", prodtype="Component")
+        project2Id = client.newProject("Bar", "bar", "rpath.org",
+                        shortname="bar", version="1.0", prodtype="Component")
+        project3Id = adminClient.newProject("Hide", "hide", "rpath.org",
+                         shortname="hide", version="1.0", prodtype="Component")
         adminClient.hideProject(project3Id)
         buildsToMake = [ (int(projectId), "foo", "Foo Unpublished"),
                            (int(project3Id), "hide", "Hide Build 1"),
@@ -512,7 +555,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         pubRel.publish()
         pubRel.unpublish()
-        self.assertRaises(PublishedReleaseNotPublished, pubRel.unpublish)
+        try:
+            pubRel.unpublish()
+            self.fail("Should have failed with PublishedReleaseNotPublished")
+        except PublishedReleaseNotPublished:
+            # do nothing, expected
+            pass
+#        self.assertRaises(PublishedReleaseNotPublished, pubRel.unpublish)
 
     @fixtures.fixture('Full')
     def testUnpubPubRelPerm(self, db, data):

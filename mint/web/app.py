@@ -15,10 +15,10 @@ from mod_python import Cookie
 from mod_python.util import FieldStorage
 
 from mint import database
-from mint import mint_error
 from mint import server
 from mint import shimclient
 from mint import users, userlevels
+from mint.mint_error import *
 from mint.session import SqlSession, COOKIE_NAME
 from mint.web import cache, fields
 from mint.web.admin import AdminHandler
@@ -122,7 +122,7 @@ class MintApp(WebHandler):
                     l.append(project)
             else:
                 if pathInfo not in  ('/maintenance/', '/logout/'):
-                    raise mint_error.MaintenanceMode
+                    raise MaintenanceMode
         self.auth.setToken(self.authToken)
 
         method = self._getHandler(pathInfo)
@@ -144,8 +144,8 @@ class MintApp(WebHandler):
                 self.session.save()
             elif 'cacheable' in method.__dict__:
                 pageCache[reqHash(self.req)] = output
-        except mint_error.MintError, e:
-            if isinstance(e, mint_error.MaintenanceMode):
+        except MintError, e:
+            if isinstance(e, MaintenanceMode):
                 raise
             tb = logTraceback()
             self.toUrl = self.cfg.basePath
@@ -191,7 +191,7 @@ class MintApp(WebHandler):
             and self.cfg.configured:
             try:
                 project = self.client.getProjectByHostname(hostname)
-            except database.ItemNotFound:
+            except ItemNotFound:
                 # project does not exist, redirect to front page
                 self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
                 raise HttpNotFound
@@ -226,7 +226,7 @@ class MintApp(WebHandler):
         if self.session.has_key('groupTroveId') and self.auth.authorized:
             try:
                 self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
-            except database.ItemNotFound:
+            except ItemNotFound:
                 del self.session['groupTroveId']
                 self.groupTrove = None
                 self.groupProject = None

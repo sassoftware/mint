@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -15,17 +15,8 @@ except ImportError:
 
 
 from mint import database
-from mint.mint_error import MintError
+from mint.mint_error import *
 from mint.helperfuncs import toDatabaseTimestamp
-
-class TooManyAMIInstancesPerIP(MintError):
-    def __str__(self):
-        return "Too many AMI instances have been launched from this IP " \
-               "address. Please try again later."
-
-class FailedToLaunchAMIInstance(MintError):
-    def __str__(self):
-        return "Failed to launch AMI instance."
 
 class BlessedAMIsTable(database.KeyedTable):
     name = 'BlessedAMIs'

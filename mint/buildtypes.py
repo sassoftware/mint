@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -24,6 +24,7 @@ validBuildTypes = {
     'AMI'               : 14,
     'UPDATE_ISO'        : 15,
     'APPLIANCE_ISO'     : 16,
+    'IMAGELESS'         : 17,
 }
 
 TYPES = validBuildTypes.values()
@@ -85,6 +86,7 @@ typeNames = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Online Update"
 }
 
 typeNamesShort = {
@@ -104,7 +106,39 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    IMAGELESS:          "Online Update",
 }
+
+# To be used to map image types ids from XML tag names
+# used the build definition contained within the
+# product definition.
+#
+# Note: Only supported image types are contained here.
+# Thus you will not see XML tags for the following:
+#   - STUB_IMAGE
+#   - PARALLELS
+#
+# Furthermore, we don't support IMAGELESS builds
+# in the context of a product definition.
+#
+xmlTagNameImageTypeMap = {
+    'amiImage':            AMI,
+    'applianceIsoImage':   APPLIANCE_ISO,
+    'installableIsoImage': INSTALLABLE_ISO,
+    'liveIsoImage':        LIVE_ISO,
+    'netbootImage':        NETBOOT_IMAGE,
+    'rawFsImage':          RAW_FS_IMAGE,
+    'rawHdImage':          RAW_HD_IMAGE,
+    'tarballImage':        TARBALL,
+    'updateIsoImage':      UPDATE_ISO,
+    'vhdImage':            VIRTUAL_PC_IMAGE,
+    'virtualIronImage':    VIRTUAL_IRON,
+    'vmwareImage':         VMWARE_IMAGE,
+    'vmwareEsxImage':      VMWARE_ESX_IMAGE,
+    'xenOvaImage':         XEN_OVA,
+}
+
+imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
 
 typeNamesMarketing = {
     NETBOOT_IMAGE:      "Netboot Image",
@@ -123,6 +157,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    IMAGELESS:          "Online Update",
 
     # flavor flags here
     XEN_DOMU:           "DomU",
@@ -130,9 +165,11 @@ typeNamesMarketing = {
 }
 
 buildTypeExtra = {
-    APPLIANCE_ISO:      "This build type will not work without using "
+    APPLIANCE_ISO:      "This image type will not work without using "
                         "a version of anaconda-templates based on "
                         "rPath Linux 2.",
+    IMAGELESS:          "Select this image type to mark a group for "
+                        "later publishing to an Update Service."
 }
 
 buildTypeIcons = {
@@ -169,7 +206,56 @@ discSizes = {
     'CD: 700 MB'  : '734003200',
     'DVD: 4.7 GB' : '4700000000',
     'DVD: 8.5 GB' : '8500000000',
-    }
+}
+
+buildDefinitionFlavorTypes = {
+    'BD_GENERIC_X86'    : 0,
+    'BD_GENERIC_X86_64' : 1,
+    'BD_DOM0_X86'       : 2,
+    'BD_DOM0_X86_64'    : 3,
+    'BD_DOMU_X86'       : 4,
+    'BD_DOMU_X86_64'    : 5,
+    'BD_VMWARE_X86'     : 6,
+    'BD_VMWARE_X86_64'  : 7,
+}
+
+sys.modules[__name__].__dict__.update(buildDefinitionFlavorTypes)
+
+buildDefinitionFlavorMap = {
+    BD_GENERIC_X86      : '!dom0, !domU, !xen, !vmware is: x86',
+    BD_GENERIC_X86_64   : '!dom0, !domU, !xen, !vmware is: x86_64',
+    BD_DOM0_X86         : 'dom0, !domU, xen, !vmware is: x86',
+    BD_DOM0_X86_64      : 'dom0, !domU, xen, !vmware is: x86_64',
+    BD_DOMU_X86         : '!dom0, domU, xen, !vmware is: x86',
+    BD_DOMU_X86_64      : '!dom0, domU, xen, !vmware is: x86_64',
+    BD_VMWARE_X86       : '!dom0, !domU, !xen, vmware is: x86',
+    BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
+}
+
+# generate mapping of flavors to flavor names
+buildDefinitionFlavorToFlavorMapRev = \
+    dict((x[1], x[0]) for x in buildDefinitionFlavorMap.iteritems())
+
+buildDefinitionFlavorNameMap = {
+    BD_GENERIC_X86      : 'Generic x86 (32-bit)',
+    BD_GENERIC_X86_64   : 'Generic x86 (64-bit)',
+    BD_DOM0_X86         : 'dom0 x86 (32-bit)',
+    BD_DOM0_X86_64      : 'dom0 x86 (64-bit)',
+    BD_DOMU_X86         : 'domU x86 (32-bit)',
+    BD_DOMU_X86_64      : 'domU x86 (64-bit)',
+    BD_VMWARE_X86       : 'VMware x86 (32-bit)',
+    BD_VMWARE_X86_64    : 'VMware x86 (64-bit)',
+}
+
+# a mapping of build types to supported flavors.  If a build type does not
+# exist in this map, it is assumed it supports all flavors.  The first flavor
+# is assumed to be the default.
+buildDefinitionSupportedFlavorsMap = {
+    VMWARE_IMAGE       : [BD_VMWARE_X86, BD_VMWARE_X86_64],
+    VMWARE_ESX_IMAGE   : [BD_VMWARE_X86, BD_VMWARE_X86_64],
+    XEN_OVA            : [BD_DOMU_X86, BD_DOMU_X86_64],
+    AMI                : [BD_DOMU_X86, BD_DOMU_X86_64],
+}
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript

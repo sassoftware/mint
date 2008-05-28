@@ -21,7 +21,6 @@ from urlparse import urlparse
 import StringIO
 
 from mint import buildtypes
-from mint import buildxml
 from mint import charts
 from mint import communityids
 from mint import data
@@ -52,26 +51,26 @@ from mint import spotlight
 from mint import selections
 from mint import urltypes
 from mint import useit
-from mint import rapapasswords
 from mint import constants
 from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
 from mint.reports import MintReport
-from mint.searcher import SearchTermsError
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 
 from mcp import client as mcpClient
 from mcp import mcp_error
 
+from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
 from conary import sqlite3
 from conary import versions
+from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound
+from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
@@ -79,6 +78,8 @@ from conary import errors as conary_errors
 from conary.dbstore import sqlerrors, sqllib
 from conary import checkin
 from conary.build import use
+
+from rpath_common.proddef import api1 as proddef
 
 try:
     # Conary 2
@@ -92,7 +93,12 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [5]
+SERVER_VERSIONS = [6]
+# XMLRPC Schema History
+# Version 6
+#  * Reworked exception marshalling API. All exceptions derived from MintError
+#    are now marshalled automatically.
+
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
@@ -103,6 +109,7 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
+validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
 dbConnection = None
 callLog = None
@@ -227,7 +234,6 @@ def getTables(db, cfg):
 
     # check to make sure the schema version is correct
     from mint import schema
-    from mint.database import DatabaseVersionMismatch
     try:
         schema.checkVersion(db)
     except sqlerrors.SchemaVersionError, e:
@@ -259,8 +265,9 @@ def getTables(db, cfg):
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
-    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db)
-    d['outboundMirrorTargets'] = mirror.OutboundMirrorTargetsTable(db)
+    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
+    d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
+    d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
     d['useit'] = useit.UseItTable(db, cfg)
@@ -272,7 +279,7 @@ def getTables(db, cfg):
     d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['rapapasswords'] = rapapasswords.rAPAPasswords(db)
+    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -353,47 +360,13 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except users.UserAlreadyExists, e:
+            except MintError, e:
                 self._handleError(e, authToken, methodName, args)
-                return (True, ("UserAlreadyExists", str(e)))
-            except database.DuplicateItem, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("DuplicateItem", e.item))
-            except database.ItemNotFound, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("ItemNotFound", e.item))
-            except SearchTermsError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("SearchTermsError", str(e)))
-            except users.AuthRepoError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("AuthRepoError", str(e)))
-            except jobs.DuplicateJob, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("DuplicateJob", str(e)))
-            except UserAlreadyAdmin, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("UserAlreadyAdmin", str(e)))
-            except AdminSelfDemotion, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("AdminSelfDemotion" , str(e)))
-            except JobserverVersionMismatch, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("JobserverVersionMismatch", str(e)))
-            except MaintenanceMode, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("MaintenanceMode", str(e)))
-            except users.LastOwner, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("LastOwner", str(e)))
-            except ParameterError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("ParameterError", str(e)))
-            except NotEntitledError, e:
-                self._handleError(e, authToken, methodName, args)
-                return (True, ("NotEntitledError", str(e)))
-            except Exception, e:
-                self._handleError(e, authToken, methodName, args)
+                frozen = (e.__class__.__name__, e.freeze())
+                return (True, frozen)
+            except:
+                e_type, e_value, e_tb = sys.exc_info()
+                self._handleError(e_value, authToken, methodName, args)
                 raise
             else:
                 self.db.commit()
@@ -483,6 +456,73 @@ class MintServer(object):
                 conaryProxies=conarycfg.getProxyFromConfig(cfg))
         return repo
 
+    def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
+
+        # Get repository + client
+        # XXX: Make this use a shimclient for rBuilder-managed
+        #      repositories so we can run web-based functional tests
+        #      against a single-threaded Apache server.
+        #      Until the shimclient can commit, we cannot do that
+        #      (see CNY-2545)
+
+        if not cclient:
+            projectCfg = project.getConaryConfig()
+            projectCfg['buildLabel'] = buildLabel
+            client = conaryclient.ConaryClient(projectCfg)
+        else:
+            client = cclient
+
+        repos = client.getRepos()
+
+        projectCfg = project.getConaryConfig()
+        projectCfg.buildLabel = buildLabel
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        # ensure that the changelog message ends with a newline
+        if not changeLogMessage.endswith('\n'):
+            changeLogMessage += '\n'
+
+        # create a pathdict out of the streamMap
+        pathDict = {}
+        for filename, filestream in streamMap.iteritems():
+            pathDict[filename] = filetypes.RegularFile(contents=filestream,
+                config=True)
+
+        # create the changelog message using the currently
+        # logged-on user's username and fullname, if available
+        newchangelog = changelog.ChangeLog(self.auth.username,
+                             self.auth.fullName or '',
+                             changeLogMessage)
+
+        # create a change set object from our source data
+        changeSet = client.createSourceTrove('%s:source' % trovename,
+                        projectCfg.buildLabel,
+                        upstreamVersion, pathDict, newchangelog)
+
+        # commit the change set to the repository
+        repos.commitChangeSet(changeSet)
+
+        if not cclient:
+            del client
+
+    def _getProductDefinitionForVersionObj(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectCfg = project.getConaryConfig()
+        cclient = conaryclient.ConaryClient(projectCfg)
+
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setProductVersion(version.name)
+        try:
+            pd.loadFromRepository(cclient)
+        except Exception, e:
+            raise ProductDefinitionVersionNotFound
+        return pd
+
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -494,12 +534,12 @@ class MintServer(object):
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
             self.auth.userId) in userlevels.WRITERS):
                 return
-        raise database.ItemNotFound()
+        raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
         try:
             buildRow = self.builds.get(buildId, fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         self._filterProjectAccess(buildRow['projectId'])
@@ -509,14 +549,14 @@ class MintServer(object):
         try:
             pubReleaseRow = self.publishedReleases.get(pubReleaseId,
                     fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
-        # if the release is not published, then only project members 
+        # if the release is not published, then only project members
         # with write access can see the published release
         if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
-            raise database.ItemNotFound()
+            raise ItemNotFound()
         # if the published release is published, then anyone can see it
         # unless the project is hidden and the user is not an admin
         else:
@@ -525,7 +565,7 @@ class MintServer(object):
     def _filterLabelAccess(self, labelId):
         try:
             labelRow = self.labels.get(labelId, fields=['projectId'])
-        except database.ItemNotFound:
+        except ItemNotFound:
             return
 
         self._filterProjectAccess(labelRow['projectId'])
@@ -561,7 +601,7 @@ class MintServer(object):
             if (self.projectUsers.getUserlevelForProjectMember(projectId,
                     self.auth.userId) in allowedUserlevels):
                 return True
-        except database.ItemNotFound:
+        except ItemNotFound:
             pass
         return False
 
@@ -570,7 +610,7 @@ class MintServer(object):
         try:
             if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
                 return True
-        except database.ItemNotFound:
+        except ItemNotFound:
             pass
         return False
 
@@ -582,11 +622,89 @@ class MintServer(object):
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
 
+    def _configureUpdateService(self, hostname, adminUser, adminPassword):
+        import xmlrpclib
+        from mint.proxiedtransport import ProxiedTransport
+        mirrorUser = ''
+        try:
+            # Make sure that we deal with any HTTP proxies
+            proxy_host = self.cfg.proxy.get('https') or \
+                            self.cfg.proxy.get('http')
+            if proxy_host:
+                transport = ProxiedTransport(proxy_host)
+            else:
+                transport = None
+
+            # Connect to the rUS via XML-RPC
+            urlhostname = hostname
+            if ':' not in urlhostname:
+                urlhostname += ':8003'
+                protocol = 'https'
+            else:
+                # Hack to allow testsuite, which passes 'hostname:port'
+                # and isn't using HTTPS
+                protocol = 'http'
+            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
+                    (protocol, adminUser, adminPassword, urlhostname)
+            sp = xmlrpclib.ServerProxy(url, transport=transport)
+
+            mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
+                    (self.cfg.hostName, self.cfg.siteDomainName), hostname)
+
+            # Add a user to the update service with mirror permissions
+            mirrorPassword = \
+                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+        except xmlrpclib.ProtocolError, e:
+            if e.errcode == 403:
+                raise UpdateServiceAuthError(urlhostname)
+            else:
+                raise UpdateServiceConnectionFailed(urlhostname, \
+                        "%d %s" % (e.errcode, e.errmsg))
+        except socket.error, e:
+            raise UpdateServiceConnectionFailed(urlhostname, str(e[1]))
+        else:
+            if not mirrorPassword:
+                raise UpdateServiceUnknownError(urlhostname)
+
+        return (mirrorUser, mirrorPassword)
+
+    def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
+        if groupName is None:
+            groupName = helperfuncs.getDefaultImageGroupName(project.shortname)
+
+        label = versions.Label(buildLabel)
+
+        projectCfg = project.getConaryConfig()
+        projectCfg.buildLabel = buildLabel
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
+
+        trvLeaves = repos.getTroveLeavesByLabel(\
+                {groupName: {label: None} }).get(groupName, [])
+        if trvLeaves:
+            raise GroupTroveTemplateExists
+
+        from mint.templates import groupTemplate
+        recipeStream = StringIO.StringIO()
+        recipeStream.write(templates.write(groupTemplate,
+                    cfg = self.cfg,
+                    groupApplianceLabel=self.cfg.groupApplianceLabel,
+                    projectName=project.getHostname(),
+                    groupName=groupName,
+                    rapaLabel=self.cfg.rapaLabel, version=version))
+        recipeStream.write('\n')
+        self._createSourceTrove(project, groupName,
+                buildLabel, '1', {'%s.recipe' % groupName: recipeStream},
+                'Initial appliance image group template',
+                client)
+        recipeStream.close()
+        return True
+
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
-            raise InvalidClientVersion(
-                'Invalid client version %s.  Server accepts client versions %s ' \
-                    % (self.clientVer, ', '.join(str(x) for x in SERVER_VERSIONS)))
+            raise InvalidClientVersion('Invalid client version %s. Server '
+                'accepts client versions %s' % (self.clientVer,
+                    ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
     # project methods
@@ -601,26 +719,56 @@ class MintServer(object):
             raise projects.InvalidHostname
         return None
 
-    @typeCheck(str, str, str, str, str, str)
+    def _validateShortname(self, shortname, domainname, resHosts):
+        if not shortname:
+            raise InvalidShortname
+        if validHost.match(shortname) == None:
+            raise InvalidShortname
+        if shortname in resHosts:
+            raise InvalidShortname
+        if (shortname + "." + domainname) == socket.gethostname():
+            raise InvalidShortname
+        return None
+    
+    @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        # make sure the hostname is valid
+        # make sure the shortname, version, and prodtype are valid, and
+        # validate the hostname also in case it ever splits from being
+        # the same as the short name
+        self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
+        if not version or len(version) <= 0:
+            raise projects.InvalidVersion
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
+            raise projects.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
-        if appliance == "yes":
+        if prodtype == 'Appliance':
+            appliance = "yes"
             applianceValue = 1
-        elif appliance == "no":
-            applianceValue = 0
         else:
-            applianceValue = None
+            appliance = "no"
+            applianceValue = 0
+
+        # initial product definition
+        pd = helperfuncs.sanitizeProductDefinition(projectName,
+                desc, hostname, domainname, shortname, version,
+                '', self.cfg.namespace)
+
+        label = pd.getDefaultLabel()
+
+        # validate the label, which will be added later.  This is done
+        # here so the project is not created before this error occurs
+        if validLabel.match(label) == None:
+            raise projects.InvalidLabel(label)
 
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
@@ -631,7 +779,10 @@ class MintServer(object):
                                       isAppliance = applianceValue,
                                       projecturl = projecturl,
                                       timeModified = time.time(),
-                                      timeCreated = time.time())
+                                      timeCreated = time.time(),
+                                      shortname = shortname,
+                                      prodtype = prodtype, 
+                                      version = version)
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
@@ -644,13 +795,24 @@ class MintServer(object):
 
         project = projects.Project(self, projectId)
 
-        project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
-            "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-            'userpass', self.cfg.authUser, self.cfg.authPass)
+        project.addLabel(label,
+                         "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, 
+                         self.cfg.basePath, hostname), 'userpass', 
+                         self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
+
+        if commitEmail:
+            project.setCommitEmail(commitEmail)
+
+        if applianceValue:
+            try:
+                self._createGroupTemplate(project, label, version)
+            except GroupTroveTemplateExists:
+                pass # really, this is OK -- and even if it weren't,
+                     # there's nothing you can do about it, anyway
 
         if self.cfg.hideNewProjects:
             repos = self._getProjectRepo(project)
@@ -838,7 +1000,7 @@ class MintServer(object):
                               WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
-                raise database.ItemNotFound("username")
+                raise ItemNotFound("username")
             else:
                 userId = r[0]
         elif userId and not username:
@@ -846,7 +1008,7 @@ class MintServer(object):
                               WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
-                raise database.ItemNotFound("userId")
+                raise ItemNotFound("userId")
             else:
                 username = r[0]
 
@@ -857,7 +1019,7 @@ class MintServer(object):
             self.membershipRequests.deleteRequest(projectId, userId)
         try:
             self.projectUsers.new(projectId, userId, level)
-        except database.DuplicateItem:
+        except DuplicateItem:
             project.updateUserLevel(userId, level)
             # only attempt to modify acl's of local projects.
             if not project.external:
@@ -865,11 +1027,13 @@ class MintServer(object):
                 # edit vice/drop+add is intentional to honor acl tweaks by
                 # admins.
                 repos.editAcl(label, username, None, None, None,
-                              None, level in userlevels.WRITERS, False,
-                              self.cfg.projectAdmin and \
-                              level == userlevels.OWNER)
-                repos.setUserGroupCanMirror(label, username,
-                                            int(level == userlevels.OWNER))
+                              None, write=level in userlevels.WRITERS,
+                              canRemove=False)
+                repos.setRoleIsAdmin(label, username,
+                                     self.cfg.projectAdmin and
+                                     level == userlevels.OWNER)
+                repos.setRoleCanMirror(label, username,
+                                       int(level == userlevels.OWNER))
             return True
 
         if not project.external:
@@ -881,14 +1045,17 @@ class MintServer(object):
             try:
                 salt, password = cu.fetchone()
             except TypeError:
-                raise database.ItemNotFound("username")
+                raise ItemNotFound("username")
             repos = self._getProjectRepo(project)
-            repos.addUserByMD5(label, username, salt, password)
+            helperfuncs.addUserByMD5ToRepository(repos, username, password, salt, 
+                username, label)
             repos.addAcl(label, username, None, None,
-                         level in userlevels.WRITERS, False,
-                         self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(label, username,
-                                        int(level == userlevels.OWNER))
+                         write=(level in userlevels.WRITERS),
+                         remove=False)
+            repos.setRoleIsAdmin(label, username,
+                                 self.cfg.projectAdmin and level == userlevels.OWNER)
+            repos.setRoleCanMirror(label, username,
+                                   int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
                          projects.Project(self,projectId), level)
@@ -909,17 +1076,13 @@ class MintServer(object):
             self._translateProjectFQDN(project.getFQDN()), db = self.db)
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         cu = db.cursor()
-        # id's guaranteed by schema definition.
-        labelId = itemId = 0
         # aggregate with MAX in case user is member of multiple groups
-        cu.execute("""SELECT MAX(admin)
-                          FROM Users
-                          LEFT JOIN UserGroupMembers ON Users.userId =
-                                  UserGroupMembers.userId
-                          LEFT JOIN Permissions ON Permissions.userGroupId =
-                                  UserGroupMembers.userGroupId
-                          WHERE Users.username=? AND itemId=? and labelId=?""",
-                   userName, itemId, labelId)
+        cu.execute("""SELECT MAX(admin) FROM Users
+                      JOIN UserGroupMembers ON
+                          Users.userId = UserGroupMembers.userId
+                      JOIN UserGroups ON
+                          UserGroups.userGroupId = UserGroupMembers.userGroupId
+                      WHERE Users.username=?""", userName)
         res = cu.fetchone()
         # acl in question can be non-existent
         db.close()
@@ -944,7 +1107,7 @@ class MintServer(object):
         #XXX Make this atomic
         try:
             userLevel = self.getUserLevel(userId, projectId)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise netclient.UserNotFound()
         if (self.auth.userId != userId) and userLevel == userlevels.USER:
             raise users.UserInduction()
@@ -1044,23 +1207,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    @typeCheck(int, str, str, str, str)
+    @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def editProject(self, projectId, projecturl, desc, name, appliance):
+    def editProject(self, projectId, projecturl, desc, name):
         if projecturl and not (projecturl.startswith('https://') or \
                                projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
-        if appliance == "yes":
-            applianceValue = 1
-        elif appliance == "no":
-            applianceValue = 0
-        else:
-            applianceValue = None
         return self.projects.update(projectId, projecturl=projecturl,
-                                    description = desc, name = name,
-                                    isAppliance = applianceValue)
+                                    description = desc, name = name)
 
     @typeCheck(int, str)
     @requiresAuth
@@ -1095,8 +1251,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def unhideProject(self, projectId):
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
-        userId = repos.addUser(versions.Label(project.getLabel()), 'anonymous', 'anonymous')
-        repos.addAcl(versions.Label(project.getLabel()), 'anonymous', None, None, False, False, False)
+        label = versions.Label(project.getLabel())
+        username = 'anonymous'
+        helperfuncs.addUserToRepository(repos, username, username, username, 
+            label)
+        repos.addAcl(label, username, None, None, write=False, remove=False)
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
@@ -1127,7 +1286,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if not r:
-            raise database.ItemNotFound("membership")
+            raise ItemNotFound("membership")
         else:
             return r[0]
 
@@ -1147,9 +1306,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             repos = self._getProjectRepo(project)
             label = versions.Label(project.getLabel())
             repos.editAcl(label, user['username'], "ALL", None,
-                          None, None, level in userlevels.WRITERS, False,
-                          level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(label, user['username'], int(level == userlevels.OWNER))
+                          None, None, write=(level in userlevels.WRITERS),
+                          canRemove=False)
+            repos.setRoleIsAdmin(label, user['username'],
+                                 level == userlevels.OWNER)
+            repos.setRoleCanMirror(label, user['username'], int(level == userlevels.OWNER))
 
         #Ok, now update the mint db
         if level in userlevels.WRITERS:
@@ -1373,12 +1534,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu.execute("SELECT userId FROM Users WHERE username=?", username)
         r = cu.fetchall()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
                    r[0][0])
         r = cu.fetchall()
         if not r:
-            raise database.ItemNotFound
+            raise ItemNotFound
         return r[0][0]
 
     @typeCheck(str)
@@ -1829,7 +1990,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         try:
             userId = self.getUserIdByName(username)
-        except database.ItemNotFound:
+        except ItemNotFound:
             userId = 0
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
@@ -1867,7 +2028,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
-            raise database.ItemNotFound
+            raise ItemNotFound
         self._filterBuildAccess(buildId)
         build = self.builds.get(buildId)
 
@@ -1896,190 +2057,168 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise NotEntitledError()
         return buildId
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
+    @typeCheck(int, ((str, unicode),), bool)
     @requiresAuth
-    def newBuildsFromXml(self, projectId, label, buildXml):
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        cc = self._getProjectRepo(project)
+    @private
+    def newBuildsFromProductDefinition(self, versionId, stageName, force):
+        """
+        Launch the image builds defined in the product definition for the
+        given version id and stage.  If provided, use troveSpec as the top
+        level group for the image, otherwise use the top level group defined
+        in the
+        product defintion.
+        """
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        projectId = version.projectId
 
+        # Read build definition from product definition.
+        pd = self._getProductDefinitionForVersionObj(versionId)
+
+        # Look up the label for the stage name that was passed in.
         try:
-            mc = self._getMcpClient()
-            jsVersion = mc.getJSVersion()
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+            stageLabel = str(pd.getLabelForStage(stageName))
+        except proddef.StageNotFoundError, snfe:
+            raise ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+        except proddef.MissingInformationError, mie:
+            raise ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
-        buildDicts = buildxml.buildsFromXml(buildXml)
+        # Filter builds by stage
+        builds = pd.getBuildsForStage(stageName)
+        if not builds:
+            raise NoBuildsDefinedInBuildDefinition
 
-        buildIds = []
+        # Create build data for each defined build so we can create the builds
+        # later
+        filteredBuilds = []
+        buildErrors = []
+        for build in builds:
+            buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
+            buildGroup = str(build.getBuildImageGroup())
 
-        # validate the input all at once to ensure this operation is atomic
-        for buildDict in buildDicts:
-            if 'type' not in buildDict:
-                raise ParameterError('XML build is missing type')
-            template = buildtemplates.getDataTemplate(buildDict['type'])
-            for name in buildDict.get('data', {}):
-                option = buildtemplates.__dict__.get(name)
-                if not(option and option.__base__.__base__ == \
-                           buildtemplates.BuildOption):
-                    raise ParameterError('illegal data value: %s' % name)
+            # Returns a list of troves that satisfy buildFlavor.
+            nvfs = self._resolveTrove(projectId, buildGroup,
+                                      stageLabel, buildFlavor)
 
-        troveNameCache = {}
-
-        for buildDict in buildDicts:
-            troveName = buildDict['troveName']
-            baseFlavor = deps.parseFlavor(buildDict.get('baseFlavor', ''))
-            if troveName not in troveNameCache:
-                troveList = \
-                    cc.findTrove(None, (troveName, label, None))
-                troveNameCache[troveName] = troveList
+            if nvfs:
+                # Store a build with options for each trove found.
+                for nvf in nvfs:
+                    filteredBuilds.append((build, nvf))
             else:
-                troveList = troveNameCache[troveName]
-            NVF = sorted([x for x in troveList \
-                              if x[2].stronglySatisfies(baseFlavor)],
-                         key = lambda x: x[1])
-            if NVF:
-                NVF = NVF[-1]
-            else:
-                raise conary_errors.TroveNotFound(\
+                # No troves were found, save the error.
+                buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
-                        (troveName, baseFlavor))
+                    (buildGroup, buildFlavor))))
 
-            buildId = self.builds.new( \
-                projectId = projectId,
-                name = buildDict.get('name', ''),
-                timeCreated = time.time(),
-                description = buildDict.get('description', ''),
-                buildType = buildDict['type'],
-                troveName = NVF[0],
-                troveVersion = NVF[1].freeze(),
-                troveFlavor = NVF[2].freeze())
+        if buildErrors and not force:
+            raise TroveNotFoundForBuildDefinition(buildErrors)
+
+        # Create/start each build.
+        buildIds = []
+        for buildDefinition, nvf in filteredBuilds:
+            buildId = self._createBuildDefBuild(projectId, buildDefinition,
+                    nvf, project.getName())
             buildIds.append(buildId)
-
-            template = buildtemplates.getDataTemplate(buildDict['type'])
-            data = dict([(x[0], x[1][1]) for x in template.iteritems()])
-            # the template is the set of all legal names for settings for this
-            # type, so we must be careful not to set new values.
-            for name, value in buildDict.get('data', {}).iteritems():
-                if name in data:
-                    data[name] = value
-            for name, value in data.iteritems():
-                dataType = template[name][0]
-                self.buildData.setDataValue(buildId, name, value, dataType)
+            self.startImageJob(buildId)
 
         return buildIds
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitAndBuild(self, projectId, labelStr, buildJson):
-        xml = buildxml.xmlFromData(simplejson.loads(buildJson))
-        self.commitBuildXml(projectId, labelStr, xml)
-        return self.newBuildsFromXml(projectId, labelStr, xml)
+    def _createBuildDefBuild(self, projectId, buildDefinition, nvf, buildName):
+        """
+        Create a new build from build definition info
+        @return: the build id
+        """
+        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
+                            'anacondaCustomTrove' : 'anaconda-custom',
+                            'anacondaTemplatesTrove' : 'anaconda-templates'}
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitBuildJson(self, projectId, labelStr, buildJson):
-        xml = buildxml.xmlFromData(simplejson.loads(buildJson))
-        return self.commitBuildXml(projectId, labelStr, xml)
+        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    @requiresAuth
-    def commitBuildXml(self, projectId, labelStr, buildXml):
-        self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
-        label = versions.Label(labelStr)
+        buildId = self.newBuild(projectId, buildName)
+        newBuild = builds.Build(self, buildId)
+        newBuild.setTrove(n, v, f)
+        buildType = buildtypes.xmlTagNameImageTypeMap[buildDefinition.getBuildImageType().tag]
+        newBuild.setBuildType(buildType)
 
-        cfg = project.getConaryConfig()
-        cfg.configLine("buildLabel %s" % labelStr)
-        cfg.configLine('name %s' % self.auth.username)
-        cfg.configLine('contact http://www.rpath.org/')
-        cfg.configLine('quiet True')
-        cfg.initializeFlavors()
+        buildImageType = buildDefinition.getBuildImageType()
+        buildSettings = buildImageType.fields.copy()
 
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        recipeName = 'build-definition'
-        sourceName = recipeName + ":source"
+        template = newBuild.getDataTemplate()
 
-        trvLeaves = repos.getTroveLeavesByLabel(\
-                {sourceName : {label : None} }).get(sourceName, [])
+        # handle custom troves
+        for customTroveSetting in ['mediaTemplateTrove', 'anacondaCustomTrove',
+                            'anacondaTemplatesTrove']:
+            if buildSettings.has_key(customTroveSetting):
+                troveName = customTroveDict[customTroveSetting]
+                troveVersion = str(buildSettings.pop(customTroveSetting))
+                customTroveSpec = project.resolveExtraTrove(troveName, v, f,
+                        troveVersion)
+                if customTroveSpec:
+                    newBuild.setDataValue(troveName, customTroveSpec)
 
-        pid = os.fork()
-        if not pid:
+        # handle the rest
+        for k, v in buildSettings.iteritems():
             try:
-                path = tempfile.mkdtemp( \
-                    dir = os.path.join(self.cfg.dataPath, 'tmp'))
-                os.chdir(path)
-                if trvLeaves:
-                    checkin.checkout(repos, cfg, path, [recipeName])
+                if template[k][0] == data.RDT_BOOL:
+                    v = (str(v) == 'true')
+                elif template[k][0] in (data.RDT_STRING, data.RDT_ENUM):
+                    v = str(v)
+                elif template[k][0] == data.RDT_INT:
+                    v = int(v)
                 else:
-                    checkin.newTrove(repos, cfg, recipeName, path)
-                    # create recipe
-                    recipePath = os.path.join(path, recipeName + '.recipe')
-                    f = open(recipePath, 'w')
-                    f.write( \
-                        '\n'.join(( \
-                        '# This file was automatically generated by rBuilder.',
-                        'class BuildDefinition(PackageRecipe):',
-                        "    name = '%s'" % recipeName,
-                        "    version = '0'",
-                        '',
-                        '    def setup(r):',
-                        '        pass', ''
-                        )))
-                    f.close()
-                    checkin.addFiles([recipeName + '.recipe'])
-                f = open(os.path.join(path, 'build.xml'), 'w')
-                f.write(buildXml)
-                f.close()
-                checkin.addFiles(['build.xml'], ignoreExisting = True)
-                use.setBuildFlagsFromFlavor(None, cfg.buildFlavor, error=False)
-                checkin.commit(repos, cfg,
-                               'Automatic commit from rBuilder Online')
-                util.rmtree(path, ignore_errors = True)
-            except:
-                os._exit(1)
+                    continue
+            except KeyError:
+                pass # if it's not int the template, no matter
             else:
-                os._exit(0)
-        pid, status = os.waitpid(pid, 0)
-        return bool(status)
+                newBuild.setDataValue(k, v)
 
-    @typeCheck(int, str)
-    @requiresAuth
-    def checkoutBuildXml(self, projectId, labelStr):
-        self._filterProjectAccess(projectId)
+        return buildId
+
+    def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
+        '''
+        Return a list of trove tuples matching C{troveName},
+        C{troveLabel}, satisfying C{filterFlavor} and also matching its
+        architecture. The repository backing the project at C{projectId}
+        will be used.
+
+        @return: List of trove tuples matching the query
+        @rtype: list
+        '''
+
         project = projects.Project(self, projectId)
-        label = versions.Label(labelStr)
+        projectCfg = project.getConaryConfig()
+        client = conaryclient.ConaryClient(projectCfg)
+        repos = client.getRepos()
 
-        cfg = project.getConaryConfig()
-        cfg.configLine("buildLabel %s" % labelStr)
-        cfg.configLine('name %s' % self.auth.username)
-        cfg.configLine('contact http://www.rpath.org/')
-        cfg.configLine('quiet True')
-        cfg.initializeFlavors()
+        # Get the major architecture from filterFlavor
+        filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
 
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        recipeName = 'build-definition'
-        sourceName = recipeName + ":source"
+        # Find the troves that satisfy the build.
+        ret = []
+        matches = repos.findTrove(None, (troveName, troveLabel, None))
+        maxVersion = max(x[1] for x in matches)
+        for name, version, flavor in matches:
+            if version != maxVersion:
+                # Skip older versions that only show up because
+                # they're flavored differently
+                continue
+            if not flavor.stronglySatisfies(filterFlavor):
+                # Skip flavors that don't satisfy our original
+                # condition in the first place
+                continue
 
-        trvLeaves = repos.getTroveLeavesByLabel(\
-                {sourceName : {label : None} }).get(sourceName, [])
+            # If filterFlavor has an instruction set, the major
+            # architecture must match that of the group so
+            # an is: x86 filter does not match is: x86 x86_64 groups
+            # even though the flavor is technically satisfied.
+            thisArch = helperfuncs.getArchFromFlavor(flavor)
+            if filterArch and filterArch != thisArch:
+                continue
 
-        defaultXml = '<buildDefinition version="1.0"/>\n'
+            ret.append((name, version, flavor))
 
-        if trvLeaves:
-            path = tempfile.mkdtemp( \
-                dir = os.path.join(self.cfg.dataPath, 'tmp'))
-            try:
-                checkin.checkout(repos, cfg, path, [recipeName])
-                try:
-                    f = open(os.path.join(path, 'build.xml'))
-                    return f.read()
-                except:
-                    return defaultXml
-            finally:
-                util.rmtree(path, ignore_errors = True)
-        else:
-            return defaultXml
+        return ret
 
     @typeCheck(int)
     @requiresAuth
@@ -2141,43 +2280,57 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
+    @typeCheck(int, str, str, str, str, str)
     @private
     @requiresAuth
-    def resolveExtraBuildTrove(self, buildId, trvName, trvVersion, trvFlavor, searchPath):
-        build = builds.Build(self, buildId)
-        project = projects.Project(self, build.projectId)
+    def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
+            specialTroveFlavor, imageGroupVersion, imageGroupFlavor):
 
-        arch = build.getArchFlavor()
+        # Get the project that the build is going to be on
+        project = projects.Project(self, projectId)
+
+        searchPath = []
+        if imageGroupVersion:
+            # Get the image group label as the first part of the searchpath
+            igV = versions.ThawVersion(imageGroupVersion)
+
+            # Determine search path; start with imageGroup's label
+            searchPath.append(igV.branch().label())
+
+        # Handle anacond-templates using a fallback
+        if specialTroveName == 'anaconda-templates':
+            # Need to search our system-wide fallback for anaconda templates
+            searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
+
+        # if no flavor specified, use the top level group's flavor
+        if imageGroupFlavor and not specialTroveFlavor:
+            specialTroveFlavor = helperfuncs.getMajorArchFlavor(imageGroupFlavor)
+
+        # Sanitize bits
+        if specialTroveVersion == '' or specialTroveFlavor == '':
+            specialTroveVersion = None
+        if specialTroveFlavor == '':
+            specialTroveFlavor = None
+
+        # Get a Conary client
         cfg = project.getConaryConfig()
-        cfg.installLabelPath = searchPath + cfg.installLabelPath
-        cfg.buildFlavor = getStockFlavor(arch)
-        cfg.flavor = getStockFlavorPath(arch)
+        cfg.installLabelPath = searchPath
         cfg.initializeFlavors()
-
         cfg.dbPath = cfg.root = ":memory:"
         cfg.proxy = self.cfg.proxy
         cclient = conaryclient.ConaryClient(cfg)
 
-        if trvVersion is None or trvFlavor == '':
-            trvVersion = None
-        if trvFlavor is None or trvFlavor == '':
-            trvFlavor = None
-
-        itemList = [(trvName, (None, None), (trvVersion, trvFlavor), True)]
         try:
-            uJob, suggMap = cclient.updateChangeSet(itemList,
-                                                    resolveDeps = False)
+            matches = cclient.getRepos().findTrove(searchPath,
+                    (specialTroveName, specialTroveVersion, specialTroveFlavor),
+                    cfg.flavor)
+            if matches:
+                strSpec = '%s=%s[%s]' % matches[0]
+            else:
+                strSpec = ''
 
-            # Use the most recent job on the label; we sort the versions
-            # returned to pick the most recent one (fix for RBL-2216).
-            job = sorted([x for x in uJob.getPrimaryJobs()],
-                    key=lambda x: x[2], reverse=True)[0]
-            strSpec = '%s=%s[%s]' % (job[0], str(job[2][0]),
-                                     str(job[2][1]))
-
-            build.setDataValue(trvName, strSpec, validate = True)
         except TroveNotFound:
-            return None
+            return ''
 
         return strSpec
 
@@ -2350,21 +2503,61 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'updatedBy': self.auth.userId})
             return self.publishedReleases.update(pubReleaseId, **valDict)
 
+    @typeCheck(int, bool)
+    @requiresAuth
+    @private
+    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        project = projects.Project(self, projectId)
+
+        self._checkPublishedRelease(pubReleaseId, projectId)
+        
+        valDict = {'timePublished': time.time(),
+                   'publishedBy': self.auth.userId,
+                   'shouldMirror': int(shouldMirror),
+                   }
+        return self.publishedReleases.update(pubReleaseId, **valDict)
+
     @typeCheck(int)
     @requiresAuth
     @private
-    def publishPublishedRelease(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
+    def getMirrorableReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.publishedReleases.getMirrorableReleasesByProject(projectId)
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def isProjectMirroredByRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.outboundMirrors.isProjectMirroredByRelease(projectId)
+
+    def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
+        """
+        Performs some sanity checks on the published release
+        """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         if not len(self.publishedReleases.getBuilds(pubReleaseId)):
             raise PublishedReleaseEmpty
-        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
-        valDict = {'timePublished': time.time(),
-                   'publishedBy': self.auth.userId}
-        return self.publishedReleases.update(pubReleaseId, **valDict)
+        if checkPublished:
+            if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+                raise PublishedReleasePublished
+
+        return True
+
+    def _checkUnpublishedRelease(self, pubReleaseId, projectId, failIfNotPub=True):
+        """
+        Performs some sanity checks on the unpublished release
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if failIfNotPub:
+            if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+                raise PublishedReleaseNotPublished
+
+        return True
 
     @typeCheck(int)
     @requiresAuth
@@ -2372,10 +2565,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def unpublishPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
-        if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleaseNotPublished
+
+        self._checkUnpublishedRelease(pubReleaseId, projectId)
+
         valDict = {'timePublished': None,
                    'publishedBy': None}
         return self.publishedReleases.update(pubReleaseId, **valDict)
@@ -2405,11 +2597,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         return self.builds.getUnpublishedBuilds(projectId)
 
-    @typeCheck(int)
+    @typeCheck(int, int)
     @private
-    def getBuildsForPublishedRelease(self, pubReleaseId):
+    def getBuildsForPublishedRelease(self, pubReleaseId, buildType = None):
+        """
+        Get builds in a release and optionally filters by buildtype
+        """
         self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.getBuilds(pubReleaseId)
+        allBuilds = self.publishedReleases.getBuilds(pubReleaseId)
+
+        if buildType:
+            builds = []
+            for b in allBuilds:
+                if self.getBuildType(b) == buildType:
+                    builds.append(b)
+        else:
+            builds = allBuilds
+        
+        return builds
 
     @typeCheck(int)
     @private
@@ -2443,18 +2648,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def deleteCommunityId(self, projectId, communityType):
         return self.communityIds.deleteCommunityId(projectId, communityType)
-
-    @typeCheck(str, str)
-    @private
-    @requiresAdmin
-    def getrAPAPassword(self, host, role):
-        return self.rapapasswords.getrAPAPassword(host, role)
-
-    @typeCheck(str, str, str, str)
-    @private
-    @requiresAdmin
-    def setrAPAPassword(self, host, user, password, role):
-        return self.rapapasswords.setrAPAPassword(host, user, password, role)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -2544,7 +2737,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
-        if published and (buildData['buildType'] != buildtypes.AMI and not self.getBuildFilenames(buildId)):
+        if published and (buildData['buildType'] != buildtypes.AMI and buildData['buildType'] != buildtypes.IMAGELESS and not self.getBuildFilenames(buildId)):
             raise BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
@@ -2609,7 +2802,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # removed
         buildTypes.remove(buildtypes.BOOTABLE_IMAGE)
 
-        return sorted(buildTypes)
+        sortedList = sorted(buildTypes) 
+
+        # make image-less the first one for UI display
+        if (sortedList.index(buildtypes.IMAGELESS)):
+            sortedList.remove(buildtypes.IMAGELESS)
+            sortedList.reverse()
+            sortedList.append(buildtypes.IMAGELESS)
+            sortedList.reverse()
+
+        return sortedList
 
     @typeCheck(int)
     @requiresAuth
@@ -2619,12 +2821,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        mc = self._getMcpClient()
-        data = self.serializeBuild(buildId)
-        try:
-            return mc.submitJob(data)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+
+        # image-less builds (i.e. group trove builds) don't actually get built,
+        # they just get stuffed into the DB
+        buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType']
+
+        if buildType != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+            data = self.serializeBuild(buildId)
+            try:
+                return mc.submitJob(data)
+            except mcp_error.NotEntitledError:
+                raise NotEntitledError()
 
     @typeCheck(int, str)
     @private
@@ -2962,7 +3171,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._setBuildFilenames(buildId, filenames)
 
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
-
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
                                                self.cfg.authPass))
@@ -3248,18 +3456,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
-        mc = self._getMcpClient()
-
         buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType'] 
         count = buildDict['buildCount']
 
         uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, buildId, count)
-        try:
-            status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
-            status, message = \
-                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+
+        if buildType != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+            try:
+                status, message = mc.jobStatus(uuid)
+            except mcp_error.UnknownJob:
+                status, message = \
+                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        else:
+            # status is always finished since no build is actually done
+            status, message = jobstatus.FINISHED, \
+                jobstatus.statusNames[jobstatus.FINISHED]
 
         return { 'status' : status, 'message' : message }
 
@@ -3270,16 +3484,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        mc = self._getMcpClient()
+        buildId = helperfuncs.getBuildIdFromUuid(uuid)
+        buildDict = self.builds.get(buildId)
+        buildType = buildDict['buildType']
 
-        try:
-            status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
-            status, message = \
-                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        if buildtype != buildtypes.IMAGELESS:
+            mc = self._getMcpClient()
+
+            try:
+                status, message = mc.jobStatus(uuid)
+            except mcp_error.UnknownJob:
+                status, message = \
+                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+        else:
+            # status is always finished since no build is actually done
+            status, message = jobstatus.FINISHED, \
+                jobstatus.statusNames[jobstatus.FINISHED]
 
         return { 'status' : status, 'message' : message }
-
 
     # session management
     @private
@@ -3785,17 +4007,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         return True
 
-
     @private
-    @typeCheck(int, (list, str), bool, bool, int)
+    @typeCheck(int, (list, str), bool, bool, bool, int)
     @requiresAdmin
     def addOutboundMirror(self, sourceProjectId, targetLabels,
-            allLabels, recurse, id):
+            allLabels, recurse, useReleases, id):
         if id != -1:
             self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = allLabels,
                                        recurse = recurse,
+                                       useReleases=useReleases,
                                        fullSync = True)
         else:
             cu = self.db.cursor()
@@ -3805,37 +4027,25 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                            targetLabels = ' '.join(targetLabels),
                                            allLabels = allLabels,
                                            recurse = recurse,
+                                           useReleases=useReleases,
                                            mirrorOrder = mirrorOrder,
                                            fullSync = True)
         return id
 
     @private
-    @typeCheck(int, str, str, str)
+    @typeCheck(int, list)
     @requiresAdmin
-    def addOutboundMirrorTarget(self, outboundMirrorId, url, username, password):
-        return self.outboundMirrorTargets.new(outboundMirrorId = outboundMirrorId,
-                                              url = url,
-                                              username = username,
-                                              password = password)
+    def setOutboundMirrorTargets(self, outboundMirrorId, updateServiceIds):
+        return self.outboundMirrorsUpdateServices.setTargets(outboundMirrorId,
+               updateServiceIds)
 
     @private
     @typeCheck(int)
     @requiresAdmin
     def delOutboundMirror(self, outboundMirrorId):
-        # XXX sqlite doesn't obey cascading deletes
-        if self.cfg.dbDriver == 'sqlite':
-            cu = self.db.cursor()
-            cu.execute("""DELETE FROM OutboundMirrorTargets WHERE
-                          outboundMirrorId = ?""", outboundMirrorId)
         self.outboundMirrors.delete(outboundMirrorId)
         self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
         return True
-
-    @private
-    @typeCheck(int)
-    @requiresAdmin
-    def delOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.outboundMirrorTargets.delete(outboundMirrorTargetId)
 
     @private
     @typeCheck(int, (list, str))
@@ -3868,15 +4078,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @requiresAdmin
     def getOutboundMirrors(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorId, sourceProjectId,
-                        targetLabels, allLabels, recurse,
-                        matchStrings, mirrorOrder, fullSync
-                        FROM OutboundMirrors
-                        ORDER by mirrorOrder""")
-        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
-                x[6], bool(x[7])] \
-                for x in cu.fetchall()]
+        return self.outboundMirrors.getOutboundMirrors()
 
     @private
     @typeCheck(int, bool)
@@ -3894,18 +4096,50 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @typeCheck(int)
     @requiresAdmin
-    def getOutboundMirrorTarget(self, outboundMirrorTargetId):
-        return self.outboundMirrorTargets.get(outboundMirrorTargetId)
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        return self.outboundMirrorsUpdateServices.getOutboundMirrorTargets(outboundMirrorId)
 
     @private
-    @typeCheck(int)
     @requiresAdmin
-    def getOutboundMirrorTargets(self, outboundMirrorId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT outboundMirrorTargetsId, url, username, password
-                        FROM OutboundMirrorTargets
-                        WHERE outboundMirrorId = ?""", outboundMirrorId)
-        return [ list(x) for x in cu.fetchall() ]
+    @typeCheck(str, str, str, ((str, unicode),))
+    def addUpdateService(self, hostname, adminUser, adminPassword,
+            description=''):
+        mirrorUser, mirrorPassword = \
+                self._configureUpdateService(hostname, adminUser,
+                        adminPassword)
+        return self.updateServices.new(hostname = hostname,
+                description = description,
+                mirrorUser = mirrorUser,
+                mirrorPassword = mirrorPassword)
+
+    @private
+    @requiresAdmin
+    @typeCheck(int)
+    def getUpdateService(self, upsrvId):
+        try:
+            ret = self.updateServices.get(upsrvId)
+        except database.ItemNotFound:
+            raise UpdateServiceNotFound()
+        else:
+            return ret
+
+    @private
+    @requiresAdmin
+    @typeCheck(int, ((str, unicode),)) 
+    def editUpdateService(self, upsrvId, newDesc):
+        return self.updateServices.update(upsrvId, description = newDesc)
+
+    @private
+    @requiresAdmin
+    @typeCheck(int)
+    def delUpdateService(self, upsrvId):
+        return self.updateServices.delete(upsrvId)
+
+    @private
+    @typeCheck()
+    @requiresAdmin
+    def getUpdateServiceList(self):
+        return self.updateServices.getUpdateServiceList()
 
     @private
     @typeCheck(int)
@@ -4137,7 +4371,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # get blessed instance
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
-        except database.ItemNotFound:
+        except ItemNotFound:
             raise ec2.FailedToLaunchAMIInstance()
 
         launchedFromIP = self.remoteIp
@@ -4219,6 +4453,126 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def getProxies(self):
         return self._getProxies()
+
+    @private
+    @requiresAuth
+    @typeCheck(int, str, ((str, unicode),))
+    def addProductVersion(self, projectId, name, description):
+        self._filterProjectAccess(projectId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
+        try:
+            return self.productVersions.new(projectId = projectId,
+                                                 name = name,
+                                                 description = description) 
+        except DuplicateItem:
+            raise DuplicateProductVersion
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductVersion(self, versionId):
+        try:
+            ret = self.productVersions.get(versionId)
+        except database.ItemNotFound:
+            raise ProductVersionNotFound()
+        else:
+            return ret
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getStagesForProductVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        return [s.name for s in pd.getStages()]
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductDefinitionForVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        sio = StringIO.StringIO()
+        pd.serialize(sio)
+        return sio.getvalue()
+
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def setProductDefinitionForVersion(self, versionId,
+            productDefinitionXMLString):
+        # XXX: Need exception handling here
+        pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+
+        # TODO put back overrides
+
+        projectCfg = project.getConaryConfig()
+        projectCfg['name'] = self.auth.username
+        projectCfg['contact'] = self.auth.fullName or ''
+        cclient = conaryclient.ConaryClient(projectCfg)
+        pd.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
+        return True
+
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def editProductVersion(self, versionId, newDesc):
+        return self.productVersions.update(versionId, description = newDesc)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def getProductVersionListForProduct(self, projectId):
+        return self.productVersions.getProductVersionListForProduct(projectId)
+
+    @private
+    @requiresAuth
+    @typeCheck(int, ((str, unicode),))
+    def getBuildTaskListForDisplay(self, versionId, stageName):
+        """
+        Get a list of build tasks to be completed for display purposes only
+        @param versionId: the product version id
+        @param stageName: the name of the stage to use
+        @return: a list of task dicts as 
+                 {buildName, buildTypeName, buildFlavorName, imageGroup}
+        """
+
+        taskList = []
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        builds = pd.getBuildsForStage(stageName)
+        stageLabel = pd.getLabelForStage(stageName)
+        for build in builds:
+            task = dict()
+
+            # set the build name
+            task['buildName'] = build.getBuildName()
+
+            # set the build type
+            buildTypeDt = buildtemplates.getDataTemplateByXmlName(
+                              build.getBuildImageType().getTag())
+            task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
+
+            # get the name of the flavor.  If we don't have a name mapped to
+            # it, specify that it is custom
+            flavor = build.getBuildBaseFlavor()
+            if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
+                index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
+                buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
+            else:
+                buildFlavor = "Custom Flavor: %s" % flavor
+            task['buildFlavorName'] = buildFlavor
+
+            # set the image group
+            task['imageGroup'] = "%s=%s" % (build.getBuildImageGroup(),
+                    stageLabel)
+
+            taskList.append(task)
+
+        return taskList
+
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

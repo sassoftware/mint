@@ -27,8 +27,8 @@ typeNames = {
     }
 
 displayNames = {
-    LOCAL           : 'Download (rpath.com)',
-    AMAZONS3        : 'Download (rpath.com)',
+    LOCAL           : 'Download',
+    AMAZONS3        : 'Download',
     AMAZONS3TORRENT : 'Download (BitTorrent)',
     GENERICMIRROR   : 'Download'
 }

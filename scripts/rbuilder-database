@@ -54,7 +54,7 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
             self.cfg.dbDriver))
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         schema.loadSchema(db, self.cfg, self.options.should_migrate)
-        return True
+        return 0
 
 if __name__ == '__main__':
     rd = RBuilderDatabase()

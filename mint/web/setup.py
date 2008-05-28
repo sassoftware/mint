@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
 #
@@ -15,6 +15,7 @@ import time
 
 from mod_python import apache
 
+from mint import constants
 from mint import helperfuncs
 from mint import mint_error
 from mint import shimclient
@@ -35,7 +36,7 @@ configGroups = {
     'Branding':
         ('companyName', 'corpSite'),
     'Repository Setup':
-        ('defaultBranch',),
+        ('namespace',),
     '(Optional) External Passwords':
         ('externalPasswordURL', 'authCacheTimeout'),
     '(Optional) Miscellaneous':
@@ -186,22 +187,11 @@ class SetupHandler(WebHandler):
         if kwargs.get('requireSigs'):
             newCfg.requireSigs = True
 
-        mintPass = ''
-        passwdLength = 32
-        for x in range(passwdLength):
-            mintPass += random.choice('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        newCfg.authPass = mintPass
+        newCfg.authPass = helperfuncs.genPassword(32)
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 
         return self._write("setup/saved")
-
-    def config(self, auth):
-        self.req.content_type = 'text/plain'
-
-        buf = StringIO()
-        self.cfg.display(out = buf)
-        return buf.getvalue()
 
     def restart(self, auth):
 
@@ -222,3 +212,4 @@ class SetupHandler(WebHandler):
 
         t = template.Template(cfg = self.cfg, req = self.req, cacheFakeoutVersion = helperfuncs.getVersionForCacheFakeout(), **values)
         return t.serialize(encoding = "utf-8", output = "xhtml")
+

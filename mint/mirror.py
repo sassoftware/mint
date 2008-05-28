@@ -12,6 +12,8 @@ import sys
 import optparse
 import traceback
 
+from mint.mint_error import UpdateServiceNotFound
+
 EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo"]
 INCLUDE_ALL_MATCH_TROVES = ["+.*"]
 
@@ -29,7 +31,13 @@ class OutboundMirrorsTable(database.KeyedTable):
     key = 'outboundMirrorId'
 
     fields = ['outboundMirrorId', 'sourceProjectId', 'targetLabels',
-              'allLabels', 'recurse', 'matchStrings', 'mirrorOrder']
+              'allLabels', 'recurse', 'matchStrings', 'mirrorOrder',
+              'useReleases',
+              ]
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
 
     def get(self, *args, **kwargs):
         res = database.KeyedTable.get(self, *args, **kwargs)
@@ -39,14 +47,77 @@ class OutboundMirrorsTable(database.KeyedTable):
             res['recurse'] = bool(res['recurse'])
         return res
 
+    def delete(self, id):
+        cu = self.db.transaction()
+        try:
+            cu.execute("""DELETE FROM OutboundMirrors WHERE
+                              outboundMirrorId = ?""", id)
 
-class OutboundMirrorTargetsTable(database.KeyedTable):
-    name = "OutboundMirrorTargets"
-    key = 'outboundMirrorTargetsId'
+            # Cleanup mapping table ourselves if we are using SQLite,
+            # as it doesn't know about contraints.
+            if self.cfg.dbDriver == 'sqlite':
+                cu.execute("""DELETE FROM OutboundMirrorsUpdateServices WHERE
+                              outboundMirrorId = ?""", id)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return True
 
-    fields = [ 'outboundMirrorTargetsId', 'outboundMirrorId',
-               'url', 'username', 'password' ]
+    def getOutboundMirrors(self):
+        cu = self.db.cursor()
+        cu.execute("""SELECT outboundMirrorId, sourceProjectId,
+                        targetLabels, allLabels, recurse,
+                        matchStrings, mirrorOrder, fullSync,
+                        useReleases
+                        FROM OutboundMirrors
+                        ORDER by mirrorOrder""")
+        return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
+                x[6], bool(x[7]), bool(x[8])] \
+                for x in cu.fetchall()]
 
+    def isProjectMirroredByRelease(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT COUNT(*) FROM OutboundMirrors
+            WHERE sourceProjectId = ? AND useReleases = 1""", projectId)
+        count = cu.fetchone()[0]
+        return bool(count)
+
+class OutboundMirrorsUpdateServicesTable(database.DatabaseTable):
+    name = "OutboundMirrorsUpdateServices"
+    fields = [ 'updateServiceId', 'outboundMirrorId' ]
+
+    def getOutboundMirrorTargets(self, outboundMirrorId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT obus.updateServiceId, us.hostname,
+                             us.mirrorUser, us.mirrorPassword, us.description
+                      FROM OutboundMirrorsUpdateServices obus
+                           JOIN
+                           UpdateServices us
+                           USING(updateServiceId)
+                      WHERE outboundMirrorId = ?""", outboundMirrorId)
+        return [ list(x[:4]) + [x[4] and x[4] or ''] \
+                for x in cu.fetchall() ]
+
+    def setTargets(self, outboundMirrorId, updateServiceIds):
+        cu = self.db.transaction()
+        updates = [ (outboundMirrorId, x) for x in updateServiceIds ]
+        try:
+            cu.execute("""DELETE FROM OutboundMirrorsUpdateServices
+                          WHERE outboundMirrorId = ?""", outboundMirrorId)
+        except:
+            pass # don't worry if there is nothing to do here
+
+        try:
+            cu.executemany("INSERT INTO OutboundMirrorsUpdateServices VALUES(?,?)",
+                updates)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return updateServiceIds
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
@@ -59,6 +130,39 @@ class RepNameMapTable(database.DatabaseTable):
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
         self.db.commit()
         return cu._cursor.lastrowid
+
+class UpdateServicesTable(database.KeyedTable):
+    name = 'UpdateServices'
+    key = 'updateServiceId'
+    fields = [ 'updateServiceId', 'hostname',
+               'mirrorUser', 'mirrorPassword', 'description' ]
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.KeyedTable.__init__(self, db)
+
+    def getUpdateServiceList(self):
+        cu = self.db.cursor()
+        cu.execute("""SELECT %s FROM UpdateServices""" % ', '.join(self.fields))
+        return [ list(x) for x in cu.fetchall() ]
+
+    def delete(self, id):
+        cu = self.db.transaction()
+        try:
+            cu.execute("""DELETE FROM UpdateServices WHERE
+                              updateServiceId = ?""", id)
+
+            # Cleanup mapping table ourselves if we are using SQLite,
+            # as it doesn't know about contraints.
+            if self.cfg.dbDriver == 'sqlite':
+                cu.execute("""DELETE FROM OutboundMirrorsUpdateServices WHERE
+                              updateServiceId = ?""", id)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            return True
 
 
 class MirrorScript(scriptlibrary.SingletonScript):
@@ -90,6 +194,10 @@ class MirrorScript(scriptlibrary.SingletonScript):
         op.add_option("--show-mirror-cfg", action = "store_true",
                 dest = "showConfig", default = False,
                 help = "print generated mirror configs to stdout")
+        op.add_option("--test", action = "store_true",
+                dest = "test", default = False,
+                help = "show how mirrorRepository would be called "
+                       "(don't actually mirror)")
         (self.options, self.args) = op.parse_args()
         if len(self.args) < 1:
             op.error("missing URL to rBuilder XML-RPC interface")
@@ -113,12 +221,6 @@ class MirrorScript(scriptlibrary.SingletonScript):
         from conary.conaryclient import mirror
         from conary.lib import util
 
-        if self.options.showConfig:
-            print >> sys.stdout, "-- Start Mirror Configuration File --"
-            mirrorCfg.display()
-            print >> sys.stdout, "-- End Mirror Configuration File --"
-            sys.stdout.flush()
-
         # set the correct tmpdir to use
         tmpDir = os.path.join(self.cfg.dataPath, 'tmp')
         if os.access(tmpDir, os.W_OK):
@@ -127,9 +229,32 @@ class MirrorScript(scriptlibrary.SingletonScript):
         else:
             self.log.warning("Using system temporary directory")
 
+        fullSync = self.options.sync or fullSync
+        if fullSync:
+            self.log.info("Full sync requested on this mirror")
+        if self.options.syncSigs:
+            self.log.info("Full signature sync requested on this mirror")
+
         # first time through, we should pass in sync options;
         # subsequent passes should use the mirror marks
         passNumber = 1
+
+        if self.options.test:
+            # If we are testing, print the configuration
+            if not self.options.showConfig:
+                self.log.info("--test implies --show-config")
+                self.options.showConfig = True
+
+        if self.options.showConfig:
+            print >> sys.stdout, "-- Start Mirror Configuration File --"
+            mirrorCfg.display()
+            print >> sys.stdout, "-- End Mirror Configuration File --"
+            sys.stdout.flush()
+
+        if self.options.test:
+            self.log.info("Testing mode, not actually mirroring")
+            return
+
         self.log.info("Beginning pass %d" % passNumber)
         callAgain = mirror.mirrorRepository(sourceRepos, targetRepos,
             mirrorCfg, sync = self.options.sync or fullSync,

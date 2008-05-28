@@ -1,0 +1,5 @@
+/srv/rbuilder/data/db
+/srv/rbuilder/{config,mcp}
+/srv/rbuilder/jobmaster/{config,config.d}
+/var/log/rbuilder/{jobmaster.log,mcp.log,mirror-inbound.log,mirror-outbound.log,package-index.log,jobs,conary-db-migration.log}
+
