@@ -486,7 +486,8 @@ class MintServer(object):
         # create a pathdict out of the streamMap
         pathDict = {}
         for filename, filestream in streamMap.iteritems():
-            pathDict[filename] = filetypes.RegularFile(contents=filestream)
+            pathDict[filename] = filetypes.RegularFile(contents=filestream,
+                config=True)
 
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
