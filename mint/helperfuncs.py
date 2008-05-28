@@ -461,7 +461,4 @@ def sanitizeProductDefinition(projectName, projectDescription,
 
     addDefaultStagesToProductDefinition(productDefinition)
 
-    # TODO: add baseFlavor
-    # TODO: add meaningful upstream sources
-
     return productDefinition

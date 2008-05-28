@@ -1194,12 +1194,33 @@ class ProjectHandler(WebHandler):
         for s in stages:
             pd.addStage(s['name'], s['labelSuffix'])
 
+        # TODO add baseflavor from the UI
+        # XXX  Currently we are hardcoding this to rLS/rPL 1 (RBL-2899)
+        #      but only if it wasn't set. This way, users can override
+        #      it by editing the XML by hand.
+        if not pd.getBaseFlavor():
+            pd.setBaseFlavor("""
+~MySQL-python.threadsafe, X, ~!alternatives, ~!bootstrap,
+~builddocs, ~buildtests, desktop, emacs, gcj, ~glibc.tls,
+gnome, gtk, ipv6, kde, ~kernel.debugdata, krb, ldap, nptl,
+~!openssh.smartcard, ~!openssh.static_libcrypto, pam, pcre,
+perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
+~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
+~!xorg-x11.xprint
+""")
+
         # Process upstream sources
         usources = collatedDict.get('pdusources',{})
         # TODO: Include upstream sources, baseFlavor, etc.
         #       from the UI (which needs to be invented).
         #       Until then, we'll leave any changes a user
         #       makes in the repos alone.
+        # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
+        if not pd.getUpstreamSources():
+            pd.addUpstreamSource(troveName="group-rap-linux-service",
+                                 label="rap.rpath.com@rpath:linux-1")
+            pd.addUpstreamSource(troveName="group-os",
+                                 label="conary.rpath.com@rpl:1")
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
