@@ -2197,13 +2197,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Find the troves that satisfy the build.
         ret = []
         matches = repos.findTrove(None, (troveName, troveLabel, None))
+        maxVersion = max(x[1] for x in matches)
         for name, version, flavor in matches:
+            if version != maxVersion:
+                # Skip older versions that only show up because
+                # they're flavored differently
+                continue
             if not flavor.stronglySatisfies(filterFlavor):
+                # Skip flavors that don't satisfy our original
+                # condition in the first place
                 continue
 
             # If filterFlavor has an instruction set, the major
-            # architecture must match that of the group, so
-            # an is: x86 filter does not match is: x86 x86_64 groups.
+            # architecture must match that of the group so
+            # an is: x86 filter does not match is: x86 x86_64 groups
+            # even though the flavor is technically satisfied.
             thisArch = helperfuncs.getArchFromFlavor(flavor)
             if filterArch and filterArch != thisArch:
                 continue

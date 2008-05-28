@@ -1405,17 +1405,19 @@ class BuildTestConaryRepository(MintRepositoryHelper):
         self.addCollection("test", "1.0",
             [(":runtime", "1.0", deps.Flavor())])
         
-        def addTrove(flavor):
-            self.addCollection(group, "1.0",
+        def addTrove(flavor, version='1.0'):
+            self.addCollection(group, version,
                 [("test", "1.0" , deps.Flavor())], flavor=flavor)
 
-        # Lots of options to pick from
+        # Older groups that show up due to their different flavors
+        addTrove('!foo,!bar,!baz,!bork,~!xen,~!domU,~!dom0,vmware is: x86',
+            version='0.9')
+        addTrove('!foo,!bar,!baz,!bork,~!xen,~!domU,~!dom0,vmware is: x86 x86_64',
+            version='0.9')
+
+        # New groups that are worth looking at
         addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86')
         addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,~!vmware is: x86 x86_64')
-        addTrove('!foo,!bar,baz,bork,xen,~!domU,~!dom0,~!vmware is: x86')
-        addTrove('!foo,!bar,baz,bork,xen,~!domU,~!dom0,~!vmware is: x86 x86_64')
-        addTrove('!foo,!bar,baz,bork,xen,~!domU,dom0,~!vmware is: x86')
-        addTrove('!foo,!bar,baz,bork,xen,~!domU,dom0,~!vmware is: x86 x86_64')
         addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86')
         addTrove('!foo,!bar,baz,bork,~!xen,~!domU,~!dom0,vmware is: x86 x86_64')
 
@@ -1438,7 +1440,7 @@ class BuildTestConaryRepository(MintRepositoryHelper):
             filter, expected = deps.parseFlavor(filter), deps.parseFlavor(expected)
 
             troves = server._resolveTrove(projectId, group, 
-                         "testproject.%s@rpl:devel/1.0" % MINT_PROJECT_DOMAIN, 
+                         "testproject.%s@rpl:devel" % MINT_PROJECT_DOMAIN, 
                          filter)
             self.failUnlessEqual(troves, [(group, versions.VersionFromString(
                 '/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN),
