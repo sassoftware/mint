@@ -117,6 +117,8 @@ class AdminHandler(WebHandler):
         additionalLabels = []
         extLabel = ""
         pText = getProjectText().lower()
+
+        # Validate simple parameters
         if not name:
             self._addErrors("Missing %s title"%pText)
         if not hostname:
@@ -128,6 +130,11 @@ class AdminHandler(WebHandler):
                 extLabel = versions.Label(label)
             except versions.ParseError:
                 self._addErrors("Invalid label %s" % label)
+
+        if self._getErrors():
+            return None, None
+
+        # Parse and check additional labels
         if useMirror == 'net' and additionalLabelsToMirror:
             for l in additionalLabelsToMirror.split():
                 # skip a redundant label specification
@@ -137,6 +144,8 @@ class AdminHandler(WebHandler):
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
+
+        # Check authentication data
         if authType != 'none':
             if authType == 'userpass':
                 if not externalUser:
@@ -146,7 +155,7 @@ class AdminHandler(WebHandler):
             elif authType == 'entitlement':
                 if not externalEntKey:
                     self._addErrors('Missing entitlement key for local mirror authentication')
-                if externalEntKey:
+                else:
                     # Test that the entitlement is valid
                     cfg = conarycfg.ConaryConfiguration()
                     if url:
