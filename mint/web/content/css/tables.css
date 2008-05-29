@@ -64,7 +64,8 @@ div.field-row {
     padding: 0 0 1em 0;
 }
 
-div.field-row label {
+div.field-row label,
+div.field-example {
     float: left;
     width: 400px;
     text-align: right;
@@ -88,6 +89,13 @@ div.field-row input.field-text-int {
 
 div.field-row br {
     clear: left;
+}
+
+div.field-example {
+    font-size: smaller;
+    text-align: left;
+    margin: 0 0 0 50px;
+    width: 650px;
 }
 
 /***************************** PRETTY FULLWIDTH *****************************/
