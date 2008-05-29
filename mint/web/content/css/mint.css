@@ -964,6 +964,13 @@ span#editProject {
     float: right;
 }
 
+.formgroupSeparator {
+    width: auto;
+    clear:both;
+    margin:0pt;
+    padding:0pt;
+}
+
 .formsubgroup,
 .formsubgroupTitle {
     background-color: #eee;
@@ -992,6 +999,12 @@ tr.editGroupHeader, .formgroupTitle {
     padding: 3px;
 }
 
+.formgroupItems
+{
+    float: left;
+    width: 60%;
+}
+
 .formgroup label,
 .formgroup input,
 .formgroup textarea,
@@ -1000,6 +1013,13 @@ tr.editGroupHeader, .formgroupTitle {
     float: left;
     margin-bottom: 1.25em;
     width: 60%;
+}
+
+.formgroup input.check {
+    display: inline;
+    margin-bottom: -.25em;
+    float: none;
+    width: auto;
 }
 
 .fsTypeDD {
@@ -1025,6 +1045,13 @@ table.fsEditorTable thead {
     width: 30%;
     margin-left: 10px;
     padding-right: 10px;
+}
+
+.formgroup label.check_label
+{
+    display: inline;
+    float: none;
+    width: 60%;
 }
 
 div.clearleft {
