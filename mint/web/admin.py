@@ -562,7 +562,7 @@ class AdminHandler(WebHandler):
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
-            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings))
+            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -625,14 +625,14 @@ class AdminHandler(WebHandler):
 
             # compute the match troves expression
             matchTroveList = []
-            if not mirrorSources:
-                matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
             if mirrorBy == 'group':
                 if not groups:
                     self._addErrors("No groups were selected")
                 else:
                     matchTroveList.extend(['+%s' % (g,) for g in groups])
             else:
+                if not mirrorSources:
+                    matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
                 # make sure we include everything else if we are not in
                 # mirror by group mode
                 matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
@@ -642,9 +642,8 @@ class AdminHandler(WebHandler):
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
                     labelList, allLabels, recurse, useReleases, id=id)
-            if not useReleases:
-                self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                    matchTroveList)
+            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                matchTroveList)
             self.client.setOutboundMirrorTargets(outboundMirrorId,
                     selectedTargets)
             self._redirect("http://%s%sadmin/outbound" %
