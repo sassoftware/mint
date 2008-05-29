@@ -77,7 +77,13 @@ def setup():
 
     #Package creator
     packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath('../../package-creator-service'))
+    if not os.path.exists(packageCreatorPath):
+        print >> sys.stderr, "Please set PACKAGE_CREATOR_SERVICE_PATH"
+        sys.exit(1)
     conaryFactoryTestPath = os.getenv('CONARY_FACTORY_TEST_PATH',    os.path.realpath('../../conary-factory-test'))
+    if not os.path.exists(conaryFactoryTestPath):
+        print >> sys.stderr, "Please set CONARY_FACTORY_TEST_PATH"
+        sys.exit(1)
 
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
