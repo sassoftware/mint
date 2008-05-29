@@ -34,6 +34,13 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.webLogin('testuser', 'testpass')
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
+        self.assertEquals(page.code, 302, "This call should redirect since there are no versions setup")
+        client.addProductVersion(projectId, "version1", "Fluff description")
+        client.addProductVersion(projectId, "version2", "Fluff description")
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        assert 'version1</option>' in page.body
+        assert 'version2</option>' in page.body
         assert 'value="Create Package"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"

@@ -697,11 +697,15 @@ class ProjectHandler(WebHandler):
     def newPackage(self, auth):
         sessionHandle = self.client.createPackageTmpDir()
         versions = self.project.getProductVersionList()
+        if not versions:
+            self._addErrors('You must create a product version before using the package creator')
+            self._predirect('editVersion', temporary=True)
         return self._write('createPackage', message = '',
                 sessionHandle = sessionHandle,
                 versions = versions, versionId = -1)
 
     @writersOnly
+    @strFields(uploadId=None, fieldname=None)
     def upload_iframe(self, auth, uploadId, fieldname):
         return self._write('uploadPackageFrame', uploadId = uploadId,
                 fieldname = fieldname, project = self.project.hostname)
