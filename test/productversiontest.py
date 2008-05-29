@@ -22,6 +22,7 @@ from rpath_common.proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testAddProductVersion_Normal(self, db, data):
         """ Test adding a product version to the database. """
@@ -35,6 +36,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         self.failUnlessEqual('Version 1', versionDict['description'],
                              'Description did not get set properly')
         
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testAddProductVersion_NoDesc(self, db, data):
         """ Test adding a product version with no description. """
@@ -44,6 +46,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         versionDict = ownerClient.getProductVersion(versionId)
         self.failIf(versionDict['description'], "Description should be blank")
          
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testAddDuplicateProductVersion(self, db, data):
         """ Test attempting to add the same version twice. This should
@@ -56,6 +59,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
                               ownerClient.addProductVersion,
                               projectId, '1')
         
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetProductVersion(self, db, data):
         ownerClient = self.getClient('owner')
@@ -70,6 +74,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         self.assertEquals('FooV2', versionDict2['name'])
         self.assertEquals('FooV2Description', versionDict2['description'])
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetNonExistantProductVersion(self, db, data):
         ownerClient = self.getClient('owner')
@@ -79,6 +84,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
                           ownerClient.getProductVersion, versionId)
         
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testEditProductVersion(self, db, data):
         ownerClient = self.getClient('owner')
@@ -92,6 +98,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         versionDict = ownerClient.getProductVersion(versionId)
         self.assertEquals(newDesc, versionDict['description'])
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testAccessDenied(self, db, data):
         """ Make sure that only admins and owners can add a
@@ -111,6 +118,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
             self.failUnless(c.addProductVersion,
                             "This should have worked for %s" % username)
         
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetProductVersionListForProduct(self, db, data):
         ownerClient = self.getClient('owner')
@@ -130,6 +138,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         self.assertEquals(0, len(names))
         self.assertEquals(0, len(descriptions))
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetProductVersionListForNonExistantProduct(self, db, data):
         ownerClient = self.getClient('owner')
@@ -140,6 +149,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         # There should be 0 versions.
         self.assertEquals(0, len(productVersions))
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetandSetProductDefinitionForVersion(self, db, data):
         ownerClient = self.getClient('owner')
@@ -160,6 +170,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         self.failUnlessEqual(npd.getStage('release').name, 'release')
         self.failUnlessEqual(npd.getStage('release').labelSuffix, '')
 
+    @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
     def testGetProductDefinitionForNonExistantVersion(self, db, data):
         ownerClient = self.getClient('owner')
