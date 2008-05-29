@@ -79,9 +79,14 @@ class SetupHandler(WebHandler):
         if not cmd:
             return self.setup
         try:
-            return self.__getattribute__(cmd)
+            ret = self.__getattribute__(cmd)
         except AttributeError:
             raise HttpNotFound
+
+        if not callable(ret):
+            raise HttpNotFound
+
+        return ret
 
     def _copyCfg(self):
         newCfg = deepcopy(self.cfg)

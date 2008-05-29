@@ -112,6 +112,9 @@ class ProjectHandler(WebHandler):
         except AttributeError:
             raise HttpNotFound
 
+        if not callable(method):
+            raise HttpNotFound
+
         return method
 
     def _predirect(self, path = "", temporary = False):
