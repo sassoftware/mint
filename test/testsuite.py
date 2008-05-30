@@ -111,9 +111,6 @@ def setup():
 
     resources.conaryDir = conaryDir = os.environ['CONARY_PATH']
 
-    from conary.lib import util
-    sys.excepthook = util.genExcepthook(True)
-
     # if we're running with COVERAGE_DIR, we'll start covering now
     from conary.lib import coveragehook
 
