@@ -35,7 +35,7 @@ class TestPackageCreatorHelperMethods(unittest.TestCase):
     def testMinConfig(self):
         cfg = conarycfg.ConaryConfiguration(False)
         mincfg = packagecreator.MinimalConaryConfiguration(cfg)
-        self.assertEquals(mincfg.lines, [])
+        self.assertNotEquals(mincfg.lines, [])
         cfg.configLine('repositoryMap foo http://foo/conary')
         cfg.configLine('user * foo bar')
         cfg.configLine('name bob')
