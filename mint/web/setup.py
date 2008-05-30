@@ -178,8 +178,15 @@ class SetupHandler(WebHandler):
                 errors.append(valid)
             else:
                 namespaceValid = True
-        
+       
         allowNamespaceChange = kwargs['allowNamespaceChange']
+        if isinstance(allowNamespaceChange, str):
+            # this comes back as a string from the web
+            if allowNamespaceChange == 'True' or allowNamespaceChange == 'true':
+                allowNamespaceChange = True
+            else:
+                allowNamespaceChange = False
+        
         # always allow them to change invalid namespace.
         if not namespaceValid:
             allowNamespaceChange = True
