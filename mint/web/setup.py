@@ -19,6 +19,7 @@ from mint import constants
 from mint import helperfuncs
 from mint import mint_error
 from mint import shimclient
+from mint import config
 from mint.config import RBUILDER_GENERATED_CONFIG
 from mint.config import keysForGeneratedConfig
 from mint.session import SqlSession
@@ -106,13 +107,20 @@ class SetupHandler(WebHandler):
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
 
         newCfg = self._copyCfg()
+        
+        # if the namespace has already been set, don't allow them to change it
+        # FIXME this needs to be changed - implemented for RBL-2905.
+        dflNamespace = config.MintConfig().namespace
+        allowNamespaceChange = (newCfg.namespace == dflNamespace) \
+            and True or False
 
         if not self.cfg.configured:
             newCfg.hostName = self.req.hostname.split(".")[0]
             newCfg.siteDomainName =  ".".join(self.req.hostname.split(".")[1:])
 
         return self._write("setup/setup", configGroups = configGroups,
-            newCfg = newCfg, errors = [])
+            newCfg = newCfg, errors = [], 
+            allowNamespaceChange = allowNamespaceChange)
 
     @intFields(authCacheTimeout = 0)
     @postOnly
@@ -158,6 +166,7 @@ class SetupHandler(WebHandler):
                 errors.append('Username: %s was not accepted by: %s' % \
                               (kwargs.get('new_username'),
                                kwargs.get('new_password')))
+        allowNamespaceChange = kwargs['allowNamespaceChange']
 
         # rewrite configuration file
         keys = self.fields.keys()
@@ -169,7 +178,8 @@ class SetupHandler(WebHandler):
 
         if errors:
             return self._write("setup/setup", configGroups = configGroups,
-                               newCfg = newCfg, errors = errors)
+                               newCfg = newCfg, errors = errors,
+                               allowNamespaceChange = allowNamespaceChange)
 
         newCfg.postCfg()
         newCfg.SSL = True

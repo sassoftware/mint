@@ -1,0 +1,40 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2008 rPath, Inc.
+#
+
+import os
+import sys
+
+from mint import config
+
+def migrate():
+    # read the configuration
+    cfg = config.MintConfig()
+    namespaceDfl = cfg.namespace
+    cfg.read(config.RBUILDER_GENERATED_CONFIG)
+    
+    if cfg.namespace == namespaceDfl:
+        print "Setting namespace from default branch '%s'" % \
+               cfg.defaultBranch
+        try:
+            branch, tag = cfg.defaultBranch.replace(' ', '').split(':')
+        except Exception, e:
+            msg = "Failed parsing default branch '%s': %s" % \
+                  (cfg.defaultBranch, str(e))
+            raise Exception(msg)
+    
+        if branch:
+            cfg.namespace = branch
+            f = file(config.RBUILDER_GENERATED_CONFIG, 'w')
+            for k in config.keysForGeneratedConfig:
+                cfg.displayKey(k, out = f)
+            f.close()
+            print "Namespace has been set to '%s'" % cfg.namespace
+    
+    return 0
+
+if __name__ == '__main__':
+    # don't migrate by default just in case
+    if  sys.argv[1:] and sys.argv[1] == "--migrate":
+        os._exit(migrate())

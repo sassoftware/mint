@@ -58,7 +58,11 @@ from mint.web.templatesupport import projectText
                               <input class="check" type="checkbox" name="${key}" value="${newCfg.__dict__[key]}"/>
                             </td>
                             <td py:if="not isinstance(newCfg._options[key].valueType, CfgBool)">
-                              <input style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
+                              <div py:if="key == 'namespace'">
+                                <input py:if="allowNamespaceChange" style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
+                                <label py:if="not allowNamespaceChange" py:content="newCfg.__dict__[key]"/>
+                              </div>
+                              <input py:if="key != 'namespace'" style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
                             </td>
                         </tr>
                     </table>
@@ -93,6 +97,7 @@ from mint.web.templatesupport import projectText
                 </table>
                 </div>
             <p><button type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/save_changes_button.png" alt="Save Changes" /></button></p>
+            <input type="hidden" name="allowNamespaceChange" value="${allowNamespaceChange}"/>
           </form>
         </div>
     </body>

@@ -143,7 +143,8 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_username': 'fooadmin',
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
-                   'new_password2': 'foopass' }
+                   'new_password2': 'foopass',
+                   'allowNamespaceChange': False }
 
         generatedConfigFilePath = os.path.join(self.cfg.dataPath, 'rbuilder-generated.conf')
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
@@ -191,7 +192,8 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_username': 'fooadmin',
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
-                   'new_password2': 'foopass43' }
+                   'new_password2': 'foopass43',
+                   'allowNamespaceChange': False }
 
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.cfg = self.cfg
@@ -212,7 +214,8 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_username': '',
                    'new_email': '',
                    'new_password': '',
-                   'new_password2': '' }
+                   'new_password2': '',
+                   'allowNamespaceChange': False }
 
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.cfg = self.cfg
