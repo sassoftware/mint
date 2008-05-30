@@ -7,7 +7,6 @@
 
 import base64
 import testsuite
-import unittest
 testsuite.setup()
 
 import copy
@@ -16,14 +15,8 @@ import time
 
 from mint import config
 
-from mint import shimclient
 from mint.web import setup, hooks
 from mint.web.webhandler import HttpForbidden, HttpNotFound, HttpMoved
-
-from conary import versions
-from conary.lib import util
-
-from repostest import testRecipe
 
 import fixtures
 import mint_rephelp
@@ -193,6 +186,7 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_email': 'fooadmin@rpath.local',
                    'new_password': 'foopass',
                    'new_password2': 'foopass43',
+                   'namespace': 'rpl',
                    'allowNamespaceChange': False }
 
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
@@ -215,7 +209,31 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'new_email': '',
                    'new_password': '',
                    'new_password2': '',
+                   'namespace': 'rpl',
                    'allowNamespaceChange': False }
+
+        self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
+        self.sh.cfg = self.cfg
+        self.sh.cfg.configured = False
+        client = self.getClient('admin')
+        auth = client.checkAuth()
+        context = {'auth': auth, 'cmd': 'processSetup', 'client': client, 'fields': fields}
+        func = self.sh.handle(context)
+        ret = func(auth = auth, **fields)
+        self.failUnless('<h1>rBuilder Configuration</h1>' in ret)
+        
+    @testsuite.context("more_cowbell")
+    @fixtures.fixture("Empty")
+    def testProcessSetupBadNamespace(self, db, data):
+        """ Test password mismatch """
+        fields = { 'hostName': 'foo',
+                   'siteDomainName': 'rpath.local',
+                   'new_username': 'fooadmin',
+                   'new_email': 'fooadmin@rpath.local',
+                   'new_password': 'foopass',
+                   'new_password2': 'foopass',
+                   'namespace': 'rpl:1',
+                   'allowNamespaceChange': True }
 
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.cfg = self.cfg

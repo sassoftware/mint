@@ -6,6 +6,7 @@
 
 from cStringIO import StringIO
 from copy import deepcopy
+from mint import helperfuncs
 import kid
 import sys
 import os
@@ -107,12 +108,11 @@ class SetupHandler(WebHandler):
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
 
         newCfg = self._copyCfg()
-        
+
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.
         dflNamespace = config.MintConfig().namespace
-        allowNamespaceChange = (newCfg.namespace == dflNamespace) \
-            and True or False
+        allowNamespaceChange = (newCfg.namespace == dflNamespace)
 
         if not self.cfg.configured:
             newCfg.hostName = self.req.hostname.split(".")[0]
@@ -166,7 +166,23 @@ class SetupHandler(WebHandler):
                 errors.append('Username: %s was not accepted by: %s' % \
                               (kwargs.get('new_username'),
                                kwargs.get('new_password')))
+        
+        # validate the namespace
+        namespaceValid = False
+        if 'namespace' not in kwargs or not kwargs['namespace']:
+            errors.append("You must specify a namespace for this installation.")
+        else:
+            # returns text explanation if invalid
+            valid = helperfuncs.validateNamespace(kwargs['namespace'])
+            if valid != True:
+                errors.append(valid)
+            else:
+                namespaceValid = True
+        
         allowNamespaceChange = kwargs['allowNamespaceChange']
+        # always allow them to change invalid namespace.
+        if not namespaceValid:
+            allowNamespaceChange = True
 
         # rewrite configuration file
         keys = self.fields.keys()

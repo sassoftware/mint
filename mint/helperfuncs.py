@@ -462,3 +462,15 @@ def sanitizeProductDefinition(projectName, projectDescription,
     addDefaultStagesToProductDefinition(productDefinition)
 
     return productDefinition
+
+def validateNamespace(ns):
+    """
+    Validate a namespace
+    @param ns: a namespace to validate
+    @return: True if valid, else a string explaining what is wrong
+    """
+    valid = ns and "@" not in ns and ':' not in ns
+    if not valid:
+        return "The namespace can not contain '@' or ':'."
+    
+    return True

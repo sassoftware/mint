@@ -7,26 +7,17 @@ import testsuite
 import unittest
 testsuite.setup()
 
-import fixtures
-
 import kid
 import os
-import re
 import sys
 import tempfile
-import time
 
 import mint_rephelp
-import rephelp
 from mint import copyutils
-from mint import config
-from mint import constants
 from mint import templates
-from mint import server
 from mint import flavors
 from mint.helperfuncs import *
 from mint.client import timeDelta
-from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
 
@@ -615,6 +606,21 @@ Much like Powdermilk Biscuits[tm]."""
         
         # make sure imageless is not in there
         self.assertTrue(buildtypes.IMAGELESS not in buildTypes)
+        
+    def testValidateNamespace(self):
+        """
+        Test valid/invalid config namespace values
+        """
+        self.assertTrue(validateNamespace("rpl"))
+        self.assertTrue(validateNamespace("foo2-*&^%$#!"))
+        
+        # invalid should return string text explainign what is wrong
+        text = validateNamespace("rpl:blah")
+        self.assertTrue(isinstance(text, str))
+        
+        # invalid should return string text explainign what is wrong
+        text = validateNamespace("rpl@blah")
+        self.assertTrue(isinstance(text, str))
         
 
 if __name__ == "__main__":

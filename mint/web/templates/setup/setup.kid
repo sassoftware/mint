@@ -61,6 +61,7 @@ from mint.web.templatesupport import projectText
                               <div py:if="key == 'namespace'">
                                 <input py:if="allowNamespaceChange" style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
                                 <label py:if="not allowNamespaceChange" py:content="newCfg.__dict__[key]"/>
+                                <input py:if="not allowNamespaceChange"  type="hidden" name="${key}" value="${newCfg.__dict__[key]}"/>
                               </div>
                               <input py:if="key != 'namespace'" style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
                             </td>
