@@ -117,6 +117,8 @@ class AdminHandler(WebHandler):
         additionalLabels = []
         extLabel = ""
         pText = getProjectText().lower()
+
+        # Validate simple parameters
         if not name:
             self._addErrors("Missing %s title"%pText)
         if not hostname:
@@ -128,6 +130,11 @@ class AdminHandler(WebHandler):
                 extLabel = versions.Label(label)
             except versions.ParseError:
                 self._addErrors("Invalid label %s" % label)
+
+        if self._getErrors():
+            return None, None
+
+        # Parse and check additional labels
         if useMirror == 'net' and additionalLabelsToMirror:
             for l in additionalLabelsToMirror.split():
                 # skip a redundant label specification
@@ -137,6 +144,8 @@ class AdminHandler(WebHandler):
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
+
+        # Check authentication data
         if authType != 'none':
             if authType == 'userpass':
                 if not externalUser:
@@ -146,7 +155,7 @@ class AdminHandler(WebHandler):
             elif authType == 'entitlement':
                 if not externalEntKey:
                     self._addErrors('Missing entitlement key for local mirror authentication')
-                if externalEntKey:
+                else:
                     # Test that the entitlement is valid
                     cfg = conarycfg.ConaryConfiguration()
                     if url:
@@ -553,7 +562,7 @@ class AdminHandler(WebHandler):
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
-            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings))
+            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -616,14 +625,14 @@ class AdminHandler(WebHandler):
 
             # compute the match troves expression
             matchTroveList = []
-            if not mirrorSources:
-                matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
             if mirrorBy == 'group':
                 if not groups:
                     self._addErrors("No groups were selected")
                 else:
                     matchTroveList.extend(['+%s' % (g,) for g in groups])
             else:
+                if not mirrorSources:
+                    matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
                 # make sure we include everything else if we are not in
                 # mirror by group mode
                 matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
@@ -633,9 +642,8 @@ class AdminHandler(WebHandler):
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
                     labelList, allLabels, recurse, useReleases, id=id)
-            if not useReleases:
-                self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
-                    matchTroveList)
+            self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
+                matchTroveList)
             self.client.setOutboundMirrorTargets(outboundMirrorId,
                     selectedTargets)
             self._redirect("http://%s%sadmin/outbound" %

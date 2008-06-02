@@ -6,6 +6,7 @@
 
 from cStringIO import StringIO
 from copy import deepcopy
+from mint import helperfuncs
 import kid
 import sys
 import os
@@ -19,6 +20,7 @@ from mint import constants
 from mint import helperfuncs
 from mint import mint_error
 from mint import shimclient
+from mint import config
 from mint.config import RBUILDER_GENERATED_CONFIG
 from mint.config import keysForGeneratedConfig
 from mint.session import SqlSession
@@ -80,9 +82,14 @@ class SetupHandler(WebHandler):
         if not cmd:
             return self.setup
         try:
-            return self.__getattribute__(cmd)
+            ret = self.__getattribute__(cmd)
         except AttributeError:
             raise HttpNotFound
+
+        if not callable(ret):
+            raise HttpNotFound
+
+        return ret
 
     def _copyCfg(self):
         newCfg = deepcopy(self.cfg)
@@ -102,12 +109,18 @@ class SetupHandler(WebHandler):
 
         newCfg = self._copyCfg()
 
+        # if the namespace has already been set, don't allow them to change it
+        # FIXME this needs to be changed - implemented for RBL-2905.
+        dflNamespace = config.MintConfig().namespace
+        allowNamespaceChange = (newCfg.namespace == dflNamespace)
+
         if not self.cfg.configured:
             newCfg.hostName = self.req.hostname.split(".")[0]
             newCfg.siteDomainName =  ".".join(self.req.hostname.split(".")[1:])
 
         return self._write("setup/setup", configGroups = configGroups,
-            newCfg = newCfg, errors = [])
+            newCfg = newCfg, errors = [], 
+            allowNamespaceChange = allowNamespaceChange)
 
     @intFields(authCacheTimeout = 0)
     @postOnly
@@ -153,6 +166,30 @@ class SetupHandler(WebHandler):
                 errors.append('Username: %s was not accepted by: %s' % \
                               (kwargs.get('new_username'),
                                kwargs.get('new_password')))
+        
+        # validate the namespace
+        namespaceValid = False
+        if 'namespace' not in kwargs or not kwargs['namespace']:
+            errors.append("You must specify a namespace for this installation.")
+        else:
+            # returns text explanation if invalid
+            valid = helperfuncs.validateNamespace(kwargs['namespace'])
+            if valid != True:
+                errors.append(valid)
+            else:
+                namespaceValid = True
+       
+        allowNamespaceChange = kwargs['allowNamespaceChange']
+        if isinstance(allowNamespaceChange, str):
+            # this comes back as a string from the web
+            if allowNamespaceChange == 'True' or allowNamespaceChange == 'true':
+                allowNamespaceChange = True
+            else:
+                allowNamespaceChange = False
+        
+        # always allow them to change invalid namespace.
+        if not namespaceValid:
+            allowNamespaceChange = True
 
         # rewrite configuration file
         keys = self.fields.keys()
@@ -164,7 +201,8 @@ class SetupHandler(WebHandler):
 
         if errors:
             return self._write("setup/setup", configGroups = configGroups,
-                               newCfg = newCfg, errors = errors)
+                               newCfg = newCfg, errors = errors,
+                               allowNamespaceChange = allowNamespaceChange)
 
         newCfg.postCfg()
         newCfg.SSL = True

@@ -185,15 +185,15 @@ class enumArg(EnumOption):
 
 class mediaTemplateTrove(TroveOption):
     default = ''
-    prompt  = 'Version of media-template to use when creating this image'
+    prompt  = 'media-template to use when creating this image'
 
 class anacondaCustomTrove(TroveOption):
     default = ''
-    prompt  = 'Version of anaconda-custom to use when creating this image'
+    prompt  = 'anaconda-custom to use when creating this image'
 
 class anacondaTemplatesTrove(TroveOption):
     default = ''
-    prompt  = 'Version of anaconda-templates to use when creating this image'
+    prompt  = 'anaconda-templates to use when creating this image'
 
 class amiHugeDiskMountpoint(StringOption):
     default = ''

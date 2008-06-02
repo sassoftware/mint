@@ -366,20 +366,19 @@ function processListActiveJobs(aReq) {
     swapDOM(oldJobTable, jobTable);
 }
 
-function addOutboundMirror_setUseReleases (value, doHooks) {
+function addOutboundMirror_setUseReleases (value) {
     // Update radio buttons for useReleases
-    $('useReleases').checked = value ? "selected" : "";
-    $('useLabels').checked = value ? "" : "selected";
+    $('useReleases').checked = value ? "checked" : "";
+    $('useLabels').checked = value ? "" : "checked";
 
     // Disable the other elements if useReleases is on
-    var elements = ['allLabels', 'selectLabels', 'mirrorByLabel', 'mirrorByGroup'];
+    var elements = ['allLabels', 'selectLabels', 'mirrorByLabel', 'mirrorByGroup', 'mirrorSources'];
     for (var i in elements)
-        $(elements[i]).disabled = value;
+        $(elements[i]).disabled = value ? "disabled" : "";
+}
 
-    if (doHooks) {
-        connect('useReleases', 'onclick', addOutboundMirror_onUseReleases);
-        connect('useLabels', 'onclick', addOutboundMirror_onUseReleases);
-    }
+function addOutboundMirror_setMirrorByGroup(value) {
+    $('mirrorSources').disabled = value ? "disabled" : "";
 }
 
 // RPC calls ----------------------------------------------------------------
@@ -607,9 +606,16 @@ function addOutboundMirror_onProjectChange (e) {
 
 function addOutboundMirror_onUseReleases (e) {
     if (e.src().id == 'useReleases')
-        addOutboundMirror_setUseReleases(true, false);
+        addOutboundMirror_setUseReleases(true);
     else
-        addOutboundMirror_setUseReleases(false, false);
+        addOutboundMirror_setUseReleases(false);
+}
+
+function addOutboundMirror_onMirrorByGroup(e) {
+    if (e.src().id == 'mirrorByGroup')
+        addOutboundMirror_setMirrorByGroup(true);
+    else
+        addOutboundMirror_setMirrorByGroup(false);
 }
 
 // Front Page

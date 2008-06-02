@@ -21,7 +21,12 @@
                 getProjectLabels(getElement('projectId').value,
                     ${kwargs['selectedLabels']});
                 connect('projectId', 'onchange', addOutboundMirror_onProjectChange);
-                addOutboundMirror_setUseReleases(${kwargs['useReleases']}, true);
+                addOutboundMirror_setUseReleases(${kwargs['useReleases']});
+                connect('mirrorByGroup', 'onclick', addOutboundMirror_onMirrorByGroup);
+                connect('mirrorByLabel', 'onclick', addOutboundMirror_onMirrorByGroup);
+                connect('useReleases', 'onclick', addOutboundMirror_onUseReleases);
+                connect('useLabels', 'onclick', addOutboundMirror_onUseReleases);
+
             });
         </script>
     </head>
@@ -156,9 +161,10 @@
                     <tr>
                         <th>Options:</th>
                         <td>
-                            <input py:attrs="{'checked': kwargs['mirrorSources'] and 'checked' or None}"
+                            <input py:attrs="{'checked': kwargs['mirrorSources'] and 'checked' or None,
+                                              'disabled': (kwargs['useReleases'] or (kwargs['mirrorBy'] == 'group')) and 'disabled' or ''}"
                                    class="check" type="checkbox" name="mirrorSources" value="1" id="mirrorSources" />
-                            <label for="mirrorSources">Include source components when mirroring</label>
+                            <label for="mirrorSources">Include source components when mirroring (only valid when mirroring by label)</label>
                         </td>
                     </tr>
                 </table>

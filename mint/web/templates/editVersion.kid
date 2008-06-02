@@ -104,11 +104,16 @@
                 <td colspan="5">
                     <fieldset>
                         <legend>Build Definition Settings</legend>
-                        <?python # funky lambda is to sort by datatype ?>
+                        <?python 
+                            # save RDT classes to get proper display classes for example
+                            troveElementBuildtypes = set()
+                            # funky lambda is to sort by datatype ?>
                         <div py:strip="True" py:for="name, data in sorted(valueToTemplateIdMap.items(), key=lambda y: y[1][1][0])">
                         <?python
                             validFor, dataRow = data
-                            elementClasses = ' '.join(['field-row'] + ['it-%d' % x for x in validFor])       
+                            elementClasses = ' '.join(['field-row'] + ['it-%d' % x for x in validFor])
+                            if dataRow[0] == RDT_TROVE:
+                                troveElementBuildtypes.update(set(validFor))
                             dataValue = buildSettings.get(name, dataRow[1])
                             elementName = 'pdbuilddef-%s-%s' % (ordinal, name)
                             elementDisabled = buildType not in validFor and 'disabled' or None
@@ -157,7 +162,17 @@
                                               'disabled': elementDisabled}" />
                             <br />
                         </div>
-                    </div>
+                        </div>
+                            <div py:attrs="{'class': ' '.join(['field-row', 'field-example'] + ['it-%d' % x for x in troveElementBuildtypes]),
+                                            'style': buildType not in troveElementBuildtypes and 'display: none;' or ''}">
+                            Special troves (e.g. anaconda-templates)
+                            may be specified as labels or as specific versions. For example, using
+                            <code>conary.rpath.com@rpl:1</code> will pick the latest trove from the
+                            <code>conary.rpath.com@rpl:1</code> label, while using
+                            <code>conary.rpath.com@rpl:1/1.0.8-0.1-3</code> will pick version
+                            <code>1.0.8-0.1-3</code> from the
+                            <code>conary.rpath.com@rpl:1</code> label.
+                        </div>
                     </fieldset>
                 </td>
             </tr>

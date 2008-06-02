@@ -13,7 +13,7 @@
 
 /var/log/rbuilder/repository.log {
     rotate 12
-    weekly
+    size 100M
     missingok
     notifempty
     copytruncate

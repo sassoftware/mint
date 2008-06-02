@@ -55,6 +55,10 @@ chown apache:apache /srv/rbuilder/data/db
 # Migrate all conary repositories
 /usr/share/rbuilder/scripts/migrate-all-projects || die "Failed to migrate all repositories"
 
+# Migrate the mint config
+/usr/share/rbuilder/scripts/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
+chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
+
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
 then
