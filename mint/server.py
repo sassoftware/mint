@@ -689,12 +689,14 @@ class MintServer(object):
         recipeStream.write(templates.write(groupTemplate,
                     cfg = self.cfg,
                     groupApplianceLabel=self.cfg.groupApplianceLabel,
-                    projectName=project.getHostname(),
                     groupName=groupName,
-                    rapaLabel=self.cfg.rapaLabel, version=version))
+                    recipeClassName=util.convertPackageNameToClassName(groupName),
+                    rapaLabel=self.cfg.rapaLabel,
+                    version=version))
         recipeStream.write('\n')
         self._createSourceTrove(project, groupName,
-                buildLabel, '1', {'%s.recipe' % groupName: recipeStream},
+                buildLabel, version,
+                {'%s.recipe' % groupName: recipeStream},
                 'Initial appliance image group template',
                 client)
         recipeStream.close()
