@@ -264,7 +264,7 @@ class TestWhizzyCGI(unittest.TestCase):
         self.prefix='tmp-testWhizzy-CGI-'
         self.wkdir = tempfile.mkdtemp(prefix=self.prefix)
         self.basedir = os.path.dirname(self.wkdir)
-        self.id = os.path.basename(self.wkdir).replace(self.prefix, '')
+        self.sesH = os.path.basename(self.wkdir).replace(self.prefix, '')
         #TODO Use a fileuploader here
         self.status,self.metadata,self.manifest = [os.path.join(self.wkdir, 'uploadfile-%s' % x) for x in ['status', 'meta_data', 'index']]
 
@@ -275,7 +275,7 @@ class TestWhizzyCGI(unittest.TestCase):
         sin = multipart_template % data
         env = dict(multipart_environ)
         env['CONTENT_LENGTH'] = str(len(sin))
-        env['QUERY_STRING'] = 'uploadId=%s;fieldname=uploadfile' % self.id
+        env['QUERY_STRING'] = 'uploadId=%s;fieldname=uploadfile' % self.sesH
         headers = multipart_headers_template % len(sin)
 
         stdin = StringIO(headers + sin)
@@ -294,7 +294,7 @@ class TestWhizzyCGI(unittest.TestCase):
         whizzyupload.handle_cgi_request(stdin, stdout, self.basedir, self.prefix, env)
         self.assertEquals(stdout.getvalue(), 'Content-Type: text/html\nStatus: 400 Bad request\n\nInvalid request, uploadId and fieldname must be specified in the query string\n')
 
-        env['QUERY_STRING'] = 'uploadId=%s' % self.id
+        env['QUERY_STRING'] = 'uploadId=%s' % self.sesH
         stdin.seek(0)
         stdout.seek(0)
         whizzyupload.handle_cgi_request(stdin, stdout, self.basedir, self.prefix, env)

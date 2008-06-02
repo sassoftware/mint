@@ -26,15 +26,15 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
     out certain pcreator.backend methods."""
 
     def _set_up_path(self):
-        self.id = u'99999'
+        self.sesH = u'99999'
         conary.lib.util.mkdirChain(os.path.join(self.cfg.dataPath, 'tmp',
-                'rb-pc-upload-%s' % self.id))
+                'rb-pc-upload-%s' % self.sesH))
         self.client = self.getClient("owner")
 
     def tearDown(self):
-        if self.id:
-            conary.lib.util.rmtree(packagecreator.getWorkingDir(self.cfg, self.id))
-            self.id = None
+        if self.sesH:
+            conary.lib.util.rmtree(packagecreator.getWorkingDir(self.cfg, self.sesH))
+            self.sesH = None
         fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
@@ -63,15 +63,15 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert not cancelUploadProcess(self.client.server._server, '99998', [])
 
-        assert cancelUploadProcess(self.client.server._server, self.id, ['some-fieldname'])
+        assert cancelUploadProcess(self.client.server._server, self.sesH, ['some-fieldname'])
 
     @fixtures.fixture('Full')
     def testCreatePkgTmpDir(self, db, data):
         self.client = self.getClient('owner')
-        self.id = self.client.createPackageTmpDir()
+        self.sesH = self.client.createPackageTmpDir()
 
         #Check to see that the directory was in fact created
-        wd = packagecreator.getWorkingDir(self.cfg, self.id)
+        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
@@ -83,7 +83,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self._set_up_path()
 
         #Create the manifest files
-        wd = packagecreator.getWorkingDir(self.cfg, self.id)
+        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
         if writeManifest:
             fup = whizzyupload.fileuploader(wd, 'uploadfile')
             i = open(fup.manifestfile, 'wt')
@@ -102,7 +102,7 @@ content-type=text/plain
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'yournamespace', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(len(args), 2)
             self.assertEquals(kwargs, {})
-            return self.id
+            return self.sesH
 
         self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', getPackageFactoriesMethod)
         self.mock(packagecreator.DirectLibraryBackend, 'startSession', startSession)
@@ -110,12 +110,12 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testCreatePackage(self, db, data):
         def getCandidateBuildFactories(s, sesH):
-            self.assertEquals(sesH, self.id)
+            self.assertEquals(sesH, self.sesH)
             return [('rpm', StringIO.StringIO(basicXmlDef), {}, {'a': 'b'})]
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        factories = self.client.getPackageFactories(projectId, self.id, 1, 'uploadfile')
+        factories = self.client.getPackageFactories(projectId, self.sesH, 1, 'uploadfile')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})
@@ -124,47 +124,47 @@ content-type=text/plain
     def testCreatePackageNoManifest(self, db, data):
         self._setup_mocks(None, writeManifest=False)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.id, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
 
     @fixtures.fixture('Full')
     def testCreatePackageFactoriesError(self, db, data):
         def raises(x, sesH):
-            self.assertEquals(sesH, self.id)
+            self.assertEquals(sesH, self.sesH)
             raise packagecreator.errors.UnsupportedFileFormat('bogus error')
         self._setup_mocks(raises)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.id, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
 
 
     @fixtures.fixture('Full')
     def testSavePackage(self, db, data):
         self.client = self.getClient('owner')
-        self.id = self.client.createPackageTmpDir()
+        self.sesH = self.client.createPackageTmpDir()
         refH = 'bogusFactoryHandle'
         self.validateCalled = False
         self.buildCalled = False
         try:
             def validateParams(x, sesH, factH, data):
                 self.validateCalled = True
-                self.assertEquals(sesH, self.id)
+                self.assertEquals(sesH, self.sesH)
                 self.assertEquals(factH, refH)
             self.mock(packagecreator.DirectLibraryBackend, 'makeSourceTrove',
                     validateParams)
 
             def buildParams(x, sesH, commit):
                 self.buildCalled = True
-                self.assertEquals(sesH, self.id)
+                self.assertEquals(sesH, self.sesH)
                 self.assertEquals(commit, True)
             self.mock(packagecreator.DirectLibraryBackend, 'build',
                     buildParams)
 
-            self.client.savePackage(self.id, refH, {}, build = False)
+            self.client.savePackage(self.sesH, refH, {}, build = False)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failIf(self.buildCalled, "The Build method was called, but shouldn't have been")
 
             #Try again with build
             self.validateCalled = False
-            self.client.savePackage(self.id, refH, {}, build = True)
+            self.client.savePackage(self.sesH, refH, {}, build = True)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failUnless(self.buildCalled, "The Build method was never called")
         finally:
@@ -175,21 +175,21 @@ content-type=text/plain
     def testGetPackageBuildStatusFailedBuild(self, db, data):
         self._set_up_path()
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.id)
+            self.assertEquals(sesH, self.sesH)
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.id), [True, -1, "fake build error"])
+        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), [True, -1, "fake build error"])
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
         self._set_up_path()
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.id)
+            self.assertEquals(sesH, self.sesH)
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             return 'Some data'
         self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.id), 'Some data')
+        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), 'Some data')
 
 
 if __name__ == '__main__':
