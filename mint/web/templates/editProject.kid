@@ -30,7 +30,11 @@
                             </th>
                             <td>
                                 <input type="text" name="name" value="${kwargs['name']}" />
-                                <p class="help">The title is a longer, more descriptive name for your ${projectText().lower()}, such as "<strong>Mail server appliance</strong>."
+                                <p class="help">
+                                    Type a descriptive title for this ${projectText().lower()}.  Note that the version is
+                                    specified in a separate field, so the title should not contain the
+                                    version.  This descriptive title can be changed at any time as a way of
+                                    updating references to the ${projectText().lower()}.
                                 </p>
                             </td>
                         </tr>
@@ -38,22 +42,30 @@
                             <th>${projectText().title()} Description</th>
                             <td>
                                 <textarea name="desc" cols="70" rows="12">${kwargs['desc']}</textarea>
-                                <p class="help">It may be useful to put alternate branch labels, ${projectText().lower()} goals,
-                                    mechanisms for joining a ${projectText().lower()}, or other relevant information here.</p>
                             </td>
                         </tr>
                         <tr>
                             <th>${projectText().title()} Home Page</th>
                             <td>
                                 <input type="text" name="projecturl" value="${kwargs['projecturl']}" />
-                                <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>
+                                <p class="help">
+                                    Type a URL for an externally-hosted web page that can be identified as
+                                    the ${projectText().lower()}'s main online resource.
+                                </p>
                             </td>
                         </tr>
                         <tr>
                             <th>Repository Commits Email</th>
                             <td>
                                 <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
-                                <p class="help">An email address to which Conary repository commit messages are sent.</p>
+                                <p class="help">
+                                    Type an email address to which notices are sent when users save
+                                    work to the ${projectText().lower()}'s repository.  Emails include the commit messages 
+                                    required when "committing" ("checking in" or "saving") anything to a 
+                                    Conary repository during appliance development.  Emails also include 
+                                    Conary's summary of what was committed, typically a list of things that 
+                                    changed between the previous commit and the current commit.
+                                </p>
                             </td>
                         </tr>
 

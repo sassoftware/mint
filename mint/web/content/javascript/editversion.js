@@ -87,7 +87,7 @@ jQuery(document).ready(function () {
         templateDomBits.find('input,select').each(function () {
             if (this.id) { this.id = this.id.replace('bt', String(currentBdefSerial)); }
             if (this.name) { this.name = this.name.replace('bt', String(currentBdefSerial)); }
-            if (this.value == 'NEWBUILD') { this.value = "New Build " + currentBdefSerial; }
+            if (this.value == 'NEWBUILD') { this.value = "Image " + currentBdefSerial; }
         });
         templateDomBits.find('tr').each(function () {
             if (this.id) { this.id = this.id.replace('bt', String(currentBdefSerial)); }

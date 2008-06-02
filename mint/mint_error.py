@@ -117,10 +117,8 @@ class MultipleImageTypes(MintError):
     "The build has multiple image types specified."
 class NoMirrorLoadDiskFound(MintError):
     "No mirror preload disk was found attached to your appliance."
-class NoBuildImageTypeInBuildDefinition(MintError):
-    "No build image set in build definition."
 class NoBuildsDefinedInBuildDefinition(MintError):
-    "No builds defined in build definition."
+    "No images in image set."
 class NoImageGroupSpecifiedForProductDefinition(MintError):
     "No imageGroup specified to build in the product definition."
 class NotEntitledError(MintError):
@@ -250,7 +248,7 @@ class BuildOptionValidationException(MintError):
         return "The following errors occurred: %s" % ", ".join(self.errlist)
     
 class TroveNotFoundForBuildDefinition(MintError):
-    "The trove for one or more build definitions was not found."
+    "The trove for one or more images was not found."
     def __init__(self, errlist):
         MintError.__init__(self)
         self.errlist = errlist
