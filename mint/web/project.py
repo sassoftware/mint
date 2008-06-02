@@ -7,8 +7,8 @@ import email
 import os
 import re
 import sys
-import tempfile
 import time
+import tempfile
 from mod_python import apache
 
 from mint.web import basictroves
@@ -21,6 +21,7 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
+from mint import packagecreator
 from mint.mint_error import *
 
 from mint import buildtemplates
@@ -695,6 +696,43 @@ class ProjectHandler(WebHandler):
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
+    @writersOnly
+    def newPackage(self, auth):
+        sessionHandle = self.client.createPackageTmpDir()
+        versions = self.project.getProductVersionList()
+        if not versions:
+            self._addErrors('You must create a product version before using the package creator')
+            self._predirect('editVersion', temporary=True)
+        return self._write('createPackage', message = '',
+                sessionHandle = sessionHandle,
+                versions = versions, versionId = -1)
+
+    @writersOnly
+    @strFields(uploadId=None, fieldname=None)
+    def upload_iframe(self, auth, uploadId, fieldname):
+        return self._write('uploadPackageFrame', uploadId = uploadId,
+                fieldname = fieldname, project = self.project.hostname)
+
+    @writersOnly
+    @strFields(sessionHandle=None, upload_url='')
+    @intFields(versionId=None)
+    def getPackageFactories(self, auth, sessionHandle, versionId, upload_url):
+        try:
+            factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                sessionHandle = sessionHandle, factories = factories,
+                message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None, factoryHandle=None)
+    def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+        #It is assumed that the package creator service will validate the input
+        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+        return self._write('buildPackage', sessionHandle = sessionHandle,
+                message = None)
 
     @ownerOnly
     def newRelease(self, auth):

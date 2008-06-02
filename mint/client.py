@@ -351,6 +351,36 @@ class MintClient:
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
+    def createPackageTmpDir(self):
+        """
+        Create a new temporary location for storing package data
+        @returns: an ID that uniquely references this temporary location
+        @rtype: str
+        """
+        return self.server.createPackageTmpDir()
+
+    def getPackageFactories(self, projectId, sessionHandle, versionId, upload_url):
+        """
+        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
+        @param projectId: Project ID
+        @type projectId: int
+        @param id: ID returned from L{createPackageTmpDir}
+        @type id: str
+        @param versionId: ID of the version chosen
+        @type versionId: int
+        @param upload_url: URL of a package or ''.  Not currently used
+        @type upload_url: str
+        @returns: a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @rtype: tuple(tuple, str)
+        """
+        from pcreator import factorydata
+        factories = self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
+        #Factories comes across as an xml file, need to parse that to something useable
+        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
+
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
