@@ -691,7 +691,6 @@ class MintServer(object):
                     groupApplianceLabel=self.cfg.groupApplianceLabel,
                     groupName=groupName,
                     recipeClassName=util.convertPackageNameToClassName(groupName),
-                    rapaLabel=self.cfg.rapaLabel,
                     version=version))
         recipeStream.write('\n')
         self._createSourceTrove(project, groupName,
