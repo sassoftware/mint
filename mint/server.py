@@ -731,7 +731,14 @@ class MintServer(object):
         if (shortname + "." + domainname) == socket.gethostname():
             raise InvalidShortname
         return None
-    
+
+    def _validateVersion(self, version):
+        if not version:
+            raise InvalidVersion
+        if not re.match('^[A-Za-z0-9][A-Za-z0-9\.\_]*$',version):
+            raise InvalidVersion
+        return None
+
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
@@ -744,8 +751,7 @@ class MintServer(object):
         # the same as the short name
         self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
-        if not version or len(version) <= 0:
-            raise projects.InvalidVersion
+        self._validateVersion(version)
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
             raise projects.InvalidProdType
 
