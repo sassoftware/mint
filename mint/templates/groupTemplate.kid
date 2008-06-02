@@ -32,7 +32,7 @@
 # are marked with the word CUSTOMIZE and a description of what should be
 # modified in most cases.
 
-loadSuperClass('group-appliance=conary.rpath.com@rpl:1')
+loadSuperClass('group-appliance=${groupApplianceLabel}')
 class ${recipeClassName}(ApplianceGroupRecipe):
     name = '${groupName}'
 
