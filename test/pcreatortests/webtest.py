@@ -22,6 +22,7 @@ import re, os, StringIO
 
 import mint.mint_error
 import mint.web.webhandler
+from types import MethodType
 
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
@@ -72,7 +73,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             return match
 
     def _setupProjectHandlerMockClientMethod(self, methodName, mockMethod, requestName):
-        from types import MethodType
         ### All this, just to monkeypatch the client
         projectHandler = self._setupProjectHandler()
         projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', requestName)
@@ -210,7 +210,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     def testSavePackage(self):
         from factory_test.packagecreatortest import expectedFactories1
         from factory_test.factorydatatest import dictDef
-        from types import MethodType
         cmd = 'testproject/savePackage'
         factoryHandle = expectedFactories1[0][0]
         factoryData = expectedFactories1[0][3]
@@ -230,6 +229,37 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
         self.failUnless('Package Build Status' in page)
+
+    def testGetPackageBuildLogsFail(self):
+        cmd = 'testproject/getPackageBuildLogs'
+        fields = {
+            'sessionHandle': 'foobarbaz',
+        }
+
+        def fakeGetPackageBuildLogs(s, sesH):
+            self.assertEquals(sesH, 'foobarbaz')
+            raise mint.mint_error.PackageCreatorError("No idea why this happened")
+        projectHandler,auth = self._setupProjectHandlerMockClientMethod(
+                            'getPackageBuildLogs', fakeGetPackageBuildLogs, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        self.assertRaises(mint.web.webhandler.HttpMovedTemporarily, func, auth=context['auth'], **context['fields'])
+
+    def testGetPackageBuildLogs(self):
+        cmd = 'testproject/getPackageBuildLogs'
+        fields = {
+            'sessionHandle': 'foobarbaz',
+        }
+
+        def fakeGetPackageBuildLogs(s, sesH):
+            self.assertEquals(sesH, 'foobarbaz')
+            return "A big long string"
+        projectHandler,auth = self._setupProjectHandlerMockClientMethod(
+                            'getPackageBuildLogs', fakeGetPackageBuildLogs, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        self.assertEquals("A big long string", page)
 
 if __name__ == "__main__":
     testsuite.main()

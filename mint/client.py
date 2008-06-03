@@ -381,6 +381,9 @@ class MintClient:
     def savePackage(self, sessionHandle, factoryHandle, data, build=True):
         return self.server.savePackage(sessionHandle, factoryHandle, data, build)
 
+    def getPackageBuildLogs(self, sessionHandle):
+        return self.server.getPackageBuildLogs(sessionHandle)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId

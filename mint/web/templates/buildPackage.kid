@@ -96,6 +96,7 @@ addLoadEvent(makeRequest);
 
             ${statusArea("Package Build")}
             <!-- the poller -->
+            <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">Full Build Log</a></p>
 
             <h3 style="color:#FF7001;">Step 3: Build package</h3>
             <p id="building">Your package is building.  Please be patient while this process completes.</p>

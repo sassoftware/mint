@@ -4654,7 +4654,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # TODO: Get a real error status code
             return [True, -1, str(e)]
 
- 
+    @typeCheck(((str,unicode),))
+    @requiresAuth
+    def getPackageBuildLogs(self, sessionHandle):
+        import packagecreator
+        path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
+        pc = packagecreator.DirectLibraryBackend(path)
+        try:
+            return pc.getBuildLogs(sessionHandle)
+        except packagecreator.errors.PackageCreatorError, e:
+            raise PackageCreatorError("Error retrieving build logs: %s" % str(e))
+
     @typeCheck(((str,unicode),), ((str,unicode),))
     @requiresAuth
     def pollUploadStatus(self, id, fieldname):

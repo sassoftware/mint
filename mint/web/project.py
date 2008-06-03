@@ -734,6 +734,19 @@ class ProjectHandler(WebHandler):
         return self._write('buildPackage', sessionHandle = sessionHandle,
                 message = None)
 
+    @writersOnly
+    @strFields(sessionHandle=None)
+    def getPackageBuildLogs(self, auth, sessionHandle):
+        try:
+            logs = self.client.getPackageBuildLogs(sessionHandle)
+        except MintError, e:
+            self._addErrors("Build logs are not available for this build: %s" % str(e))
+            self._predirect('index', temporary=True)
+
+        self.req.content_type = 'text/plain'
+        return logs
+
+
     @ownerOnly
     def newRelease(self, auth):
         currentBuilds = []

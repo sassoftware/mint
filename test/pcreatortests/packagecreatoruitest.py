@@ -191,6 +191,23 @@ content-type=text/plain
         self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
         self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), 'Some data')
 
+    @fixtures.fixture('Full')
+    def testGetPackageBuildLogsFailure(self, db, data):
+        self._set_up_path()
+        def validateParams(x, sesH):
+            self.assertEquals(sesH, self.sesH)
+            raise packagecreator.errors.BuildFailedError('fake build error')
+        self.mock(packagecreator.DirectLibraryBackend, 'getBuildLogs', validateParams)
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, self.sesH)
+
+    @fixtures.fixture('Full')
+    def testGetPackageBuildLogs(self, db, data):
+        self._set_up_path()
+        def validateParams(x, sesH):
+            self.assertEquals(sesH, self.sesH)
+            return 'Some Data'
+        self.mock(packagecreator.DirectLibraryBackend, 'getBuildLogs', validateParams)
+        self.assertEquals(self.client.getPackageBuildLogs(self.sesH), 'Some Data')
 
 if __name__ == '__main__':
     testsuite.main()
