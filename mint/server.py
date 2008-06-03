@@ -2171,7 +2171,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for k, v in buildSettings.iteritems():
             try:
                 if template[k][0] == data.RDT_BOOL:
-                    v = (str(v) == 'true')
+                    v = (str(v).lower() == 'true')
                 elif template[k][0] in (data.RDT_STRING, data.RDT_ENUM):
                     v = str(v)
                 elif template[k][0] == data.RDT_INT:
