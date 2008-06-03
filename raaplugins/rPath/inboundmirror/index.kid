@@ -102,7 +102,7 @@
             <img style="float: right;" src="${tg.url('/static/images/circle-ball-dark-antialiased.gif')}" />
             <br style="clear: right;" />
             <p>If you wish to monitor the status of the mirror operation,
-               <a href="/logs/Logs/">click here</a> and select
+               <a href="${tg.url('/logs/Logs')}">click here</a> and select
                "Inbound Mirroring" from the list of logs.
             </p>
         </div>
