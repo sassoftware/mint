@@ -1012,11 +1012,9 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
         client, userid = self.quickMintUser("test", "testpass")
 
         _groupApplianceLabel = client.server._server.cfg.groupApplianceLabel
-        _rapaLabel = client.server._server.cfg.rapaLabel
 
         # set labels that don't use protected repositories so we can test
         client.server._server.cfg.groupApplianceLabel = 'conary.rpath.com@rpl:1'
-        client.server._server.cfg.rapaLabel = 'raa.rpath.org@rpath:raa-2'
 
         try:
             #First, create a project without being an appliance
@@ -1044,11 +1042,10 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
             self.assertEquals(len(labels), 1)
             self.assertEquals(str(labels.keys()[0].branch()), branch)
-            self.assertEquals(str(labels.keys()[0].trailingRevision()), '1-1')
+            self.assertEquals(str(labels.keys()[0].trailingRevision()), '5.4-1')
         finally:
             # reset the labels
             client.server._server.cfg.groupApplianceLabel = _groupApplianceLabel
-            client.server._server.cfg.rapaLabel = _rapaLabel
 
 
         # TODO: Add additional tests to exercise the label selecting, and

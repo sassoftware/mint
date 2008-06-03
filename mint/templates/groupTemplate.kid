@@ -31,15 +31,15 @@
 #
 # See the sections marked "CUSTOMIZE" for typical areas of recipe development.
 
-loadSuperClass('group-appliance=conary.rpath.com@rpl:1')
-class Group${projectName.capitalize()}Dist(ApplianceGroupRecipe):
+loadSuperClass('group-appliance=${groupApplianceLabel}')
+class ${recipeClassName}(ApplianceGroupRecipe):
     name = '${groupName}'
 
     # CUSTOMIZE:  VERSION NUMBER
     # This is the version of your appliance, and the original 
     # auto-generated recipe uses the version specified when the 
     # product was created in rBuilder.
-    version = '1'
+    version = '${version}'
     # END CUSTOMIZE
     
     def addPackages(r):

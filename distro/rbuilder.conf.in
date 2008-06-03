@@ -33,9 +33,8 @@ commitAction    /usr/lib/python2.4/site-packages/conary/commitaction --repmap='%
 commitActionEmail \
     --module='/usr/lib/python2.4/site-packages/conary/changemail.py --user=%%(user)s --from=%(commitFromEmail)s --email=%(commitEmail)s'
 
-# Group template labels
+# Group template label
 groupApplianceLabel     'rap.rpath.com@rpath:linux-1'
-rapaLabel               'products.rpath.com@rpath:raa-2'
 
 # This gets overridden by the rBuilder-generated configuration
 configured              False
