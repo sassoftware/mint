@@ -32,6 +32,16 @@ def isSelected(field, value, prefilled):
         return False
     return str(v) == str(value)
 
+### default value could be "0" "False", etc.
+### value could be "True" or "False"
+def isChecked(field, value, prefilled):
+    v = workingValue(field, prefilled)
+    if v is None:
+        return False
+    vb = v.upper() in ('TRUE', '0')
+    pb = value.upper() in ('TRUE', '0')
+    return vb == pb
+
 def workingValue(field, prefilled):
     '''
     In order to display the proper value when displaying UI elements, we have to determine which value should be given.  Prefer the prefilled value, but if it's not given, use the field's default.
@@ -54,6 +64,11 @@ def drawField(factoryIndex, field, values, drawingMethods):
     prefilled = values.get(name, None)
     fieldId= "%d_%s_id" % (factoryIndex, name)
     constraints = field.constraints
+
+    #Take care of Boolean types
+    if field.type == 'bool':
+        return drawingMethods['boolean'](fieldId, field, prefilled)
+
     if len(constraints) != 1:
         return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
     if set(('regexp', 'length')).intersection(set([x['constraintName'] for x in constraints])):

@@ -207,6 +207,23 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         elem = self.extractElement(page, 'input', 'name', 'very_large_integer_range')
         self.failUnless(elem)
 
+        #Boolean
+        elem = self.extractElement(page, 'input', 'id', '0_boolean_value_id_True')
+        self.failUnless(elem)
+        self.failIf('checked' in elem)
+        elem = self.extractElement(page, 'input', 'id', '0_boolean_value_id_False')
+        self.failUnless(elem)
+        self.failIf('checked' in elem)
+
+        self.prefilled['boolean_value'] = 'TrUe'
+        page = func(auth=context['auth'], **context['fields'])
+        elem = self.extractElement(page, 'input', 'id', '0_boolean_value_id_True')
+        self.failUnless(elem)
+        self.failUnless('checked="checked"' in elem)
+        elem = self.extractElement(page, 'input', 'id', '0_boolean_value_id_False')
+        self.failUnless(elem)
+        self.failIf('checked' in elem)
+
     def testSavePackage(self):
         from factory_test.packagecreatortest import expectedFactories1
         from factory_test.factorydatatest import dictDef

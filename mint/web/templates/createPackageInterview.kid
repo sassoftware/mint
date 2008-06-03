@@ -6,7 +6,7 @@ import simplejson
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
-from mint.packagecreator import drawField, isSelected, workingValue
+from mint.packagecreator import drawField, isChecked, isSelected, workingValue
 lang = None;
 
 ?>
@@ -159,6 +159,21 @@ ${drawLabel(fieldId, field)}
         </div>
         </div>
 
+        <div py:def="drawBooleanField(fieldId, field, prefilled)" py:strip="True">
+        <div class="fieldgroup">
+         <div class="fieldgroup_row">
+${drawLabel(fieldId, field)}
+          <div class="formgroupItems">
+          <div py:for="val in ['True', 'False']">
+            <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" type="radio" py:attrs="{'checked': isChecked(field, val, prefilled) and 'checked' or None}" value="${val}"/>
+            <label class="check_label" for="${fieldId}_${val}">${val}</label>
+          </div>
+          </div>
+         </div>
+         <div class="formgroupSeparator"/>
+        </div>
+        </div>
+
             <div id="chosen_factory" />
 
                   <!-- End factory interview -->
@@ -169,7 +184,7 @@ ${drawLabel(fieldId, field)}
             <div style="display: none" id="factory_dumping_ground">
         <div py:for="(factoryIndex, (factoryHandle, factoryDef, values)) in enumerate(factories)" id="${factoryHandle}">
           <div py:for="field in factoryDef.getDataFields()" py:strip="True">
-${drawField(factoryIndex, field, values, dict(unconstrained = drawTextField, medium_enumeration=drawSelectField, small_enumeration=drawCheckBoxes, large_enumeration=drawTextField))}
+${drawField(factoryIndex, field, values, dict(unconstrained = drawTextField, medium_enumeration=drawSelectField, small_enumeration=drawCheckBoxes, large_enumeration=drawTextField, boolean = drawBooleanField))}
             <div class="clearleft">&nbsp;</div>
           </div>
         </div>
