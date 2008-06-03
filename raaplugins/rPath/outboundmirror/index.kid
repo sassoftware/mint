@@ -85,7 +85,7 @@
         <table style="border: 1px solid  #DDDDDD; margin-top: 10px; margin-bottom: 10px;">
             <tbody>
                 <tr>
-                    <td>Mirrrors will update:</td>  
+                    <td>Mirrors will update:</td>  
                     <td>${MirrorScheduleWidget().display(dict(checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours))}</td>
                 </tr>
             </tbody>
