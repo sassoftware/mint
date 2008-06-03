@@ -101,6 +101,11 @@
         <div style="padding-top: 5px; font-style: italic;" id="inProgress">
             <span style="float: left;">Mirroring to Update Service appliance(s)...</span> 
             <img style="float: right;" src="${tg.url('/static/images/circle-ball-dark-antialiased.gif')}" />
+            <br style="clear: right;" />
+            <p>If you wish to monitor the status of the mirror operation,
+               <a href="/logs/Logs/">click here</a> and select
+               "Outbound Mirroring" from the list of logs.
+            </p>
         </div>
     </body>
 </html>
