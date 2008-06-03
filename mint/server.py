@@ -111,6 +111,9 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 #     localhost
 validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
+# valid product version
+validProductVersion = re.compile('^[a-zA-Z0-9\.]*$')
+
 dbConnection = None
 callLog = None
 
@@ -731,11 +734,11 @@ class MintServer(object):
             raise InvalidShortname
         return None
 
-    def _validateVersion(self, version):
+    def _validateProductVersion(self, version):
         if not version:
-            raise InvalidVersion
-        if not re.match('^[A-Za-z0-9][A-Za-z0-9\.\_]*$',version):
-            raise InvalidVersion
+            raise ProductVersionInvalid
+        if not validProductVersion.match(version):
+            raise ProductVersionInvalid
         return None
 
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
@@ -750,7 +753,7 @@ class MintServer(object):
         # the same as the short name
         self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
-        self._validateVersion(version)
+        self._validateProductVersion(version)
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
             raise projects.InvalidProdType
 
@@ -4471,6 +4474,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
+        
+        # make sure it is a valid product version
+        self._validateProductVersion(name)
         
         try:
             return self.productVersions.new(projectId = projectId,

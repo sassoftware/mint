@@ -527,10 +527,8 @@ class SiteHandler(WebHandler):
             except mint_error.MintError, e:
                 self._addErrors(str(e))
                 
-        creatingVersion = False
         if not self._getErrors():
             # attempt to create the project version
-            creatingVersion = True
             try:
                 versionId = self.client.addProductVersion(projectId, version);
                 pd = helperfuncs.sanitizeProductDefinition(title,
@@ -540,6 +538,8 @@ class SiteHandler(WebHandler):
 
             except projects.DuplicateProductVersion, e: 
                 self._addErrors(str(e))
+            except projects.ProductVersionInvalid, e:
+                    self._addErrors(str(e))
                 
         if not self._getErrors():
             # don't output status here since we now move on the updating the 

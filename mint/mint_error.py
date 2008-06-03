@@ -81,8 +81,6 @@ class DuplicateProductVersion(MintError): "Product version already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
-class InvalidVersion(MintError):
-    "The version is invalid."
 class LabelMissing(MintError):
     "%(Project)s label does not exist"
 class FailedToLaunchAMIInstance(MintError):
@@ -131,6 +129,8 @@ class ProductDefinitionVersionNotFound(MintError):
     "The product definition for the specified product version was not found."
 class ProductVersionNotFound(MintError):
     "The specified product version was not found."
+class ProductVersionInvalid(MintError):
+    "The specified product version is invalid."
 class ProductDefinitionVersionExternalNotSup(MintError):
     "Product versions are not currently supported on external products."
 class PublishedReleaseEmpty(MintError):

@@ -83,9 +83,12 @@ class ProjectTest(fixtures.FixturedUnitTest):
                               sData[0], sData[1], shortname='bar3')
         self.failUnlessRaises(InvalidShortname, client.newProject, "Test", 
                           'barbar', MINT_PROJECT_DOMAIN, shortname="&bar")
-        self.failUnlessRaises(InvalidVersion, client.newProject, "Test", 
+        self.failUnlessRaises(ProductVersionInvalid, client.newProject, "Test", 
                           'barbar', MINT_PROJECT_DOMAIN, 
                            shortname="barbara", version="")
+        self.failUnlessRaises(ProductVersionInvalid, client.newProject, "Test", 
+                          'barbar', MINT_PROJECT_DOMAIN, 
+                           shortname="barbara", version="9 8")
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
