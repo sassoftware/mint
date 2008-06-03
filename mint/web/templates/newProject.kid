@@ -55,10 +55,12 @@
                         <td>
                             <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
                             <p class="help">
-                                Select a ${projectText().title()} Version that reflects the initial major version of the
-                                appliance ${projectText().lower()}.  Versions may contain any combination of alphanumeric characters and 
-                                decimals but cannot contain any spaces.  This does not have to correspond to the version of 
-                                the software on the appliance.  For example: <strong>1.0</strong>
+                                Type a ${projectText().title()} Version that reflects the new major version of the
+                                appliance ${projectText().lower()}.  This does not have to correspond to the version 
+                                of the software on the appliance.  Versions must start with an alphanumeric character
+                                and can be followed by any number of other alphanumeric characters, separated if 
+                                desired by decimals.  For example: '1', '1.0', '1.A', 'A1', and '2008' are all valid 
+                                versions, but '2008 RC', '.', and '1.' are not valid.
                              </p>
                         </td>
                     </tr>
