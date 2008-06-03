@@ -112,7 +112,7 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
 # valid product version
-validProductVersion = re.compile('^[a-zA-Z0-9\.]*$')
+validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
 
 dbConnection = None
 callLog = None

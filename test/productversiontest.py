@@ -71,13 +71,28 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         projectId = data['projectId']
         ownerClient = self.getClient('owner')
         
-        # make sure common symbols aren't allowed
+        # Try various broken things; all should raise errors
         for symbol in ['_', '-', '@', '*', ' ']:
             # test adding with spaces
             self.failUnlessRaises(mint_error.ProductVersionInvalid,
                                   ownerClient.addProductVersion,
                                   projectId, 'ver%sion' % symbol)
-        
+
+        for badVer in [' ', '2008 RC', '.', '..', '...', '.1', '1.' ]:
+            # test adding with spaces
+            self.failUnlessRaises(mint_error.ProductVersionInvalid,
+                                  ownerClient.addProductVersion,
+                                  projectId, badVer)
+
+        # these should work, though
+        v1Id = ownerClient.addProductVersion(projectId, '1')
+        v2Id = ownerClient.addProductVersion(projectId, '1.0')
+        v3Id = ownerClient.addProductVersion(projectId, '1.1')
+        v4Id = ownerClient.addProductVersion(projectId, '0.1')
+        v5Id = ownerClient.addProductVersion(projectId, 'A1')
+        v6Id = ownerClient.addProductVersion(projectId, '1.A')
+        v7Id = ownerClient.addProductVersion(projectId, '2008')
+
     @fixtures.fixture("Full")
     def testGetProductVersion(self, db, data):
         ownerClient = self.getClient('owner')
