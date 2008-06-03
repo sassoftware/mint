@@ -619,12 +619,12 @@ class AdminHandler(WebHandler):
         inputKwargs['selectedLabels'] = labelList
         inputKwargs['selectedGroups'] = groups
 
+        matchTroveList = []
         if not useReleases:
             if not labelList and not allLabels:
                 self._addErrors("No labels were selected")
 
             # compute the match troves expression
-            matchTroveList = []
             if mirrorBy == 'group':
                 if not groups:
                     self._addErrors("No groups were selected")
