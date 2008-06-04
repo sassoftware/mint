@@ -185,18 +185,25 @@ FileUploadForm.prototype =
 
     showStatistics: function(sTime, cTime, read, total)
     {
-        logDebug("Showing statistics");
-        $('upload_progress_cancel_button').disabled=false;
-        var percent = Math.floor(100*read/total);
-        $('progress_indicator_bar').style.width= "" + percent + "%";
-        $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
-        var rate = read/(cTime-sTime);
-        $('upload_progress_rate').innerHTML = ""  + Math.round(rate/1024) + " KB/s";
-        $('upload_progress_bytes').innerHTML = "uploaded " + Math.floor(read/1024) + " of " + Math.floor(total/1024) + " KB";
-        $('upload_progress_eta').innerHTML = format_eta(Math.ceil((total-read)/rate));
-        $('upload_progress_statistics').style.display='block';
-        $('upload_progress_wait').style.display='none';
-
+        if (total == undefined)
+        {
+            $('upload_progress_statistics').style.display='none';
+            $('upload_progress_wait').style.display='block';
+        }
+        else
+        {
+            logDebug("Showing statistics");
+            $('upload_progress_cancel_button').disabled=false;
+            var percent = Math.floor(100*read/total);
+            $('progress_indicator_bar').style.width= "" + percent + "%";
+            $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
+            var rate = read/(cTime-sTime);
+            $('upload_progress_rate').innerHTML = ""  + Math.round(rate/1024) + " KB/s";
+            $('upload_progress_bytes').innerHTML = "uploaded " + Math.floor(read/1024) + " of " + Math.floor(total/1024) + " KB";
+            $('upload_progress_eta').innerHTML = format_eta(Math.ceil((total-read)/rate));
+            $('upload_progress_statistics').style.display='block';
+            $('upload_progress_wait').style.display='none';
+        }
     },
 
     hideStatistics: function()
