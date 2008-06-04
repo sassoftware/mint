@@ -27,13 +27,21 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         """ Test adding a product version to the database. """
         projectId = data['projectId']
         ownerClient = self.getClient('owner')
-        versionId = ownerClient.addProductVersion(projectId, '1',
-                                                  description='Version 1')
-        versionDict = ownerClient.getProductVersion(versionId)
-        self.failUnlessEqual('1', versionDict['name'],
-                             'Name did not get set properly')
-        self.failUnlessEqual('Version 1', versionDict['description'],
-                             'Description did not get set properly')
+        
+        # some versions, desc to test
+        versions = [('1', 'Version 1'), ('s0m3v3rs1on', 'some version'),
+                    ('0ver', 'another ver'), ('ver.3', 'ver 3')]
+        
+        for version in versions:
+            versionId = ownerClient.addProductVersion(projectId, version[0],
+                                                  description=version[1])
+            versionDict = ownerClient.getProductVersion(versionId)
+            self.failUnlessEqual(version[0], versionDict['name'],
+                                 'Name did not get set properly')
+            self.failUnlessEqual(version[1], versionDict['description'],
+                                 'Description did not get set properly')
+        
+        
         
     @fixtures.fixture("Full")
     def testAddProductVersion_NoDesc(self, db, data):
@@ -56,6 +64,35 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
                               ownerClient.addProductVersion,
                               projectId, '1')
         
+    @fixtures.fixture("Full")
+    def testAddInvalidProductVersion(self, db, data):
+        """ Test attempting to add invalid versions. This should
+            raise ProductVersionInvalid """
+        projectId = data['projectId']
+        ownerClient = self.getClient('owner')
+        
+        # Try various broken things; all should raise errors
+        for symbol in ['_', '-', '@', '*', ' ']:
+            # test adding with spaces
+            self.failUnlessRaises(mint_error.ProductVersionInvalid,
+                                  ownerClient.addProductVersion,
+                                  projectId, 'ver%sion' % symbol)
+
+        for badVer in [' ', '2008 RC', '.', '..', '...', '.1', '1.' ]:
+            # test adding with spaces
+            self.failUnlessRaises(mint_error.ProductVersionInvalid,
+                                  ownerClient.addProductVersion,
+                                  projectId, badVer)
+
+        # these should work, though
+        v1Id = ownerClient.addProductVersion(projectId, '1')
+        v2Id = ownerClient.addProductVersion(projectId, '1.0')
+        v3Id = ownerClient.addProductVersion(projectId, '1.1')
+        v4Id = ownerClient.addProductVersion(projectId, '0.1')
+        v5Id = ownerClient.addProductVersion(projectId, 'A1')
+        v6Id = ownerClient.addProductVersion(projectId, '1.A')
+        v7Id = ownerClient.addProductVersion(projectId, '2008')
+
     @fixtures.fixture("Full")
     def testGetProductVersion(self, db, data):
         ownerClient = self.getClient('owner')

@@ -111,10 +111,6 @@ class MintConfig(ConfigFile):
             'rap.rpath.com@rpath:linux-1',
             "The label that contains the group-appliance-platform superclass")
 
-    rapaLabel               = (cfgtypes.CfgString, 
-                                'products.rpath.com@rpath:raa-2',
-                                "The label that contains rAPA")
-
     supportContactHTML      = 'Contact information in HTML.'
     supportContactTXT       = 'Contact information in text.'
     staticPath              = '/conary-static/'

@@ -13,6 +13,7 @@ static_files =				\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
+	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
 	rbuilder-database		\

@@ -422,7 +422,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'manage your %s'%pText.lower() not in page.body.lower()
+        assert 'manage this %s'%pText.lower() not in page.body.lower()
 
     def testProjectPageManageOwner(self):
         pText = helperfuncs.getProjectText().lower()
@@ -435,7 +435,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'manage your %s'%pText.lower() in page.body.lower()
+        assert 'manage this %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()

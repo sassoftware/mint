@@ -57,7 +57,7 @@ from mint.web.templatesupport import projectText
                 </div>
                 
                 <div py:if="isOwner" py:strip="True">
-                    <h2>Manage Your ${projectText().title()}</h2>
+                    <h2>Manage This ${projectText().title()}</h2>
                     <ul>
                         <li><a href="${basePath}editProject">Edit</a> ${projectText().lower()} settings</li>
                         <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>

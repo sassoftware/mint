@@ -1277,11 +1277,15 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 
         if not self._getErrors():
             if id == -1:
-                id = self.client.addProductVersion(self.project.id,
-                        name, description)
+                try:
+                    id = self.client.addProductVersion(self.project.id,
+                            name, description)
+                except ProductVersionInvalid, e:
+                    self._addErrors(str(e))
             else:
                 self.client.editProductVersion(id, description)
 
+        if not self._getErrors():
             assert(id != -1)
             self.client.setProductDefinitionForVersion(id, pd)
 

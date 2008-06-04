@@ -596,6 +596,94 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             postdata = {'itemId': str(x[0]['itemId'])})
         self.failUnlessEqual(client.getSpotlightAll(), False)
 
+    def testAddOutboundMirror(self):
+        '''
+        Test basic functionality of the add outbound mirror page.
+        '''
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        projectId = self.newProject(client)
+
+        form = self.fetch('/admin/editOutbound')
+
+        # Add an outbound mirror with all labels
+        page = form.postForm(1, self.post, {
+            'projectId': str(projectId),
+            'mirrorSources': '1',
+            'allLabels': '1',
+            'mirrorBy': 'label',
+            'action': 'Save',
+            'useReleases': '0',
+          })
+
+        # Add an outbound mirror with some labels
+        page = form.postForm(1, self.post, {
+            'projectId': str(projectId),
+            'mirrorSources': '1',
+            'allLabels': '0',
+            'labelList': ['conary.example.com@rpl:1',
+                'conary.example.com@rpl:1-devel'],
+            'mirrorBy': 'label',
+            'action': 'Save',
+            'useReleases': '0',
+          })
+
+        # Add an outbound mirror with some labels and no sources
+        page = form.postForm(1, self.post, {
+            'projectId': str(projectId),
+            'mirrorSources': '0',
+            'allLabels': '0',
+            'labelList': 'conary.example.com@rpl:1',
+            'mirrorBy': 'label',
+            'action': 'Save',
+            'useReleases': '0',
+          })
+
+        # Add an outbound mirror with some labels and some groups
+        page = form.postForm(1, self.post, {
+            'projectId': str(projectId),
+            'mirrorSources': '0',
+            'allLabels': '0',
+            'labelList': 'conary.example.com@rpl:1',
+            'mirrorBy': 'group',
+            'groups': ['group-foo', 'group-bar'],
+            'action': 'Save',
+            'useReleases': '0',
+          })
+
+        # Add an outbound mirror with mirror-by-release
+        page = form.postForm(1, self.post, {
+            'projectId': str(projectId),
+            'mirrorSources': '0',
+            'allLabels': '0',
+            'mirrorBy': 'label',
+            'action': 'Save',
+            'useReleases': '1',
+          })
+
+        mirrors = client.getOutboundMirrors()
+        mirrors = [(project, labels, allLabels, recurse,
+            matchStrings, useReleases) for (_, project, labels, allLabels,
+            recurse, matchStrings, _, _, useReleases) in mirrors]
+        self.failUnlessEqual(mirrors, [
+            # All labels
+            (projectId, '', True, False, ['+.*'], False),
+            # Some labels, with sources
+            (projectId,
+                'conary.example.com@rpl:1 conary.example.com@rpl:1-devel',
+                False, False, ['+.*'], False),
+            # Some labels, no sources
+            (projectId, 'conary.example.com@rpl:1', False, False,
+                ['-.*:source', '-.*:debuginfo', '+.*'], False),
+            # Some labels, some groups
+            (projectId, 'conary.example.com@rpl:1', False, True,
+                ['+group-foo', '+group-bar'], False),
+            # All labels
+            (projectId, '', False, False, [], True),
+          ])
+
+
 class UpdateServiceWebTest(mint_rephelp.WebRepositoryHelper):
 
     def setUp(self):

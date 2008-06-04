@@ -103,7 +103,7 @@
             <tr id="pdbuilddef-${ordinal}-more" style="display: none">
                 <td colspan="5">
                     <fieldset>
-                        <legend>Build Definition Settings</legend>
+                        <legend>Image Settings</legend>
                         <?python 
                             # save RDT classes to get proper display classes for example
                             troveElementBuildtypes = set()
@@ -202,6 +202,7 @@
             <?python
                 relstageName = relstage and relstage.name or ''
                 relstageLabelSuffix = relstage and relstage.labelSuffix or ''
+                labelSuffixDesc = relstageLabelSuffix and relstageLabelSuffix or '(no label suffix)'
             ?>
             <tr id="pdstages-${ordinal}">
                 <!--!
@@ -215,7 +216,7 @@
                     <input type="hidden" name="pdstages-${ordinal}-name" value="${relstageName}"/>
                 </td>
                 <td colspan="3">
-                    ${relstageLabelSuffix}
+                    ${labelSuffixDesc}
                     <input type="hidden" name="pdstages-${ordinal}-labelSuffix" value="${relstageLabelSuffix}"/>
                 </td>
             </tr>
@@ -236,8 +237,9 @@
                 If kwargs['linked'] exists, we were sent here after creating a 
                 new product.  Add the transitional help text.
                 -->
-                Next enter the additional data necessary to define version
-                '${kwargs['name']}' of your ${projectText().lower()}.
+                Enter any additional data necessary to define version
+                '${kwargs['name']}' of your ${projectText().lower()}, including the images
+                you need to generate for this version.
             </p>
             <!--! Only new ones have a required field for now -->
             <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>
@@ -254,10 +256,12 @@
                             <input type="text" autocomplete="off" name="name"
                                 value="${kwargs['name']}"/>
                             <p class="help">
-                                Choose an initial version for your ${projectText().lower()}. Versions may contain
-                                any combination of alphanumeric characters and decimals but
-                                cannot contain any spaces (for example, '1', 'A', '1.0', '2007' are
-                                all legal versions, but '1.0 XL' is not).
+                                Type a ${projectText().title()} Version that reflects the new major version of the
+                                appliance ${projectText().lower()}.  This does not have to correspond to the version 
+                                of the software on the appliance.  Versions must start with an alphanumeric character
+                                and can be followed by any number of other alphanumeric characters, separated if 
+                                desired by decimals.  For example: '1', '1.0', '1.A', 'A1', and '2008' are all valid 
+                                versions, but '2008 RC', '.', and '1.' are not valid.
                             </p>
                         </td>
                         <td py:if="not isNew">${kwargs['name']}<input type="hidden" name="name" value="${kwargs['name']}" /></td>
@@ -267,8 +271,6 @@
                         <td>
                             <textarea rows="6" cols="72" name="description"
                                 py:content="kwargs['description']"></textarea>
-                            <p class="help">Please provide a description of
-                                this version of your ${projectText().lower()}.</p>
                         </td>
                     </tr>
                     <tr>
@@ -330,13 +332,13 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Build Definitions:</th>
+                        <th>Image Sets:</th>
                         <td>
                             <table id="pdbuilddefs" class="pretty-fullwidth">
                                 <thead>
                                     <tr>
                                         <th class="builddef-name">Name</th>
-                                        <th>Build Type</th>
+                                        <th>Image Type</th>
                                         <th>Architecture</th>
                                         <th>&nbsp;</th>
                                         <th>&nbsp;</th>
@@ -346,14 +348,19 @@
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
                                      <tr id="pdbuilddef-empty" py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
-                                        <td colspan="5">No builds defined.</td>
+                                        <td colspan="5">No images defined.</td>
                                     </tr>
                                 </tbody>
                             </table>
                             <table id="pdbuilddef-bt-all" style="display: none">
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
-                            <p><a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />Add a new build definition</a></p>
+                            <p>
+                                <a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />Add a new image</a>
+                            </p>
+                            <p>
+                                <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder:Image_Types" target="_blank">Read more about each image type</a>
+                            </p>
                         </td>
                     </tr>
                 </table>

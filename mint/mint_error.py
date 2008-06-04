@@ -81,8 +81,6 @@ class DuplicateProductVersion(MintError): "Product version already exists"
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
-class InvalidVersion(MintError):
-    "The version is invalid."
 class LabelMissing(MintError):
     "%(Project)s label does not exist"
 class FailedToLaunchAMIInstance(MintError):
@@ -117,10 +115,8 @@ class MultipleImageTypes(MintError):
     "The build has multiple image types specified."
 class NoMirrorLoadDiskFound(MintError):
     "No mirror preload disk was found attached to your appliance."
-class NoBuildImageTypeInBuildDefinition(MintError):
-    "No build image set in build definition."
 class NoBuildsDefinedInBuildDefinition(MintError):
-    "No builds defined in build definition."
+    "No images in image set."
 class NoImageGroupSpecifiedForProductDefinition(MintError):
     "No imageGroup specified to build in the product definition."
 class NotEntitledError(MintError):
@@ -133,6 +129,8 @@ class ProductDefinitionVersionNotFound(MintError):
     "The product definition for the specified product version was not found."
 class ProductVersionNotFound(MintError):
     "The specified product version was not found."
+class ProductVersionInvalid(MintError):
+    "The specified product version is invalid."
 class ProductDefinitionVersionExternalNotSup(MintError):
     "Product versions are not currently supported on external products."
 class PublishedReleaseEmpty(MintError):
@@ -250,7 +248,7 @@ class BuildOptionValidationException(MintError):
         return "The following errors occurred: %s" % ", ".join(self.errlist)
     
 class TroveNotFoundForBuildDefinition(MintError):
-    "The trove for one or more build definitions was not found."
+    "The trove for one or more images was not found."
     def __init__(self, errlist):
         MintError.__init__(self)
         self.errlist = errlist
