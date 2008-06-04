@@ -13,8 +13,8 @@ def migrate():
     cfg = config.MintConfig()
     namespaceDfl = cfg.namespace
     cfg.read(config.RBUILDER_GENERATED_CONFIG)
-    
-    if cfg.namespace == namespaceDfl:
+
+    if cfg.configured and cfg.namespace == namespaceDfl:
         print "Setting namespace from default branch '%s'" % \
                cfg.defaultBranch
         try:
