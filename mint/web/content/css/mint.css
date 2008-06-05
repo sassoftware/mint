@@ -1091,6 +1091,11 @@ div.clearleft {
     display: block;
     text-align: right;
 }
+
+.expandableformgroup label.required{
+    padding-left: 0em;
+}
+
 .smallSpecs,
 table.buildstable td.buildInfo {
     font-size: smaller;

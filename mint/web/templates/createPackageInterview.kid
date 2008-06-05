@@ -124,7 +124,7 @@ lang = None;
                   </div>
                   <!-- The factory interview -->
         <div py:def="drawLabel(fieldId, field)" py:strip="True">
-          <label for="${fieldId}" id="${fieldId}_label">${field.descriptions[lang]}</label>
+          <label for="${fieldId}" id="${fieldId}_label" py:attrs="{'class': field.required and 'required' or None}">${field.descriptions[lang]}</label>
         </div>
         <div py:def="drawDescription(fieldId, field)" py:strip="True">
             <?python
