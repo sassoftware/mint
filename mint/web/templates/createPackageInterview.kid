@@ -107,7 +107,7 @@ lang = None;
                 <div class="expandableformgroupTitle">Package Details</div>
                 <div class="expandableformgroup">
                   <div>
-                    <label for="factoryHandle">Package Type</label>
+                    <label for="factoryHandle" class="required">Package Type</label>
                     <div class="expandableformgroupItems">
                         <select py:if="len(factories) > 1" name="factoryHandle" id="factoryHandle" onchange="javascript:changeFactory()">
                           <option py:for="(factoryHandle, factoryDef, values) in factories" value="${factoryHandle}">${str(factoryDef.getDisplayName())}</option>
