@@ -146,6 +146,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         #The rest of the tests can be done with the stub factory
         page = func(auth=context['auth'], **context['fields'])
 
+        import epdb; epdb.st()
         #The name element for the stub is blank
         elem = self.extractElement(page, 'input', 'name', 'name')
         self.failUnless(('value=""' in elem) or ("value=" not in elem), "No value should be set")
@@ -194,6 +195,8 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         elem = self.extractElement(page, 'option', 'id', '0_integer_value_with_default_id_9')
         self.failUnless(elem)
         self.failUnless('selected' in elem)
+        #Check for the constraint description
+        self.failUnless('pick a number between 1 and 10' in page)
 
         #Now a select box with multiple
         elem = self.extractElement(page, 'select', 'name', 'integer_value_with_multiple')

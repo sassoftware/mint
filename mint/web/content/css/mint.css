@@ -947,6 +947,7 @@ span#editProject {
     font-size: x-small;
 }
 
+.expandableformgroup,
 .formgroup,
 .formsubgroup {
     border-top: 0;
@@ -960,15 +961,9 @@ span#editProject {
     height: 1%;
 }
 
+.expandableformgroupTitle img,
 .formgroupTitle img {
     float: right;
-}
-
-.formgroupSeparator {
-    width: auto;
-    clear:both;
-    margin:0pt;
-    padding:0pt;
 }
 
 .formsubgroup,
@@ -978,7 +973,9 @@ span#editProject {
     margin-right: 20px;
 }
 
-tr.editGroupHeader, .formgroupTitle {
+tr.editGroupHeader,
+.expandableformgroupTitle,
+.formgroupTitle {
     border-top: 1px solid #ccc;
     border-left: 1px solid #ccc;
     border-bottom: 1px solid #aaa;
@@ -999,12 +996,6 @@ tr.editGroupHeader, .formgroupTitle {
     padding: 3px;
 }
 
-.formgroupItems
-{
-    float: left;
-    width: 60%;
-}
-
 .formgroup label,
 .formgroup input,
 .formgroup textarea,
@@ -1013,13 +1004,6 @@ tr.editGroupHeader, .formgroupTitle {
     float: left;
     margin-bottom: 1.25em;
     width: 60%;
-}
-
-.formgroup input.check {
-    display: inline;
-    margin-bottom: -.25em;
-    float: none;
-    width: auto;
 }
 
 .fsTypeDD {
@@ -1047,13 +1031,6 @@ table.fsEditorTable thead {
     padding-right: 10px;
 }
 
-.formgroup label.check_label
-{
-    display: inline;
-    float: none;
-    width: 60%;
-}
-
 div.clearleft {
     clear: left;
     margin: 0;
@@ -1073,6 +1050,47 @@ div.clearleft {
     margin-left: 30px;
 }
 
+.expandableformgroupSeparator {
+    width: auto;
+    clear:left;
+    margin:0pt;
+    padding:0pt;
+}
+
+.expandableformgroupItems
+{
+    float: left;
+    width: 60%;
+    padding: 4px;
+}
+
+.expandableformgroup label.check_label
+{
+    display: inline;
+    float: none;
+    width: 60%;
+}
+
+.expandableformgroup input.check {
+    display: inline;
+    margin-bottom: -.25em;
+    float: none;
+    width: auto;
+}
+
+.expandableformgroupItems input, textarea, select{
+    width: 90%;
+}
+
+.expandableformgroup label{
+    width: 30%;
+    float: left;
+    margin-top: 6px;
+    margin-left: 10px;
+    padding-right: 10px;
+    display: block;
+    text-align: right;
+}
 .smallSpecs,
 table.buildstable td.buildInfo {
     font-size: smaller;
