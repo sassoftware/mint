@@ -96,7 +96,6 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         v6Id = ownerClient.addProductVersion(projectId, '1.A')
         v7Id = ownerClient.addProductVersion(projectId, '2008')
 
->>>>>>> other
     @fixtures.fixture("Full")
     def testGetProductVersion(self, db, data):
         ownerClient = self.getClient('owner')
