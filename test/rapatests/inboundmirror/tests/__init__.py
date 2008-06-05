@@ -71,7 +71,7 @@ class InboundMirrorTest(raatest.rAATest):
         self.callWithIdent(ibm.doTask, res['schedId'], 1)
         # The username/password is randomly generated
         assert sio.getvalue().startswith('sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://'), "Mismatch in %s" % sio.getvalue()
-        assert sio.getvalue().endswith('@localhost/xmlrpc-private/ 2>> /var/log/rbuilder/mirror-inbound.log"'), "Mismatch in %s" % sio.getvalue()
+        assert sio.getvalue().endswith('@localhost/xmlrpc-private/"'), "Mismatch in %s" % sio.getvalue()
 
     def test_hourly(self):
         """

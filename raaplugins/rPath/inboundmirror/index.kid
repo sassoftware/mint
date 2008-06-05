@@ -84,7 +84,7 @@
         <table style="border: 1px solid  #DDDDDD; margin-top: 10px; margin-bottom: 10px;">
             <tbody>
                 <tr>
-                    <td>Mirrrors will update:</td>  
+                    <td>Mirrors will update:</td>  
                     <td>${MirrorScheduleWidget().display(dict(checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours))}</td>
                 </tr>
             </tbody>
@@ -98,8 +98,13 @@
         <button class="img" onclick="startMirrorNow();"><img src="${tg.url('/inboundmirror/static/images/mirror_now.png')}"/></button>
         </div>
         <div style="padding-top: 5px; font-style: italic;" id="inProgress">
-            <span style="float: left;">Local mirrors are currently being updated...</span> 
+            <span style="float: left;">Local mirrors are currently being updated...</span>
             <img style="float: right;" src="${tg.url('/static/images/circle-ball-dark-antialiased.gif')}" />
+            <br style="clear: right;" />
+            <p>If you wish to monitor the status of the mirror operation,
+               <a href="${tg.url('/logs/Logs')}">click here</a> and select
+               "Inbound Mirroring" from the list of logs.
+            </p>
         </div>
     </body>
 </html>

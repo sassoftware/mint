@@ -54,13 +54,20 @@
 
                     <div id="step3-confirm" class="hideOnReset" style="display: none;">
                         <h3>Step 3: Confirm the Set of Images</h3>
-                        <p id="taskListHeader">The following images will be built:</p>
+                        <p id="taskListHeader">The following images will be generated:</p>
                         <dl id="taskList" />
                         <p>Note: The actual number of images generated may be
                             different from the above list in the following cases:</p>
                            <ul>
-                               <li>The image group for a build was not cooked with a flavor that satisfies an image's flavor or architectural requirements</li>
-                               <li>The image group for a build was cooked with several different flavors that each satisfy an image's flavor or architectural requirements</li>
+                               <li>
+                                    The binary group for the appliance was not cooked with
+                                    a flavor that satisfies the requirements for this image.
+                               </li>
+                               <li>
+                                    The binary group for the appliance was cooked with 
+                                    several different flavors that each satisfy a given 
+                                    deployment scenario.
+                               </li>
                            </ul>
                     </div>
 

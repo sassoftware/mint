@@ -26,7 +26,12 @@
                         <th><em class="required">${projectText().title()} Title:</em></th>
                         <td>
                             <input type="text" autocomplete="off" name="title" value="${kwargs['title']}"/>
-                            <p class="help">The title should be a descriptive name for your ${projectText().lower()}. For example, <strong>My Custom Linux</strong></p>
+                            <p class="help">
+                                Type a descriptive title for this ${projectText().lower()}.  Note that the version is
+                                specified in a separate field, so the title should not contain the
+                                version.  This descriptive title can be changed at any time as a way of
+                                updating references to the ${projectText().lower()}.  For example: <strong>Example Appliance</strong>
+                            </p>
                         </td>
                     </tr>
 
@@ -34,7 +39,14 @@
                         <th><em class="required">${projectText().title()} Short Name:</em></th>
                         <td>
                             <input type="text" autocomplete="off" name="shortname" value="${kwargs['shortname']}" maxlength="16"/>
-                            <p class="help">The short name should reflect your ${projectText().lower()}'s identity (for example <tt>custlinux</tt>).  It must start with a letter, contain only letters and numbers, and be less than or equal to 16 characters long. <a class="learnmore" href="http://${SITE}help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
+                            <p class="help">
+                                Select a short name that reflects the ${projectText().lower()}'s identity.  This short
+                                name is used to form the permanent repository hostname for the ${projectText().lower()}
+                                as it resides in rBuilder.  Unlike the ${projectText().title()} Title, this value cannot 
+                                be changed after it is set.  Carefully select a short name that starts
+                                with a letter, contains only letters and numbers, and is up to 16 
+                                characters long.  For example: <strong>exampleapp</strong>
+                            </p>
                         </td>
                     </tr>
 
@@ -43,10 +55,12 @@
                         <td>
                             <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
                             <p class="help">
-                                Choose an initial version for your product. Versions may contain
-                                any combination of alphanumeric characters and decimals but
-                                cannot contain any spaces (for example, '1', 'A', '1.0', '2007' are
-                                all legal versions, but '1.0 XL' is not).
+                                Type a ${projectText().title()} Version that reflects the new major version of the
+                                appliance ${projectText().lower()}.  This does not have to correspond to the version 
+                                of the software on the appliance.  Versions must start with an alphanumeric character
+                                and can be followed by any number of other alphanumeric characters, separated if 
+                                desired by decimals.  For example: '1', '1.0', '1.A', 'A1', and '2008' are all valid 
+                                versions, but '2008 RC', '.', and '1.' are not valid.
                              </p>
                         </td>
                     </tr>
@@ -66,21 +80,30 @@
                         <th>${projectText().title()} Description:</th>
                         <td>
                             <textarea rows="6" cols="72" name="blurb" py:content="kwargs['blurb']"></textarea>
-                            <p class="help">Please provide a description of your ${projectText().lower()} and your goals for it.</p>
                         </td>
                     </tr>
                     <tr>
                         <th>${projectText().title()} Home Page</th>
                         <td>
                             <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
-                            <p class="help">Please enter the URL for an externally-hosted web page that will be linked from your ${projectText().lower()}'s main page.</p>
+                            <p class="help">
+                                Type a URL for an externally-hosted web page that can be identified as
+                                the ${projectText().lower()}'s main online resource.
+                            </p>
                         </td>
                     </tr>
                     <tr>
                         <th>Repository Commits Email</th>
                         <td>
                             <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
-                            <p class="help">An email address to which Conary repository commit messages are sent.</p>
+                            <p class="help">
+                                Type an email address to which notices are sent when users save
+                                work to the ${projectText().lower()}'s repository.  Emails include the commit messages 
+                                required when "committing" ("checking in" or "saving") anything to a 
+                                Conary repository during appliance development.  Emails also include 
+                                Conary's summary of what was committed, typically a list of things that 
+                                changed between the previous commit and the current commit.
+                             </p>
                         </td>
                     </tr>
                 </table>

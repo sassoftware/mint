@@ -11,6 +11,7 @@
     from mint.helperfuncs import truncateForDisplay
     from mint import urltypes
     from mint.builds import getExtraFlags
+    from mint.config import isRBO
 
     def condUpstream(upstreams, version):
         up = upstream(version)
@@ -117,17 +118,19 @@
         <div class="boxBody" py:if="not projectList">
             <h3>Get Started</h3>
 
-            <p>Participate in the ${cfg.productName} community by:</p>
+            <p py:if="isRBO()">Participate in the ${cfg.productName} community by:</p>
 
             <ul>
-                <li><a
-                href="http://${SITE}newProject"><strong>Creating a new
-                ${projectText().lower()}</strong></a></li>
+                <li>
+                    <a href="http://${SITE}newProject">
+                        <strong>${isRBO() and 'Creating' or 'Create'} a new ${projectText().lower()}</strong>
+                    </a>
+                </li>
 
-                <li>Joining an existing ${projectText().lower()}</li>
+                <li py:if="isRBO()">Joining an existing ${projectText().lower()}</li>
             </ul>
 
-            <p>To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
+            <p  py:if="isRBO()">To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>

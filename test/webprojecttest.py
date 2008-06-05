@@ -453,9 +453,9 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'manage your %s'%pText.lower() not in page.body.lower()
         assert 'create packages' not in page.body.lower()
         assert 'create a <a href="newpackage">new package</a>' not in page.body.lower()
+        assert 'manage this %s'%pText.lower() not in page.body.lower()
 
     def testProjectPageManageOwner(self):
         pText = helperfuncs.getProjectText().lower()
@@ -468,9 +468,9 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'manage your %s'%pText.lower() in page.body.lower()
         assert 'create packages' in page.body.lower()
         assert 'create a <a href="newpackage">new package</a>' in page.body.lower()
+        assert 'manage this %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
         projectHandler = project.ProjectHandler()

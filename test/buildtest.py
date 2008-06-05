@@ -1072,7 +1072,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                               stages=stageNames)
         pd.addBuildDefinition(name='ISO 64 II',
                               baseFlavor='~superfunk.bootsy is: x86_64',
-                              imageType=pd.imageType('installableIsoImage'),
+                              imageType=pd.imageType('installableIsoImage', {'betaNag': True}),
                               stages=['Booya'],
                               imageGroup='group-other')
         pd.addBuildDefinition(name='Cannot be built',
@@ -1144,16 +1144,32 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         versionId = data['versionId']
         client = self.getClient('admin')
         buildIds = \
-            client.newBuildsFromProductDefinition(data['versionId'],
-                'Development', False)
+            client.newBuildsFromProductDefinition(versionId, 'Development', 
+                                                  False)
         # Should have created 4 builds for Development stage
         self.assertEquals(4, len(buildIds))
 
         buildIds = \
-            client.newBuildsFromProductDefinition(data['versionId'], 
-                'Booya', False)
+            client.newBuildsFromProductDefinition(versionId, 'Booya', False)
         # Should have created 1 build for Booya stage
         self.assertEquals(1, len(buildIds))
+        
+    @fixtures.fixture('Full')
+    @testsuite.tests('RBL-2924')
+    def testBuildsFromProductDefinitionBoolVal(self, db, data):
+        
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        server = client.server._server
+        
+        # get our booya build
+        buildIds = client.newBuildsFromProductDefinition(versionId, 'Booya', 
+                                                         False)
+        self.assertEquals(1, len(buildIds))
+        
+        isSet, betaNag = server.getBuildDataValue(buildIds[0], "betaNag")
+        self.assertTrue(isSet)
+        self.assertTrue(betaNag)
         
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionCustom(self, db, data):
@@ -1163,8 +1179,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         
         # get custom builds
         buildIds = \
-            client.newBuildsFromProductDefinition(data['versionId'], 
-                'Custom', False)
+            client.newBuildsFromProductDefinition(versionId, 'Custom', False)
             
         # Should have created 1 build for Custom stage
         self.assertEquals(1, len(buildIds))
@@ -1189,8 +1204,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         versionId = data['versionId']
         client = self.getClient('admin')
         self.assertRaises(ProductDefinitionError,
-            client.newBuildsFromProductDefinition, data['versionId'],
-                'fgsfds', False)
+            client.newBuildsFromProductDefinition, versionId, 'fgsfds', False)
 
     @fixtures.fixture('Full')
     def testValidateBuildDefinitionTaskList(self, db, data):

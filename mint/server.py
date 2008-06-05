@@ -111,6 +111,9 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 #     localhost
 validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
+# valid product version
+validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
+
 dbConnection = None
 callLog = None
 
@@ -689,12 +692,13 @@ class MintServer(object):
         recipeStream.write(templates.write(groupTemplate,
                     cfg = self.cfg,
                     groupApplianceLabel=self.cfg.groupApplianceLabel,
-                    projectName=project.getHostname(),
                     groupName=groupName,
-                    rapaLabel=self.cfg.rapaLabel, version=version))
+                    recipeClassName=util.convertPackageNameToClassName(groupName),
+                    version=version))
         recipeStream.write('\n')
         self._createSourceTrove(project, groupName,
-                buildLabel, '1', {'%s.recipe' % groupName: recipeStream},
+                buildLabel, version,
+                {'%s.recipe' % groupName: recipeStream},
                 'Initial appliance image group template',
                 client)
         recipeStream.close()
@@ -729,7 +733,14 @@ class MintServer(object):
         if (shortname + "." + domainname) == socket.gethostname():
             raise InvalidShortname
         return None
-    
+
+    def _validateProductVersion(self, version):
+        if not version:
+            raise ProductVersionInvalid
+        if not validProductVersion.match(version):
+            raise ProductVersionInvalid
+        return None
+
     @typeCheck(str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
@@ -742,8 +753,7 @@ class MintServer(object):
         # the same as the short name
         self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
-        if not version or len(version) <= 0:
-            raise projects.InvalidVersion
+        self._validateProductVersion(version)
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
             raise projects.InvalidProdType
 
@@ -2161,7 +2171,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for k, v in buildSettings.iteritems():
             try:
                 if template[k][0] == data.RDT_BOOL:
-                    v = (str(v) == 'true')
+                    v = (str(v).lower() == 'true')
                 elif template[k][0] in (data.RDT_STRING, data.RDT_ENUM):
                     v = str(v)
                 elif template[k][0] == data.RDT_INT:
@@ -4464,6 +4474,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
+        
+        # make sure it is a valid product version
+        self._validateProductVersion(name)
         
         try:
             return self.productVersions.new(projectId = projectId,
