@@ -51,11 +51,11 @@
                     </tr>
 
                     <tr>
-                        <th><em class="required">${projectText().title()} Version:</em></th>
+                        <th><em class="required">${projectText().title()} Major Version:</em></th>
                         <td>
                             <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
                             <p class="help">
-                                Type a ${projectText().title()} Version that reflects the new major version of the
+                                Type a ${projectText().title()} Major Version that reflects the new major version of the
                                 appliance ${projectText().lower()}.  This does not have to correspond to the version 
                                 of the software on the appliance.  Versions must start with an alphanumeric character
                                 and can be followed by any number of other alphanumeric characters, separated if 

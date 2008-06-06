@@ -404,7 +404,7 @@ class ProjectHandler(WebHandler):
                                 'force': '1'},
                     noLink = "builds")
         except Exception, e:
-            self._addErrors("Problem encountered when creating builds: %s" % str(e))
+            self._addErrors("Problem encountered when creating build(s): %s" % str(e))
             self._predirect('newBuildsFromProductDefinition')
         else:
             self._setInfo("Builds created.")
@@ -1159,7 +1159,7 @@ class ProjectHandler(WebHandler):
         isNew = (id == -1)
 
         if not name:
-            self._addErrors("Missing version")
+            self._addErrors("Missing major version")
 
         # Load the current project definition for this version
         # If this is new, use our template product definition

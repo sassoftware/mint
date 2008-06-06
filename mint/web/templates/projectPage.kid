@@ -62,7 +62,7 @@ from mint.web.templatesupport import projectText
                         <li><a href="${basePath}editProject">Edit</a> ${projectText().lower()} settings</li>
                         <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
                         <li py:if="versions and not external">
-                            Edit product version
+                            Edit ${projectText().lower()} version
                             <select py:attrs="{'id': 'version', 'name': 'version', 'class': 'field'}" onchange="editVersionRedirect('${basePath}', this.options[this.selectedIndex].value);">
                                 <option py:if="versions" py:content="'--'" value="-1" selected="selected"/>
                                 <option py:for="ver in versions" py:content="ver[2]" value="${ver[0]}"/>

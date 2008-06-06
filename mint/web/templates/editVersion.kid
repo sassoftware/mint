@@ -241,14 +241,14 @@
                     <tr>
                         <th>
                             <!--! version only required if creating new one -->
-                            <div py:if="not isNew">Version:</div>
-                            <em py:if="isNew" class="required">Version:</em>
+                            <div py:if="not isNew">Major Version:</div>
+                            <em py:if="isNew" class="required">Major Version:</em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
                                 value="${kwargs['name']}"/>
                             <p class="help">
-                                Type a ${projectText().title()} Version that reflects the new major version of the
+                                Type a ${projectText().lower()} Major Version that reflects the new major version of the
                                 appliance ${projectText().lower()}.  This does not have to correspond to the version 
                                 of the software on the appliance.  Versions must start with an alphanumeric character
                                 and can be followed by any number of other alphanumeric characters, separated if 
@@ -259,7 +259,7 @@
                         <td py:if="not isNew">${kwargs['name']}<input type="hidden" name="name" value="${kwargs['name']}" /></td>
                     </tr>
                     <tr>
-                        <th>Version Description:</th>
+                        <th>Major Version Description:</th>
                         <td>
                             <textarea rows="6" cols="72" name="description"
                                 py:content="kwargs['description']"></textarea>
