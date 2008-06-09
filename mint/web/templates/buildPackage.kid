@@ -18,7 +18,7 @@ from mint.helperfuncs import truncateForDisplay
         <script type="text/javascript">
             <![CDATA[
 var polldata = {
-    sessionHandle: ${simplejson.dumps(sessionHandle)},
+    sessionHandle: ${simplejson.dumps(sessionHandle)}
 };
 
 var buildlength = '';
