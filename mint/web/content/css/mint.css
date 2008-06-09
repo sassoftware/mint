@@ -1128,6 +1128,10 @@ div.clearleft {
     padding-left: 0em;
 }
 
+.expandableformgroup div.help{
+    clear: left;
+}
+
 .smallSpecs,
 table.buildstable td.buildInfo {
     font-size: smaller;

@@ -29,22 +29,19 @@ lang = None;
 
             //See that the only child of "chosen_factory" isn't the one we're looking for
             var chosen = $('chosen_factory');
-            for (var child=0; child < chosen.childNodes.length; child++)
+            for (var child=0; chosen.childNodes.length > child; child++)
             {
                 var elem = chosen.childNodes[child];
-                if (! (elem instanceof Text))
+                if (sel.value != elem.id)
                 {
-                    if (sel.value != elem.id)
-                    {
-                        //Don't ever want to have two of the same ID, so remove it
-                        swapDOM(elem, null);
-                        // put this factory back in the holding tank
-                        appendChildNodes('factory_dumping_ground', elem);
-                    }
-                    else{
-                        //Otherwise, we're changing to what we were before, do nothing
-                        return;
-                    }
+                    //Don't ever want to have two of the same ID, so remove it
+                    swapDOM(elem, null);
+                    // put this factory back in the holding tank
+                    appendChildNodes('factory_dumping_ground', elem);
+                }
+                else{
+                    //Otherwise, we're changing to what we were before, do nothing
+                    return;
                 }
             }
 
@@ -57,16 +54,15 @@ lang = None;
         function shrinkToTextInput(e)
         {
             swapDOM(e, INPUT({name: e.name, id: e.id, value: e.value}, null));
-            removeElementClass(e.id + "_expander", 'expander');
-            addElementClass(e.id + "_expander", 'collapser')
+            removeElementClass(e.id + "_expander", 'collapser');
+            addElementClass(e.id + "_expander", 'expander')
         }
 
         function expandToTextArea(e)
         {
             swapDOM(e, TEXTAREA({name: e.name, id: e.id, rows: 5}, e.value));
-            div = document.getElementById(e.id + "_expander");
-            removeElementClass(e.id + "_expander", 'collapser');
-            addElementClass(e.id + "_expander", 'expander')
+            removeElementClass(e.id + "_expander", 'expander');
+            addElementClass(e.id + "_expander", 'collapser')
         }
 
         function toggle_textarea(tid)
