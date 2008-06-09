@@ -1617,3 +1617,30 @@ table.buildDefs tr.dialogButtons td button {
     font-style: italic;
 }
 
+div#progress_indicator {
+    border: 1px solid black;
+    margin: auto;
+    height: 20px;
+    width: 90%;
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+p#upload_progress_percent_complete {
+    margin: 0pt;
+    padding: 0pt;
+    text-align: center;
+    color: black;
+    z-index: 2;
+}
+
+div#progress_indicator_bar {
+    height: 20px;
+    width: 1%;
+    background-color: green;
+    z-index: -1;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+}

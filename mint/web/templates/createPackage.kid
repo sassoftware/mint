@@ -16,7 +16,7 @@ import simplejson
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}/apps/yui/build/container/assets/container.css"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo-dom-event/yahoo-dom-event.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/container/container-debug.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/container/container-min.js" />
     </head>
 
     <body>
@@ -119,18 +119,20 @@ import simplejson
             <div style="display:none">
             <div id="upload_progress">
                 <div class="bd">
-                    <div id="progress_indicator" style="border: 1px solid black; margin: auto; height: 20px; width: 90%; position: relative; left: 0px; top: 0px;">
-                        <p id="upload_progress_percent_complete" style="margin: 0pt; padding: 0pt; text-align: center; color: black; z-index: 2;">0%</p>
-                        <div id="progress_indicator_bar" style="height: 20px; width: 1%; background-color: green; z-index: -1; left: 0px; top: 0px; position: absolute;">
+                    <div id="progress_indicator">
+                        <p id="upload_progress_percent_complete">0%</p>
+                        <div id="progress_indicator_bar">
                         </div>
                     </div>
                     <div id="upload_progress_wait">Please wait...</div>
                     <div id="upload_progress_statistics" style="display:none;">
                         <span id="upload_progress_bytes"></span>
-                        at <span id="upload_progress_rate"></span>,
-                        <span id="upload_progress_eta"></span> remaining
+                        &nbsp;at <span id="upload_progress_rate"></span>,
+                        <span id="upload_progress_eta"></span>&nbsp;remaining
                     </div>
+                    <form><!-- IE Errors out if the YUI has to embed its own "form" control -->
                     <input id="upload_progress_cancel_button" type="button" value="Cancel" disabled="true"/>
+                    </form>
                 </div>
             </div>
             </div>
