@@ -57,21 +57,16 @@ lang = None;
         function shrinkToTextInput(e)
         {
             swapDOM(e, INPUT({name: e.name, id: e.id, value: e.value}, null));
-            img = document.getElementById(e.id + "_expander");
-            if(img != null)
-            {
-                img.src = img.src.replace('collapse', 'expand');
-            }
+            removeElementClass(e.id + "_expander", 'expander');
+            addElementClass(e.id + "_expander", 'collapser')
         }
 
         function expandToTextArea(e)
         {
             swapDOM(e, TEXTAREA({name: e.name, id: e.id, rows: 5}, e.value));
-            img = document.getElementById(e.id + "_expander");
-            if(img != null)
-            {
-                img.src = img.src.replace('expand', 'collapse');
-            }
+            div = document.getElementById(e.id + "_expander");
+            removeElementClass(e.id + "_expander", 'collapser');
+            addElementClass(e.id + "_expander", 'expander')
         }
 
         function toggle_textarea(tid)
@@ -141,8 +136,8 @@ lang = None;
             <div class="expandableformgroupItems">
               <input type="text" id="${fieldId}" name="${field.name}"
                   value="${workingValue(field, prefilled)}"/>
-              <div style="display:inline; cursor: pointer;" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
-                <img id="${fieldId}_expander" src="${cfg.staticPath}apps/mint/images/BUTTON_expand.gif" class="noborder" />
+              <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
+                &nbsp;
               </div>
               ${drawDescription(fieldId, field)}
             </div>

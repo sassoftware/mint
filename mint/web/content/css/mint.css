@@ -1078,8 +1078,40 @@ div.clearleft {
     width: auto;
 }
 
-.expandableformgroupItems input, textarea, select{
-    width: 90%;
+.expandableformgroupItems select{
+    width: 100%;
+}
+.expandableformgroupItems input, textarea{
+    float: left;
+    width: 92%;
+}
+
+.expandableformgroupItems div.resize{
+    width: 16px;
+    height: 16px;
+    display: inline;
+    float: left;
+    cursor: pointer;
+}
+
+.expandableformgroupItems div.expander {
+    background-image: url(../images/TEXTAREA_expanded.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.expander:hover {
+    background-image: url(../images/TEXTAREA_expand.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser {
+    background-image: url(../images/TEXTAREA_collapsed.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser:hover {
+    background-image: url(../images/TEXTAREA_collapse.gif);
+    background-repeat: no-repeat;
 }
 
 .expandableformgroup label{
