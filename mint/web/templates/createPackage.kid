@@ -86,6 +86,7 @@ import simplejson
                 <iframe id="${fieldname}_iframe" src="${src}" class="fileupload" frameborder="0"/>
                 <input type="hidden" name="${fieldname}" value="" id="${fieldname}"/>
             </div>
+            <div id="getPackageFactories_outerdiv">
             <form name="getPackageFactories" method="post" action="getPackageFactories" enctype="multipart/form-data" id="getPackageFactories">
                 <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
@@ -112,6 +113,7 @@ import simplejson
                 </table>
                 <p><input type="submit" id="submitButton_getPackageFactories" value="Create Package" onclick="javascript: signal(this.form, 'onsubmit'); return false;"/></p>
             </form>
+            </div>
 
             <h3 style="color:#FF7001;">Step 1: Upload a bundle</h3>
             <p>Select your source or binary file bundle (rpm, src rpm, tarball, zip, jar, war, ear, egg, etc.) from your computer, or provide the URL.</p>

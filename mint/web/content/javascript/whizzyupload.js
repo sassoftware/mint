@@ -120,7 +120,8 @@ FileUploadForm.prototype =
         {
             this.progressDialog.setBody('<div id="' + this.progressDialogId + '">Override this div in your template.</div>');
         }
-        this.progressDialog.render(this.form_key);
+        // This dialog is appended to the element identified this.form_key + "_outerdiv"
+        this.progressDialog.render(this.form_key + "_outerdiv");
         //Attach the cancel handler
         this.cancel_event = connect('upload_progress_cancel_button', 
                 "onclick", this, 'cancelUpload');
