@@ -5,6 +5,8 @@
 # All Rights Reserved
 #
 
+import sys
+if '..' not in sys.path: sys.path.append('..')
 import testsuite
 testsuite.setup()
 import mint_rephelp

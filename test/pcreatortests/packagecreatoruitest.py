@@ -3,6 +3,8 @@
 # Copyright (c) 2008 rPath, Inc.
 #
 
+import sys
+if '..' not in sys.path: sys.path.append('..')
 import testsuite
 testsuite.setup()
 
@@ -19,6 +21,7 @@ from mint.server import deriveBaseFunc
 import mint.mint_error
 from conary.conarycfg import ConaryConfiguration
 from factory_test.factorydatatest import basicXmlDef
+import pcreator
 from pcreator.factorydata import FactoryDefinition
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
@@ -98,20 +101,24 @@ content-type=text/plain
         i.write('a' * 350)
         i.close()
 
+        @pcreator.backend.public
         def startSession(s, *args, **kwargs):
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'yournamespace', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(len(args), 2)
             self.assertEquals(kwargs, {})
             return self.sesH
 
-        self.mock(packagecreator.DirectLibraryBackend, 'getCandidateBuildFactories', getPackageFactoriesMethod)
-        self.mock(packagecreator.DirectLibraryBackend, 'startSession', startSession)
+        if getPackageFactoriesMethod:
+            getPackageFactoriesMethod._isPublic = True
+        self.mock(pcreator.backend.BaseBackend,
+                '_getCandidateBuildFactories', getPackageFactoriesMethod)
+        self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
 
     @fixtures.fixture('Full')
     def testCreatePackage(self, db, data):
         def getCandidateBuildFactories(s, sesH):
             self.assertEquals(sesH, self.sesH)
-            return [('rpm', StringIO.StringIO(basicXmlDef), {}, {'a': 'b'})]
+            return [('rpm', basicXmlDef, {'a': 'b'})]
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
@@ -144,18 +151,22 @@ content-type=text/plain
         self.validateCalled = False
         self.buildCalled = False
         try:
+            @pcreator.backend.public
             def validateParams(x, sesH, factH, data):
                 self.validateCalled = True
                 self.assertEquals(sesH, self.sesH)
                 self.assertEquals(factH, refH)
-            self.mock(packagecreator.DirectLibraryBackend, 'makeSourceTrove',
+                return True
+            self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove',
                     validateParams)
 
+            @pcreator.backend.public
             def buildParams(x, sesH, commit):
                 self.buildCalled = True
                 self.assertEquals(sesH, self.sesH)
                 self.assertEquals(commit, True)
-            self.mock(packagecreator.DirectLibraryBackend, 'build',
+                return True
+            self.mock(pcreator.backend.BaseBackend, '_build',
                     buildParams)
 
             self.client.savePackage(self.sesH, refH, {}, build = False)
@@ -174,39 +185,43 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testGetPackageBuildStatusFailedBuild(self, db, data):
         self._set_up_path()
+        @pcreator.backend.public
         def validateParams(x, sesH, commit):
             self.assertEquals(sesH, self.sesH)
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
-        self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
+        self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
         self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), [True, -1, "fake build error"])
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
         self._set_up_path()
+        @pcreator.backend.public
         def validateParams(x, sesH, commit):
             self.assertEquals(sesH, self.sesH)
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             return 'Some data'
-        self.mock(packagecreator.DirectLibraryBackend, 'isBuildFinished', validateParams)
+        self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
         self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), 'Some data')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogsFailure(self, db, data):
         self._set_up_path()
+        @pcreator.backend.public
         def validateParams(x, sesH):
             self.assertEquals(sesH, self.sesH)
             raise packagecreator.errors.BuildFailedError('fake build error')
-        self.mock(packagecreator.DirectLibraryBackend, 'getBuildLogs', validateParams)
+        self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
         self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, self.sesH)
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogs(self, db, data):
         self._set_up_path()
+        @pcreator.backend.public
         def validateParams(x, sesH):
             self.assertEquals(sesH, self.sesH)
             return 'Some Data'
-        self.mock(packagecreator.DirectLibraryBackend, 'getBuildLogs', validateParams)
+        self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
         self.assertEquals(self.client.getPackageBuildLogs(self.sesH), 'Some Data')
 
 if __name__ == '__main__':

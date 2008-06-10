@@ -21,7 +21,6 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint import users
-from mint import packagecreator
 from mint.mint_error import *
 
 from mint import buildtemplates

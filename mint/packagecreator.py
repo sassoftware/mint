@@ -8,9 +8,9 @@ import simplejson
 from StringIO import StringIO
 
 from pcreator.backend import errors
-import pcreator.backend
 import pcreator.factorydata
 import pcreator.config
+import pcreator.shimclient
 
 PCREATOR_TMPDIR_PREFIX = 'rb-pc-upload-'
 
@@ -121,39 +121,16 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
         finally:
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
-class DirectLibraryBackend(pcreator.backend.BaseBackend):
-    methodClass = _Method
+class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
+    def uploadData(self, sessionHandle, filePath):
+        self.server._server._storeSessionValue( \
+                sessionHandle, 'filePath', filePath)
 
-    def __init__(self, tmpdir):
-        cfg = pcreator.config.PackageCreatorServiceConfiguration()
-        cfg.storagePath = tmpdir
-        cfg.tmpFileStorage = tmpdir
-        pcreator.backend.BaseBackend.__init__(self, cfg)
 
-    def _getStorageDir(self):
-        return self.cfg.tmpFileStorage
+def getPackageCreatorClient(tmpdir, authToken):
+    cfg = pcreator.config.PackageCreatorServiceConfiguration()
+    cfg.storagePath = tmpdir
+    cfg.tmpFileStorage = tmpdir
+    auth = {'user': authToken[0], 'passwd': authToken[1]}
+    return ShimClient(cfg, auth)
 
-    def _createSessionDir(self):
-        # this class already is already based in a tmpdir, so we'll just
-        # re-use the tmpname for the session name. this alleviates the need
-        # to track pointless data
-        storageDir = self._getStorageDir()
-        return os.path.basename(storageDir).replace(PCREATOR_TMPDIR_PREFIX, '')
-
-    @pcreator.backend.public
-    def _uploadData(self, sessionHandle, filePath):
-        self._storeSessionValue(sessionHandle, 'filePath', filePath)
-
-    @pcreator.backend.public
-    def _makeSourceTrove(self, sessionHandle, factoryHandle, dataDict):
-        #Grab the XML factory definition from the PC
-        xmlstream = self._getFactoryDataDefinitionStream(sessionHandle, factoryHandle)
-        xmlstream.seek(0)
-        factoryDef = pcreator.factorydata.FactoryDefinition(fromStream = xmlstream)
-        factoryData = pcreator.factorydata.FactoryData(factoryDefinition = factoryDef)
-
-        for k, v in dataDict.items():
-            factoryData.addField(k, v)
-
-        pcreator.backend.BaseBackend._makeSourceTroveFromFactoryData(self,
-            sessionHandle, factoryHandle, factoryData)
