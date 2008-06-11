@@ -27,6 +27,18 @@ def getWorkingDir(cfg, id):
     return path
 
 def isSelected(field, value, prefilled):
+    '''
+    Determines whether a checkbox or select box item should be selected/checked.  It does this by comparing the prefilled value, or in its abscense the default with the value representing the item.
+
+    @param field: The field, retrieved by parsing the factory definition object
+    @type field: PresentationField
+    @param value: The value to compare against the field.
+    @type value: any comparable type
+    @param prefilled: The value prefilled from the uploaded file.
+    @type value: any comparable type
+    @return: True if "value" should be selected in the interface.  False otherwise.
+    @rtype: boolean
+    '''
     v = workingValue(field, prefilled)
     if v is None:
         return False
@@ -35,6 +47,9 @@ def isSelected(field, value, prefilled):
 ### default value could be "0" "False", etc.
 ### value could be "True" or "False"
 def isChecked(field, value, prefilled):
+    """
+        Same as L{isSelected}, except meant to be used to compare possible boolean values
+    """
     v = workingValue(field, prefilled)
     if v is None:
         return False
