@@ -71,7 +71,7 @@ Alias /conary-static/apps/mint/     "@CONTENTPATH@/"
 Alias /jsonrpc/                     "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc/                      "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc-private/              "@DOCROOT@/rbuilder.conf/"
-Alias /images/                      "@IMAGESPATH/"
+Alias /images/                      "@IMAGESPATH@/"
 Alias /                             "@DOCROOT@/rbuilder.conf/"
 
 <Location />
@@ -79,6 +79,7 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonOption basePath "/"
+    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@'] + sys.path"
     PythonDebug Off
 </Location>
 
