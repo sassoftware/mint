@@ -61,17 +61,20 @@ LoadModule mime_module modules/mod_mime.so
 LoadModule python_module modules/mod_python.so
 LoadModule alias_module modules/mod_alias.so
 LoadModule setenvif_module modules/mod_setenvif.so
+LoadModule cgi_module modules/mod_cgi.so
 
 DocumentRoot "@DOCROOT@"
 
 Alias /conary/ "@DOCROOT@/test.cnr/"
 
+Alias /conary-static/apps/yui/      "/srv/www/html/yui/"
 Alias /conary-static/apps/MochiKit/ "/srv/www/html/MochiKit/"
 Alias /conary-static/apps/mint/     "@CONTENTPATH@/"
 Alias /jsonrpc/                     "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc/                      "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc-private/              "@DOCROOT@/rbuilder.conf/"
 Alias /images/                      "@IMAGESPATH@/"
+Alias /cgi-bin/                     "@SCRIPTSPATH@/"
 Alias /                             "@DOCROOT@/rbuilder.conf/"
 
 <Location />
@@ -116,6 +119,13 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     AddType application/octet-stream .iso .img
 </Location>
 
+<Location /cgi-bin/>
+    AddHandler cgi-script .cgi
+</Location>
+
+<Directory @SCRIPTSPATH@/>
+    Options +ExecCGI
+</Directory>
 
 
 # TypesConfig describes where the mime.types file (or equivalent) is

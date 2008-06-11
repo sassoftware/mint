@@ -154,6 +154,8 @@ class UserInduction(MintError):
         "illegal fashion"
 class UpdateServiceNotFound(MintError):
     "The Update Service was not found."
+class PackageCreatorError(MintError):
+    "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 

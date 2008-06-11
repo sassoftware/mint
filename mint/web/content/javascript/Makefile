@@ -9,7 +9,8 @@ javascript_files =\
 	trovepicker.js \
 	repobrowser.js \
 	editversion.js \
-	jquery-1.2.3.min.js
+	jquery-1.2.3.min.js \
+	whizzyupload.js
 
 generated_files =\
 	buildtypes.js \

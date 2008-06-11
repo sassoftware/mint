@@ -78,6 +78,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
                               MINT_PROJECT_DOMAIN, shortname="bar",
                               version='1.0', prodtype='Component')
+
+        self.mock(socket, 'gethostname', lambda: 'sir.robin')
         sData = re.split("\.", socket.gethostname(), 1)
         self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
                               sData[0], sData[1], shortname='bar3')
@@ -427,7 +429,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
                               "Foo",  "www", MINT_PROJECT_DOMAIN, "label",
                               "url")
+
+        # mock out hostname for consistency
+        self.mock(socket, 'gethostname', lambda: 'sir.galahad')
         sData = re.split("\.", socket.gethostname(), 1)
+
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
                               "Foo", sData[0], sData[1], "label", "url")
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
