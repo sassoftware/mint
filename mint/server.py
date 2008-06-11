@@ -3463,32 +3463,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
             not trove.endswith(':source'))
         return troves
 
-    # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
         buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType'] 
         count = buildDict['buildCount']
 
         uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, buildId, count)
 
-        if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
-            try:
-                status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
-                status, message = \
-                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
-        else:
-            # status is always finished since no build is actually done
-            status, message = jobstatus.FINISHED, \
-                jobstatus.statusNames[jobstatus.FINISHED]
-
-        return { 'status' : status, 'message' : message }
+        return self._getBuildStatus(buildDict, uuid)
 
     @typeCheck(unicode)
     @requiresAuth
@@ -3499,9 +3485,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         buildId = helperfuncs.getBuildIdFromUuid(uuid)
         buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType']
 
-        if buildtype != buildtypes.IMAGELESS:
+        return self._getBuildStatus(buildDict, uuid)
+
+    def _getBuildStatus(self, buildDict, uuid):
+        if buildDict['buildType'] != buildtypes.IMAGELESS:
             mc = self._getMcpClient()
 
             try:
