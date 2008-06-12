@@ -130,7 +130,7 @@ class ProductDefinitionVersionNotFound(MintError):
 class ProductVersionNotFound(MintError):
     "The specified product version was not found."
 class ProductVersionInvalid(MintError):
-    "The specified product version is invalid."
+    "The specified product major version is invalid."
 class ProductDefinitionVersionExternalNotSup(MintError):
     "Product versions are not currently supported on external products."
 class PublishedReleaseEmpty(MintError):
