@@ -35,7 +35,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self.client = self.getClient("owner")
 
     def tearDown(self):
-        if self.sesH:
+        if hasattr(self, 'sesH') and self.sesH:
             conary.lib.util.rmtree(packagecreator.getWorkingDir(self.cfg, self.sesH))
             self.sesH = None
         fixtures.FixturedUnitTest.tearDown(self)
@@ -77,6 +77,37 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
+
+    @fixtures.fixture('Full')
+    def testStartSessionDir(self, db, data):
+        class MockProdDef(object):
+            name = 'mock'
+            getUpstreamSources = lambda *args, **kwargs: {}
+            getFactorySources = lambda *args, **kwargs: {}
+            getStages = lambda x: [x]
+            getLabelForStage = lambda *args: 'localhost@rpl:linux'
+        self.mock(pcreator.backend.BaseBackend, '_loadProductDefinitionFromProdDefDict', lambda *args: MockProdDef())
+        self.client = self.getClient('owner')
+        self.sesH = self.client.createPackageTmpDir()
+
+        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
+
+        pc = packagecreator.getPackageCreatorClient(wd, ('owner', "%dpass" % data['owner']))
+        project = self.client.getProject(data['projectId'])
+        cfg = project.getConaryConfig()
+        cfg['name'] = 'owner'
+        cfg['contact'] = ''
+        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
+
+        pc.startSession({}, mincfg)
+        # ensure we have a viable session
+        self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.sesH])
+        self.assertEquals(wd.endswith(self.sesH), True)
+        refKeys = ['develStageLabel', 'productDefinition', 'upstreamSources',
+                'factorySources', 'mincfg']
+        self.assertEquals(os.listdir(os.path.join(wd, 'owner', self.sesH)),
+                refKeys)
+
 
     #
     ## Tests for the package creator client (ui backend)

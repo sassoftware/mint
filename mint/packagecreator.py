@@ -137,6 +137,15 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
+    def __init__(self, *args, **kwargs):
+        pcreator.shimclient.ShimPackageCreatorClient.__init__(self,
+                *args, **kwargs)
+        self.server._server._createSessionDir = self._createSessionDir
+
+    def _createSessionDir(self):
+        storageDir = self.server._server.cfg.tmpFileStorage
+        return os.path.basename(storageDir).replace(PCREATOR_TMPDIR_PREFIX, '')
+
     def uploadData(self, sessionHandle, filePath):
         self.server._server._storeSessionValue( \
                 sessionHandle, 'filePath', filePath)
