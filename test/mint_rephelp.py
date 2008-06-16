@@ -190,7 +190,7 @@ class MintApacheServer(rephelp.ApacheServer):
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
                        os.environ['MINT_PATH'],
-                       os.environ['MCP_PATH'], os.environ['PRODDEF_PATH'],
+                       os.environ['MCP_PATH'], os.environ['PRODUCT_DEFINITION_PATH'],
                        os.environ['CONARY_PATH'], self.serverRoot,
                        self.serverRoot))
             os.system(cmd)
