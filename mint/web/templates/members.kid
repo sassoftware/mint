@@ -75,55 +75,55 @@
                 <div id="yourStatus" py:if="auth.authorized">
                     <h3>Your Status</h3>
                     <p py:if="userLevel == userlevels.NONMEMBER">
-                        You are currently not involved in this project.
+                        You are currently not involved in this ${projectText().lower()}.
                     </p>
                     <p py:if="userLevel == userlevels.USER">
-                        You are currently watching this project.
+                        You are currently watching this ${projectText().lower()}.
                     </p>
                     <p py:if="userLevel == userlevels.DEVELOPER">
-                        You are currently a developer of this project.
+                        You are currently a developer of this ${projectText().lower()}.
                     </p>
                     <p py:if="userLevel == userlevels.OWNER">
-                        You are currently ${onlyOwner and "the owner" or "an owner"} of this project.
+                        You are currently ${onlyOwner and "the owner" or "an owner"} of this ${projectText().lower()}.
                     </p>
                     <p py:if="not isTrueOwner">Actions:
                         <ul>
                             <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
-                            <a href="${basePath}watch">Watch this project</a>
+                            <a href="${basePath}watch">Watch this ${projectText().lower()}</a>
                             </li>
                             <li py:if="userLevel == userlevels.USER">
-                                <a href="${basePath}unwatch">Stop watching this project</a>
+                                <a href="${basePath}unwatch">Stop watching this ${projectText().lower()}</a>
                             </li>
                             <div py:strip="True" py:if="not project.external">
-                                <li py:if="isWriter"><a href="${basePath}resign">Resign from this project</a></li>
+                                <li py:if="isWriter"><a href="${basePath}resign">Resign from this ${projectText().lower()}</a></li>
                                 <li py:if="auth.authorized and not isTrueOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in projectMemberList]">
-                                    <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
+                                    <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this ${projectText().lower()}</a>
                                     <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
                                 </li>
                                 <li py:if="True not in [ x[2] not in userlevels.READERS for x in projectMemberList]">
-                                    <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
-                                    <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
+                                    <a py:if="auth.authorized" href="${basePath}adopt">Adopt this ${projectText().lower()}</a>
+                                    <span py:strip="True" py:if="not auth.authorized">Log in to adopt this ${projectText().lower()}</span>
                                 </li>
                             </div>
                         </ul>
                     </p>
                 </div>
 
-                <h3>Project Owners</h3>
+                <h3>${projectText().title()} Owners</h3>
                 <table py:if="users[userlevels.OWNER]" border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not onlyOwner">
                             <a onclick="javascript:setUserLevel(${userId}, ${project.id}, ${userlevels.DEVELOPER});" href="#" class="option">Demote to Developer</a>
                         </td>
-                        <td py:if="isOwner and not lastOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From Project</a></td>
+                        <td py:if="isOwner and not lastOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From ${projectText().title()}</a></td>
                     </tr>
                 </table>
-                <p py:if="not users[userlevels.OWNER]">This project has been orphaned.</p>
+                <p py:if="not users[userlevels.OWNER]">This ${projectText().lower()} has been orphaned.</p>
                 <p class="help" py:if="isTrueOwner and lastOwner">
-                    Because a project cannot have developers with no owner, you cannot change your
-                    ownership status at this time. To remove yourself from this project, promote
-                    a developer to Owner status, or orphan the project by removing all developers,
+                    Because a ${projectText().lower()} cannot have developers with no owner, you cannot change your
+                    ownership status at this time. To remove yourself from this ${projectText().lower()}, promote
+                    a developer to Owner status, or orphan the ${projectText().lower()} by removing all developers,
                     followed by yourself.
                 </p>
                 <h3>Developers</h3>
@@ -134,10 +134,10 @@
                         <td py:if="isOwner">
                             <a onclick="javascript:setUserLevel(${userId}, ${project.id}, ${userlevels.OWNER});" href="#" class="option">Promote to Owner</a>
                         </td>
-                        <td py:if="isOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From Project</a></td>
+                        <td py:if="isOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From ${projectText().title()}</a></td>
                     </tr>
                 </table>
-                <p py:if="not users[userlevels.DEVELOPER]">This project currently has no developers.</p>
+                <p py:if="not users[userlevels.DEVELOPER]">This ${projectText().lower()} currently has no developers.</p>
 		<div py:if="reqList">
                     <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
@@ -160,13 +160,13 @@
                             <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a>
                         </td>
                     </tr>
-                    <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
+                    <tr><td py:if="not users[userlevels.USER]">No users are watching this ${projectText().lower()}</td></tr>
                 </table>
                 </div>
                 <div py:if="not isOwner" py:strip="True">
-                    <p py:if="not users[userlevels.USER]">There are no users watching this project.</p>
-                    <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this project.</p>
-                    <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this project.</p>
+                    <p py:if="not users[userlevels.USER]">There are no users watching this ${projectText().lower()}.</p>
+                    <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this ${projectText().lower()}.</p>
+                    <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this ${projectText().lower()}.</p>
                 </div>
                 <div py:if="isWriter">
                     <h3>OpenPGP Signing Keys</h3>
