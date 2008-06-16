@@ -4689,7 +4689,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(path, self.authToken)
 
-        srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, data)
+        datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
+        srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
         if build:
             pc.build(sessionHandle, commit=True)
         return True

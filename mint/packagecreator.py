@@ -136,6 +136,24 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
         finally:
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
+def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
+    """
+    This is a convenience method: since we always get a dictionary as a result of the interview, we need an easy way to convert it into a factory data xml stream.
+
+    Put it here so that it can be tested independently.
+    """
+    xmlstream = StringIO(pcclient.getFactoryDataDefinition(sesH, factH))
+    xmlstream.seek(0)
+    factDef = pcreator.factorydata.FactoryDefinition(fromStream=xmlstream)
+    factoryData = pcreator.factorydata.FactoryData(factoryDefinition = factDef)
+
+    for (k,v) in dataDict.iteritems():
+        factoryData.addField(k,v)
+    xmldatastream = StringIO()
+    factoryData.serialize(xmldatastream)
+    xmldatastream.seek(0)
+    return xmldatastream
+
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
     def __init__(self, *args, **kwargs):
         pcreator.shimclient.ShimPackageCreatorClient.__init__(self,
