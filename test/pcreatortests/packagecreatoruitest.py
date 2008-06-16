@@ -105,8 +105,8 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self.assertEquals(wd.endswith(self.sesH), True)
         refKeys = ['develStageLabel', 'productDefinition', 'upstreamSources',
                 'factorySources', 'mincfg']
-        self.assertEquals(os.listdir(os.path.join(wd, 'owner', self.sesH)),
-                refKeys)
+        self.assertEquals(set(os.listdir(os.path.join(wd, 'owner', self.sesH))),
+                set(refKeys))
 
 
     #
