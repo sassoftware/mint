@@ -70,7 +70,8 @@ from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, RoleAlreadyExists, UserAlreadyExists
+from conary.repository.errors import TroveNotFound, RoleAlreadyExists
+from conary.repository.errors import UserAlreadyExists, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
@@ -1127,8 +1128,17 @@ class MintServer(object):
         repos = self._getProjectRepo(project)
         user = self.getUser(userId)
 
+        label = versions.Label(project.getLabel())
         if not project.external:
-            repos.deleteUserByName(versions.Label(project.getLabel()), user['username'])
+            repos.deleteUserByName(label, user['username'])
+            try:
+                # TODO: This will go away when using role-based permissions
+                # instead of one-role-per-user. Without this, admin users'
+                # roles would not be deleted due to CNY-2775
+                repos.deleteRole(label, user['username'])
+            except RoleNotFound:
+                # Conary deleted the (unprivileged) role for us
+                pass
         if notify:
             self._notifyUser('Removed', user, project)
         return True
