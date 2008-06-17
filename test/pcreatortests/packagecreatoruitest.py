@@ -105,8 +105,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self.assertEquals(wd.endswith(self.sesH), True)
         refKeys = ['develStageLabel', 'productDefinition', 'upstreamSources',
                 'factorySources', 'mincfg']
-        self.assertEquals(set(os.listdir(os.path.join(wd, 'owner', self.sesH))),
-                set(refKeys))
+        assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.sesH)))))
 
 
     #
@@ -135,7 +134,7 @@ content-type=text/plain
         @pcreator.backend.public
         def startSession(s, *args, **kwargs):
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'yournamespace', 'hostname': 'foo.rpath.local2'})
-            self.assertEquals(len(args), 2)
+            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
             return self.sesH
 
