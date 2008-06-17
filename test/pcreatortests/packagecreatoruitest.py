@@ -200,6 +200,9 @@ content-type=text/plain
             self.mock(pcreator.backend.BaseBackend, '_build',
                     buildParams)
 
+            def goodgfdfdd(*args):
+                return StringIO.StringIO('blah blah blah')
+            self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
             self.client.savePackage(self.sesH, refH, {}, build = False)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failIf(self.buildCalled, "The Build method was called, but shouldn't have been")
@@ -209,6 +212,21 @@ content-type=text/plain
             self.client.savePackage(self.sesH, refH, {}, build = True)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failUnless(self.buildCalled, "The Build method was never called")
+
+            # test FAIL cases
+            @pcreator.backend.public
+            def badvalidateparams(*args):
+                raise pcreator.errors.ConstraintsValidationError(['blah', 'bleh', 'blih'])
+            self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove',
+                    badvalidateparams)
+            self.validateCalled = False
+            self.buildCalled = False
+            try:
+                self.client.savePackage(self.sesH, refH, {}, build=True)
+            except mint.mint_error.PackageCreatorValidationError, err:
+                self.assertEquals(err.reasons, ['blah', 'bleh', 'blih'])
+                self.assertEquals(str(err), 'Field validation failed: blah, bleh, blih')
+
         finally:
             del self.validateCalled
             del self.buildCalled

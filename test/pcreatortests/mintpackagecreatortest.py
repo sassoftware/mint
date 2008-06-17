@@ -11,6 +11,8 @@ import testsuite
 testsuite.setup()
 import unittest
 
+from conary_test import resources
+
 import os
 import shutil
 import tempfile
@@ -22,6 +24,8 @@ from mint import packagecreator
 from conary import conarycfg
 from conary import changelog
 from conary.lib import util
+
+from factory_test import packagecreatortest
 
 _envName = 'PACKAGE_CREATOR_SERVICE_PATH'
 if _envName in os.environ:
@@ -94,6 +98,27 @@ class TestPackageCreatorHelperMethods(unittest.TestCase):
         changelog.ChangeLog(name = cfg.name, contact = cfg.contact,
                 message = "doesn't matter\n")
 
+class testPackageCreatorManipulation(packagecreatortest.RepoTest):
+    def testgetFactoryDataFromDataDict(self):
+        #create a pcreator client object
+        #set up enough client to call getFactoryDataDefinition
+        pClient = self.getPackageCreatorClient()
+        mincfg = self._getMinimalFactoryConfig()
+        sesH = pClient.startSession(self.productDefinitionDict, mincfg)
+        rpmFileName = 'tags-1.2-3.noarch.rpm'
+        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+                            rpmFileName)
+        fileH = pClient.uploadData(sesH, file(rpmf))
+        pClient.writeMetaFile(sesH, rpmFileName, "application/x-rpm")
+
+        #This is throwaway, but you have to call it to cache the factory data
+        #definitions
+        pClient.getCandidateBuildFactories(sesH)
+
+        foo = packagecreator.getFactoryDataFromDataDict(pClient, sesH,
+            'rpm-redhat=/localhost1@pc:factory/1.0-1-1',
+            packagecreatortest.expectedFactories1[0][3])
+        self.assertEquals(foo.getvalue(), '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<factoryData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.org/permanent/factorydata-1.0.xsd factorydata-1.0.xsd">\n  <field>\n    <name>description</name>\n    <type>str</type>\n    <value>Some Description</value>\n  </field>\n  <field>\n    <name>version</name>\n    <type>str</type>\n    <value>1.2</value>\n  </field>\n  <field>\n    <name>name</name>\n    <type>str</type>\n    <value>tags</value>\n  </field>\n  <field>\n    <name>license</name>\n    <type>str</type>\n    <value>Some License</value>\n  </field>\n  <field>\n    <name>summary</name>\n    <type>str</type>\n    <value>Some Summary</value>\n  </field>\n</factoryData>\n')
 
 if __name__ == '__main__':
     testsuite.main()
