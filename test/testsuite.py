@@ -105,7 +105,10 @@ def setup():
     from conary_test import resources
 
     resources.testPath = testPath = testhelp.getTestPath()
-    resources.archivePath = archivePath = testPath + '/' + "archive"
+    resources.mintArchivePath = archivePath = testPath + '/' + "archive"
+
+    # Set conary's archivePath as well
+    resources.archivePath = conaryTestPath + '/archive'
 
     global conaryDir
 
