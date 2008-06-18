@@ -9,7 +9,7 @@ import unittest
 testsuite.setup()
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
-from mint import loadmirror
+from mint import loadmirror, helperfuncs
 from mint.client import MintClient
 from mint.projects import Project
 from mint.config import MintConfig
@@ -141,36 +141,41 @@ class LoadMirrorUnitTest(unittest.TestCase):
         from conary.repository.netrepos import netserver
         oldNetworkRepositoryServer = netserver.NetworkRepositoryServer
         netserver.NetworkRepositoryServer = mock.MockObject()
+        _getShim, helperfuncs._getShimServer = helperfuncs._getShimServer, \
+            lambda x: x
 
-        callback = loadmirror.Callback('test.rpath.local', 1)
-        lm = loadmirror.LoadMirror(None, None)
-        lm.cfg = MintConfig()
-        lm.cfg.dataPath = tempfile.mkdtemp()
-        lm.cfg.projectSiteHost = 'test.rpath.local'
-        lm.cfg.projectDomainName = 'rpath.local'
+        try:
+            callback = loadmirror.Callback('test.rpath.local', 1)
+            lm = loadmirror.LoadMirror(None, None)
+            lm.cfg = MintConfig()
+            lm.cfg.dataPath = tempfile.mkdtemp()
+            lm.cfg.projectSiteHost = 'test.rpath.local'
+            lm.cfg.projectDomainName = 'rpath.local'
 
-        lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None, None))
-        lm.sourceDir = tempfile.mkdtemp()
+            lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None, None))
+            lm.sourceDir = tempfile.mkdtemp()
 
-        util.mkdirChain(lm.sourceDir + '/test.rpath.local')
-        self.createFile(lm.sourceDir + '/test.rpath.local/MIRROR-INFO')
-        self.createFile(lm.sourceDir + '/test.rpath.local/sqldb', 'contents of testfile')
+            util.mkdirChain(lm.sourceDir + '/test.rpath.local')
+            self.createFile(lm.sourceDir + '/test.rpath.local/MIRROR-INFO')
+            self.createFile(lm.sourceDir + '/test.rpath.local/sqldb', 'contents of testfile')
 
-        # Skip failing chown calls to cut down on noise
-        oldCall = loadmirror.call
-        def call(cmd):
-            if cmd.startswith('chown'):
-                return
-            oldCall(cmd)
-        loadmirror.call = call
+            # Skip failing chown calls to cut down on noise
+            oldCall = loadmirror.call
+            def call(cmd):
+                if cmd.startswith('chown'):
+                    return
+                oldCall(cmd)
+            loadmirror.call = call
 
-        lm.copyFiles('test.rpath.local', project, callback = callback.callback)
+            lm.copyFiles('test.rpath.local', project, callback = callback.callback)
 
-        # clean up
-        util.rmtree(lm.cfg.dataPath)
-        util.rmtree(lm.sourceDir)
-        loadmirror.call = oldCall
-        netserver.NetworkRepositoryServer = oldNetworkRepositoryServer
+        finally:
+            # clean up
+            util.rmtree(lm.cfg.dataPath)
+            util.rmtree(lm.sourceDir)
+            loadmirror.call = oldCall
+            netserver.NetworkRepositoryServer = oldNetworkRepositoryServer
+            helperfuncs._getShimServer = _getShim
 
 
 if __name__ == "__main__":
