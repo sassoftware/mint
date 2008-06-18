@@ -310,3 +310,13 @@ a.option:hover {
     background-color:#ccc; background-image:none;
     text-decoration:none;
 }
+
+.fileupload {
+    height: 50px;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    border: 0px;
+    display: block;
+}
+

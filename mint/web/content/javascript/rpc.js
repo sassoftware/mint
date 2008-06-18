@@ -106,7 +106,7 @@ GenericRpcRequest.prototype.send = function(aIsAsync, aArgList) {
         req.send(marshaledData);
         // TODO: better error handling here, please
         if (this.callbackData) {
-            this.callback(data, req);
+            this.callback(this.callbackData, req);
         } else {
             this.callback(req);
         }

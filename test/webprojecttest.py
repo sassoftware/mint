@@ -8,6 +8,9 @@ import testsuite
 testsuite.setup()
 
 import os
+import re
+import shutil
+import copy
 
 import mint_rephelp
 import fixtures
@@ -42,7 +45,35 @@ class rogueReq(object):
         self.headers_out = {}
         self.uri = ''
 
-class WebProjectTest(mint_rephelp.WebRepositoryHelper):
+class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
+    def _setupProjectHandler(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        projectHandler = project.ProjectHandler()
+        projectHandler.projectId = projectId
+        projectHandler.project = client.getProject(projectId)
+        projectHandler.userLevel = userlevels.OWNER
+        projectHandler.client = client
+        projectHandler.session = {}
+        projectHandler.cfg = self.mintCfg
+        projectHandler.req = rogueReq()
+        projectHandler.auth = users.Authorization(\
+            token = ('testuser', 'testpass'))
+        projectHandler.isWriter = True
+        projectHandler.isOwner = True
+        projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
+        projectHandler.basePath = self.mintCfg.basePath
+        projectHandler.searchType = None
+        projectHandler.searchTerms = ''
+        projectHandler.inlineMime = None
+        projectHandler.infoMsg = None
+        projectHandler.errorMsgList = []
+
+        return projectHandler
+
+
+class WebProjectTest(WebProjectBaseTest):
     def testBuildsPerms(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -422,6 +453,8 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
+        assert 'create packages' not in page.body.lower()
+        assert not re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() not in page.body.lower()
 
     def testProjectPageManageOwner(self):
@@ -435,6 +468,8 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
+        assert 'create packages' in page.body.lower()
+        assert re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
@@ -482,29 +517,10 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                 'group-test testproject.rpath.local@rpl:devel/1.0.1-1-2 []'])
         assert not projectHandler.session['errorMsgList']
 
-    testsuite.context('more_cowbell')
-    def testBadGroupParams(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
-        projectHandler = project.ProjectHandler()
-        projectHandler.project = client.getProject(projectId)
-        projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
-        projectHandler.client = client
-        projectHandler.cfg = self.mintCfg
-        projectHandler.req = rogueReq()
-        projectHandler.auth = users.Authorization(\
-            token = ('testuser', 'testpass'))
-        projectHandler.isWriter = True
-        projectHandler.isOwner = True
-        projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
-        projectHandler.searchType = None
-        projectHandler.searchTerms = ''
-        projectHandler.inlineMime = None
-        projectHandler.infoMsg = None
-        projectHandler.errorMsgList = []
 
+    @testsuite.context('more_cowbell')
+    def testBadGroupParams(self):
+        projectHandler = self._setupProjectHandler()
         page = projectHandler.createGroup(auth = ('testuser', 'testpass'),
                                           groupName = '', version = '',
                                           description = '', initialTrove = [])

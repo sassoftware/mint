@@ -37,6 +37,7 @@ python_files =			\
 	mint_update.py		\
 	mirror.py		\
 	news.py			\
+	packagecreator.py	\
 	pkgindex.py		\
 	pkgindexer.py		\
 	profile.py		\

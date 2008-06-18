@@ -36,6 +36,7 @@
         <div class="boxHeader">${projectText().title()} Resources</div>
         <ul>
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">${projectText().title()} Home</a></li>
+            <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('newPackage', 'getPackageFactories', 'savePackage')) and 'selectedItem' or None}"><a href="${projectUrl}newPackage">Create Packages</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Manage Images</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">${isOwner and 'Manage' or 'View'} Releases</a></li>
             <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} ${projectText().title()} Membership</a></li>

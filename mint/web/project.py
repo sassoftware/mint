@@ -7,8 +7,8 @@ import email
 import os
 import re
 import sys
-import tempfile
 import time
+import tempfile
 from mod_python import apache
 
 from mint.web import basictroves
@@ -695,6 +695,56 @@ class ProjectHandler(WebHandler):
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
+    @writersOnly
+    def newPackage(self, auth):
+        sessionHandle = self.client.createPackageTmpDir()
+        versions = self.project.getProductVersionList()
+        if not versions:
+            self._addErrors('You must create a product version before using the package creator')
+            self._predirect('editVersion', temporary=True)
+        return self._write('createPackage', message = '',
+                sessionHandle = sessionHandle,
+                versions = versions, versionId = -1)
+
+    @writersOnly
+    @strFields(uploadId=None, fieldname=None)
+    def upload_iframe(self, auth, uploadId, fieldname):
+        return self._write('uploadPackageFrame', uploadId = uploadId,
+                fieldname = fieldname, project = self.project.hostname)
+
+    @writersOnly
+    @strFields(sessionHandle=None, upload_url='')
+    @intFields(versionId=None)
+    def getPackageFactories(self, auth, sessionHandle, versionId, upload_url):
+        try:
+            factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                sessionHandle = sessionHandle, factories = factories,
+                message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None, factoryHandle=None)
+    def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+        #It is assumed that the package creator service will validate the input
+        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+        return self._write('buildPackage', sessionHandle = sessionHandle,
+                message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None)
+    def getPackageBuildLogs(self, auth, sessionHandle):
+        try:
+            logs = self.client.getPackageBuildLogs(sessionHandle)
+        except MintError, e:
+            self._addErrors("Build logs are not available for this build: %s" % str(e))
+            self._predirect('index', temporary=True)
+
+        self.req.content_type = 'text/plain'
+        return logs
+
 
     @ownerOnly
     def newRelease(self, auth):
@@ -1213,11 +1263,16 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 """)
 
         # Process upstream sources
-        usources = collatedDict.get('pdusources',{})
-        # TODO: Include upstream sources, baseFlavor, etc.
-        #       from the UI (which needs to be invented).
-        #       Until then, we'll leave any changes a user
-        #       makes in the repos alone.
+        # XXX ProductDefinition object needs clearUpstreamSources()
+        pd.upstreamSources = proddef._UpstreamSources()
+        usources = collatedDict.get('pdusource',{})
+        for us in usources:
+            troveName, label = self._getValidatedUpstreamSource(us)
+            # add regardless of errors.  if an error occurred, we want the
+            # user to see what they entered.
+            pd.addUpstreamSource(troveName, label)
+
+        # add defaults if neccessary
         # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
         if not pd.getUpstreamSources():
             pd.addUpstreamSource(troveName="group-rap-linux-service",
@@ -1300,6 +1355,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                               (action, getProjectText().lower(), name))
             self._predirect()
         else:
+            kwargs.update(name=name, description=description)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
@@ -1331,6 +1387,35 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             # value since we allow it to be empty
             if not stage.has_key('labelSuffix'):
                 stage['labelSuffix'] = ""
+                
+    def _getValidatedUpstreamSource(self, us):
+        """
+        Return the validated troveName and label for the specified upstream
+        sources dict.  Any keys missing from the dict will be set to '' so 
+        that errors can be properly handled.
+        """
+        
+        # validate the trove name
+        if not us.has_key('troveName'):
+            troveName = ''
+            self._addErrors("Missing trove name for upstream source")
+        else:
+            troveName = us['troveName']
+            
+        # validate the label
+        if not us.has_key('label'):
+            label = ''
+            self._addErrors("Missing label for upstream source")
+        else:
+            try:
+                labelObj = versions.Label(us['label'])
+                label = labelObj.freeze()
+            except Exception ,e:
+                label = us['label']
+                self._addErrors("Invalid label for upstream source: %s" \
+                                % str(e))
+            
+        return troveName, label
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

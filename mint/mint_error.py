@@ -154,6 +154,8 @@ class UserInduction(MintError):
         "illegal fashion"
 class UpdateServiceNotFound(MintError):
     "The Update Service was not found."
+class PackageCreatorError(MintError):
+    "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 
@@ -327,6 +329,18 @@ class ProductDefinitionInvalidStage(MintError):
 
     def __str__(self):
         return "Invalid product definition stage: %s" % self.msg
+
+class PackageCreatorValidationError(PackageCreatorError):
+    "Package Creator Validation Error:"
+    def __init__(self, reasons):
+        PackageCreatorError.__init__(self)
+        self.reasons = reasons
+
+    def freeze(self): return (self.reasons,)
+
+    def __str__(self):
+        return "Field validation failed: %s" % ', '.join(self.reasons)
+
 
 ## Subclassed exceptions
 # MessageException
