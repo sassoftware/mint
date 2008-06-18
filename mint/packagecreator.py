@@ -155,24 +155,17 @@ def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     return xmldatastream
 
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
-    def __init__(self, *args, **kwargs):
-        pcreator.shimclient.ShimPackageCreatorClient.__init__(self,
-                *args, **kwargs)
-        self.server._server._createSessionDir = self._createSessionDir
-
-    def _createSessionDir(self):
-        storageDir = self.server._server.cfg.tmpFileStorage
-        return os.path.basename(storageDir).replace(PCREATOR_TMPDIR_PREFIX, '')
-
     def uploadData(self, sessionHandle, filePath):
         self.server._server._storeSessionValue( \
                 sessionHandle, 'filePath', filePath)
 
 
-def getPackageCreatorClient(tmpdir, authToken):
-    cfg = pcreator.config.PackageCreatorServiceConfiguration()
-    cfg.storagePath = tmpdir
-    cfg.tmpFileStorage = tmpdir
+def getPackageCreatorClient(mintCfg, authToken):
     auth = {'user': authToken[0], 'passwd': authToken[1]}
+    if mintCfg.packageCreatorURL:
+        return pcreator.client.PackageCreatorClient( \
+                mintCfg.packageCreatorURL, auth)
+    cfg = pcreator.config.PackageCreatorServiceConfiguration()
+    cfg.storagePath = os.path.join(mintCfg.dataPath, 'tmp')
+    cfg.tmpFileStorage = cfg.storagePath
     return ShimClient(cfg, auth)
-

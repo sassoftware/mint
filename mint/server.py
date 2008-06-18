@@ -4672,7 +4672,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         version = projects.ProductVersions(self, versionId)
 
         #Register the file
-        pc = packagecreator.getPackageCreatorClient(path, self.authToken)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         project = projects.Project(self, projectId)
         cfg = project.getConaryConfig()
         cfg['name'] = self.auth.username
@@ -4723,7 +4723,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         import packagecreator
         from conary import versions as conaryVer
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(path, self.authToken)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
 
         datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
 
@@ -4750,7 +4750,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         import packagecreator
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(path, self.authToken)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         try:
             return pc.isBuildFinished(sessionHandle, commit=True)
         except packagecreator.errors.PackageCreatorError, e:
@@ -4774,7 +4774,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         import packagecreator
         path = packagecreator.getWorkingDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(path, self.authToken)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         try:
             return pc.getBuildLogs(sessionHandle)
         except packagecreator.errors.PackageCreatorError, e:

@@ -20,6 +20,7 @@ import tempfile
 import fixtures
 
 from mint import packagecreator
+from mint import config
 
 from conary import conarycfg
 from conary import changelog
@@ -31,12 +32,13 @@ _envName = 'PACKAGE_CREATOR_SERVICE_PATH'
 if _envName in os.environ:
     from pcreator import backend as pcreatorBackend
     from pcreator import factorydata as pcreatorFactoryData
+    from pcreator import client as pcreatorClient
 
 class mockfield(object):
     default = None
 
 
-class TestPackageCreatorHelperMethods(unittest.TestCase):
+class TestPackageCreatorHelperMethods(testsuite.TestCase):
     @testsuite.context('more_cowbell')
     def testMinConfig(self):
         cfg = conarycfg.ConaryConfiguration(False)
@@ -97,6 +99,33 @@ class TestPackageCreatorHelperMethods(unittest.TestCase):
         # instantiate a changelog object to ensure it won't backtrace
         changelog.ChangeLog(name = cfg.name, contact = cfg.contact,
                 message = "doesn't matter\n")
+
+    def testGetClientSwitch(self):
+        cfg = config.MintConfig()
+        self.shimClient = False
+        self.networkedClient = False
+        class DummyClient(object):
+            def __init__(x, *args, **kwargs):
+                self.assertEquals(args,
+                        ('localhost', {'passwd': 'bar', 'user': 'foo'}))
+                self.networkedClient = True
+
+        class DummyShimClient(object):
+            def __init__(x, *args, **kwargs):
+                tmpDir = os.path.join(cfg.dataPath, 'tmp')
+                self.assertEquals(args[0].storagePath, tmpDir)
+                self.assertEquals(args[0].tmpFileStorage, tmpDir)
+                self.assertEquals(args[1], {'passwd': 'bar', 'user': 'foo'})
+                self.shimClient = True
+
+        self.mock(pcreatorClient, 'PackageCreatorClient', DummyClient)
+        self.mock(packagecreator, 'ShimClient', DummyShimClient)
+        cfg.packageCreatorURL = None
+        packagecreator.getPackageCreatorClient(cfg, ('foo', 'bar'))
+        self.assertEquals(self.shimClient, True)
+        cfg.packageCreatorURL = 'localhost'
+        packagecreator.getPackageCreatorClient(cfg, ('foo', 'bar'))
+        self.assertEquals(self.networkedClient, True)
 
 class testPackageCreatorManipulation(packagecreatortest.RepoTest):
     def testgetFactoryDataFromDataDict(self):
