@@ -24,6 +24,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
+from conary_test import resources
 
 from conary.lib import util
 from conary import versions
@@ -899,7 +900,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testUploadKey(self):
-        keyFile = open(testsuite.archivePath + '/key.asc')
+        keyFile = open(resources.mintArchivePath + '/key.asc')
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
