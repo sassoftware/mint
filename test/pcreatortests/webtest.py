@@ -136,7 +136,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         # This method only tests that the page was rendered as expected with
         # the proper UI elements
         self.factorystream = open(
-                 os.path.join(conary_test.resources.factoryArchivePath,
+                 os.path.join(conary_test.resources.factoryRecipePath,
                               'recipedata', 'stub-definition.xml'))
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):
