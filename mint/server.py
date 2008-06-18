@@ -2135,33 +2135,47 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Create/start each build.
         buildIds = []
         for buildDefinition, nvf in filteredBuilds:
-            buildId = self._createBuildDefBuild(projectId, buildDefinition,
-                    nvf, project.getName())
+            buildImageType = buildDefinition.getBuildImageType()
+            buildSettings = buildImageType.fields.copy()
+            buildType = buildImageType.tag
+
+            n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+            projectName = project.getName()
+            buildId = self.newBuildWithOptions(projectId, projectName,
+                                               n, v, f, buildType,
+                                               buildSettings)
             buildIds.append(buildId)
             self.startImageJob(buildId)
-
         return buildIds
 
-    def _createBuildDefBuild(self, projectId, buildDefinition, nvf, buildName):
-        """
-        Create a new build from build definition info
-        @return: the build id
-        """
+
+    @typeCheck(int, str, str, str, str, str, dict)
+    @requiresAuth
+    @private
+    def newBuildWithOptions(self, projectId, productName,
+                            groupName, groupVersion, groupFlavor,
+                            buildType, buildSettings):
         customTroveDict = { 'mediaTemplateTrove' : 'media-template',
                             'anacondaCustomTrove' : 'anaconda-custom',
                             'anacondaTemplatesTrove' : 'anaconda-templates'}
+        self._filterProjectAccess(projectId)
+        buildId = self.builds.new(projectId = projectId,
+                                      name = productName,
+                                      timeCreated = time.time(),
+                                      buildCount = 0)
+        mc = self._getMcpClient()
 
-        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+        try:
+            self.buildData.setDataValue(buildId, 'jsversion',
+                str(mc.getJSVersion()),
+                data.RDT_STRING)
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
 
-        project = projects.Project(self, projectId)
-        buildId = self.newBuild(projectId, buildName)
         newBuild = builds.Build(self, buildId)
-        newBuild.setTrove(n, v, f)
-        buildType = buildtypes.xmlTagNameImageTypeMap[buildDefinition.getBuildImageType().tag]
+        newBuild.setTrove(groupName, groupVersion, groupFlavor)
+        buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
-
-        buildImageType = buildDefinition.getBuildImageType()
-        buildSettings = buildImageType.fields.copy()
 
         template = newBuild.getDataTemplate()
 
@@ -2171,8 +2185,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if buildSettings.has_key(customTroveSetting):
                 troveName = customTroveDict[customTroveSetting]
                 troveVersion = str(buildSettings.pop(customTroveSetting))
-                customTroveSpec = project.resolveExtraTrove(troveName, v, f,
-                        troveVersion)
+                customTroveSpec = self.resolveExtraTrove(projectId, troveName,
+                                                     troveVersion, '',
+                                                     groupVersion, groupFlavor)
                 if customTroveSpec:
                     newBuild.setDataValue(troveName, customTroveSpec)
 

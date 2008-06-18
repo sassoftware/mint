@@ -1,3 +1,9 @@
+Changes in @NEW@
+===============
+Internal Changes
+----------------
+* A new api method, newBuildWithOptions, has been added. (RBL-2959)
+
 Changes in 4.1.0
 ================
 
