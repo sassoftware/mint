@@ -1,4 +1,4 @@
-#
+
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
@@ -6,11 +6,14 @@
 
 from conary import versions
 from conary.deps import arch, deps
+from conary.repository import shimclient
+from conary.repository.errors import RoleAlreadyExists
+from conary.repository.netrepos import netserver
+
 from mint import constants
 from mint import buildtypes
 from mint.config import isRBO
 from mint.mint_error import MintError
-from conary.repository.errors import RoleAlreadyExists
 
 from rpath_common.proddef import api1 as proddef
 
@@ -339,6 +342,20 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
 
     return dicts
 
+
+def _getShimServer(repos):
+    # Delete me as soon as addUserToRepository and addUserByMD5ToRepository
+    # can safely use a shim to add users to a role. (CNY-2862)
+
+    if isinstance(repos, (shimclient.NetworkRepositoryServer,
+      netserver.NetworkRepositoryServer)):
+        return repos
+    elif isinstance(repos, shimclient.ShimNetClient):
+        return repos.c._server._server
+    else:
+        raise TypeError("Don't know how to get repository from %r" % repos)
+
+
 def addUserToRepository(repos, username, password, role, label=None):
     """
     Add a user to the repository
@@ -350,15 +367,19 @@ def addUserToRepository(repos, username, password, role, label=None):
             # who cares
             pass
         repos.addUser(label, username, password)
+        # XXX: This is WRONG, but conary offers no API to either add a
+        # user or to get the list of users for a role! Instead, we end
+        # up blowing away any other members of the role.
         repos.updateRoleMembers(label, role, [username])
     else:
+        repos = _getShimServer(repos)
         try:
             repos.auth.addRole(role)
         except RoleAlreadyExists:
             # who cares
             pass
         repos.auth.addUser(username, password)
-        repos.auth.updateRoleMembers(role, [username])
+        repos.auth.addRoleMember(role, username)
 
 def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
     """
@@ -371,15 +392,60 @@ def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
             # who cares
             pass
         repos.addUserByMD5(label, username, salt, password)
+        # XXX: This is WRONG, but conary offers no API to either add a
+        # user or to get the list of users for a role! Instead, we end
+        # up blowing away any other members of the role.
         repos.updateRoleMembers(label, role, [username])
     else:
+        repos = _getShimServer(repos)
         try:
             repos.auth.addRole(role)
         except RoleAlreadyExists:
             # who cares
             pass
         repos.auth.addUserByMD5(username, salt, password)
-        repos.auth.updateRoleMembers(role, [username])
+        repos.auth.addRoleMember(role, username)
+
+
+def deleteUserFromRepository(repos, username, label=None, deleteRole=True):
+    """
+    Delete a user C{username} from repository C{repos} and (maybe) try
+    to delete the role of the same name (if present). C{repos} can be
+    either a repository client or a repository server; in the former
+    case a C{label} is required to identify which repository the user
+    will be deleted from.
+
+    @param repos: Repository to delete the user from
+    @type  repos: C{NetworkRepositoryClient} or C{NetworkRepositoryServer}
+    @param username: Which user to delete
+    @type  username: str
+    @param label: Label or hostname of the repository to delete the
+                  user from, if C{repos} is a
+                  C{NetworkRepositoryClient}
+    @type  label: str or L{Label<conary.versions.Label>}
+    @param deleteRole: If C{True} (the default), try to delete the role
+                       of the same name
+    @type  deleteRole: bool
+    """
+
+    if label:
+        repos.deleteUserByName(label, username)
+        if deleteRole:
+            try:
+                repos.deleteRole(label, username)
+            except RoleNotFound:
+                # Conary deleted the role for us (probably)
+                pass
+    else:
+        repos = _getShimServer(repos)
+        repos.auth.deleteUserByName(username)
+        if deleteRole:
+            try:
+                repos.auth.deleteRole(username)
+            except RoleNotFound:
+                # Conary deleted the role for us (probably)
+                pass
+
 
 def getProductVersionDefaultStagesNames():
     """

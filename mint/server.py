@@ -827,7 +827,7 @@ class MintServer(object):
 
         if self.cfg.hideNewProjects:
             repos = self._getProjectRepo(project)
-            repos.deleteUserByName(project.getLabel(), 'anonymous')
+            helperfuncs.deleteUserFromRepository(repos, 'anonymous')
             self.projects.hide(projectId)
 
         if self.cfg.createConaryRcFile:
@@ -1059,7 +1059,7 @@ class MintServer(object):
                 raise ItemNotFound("username")
             repos = self._getProjectRepo(project)
             helperfuncs.addUserByMD5ToRepository(repos, username, password, salt, 
-                username, label)
+                username)
             repos.addAcl(label, username, None, None,
                          write=(level in userlevels.WRITERS),
                          remove=False)
@@ -1130,7 +1130,7 @@ class MintServer(object):
 
         label = versions.Label(project.getLabel())
         if not project.external:
-            repos.deleteUserByName(label, user['username'])
+            helperfuncs.deleteUserFromRepository(repos, user['username'])
             try:
                 # TODO: This will go away when using role-based permissions
                 # instead of one-role-per-user. Without this, admin users'
@@ -1253,7 +1253,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
-        repos.deleteUserByName(versions.Label(project.getLabel()), 'anonymous')
+        helperfuncs.deleteUserFromRepository(repos, 'anonymous')
 
         self.projects.hide(projectId)
         self._generateConaryRcFile()
@@ -1273,8 +1273,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
         username = 'anonymous'
-        helperfuncs.addUserToRepository(repos, username, username, username, 
-            label)
+        helperfuncs.addUserToRepository(repos, username, username, username)
         repos.addAcl(label, username, None, None, write=False, remove=False)
 
         self.projects.unhide(projectId)
