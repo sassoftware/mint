@@ -300,38 +300,6 @@
                     </tr>
                     
                     <tr>
-                        <th>Upstream Sources:</th>
-                        <td>
-                            <table id="pdusource" class="pretty-fullwidth">
-                                <thead>
-                                    <tr>
-                                        <th>Trove Name</th>
-                                        <th>Label</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <div py:strip="True" py:for="ordinal, us in enumerate(productDefinition.getUpstreamSources())"
-                                         py:content="upstreamSourcesOptions(us, ordinal)" />
-                                    <tr id="pdusource-empty" py:if="not productDefinition.getUpstreamSources()">
-                                        <td colspan="4">No upstream sources defined.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table id="pdusource-bt-all" style="display: none">
-                                <tbody py:content="upstreamSourcesOptions()" />
-                            </table>
-                            <p>
-                                <a class="pdusource-adder">
-                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />
-                                    Add a new upstream source
-                                </a>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
                         <th>Image Sets:</th>
                         <td>
                             <table id="pdbuilddefs" class="pretty-fullwidth">
