@@ -169,9 +169,9 @@ class SiteHandler(WebHandler):
             errors.append("Passwords do not match.")
         if len(password) < 6:
             errors.append("Password must be 6 characters or longer.")
-        if self.cfg.rBuilderOnline or self.cfg.tosLink and not tos:
+        if (self.cfg.rBuilderOnline or self.cfg.tosLink) and not tos:
             errors.append("You must accept the Terms of Service to create an account")
-        if self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink and not privacy:
+        if (self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink) and not privacy:
             errors.append("You must accept the Privacy Policy to create an account")
         if not errors:
             try:
