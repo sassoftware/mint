@@ -42,8 +42,8 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         client.addProductVersion(projectId, self.mintCfg.namespace, "version2", "Fluff description")
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
-        assert 'version1</option>' in page.body
-        assert 'version2</option>' in page.body
+        assert 'version1' in page.body
+        assert 'version2' in page.body
         assert 'value="Create Package"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
@@ -137,7 +137,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         # the proper UI elements
         self.factorystream = open(
                  os.path.join(conary_test.resources.factoryRecipePath,
-                              'recipedata', 'stub-definition.xml'))
+                              'factory-stub', 'data-definition.xml'))
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):
             self.factorystream.seek(0)
