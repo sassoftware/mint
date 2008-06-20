@@ -462,7 +462,7 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance'})
+        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance', 'namespace': self.cfg.namespace})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):

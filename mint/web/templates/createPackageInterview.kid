@@ -182,7 +182,7 @@ lang = None;
 
                   <!-- End factory interview -->
                 </div>
-                <p><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
+                <p><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
             </form>
 
             <div style="display: none" id="factory_dumping_ground">
@@ -194,8 +194,8 @@ ${drawField(factoryIndex, field, values, dict(unconstrained = drawTextField, med
         </div>
             </div>
 
-            <h3 style="color:#FF7001;">Step 2: Confirm package details</h3>
-            <p>The package creator has selected a list of possibile factories to use with the file that you uploaded, and has gathered as much information from it as possible.  Please choose the correct factory, and verify the information displayed.</p>
+            <h3 style="color:#FF7001;">Step 2: Confirm Package Details</h3>
+            <p>Package Creator has selected a list of possible package type(s) to use with the archive that you uploaded, and has gathered as much information from it as possible.  Please confirm the correct package type, and verify the information displayed.</p>
 
             </div>
         </div>

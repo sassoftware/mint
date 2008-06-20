@@ -12,11 +12,13 @@ import pcreator.factorydata
 import pcreator.config
 import pcreator.shimclient
 
+import mint_error
+
 PCREATOR_TMPDIR_PREFIX = 'rb-pc-upload-'
 
 from mint import mint_error
 
-def getWorkingDir(cfg, id):
+def getUploadDir(cfg, id):
     """
     @param cfg: Mint Configuration Object
     @type cfg: MintConfig
@@ -136,9 +138,29 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
         finally:
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
+###
+### Convenience methods for working with the package creator service
+###
+
+def getPackageCreatorFactories(pc, sessionHandle):
+    """
+        Calls the getCandidateBuildFactories method, but translates the package
+        creator error to a mint error
+    """
+    try:
+        factories = pc.getCandidateBuildFactories(sessionHandle)
+    except errors.UnsupportedFileFormat, e:
+        raise mint_error.PackageCreatorError("Error gathering Candidate Build Factories: %s",
+            "The file uploaded is not a supported file type")
+    [x[1].seek(0) for x in factories]
+    ret = [(x[0],x[1].read(),x[3]) for x in factories]
+    return ret
+
 def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     """
-    This is a convenience method: since we always get a dictionary as a result of the interview, we need an easy way to convert it into a factory data xml stream.
+    This is a convenience method: since we always get a dictionary as a result
+    of the interview, we need an easy way to convert it into a factory data xml
+    stream.
 
     Put it here so that it can be tested independently.
     """

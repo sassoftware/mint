@@ -87,7 +87,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
     def _setupInterviewEnvironment(self, mockMethod):
         fields = {
-            'sessionHandle': 'foobarbaz',
+            'uploadDirectoryHandle': 'foobarbaz',
             'versionId': '1',
             'uploadfile': 'UPLOADED',
         }
@@ -114,7 +114,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             ret.append(('rpm1', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
             self.factorystream.seek(0)
             ret.append(('rpm2', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
-            return ret
+            return 'foobarbaz', ret
 
         func,context = self._setupInterviewEnvironment(fakepackagefactories)
         page = func(auth=context['auth'], **context['fields'])
@@ -141,7 +141,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):
             self.factorystream.seek(0)
-            return [('stub', factorydata.FactoryDefinition(fromStream=self.factorystream), self.prefilled)]
+            return 'foobarbaz', [('stub', factorydata.FactoryDefinition(fromStream=self.factorystream), self.prefilled)]
 
         func,context = self._setupInterviewEnvironment(fakepackagefactories)
 

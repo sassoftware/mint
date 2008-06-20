@@ -39,6 +39,7 @@ kid_files = \
 	newBuildsFromProductDefinition.kid	\
 	newGroup.kid		\
 	newProject.kid		\
+	packageList.kid		\
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\

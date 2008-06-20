@@ -91,18 +91,18 @@ addLoadEvent(makeRequest);
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-            <h1>Package Creator</h1>
+            <h1>Package Creator - Build</h1>
             <h3>Step 3 of 3</h3>
 
             ${statusArea("Package Build")}
             <!-- the poller -->
-            <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">Full Build Log</a></p>
+            <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">Full build log</a></p>
 
-            <h3 style="color:#FF7001;">Step 3: Build package</h3>
-            <p id="building">Your package is building.  Please be patient while this process completes.</p>
+            <h3 style="color:#FF7001;">Step 3: Build Package</h3>
+            <p id="building">Your package has been created and is now building.  Please be patient while the build completes.</p>
             <p id="complete" style="display:none">Your package has built successfully</p>
             <p id="complete_fail" style="display:none">Your package did not build successfully</p>
-            <p id="resubmit_data" style="display:none"><a href="javascript: history.go(-1);">Review package data</a></p>
+            <p id="resubmit_data" style="display:none"><a href="javascript: history.go(-1);">Review package details</a></p>
             <p id="start_over" style="display:none"><a href="newPackage">Create a new package</a></p>
             </div>
         </div>

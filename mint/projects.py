@@ -864,7 +864,6 @@ class ProductVersions(database.TableObject):
     def getItem(self, id):
         return self.server.getProductVersion(id)
 
-
 class ProductVersionsTable(database.KeyedTable):
     name = 'ProductVersions'
     key = 'productVersionId'

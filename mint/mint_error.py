@@ -343,6 +343,17 @@ class PackageCreatorValidationError(PackageCreatorError):
     def __str__(self):
         return "Field validation failed: %s" % ', '.join(self.reasons)
 
+class ProductDefinitionLabelLookupError(MintError):
+    "Product Definition Label Lookup Error:"
+    def __init__(self, label, possibles):
+        MintError.__init__(self)
+        self.lookup = label
+        self.set = possibles
+
+    def freeze(self): return (self.lookup, self.set)
+
+    def __str__(self):
+        return self.msg + " Could not map the label %s to a product definition.  The versioned default labels are %s" % (self.lookup, ", ".join(self.set))
 
 ## Subclassed exceptions
 # MessageException

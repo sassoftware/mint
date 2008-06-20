@@ -26,7 +26,7 @@ import simplejson
             function PkgCreatorFileUploadForm()
             {
                 this.base = FileUploadForm;
-                this.base(${simplejson.dumps(sessionHandle)}, 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
+                this.base(${simplejson.dumps(uploadDirectoryHandle)}, 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
             }
             PkgCreatorFileUploadForm.prototype = new FileUploadForm();
 
@@ -88,20 +88,20 @@ import simplejson
             </div>
             <div id="getPackageFactories_outerdiv">
             <form name="getPackageFactories" method="post" action="getPackageFactories" enctype="multipart/form-data" id="getPackageFactories">
-                <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
+                <input type="hidden" name="uploadDirectoryHandle" value="${uploadDirectoryHandle}"/>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                   <tr>
-                  <th>Select Product Version</th>
+                  <th>Product Version</th>
                   <td>
                     <select name="versionId">
-                      <option py:for="(vId, projectId, namespace, version_str, desc) in versions" value="${vId}" py:attr="'selected': ${vId==versionId and 'selected' or None}" py:content="version_str"/>
+                      <option py:for="(vId, projectId, namespace, version_str, desc) in versions" value="${vId}" py:attr="'selected': ${vId==versionId and 'selected' or None}" py:content="'%s (%s)' % (version_str, namespace)"/>
                     </select>
                   </td>
                   </tr>
                   <tr>
-                  <th>Upload File</th>
+                  <th>Archive</th>
                   <td>
-                      ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % sessionHandle, 'uploadfile')}
+                      ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % uploadDirectoryHandle, 'uploadfile')}
                   </td>
                   </tr>
                   <!--<tr>
@@ -111,12 +111,12 @@ import simplejson
                   </td>
                   </tr> Not going to support urls right now -->
                 </table>
-                <p><input type="submit" id="submitButton_getPackageFactories" value="Create Package" onclick="javascript: signal(this.form, 'onsubmit'); return false;"/></p>
+                <p><input type="submit" id="submitButton_getPackageFactories" value="Upload" onclick="javascript: signal(this.form, 'onsubmit'); return false;"/></p>
             </form>
             </div>
 
-            <h3 style="color:#FF7001;">Step 1: Upload a bundle</h3>
-            <p>Select your source or binary file bundle (rpm, src rpm, tarball, zip, jar, war, ear, egg, etc.) from your computer, or provide the URL.</p>
+            <h3 style="color:#FF7001;">Step 1: Upload an Archive</h3>
+            <p>Select your binary archive (rpm, tarball) from your computer, or provide the URL.</p>
 
             <div style="display:none">
             <div id="upload_progress">

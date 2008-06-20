@@ -361,7 +361,16 @@ class MintClient:
         """
         return self.server.createPackageTmpDir()
 
-    def getPackageFactories(self, projectId, sessionHandle, versionId, upload_url):
+    def _filterFactories(self, factories):
+        """
+            Converts the return value from the server (which passes an xmlblob)
+            to an object tree
+        """
+        from pcreator import factorydata
+        #Factories comes across as an xml file, need to parse that to something useable
+        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
+
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, upload_url):
         """
         Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
         @param projectId: Project ID
@@ -372,13 +381,15 @@ class MintClient:
         @type versionId: int
         @param upload_url: URL of a package or ''.  Not currently used
         @type upload_url: str
-        @returns: a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
         @rtype: tuple(tuple, str)
         """
-        from pcreator import factorydata
-        factories = self.server.getPackageFactories(projectId, sessionHandle, versionId, upload_url)
-        #Factories comes across as an xml file, need to parse that to something useable
-        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
+        sesH, factories = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, upload_url)
+        return sesH, self._filterFactories(factories)
+
+    def getPackageFactoriesFromRepoArchive(self, projectId, troveSpec):
+        sesH, factories = self.server.getPackageFactoriesFromRepoArchive(projectId, troveSpec)
+        return sesH, self._filterFactories(factories)
 
     def savePackage(self, sessionHandle, factoryHandle, data, build=True):
         "See L{mint.server.MintServer.savePackage}"
@@ -387,6 +398,10 @@ class MintClient:
     def getPackageBuildLogs(self, sessionHandle):
         '''See L{mint.server.MintServer.getPackageBuildLogs}'''
         return self.server.getPackageBuildLogs(sessionHandle)
+
+    def getPackageCreatorPackages(self):
+        '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
+        return self.server.getPackageCreatorPackages()
 
     def getBuildFilenames(self, buildId):
         """

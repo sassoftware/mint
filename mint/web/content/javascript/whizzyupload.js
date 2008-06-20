@@ -144,7 +144,7 @@ FileUploadForm.prototype =
 
     cancelUploadRequest: function()
     {
-        var d = loadJSONDoc(this.cancel_uri, {'sessionHandle': this.id, 'fieldnames': this.getFieldnames()});
+        var d = loadJSONDoc(this.cancel_uri, {'uploadDirectoryHandle': this.id, 'fieldnames': this.getFieldnames()});
         d.addCallback(cancelUploadRequestFinished);
     },
 
@@ -300,7 +300,7 @@ FileUploadForm.prototype =
         {
             //Poll the upload uri for a status update, at the end, either schedule another poll, or trigger uploadsComplete
             logDebug("Checking for status on " + this.id);
-            var d = loadJSONDoc(this.status_uri, {'sessionHandle': this.id, 'fieldname': key});
+            var d = loadJSONDoc(this.status_uri, {'uploadDirectoryHandle': this.id, 'fieldname': key});
             //Add error handling for resiliency
             //Check to see if it's done
             d.addCallback(partial(this.uploadStatusCallFinished, key));

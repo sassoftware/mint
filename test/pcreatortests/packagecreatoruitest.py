@@ -36,7 +36,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
     def tearDown(self):
         if hasattr(self, 'sesH') and self.sesH:
-            conary.lib.util.rmtree(packagecreator.getWorkingDir(self.cfg, self.sesH))
+            conary.lib.util.rmtree(packagecreator.getUploadDir(self.cfg, self.sesH))
             self.sesH = None
         fixtures.FixturedUnitTest.tearDown(self)
 
@@ -74,7 +74,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self.sesH = self.client.createPackageTmpDir()
 
         #Check to see that the directory was in fact created
-        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
@@ -91,7 +91,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self.client = self.getClient('owner')
         self.sesH = self.client.createPackageTmpDir()
 
-        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
 
         pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']))
         project = self.client.getProject(data['projectId'])
@@ -117,7 +117,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self._set_up_path()
 
         #Create the manifest files
-        wd = packagecreator.getWorkingDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
         if writeManifest:
             fup = whizzyupload.fileuploader(wd, 'uploadfile')
             i = open(fup.manifestfile, 'wt')
@@ -153,7 +153,7 @@ content-type=text/plain
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        factories = self.client.getPackageFactories(projectId, self.sesH, 1, 'uploadfile')
+        sesH, factories = self.client.getPackageFactories(projectId, self.sesH, 1, 'uploadfile')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})

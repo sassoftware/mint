@@ -697,13 +697,13 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     def newPackage(self, auth):
-        sessionHandle = self.client.createPackageTmpDir()
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
         versions = self.project.getProductVersionList()
         if not versions:
             self._addErrors('You must create a product version before using the package creator')
             self._predirect('editVersion', temporary=True)
         return self._write('createPackage', message = '',
-                sessionHandle = sessionHandle,
+                uploadDirectoryHandle = uploadDirectoryHandle,
                 versions = versions, versionId = -1)
 
     @writersOnly
@@ -713,11 +713,24 @@ class ProjectHandler(WebHandler):
                 fieldname = fieldname, project = self.project.hostname)
 
     @writersOnly
-    @strFields(sessionHandle=None, upload_url='')
+    @strFields(uploadDirectoryHandle=None, upload_url='')
     @intFields(versionId=None)
-    def getPackageFactories(self, auth, sessionHandle, versionId, upload_url):
+    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url):
         try:
-            factories = self.client.getPackageFactories(self.project.getId(), sessionHandle, versionId, upload_url)
+            sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                sessionHandle = sessionHandle, factories = factories,
+                message = None)
+
+    @writersOnly
+    @strFields(name=None, label=None)
+    def maintainPackageInterview(self, name, label):
+        """"""
+        try:
+            sessionHandle, factories = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), "=".join((name,label)))
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -745,6 +758,11 @@ class ProjectHandler(WebHandler):
         self.req.content_type = 'text/plain'
         return logs
 
+    @writersOnly
+    def packageCreatorPackages(self, auth):
+        pkgList = [x.split('=') for x in self.client.getPackageCreatorPackages()]
+
+        return self._write('packageList', pkgList=pkgList, message=None)
 
     @ownerOnly
     def newRelease(self, auth):
