@@ -65,7 +65,7 @@ from mint.web.templatesupport import projectText
                             Edit ${projectText().lower()} version
                             <select py:attrs="{'id': 'version', 'name': 'version', 'class': 'field'}" onchange="editVersionRedirect('${basePath}', this.options[this.selectedIndex].value);">
                                 <option py:if="versions" py:content="'--'" value="-1" selected="selected"/>
-                                <option py:for="ver in versions" py:content="ver[2]" value="${ver[0]}"/>
+                                <option py:for="ver in versions" py:content="'%s %s' % (ver[2], ver[3])" value="${ver[0]}"/>
                             </select>
                         </li>
                     </ul>
@@ -73,9 +73,9 @@ from mint.web.templatesupport import projectText
                 <div py:if="isWriter" py:strip="True">
                     <h2>Add ${projectText().title()} Contents</h2>
                     <ul>
-                        <li>Create a <a href="${basePath}newBuild">new Image</a></li>
-                        <li>Create a <a href="${basePath}newRelease">new Release</a></li>
-                        <li>Create a <a href="${basePath}newPackage">new Package</a></li>
+                        <li>Create a <a href="${basePath}newBuild">new image</a></li>
+                        <li>Create a <a href="${basePath}newRelease">new release</a></li>
+                        <li>Create a <a href="${basePath}newPackage">new package</a></li>
                     </ul>
                 </div>
                 <div py:if="auth.admin" py:strip="True">

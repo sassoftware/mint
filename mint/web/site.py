@@ -487,16 +487,18 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '', commitEmail='')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', namespace='', prodtype = '', version = '', commitEmail='')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version, commitEmail):
+    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, namespace, prodtype, version, commitEmail):
         
         shortname = shortname.lower()
         if not hostname:
             hostname = shortname
-        
+
         pText = getProjectText().lower()
+        if not namespace:
+            self._addErrors('You must supply a namespace' % pText)
         if not title:
             self._addErrors("You must supply a %s title"%pText)
         if not shortname:
@@ -510,7 +512,7 @@ class SiteHandler(WebHandler):
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance, shortname, prodtype, version, commitEmail)
+                    domainname, projecturl, blurb, appliance, shortname, namespace, prodtype, version, commitEmail)
                 
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
@@ -530,10 +532,10 @@ class SiteHandler(WebHandler):
         if not self._getErrors():
             # attempt to create the project version
             try:
-                versionId = self.client.addProductVersion(projectId, version);
+                versionId = self.client.addProductVersion(projectId, namespace, version);
                 pd = helperfuncs.sanitizeProductDefinition(title,
                         blurb, hostname, domainname, shortname, version,
-                        '', self.cfg.namespace)
+                        '', namespace)
                 self.client.setProductDefinitionForVersion(versionId, pd)
 
             except projects.DuplicateProductVersion, e: 

@@ -94,8 +94,11 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [6]
+SERVER_VERSIONS = [7]
 # XMLRPC Schema History
+# Version 7
+#  * Added package creator methods
+#  * Added namespace parameter to newPackage, addProductVersion
 # Version 6
 #  * Reworked exception marshalling API. All exceptions derived from MintError
 #    are now marshalled automatically.
@@ -519,7 +522,7 @@ class MintServer(object):
         pd = proddef.ProductDefinition()
         pd.setProductShortname(project.shortname)
         pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setConaryNamespace(version.namespace)
         pd.setProductVersion(version.name)
         try:
             pd.loadFromRepository(cclient)
@@ -735,6 +738,11 @@ class MintServer(object):
             raise InvalidShortname
         return None
 
+    def _validateNamespace(self, namespace):
+        v = helperfuncs.validateNamespace(namespace)
+        if v != True:
+            raise InvalidNamespace
+
     def _validateProductVersion(self, version):
         if not version:
             raise ProductVersionInvalid
@@ -742,10 +750,10 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -755,6 +763,11 @@ class MintServer(object):
         self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
         self._validateProductVersion(version)
+        if namespace:
+            self._validateNamespace(namespace)
+        else:
+            #If none was set use the default namespace set in config
+            namespace = self.cfg.namespace
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
             raise projects.InvalidProdType
 
@@ -772,7 +785,7 @@ class MintServer(object):
         # initial product definition
         pd = helperfuncs.sanitizeProductDefinition(projectName,
                 desc, hostname, domainname, shortname, version,
-                '', self.cfg.namespace)
+                '', namespace)
 
         label = pd.getDefaultLabel()
 
@@ -787,6 +800,7 @@ class MintServer(object):
                                       description = desc,
                                       hostname = hostname,
                                       domainname = domainname,
+                                      namespace = namespace,
                                       isAppliance = applianceValue,
                                       projecturl = projecturl,
                                       timeModified = time.time(),
@@ -4493,17 +4507,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, str, ((str, unicode),))
-    def addProductVersion(self, projectId, name, description):
+    @typeCheck(int, str, str, ((str, unicode),))
+    def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         
+        # Check the namespace
+        self._validateNamespace(namespace)
         # make sure it is a valid product version
         self._validateProductVersion(name)
         
         try:
+            # XXX: Should this add an entry to the labels table?
             return self.productVersions.new(projectId = projectId,
+                                                 namespace = namespace,
                                                  name = name,
                                                  description = description) 
         except DuplicateItem:
@@ -4683,7 +4701,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # we're using the session handle for both the dirname and the filename
         # of this instance, so we don't need the return value
         pc.startSession(dict(hostname=project.getFQDN(),
-            shortname=project.shortname, namespace=self.cfg.namespace,
+            shortname=project.shortname, namespace=version.namespace,
             version=version.name), mincfg)
 
         # Start the PCS session, and "upload" the data

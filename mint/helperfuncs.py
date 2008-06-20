@@ -535,6 +535,9 @@ def validateNamespace(ns):
     @param ns: a namespace to validate
     @return: True if valid, else a string explaining what is wrong
     """
+    if len(ns) > 16:
+        return "The namespace cannot be more than 16 characters long"
+
     valid = ns and "@" not in ns and ':' not in ns
     if not valid:
         return "The namespace can not contain '@' or ':'."

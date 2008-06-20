@@ -856,6 +856,7 @@ class ProductVersions(database.TableObject):
 
     __slots__ = ( 'productVersionId',
                   'projectId',
+                  'namespace',
                   'name',
                   'description',
                 )
@@ -869,6 +870,7 @@ class ProductVersionsTable(database.KeyedTable):
     key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
+               'namespace',
                'name',
                'description',
              ]

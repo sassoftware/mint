@@ -64,8 +64,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.getCreatorId() == 2)
-        assert([[x[2],x[3]] for x in project.getProductVersionList()] ==
-                [['FooV1', 'FooV1Description'],['FooV2', 'FooV2Description']])
+        assert([[x[2],x[3],x[4]] for x in project.getProductVersionList()] ==
+                [['ns', 'FooV1', 'FooV1Description'],['ns2', 'FooV2', 'FooV2Description']])
 
     @fixtures.fixture("Full")
     def testNewProjectError(self, db, data):
@@ -91,6 +91,22 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(ProductVersionInvalid, client.newProject, "Test", 
                           'barbar', MINT_PROJECT_DOMAIN, 
                            shortname="barbara", version="9 8")
+
+    @fixtures.fixture("Full")
+    def testNewProjectWithNamespace(self, db, data):
+        client = self.getClient('owner')
+        hostname=shortname = "foo2"
+        namespace = 'ns1'
+        newProjectId = client.newProject("Foo2", hostname, MINT_PROJECT_DOMAIN,
+                                         shortname=shortname,
+                                         namespace=namespace,
+                                         version='1.0', prodtype='Component')
+        project = client.getProject(newProjectId)
+
+        #Invalid product
+        self.assertRaises(InvalidNamespace, client.newProject, 'Foo3', hostname, MINT_PROJECT_DOMAIN,
+                                         shortname=shortname, namespace='0123456789abcdefg',
+                                         version='1.1', prodtype='Component')
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):

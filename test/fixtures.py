@@ -300,9 +300,9 @@ class FixtureCache(object):
         imagelessRelease.save()
 
         # create 2 product versions in the project
-        versionId = client.addProductVersion(projectId, 'FooV1',
+        versionId = client.addProductVersion(projectId, 'ns', 'FooV1',
                 'FooV1Description')
-        versionId2 = client.addProductVersion(projectId, 'FooV2',
+        versionId2 = client.addProductVersion(projectId, 'ns2', 'FooV2',
                 'FooV2Description')
 
         # create a group trove for the "foo" project

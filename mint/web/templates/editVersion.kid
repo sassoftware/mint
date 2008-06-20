@@ -10,6 +10,7 @@
     from mint.web.templatesupport import projectText
     from rpath_common.proddef import api1 as proddef
     for var in [ 'name',
+                 'namespace',
                  'description' ]:
         kwargs[var] = kwargs.get(var, '')
 ?>
@@ -247,6 +248,26 @@
                 <table border="0" cellspacing="0" cellpadding="0"
                     class="mainformhorizontal">
                     <tr>
+                        <th>
+                            <!--! namespace only required if creating new one -->
+                            <div py:if="not isNew">Namespace:</div>
+                            <em py:if="isNew" class="required">Namespace:</em>
+                        </th>
+                        <td py:if="isNew">
+                            <input type="text" autocomplete="off" name="namespace"
+                                value="${kwargs['namespace']}"/>
+                            <p class="help">
+                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
+                                Namespaces usually represent the organization behind the project, or the namespace of
+                                the project that is being derived.  Namespaces must start with an alphanumeric
+                                character and can be followed by any number of other alphanumeric characters.
+                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
+                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
+                            </p>
+                        </td>
+                        <td py:if="not isNew">${kwargs['namespace']}<input type="hidden" name="namespace" value="${kwargs['namespace']}" /></td>
+                    </tr>
+                     <tr>
                         <th>
                             <!--! version only required if creating new one -->
                             <div py:if="not isNew">Major Version:</div>

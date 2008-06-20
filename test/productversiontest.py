@@ -34,8 +34,8 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
                     ('0ver', 'another ver'), ('ver.3', 'ver 3')]
         
         for version in versions:
-            versionId = ownerClient.addProductVersion(projectId, version[0],
-                                                  description=version[1])
+            versionId = ownerClient.addProductVersion(projectId, self.cfg.namespace, 
+                                                  version[0], description=version[1])
             versionDict = ownerClient.getProductVersion(versionId)
             self.failUnlessEqual(version[0], versionDict['name'],
                                  'Name did not get set properly')
@@ -50,7 +50,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         """ Test adding a product version with no description. """
         projectId = data['projectId']
         ownerClient = self.getClient('owner')
-        versionId = ownerClient.addProductVersion(projectId, '1')
+        versionId = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1')
         versionDict = ownerClient.getProductVersion(versionId)
         self.failIf(versionDict['description'], "Description should be blank")
          
@@ -61,40 +61,50 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
             raise DuplicateProductVersion """
         projectId = data['projectId']
         ownerClient = self.getClient('owner')
-        versionId = ownerClient.addProductVersion(projectId, '1')
+        versionId = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1')
         
         self.failUnlessRaises(mint_error.DuplicateProductVersion,
                               ownerClient.addProductVersion,
-                              projectId, '1')
-        
+                              projectId, self.cfg.namespace, '1')
+
+        #This one should pass though
+        versionId = ownerClient.addProductVersion( projectId, self.cfg.namespace + '1', '1')
+        versionDict = ownerClient.getProductVersion(versionId)
+        self.assertEquals(versionDict['namespace'], self.cfg.namespace + "1")
+
     @fixtures.fixture("Full")
     def testAddInvalidProductVersion(self, db, data):
         """ Test attempting to add invalid versions. This should
             raise ProductVersionInvalid """
         projectId = data['projectId']
         ownerClient = self.getClient('owner')
-        
+
+        for symbol in [':', '@', 'aaaaaaaaaaaaaaa']:
+            self.failUnlessRaises(mint_error.InvalidNamespace,
+                                  ownerClient.addProductVersion,
+                                  projectId, 'n%ss' % symbol, 'v1.0')
+
         # Try various broken things; all should raise errors
         for symbol in ['_', '-', '@', '*', ' ']:
             # test adding with spaces
             self.failUnlessRaises(mint_error.ProductVersionInvalid,
                                   ownerClient.addProductVersion,
-                                  projectId, 'ver%sion' % symbol)
+                                  projectId, self.cfg.namespace, 'ver%sion' % symbol)
 
         for badVer in [' ', '2008 RC', '.', '..', '...', '.1', '1.' ]:
             # test adding with spaces
             self.failUnlessRaises(mint_error.ProductVersionInvalid,
                                   ownerClient.addProductVersion,
-                                  projectId, badVer)
+                                  projectId, self.cfg.namespace, badVer)
 
         # these should work, though
-        v1Id = ownerClient.addProductVersion(projectId, '1')
-        v2Id = ownerClient.addProductVersion(projectId, '1.0')
-        v3Id = ownerClient.addProductVersion(projectId, '1.1')
-        v4Id = ownerClient.addProductVersion(projectId, '0.1')
-        v5Id = ownerClient.addProductVersion(projectId, 'A1')
-        v6Id = ownerClient.addProductVersion(projectId, '1.A')
-        v7Id = ownerClient.addProductVersion(projectId, '2008')
+        v1Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1')
+        v2Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1.0')
+        v3Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1.1')
+        v4Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '0.1')
+        v5Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, 'A1')
+        v6Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '1.A')
+        v7Id = ownerClient.addProductVersion(projectId, self.cfg.namespace, '2008')
 
     @fixtures.fixture("Full")
     def testGetProductVersion(self, db, data):
@@ -146,6 +156,7 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
             c = self.getClient(username)
             self.failUnlessRaises(mint_error.PermissionDenied,
                                   c.addProductVersion, projectId,
+                                  self.cfg.namespace,
                                   '1_%s' % username)
         
         # these should work
@@ -164,13 +175,16 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         # There should be 2 versions.
         self.assertEquals(2, len(productVersions))
 
+        namespaces = ['ns', 'ns2']
         names = ['FooV1', 'FooV2']
         descriptions = ['FooV1Description', 'FooV2Description']
 
         for pv in productVersions:
-            names.pop(names.index(pv[2]))
-            descriptions.pop(descriptions.index(pv[3]))
+            namespaces.pop(namespaces.index(pv[2]))
+            names.pop(names.index(pv[3]))
+            descriptions.pop(descriptions.index(pv[4]))
 
+        self.assertEquals(0, len(namespaces))
         self.assertEquals(0, len(names))
         self.assertEquals(0, len(descriptions))
 
@@ -254,7 +268,7 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
         # add product version
-        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+        versionId = client.addProductVersion(projectId, 'foons', 'foo', 'foo version')
 
         page = self.fetchWithRedirect(
             '/project/testproject/editVersion?id=%d'%versionId,
@@ -275,7 +289,7 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('testuser', 'testpass')
 
         # add product version
-        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+        versionId = client.addProductVersion(projectId, self.cfg.namespace, 'foo', 'foo version')
 
         page = self.fetchWithRedirect(
            '/project/testproject/editVersion?id=%d'%versionId,
@@ -290,7 +304,7 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
         # add product version
-        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+        versionId = client.addProductVersion(projectId, 'foons', 'foo', 'foo version')
 
         page = self.fetchWithRedirect(
             '/project/testproject/editVersion?id=%d?linked=true'%versionId,
@@ -312,7 +326,7 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('testuser', 'testpass')
 
         # add product version
-        versionId = client.addProductVersion(projectId, 'foo', 'foo version')
+        versionId = client.addProductVersion(projectId, 'foons', 'foo', 'foo version')
 
         page = self.fetchWithRedirect(
            '/project/testproject/editVersion?id=%d&linked=true'%versionId,

@@ -95,6 +95,8 @@ class GroupTroveVersionError(MintError):
     "Invalid version for group: letters, numbers, periods allowed."
 class HtmlTagNotAllowed(MintError): pass
 class HtmlParseError(MintError): pass
+class InvalidNamespace(MintError):
+    "Invalid namespace: may not contain @ or : and may not be more than 16 characters"
 class InvalidShortname(MintError):
     "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
 class InvalidProdType(MintError):

@@ -134,7 +134,7 @@ content-type=text/plain
 
         @pcreator.backend.public
         def startSession(s, *args, **kwargs):
-            self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'yournamespace', 'hostname': 'foo.rpath.local2'})
+            self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
             return self.sesH

@@ -1186,10 +1186,13 @@ class ProjectHandler(WebHandler):
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             pd = self.client.getProductDefinitionForVersion(id)
+            kwargs['namespace'] = pd.getConaryNamespace()
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
             pd = proddef.ProductDefinition()
             helperfuncs.addDefaultStagesToProductDefinition(pd)
+            # XXX: this should be carried forward when images and other values are
+            kwargs['namespace'] = self.project.namespace
 
         return self._write("editVersion",
                 isNew = isNew,
@@ -1200,13 +1203,20 @@ class ProjectHandler(WebHandler):
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor,
             **kwargs):
 
         isNew = (id == -1)
+
+        if not namespace:
+            self._addErrors('Missing namespace')
+        else:
+            err = helperfuncs.validateNamespace(namespace)
+            if err != True:
+                self._addErrors(err)
 
         if not name:
             self._addErrors("Missing major version")
@@ -1228,7 +1238,7 @@ class ProjectHandler(WebHandler):
                     self.project.shortname,
                     name,
                     description,
-                    self.cfg.namespace,
+                    namespace,
                     pd)
 
         # Gather all grouped inputs
@@ -1329,7 +1339,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             if id == -1:
                 try:
                     id = self.client.addProductVersion(self.project.id,
-                            name, description)
+                            namespace, name, description)
                 except ProductVersionInvalid, e:
                     self._addErrors(str(e))
             else:

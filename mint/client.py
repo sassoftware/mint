@@ -28,7 +28,7 @@ from conary.deps import deps
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [6]
+CLIENT_VERSIONS = [7]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -49,7 +49,7 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version="", commitEmail=""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", namespace="", prodtype="",  version="", commitEmail=""):
         """
         Create a new project.
         @param name: name of new project
@@ -60,12 +60,14 @@ class MintClient:
         @param appliance: whether or not this project represents a
                a software appliance ('yes', 'no', 'unknown')
         @param shortname: the shortname of the product being created
+        @param namespace: for rBuilder Online, the namespace to use in the
+               first Product Version, not relevant for rBA
         @param prodtype: the type of product being created.
         @param version:  the initial product version.
         @param commitEmail: email address to which commit messages are sent.
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -805,8 +807,8 @@ class MintClient:
         return self.server.setBuildAMIDataSafe(buildId, outputToken,
                 amiId, amiManifestName)
 
-    def addProductVersion(self, projectId, name, description=''):
-        return self.server.addProductVersion(projectId, name, description)
+    def addProductVersion(self, projectId, namespace, name, description=''):
+        return self.server.addProductVersion(projectId, namespace, name, description)
 
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)

@@ -493,7 +493,10 @@ class WebProjectTest(WebProjectBaseTest):
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
 
-        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(refNamesRpl1) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(refNamesRaa) != set(troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
+
+        self.assertEquals(set(troveDict.keys()), set(refNamesRaa + refNamesRpl1))
 
 
     testsuite.context('more_cowbell')
