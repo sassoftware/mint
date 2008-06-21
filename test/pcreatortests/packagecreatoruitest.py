@@ -83,7 +83,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         raise testsuite.SkipTestException('session dir has been broken out from upload dir. this test needs to be corrected')
         class MockProdDef(object):
             name = 'mock'
-            getUpstreamSources = lambda *args, **kwargs: {}
+            getSearchPath = lambda *args, **kwargs: {}
             getFactorySources = lambda *args, **kwargs: {}
             getStages = lambda x: [x]
             getLabelForStage = lambda *args: 'localhost@rpl:linux'
@@ -104,7 +104,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         # ensure we have a viable session
         self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.sesH])
         self.assertEquals(wd.endswith(self.sesH), True)
-        refKeys = ['develStageLabel', 'productDefinition', 'upstreamSources',
+        refKeys = ['develStageLabel', 'productDefinition', 'searchPath',
                 'factorySources', 'mincfg']
         assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.sesH)))))
 
