@@ -93,9 +93,7 @@ import simplejson
                   <tr>
                   <th>Product Version</th>
                   <td>
-                    <select name="versionId">
-                      <option py:for="(vId, projectId, namespace, version_str, desc) in versions" value="${vId}" py:attr="'selected': ${vId==versionId and 'selected' or None}" py:content="'%s (%s)' % (version_str, namespace)"/>
-                    </select>
+                    ${versionSelection(dict(name='versionId'), versions, False)}
                   </td>
                   </tr>
                   <tr>

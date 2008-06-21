@@ -63,10 +63,10 @@ from mint.web.templatesupport import projectText
                         <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
                         <li py:if="versions and not external">
                             Edit ${projectText().lower()} version
-                            <select py:attrs="{'id': 'version', 'name': 'version', 'class': 'field'}" onchange="editVersionRedirect('${basePath}', this.options[this.selectedIndex].value);">
-                                <option py:if="versions" py:content="'--'" value="-1" selected="selected"/>
-                                <option py:for="ver in versions" py:content="'%s %s' % (ver[2], ver[3])" value="${ver[0]}"/>
-                            </select>
+                            <?python
+                            d = {'id':'version', 'name':'version', 'class':'field', 'onchange':"editVersionRedirect('" + basePath + "', this.options[this.selectedIndex].value);"}
+                            ?>
+                            ${versionSelection(d, versions, True)}
                         </li>
                     </ul>
                 </div>

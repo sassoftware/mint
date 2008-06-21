@@ -49,6 +49,20 @@
         </ul>
     </div>
 
+    <div py:def="versionSelection(attributes, versions, unselected)" py:strip="True">
+        <?python
+    v = set([x[2] for x in versions])
+    showNamespace = len(v) > 1
+        ?>
+        <select py:attrs="attributes">
+            <option py:if="unselected" value="-1" selected="selected">--</option>
+            <option py:for="ver in versions" value="${ver[0]}">
+                <div py:strip="True" py:if="showNamespace">${ver[3]} (${ver[2]})</div>
+                <div py:strip="True" py:if="not showNamespace">${ver[3]}</div>
+            </option>
+        </select>
+    </div>
+
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
         <?python
             projectUrl = project.getUrl()
