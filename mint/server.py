@@ -523,6 +523,7 @@ class MintServer(object):
         pd.setConaryRepositoryHostname(project.getFQDN())
         pd.setConaryNamespace(version.namespace)
         pd.setProductVersion(version.name)
+        pd.rebase(cclient, source = 'conary.rpath.com@rpl:2-devel')
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:

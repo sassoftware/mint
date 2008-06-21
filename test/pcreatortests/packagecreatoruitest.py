@@ -83,7 +83,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         raise testsuite.SkipTestException('session dir has been broken out from upload dir. this test needs to be corrected')
         class MockProdDef(object):
             name = 'mock'
-            getSearchPath = lambda *args, **kwargs: {}
+            getSearchPaths = lambda *args, **kwargs: {}
             getFactorySources = lambda *args, **kwargs: {}
             getStages = lambda x: [x]
             getLabelForStage = lambda *args: 'localhost@rpl:linux'
