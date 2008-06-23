@@ -114,7 +114,7 @@ import simplejson
             </div>
 
             <h3 style="color:#FF7001;">Step 1: Upload an Archive</h3>
-            <p>Select your binary archive (rpm, tarball) from your computer, or provide the URL.</p>
+            <p>Select your binary archive (rpm, tar archive) from your computer, or provide the URL.</p>
 
             <div style="display:none">
             <div id="upload_progress">
