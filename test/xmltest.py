@@ -161,7 +161,7 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(server._server.callWrapper('checkVersion',
                 ('anonymous', 'anonymous'), ('RBUILDER_CLIENT:0',)),
             (True, ('InvalidClientVersion', 'Invalid client version 0. '
-                'Server accepts client versions 6')))
+                'Server accepts client versions 7')))
 
 if __name__ == "__main__":
     testsuite.main()
