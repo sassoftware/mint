@@ -536,6 +536,9 @@ class SiteHandler(WebHandler):
             try:
                 versionId = self.client.addProductVersion(projectId, namespace, version);
                 pd = proddef.ProductDefinition()
+                pd = helperfuncs.sanitizeProductDefinition(title,
+                        blurb, hostname, domainname, shortname, version,
+                        '', namespace)
                 ##### DELETE #####
                 # this value was hard coded for the june 23, 2008 release of rBO
                 # this code must be removed when a proper solution is
@@ -545,9 +548,6 @@ class SiteHandler(WebHandler):
                 cClient = conaryclient.ConaryClient(cCfg)
                 pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
                 ##### END DELETE #####
-                pd = helperfuncs.sanitizeProductDefinition(title,
-                        blurb, hostname, domainname, shortname, version,
-                        '', namespace)
                 self.client.setProductDefinitionForVersion(versionId, pd)
 
             except projects.DuplicateProductVersion, e: 
