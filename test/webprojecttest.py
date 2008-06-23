@@ -468,11 +468,12 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'create packages' in page.body.lower()
+        assert 'create package' in page.body.lower()
         assert re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
+        raise testsuite.SkipTestException("This test relies on external repositories!")
         projectHandler = project.ProjectHandler()
         projectHandler.cfg = self.mintCfg
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'config'))
