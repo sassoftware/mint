@@ -276,7 +276,7 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
 def getProjectText():
     """Returns project if rBO and product if rBA"""
-    return isRBO() and "project" or "product"
+    return "product"
 
 def genPassword(length):
     """
