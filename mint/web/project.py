@@ -1297,24 +1297,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 ~!xorg-x11.xprint
 """)
 
-        # Process upstream sources
-        # XXX ProductDefinition object needs clearUpstreamSources()
-        pd.upstreamSources = proddef._UpstreamSources()
-        usources = collatedDict.get('pdusource',{})
-        for us in usources:
-            troveName, label = self._getValidatedUpstreamSource(us)
-            # add regardless of errors.  if an error occurred, we want the
-            # user to see what they entered.
-            pd.addUpstreamSource(troveName, label)
-
-        # add defaults if neccessary
-        # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
-        if not pd.getUpstreamSources():
-            pd.addUpstreamSource(troveName="group-rap-linux-service",
-                                 label="rap.rpath.com@rpath:linux-1")
-            pd.addUpstreamSource(troveName="group-os",
-                                 label="conary.rpath.com@rpl:1")
-
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
 
