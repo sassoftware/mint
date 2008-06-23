@@ -533,6 +533,16 @@ class SiteHandler(WebHandler):
             # attempt to create the project version
             try:
                 versionId = self.client.addProductVersion(projectId, namespace, version);
+                pd = prodded.ProductDefinition()
+                ##### DELETE #####
+                # this value was hard coded for the june 23, 2008 release of rBO
+                # this code must be removed when a proper solution is
+                # implemented
+                project = self.client.getProject(projectId)
+                cCfg = project.getConaryConfig()
+                cClient = conaryclient.ConaryClient(cCfg)
+                pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+                ##### END DELETE #####
                 pd = helperfuncs.sanitizeProductDefinition(title,
                         blurb, hostname, domainname, shortname, version,
                         '', namespace)

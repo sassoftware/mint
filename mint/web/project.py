@@ -1244,6 +1244,13 @@ class ProjectHandler(WebHandler):
         # generator. Otherwise, just get it from the repository.
         if isNew:
             pd = proddef.ProductDefinition()
+            ##### DELETE #####
+            # this value was hard coded for the june 23, 2008 release of rBO
+            # this code must be removed when a proper solution is implemented
+            cCfg = self.project.getConaryConfig()
+            cClient = conaryclient.ConaryClient(cCfg)
+            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+            ##### END DELETE #####
         else:
             version = self.client.getProductVersion(id)
             pd = self.client.getProductDefinitionForVersion(id)
