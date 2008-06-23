@@ -721,6 +721,9 @@ class ProjectHandler(WebHandler):
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
+        if not factories:
+            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
+            self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 sessionHandle = sessionHandle, factories = factories,
                 message = None)
