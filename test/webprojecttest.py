@@ -453,7 +453,7 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'create packages' not in page.body.lower()
+        assert 'create package' not in page.body.lower()
         assert not re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() not in page.body.lower()
 
