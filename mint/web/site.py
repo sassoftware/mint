@@ -498,7 +498,7 @@ class SiteHandler(WebHandler):
 
         pText = getProjectText().lower()
         if not namespace:
-            self._addErrors('You must supply a namespace' % pText)
+            self._addErrors('You must supply a %s namespace' % pText)
         if not title:
             self._addErrors("You must supply a %s title"%pText)
         if not shortname:
