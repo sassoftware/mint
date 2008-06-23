@@ -44,7 +44,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
                 server=self.getProjectServerHostname())
         assert 'version1' in page.body
         assert 'version2' in page.body
-        assert 'value="Create Package"' in page.body
+        assert 'value="Upload"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
         sessionHandle = match.groups()[0]
