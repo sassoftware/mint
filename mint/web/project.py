@@ -1262,7 +1262,7 @@ class ProjectHandler(WebHandler):
                     namespace,
                     pd)
 
-        if isNew:
+        if isNew and not self._getErrors():
             ##### DELETE #####
             # this value was hard coded for the june 23, 2008 release of rBO
             # this code must be removed when a proper solution is implemented

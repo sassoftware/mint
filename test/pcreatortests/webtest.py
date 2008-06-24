@@ -10,6 +10,7 @@ if '..' not in sys.path: sys.path.append('..')
 import testsuite
 testsuite.setup()
 import mint_rephelp
+import mock
 import webprojecttest
 from pcreator import factorydata
 
@@ -326,6 +327,35 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.assertEquals(self.called, True)
         self.assertEquals(client.getProductVersionListForProduct(projectId),
                 [[1, 1, 'foo', '1', '']])
+
+    def testEditVersionMissingValues(self):
+        methodName = 'processEditVersion'
+        cmd = 'testproject/processEditVersion'
+        fields = {'id': -1, 'namespace': 'foo', 'name': '', 'description': '',
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel'}
+
+        #set up the request
+        projectHandler = self._setupProjectHandler()
+        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', cmd)
+        auth = projectHandler.client.checkAuth()
+        projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
+        projectHandler.projectDict = {}
+
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+
+        #Mock out the product definition completely
+        self.mock(proddef, 'ProductDefinition', mock.mockClass(proddef.ProductDefinition))
+
+        #mock the write method, since we really want to see what was returned, instead of a rendered page
+        self.mock(projectHandler, '_write', lambda *a, **k: (a,k))
+
+        pagea, pagek = func(auth=auth, **fields)
+        #The primary result
+        self.assertEquals(pagea[0], 'editVersion')
+        self.assertEquals(projectHandler._getErrors(), ['Missing major version'])
+        # make sure that rebase did NOT get called
+        pagek['productDefinition'].rebase._mock.assertNotCalled()
 
     def testCreateProject(self):
         self.called = False
