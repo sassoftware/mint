@@ -101,7 +101,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         fields = {
             'uploadDirectoryHandle': 'foobarbaz',
             'versionId': '1',
-            'uploadfile': 'UPLOADED',
         }
         cmd = 'testproject/getPackageFactories'
 
