@@ -721,6 +721,9 @@ class ProjectHandler(WebHandler):
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
+        if not factories:
+            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
+            self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 sessionHandle = sessionHandle, factories = factories,
                 message = None)
@@ -1244,13 +1247,6 @@ class ProjectHandler(WebHandler):
         # generator. Otherwise, just get it from the repository.
         if isNew:
             pd = proddef.ProductDefinition()
-            ##### DELETE #####
-            # this value was hard coded for the june 23, 2008 release of rBO
-            # this code must be removed when a proper solution is implemented
-            cCfg = self.project.getConaryConfig()
-            cClient = conaryclient.ConaryClient(cCfg)
-            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
-            ##### END DELETE #####
         else:
             version = self.client.getProductVersion(id)
             pd = self.client.getProductDefinitionForVersion(id)
@@ -1265,6 +1261,15 @@ class ProjectHandler(WebHandler):
                     description,
                     namespace,
                     pd)
+
+        if isNew and not self._getErrors():
+            ##### DELETE #####
+            # this value was hard coded for the june 23, 2008 release of rBO
+            # this code must be removed when a proper solution is implemented
+            cCfg = self.project.getConaryConfig()
+            cClient = conaryclient.ConaryClient(cCfg)
+            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+            ##### END DELETE #####
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1296,24 +1301,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 ~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
 ~!xorg-x11.xprint
 """)
-
-        # Process upstream sources
-        # XXX ProductDefinition object needs clearUpstreamSources()
-        pd.upstreamSources = proddef._UpstreamSources()
-        usources = collatedDict.get('pdusource',{})
-        for us in usources:
-            troveName, label = self._getValidatedUpstreamSource(us)
-            # add regardless of errors.  if an error occurred, we want the
-            # user to see what they entered.
-            pd.addUpstreamSource(troveName, label)
-
-        # add defaults if neccessary
-        # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
-        if not pd.getUpstreamSources():
-            pd.addUpstreamSource(troveName="group-rap-linux-service",
-                                 label="rap.rpath.com@rpath:linux-1")
-            pd.addUpstreamSource(troveName="group-os",
-                                 label="conary.rpath.com@rpl:1")
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])

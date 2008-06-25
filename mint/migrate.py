@@ -382,6 +382,7 @@ class MigrateTo_45(SchemaMigration):
     # 45.5
     # - Add namespace column to Project
     def migrate5(self):
+        cu = self.db.cursor()
         add_columns(cu, 'Projects', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
         return True
 

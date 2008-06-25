@@ -47,6 +47,8 @@ from conary import versions
 from conary.deps import deps
 from conary import conarycfg, conaryclient
 
+from rpath_common.proddef import api1 as proddef
+
 BUFFER=1024 * 256
 
 class SiteHandler(WebHandler):
@@ -533,7 +535,10 @@ class SiteHandler(WebHandler):
             # attempt to create the project version
             try:
                 versionId = self.client.addProductVersion(projectId, namespace, version);
-                pd = prodded.ProductDefinition()
+                pd = proddef.ProductDefinition()
+                pd = helperfuncs.sanitizeProductDefinition(title,
+                        blurb, hostname, domainname, shortname, version,
+                        '', namespace)
                 ##### DELETE #####
                 # this value was hard coded for the june 23, 2008 release of rBO
                 # this code must be removed when a proper solution is
@@ -543,9 +548,6 @@ class SiteHandler(WebHandler):
                 cClient = conaryclient.ConaryClient(cCfg)
                 pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
                 ##### END DELETE #####
-                pd = helperfuncs.sanitizeProductDefinition(title,
-                        blurb, hostname, domainname, shortname, version,
-                        '', namespace)
                 self.client.setProductDefinitionForVersion(versionId, pd)
 
             except projects.DuplicateProductVersion, e: 
@@ -602,7 +604,7 @@ class SiteHandler(WebHandler):
             limit =  self.user and \
                     self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
-        if type == "Projects":
+        if type in ("Products", "Projects"):
             return self._projectSearch(search, modified, limit, offset, removed, not showAll)
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
@@ -765,7 +767,7 @@ class SiteHandler(WebHandler):
         else:
             extraParams = ";showAll=1"
         
-        return self._write("searchResults", searchType = pText.title(),
+        return self._write("searchResults", searchType = pText.title()+'s',
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
                 columns = columns, count = count, limit = limit,

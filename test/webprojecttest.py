@@ -15,6 +15,7 @@ import copy
 import mint_rephelp
 import fixtures
 from mint.web import project
+from mint.web import site
 from mint import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
 from mint import jobstatus
@@ -71,6 +72,27 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.errorMsgList = []
 
         return projectHandler
+
+    def _setupSiteHandler(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        siteHandler = site.SiteHandler()
+        siteHandler.client = client
+        siteHandler.cfg = self.mintCfg
+        siteHandler.req = rogueReq()
+        siteHandler.req.hostname = self.mintCfg.siteHost.split(':')[0]
+        siteHandler.auth = users.Authorization(\
+            token = ('testuser', 'testpass'))
+        siteHandler.auth.authorized = True
+        siteHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
+        siteHandler.basePath = self.mintCfg.basePath
+        siteHandler.searchType = None
+        siteHandler.searchTerms = ''
+        siteHandler.inlineMime = None
+        siteHandler.infoMsg = None
+        siteHandler.errorMsgList = []
+        siteHandler.session = {}
+
+        return siteHandler,  siteHandler.auth
 
 
 class WebProjectTest(WebProjectBaseTest):

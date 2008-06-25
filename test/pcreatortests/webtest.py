@@ -10,6 +10,7 @@ if '..' not in sys.path: sys.path.append('..')
 import testsuite
 testsuite.setup()
 import mint_rephelp
+import mock
 import webprojecttest
 from pcreator import factorydata
 
@@ -25,6 +26,8 @@ import re, os, StringIO
 import mint.mint_error
 import mint.web.webhandler
 from types import MethodType
+
+from rpath_common.proddef import api1 as proddef
 
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
@@ -84,6 +87,15 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.mock(projectHandler.client, methodName, MethodType(mockMethod, projectHandler.client))
 
         return projectHandler, auth
+
+    def _setupSiteHandlerMockClientMethod(self, methodName, mockMethod, requestName):
+        ### All this, just to monkeypatch the client
+        siteHandler, auth = self._setupSiteHandler()
+        siteHandler.req = mint_rephelp.FakeRequest(self.getServerHostname(), 'POST', requestName)
+        siteHandler.siteDict = {}
+        self.mock(siteHandler.client, methodName, MethodType(mockMethod, siteHandler.client))
+
+        return siteHandler, auth
 
     def _setupInterviewEnvironment(self, mockMethod):
         fields = {
@@ -287,6 +299,92 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
         self.assertEquals("A big long string", page)
+
+    def testEditVersionHardcodedValues(self):
+        self.called = False
+        def fakeRebase(pd, cclient, label):
+            self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
+            self.called = True
+        self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+
+        def fail(self, *args, **kwargs):
+            self.fail('this codepath should not have been taken')
+
+        methodName = 'processEditVersion'
+        cmd = 'testproject/processEditVersion'
+        fields = {'id': -1, 'namespace': 'foo', 'name': '1', 'description': '',
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel'}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductVersion', fail, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        try:
+            page = func(auth = auth, **fields)
+        except mint.web.webhandler.HttpMoved:
+            pass
+
+        client = projectHandler.client
+        projectId = projectHandler.projectId
+        self.assertEquals(self.called, True)
+        self.assertEquals(client.getProductVersionListForProduct(projectId),
+                [[1, 1, 'foo', '1', '']])
+
+    def testEditVersionMissingValues(self):
+        methodName = 'processEditVersion'
+        cmd = 'testproject/processEditVersion'
+        fields = {'id': -1, 'namespace': 'foo', 'name': '', 'description': '',
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel'}
+
+        #set up the request
+        projectHandler = self._setupProjectHandler()
+        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', cmd)
+        auth = projectHandler.client.checkAuth()
+        projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
+        projectHandler.projectDict = {}
+
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+
+        #Mock out the product definition completely
+        self.mock(proddef, 'ProductDefinition', mock.mockClass(proddef.ProductDefinition))
+
+        #mock the write method, since we really want to see what was returned, instead of a rendered page
+        self.mock(projectHandler, '_write', lambda *a, **k: (a,k))
+
+        pagea, pagek = func(auth=auth, **fields)
+        #The primary result
+        self.assertEquals(pagea[0], 'editVersion')
+        self.assertEquals(projectHandler._getErrors(), ['Missing major version'])
+        # make sure that rebase did NOT get called
+        pagek['productDefinition'].rebase._mock.assertNotCalled()
+
+    def testCreateProject(self):
+        self.called = False
+        def fakeRebase(pd, cclient, label):
+            self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
+            self.called = True
+        self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+
+        def fakeNewProject(*args, **kwargs):
+            return self.newProject(client)
+
+        def fakeSetProductDefinitionForVersion(*args, **kwargs):
+            pass
+
+        methodName = 'newProject'
+        cmd = '/createProject'
+        fields = {'title': 'Test Project', 'hostname': 'test', 'domainname': 'test', 'blurb': '', 'appliance': True, 'namespace': 'rpl', 'shortname': 'test', 'version': '1', 'prodtype': 'Appliance'}
+        siteHandler, auth = self._setupSiteHandlerMockClientMethod('1newProject', fakeNewProject, cmd)
+        siteHandler.client.setProductDefinitionForVersion = \
+                fakeSetProductDefinitionForVersion
+        context = {'auth': auth, 'cmd': cmd, 'client': siteHandler.client, 'fields': fields}
+        func = siteHandler.handle(context)
+        try:
+            page = func(auth = auth, **fields)
+        except mint.web.webhandler.HttpMoved:
+            pass
+
+        self.assertEquals(self.called, True)
+
 
 if __name__ == "__main__":
     testsuite.main()
