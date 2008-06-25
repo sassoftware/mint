@@ -362,12 +362,15 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     }
 
     timeStamp = time.ctime(time.time())
+    realHostName = socket.getfqdn()
 
     # Format large traceback to file
     (fd, tb_path) = tempfile.mkstemp('.txt', 'mint-error-')
     large = os.fdopen(fd, 'w')
-    print >>large, 'Unhandled exception from mint web interface:'
+    print >>large, 'Unhandled exception from mint web interface on %s:' \
+        % realHostName
     print >>large, 'Time of occurrence: %s' % timeStamp
+    print >>large, 'See also: %s' % tb_path
     print >>large
     conary_util.formatTrace(exception, e, bt, stream=large, withLocals=False)
     print >>large
@@ -382,7 +385,8 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
     # Format small traceback to memory
     small = conary_util.BoundedStringIO()
-    print >>small, 'Unhandled exception from mint web interface:'
+    print >>small, 'Unhandled exception from mint web interface on %s:' \
+        % realHostName
     conary_util.formatTrace(exception, e, bt, stream=small, withLocals=False)
     print >>small, 'Extended traceback at %s' % tb_path
     small.seek(0)
@@ -394,9 +398,13 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     small.seek(0)
 
     # send email
-    try:
-        extra = {'hostname': socket.getfqdn()}
+    base_exception = traceback.format_exception_only(exception, e)[-1].strip()
+    if cfg.rBuilderOnline:
+        subject = '%s: %s' % (realHostName, base_exception)
+    else:
+        extra = {'hostname': realHostName}
         subject = cfg.bugsEmailSubject % extra
+    try:
         if cfg.bugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.bugsEmail, subject, large.read())
