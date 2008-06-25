@@ -27,15 +27,9 @@ def cancel_signal(num, frame):
 
 signal.signal(signal.SIGUSR1, cancel_signal)
 
-open('/tmp/tickler.log', 'a').write('started\n')
-
 #Make this script testable
 if "GATEWAY_INTERFACE" in os.environ:
-    open('/tmp/tickler.log', 'a').write('uploading\n')
     cgitb.enable()
-
-    open('/tmp/tickler.log', 'a').write(str(os.environ) + '\n')
-    open('/tmp/tickler.log', 'a').write(os.getcwd() + '\n')
 
     #Read the mint configuration
     # RBUILDER_CONFIG is not always going to be defined to the proper path, so look it up
@@ -50,7 +44,5 @@ if "GATEWAY_INTERFACE" in os.environ:
         cfg.read(config.RBUILDER_CONFIG)
 
     wkdir = os.path.join(cfg.dataPath, 'tmp')
-    open('/tmp/tickler.log', 'a').write('whizzing\n')
     whizzyupload.handle_cgi_request(sys.stdin, sys.stdout, wkdir, 'rb-pc-upload-', os.environ)
-    open('/tmp/tickler.log', 'a').write('postwhizzing\n')
 
