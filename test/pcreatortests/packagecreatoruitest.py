@@ -232,6 +232,25 @@ content-type=text/plain
             del self.buildCalled
 
     @fixtures.fixture('Full')
+    def testSavePackageBadArgs(self, db, data):
+        self.client = self.getClient('owner')
+        self.sesH = self.client.createPackageTmpDir()
+        refH = 'bogusFactoryHandle'
+        @pcreator.backend.public
+        def raiseError(x, sesH, factH, data):
+            raise packagecreator.errors.PackageCreationFailedError("deliberately raised")
+        self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove',
+                raiseError)
+
+        def goodgfdfdd(*args):
+            return StringIO.StringIO('blah blah blah')
+        self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
+        err = self.assertRaises(mint.mint_error.PackageCreatorError,
+                self.client.savePackage, self.sesH, refH, {}, build = False)
+        self.assertEquals(str(err),
+                'Error attempting to create source trove: deliberately raised')
+
+    @fixtures.fixture('Full')
     def testGetPackageBuildStatusFailedBuild(self, db, data):
         self._set_up_path()
         @pcreator.backend.public

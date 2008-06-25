@@ -4745,6 +4745,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
         except packagecreator.errors.ConstraintsValidationError, err:
             raise PackageCreatorValidationError(*err.args)
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error attempting to create source trove: %s", str(err))
         if build:
             pc.build(sessionHandle, commit=True)
         return True
