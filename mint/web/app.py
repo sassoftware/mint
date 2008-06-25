@@ -18,6 +18,7 @@ from mint import database
 from mint import server
 from mint import shimclient
 from mint import users, userlevels
+from mint.helperfuncs import weak_signature_call
 from mint.mint_error import *
 from mint.session import SqlSession, COOKIE_NAME
 from mint.web import cache, fields
@@ -139,7 +140,7 @@ class MintApp(WebHandler):
             return tb
 
         try:
-            output = method(**d)
+            output = weak_signature_call(method, **d)
             if self.auth.authorized:
                 self.session.save()
             elif 'cacheable' in method.__dict__:
