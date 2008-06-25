@@ -193,7 +193,7 @@ class MintApacheServer(rephelp.ApacheServer):
                        os.environ['MINT_PATH'],
                        os.environ['MCP_PATH'], os.environ['PRODUCT_DEFINITION_PATH'],
                        os.environ['CONARY_PATH'], 
-                       os.environ['PACKAGE_CREATOR_PATH'], self.serverRoot,
+                       os.environ['PACKAGE_CREATOR_SERVICE_PATH'], self.serverRoot,
                        self.serverRoot))
             os.system(cmd)
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
