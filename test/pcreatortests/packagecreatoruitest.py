@@ -251,6 +251,33 @@ content-type=text/plain
                 'Error attempting to create source trove: deliberately raised')
 
     @fixtures.fixture('Full')
+    def testBuildPackageUnbuildable(self, db, data):
+        self.client = self.getClient('owner')
+        self.sesH = self.client.createPackageTmpDir()
+        refH = 'bogusFactoryHandle'
+        @pcreator.backend.public
+        def passThru(*args, **kwargs):
+            return "slide"
+        self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove', passThru)
+
+        @pcreator.backend.public
+        def raiseError(*args, **kwargs):
+            raise packagecreator.errors.UnbuildablePackage
+        self.mock(pcreator.backend.BaseBackend, '_build', raiseError)
+
+        def goodgfdfdd(*args):
+            return StringIO.StringIO('blah blah blah')
+        self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
+
+        # prove the build param is honored
+        self.client.savePackage(self.sesH, refH, {}, build = False)
+        err = self.assertRaises(mint.mint_error.PackageCreatorError,
+                self.client.savePackage, self.sesH, refH, {}, build = True)
+        self.assertEquals(str(err),
+                'Error attempting to build package: '
+                'Raised when a package cannot be built')
+
+    @fixtures.fixture('Full')
     def testGetPackageBuildStatusFailedBuild(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
