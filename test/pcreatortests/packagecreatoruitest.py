@@ -29,15 +29,15 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
     out certain pcreator.backend methods."""
 
     def _set_up_path(self):
-        self.sesH = u'99999'
+        self.uploadSes = u'99999'
         conary.lib.util.mkdirChain(os.path.join(self.cfg.dataPath, 'tmp',
-                'rb-pc-upload-%s' % self.sesH))
+                'rb-pc-upload-%s' % self.uploadSes))
         self.client = self.getClient("owner")
 
     def tearDown(self):
-        if hasattr(self, 'sesH') and self.sesH:
-            conary.lib.util.rmtree(packagecreator.getUploadDir(self.cfg, self.sesH))
-            self.sesH = None
+        if hasattr(self, 'uploadSes') and self.uploadSes:
+            conary.lib.util.rmtree(packagecreator.getUploadDir(self.cfg, self.uploadSes))
+            self.uploadSes = None
         fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
@@ -66,15 +66,15 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert not cancelUploadProcess(self.client.server._server, '99998', [])
 
-        assert cancelUploadProcess(self.client.server._server, self.sesH, ['some-fieldname'])
+        assert cancelUploadProcess(self.client.server._server, self.uploadSes, ['some-fieldname'])
 
     @fixtures.fixture('Full')
     def testCreatePkgTmpDir(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
 
         #Check to see that the directory was in fact created
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
@@ -89,9 +89,9 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
             getLabelForStage = lambda *args: 'localhost@rpl:linux'
         self.mock(pcreator.backend.BaseBackend, '_loadProductDefinitionFromProdDefDict', lambda *args: MockProdDef())
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
 
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
         pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']))
         project = self.client.getProject(data['projectId'])
@@ -102,11 +102,11 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         pc.startSession({}, mincfg)
         # ensure we have a viable session
-        self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.sesH])
-        self.assertEquals(wd.endswith(self.sesH), True)
+        self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.uploadSes])
+        self.assertEquals(wd.endswith(self.uploadSes), True)
         refKeys = ['develStageLabel', 'productDefinition', 'searchPath',
                 'factorySources', 'mincfg']
-        assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.sesH)))))
+        assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.uploadSes)))))
 
 
     #
@@ -117,7 +117,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self._set_up_path()
 
         #Create the manifest files
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
         if writeManifest:
             fup = whizzyupload.fileuploader(wd, 'uploadfile')
             i = open(fup.manifestfile, 'wt')
@@ -137,7 +137,7 @@ content-type=text/plain
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
-            return self.sesH
+            return '88889'
 
         if getPackageFactoriesMethod:
             getPackageFactoriesMethod._isPublic = True
@@ -148,12 +148,13 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testCreatePackage(self, db, data):
         def getCandidateBuildFactories(s, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             return [('rpm', basicXmlDef, {'a': 'b'})]
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        sesH, factories = self.client.getPackageFactories(projectId, self.sesH, 1, 'uploadfile')
+        sesH, factories = self.client.getPackageFactories(projectId, self.uploadSes, 1)
+        self.assertEquals(sesH, '88889')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})
@@ -162,22 +163,22 @@ content-type=text/plain
     def testCreatePackageNoManifest(self, db, data):
         self._setup_mocks(None, writeManifest=False)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.uploadSes, 1)
 
     @fixtures.fixture('Full')
     def testCreatePackageFactoriesError(self, db, data):
         def raises(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             raise packagecreator.errors.UnsupportedFileFormat('bogus error')
         self._setup_mocks(raises)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.uploadSes, 1)
 
 
     @fixtures.fixture('Full')
     def testSavePackage(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
         refH = 'bogusFactoryHandle'
         self.validateCalled = False
         self.buildCalled = False
@@ -185,7 +186,7 @@ content-type=text/plain
             @pcreator.backend.public
             def validateParams(x, sesH, factH, data):
                 self.validateCalled = True
-                self.assertEquals(sesH, self.sesH)
+                self.assertEquals(sesH, '88889')
                 self.assertEquals(factH, refH)
                 return True
             self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove',
@@ -194,7 +195,7 @@ content-type=text/plain
             @pcreator.backend.public
             def buildParams(x, sesH, commit):
                 self.buildCalled = True
-                self.assertEquals(sesH, self.sesH)
+                self.assertEquals(sesH, '88889')
                 self.assertEquals(commit, True)
                 return True
             self.mock(pcreator.backend.BaseBackend, '_build',
@@ -203,13 +204,13 @@ content-type=text/plain
             def goodgfdfdd(*args):
                 return StringIO.StringIO('blah blah blah')
             self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
-            self.client.savePackage(self.sesH, refH, {}, build = False)
+            self.client.savePackage('88889', refH, {}, build = False)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failIf(self.buildCalled, "The Build method was called, but shouldn't have been")
 
             #Try again with build
             self.validateCalled = False
-            self.client.savePackage(self.sesH, refH, {}, build = True)
+            self.client.savePackage('88889', refH, {}, build = True)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failUnless(self.buildCalled, "The Build method was never called")
 
@@ -222,7 +223,7 @@ content-type=text/plain
             self.validateCalled = False
             self.buildCalled = False
             try:
-                self.client.savePackage(self.sesH, refH, {}, build=True)
+                self.client.savePackage('88889', refH, {}, build=True)
             except mint.mint_error.PackageCreatorValidationError, err:
                 self.assertEquals(err.reasons, ['blah', 'bleh', 'blih'])
                 self.assertEquals(str(err), 'Field validation failed: blah, bleh, blih')
@@ -234,7 +235,7 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testSavePackageBadArgs(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
         refH = 'bogusFactoryHandle'
         @pcreator.backend.public
         def raiseError(x, sesH, factH, data):
@@ -246,7 +247,7 @@ content-type=text/plain
             return StringIO.StringIO('blah blah blah')
         self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
         err = self.assertRaises(mint.mint_error.PackageCreatorError,
-                self.client.savePackage, self.sesH, refH, {}, build = False)
+                self.client.savePackage, '88889', refH, {}, build = False)
         self.assertEquals(str(err),
                 'Error attempting to create source trove: deliberately raised')
 
@@ -282,42 +283,42 @@ content-type=text/plain
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), [True, -1, "fake build error"])
+        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error"])
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             return 'Some data'
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), 'Some data')
+        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), 'Some data')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogsFailure(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, self.sesH)
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, '88889')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogs(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             return 'Some Data'
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
-        self.assertEquals(self.client.getPackageBuildLogs(self.sesH), 'Some Data')
+        self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
 
 if __name__ == '__main__':
     testsuite.main()

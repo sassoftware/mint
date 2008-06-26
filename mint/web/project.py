@@ -704,7 +704,7 @@ class ProjectHandler(WebHandler):
             self._predirect('editVersion', temporary=True)
         return self._write('createPackage', message = '',
                 uploadDirectoryHandle = uploadDirectoryHandle,
-                versions = versions, versionId = -1)
+                versions = versions, versionId = -1, name=None)
 
     @writersOnly
     @strFields(uploadId=None, fieldname=None)
@@ -713,11 +713,12 @@ class ProjectHandler(WebHandler):
                 fieldname = fieldname, project = self.project.hostname)
 
     @writersOnly
-    @strFields(uploadDirectoryHandle=None, upload_url='')
-    @intFields(versionId=None)
-    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url):
+    @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
+    @intFields(versionId=-1)
+    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url, sessionHandle):
         try:
-            sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, upload_url)
+            #Start the session first
+            sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -729,11 +730,23 @@ class ProjectHandler(WebHandler):
                 message = None)
 
     @writersOnly
-    @strFields(name=None, label=None)
-    def maintainPackageInterview(self, name, label):
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def newUpload(self, name, label, prodVer, namespace):
+        """"""
+        #Start both the upload and the pc sessions
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
+        versions = []
+        sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
+        return self._write('createPackage', message = '',
+                uploadDirectoryHandle = uploadDirectoryHandle,
+                versions = [], versionId = -1, sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
+
+    @writersOnly
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def maintainPackageInterview(self, name, label, prodVer, namespace):
         """"""
         try:
-            sessionHandle, factories = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), "=".join((name,label)))
+            sessionHandle, factories = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -763,7 +776,7 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     def packageCreatorPackages(self, auth):
-        pkgList = [x.split('=') for x in self.client.getPackageCreatorPackages()]
+        pkgList = self.client.getPackageCreatorPackages(self.project.getId())
 
         return self._write('packageList', pkgList=pkgList, message=None)
 

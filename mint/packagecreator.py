@@ -176,7 +176,19 @@ def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     xmldatastream.seek(0)
     return xmldatastream
 
+def setupPCBackendCall(func):
+    """ This is useful if a private method is needed before a public method is called """
+    def PCBackendCallWrapper(s, *args, **kwargs):
+        #Grab the auth token if it exists
+        auth = getattr(s.server, '_auth')
+        if auth:
+            s.server._server.auth(auth)
+        return func(s, *args, **kwargs)
+    PCBackendCallWrapper.__wrapped_func__ = func
+    return PCBackendCallWrapper
+
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
+    @setupPCBackendCall
     def uploadData(self, sessionHandle, filePath):
         self.server._server._storeSessionValue( \
                 sessionHandle, 'filePath', filePath)
