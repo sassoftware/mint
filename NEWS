@@ -5,6 +5,9 @@ Internal Changes
 * A new api method, newBuildWithOptions, has been added. (RBL-2959)
 * Fixed a bug where a missing GROUP BY argument in an SQL statement was
   causing a traceback in MySQL. (RBL-2995)
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
 
 Changes in 4.1.0
 ================
