@@ -91,7 +91,8 @@ addLoadEvent(makeRequest);
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-            <h1>Package Creator - Build</h1>
+            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Package Creator - Build</h2>
             <h3>Step 3 of 3</h3>
 
             ${statusArea("Package Build")}

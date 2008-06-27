@@ -91,7 +91,8 @@ lang = None;
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-            <h1>Package Creator - Confirm Package Details</h1>
+            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Package Creator - Confirm Package Details</h2>
             <h3>Step 2 of 3</h3>
             <form name="savePackage" method="post" action="savePackage" id="savePackage">
                 <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
