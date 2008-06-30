@@ -441,7 +441,7 @@ class ProjectHandler(WebHandler):
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()
             thawedFlavor = deps.ThawFlavor(flavor)
-            arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+            arch = helperfuncs.getArchFromFlavor(thawedFlavor)
 
             return self._write("editBuild",
                 buildId = buildId,
@@ -517,7 +517,7 @@ class ProjectHandler(WebHandler):
         build.setName(name)
         build.setDesc(desc)
 
-        jobArch = distTroveFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        jobArch = helperfuncs.getArchFromFlavor(distTroveFlavor)
 
         # handle buildType check box state changes
         buildType = int(kwargs['buildtype'])

@@ -3388,10 +3388,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             archMap = {}
             for v, flavors in reversed(sorted(versionList[trove].items())):
                 for f in flavors:
-                    # skip broken groups that don't have an instruction set
-                    if deps.DEP_CLASS_IS not in f.members:
-                        continue
-                    arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
+                    arch = helperfuncs.getArchFromFlavor(f)
 
                     l = archMap.setdefault(arch, [])
                     l.append((v.asString(), v.freeze(), f.freeze()))
