@@ -3,26 +3,38 @@
 # Copyright (c) 2008 rPath, Inc.
 #
 
-import sys
-if '..' not in sys.path: sys.path.append('..')
+import os, sys
+# SUB_LEVEL is the number of levels beneath the main test dir that we are
+SUB_LEVEL = 1
+mainPath = os.path.dirname(os.path.abspath(__file__))
+for sub in range(SUB_LEVEL):
+    mainPath = os.path.dirname(mainPath)
+if mainPath not in sys.path: sys.path.append(mainPath)
 import testsuite
 testsuite.setup()
 
-import os
+import os, signal
+import SimpleHTTPServer
 
 import StringIO
 import conary.lib.util
+from conary.conaryclient import filetypes
+from conary import changelog
+from conary import versions
 
 import fixtures
+import mint_rephelp
 
 from mint import packagecreator
 from mint.web import whizzyupload
 from mint.server import deriveBaseFunc
 import mint.mint_error
 from conary.conarycfg import ConaryConfiguration
+from conary import conaryclient
 from factory_test.factorydatatest import basicXmlDef
 import pcreator
 from pcreator.factorydata import FactoryDefinition
+from pcreator import server as pcreatorServer
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
@@ -319,6 +331,248 @@ content-type=text/plain
             return 'Some Data'
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
         self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
+
+
+prodDef1 = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<productDefinition version="0.1" xmlns="http://www.rpath.com/permanent/rpd-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-1.0.xsd">
+   <productName>My Awesome Appliance</productName>
+   <productShortname>awesome</productShortname>
+   <productDescription>
+      This here is my awesome appliance.
+      Is it not nifty?
+      Worship the appliance.
+   </productDescription>
+   <productVersion>1.0</productVersion>
+   <productVersionDescription>
+      Version 1.0 features "stability" and "usefulness", which is a
+      vast improvement over our pre-release code.
+   </productVersionDescription>
+   <conaryRepositoryHostname>conary.example.com</conaryRepositoryHostname>
+   <conaryNamespace>mycompany</conaryNamespace>
+   <imageGroup>group-foo</imageGroup>
+   <baseFlavor>
+      ~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap,
+      ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU,
+      ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug,
+      ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl,
+      ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl,
+      ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux,
+      ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
+      ~!xen, ~!xfce, ~!xorg-x11.xprint
+   </baseFlavor>
+   <stages>
+      <stage labelSuffix="-devel" name="devel"/>
+      <stage labelSuffix="-qa" name="qa"/>
+      <stage labelSuffix="" name="release"/>
+   </stages>
+   <searchPaths>
+      <searchPath label="localhost@rpath:factories"
+troveName="group-rap-standard"/>
+troveName="group-postgres"/>
+   </searchPaths>
+   <factorySources>
+      <factorySource label="localhost@rpath:factories"
+troveName="group-factories"/>
+troveName="group-postgres"/>
+   </factorySources>
+   <buildDefinition>
+      <build baseFlavor="is: x86" name="x86 installableIso">
+         <installableIsoImage/>
+         <stage ref="devel"/>
+         <stage ref="qa"/>
+         <stage ref="release"/>
+         <imageGroup>group-os</imageGroup>
+      </build>
+      <build baseFlavor="is: x86_64" name="x86_64 installableIso">
+         <installableIsoImage/>
+         <stage ref="release"/>
+      </build>
+      <build baseFlavor="~xen, ~domU is: x86" name="x86 rawFs">
+         <rawFsImage freespace="1234"/>
+      </build>
+      <build baseFlavor="~xen, ~domU is: x86 x86_64" name="x86_64 rawHd">
+         <rawHdImage autoResolve="true" baseFileName="/proc/foo/moo"/>
+         <stage ref="devel"/>
+         <stage ref="qa"/>
+         <stage ref="release"/>
+         <imageGroup>group-os</imageGroup>
+      </build>
+      <build baseFlavor="~vmware is: x86 x86_64" name="x86_64 vmware">
+         <vmwareImage autoResolve="true" baseFileName="foobar"/>
+         <stage ref="release"/>
+         <imageGroup>group-bar</imageGroup>
+      </build>
+      <build baseFlavor="is: x86 x86_64" name="Virtual Iron Image">
+         <virtualIronImage />
+         <stage ref="release"/>
+         <imageGroup>group-bar</imageGroup>
+      </build>
+   </buildDefinition>
+</productDefinition>
+"""
+
+class FileHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    def log_message(self, *args, **kw):
+        pass
+
+    def do_GET(self):
+        fname = os.path.basename(self.path)
+        # Do we have this file?
+        fPath = os.path.join(testsuite.resources.factoryArchivePath, 'rpms',
+                             fname)
+        if not os.path.exists(fPath):
+            self.send_response(404)
+            self.end_headers()
+            return
+        # Get the file length
+        s = os.stat(fPath)
+        fileSize = s.st_size
+        del s
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-rpm")
+        self.send_header("Content-Length", fileSize)
+        self.end_headers()
+        util.copyStream(open(fPath), self.wfile)
+
+class ReposTests(mint_rephelp.MintRepositoryHelper):
+#class Disabled(object):
+    def startHTTPServer(self):
+        httpServer = mint_rephelp.rephelp.HTTPServerController(FileHandler)
+        return httpServer
+
+    def setUp(self):
+        mint_rephelp.MintRepositoryHelper.setUp(self)
+        self.httpServer = self.startHTTPServer()
+
+    def tearDown(self):
+        self.httpServer.close()
+        self.httpServer = None
+        mint_rephelp.MintRepositoryHelper.tearDown(self)
+
+    def _saveProdDef(self):
+        prodDefDict = dict(hostname = 'localhost', shortname = 'myprod',
+                 namespace = 'mycompany', version = '1.0')
+
+        self.openRepository(1)
+        client = conaryclient.ConaryClient(self.cfg)
+
+        # OK, we need to save the product definition first
+        pd = pcreator.backend.proddef.ProductDefinition(fromStream = prodDef1)
+        pd.setConaryRepositoryHostname('localhost')
+        pd.setConaryNamespace('mycompany')
+        pd.setProductShortname('myprod')
+        pd.setProductVersion('1.0')
+
+        pd.saveToRepository(client)
+        return prodDefDict
+
+    def _createFactories(self, recipesToBuild = ['factory-rpm']):
+        fakedTroves = [
+        'bzip2:runtime',
+        'conary-build:lib',
+        'conary-build:python',
+        'conary-build:runtime',
+        'conary:python',
+        'conary:runtime',
+        'cpio:runtime',
+        'filesystem:runtime',
+        'gzip:runtime',
+        'patch:runtime',
+        'python:lib',
+        'python:runtime',
+        'setup:runtime',
+        'sqlite:lib',
+        'tar:runtime',
+    ]
+        recipedir = conary.lib.util.joinPaths( \
+                os.environ.get('CONARY_FACTORY_TEST_PATH'), 'recipes')
+
+        if 'factory-base-packagecreator' not in recipesToBuild:
+            recipesToBuild.insert(0, 'factory-base-packagecreator')
+        client = self.getConaryClient()
+        repos = client.getRepos()
+        factoryLabel = versions.Label('localhost@rpath:factories')
+        for i, ft in enumerate(fakedTroves):
+            self.addComponent(ft, filePrimer = 1000 + i)
+        self.updatePkg(fakedTroves, noRestart = True)
+
+        # We need to change baseClassDir, otherwise the recipe lives in /tmp
+        # and doesn't get packaged
+        oldBaseClassDir = self.cfg.baseClassDir
+
+        oldBuildLabel = self.cfg.buildLabel
+        try:
+            self.cfg.baseClassDir = "/usr/share/conary/baseclasses"
+            self.cfg.buildLabel = factoryLabel
+
+            superclassContents = file(os.path.join(recipedir, 'rpm-import',
+                    "rpm-import.recipe")).read()
+            superclassContents = superclassContents.replace(
+                                "rpmUrl = ''",
+                                "rpmUrl = 'http://localhost:%s/some/path'" %
+                                            self.httpServer.port)
+
+            self.makeSourceTrove('rpm-import', superclassContents)
+
+            cookedFactories = []
+            for recipe in recipesToBuild:
+                recipePath = os.path.join(recipedir, recipe)
+                pathDict = {}
+                for fn in os.listdir(recipePath):
+                    fileObj = filetypes.RegularFile( \
+                            contents = open(os.path.join(recipePath, fn)))
+                    pathDict[fn] = fileObj
+                chLog = changelog.ChangeLog(name = 'test', contact = '')
+                factory = recipe.startswith('factory-') and 'factory' or None
+                cs = client.createSourceTrove('%s:source' % recipe,
+                        factoryLabel, '1.0', pathDict, chLog,
+                        factory = factory)
+                repos.commitChangeSet(cs)
+                built = self.cookFromRepository(recipe, logBuild = True)
+                # Grab the :recipe component
+                cookedFactories.append((recipe, built[0][1], built[0][2]))
+
+            # Now cook the group
+            trv = self.addCollection('group-factories', '1.0',
+                    cookedFactories)
+        finally:
+            self.cfg.buildLabel = oldBuildLabel
+            self.cfg.baseClassDir = oldBaseClassDir
+
+    def testUploadFileXMLRPC(self):
+        repos = self.openRepository()
+        pDefDict = self._saveProdDef()
+        self._createFactories(['factory-archive'])
+
+        packageCreatorURL = self.mintCfg.packageCreatorURL
+        pid = 0
+        try:
+            pccfg = pcreator.config.PackageCreatorServiceConfiguration()
+            pccfg.storagePath =  os.path.join(self.workDir,
+                    'pcreator', 'storagePath')
+            pccfg.tmpFileStorage = os.path.join(self.workDir,
+                    'pcreator', 'tmpFileStorage')
+            port, pid = pcreator.server.getServer(pccfg)
+            url = 'http://127.0.0.1:%s' % port
+            self.mintCfg.packageCreatorURL = url
+            client, userId = self.quickMintUser('testuser', 'testpass')
+            pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
+                    ('testuser', 'testpass'))
+            mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
+            sesH = pClient.startSession(pDefDict, mincfg)
+            tarFile = 'logrotate-3.7.1.tar.gz'
+            filePath = os.path.join(self.archiveDir, tarFile)
+            pClient.uploadData(sesH, open(filePath))
+            pClient.writeMetaFile(sesH, tarFile, 'application/x-rpm')
+            res = pClient.getCandidateBuildFactories(sesH)
+            self.assertEquals([x[0] for x in res],
+                    ['archive=/localhost@rpath:factories/1.0-1-1'])
+        finally:
+            if pid:
+                os.kill(pid, signal.SIGKILL)
+            self.mintCfg.packageCreatorURL = packageCreatorURL
+
 
 if __name__ == '__main__':
     testsuite.main()
