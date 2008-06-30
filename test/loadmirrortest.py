@@ -141,8 +141,6 @@ class LoadMirrorUnitTest(unittest.TestCase):
         from conary.repository.netrepos import netserver
         oldNetworkRepositoryServer = netserver.NetworkRepositoryServer
         netserver.NetworkRepositoryServer = mock.MockObject()
-        _getShim, helperfuncs._getShimServer = helperfuncs._getShimServer, \
-            lambda x: x
 
         try:
             callback = loadmirror.Callback('test.rpath.local', 1)
@@ -175,7 +173,6 @@ class LoadMirrorUnitTest(unittest.TestCase):
             util.rmtree(lm.sourceDir)
             loadmirror.call = oldCall
             netserver.NetworkRepositoryServer = oldNetworkRepositoryServer
-            helperfuncs._getShimServer = _getShim
 
 
 if __name__ == "__main__":
