@@ -152,10 +152,12 @@ class KeyedTable(DatabaseTable):
         else:
             return r[0]
 
-    def new(self, **kwargs):
+    def new(self, commit=True, **kwargs):
         """
         Adds a row to the database.
         @param kwargs: map of database column names to values.
+        @param commit: whether or not to automatically commit this
+          transaction after the statement has executed.
         @return: primary key id of new item.
         """
         # XXX fix to handle sequences
@@ -168,7 +170,8 @@ class KeyedTable(DatabaseTable):
 
         try:
             cu.execute(*[stmt] + values)
-            self.db.commit()
+            if commit:
+                self.db.commit()
         except sqlerrors.ColumnNotUnique:
             self.db.rollback()
             raise DuplicateItem(self.name)
@@ -178,10 +181,12 @@ class KeyedTable(DatabaseTable):
 
         return cu._cursor.lastrowid
 
-    def update(self, id, **kwargs):
+    def update(self, id, commit=True, **kwargs):
         """
         Updates a row in the database.
         @param id: primary key of row to update.
+        @param commit: whether or not to automatically commit this
+          transaction after the statement has executed.
         @param kwargs: map of column names to new values.
         @return: True on success
         @rtype: bool
@@ -195,7 +200,8 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         try:
             cu.execute(*[stmt] + values + [id])
-            self.db.commit()
+            if commit:
+                self.db.commit()
         except sqlerrors.ColumnNotUnique:
             self.db.rollback()
             raise DuplicateItem(self.name)
@@ -205,10 +211,12 @@ class KeyedTable(DatabaseTable):
 
         return True
 
-    def delete(self, id):
+    def delete(self, id, commit=True):
         """
         Deletes a row in the database.
         @param id: primary key of row to delete.
+        @param commit: whether or not to automatically commit this
+          transaction after the statement has executed.
         @return: True on success
         @rtype: bool
         """
@@ -216,7 +224,8 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         try:
             cu.execute(stmt, id)
-            self.db.commit()
+            if commit:
+                self.db.commit()
         except:
             self.db.rollback()
             raise
