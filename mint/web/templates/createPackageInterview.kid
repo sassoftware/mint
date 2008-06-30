@@ -183,7 +183,8 @@ lang = None;
 
                   <!-- End factory interview -->
                 </div>
-                <p><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
+                <p py:if="editing"><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
+                <p py:if="not editing"><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
             </form>
 
             <div style="display: none" id="factory_dumping_ground">

@@ -716,6 +716,10 @@ class ProjectHandler(WebHandler):
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
     @intFields(versionId=-1)
     def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url, sessionHandle):
+        if sessionHandle:
+            editing = True
+        else:
+            editing = False
         try:
             #Start the session first
             sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
@@ -726,8 +730,8 @@ class ProjectHandler(WebHandler):
             self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
             self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
-                sessionHandle = sessionHandle, factories = factories,
-                message = None)
+                editing = editing, sessionHandle = sessionHandle,
+                factories = factories, message = None)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
@@ -751,8 +755,8 @@ class ProjectHandler(WebHandler):
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
-                sessionHandle = sessionHandle, factories = factories,
-                message = None)
+                editing = True, sessionHandle = sessionHandle,
+                factories = factories, message = None)
 
     @writersOnly
     @strFields(sessionHandle=None, factoryHandle=None)
