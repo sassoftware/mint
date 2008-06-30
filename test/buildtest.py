@@ -1460,6 +1460,30 @@ class BuildTestConaryRepository(MintRepositoryHelper):
                 '/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN),
                 expected)])
 
+    @testsuite.tests('RBL-3011')
+    def testResolveExactExtraTrove(self):
+        '''
+        Test that, when given an exact NVF anaconda-custom, the group
+        flavor is not substituted in and the proper trove is found.
+        '''
+        client, userid = self.quickMintUser("test", "testpass")
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        # Add a simple trove
+        self.addComponent("test:runtime", "1.0")
+        coll = self.addCollection("test", "1.0",
+            [(":runtime", "1.0", deps.Flavor())])
+
+        # Try to grab the trove via resolveExtraTrove and an exact
+        # tuple. The group flavor should not taint the search for the
+        # extra trove since the frozen version hints at an exact
+        # spec.
+        foundSpec = project.resolveExtraTrove(coll.getName(),
+                "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
+                coll.getVersion().freeze(), coll.getFlavor().freeze())
+        self.failUnlessEqual(foundSpec, "%s=%s[%s]" % coll.getNameVersionFlavor())
+
 
 if __name__ == "__main__":
     testsuite.main()
