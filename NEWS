@@ -6,6 +6,10 @@ Bug Fixes
 
 * Extra troves such as anaconda-custom selected through the web
   interface are now properly included in builds. (RBL-3011)
+* Custom troves with names other than the default can now be used
+  in builds. (RBL-2957)
+* Packages with names starting with "kernel" that are not named "kernel"
+  will no longer be pinned by default in generated images. (RBL-3000)
 
 
 Changes in 4.1.0
