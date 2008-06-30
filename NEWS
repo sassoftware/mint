@@ -1,3 +1,13 @@
+Changes in 4.1.1
+================
+
+Bug Fixes
+---------------------
+
+* Extra troves such as anaconda-custom selected through the web
+  interface are now properly included in builds. (RBL-3011)
+
+
 Changes in 4.1.0
 ================
 
