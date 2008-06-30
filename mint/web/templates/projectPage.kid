@@ -74,8 +74,12 @@ from mint.web.templatesupport import projectText
                     <h2>Add ${projectText().title()} Contents</h2>
                     <ul>
                         <li>Create a <a href="${basePath}newBuild">new image</a></li>
-                        <li>Create a <a href="${basePath}newRelease">new release</a></li>
+                        <li py:if="isOwner">Create a <a href="${basePath}newRelease">new release</a></li>
                         <li>Create a <a href="${basePath}newPackage">new package</a></li>
+                    </ul>
+                    <h2>Maintain ${projectText().title()} Contents</h2>
+                    <ul>
+                        <li>Maintain <a href="${basePath}packageCreatorPackages">packages</a></li>
                     </ul>
                 </div>
                 <div py:if="auth.admin" py:strip="True">

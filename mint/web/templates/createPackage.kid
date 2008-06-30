@@ -80,7 +80,8 @@ import simplejson
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-            <h1>Package Creator</h1>
+              <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Package Creator<span py:if="name" py:strip="True"> - Editing ${name.replace(':source', '')}</span></h2>
             <h3>Step 1 of 3</h3>
             <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
                 <iframe id="${fieldname}_iframe" src="${src}" class="fileupload" frameborder="0"/>
@@ -92,8 +93,12 @@ import simplejson
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                   <tr>
                   <th>Product Version</th>
-                  <td>
+                  <td py:if='versions'>
                     ${versionSelection(dict(name='versionId'), versions, False)}
+                  </td>
+                  <td py:if="not versions">
+                    ${prodVer} (${namespace})
+                    <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
                   </td>
                   </tr>
                   <tr>

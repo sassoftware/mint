@@ -4658,9 +4658,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
         return mincfg
 
-    @typeCheck(int, ((str,unicode),), int, ((str,unicode),))
+    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
     @requiresAuth
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, upload_url):
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url):
         '''
             Given a file represented by L{uploadDirectoryHandle}, query the PC Service for
             possible factories to handle it.
@@ -4672,6 +4672,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @type uploadDirectoryHandle: string
             @param versionId: A product version ID
             @type versionId: int
+            @param sessionHandle: A sessionHandle.  If empty, one will be created
+            @type sessionHandle: string
             @param upload_url: Not used (yet)
             @type upload_url: string
 
@@ -4696,22 +4698,96 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
-        #Get the version object
-        version = projects.ProductVersions(self, versionId)
 
         #Register the file
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         project = projects.Project(self, projectId)
         mincfg = self._getMinCfg(project)
 
-        sesH = pc.startSession(dict(hostname=project.getFQDN(),
-            shortname=project.shortname, namespace=version.namespace,
-            version=version.name), mincfg)
+        if not sessionHandle:
+            #Get the version object
+            version = projects.ProductVersions(self, versionId)
+            sesH = pc.startSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=version.namespace,
+                version=version.name), mincfg)
+        else:
+            sesH = sessionHandle
 
         # Start the PCS session, and "upload" the data
         pc.uploadData(sesH, info['tempfile'])
         pc.writeMetaFile(sesH, info['filename'], info['content-type'])
 
+        return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
+
+    @requiresAuth
+    def getPackageCreatorPackages(self, projectId):
+        """
+            Return a list of all of the packages that are available for maintenance by the package creator UI.  This is done via a conary API call to retrieve all source troves with the PackageCreator troveInfo.
+            @param projectId: Project ID of the project for which to request the list
+            @type projectId: int
+
+            @rtype: list
+            @return: The list of packages
+        """
+        # Get the conary repository client
+        project = projects.Project(self, projectId)
+        repo = self._getProjectRepo(project)
+
+        troves = repo.getPackageCreatorTroves(project.getFQDN())
+        #Set up a dictionary structure
+        ret = dict()
+
+        for (n, v, f), sjdata in troves:
+            data = simplejson.loads(sjdata)
+            # First version
+            # We expect data to look like {'productDefinition':
+            # dict(hostname='repo.example.com', shortname='repo',
+            # namespace='rbo', version='2.0'), 'develStageLabel':
+            # 'repo.example.com@rbo:repo-2.0-devel'}
+
+            #Filter out labels that don't match the develStageLabel
+            label = v.trailingLabel()
+            if label != str(data['develStageLabel']):
+                pDefDict = data['productDefinition']
+                manip = ret.setdefault(pDefDict['version'], dict())
+                manipns = manip.setdefault(pDefDict['namespace'], dict())
+                manipns[n] = data
+        return ret
+
+    @requiresAuth
+    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
+        project = projects.Project(self, projectId)
+
+        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
+
+        return sesH
+
+    def _startPackageCreatorSession(self, project, prodVer, namespace, troveName, label):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        mincfg = self._getMinCfg(project)
+        try:
+            sesH = pc.startSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=namespace,
+                version=prodVer), mincfg, "%s=%s" % (troveName, label))
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error starting the package creator service session: %s", str(err))
+        return sesH, pc
+
+    @requiresAuth
+    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
+        """
+            Get the list of factories, but instead of using an uploaded file,
+            it uses the archive that is stored in the :source trove referred to
+            by C{troveSpec}.
+
+            @param projectId: Project ID
+            @type projectId: int
+            @param troveSpec:
+        """
+        project = projects.Project(self, projectId)
+        #start the session
+        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
         return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
 
     @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
@@ -4749,7 +4825,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PackageCreatorError( \
                     "Error attempting to create source trove: %s", str(err))
         if build:
-            pc.build(sessionHandle, commit=True)
+            try:
+                pc.build(sessionHandle, commit=True)
+            except packagecreator.errors.PackageCreatorError, err:
+                raise PackageCreatorError( \
+                        "Error attempting to build package: %s", str(err))
         return True
 
     @typeCheck(((str,unicode),))

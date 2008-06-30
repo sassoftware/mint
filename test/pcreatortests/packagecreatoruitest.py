@@ -3,41 +3,53 @@
 # Copyright (c) 2008 rPath, Inc.
 #
 
-import sys
-if '..' not in sys.path: sys.path.append('..')
+import os, sys
+# SUB_LEVEL is the number of levels beneath the main test dir that we are
+SUB_LEVEL = 1
+mainPath = os.path.dirname(os.path.abspath(__file__))
+for sub in range(SUB_LEVEL):
+    mainPath = os.path.dirname(mainPath)
+if mainPath not in sys.path: sys.path.append(mainPath)
 import testsuite
 testsuite.setup()
 
-import os
+import os, signal
+import SimpleHTTPServer
 
 import StringIO
 import conary.lib.util
+from conary.conaryclient import filetypes
+from conary import changelog
+from conary import versions
 
 import fixtures
+import mint_rephelp
 
 from mint import packagecreator
 from mint.web import whizzyupload
 from mint.server import deriveBaseFunc
 import mint.mint_error
 from conary.conarycfg import ConaryConfiguration
+from conary import conaryclient
 from factory_test.factorydatatest import basicXmlDef
 import pcreator
 from pcreator.factorydata import FactoryDefinition
+from pcreator import server as pcreatorServer
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
     out certain pcreator.backend methods."""
 
     def _set_up_path(self):
-        self.sesH = u'99999'
+        self.uploadSes = u'99999'
         conary.lib.util.mkdirChain(os.path.join(self.cfg.dataPath, 'tmp',
-                'rb-pc-upload-%s' % self.sesH))
+                'rb-pc-upload-%s' % self.uploadSes))
         self.client = self.getClient("owner")
 
     def tearDown(self):
-        if hasattr(self, 'sesH') and self.sesH:
-            conary.lib.util.rmtree(packagecreator.getUploadDir(self.cfg, self.sesH))
-            self.sesH = None
+        if hasattr(self, 'uploadSes') and self.uploadSes:
+            conary.lib.util.rmtree(packagecreator.getUploadDir(self.cfg, self.uploadSes))
+            self.uploadSes = None
         fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
@@ -66,15 +78,15 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         assert not cancelUploadProcess(self.client.server._server, '99998', [])
 
-        assert cancelUploadProcess(self.client.server._server, self.sesH, ['some-fieldname'])
+        assert cancelUploadProcess(self.client.server._server, self.uploadSes, ['some-fieldname'])
 
     @fixtures.fixture('Full')
     def testCreatePkgTmpDir(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
 
         #Check to see that the directory was in fact created
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
         assert os.path.isdir(wd), "The working directory for createPackage was not created"
 
@@ -89,9 +101,9 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
             getLabelForStage = lambda *args: 'localhost@rpl:linux'
         self.mock(pcreator.backend.BaseBackend, '_loadProductDefinitionFromProdDefDict', lambda *args: MockProdDef())
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
 
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
         pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']))
         project = self.client.getProject(data['projectId'])
@@ -102,11 +114,11 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         pc.startSession({}, mincfg)
         # ensure we have a viable session
-        self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.sesH])
-        self.assertEquals(wd.endswith(self.sesH), True)
+        self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.uploadSes])
+        self.assertEquals(wd.endswith(self.uploadSes), True)
         refKeys = ['develStageLabel', 'productDefinition', 'searchPath',
                 'factorySources', 'mincfg']
-        assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.sesH)))))
+        assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.uploadSes)))))
 
 
     #
@@ -117,7 +129,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         self._set_up_path()
 
         #Create the manifest files
-        wd = packagecreator.getUploadDir(self.cfg, self.sesH)
+        wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
         if writeManifest:
             fup = whizzyupload.fileuploader(wd, 'uploadfile')
             i = open(fup.manifestfile, 'wt')
@@ -137,7 +149,7 @@ content-type=text/plain
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
-            return self.sesH
+            return '88889'
 
         if getPackageFactoriesMethod:
             getPackageFactoriesMethod._isPublic = True
@@ -148,12 +160,13 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testCreatePackage(self, db, data):
         def getCandidateBuildFactories(s, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             return [('rpm', basicXmlDef, {'a': 'b'})]
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        sesH, factories = self.client.getPackageFactories(projectId, self.sesH, 1, 'uploadfile')
+        sesH, factories = self.client.getPackageFactories(projectId, self.uploadSes, 1)
+        self.assertEquals(sesH, '88889')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
         self.assertEquals(factories[0][2], {'a': 'b'})
@@ -162,22 +175,22 @@ content-type=text/plain
     def testCreatePackageNoManifest(self, db, data):
         self._setup_mocks(None, writeManifest=False)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.uploadSes, 1)
 
     @fixtures.fixture('Full')
     def testCreatePackageFactoriesError(self, db, data):
         def raises(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             raise packagecreator.errors.UnsupportedFileFormat('bogus error')
         self._setup_mocks(raises)
         projectId = data['projectId']
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.sesH, 1, 'uploadfile')
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.uploadSes, 1)
 
 
     @fixtures.fixture('Full')
     def testSavePackage(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
         refH = 'bogusFactoryHandle'
         self.validateCalled = False
         self.buildCalled = False
@@ -185,7 +198,7 @@ content-type=text/plain
             @pcreator.backend.public
             def validateParams(x, sesH, factH, data):
                 self.validateCalled = True
-                self.assertEquals(sesH, self.sesH)
+                self.assertEquals(sesH, '88889')
                 self.assertEquals(factH, refH)
                 return True
             self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove',
@@ -194,7 +207,7 @@ content-type=text/plain
             @pcreator.backend.public
             def buildParams(x, sesH, commit):
                 self.buildCalled = True
-                self.assertEquals(sesH, self.sesH)
+                self.assertEquals(sesH, '88889')
                 self.assertEquals(commit, True)
                 return True
             self.mock(pcreator.backend.BaseBackend, '_build',
@@ -203,13 +216,13 @@ content-type=text/plain
             def goodgfdfdd(*args):
                 return StringIO.StringIO('blah blah blah')
             self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
-            self.client.savePackage(self.sesH, refH, {}, build = False)
+            self.client.savePackage('88889', refH, {}, build = False)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failIf(self.buildCalled, "The Build method was called, but shouldn't have been")
 
             #Try again with build
             self.validateCalled = False
-            self.client.savePackage(self.sesH, refH, {}, build = True)
+            self.client.savePackage('88889', refH, {}, build = True)
             self.failUnless(self.validateCalled, "The validate method was never called")
             self.failUnless(self.buildCalled, "The Build method was never called")
 
@@ -222,7 +235,7 @@ content-type=text/plain
             self.validateCalled = False
             self.buildCalled = False
             try:
-                self.client.savePackage(self.sesH, refH, {}, build=True)
+                self.client.savePackage('88889', refH, {}, build=True)
             except mint.mint_error.PackageCreatorValidationError, err:
                 self.assertEquals(err.reasons, ['blah', 'bleh', 'blih'])
                 self.assertEquals(str(err), 'Field validation failed: blah, bleh, blih')
@@ -234,7 +247,7 @@ content-type=text/plain
     @fixtures.fixture('Full')
     def testSavePackageBadArgs(self, db, data):
         self.client = self.getClient('owner')
-        self.sesH = self.client.createPackageTmpDir()
+        self.uploadSes = self.client.createPackageTmpDir()
         refH = 'bogusFactoryHandle'
         @pcreator.backend.public
         def raiseError(x, sesH, factH, data):
@@ -246,51 +259,320 @@ content-type=text/plain
             return StringIO.StringIO('blah blah blah')
         self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
         err = self.assertRaises(mint.mint_error.PackageCreatorError,
-                self.client.savePackage, self.sesH, refH, {}, build = False)
+                self.client.savePackage, '88889', refH, {}, build = False)
         self.assertEquals(str(err),
                 'Error attempting to create source trove: deliberately raised')
+
+    @fixtures.fixture('Full')
+    def testBuildPackageUnbuildable(self, db, data):
+        self.client = self.getClient('owner')
+        self.sesH = self.client.createPackageTmpDir()
+        refH = 'bogusFactoryHandle'
+        @pcreator.backend.public
+        def passThru(*args, **kwargs):
+            return "slide"
+        self.mock(pcreator.backend.BaseBackend, '_makeSourceTrove', passThru)
+
+        @pcreator.backend.public
+        def raiseError(*args, **kwargs):
+            raise packagecreator.errors.UnbuildablePackage
+        self.mock(pcreator.backend.BaseBackend, '_build', raiseError)
+
+        def goodgfdfdd(*args):
+            return StringIO.StringIO('blah blah blah')
+        self.mock(packagecreator, 'getFactoryDataFromDataDict', goodgfdfdd)
+
+        # prove the build param is honored
+        self.client.savePackage(self.sesH, refH, {}, build = False)
+        err = self.assertRaises(mint.mint_error.PackageCreatorError,
+                self.client.savePackage, self.sesH, refH, {}, build = True)
+        self.assertEquals(str(err),
+                'Error attempting to build package: '
+                'Raised when a package cannot be built')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatusFailedBuild(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), [True, -1, "fake build error"])
+        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error"])
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH, commit):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             return 'Some data'
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus(self.sesH), 'Some data')
+        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), 'Some data')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogsFailure(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
-        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, self.sesH)
+        self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageBuildLogs, '88889')
 
     @fixtures.fixture('Full')
     def testGetPackageBuildLogs(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
         def validateParams(x, sesH):
-            self.assertEquals(sesH, self.sesH)
+            self.assertEquals(sesH, '88889')
             return 'Some Data'
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
-        self.assertEquals(self.client.getPackageBuildLogs(self.sesH), 'Some Data')
+        self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
+
+
+prodDef1 = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<productDefinition version="0.1" xmlns="http://www.rpath.com/permanent/rpd-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-1.0.xsd">
+   <productName>My Awesome Appliance</productName>
+   <productShortname>awesome</productShortname>
+   <productDescription>
+      This here is my awesome appliance.
+      Is it not nifty?
+      Worship the appliance.
+   </productDescription>
+   <productVersion>1.0</productVersion>
+   <productVersionDescription>
+      Version 1.0 features "stability" and "usefulness", which is a
+      vast improvement over our pre-release code.
+   </productVersionDescription>
+   <conaryRepositoryHostname>conary.example.com</conaryRepositoryHostname>
+   <conaryNamespace>mycompany</conaryNamespace>
+   <imageGroup>group-foo</imageGroup>
+   <baseFlavor>
+      ~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap,
+      ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU,
+      ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug,
+      ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl,
+      ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl,
+      ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux,
+      ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware,
+      ~!xen, ~!xfce, ~!xorg-x11.xprint
+   </baseFlavor>
+   <stages>
+      <stage labelSuffix="-devel" name="devel"/>
+      <stage labelSuffix="-qa" name="qa"/>
+      <stage labelSuffix="" name="release"/>
+   </stages>
+   <searchPaths>
+      <searchPath label="localhost@rpath:factories"
+troveName="group-rap-standard"/>
+troveName="group-postgres"/>
+   </searchPaths>
+   <factorySources>
+      <factorySource label="localhost@rpath:factories"
+troveName="group-factories"/>
+troveName="group-postgres"/>
+   </factorySources>
+   <buildDefinition>
+      <build baseFlavor="is: x86" name="x86 installableIso">
+         <installableIsoImage/>
+         <stage ref="devel"/>
+         <stage ref="qa"/>
+         <stage ref="release"/>
+         <imageGroup>group-os</imageGroup>
+      </build>
+      <build baseFlavor="is: x86_64" name="x86_64 installableIso">
+         <installableIsoImage/>
+         <stage ref="release"/>
+      </build>
+      <build baseFlavor="~xen, ~domU is: x86" name="x86 rawFs">
+         <rawFsImage freespace="1234"/>
+      </build>
+      <build baseFlavor="~xen, ~domU is: x86 x86_64" name="x86_64 rawHd">
+         <rawHdImage autoResolve="true" baseFileName="/proc/foo/moo"/>
+         <stage ref="devel"/>
+         <stage ref="qa"/>
+         <stage ref="release"/>
+         <imageGroup>group-os</imageGroup>
+      </build>
+      <build baseFlavor="~vmware is: x86 x86_64" name="x86_64 vmware">
+         <vmwareImage autoResolve="true" baseFileName="foobar"/>
+         <stage ref="release"/>
+         <imageGroup>group-bar</imageGroup>
+      </build>
+      <build baseFlavor="is: x86 x86_64" name="Virtual Iron Image">
+         <virtualIronImage />
+         <stage ref="release"/>
+         <imageGroup>group-bar</imageGroup>
+      </build>
+   </buildDefinition>
+</productDefinition>
+"""
+
+class FileHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    def log_message(self, *args, **kw):
+        pass
+
+    def do_GET(self):
+        fname = os.path.basename(self.path)
+        # Do we have this file?
+        fPath = os.path.join(testsuite.resources.factoryArchivePath, 'rpms',
+                             fname)
+        if not os.path.exists(fPath):
+            self.send_response(404)
+            self.end_headers()
+            return
+        # Get the file length
+        s = os.stat(fPath)
+        fileSize = s.st_size
+        del s
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-rpm")
+        self.send_header("Content-Length", fileSize)
+        self.end_headers()
+        util.copyStream(open(fPath), self.wfile)
+
+class ReposTests(mint_rephelp.MintRepositoryHelper):
+#class Disabled(object):
+    def startHTTPServer(self):
+        httpServer = mint_rephelp.rephelp.HTTPServerController(FileHandler)
+        return httpServer
+
+    def setUp(self):
+        mint_rephelp.MintRepositoryHelper.setUp(self)
+        self.httpServer = self.startHTTPServer()
+
+    def tearDown(self):
+        self.httpServer.close()
+        self.httpServer = None
+        mint_rephelp.MintRepositoryHelper.tearDown(self)
+
+    def _saveProdDef(self):
+        prodDefDict = dict(hostname = 'localhost', shortname = 'myprod',
+                 namespace = 'mycompany', version = '1.0')
+
+        self.openRepository(1)
+        client = conaryclient.ConaryClient(self.cfg)
+
+        # OK, we need to save the product definition first
+        pd = pcreator.backend.proddef.ProductDefinition(fromStream = prodDef1)
+        pd.setConaryRepositoryHostname('localhost')
+        pd.setConaryNamespace('mycompany')
+        pd.setProductShortname('myprod')
+        pd.setProductVersion('1.0')
+
+        pd.saveToRepository(client)
+        return prodDefDict
+
+    def _createFactories(self, recipesToBuild = ['factory-rpm']):
+        fakedTroves = [
+        'bzip2:runtime',
+        'conary-build:lib',
+        'conary-build:python',
+        'conary-build:runtime',
+        'conary:python',
+        'conary:runtime',
+        'cpio:runtime',
+        'filesystem:runtime',
+        'gzip:runtime',
+        'patch:runtime',
+        'python:lib',
+        'python:runtime',
+        'setup:runtime',
+        'sqlite:lib',
+        'tar:runtime',
+    ]
+        recipedir = conary.lib.util.joinPaths( \
+                os.environ.get('CONARY_FACTORY_TEST_PATH'), 'recipes')
+
+        if 'factory-base-packagecreator' not in recipesToBuild:
+            recipesToBuild.insert(0, 'factory-base-packagecreator')
+        client = self.getConaryClient()
+        repos = client.getRepos()
+        factoryLabel = versions.Label('localhost@rpath:factories')
+        for i, ft in enumerate(fakedTroves):
+            self.addComponent(ft, filePrimer = 1000 + i)
+        self.updatePkg(fakedTroves, noRestart = True)
+
+        # We need to change baseClassDir, otherwise the recipe lives in /tmp
+        # and doesn't get packaged
+        oldBaseClassDir = self.cfg.baseClassDir
+
+        oldBuildLabel = self.cfg.buildLabel
+        try:
+            self.cfg.baseClassDir = "/usr/share/conary/baseclasses"
+            self.cfg.buildLabel = factoryLabel
+
+            superclassContents = file(os.path.join(recipedir, 'rpm-import',
+                    "rpm-import.recipe")).read()
+            superclassContents = superclassContents.replace(
+                                "rpmUrl = ''",
+                                "rpmUrl = 'http://localhost:%s/some/path'" %
+                                            self.httpServer.port)
+
+            self.makeSourceTrove('rpm-import', superclassContents)
+
+            cookedFactories = []
+            for recipe in recipesToBuild:
+                recipePath = os.path.join(recipedir, recipe)
+                pathDict = {}
+                for fn in os.listdir(recipePath):
+                    fileObj = filetypes.RegularFile( \
+                            contents = open(os.path.join(recipePath, fn)))
+                    pathDict[fn] = fileObj
+                chLog = changelog.ChangeLog(name = 'test', contact = '')
+                factory = recipe.startswith('factory-') and 'factory' or None
+                cs = client.createSourceTrove('%s:source' % recipe,
+                        factoryLabel, '1.0', pathDict, chLog,
+                        factory = factory)
+                repos.commitChangeSet(cs)
+                built = self.cookFromRepository(recipe, logBuild = True)
+                # Grab the :recipe component
+                cookedFactories.append((recipe, built[0][1], built[0][2]))
+
+            # Now cook the group
+            trv = self.addCollection('group-factories', '1.0',
+                    cookedFactories)
+        finally:
+            self.cfg.buildLabel = oldBuildLabel
+            self.cfg.baseClassDir = oldBaseClassDir
+
+    def testUploadFileXMLRPC(self):
+        repos = self.openRepository()
+        pDefDict = self._saveProdDef()
+        self._createFactories(['factory-archive'])
+
+        packageCreatorURL = self.mintCfg.packageCreatorURL
+        pid = 0
+        try:
+            pccfg = pcreator.config.PackageCreatorServiceConfiguration()
+            pccfg.storagePath =  os.path.join(self.workDir,
+                    'pcreator', 'storagePath')
+            pccfg.tmpFileStorage = os.path.join(self.workDir,
+                    'pcreator', 'tmpFileStorage')
+            port, pid = pcreator.server.getServer(pccfg)
+            url = 'http://127.0.0.1:%s' % port
+            self.mintCfg.packageCreatorURL = url
+            client, userId = self.quickMintUser('testuser', 'testpass')
+            pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
+                    ('testuser', 'testpass'))
+            mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
+            sesH = pClient.startSession(pDefDict, mincfg)
+            tarFile = 'logrotate-3.7.1.tar.gz'
+            filePath = os.path.join(self.archiveDir, tarFile)
+            pClient.uploadData(sesH, open(filePath))
+            pClient.writeMetaFile(sesH, tarFile, 'application/x-rpm')
+            res = pClient.getCandidateBuildFactories(sesH)
+            self.assertEquals([x[0] for x in res],
+                    ['archive=/localhost@rpath:factories/1.0-1-1'])
+        finally:
+            if pid:
+                os.kill(pid, signal.SIGKILL)
+            self.mintCfg.packageCreatorURL = packageCreatorURL
+
 
 if __name__ == '__main__':
     testsuite.main()

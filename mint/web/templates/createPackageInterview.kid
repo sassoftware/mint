@@ -91,7 +91,8 @@ lang = None;
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-            <h1>Package Creator - Confirm Package Details</h1>
+            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Package Creator - Confirm Package Details</h2>
             <h3>Step 2 of 3</h3>
             <form name="savePackage" method="post" action="savePackage" id="savePackage">
                 <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
@@ -182,7 +183,8 @@ lang = None;
 
                   <!-- End factory interview -->
                 </div>
-                <p><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
+                <p py:if="editing"><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
+                <p py:if="not editing"><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
             </form>
 
             <div style="display: none" id="factory_dumping_ground">
