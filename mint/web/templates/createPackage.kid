@@ -81,7 +81,7 @@ import simplejson
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-            <h2>Package Creator<span py:if="name" py:strip="True"> - Editing ${name}</span></h2>
+            <h2>Package Creator<span py:if="name" py:strip="True"> - Editing ${name.replace(':source', '')}</span></h2>
             <h3>Step 1 of 3</h3>
             <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
                 <iframe id="${fieldname}_iframe" src="${src}" class="fileupload" frameborder="0"/>
