@@ -1,4 +1,4 @@
-
+#
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 # All rights reserved
@@ -6,9 +6,7 @@
 
 from conary import versions
 from conary.deps import arch, deps
-from conary.repository import shimclient
 from conary.repository.errors import RoleAlreadyExists
-from conary.repository.netrepos import netserver
 
 from mint import constants
 from mint import buildtypes
@@ -343,20 +341,7 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
     return dicts
 
 
-def _getShimServer(repos):
-    # Delete me as soon as addUserToRepository and addUserByMD5ToRepository
-    # can safely use a shim to add users to a role. (CNY-2862)
-
-    if isinstance(repos, (shimclient.NetworkRepositoryServer,
-      netserver.NetworkRepositoryServer)):
-        return repos
-    elif isinstance(repos, shimclient.ShimNetClient):
-        return repos.c._server._server
-    else:
-        raise TypeError("Don't know how to get repository from %r" % repos)
-
-
-def addUserToRepository(repos, username, password, role, label=None):
+def addUserToRepository(repos, username, password, role=None, label=None):
     """
     Add a user to the repository
     """
@@ -367,21 +352,21 @@ def addUserToRepository(repos, username, password, role, label=None):
             # who cares
             pass
         repos.addUser(label, username, password)
-        # XXX: This is WRONG, but conary offers no API to either add a
-        # user or to get the list of users for a role! Instead, we end
-        # up blowing away any other members of the role.
-        repos.updateRoleMembers(label, role, [username])
+        if role:
+            repos.addRoleMember(label, role, username)
     else:
-        repos = _getShimServer(repos)
         try:
             repos.auth.addRole(role)
         except RoleAlreadyExists:
             # who cares
             pass
         repos.auth.addUser(username, password)
-        repos.auth.addRoleMember(role, username)
+        if role:
+            repos.auth.addRoleMember(role, username)
 
-def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
+
+def addUserByMD5ToRepository(repos, username, password, salt,
+  role=None, label=None):
     """
     Add a user to the repository
     """
@@ -392,19 +377,17 @@ def addUserByMD5ToRepository(repos, username, password, salt, role, label=None):
             # who cares
             pass
         repos.addUserByMD5(label, username, salt, password)
-        # XXX: This is WRONG, but conary offers no API to either add a
-        # user or to get the list of users for a role! Instead, we end
-        # up blowing away any other members of the role.
-        repos.updateRoleMembers(label, role, [username])
+        if role:
+            repos.addRoleMember(label, role, username)
     else:
-        repos = _getShimServer(repos)
         try:
             repos.auth.addRole(role)
         except RoleAlreadyExists:
             # who cares
             pass
         repos.auth.addUserByMD5(username, salt, password)
-        repos.auth.addRoleMember(role, username)
+        if role:
+            repos.auth.addRoleMember(role, username)
 
 
 def deleteUserFromRepository(repos, username, label=None, deleteRole=True):
