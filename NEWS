@@ -8,6 +8,7 @@ Internal Changes
 * The default search settings in the web interface was not being set
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)
+* The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
 
 Changes in 4.1.0
 ================
