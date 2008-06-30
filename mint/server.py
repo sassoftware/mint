@@ -2338,8 +2338,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             replaceFlavor = True
             if specialTroveVersion:
                 try:
-                    specialTroveVersion = \
-                        versions.ThawVersion(specialTroveVersion)
+                    versions.ThawVersion(specialTroveVersion)
                 except:
                     # Not a frozen version; replacing the flavor is OK
                     replaceFlavor = True
