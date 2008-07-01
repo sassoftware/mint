@@ -92,8 +92,8 @@
                         
                         <tr>
                             <td colspan="2">
-                                <p><strong>EC2 Settings:</strong>
-                                <a href="http://${SITE}cloudSettings">Edit EC2 Settings</a></p>
+                                <p><strong>Amazon EC2 Settings:</strong>
+                                <a href="http://${SITE}cloudSettings">Edit Settings</a></p>
                             </td>
                         </tr>
                         
