@@ -24,22 +24,21 @@
               <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
               <h2>Package Creator - Available Packages</h2>
 
+              <?python
+              nscount = set([])
+              for w,x in pkgList.iteritems():
+                  nscount.update(x.keys())
+              ?>
+              <div py:if="not pkgList">No packages available, <a href="newPackage">create</a> one. </div>
               <div py:for="version in sorted(pkgList.keys())" class="mailingListButtons">
 
                 <div py:for="namespace in sorted(pkgList[version].keys())" py:strip="True">
-                  <h3 py:if="len(pkgList[version]) == 1">Product Version ${version}</h3>
-                  <h3 py:if="len(pkgList[version]) != 1">Product Version ${version} (${namespace})</h3>
+                  <h3 py:if="len(nscount) == 1">Product Version ${version}</h3>
+                  <h3 py:if="len(nscount) != 1">Product Version ${version} (${namespace})</h3>
 
                   <?python
                   troveList = pkgList[version][namespace]
                   ?>
-                  <!--
-{u'1': {'zope:s  ource': {u'develStageLabel': u'foo.rdu.rpath.com@f:foo-1-devel',
-    u'productDe  finition': {u'hostname': u'foo.rdu.rpath.com',
-    u'namespace  ': u'f',
-    u'shortname  ': u'foo',
-    u'version':   u'1'}}}}
-    -->
                   <div py:for="troveName in sorted(troveList.keys())" py:strip="True">
                     <?python
                     data = troveList[troveName]

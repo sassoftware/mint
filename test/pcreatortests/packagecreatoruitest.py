@@ -175,6 +175,19 @@ content-type=text/plain
         self.assertEquals(factories[0][2], {'a': 'b'})
 
     @fixtures.fixture('Full')
+    def testCreatePackagePreExistSession(self, db, data):
+        def getCandidateBuildFactories(s, sesH):
+            self.assertEquals(sesH, 'session_handle_test')
+            return [('rpm', basicXmlDef, {'a': 'b'})]
+        self._setup_mocks(getCandidateBuildFactories)
+        projectId = data['projectId']
+        sesH, factories = self.client.getPackageFactories(projectId, self.uploadSes, 1, 'session_handle_test')
+        self.assertEquals(sesH, 'session_handle_test')
+        self.assertEquals(factories[0][0], 'rpm')
+        assert isinstance(factories[0][1], FactoryDefinition)
+        self.assertEquals(factories[0][2], {'a': 'b'})
+
+    @fixtures.fixture('Full')
     def testCreatePackageNoManifest(self, db, data):
         self._setup_mocks(None, writeManifest=False)
         projectId = data['projectId']
@@ -189,6 +202,26 @@ content-type=text/plain
         projectId = data['projectId']
         self.assertRaises(mint.mint_error.PackageCreatorError, self.client.getPackageFactories, projectId, self.uploadSes, 1)
 
+    @fixtures.fixture('Full')
+    def testStartPackageCreatorSession(self, db, data):
+        @pcreator.backend.public
+        def startSession(*args):
+            return 'asdfasdfasdfasdfsdf'
+        self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
+        self.client = self.getClient('owner')
+        sesH = self.client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
+        self.assertEquals(sesH, 'asdfasdfasdfasdfsdf')
+
+    @fixtures.fixture('Full')
+    def testStartPackageCreatorSessionFail(self, db, data):
+        @pcreator.backend.public
+        def startSession(*args):
+            raise packagecreator.errors.ProductDefinitionTroveNotFound()
+        self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
+        self.client = self.getClient('owner')
+        self.assertRaises(mint.mint_error.PackageCreatorError,
+            self.client.startPackageCreatorSession,1, '3', 'yournamespace', 'foo',
+            'bar.baz.com@yournamespace:baz-3-devel')
 
     @fixtures.fixture('Full')
     def testSavePackage(self, db, data):
