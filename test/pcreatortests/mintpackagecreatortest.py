@@ -148,8 +148,7 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
         rpmFileName = 'tags-1.2-3.noarch.rpm'
         rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
                             rpmFileName)
-        fileH = pClient.uploadData(sesH, file(rpmf))
-        pClient.writeMetaFile(sesH, rpmFileName, "application/x-rpm")
+        pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
 
         #This is throwaway, but you have to call it to cache the factory data
         #definitions
@@ -159,6 +158,16 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
             'rpm-redhat=/localhost1@pc:factory/1.0-1-1',
             packagecreatortest.expectedFactories1[0][3])
         self.assertEquals(foo.getvalue(), '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<factoryData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.org/permanent/factorydata-1.0.xsd factorydata-1.0.xsd">\n  <field>\n    <name>description</name>\n    <type>str</type>\n    <value>Some Description</value>\n  </field>\n  <field>\n    <name>version</name>\n    <type>str</type>\n    <value>1.2</value>\n  </field>\n  <field>\n    <name>name</name>\n    <type>str</type>\n    <value>tags</value>\n  </field>\n  <field>\n    <name>license</name>\n    <type>str</type>\n    <value>Some License</value>\n  </field>\n  <field>\n    <name>summary</name>\n    <type>str</type>\n    <value>Some Summary</value>\n  </field>\n</factoryData>\n')
+
+        rpmFileName = 'foo-0.3-1.noarch.rpm'
+        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+                            rpmFileName)
+        pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
+        self.assertEquals(sorted(pClient.server._server._getSessionValue( \
+                sesH, 'currentFiles').keys()),
+                ['foo-0.3-1.noarch.rpm', 'tags-1.2-3.noarch.rpm'])
+
+
 
 if __name__ == '__main__':
     testsuite.main()
