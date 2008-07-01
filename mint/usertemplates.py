@@ -35,12 +35,12 @@ class searchResultsPerPage(IntegerOption):
     default = 10
     prompt = 'Number of search/browse entries to show per page'
     
-class awsAccountId(StringOption):
+class awsAccountNumber(StringOption):
     default = ''
-    prompt = 'Account ID:'
-    help = 'Please enter your Amazon Web Services account identifier.'
+    prompt = 'Account Number:'
+    help = 'Please enter your Amazon Web Services account number.'
     
-class awsAccessKeyId(StringOption):
+class awsPublicAccessKeyId(StringOption):
     default = ''
     prompt = 'Access Key ID:'
     help = 'Please enter your Amazon Web Services access key identifier.'
@@ -67,7 +67,7 @@ class UserPrefsNoAttTemplate(Template):
 
 # Template for AWS settings
 class UserPrefsAWSTemplate(Template):
-    __slots__ = ['awsAccountId', 'awsAccessKeyId', 'awsSecretAccessKey']
+    __slots__ = ['awsAccountNumber', 'awsPublicAccessKeyId', 'awsSecretAccessKey']
 
 class UserPrefsInvisibleTemplate(Template):
     if isRBO():
