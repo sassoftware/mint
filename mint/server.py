@@ -4428,16 +4428,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getActiveLaunchedAMIs(self):
         return self.launchedAMIs.getActive()
 
-    @typeCheck(int)
+    @typeCheck(tuple, int)
     @private
-    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
-    @typeCheck(int)
+    @typeCheck(tuple, int)
     @private
-    def launchAMIInstance(self, blessedAMIId):
+    def launchAMIInstance(self, authToken, blessedAMIId):
         # get blessed instance
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
@@ -4465,7 +4465,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             userData = None
 
         # attempt to boot it up
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
                 useNATAddressing=self.cfg.ec2UseNATAddressing)
@@ -4482,10 +4482,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 launchedAt = toDatabaseTimestamp(),
                 userData = userData)
 
+    @typeCheck(tuple)
     @requiresAdmin
     @private
-    def terminateExpiredAMIInstances(self):
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+    def terminateExpiredAMIInstances(self, authToken):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
         for launchedAMIId, ec2InstanceId in instancesToKill:

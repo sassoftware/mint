@@ -795,14 +795,15 @@ class MintClient:
         return [self.getLaunchedAMI(x) for x in \
                 self.server.getActiveLaunchedAMIs()]
 
-    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
-        return self.server.getLaunchedAMIInstanceStatus(launchedAMIId)
+    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        return self.server.getLaunchedAMIInstanceStatus(authToken,
+                                                        launchedAMIId)
 
-    def launchAMIInstance(self, blessedAMIId):
-        return self.server.launchAMIInstance(blessedAMIId)
+    def launchAMIInstance(self, authToken, blessedAMIId):
+        return self.server.launchAMIInstance(authToken, blessedAMIId)
 
-    def terminateExpiredAMIInstances(self):
-        return self.server.terminateExpiredAMIInstances()
+    def terminateExpiredAMIInstances(self, authToken):
+        return self.server.terminateExpiredAMIInstances(authToken)
 
     def extendLaunchedAMITimeout(self, launchedAMIId):
         return self.server.extendLaunchedAMITimeout(launchedAMIId)

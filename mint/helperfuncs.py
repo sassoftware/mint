@@ -568,3 +568,13 @@ def weak_signature_call(_func, *args, **kwargs):
         keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
             if arg in argnames)
     return _func(*args, **keep_args)
+
+def buildEC2AuthToken(cfg):
+        """
+        Convenience function to build the EC2 auth token from the config data
+        """
+        at = ()
+        if cfg:
+            at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
+        
+        return at

@@ -17,7 +17,7 @@ from boto.exception import EC2ResponseError
 from mint import ec2
 from mint.mint_error import *
 
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
+from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, buildEC2AuthToken
 from conary.lib import util
 
 import fixtures
@@ -27,13 +27,14 @@ FAKE_PRIVATE_KEY = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
 class FakeEC2Connection(object):
 
-    def __init__(self, awsPublicKey, awsPrivateKey):
-        self.awsPublicKey = awsPublicKey
-        self.awsPrivateKey = awsPrivateKey
+    def __init__(self, (accountId, accessKey, secretKey)):
+        self.accountId = accountId
+        self.accessKey = accessKey
+        self.secretKey = secretKey
 
     def _checkKeys(self):
-        if self.awsPublicKey != FAKE_PUBLIC_KEY or \
-                self.awsPrivateKey != FAKE_PRIVATE_KEY:
+        if self.accessKey != FAKE_PUBLIC_KEY or \
+                self.secretKey != FAKE_PRIVATE_KEY:
             raise EC2ResponseError()
 
     def run_instances(self, amiId, user_data=None, addressing_type = 'public'):
@@ -72,8 +73,8 @@ class FakeEC2ResultSet(object):
         self.instances = instances
         pass
 
-def getFakeEC2Connection(awsPublicKey, awsPrivateKey):
-    return FakeEC2Connection(awsPublicKey, awsPrivateKey)
+def getFakeEC2Connection(accessKey, secretKey):
+    return FakeEC2Connection((None, accessKey, secretKey))
 
 class Ec2Test(fixtures.FixturedUnitTest):
 
@@ -190,8 +191,8 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
-        instanceId = client.launchAMIInstance(amiIds[0])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                                              amiIds[0])
         self.failUnlessEqual(1, instanceId)
 
         instance = client.getLaunchedAMI(instanceId)
@@ -204,10 +205,12 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
-        instanceId = client.launchAMIInstance(amiIds[0])
-        instanceId2 = client.launchAMIInstance(amiIds[1])
-        instanceId3 = client.launchAMIInstance(amiIds[2])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                                              amiIds[0])
+        instanceId2 = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                                               amiIds[1])
+        instanceId3 = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                                               amiIds[2])
 
         activeAMIs = client.getActiveLaunchedAMIs()
         self.failUnlessEqual([instanceId, instanceId2, instanceId3],
@@ -223,7 +226,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         # kill 'em
         self.failUnlessEqual([instanceId, instanceId3],
-                client.terminateExpiredAMIInstances())
+                client.terminateExpiredAMIInstances(buildEC2AuthToken(self.cfg)))
         del activeAMIs
 
         # there better only be one active now
@@ -237,7 +240,8 @@ Please log in via raa using the following password. %(raaPassword)s"""
         amiIds = data['amiIds']
         for i in range(0, self.cfg.ec2MaxInstancesPerIP):
             try:
-                client.launchAMIInstance(amiIds[0])
+                client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                                         amiIds[0])
             except ec2.TooManyAMIInstancesPerIP:
                 self.fail()
 
@@ -249,7 +253,8 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         # but this should
         self.assertRaises(ec2.TooManyAMIInstancesPerIP,
-                client.launchAMIInstance, amiIds[0])
+                client.launchAMIInstance, buildEC2AuthToken(self.cfg), 
+                amiIds[0])
 
         # this should not fail
         #try:
@@ -262,10 +267,11 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
-        instanceId = client.launchAMIInstance(amiIds[0])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg),
+                                              amiIds[0])
 
-        state, dns_name = client.getLaunchedAMIInstanceStatus(instanceId)
+        state, dns_name = client.getLaunchedAMIInstanceStatus(
+                              buildEC2AuthToken(self.cfg), instanceId)
         self.failUnlessEqual(state, 'pending')
         self.failIf(dns_name)
 
@@ -273,17 +279,15 @@ Please log in via raa using the following password. %(raaPassword)s"""
     def testLaunchNonexistentAMIInstance(self, db, data):
         client = self.getClient("admin")
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
         self.assertRaises(ec2.FailedToLaunchAMIInstance,
-                client.launchAMIInstance, 3431)
+                client.launchAMIInstance, buildEC2AuthToken(self.cfg), 3431)
 
     @fixtures.fixture("EC2")
     def testExtendInstanceTTL(self, db, data):
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
-        instanceId = client.launchAMIInstance(amiIds[0])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), amiIds[0])
 
         blessedAMI = client.getBlessedAMI(amiIds[0])
         launchedAMI = client.getLaunchedAMI(instanceId)
@@ -301,8 +305,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
-        instanceId = client.launchAMIInstance(amiIds[0])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), amiIds[0])
 
         blessedAMI = client.getBlessedAMI(amiIds[0])
         blessedAMIUserDataTemplate = \
@@ -322,7 +325,8 @@ conaryproxy = http://proxy.hostname.com/proxy/
         blessedAMI.userDataTemplate = blessedAMIUserDataTemplate
         blessedAMI.save()
 
-        instanceId = client.launchAMIInstance(amiIds[0])
+        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg),
+                                              amiIds[0])
         launchedAMIInstance = client.getLaunchedAMI(instanceId)
 
         self.failUnless('rapadminpassword = password' in

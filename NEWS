@@ -11,6 +11,8 @@ Internal Changes
 * The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
 * The user settings page now contains fields for entering EC2 credentials.
   (RBL-3029)
+* The backend now allows EC2 calls to be run using user supplied credentials.
+  (RBL-3039)
 
 Web Front End Changes
 ---------------------

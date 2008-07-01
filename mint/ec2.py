@@ -84,10 +84,13 @@ class BlessedAMI(database.TableObject):
 
 class EC2Wrapper(object):
 
-    __slots__ = ( 'ec2conn', )
+    __slots__ = ( 'ec2conn', 'accountId', 'accessKey', 'secretKey')
 
-    def __init__(self, cfg):
-        self.ec2conn = boto.connect_ec2(cfg.awsPublicKey, cfg.awsPrivateKey)
+    def __init__(self, (accountId, accessKey, secretKey)):
+        self.accountId = accountId
+        self.accessKey = accessKey
+        self.secretKey = secretKey
+        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey)
 
     def launchInstance(self, ec2AMIId, userData=None, useNATAddressing=False):
 
@@ -118,4 +121,3 @@ class EC2Wrapper(object):
             return True
         except EC2ResponseError:
             return False
-

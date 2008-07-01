@@ -198,8 +198,9 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    awsPublicKey            = None
-    awsPrivateKey           = None
+    awsAccountId            = (cfgtypes.CfgString, '', "The AWS account id")
+    awsPublicKey            = (cfgtypes.CfgString, '', "The AWS public key")
+    awsPrivateKey           = (cfgtypes.CfgString, '', "The AWS private key")
 
     # AMI configuration data
     ec2PublicKey            = None

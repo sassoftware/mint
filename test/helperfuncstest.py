@@ -13,6 +13,7 @@ import sys
 import tempfile
 
 import mint_rephelp
+from mint import config
 from mint import copyutils
 from mint import templates
 from mint import flavors
@@ -622,6 +623,19 @@ Much like Powdermilk Biscuits[tm]."""
         # invalid should return string text explainign what is wrong
         text = validateNamespace("rpl@blah")
         self.assertTrue(isinstance(text, str))
+        
+    def testBuildEC2AuthToken(self):
+        
+        # test empty
+        cfg = None
+        self.assertTrue(buildEC2AuthToken(cfg) == ())
+        
+        # test with daya
+        cfg = config.MintConfig()
+        cfg.awsAccountId = 'accountId'
+        cfg.awsPublicKey = 'awsPublicKey'
+        cfg.awsPrivateKey = 'awsPrivateKey'
+        self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
         
 
 if __name__ == "__main__":
