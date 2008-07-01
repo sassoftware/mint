@@ -27,6 +27,7 @@ import mint_rephelp
 
 from mint import packagecreator
 from mint.web import whizzyupload
+from mint_rephelp import MINT_HOST, MINT_DOMAIN
 from mint.server import deriveBaseFunc
 import mint.mint_error
 from conary.conarycfg import ConaryConfiguration
@@ -554,7 +555,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             pccfg.tmpFileStorage = os.path.join(self.workDir,
                     'pcreator', 'tmpFileStorage')
             port, pid = pcreator.server.getServer(pccfg)
-            url = 'http://127.0.0.1:%s' % port
+            url = 'http://%s.%s:%s' % (MINT_HOST, MINT_DOMAIN, port)
             self.mintCfg.packageCreatorURL = url
             client, userId = self.quickMintUser('testuser', 'testpass')
             pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
