@@ -14,6 +14,7 @@ kid_files = \
 	builds.kid		\
 	createPackage.kid	\
 	createPackageInterview.kid \
+	cloudSettings.kid	\
 	confirmEmail.kid	\
 	confirmPublish.kid	\
 	confirm.kid		\

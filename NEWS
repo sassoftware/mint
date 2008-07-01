@@ -9,6 +9,8 @@ Internal Changes
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)
 * The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
+* The user settings page now contains fields for entering EC2 credentials.
+  (RBL-3029)
 
 Changes in 4.1.0
 ================

@@ -1629,6 +1629,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
             res.remove(ent)
         return res
+    
+    @typeCheck(str)
+    @requiresAuth
+    @private
+    def getUserDataDefaultedAWS(self, username):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        cu = self.db.cursor()
+        cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
+        res = usertemplates.userPrefsAWSTemplate.keys()
+        for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
+            res.remove(ent)
+        return res
 
     @typeCheck(str)
     @requiresAuth

@@ -5,7 +5,7 @@
 
 import sys
 
-from mint.buildtemplates import BooleanOption, IntegerOption
+from mint.buildtemplates import BooleanOption, IntegerOption, StringOption
 from mint.config import isRBO
 
 # this must be redefined in each template module due to sys.modules[__name__]
@@ -34,6 +34,22 @@ class insider(BooleanOption):
 class searchResultsPerPage(IntegerOption):
     default = 10
     prompt = 'Number of search/browse entries to show per page'
+    
+class awsAccountId(StringOption):
+    default = ''
+    prompt = 'Account ID:'
+    help = 'Please enter your Amazon Web Services account identifier.'
+    
+class awsAccessKeyId(StringOption):
+    default = ''
+    prompt = 'Access Key ID:'
+    help = 'Please enter your Amazon Web Services access key identifier.'
+    
+class awsSecretAccessKey(StringOption):
+    default = ''
+    password = True
+    prompt = 'Secret Access Key:'
+    help = 'Please enter your Amazon Web Services secret access key.'
 
 ###
 # Templates
@@ -49,6 +65,10 @@ class UserPrefsAttTemplate(Template):
 class UserPrefsNoAttTemplate(Template):
     __slots__ = ['searchResultsPerPage']
 
+# Template for AWS settings
+class UserPrefsAWSTemplate(Template):
+    __slots__ = ['awsAccountId', 'awsAccessKeyId', 'awsSecretAccessKey']
+
 class UserPrefsInvisibleTemplate(Template):
     if isRBO():
         __slots__ = []
@@ -63,7 +83,8 @@ class UserPrefsVisibleTemplate(Template):
 # Base template for all legal data values.
 class UserPrefsTemplate(Template):
     __slots__ = UserPrefsVisibleTemplate.__slots__ + \
-                UserPrefsInvisibleTemplate.__slots__
+                UserPrefsInvisibleTemplate.__slots__ + \
+                UserPrefsAWSTemplate.__slots__
 
 ########################
 
