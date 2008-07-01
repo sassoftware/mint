@@ -37,6 +37,8 @@ import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
 
+from conary_test import resources as conaryTestResources
+
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
     out certain pcreator.backend methods."""
@@ -562,7 +564,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
-            filePath = os.path.join(self.archiveDir, tarFile)
+            filePath = os.path.join(conaryTestResources.archivePath, tarFile)
             pClient.uploadData(sesH, open(filePath))
             pClient.writeMetaFile(sesH, tarFile, 'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)
