@@ -11,6 +11,7 @@ from pcreator.backend import errors
 import pcreator.factorydata
 import pcreator.config
 import pcreator.shimclient
+from pcreator.backend import FILETYPE_PRIMARY, FILETYPE_UPLOADED
 
 import mint_error
 
@@ -189,9 +190,21 @@ def setupPCBackendCall(func):
 
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
     @setupPCBackendCall
-    def uploadData(self, sessionHandle, filePath):
-        self.server._server._storeSessionValue( \
-                sessionHandle, 'filePath', filePath)
+    def uploadData(self, sessionHandle, name, filePath, mimeType):
+        try:
+            currentFiles = self.server._server._getSessionValue(sessionHandle, 'currentFiles')
+        except errors.InvalidSessionHandle:
+            currentFiles = {}
+        # the first file uploaded will be the primary file
+        fileType = len(currentFiles) and FILETYPE_UPLOADED or FILETYPE_PRIMARY
+
+        name = self.server._server._osIndependentBasename(name)
+        currentFiles[name] = (filePath, fileType, mimeType)
+        self.server._server._storeSessionValue(sessionHandle, 'currentFiles', currentFiles)
+        if fileType == FILETYPE_PRIMARY:
+            self.server._server._storeSessionValue(sessionHandle, 'filePath', filePath)
+            self.server._server._writeMetaFile(sessionHandle, name, mimeType)
+
 
 
 def getPackageCreatorClient(mintCfg, authToken):

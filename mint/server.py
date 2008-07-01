@@ -4730,8 +4730,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             sesH = sessionHandle
 
         # Start the PCS session, and "upload" the data
-        pc.uploadData(sesH, info['tempfile'])
-        pc.writeMetaFile(sesH, info['filename'], info['content-type'])
+        pc.uploadData(sesH, info['filename'], info['tempfile'],
+                info['content-type'])
 
         return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
 
