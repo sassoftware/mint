@@ -437,7 +437,6 @@ class FileHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         util.copyStream(open(fPath), self.wfile)
 
 class ReposTests(mint_rephelp.MintRepositoryHelper):
-#class Disabled(object):
     def startHTTPServer(self):
         httpServer = mint_rephelp.rephelp.HTTPServerController(FileHandler)
         return httpServer
