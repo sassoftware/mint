@@ -130,15 +130,6 @@ class TestPackageCreatorHelperMethods(testsuite.TestCase):
         self.assertEquals(self.networkedClient, True)
 
 class testPackageCreatorManipulation(packagecreatortest.RepoTest):
-    def setUp(self):
-        mint_rephelp._servers.stopAllServers()
-        packagecreatortest.RepoTest.setUp(self)
-
-    def tearDown(self):
-        self.stopRepository(0)
-        self.stopRepository(1)
-        packagecreatortest.RepoTest.tearDown(self)
-
     def testgetFactoryDataFromDataDict(self):
         #create a pcreator client object
         #set up enough client to call getFactoryDataDefinition
