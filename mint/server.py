@@ -4953,6 +4953,62 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             return False
 
+    @typeCheck(int)
+    @requiresAuth
+    def getEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, returns a dict of credentials used for
+        Amazon EC2.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: a dictionary of EC2 credentials
+          - 'awsAccountNumber': the Amazon account ID
+          - 'awsPublicAccessKeyId': the public access key
+          - 'awsSecretAccessKey': the secret access key
+        @rtype: C{boolean}
+        @raises: C{ItemNotFound} if there is no such user
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),))
+    @requiresAuth
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        """
+        Given a userId, update the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @param awsPublicAccessKeyId: the public access key identifier
+        @type  awsPublicAccessKeyId: C{str}
+        @param awsSecretAccessKey: the secret access key
+        @type  awsSecretAccessKey: C{str}
+        @return: True if updated successfully, False otherwise
+        @rtype C{bool}
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
+                         awsPublicAccessKeyId=awsPublicAccessKeyId,
+                         awsSecretAccessKey=awsSecretAccessKey)
+        try:
+            self.db.transaction()
+            for key, (dType, default, _, _, _, _) in \
+                    usertemplates.userPrefsAWSTemplate.iteritems():
+                val = newValues.get(key, default)
+                self.userData.setDataValue(userId, key, val, dType,
+                        commit=False)
+        except:
+            self.db.rollback()
+            return False
+        else:
+            self.db.commit()
+            return True
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
