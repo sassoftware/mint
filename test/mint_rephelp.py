@@ -394,12 +394,18 @@ def _cleanUp():
 
 rephelp._cleanUp = _cleanUp
 
+_reposDir = None
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     # Repository tests tend to be slow, so tag them with this context
     contexts = ('slow',)
-    
+
+    def _getReposDir(self):
+        global _reposDir
+        _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
+        return _reposDir
+
     def openMintRepository(self, serverIdx = 0, requireSigs = False, 
                            serverName = None):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
