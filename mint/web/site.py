@@ -371,24 +371,24 @@ class SiteHandler(WebHandler):
     def cloudSettings(self, auth):
         return self._write("cloudSettings",
                            user = self.user,
-                           dataDict = self.user.getDataDict(self.user.getDataTemplateAWS()),
+                           dataDict = self.user.getDataDict(),
                            defaultedData = self.user.getDefaultedDataAWS())
-    
+
+    @strFields(awsAccountNumber = "", awsPublicAccessKeyId = "",
+               awsSecretAccessKey = "")
     @requiresHttps
     @requiresAuth
-    def processCloudSettings(self, auth, **kwargs):
-        
-        for key, (dType, default, prompt, errordesc, helpText, password) in \
-                self.user.getDataTemplateAWS().iteritems():
-            if dType == data.RDT_BOOL:
-                val = bool(kwargs.get(key, False))
-            elif dType == data.RDT_INT:
-                val = int(kwargs.get(key, default))
-            else:
-                val = str(kwargs.get(key, default))
-            self.user.setDataValue(key, val)
-            
-        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+    def processCloudSettings(self, auth, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        if self.client.setEC2CredentialsForUser(self.user.id,
+                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey):
+            self._setInfo("Updated EC2 credentials")
+            self._redirect("http://%s%s/userSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._addErrors("Failed to update EC2 credentials")
+            self._redirect("http://%s%s/cloudSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
     @redirectHttps

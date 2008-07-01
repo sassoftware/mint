@@ -37,8 +37,7 @@ from mint.web.templatesupport import projectText
                         <div py:strip="True" py:if="dType == data.RDT_INT or dType == data.RDT_STRING">
                             <td>${prompt}</td>
                             <td>
-                                <input py:if="password" type="password" name="$key" value="${dataDict.get(key, default)}"/>
-                                <input py:if="not password" type="text" name="$key" value="${dataDict.get(key, default)}"/>
+                                <input py:attrs="{'type': (password and 'password' or 'text'), 'name': key, 'value': dataDict.get(key, default)}" name="$key" value="${dataDict.get(key, default)}"/>
                                 <div py:if="helpText" class="help">
                                     ${helpText}
                                 </div>
