@@ -37,19 +37,19 @@ class searchResultsPerPage(IntegerOption):
     
 class awsAccountId(StringOption):
     default = ''
-    prompt = 'Account ID:'
-    help = 'Please enter your Amazon Web Services account identifier.'
+    prompt = 'Account Number:'
+    help = 'Please enter your Amazon Web Services account number as displayed on your AWS profile page.'
     
 class awsAccessKeyId(StringOption):
     default = ''
     prompt = 'Access Key ID:'
-    help = 'Please enter your Amazon Web Services access key identifier.'
+    help = 'Please enter your Amazon Web Services access key identifier as displayed on your AWS access identifiers page.'
     
 class awsSecretAccessKey(StringOption):
     default = ''
     password = True
     prompt = 'Secret Access Key:'
-    help = 'Please enter your Amazon Web Services secret access key.'
+    help = 'Please enter your Amazon Web Services secret access key as displayed on your AWS access identifiers page.'
 
 ###
 # Templates
