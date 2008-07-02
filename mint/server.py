@@ -5043,7 +5043,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if status == 401:
                     raise InvalidAMICredentials()
                 else:
-                    raise AMICommunicationException()
+                    raise AMIException()
             
         return True
 
