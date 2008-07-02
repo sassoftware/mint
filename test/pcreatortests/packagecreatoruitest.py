@@ -385,6 +385,87 @@ content-type=text/plain
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
         self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
 
+class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
+    def testGetPackageCreatorPackages(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        cclient = conaryclient.ConaryClient(cfg)
+        repos = cclient.getRepos()
+
+        self.assertEquals({}, client.getPackageCreatorPackages(projectId))
+
+        #add some troves
+        hostname = project.getFQDN()
+        labeltemplate = "%s@%%s:%s-%%s-devel" % (hostname, project.getShortname())
+        ns1, vs1 = 'ns1', 'vs1'
+        label1 = labeltemplate % (ns1, vs1)
+        vs2 = 'vs2'
+        label2 = labeltemplate % (ns1, vs2)
+        ns2 = 'ns2'
+        label3 = labeltemplate % (ns2, vs2)
+        cs = cclient.createSourceTrove('grnotify:source', label1, '0.4.4', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs1, namespace=ns1, hostname=hostname,
+                    shortname=project.getShortname(), label=label1))
+        repos.commitChangeSet(cs)
+        cs = cclient.createSourceTrove('zope:source', label1, '2.7.8', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs1, namespace=ns1, hostname=hostname,
+                    shortname=project.getShortname(), label=label1))
+        repos.commitChangeSet(cs)
+        cs = cclient.createSourceTrove('grnotify:source', label1, '0.4.5', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs1, namespace=ns1, hostname=hostname,
+                    shortname=project.getShortname(), label=label1))
+        repos.commitChangeSet(cs)
+        cs = cclient.createSourceTrove('grnotify:source', label2, '0.4.4', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs2, namespace=ns1, hostname=hostname,
+                    shortname=project.getShortname(), label=label2))
+        repos.commitChangeSet(cs)
+        cs = cclient.createSourceTrove('grnotify:source', label3, '0.4.4', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs2, namespace=ns2, hostname=hostname,
+                    shortname=project.getShortname(), label=label3))
+        repos.commitChangeSet(cs)
+        #This one should not be returned
+        cs = cclient.createSourceTrove('zope:source', label1, '2.7.9', {},
+            changelog.ChangeLog(name='test', contact=''),
+            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+                dict(version=vs2, namespace=ns2, hostname=hostname,
+                    shortname=project.getShortname(), label=label3))
+        repos.commitChangeSet(cs)
+        
+        res = client.getPackageCreatorPackages(projectId)
+        self.assertEquals(res,
+{u'vs1': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+                                       u'productDefinition': {u'hostname': u'testproject.rpath.local2',
+                                                              u'namespace': u'ns1',
+                                                              u'shortname': u'testproject',
+                                                              u'version': u'vs1'}},
+                   'zope:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+                                   u'productDefinition': {u'hostname': u'testproject.rpath.local2',
+                                                          u'namespace': u'ns1',
+                                                          u'shortname': u'testproject',
+                                                          u'version': u'vs1'}}}},
+ u'vs2': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs2-devel',
+                                       u'productDefinition': {u'hostname': u'testproject.rpath.local2',
+                                                              u'namespace': u'ns1',
+                                                              u'shortname': u'testproject',
+                                                              u'version': u'vs2'}}},
+          u'ns2': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns2:testproject-vs2-devel',
+                                       u'productDefinition': {u'hostname': u'testproject.rpath.local2',
+                                                              u'namespace': u'ns2',
+                                                              u'shortname': u'testproject',
+                                                              u'version': u'vs2'}}}}})
 
 prodDef1 = """\
 <?xml version="1.0" encoding="UTF-8"?>
