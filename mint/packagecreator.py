@@ -170,8 +170,9 @@ def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     factDef = pcreator.factorydata.FactoryDefinition(fromStream=xmlstream)
     factoryData = pcreator.factorydata.FactoryData(factoryDefinition = factDef)
 
-    for (k,v) in dataDict.iteritems():
-        factoryData.addField(k,v)
+    for field in factDef.getDataFields():
+        name = field.name
+        factoryData.addField(name, dataDict.get(name, ''))
     xmldatastream = StringIO()
     factoryData.serialize(xmldatastream)
     xmldatastream.seek(0)

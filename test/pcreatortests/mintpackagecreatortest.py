@@ -129,6 +129,37 @@ class TestPackageCreatorHelperMethods(testsuite.TestCase):
         packagecreator.getPackageCreatorClient(cfg, ('foo', 'bar'))
         self.assertEquals(self.networkedClient, True)
 
+#This may need to be reordered if the factory definition changes
+generatedXML = """<?xml version='1.0' encoding='UTF-8'?>
+<factoryData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.org/permanent/factorydata-1.0.xsd factorydata-1.0.xsd">
+  <field>
+    <name>name</name>
+    <type>str</type>
+    <value>tags</value>
+  </field>
+  <field>
+    <name>version</name>
+    <type>str</type>
+    <value>1.2</value>
+  </field>
+  <field>
+    <name>license</name>
+    <type>str</type>
+    <value>Some License</value>
+  </field>
+  <field>
+    <name>summary</name>
+    <type>str</type>
+    <value>Some Summary</value>
+  </field>
+  <field>
+    <name>description</name>
+    <type>str</type>
+    <value>Some Description</value>
+  </field>
+</factoryData>
+"""
+
 class testPackageCreatorManipulation(packagecreatortest.RepoTest):
     def testgetFactoryDataFromDataDict(self):
         #create a pcreator client object
@@ -148,7 +179,7 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
         foo = packagecreator.getFactoryDataFromDataDict(pClient, sesH,
             'rpm-redhat=/localhost1@pc:factory/1.0-1-1',
             packagecreatortest.expectedFactories1[0][3])
-        self.assertEquals(foo.getvalue(), '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<factoryData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.org/permanent/factorydata-1.0.xsd factorydata-1.0.xsd">\n  <field>\n    <name>description</name>\n    <type>str</type>\n    <value>Some Description</value>\n  </field>\n  <field>\n    <name>version</name>\n    <type>str</type>\n    <value>1.2</value>\n  </field>\n  <field>\n    <name>name</name>\n    <type>str</type>\n    <value>tags</value>\n  </field>\n  <field>\n    <name>license</name>\n    <type>str</type>\n    <value>Some License</value>\n  </field>\n  <field>\n    <name>summary</name>\n    <type>str</type>\n    <value>Some Summary</value>\n  </field>\n</factoryData>\n')
+        self.assertEquals(foo.getvalue(), generatedXML)
 
         rpmFileName = 'foo-0.3-1.noarch.rpm'
         rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
