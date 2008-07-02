@@ -175,6 +175,23 @@ content-type=text/plain
         self.assertEquals(factories[0][2], {'a': 'b'})
 
     @fixtures.fixture('Full')
+    def testCreatPackagePreexistingTrove(self, db, data):
+        def getCandidateBuildFactories(s, sesH):
+            self.assertEquals(sesH, 'session-88889')
+            return [('rpm', basicXmlDef, {'a': 'b'})]
+        self._setup_mocks(getCandidateBuildFactories)
+        @pcreator.backend.public
+        def startSession(*args):
+            return 'session-88889'
+        self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
+        projectId = data['projectId']
+        sesH, factories = self.client.getPackageFactoriesFromRepoArchive(projectId, 1, 'gina', 'foobar', 'barrage.rpath.com@gina:sdi-1-devel')
+        self.assertEquals(sesH, 'session-88889')
+        self.assertEquals(factories[0][0], 'rpm')
+        assert isinstance(factories[0][1], FactoryDefinition)
+        self.assertEquals(factories[0][2], {'a': 'b'})
+ 
+    @fixtures.fixture('Full')
     def testCreatePackagePreExistSession(self, db, data):
         def getCandidateBuildFactories(s, sesH):
             self.assertEquals(sesH, 'session_handle_test')
