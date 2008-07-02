@@ -7,6 +7,7 @@
     All Rights Reserved
 -->
 <?python
+    from mint.config import isRBO
     from mint.web.templatesupport import projectText
     for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
@@ -126,7 +127,7 @@
                         </td>
                     </tr>
 
-                    <tr>
+                    <tr py:if="not isRBO()">
                         <th><em class="required">Repository Domain Name</em></th>
                         <td>
                             <input type="text" name="domainname" value="${kwargs['domainname']}" />
