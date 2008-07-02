@@ -269,12 +269,22 @@ class Project(database.TableObject):
         """
         if imageGroupVersion is None:
             imageGroupVersion = ''
+        elif hasattr(imageGroupVersion, 'asString'):
+            imageGroupVersion = imageGroupVersion.asString()
         if imageGroupFlavor is None:
             imageGroupFlavor = ''
+        elif hasattr(imageGroupFlavor, 'freeze'):
+            imageGroupFlavor = imageGroupFlavor.freeze()
+
         if specialTroveVersion is None:
             specialTroveVersion = ''
+        elif hasattr(specialTroveVersion, 'asString'):
+            specialTroveVersion = specialTroveVersion.asString()
         if specialTroveFlavor is None:
             specialTroveFlavor = ''
+        elif hasattr(specialTroveFlavor, 'freeze'):
+            specialTroveFlavor = specialTroveFlavor.freeze()
+
         return self.server.resolveExtraTrove(self.id,
                 specialTroveName, specialTroveVersion, specialTroveFlavor,
                 imageGroupVersion, imageGroupFlavor)

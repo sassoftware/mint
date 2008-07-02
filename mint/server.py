@@ -2328,33 +2328,28 @@ If you would not like to be %s %s of this project, you may resign from this proj
             searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
 
         # if no flavor specified, use the top level group's flavor
-        if imageGroupFlavor and not specialTroveFlavor:
-            # If the version is a frozen one (with timestamp), then
-            # conary will interpret the entire NVF as an exact trove
-            # tuple, and so replacing the flavor with a suggestion
-            # will almost certainly result in a TroveNotFound. So if
-            # the version thaws successfully, don't change the search
-            # flavor.
-            replaceFlavor = True
-            if specialTroveVersion:
-                try:
-                    versions.ThawVersion(specialTroveVersion)
-                except:
-                    # Not a frozen version; replacing the flavor is OK
-                    replaceFlavor = True
-                else:
-                    # Frozen version, so we can't try different flavors
-                    replaceFlavor = False
-
-            if replaceFlavor:
-                specialTroveFlavor = helperfuncs.getMajorArchFlavor(
-                    imageGroupFlavor)
+        if not specialTroveFlavor:
+            specialTroveFlavor = helperfuncs.getMajorArchFlavor(
+                imageGroupFlavor)
 
         # Sanitize bits
         if specialTroveVersion == '':
+            # empty version -> no version in particular
             specialTroveVersion = None
+        elif '/' in specialTroveVersion:
+            try:
+                # frozen version -> normal version
+                specialTroveVersion = \
+                    versions.ThawVersion(specialTroveVersion).asString()
+            except:
+                # maybe not
+                pass
         if specialTroveFlavor == '':
+            # empty flavor -> no flavor in particular
             specialTroveFlavor = None
+        if isinstance(specialTroveFlavor, basestring):
+            # string flavor -> thawed flavor object
+            specialTroveFlavor = deps.ThawFlavor(specialTroveFlavor)
 
         # Get a Conary client
         cfg = project.getConaryConfig()

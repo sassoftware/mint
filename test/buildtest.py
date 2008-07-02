@@ -1117,7 +1117,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                         flava_flavs = [ '~superfunk.bootsy is: x86_64', ]
                     elif tn in ['anaconda-custom', 'anaconda-templates', 'media-template']:
                         return [(tn,
-                             versions._VersionFromString(tv, frozen=True),
+                             versions.VersionFromString(tv),
                                 deps.parseFlavor('is: x86_64'))]
                     else:
                         return []
