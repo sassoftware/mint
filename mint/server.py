@@ -4386,6 +4386,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
     #
     # EC2 Support for rBO
     #
+    
+    @typeCheck(tuple)
+    @private
+    def validateAMICredentials(self, authToken):
+        return ec2.EC2Wrapper.validateCredentials(authToken)
+    
+    @typeCheck(tuple, list)
+    @private
+    def getAMIKeyPairs(self, authToken, keyNames):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        return ec2Wrapper.getAllKeyPairs(keyNames)
 
     @typeCheck(str, str)
     @requiresAdmin
