@@ -41,7 +41,7 @@ from mint.web.templatesupport import projectText
                 ${statusArea("Cook")}
 
                 <p>When the job status "Finished" appears, your group
-                has finished cooking. Click on the "Images" link in the
+                has finished cooking. Click on the "Manage Images" link in the
                 "${projectText().title()} Resources" sidebar, and select
                 ${curGroupTrove.recipeName} to create an image.</p>
             </div>

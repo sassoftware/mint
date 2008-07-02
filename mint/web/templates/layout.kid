@@ -78,7 +78,7 @@ onload = "javascript:;"
                             <label class="search" for="searchLabel">I'm looking for a...</label>
                             <input class="search" name="search" id="searchLabel" type="text" value="$searchTerms" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
-                            <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': (searchType == 'Projects') and 'checked' or None}" />
+                            <input id="typeProject" type="radio" name="type" value="${projectText().title()}s" py:attrs="{'checked': (searchType == projectText().title()+'s') and 'checked' or None}" />
                             <label for="typeProject">${projectText().title()}</label>
                             <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': (searchType == 'Packages') and 'checked' or None}" />
                             <label for="typePackage">Package</label>
@@ -86,7 +86,7 @@ onload = "javascript:;"
                             <input id="typeUser" type="radio" name="type" value="Users" py:attrs="{'checked': (searchType == 'Users') and 'checked' or None}" />
                             <label for="typeUser">User</label>
                             </div>
-                            <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=Projects">${projectText().lower()}s</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
+                            <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=${projectText().title()}s">${projectText().lower()}s</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
                         </div>
                     </form>
                 </div>

@@ -300,9 +300,9 @@ class FixtureCache(object):
         imagelessRelease.save()
 
         # create 2 product versions in the project
-        versionId = client.addProductVersion(projectId, 'FooV1',
+        versionId = client.addProductVersion(projectId, 'ns', 'FooV1',
                 'FooV1Description')
-        versionId2 = client.addProductVersion(projectId, 'FooV2',
+        versionId2 = client.addProductVersion(projectId, 'ns2', 'FooV2',
                 'FooV2Description')
 
         # create a group trove for the "foo" project
@@ -967,12 +967,6 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             os.dup2(oldOut, sys.stdout.fileno())
 
     def setUp(self):
-        for dir in sys.path:
-            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
-            if os.path.isdir(thisdir):
-                self.archiveDir = thisdir
-                break
-
         testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 

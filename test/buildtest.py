@@ -1047,9 +1047,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         stageNames = [x.name for x in pd.getStages() \
                 if x.name not in ('Booya', 'Elsewhere', 'Custom')]
 
-        pd.addUpstreamSource('group-rap-standard',
+        pd.addSearchPath('group-rap-standard',
                 'rap.rpath.com@rpath:linux-1')
-        pd.addUpstreamSource('group-postgres',
+        pd.addSearchPath('group-postgres',
                     'products.rpath.com@rpath:postgres-8.2')
 
         pd.addBuildDefinition(name='ISO 32',

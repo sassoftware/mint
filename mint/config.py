@@ -198,8 +198,9 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    awsPublicKey            = None
-    awsPrivateKey           = None
+    awsAccountId            = (cfgtypes.CfgString, '', "The AWS account id")
+    awsPublicKey            = (cfgtypes.CfgString, '', "The AWS public key")
+    awsPrivateKey           = (cfgtypes.CfgString, '', "The AWS private key")
 
     # AMI configuration data
     ec2PublicKey            = None
@@ -264,6 +265,9 @@ class MintConfig(ConfigFile):
 
     # anaconda-templates fallback label
     anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
+
+    # package creator related settings
+    packageCreatorURL       = None
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

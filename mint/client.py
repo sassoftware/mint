@@ -28,7 +28,7 @@ from conary.deps import deps
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [6]
+CLIENT_VERSIONS = [7]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -49,7 +49,7 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version="", commitEmail=""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", namespace="", prodtype="",  version="", commitEmail=""):
         """
         Create a new project.
         @param name: name of new project
@@ -60,12 +60,14 @@ class MintClient:
         @param appliance: whether or not this project represents a
                a software appliance ('yes', 'no', 'unknown')
         @param shortname: the shortname of the product being created
+        @param namespace: for rBuilder Online, the namespace to use in the
+               first Product Version, not relevant for rBA
         @param prodtype: the type of product being created.
         @param version:  the initial product version.
         @param commitEmail: email address to which commit messages are sent.
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -350,6 +352,61 @@ class MintClient:
         """
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
+
+    def createPackageTmpDir(self):
+        """
+        Create a new temporary location for storing package data
+        @returns: an ID that uniquely references this temporary location
+        @rtype: str
+        """
+        return self.server.createPackageTmpDir()
+
+    def _filterFactories(self, factories):
+        """
+            Converts the return value from the server (which passes an xmlblob)
+            to an object tree
+        """
+        from pcreator import factorydata
+        #Factories comes across as an xml file, need to parse that to something useable
+        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
+
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle='', upload_url=''):
+        """
+        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
+        @param projectId: Project ID
+        @type projectId: int
+        @param id: ID returned from L{createPackageTmpDir}
+        @type id: str
+        @param versionId: ID of the version chosen
+        @type versionId: int
+        @param sessionHandle: A sessionHandle.  If empty, one will be created (and returned)
+        @type sessionHandle: string
+        @param upload_url: URL of a package or ''.  Not currently used
+        @type upload_url: str
+        @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @rtype: tuple(tuple, str)
+        """
+        sesH, factories = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+        return sesH, self._filterFactories(factories)
+
+    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
+        return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
+
+    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
+        sesH, factories = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
+        return sesH, self._filterFactories(factories)
+
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+        "See L{mint.server.MintServer.savePackage}"
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
+
+    def getPackageBuildLogs(self, sessionHandle):
+        '''See L{mint.server.MintServer.getPackageBuildLogs}'''
+        return self.server.getPackageBuildLogs(sessionHandle)
+
+    def getPackageCreatorPackages(self, projectId):
+        '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
+        return self.server.getPackageCreatorPackages(projectId)
 
     def getBuildFilenames(self, buildId):
         """
@@ -721,6 +778,15 @@ class MintClient:
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
     # ec2 "try it now" support
+    def validateAMICredentials(self, authToken):
+        return self.server.validateAMICredentials(authToken)
+    
+    def getAMIKeyPair(self, authToken, keyName):
+        return self.server.getAMIKeyPairs(authToken, [keyName])
+    
+    def getAMIKeyPairs(self, authToken, keyNames):
+        return self.server.getAMIKeyPairs(authToken, keyNames)
+    
     def createBlessedAMI(self, ec2AMIId, shortDescription):
         return self.server.createBlessedAMI(ec2AMIId, shortDescription)
 
@@ -738,14 +804,15 @@ class MintClient:
         return [self.getLaunchedAMI(x) for x in \
                 self.server.getActiveLaunchedAMIs()]
 
-    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
-        return self.server.getLaunchedAMIInstanceStatus(launchedAMIId)
+    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        return self.server.getLaunchedAMIInstanceStatus(authToken,
+                                                        launchedAMIId)
 
-    def launchAMIInstance(self, blessedAMIId):
-        return self.server.launchAMIInstance(blessedAMIId)
+    def launchAMIInstance(self, authToken, blessedAMIId):
+        return self.server.launchAMIInstance(authToken, blessedAMIId)
 
-    def terminateExpiredAMIInstances(self):
-        return self.server.terminateExpiredAMIInstances()
+    def terminateExpiredAMIInstances(self, authToken):
+        return self.server.terminateExpiredAMIInstances(authToken)
 
     def extendLaunchedAMITimeout(self, launchedAMIId):
         return self.server.extendLaunchedAMITimeout(launchedAMIId)
@@ -770,8 +837,8 @@ class MintClient:
         return self.server.setBuildAMIDataSafe(buildId, outputToken,
                 amiId, amiManifestName)
 
-    def addProductVersion(self, projectId, name, description=''):
-        return self.server.addProductVersion(projectId, name, description)
+    def addProductVersion(self, projectId, namespace, name, description=''):
+        return self.server.addProductVersion(projectId, namespace, name, description)
 
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
@@ -805,6 +872,17 @@ class MintClient:
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
+    def getEC2CredentialsForUser(self, userId):
+        return self.server.getEC2CredentialsForUser(userId)
+
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        return self.server.setEC2CredentialsForUser(userId,
+                awsAccountNumber, awsPublicAccessKeyId,
+                awsSecretAccessKey)
+        
+    def removeEC2CredentialsForUser(self, userId):
+        return self.server.removeEC2CredentialsForUser(userId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
