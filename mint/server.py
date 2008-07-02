@@ -4787,8 +4787,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # 'repo.example.com@rbo:repo-2.0-devel'}
 
             #Filter out labels that don't match the develStageLabel
-            label = v.trailingLabel()
-            if label != str(data['develStageLabel']):
+            label = str(v.trailingLabel())
+            if label == str(data['develStageLabel']):
                 pDefDict = data['productDefinition']
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
