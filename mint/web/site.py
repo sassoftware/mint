@@ -371,24 +371,37 @@ class SiteHandler(WebHandler):
     def cloudSettings(self, auth):
         return self._write("cloudSettings",
                            user = self.user,
-                           dataDict = self.user.getDataDict(self.user.getDataTemplateAWS()),
-                           defaultedData = self.user.getDefaultedDataAWS())
-    
+                           dataDict = self.user.getDataDict())
+
+    @strFields(awsAccountNumber = "", awsPublicAccessKeyId = "",
+               awsSecretAccessKey = "")
     @requiresHttps
     @requiresAuth
-    def processCloudSettings(self, auth, **kwargs):
+    def processCloudSettings(self, auth, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+
+        def getDataDict():
+            dataDict = self.user.getDataDict()
+            dataDict['awsAccountNumber'] = awsAccountNumber
+            dataDict['awsPublicAccessKeyId'] = awsPublicAccessKeyId
+            dataDict['awsSecretAccessKey'] = awsSecretAccessKey
+            return dataDict
         
-        for key, (dType, default, prompt, errordesc, helpText, password) in \
-                self.user.getDataTemplateAWS().iteritems():
-            if dType == data.RDT_BOOL:
-                val = bool(kwargs.get(key, False))
-            elif dType == data.RDT_INT:
-                val = int(kwargs.get(key, default))
-            else:
-                val = str(kwargs.get(key, default))
-            self.user.setDataValue(key, val)
-            
-        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+        # make sure all or none of the fields are set
+        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
+            if not (awsAccountNumber and awsPublicAccessKeyId and awsSecretAccessKey):
+                self._addErrors("Missing EC2 credential data")
+                return self._write("cloudSettings", dataDict=getDataDict())
+        
+        try:
+            self.client.setEC2CredentialsForUser(self.user.id,
+                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey)
+            self._setInfo("Updated EC2 credentials")
+            self._redirect("http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        except mint_error.AMIException, e:
+            self._addErrors("Failed to update EC2 credentials: %s" % str(e))
+            return self._write("cloudSettings", dataDict=getDataDict())
 
     @requiresAuth
     @redirectHttps

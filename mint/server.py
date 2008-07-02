@@ -4386,6 +4386,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
     #
     # EC2 Support for rBO
     #
+    
+    @typeCheck(tuple)
+    @private
+    def validateAMICredentials(self, authToken):
+        return ec2.EC2Wrapper(authToken).validateCredentials()
+    
+    @typeCheck(tuple, list)
+    @private
+    def getAMIKeyPairs(self, authToken, keyNames):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        return ec2Wrapper.getAllKeyPairs(keyNames)
 
     @typeCheck(str, str)
     @requiresAdmin
@@ -4952,6 +4963,89 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return True
         else:
             return False
+
+    @typeCheck(int)
+    @requiresAuth
+    def getEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, returns a dict of credentials used for
+        Amazon EC2.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: a dictionary of EC2 credentials
+          - 'awsAccountNumber': the Amazon account ID
+          - 'awsPublicAccessKeyId': the public access key
+          - 'awsSecretAccessKey': the secret access key
+        @rtype: C{boolean}
+        @raises: C{ItemNotFound} if there is no such user
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),))
+    @requiresAuth
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        """
+        Given a userId, update the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @param awsPublicAccessKeyId: the public access key identifier
+        @type  awsPublicAccessKeyId: C{str}
+        @param awsSecretAccessKey: the secret access key
+        @type  awsSecretAccessKey: C{str}
+        @return: True if updated successfully, False otherwise
+        @rtype C{bool}
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        
+        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
+                         awsPublicAccessKeyId=awsPublicAccessKeyId,
+                         awsSecretAccessKey=awsSecretAccessKey)
+        
+        # validate the credentials with EC2
+        self._validateEC2Credentials(newValues['awsAccountNumber'],
+                                     newValues['awsPublicAccessKeyId'],
+                                     newValues['awsSecretAccessKey'])
+        
+        try:
+            self.db.transaction()
+            for key, (dType, default, _, _, _, _) in \
+                    usertemplates.userPrefsAWSTemplate.iteritems():
+                val = newValues.get(key, default)
+                self.userData.setDataValue(userId, key, val, dType,
+                        commit=False)
+        except:
+            self.db.rollback()
+            return False
+        else:
+            self.db.commit()
+            return True
+        
+    def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
+                                awsSecretAccessKey):
+        """
+        Validate the EC2 credentials if one or more of them are set.  We 
+        don't validate if they are all empty since we are just deleting the 
+        credentials.
+        """
+        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
+            valid, status = self.validateAMICredentials(
+                                (awsAccountNumber,
+                                 awsPublicAccessKeyId,
+                                 awsSecretAccessKey))
+            if not valid:
+                if status == 401:
+                    raise InvalidAMICredentials()
+                else:
+                    raise AMIException()
+            
+        return True
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

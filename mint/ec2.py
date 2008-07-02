@@ -121,3 +121,21 @@ class EC2Wrapper(object):
             return True
         except EC2ResponseError:
             return False
+        
+    def getAllKeyPairs(self, keyNames=None):
+        keyPairs = []
+        rs = self.ec2conn.get_all_key_pairs(keynames=keyNames)
+        for pair in rs:
+            keyPairs.append((str(pair.name), str(pair.fingerprint),
+                            str(pair.material)))            
+        return keyPairs
+    
+    def validateCredentials(self):
+        try:
+            self.getAllKeyPairs()
+            rc = True, None
+        except EC2ResponseError, e:
+            rc = False, e.status
+            
+        return rc
+            

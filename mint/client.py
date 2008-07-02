@@ -778,6 +778,15 @@ class MintClient:
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
     # ec2 "try it now" support
+    def validateAMICredentials(self, authToken):
+        return self.server.validateAMICredentials(authToken)
+    
+    def getAMIKeyPair(self, authToken, keyName):
+        return self.server.getAMIKeyPairs(authToken, [keyName])
+    
+    def getAMIKeyPairs(self, authToken, keyNames):
+        return self.server.getAMIKeyPairs(authToken, keyNames)
+    
     def createBlessedAMI(self, ec2AMIId, shortDescription):
         return self.server.createBlessedAMI(ec2AMIId, shortDescription)
 
@@ -863,6 +872,14 @@ class MintClient:
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
+    def getEC2CredentialsForUser(self, userId):
+        return self.server.getEC2CredentialsForUser(userId)
+
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        return self.server.setEC2CredentialsForUser(userId,
+                awsAccountNumber, awsPublicAccessKeyId,
+                awsSecretAccessKey)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

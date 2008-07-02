@@ -13,6 +13,8 @@ Internal Changes
   (RBL-3029)
 * The backend now allows EC2 calls to be run using user supplied credentials.
   (RBL-3039)
+* The user's EC2 credentials are now validated by the EC2 web service.
+  (RBL-3038)
 
 Web Front End Changes
 ---------------------
