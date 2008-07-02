@@ -506,6 +506,10 @@ class SiteHandler(WebHandler):
         if not version or len(version) <= 0:
             self._addErrors("You must supply a %s version"%pText)
 
+        # For rBO, use the default domain name unconditionally
+        if self.cfg.rBuilderOnline:
+            domainname = self.cfg.projectDomainName.split(':')[0]
+
         if not self._getErrors():
             try:
                 # attempt to create the project
