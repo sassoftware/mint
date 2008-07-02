@@ -23,6 +23,11 @@ from conary.lib import util
 
 import fixtures
 
+from mint import buildtypes
+from mint import userlevels
+from mint.data import RDT_STRING
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
+
 FAKE_PUBLIC_KEY  = '123456789ABCDEFGHIJK'
 FAKE_PRIVATE_KEY = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
@@ -434,6 +439,109 @@ conaryproxy = http://proxy.hostname.com/proxy/
                                         'awsAccountNumber': ''})
         finally:
             client.server._server.validateAMICredentials = oldValidateAMICredentials
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsForUser(self, db, data):
+        client = self.getClient('developer')
+        AMIbuilds = client.getAMIBuildsForUser(data['developerId'])
+        self.failUnlessEqual(set([x['amiId'] for x in AMIbuilds]),
+                set(['ami-00000001', 'ami-00000002', 'ami-00000003']))
+
+        client = self.getClient('someotherdeveloper')
+        otherAMIbuilds = client.getAMIBuildsForUser(data['someOtherDeveloperId'])
+        self.failUnlessEqual(len(otherAMIbuilds), 5)
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsForDifferentUser(self, db, data):
+        client = self.getClient('developer')
+        self.failUnlessRaises(PermissionDenied,
+                client.getAMIBuildsForUser, data['adminId'])
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsForNonExisistentUser(self, db, data):
+        client = self.getClient('admin')
+        self.failUnlessRaises(ItemNotFound,
+                client.getAMIBuildsForUser, 238494)
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsForUserWithNoAMIBuilds(self, db, data):
+        client = self.getClient('admin')
+        AMIbuilds = client.getAMIBuildsForUser(data['adminId'])
+        self.failUnlessEqual(len(AMIbuilds), 0, "Admin user has no" \
+                " AMI builds, should have returned empty list")
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsForAdminUser(self, db, data):
+        client = self.getClient('admin')
+        AMIbuilds = client.getAMIBuildsForUser(data['someOtherDeveloperId'])
+        self.failUnlessEqual(len(AMIbuilds), 5,
+                "Expected to see five AMI builds")
+
+    @fixtures.fixture("Empty")
+    def testAMIBuildsData(self, db, data):
+        client = self.getClient('admin')
+        testClient = self.getClient('test')
+
+        # Create a plain ol' project
+        hostname = shortname = "project1"
+        projectId = testClient.newProject("Project 1",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+
+        # create an AMI build that isn't a part of a release
+        build = testClient.newBuild(projectId,
+                "Test AMI Build (Unpublished, not in release)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000001', RDT_STRING,
+                validate=False)
+
+        # original build created by test user, not seen by admin
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['test']),
+            [dict(amiId='ami-00000001', isPublished=0,
+                 level=0, isPrivate=0, projectId=1)],
+            "Expected to see ami-00000001")
+
+        # make sure admin can't see any AMI builds for herself
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['admin']), [],
+                "Expected to not see any AMI builds as admin doesn't belong to any projects with AMI builds")
+
+        # add admin to project, now admin shows AMI build
+        project = client.getProject(projectId)
+        project.addMemberById(data['admin'], userlevels.DEVELOPER)
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['admin']),
+            [dict(amiId='ami-00000001', isPublished=0,
+                 level=1, isPrivate=0, projectId=1)],
+            "Expected to see ami-00000001")
+
+        # create a published release, but don't publish yet
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['admin']),
+            [dict(amiId='ami-00000001', isPublished=0,
+                 level=1, isPrivate=0, projectId=1)],
+            "Expected isPublished to not be set")
+
+        # publish the published release
+        pubRelease.publish()
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['admin']),
+            [dict(amiId='ami-00000001', isPublished=1,
+                 level=1, isPrivate=0, projectId=1)],
+            "Expected isPublished to be set")
+
+        # hide the project (make private)
+        client.hideProject(projectId)
+        self.failUnlessEqual(client.getAMIBuildsForUser(data['admin']),
+            [dict(amiId='ami-00000001', isPublished=1,
+                 level=1, isPrivate=1, projectId=1)],
+            "Expected isPrivate to be set")
 
 if __name__ == '__main__':
     testsuite.main()

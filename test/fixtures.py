@@ -26,6 +26,7 @@ from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
+from mint.data import RDT_STRING
 
 from conary import dbstore
 from conary.deps import deps
@@ -455,15 +456,113 @@ class FixtureCache(object):
     def fixtureEC2(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
-        adminId = self.createUser(cfg, db, username = 'admin', isAdmin = True)
-        client = shimclient.ShimMintClient(cfg, ('admin', 'adminpass'))
+        adminId = self.createUser(cfg, db,
+                username = 'admin', isAdmin = True)
+
+        developerId = self.createUser(cfg, db,
+                username = 'developer', isAdmin = False)
+
+        someOtherDeveloperId = self.createUser(cfg, db,
+                username = 'someotherdeveloper', isAdmin = False)
+
+        client    = shimclient.ShimMintClient(cfg,
+                ('admin', 'adminpass'))
+
+        someOtherClient = shimclient.ShimMintClient(cfg,
+                ('someotherdeveloper', 'someotherdeveloperpass'))
+
+        hostname = shortname = "testproject"
+        projectId = someOtherClient.newProject("Test Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+
+        hostname = shortname = "otherproject"
+        otherProjectId = someOtherClient.newProject("Other Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+
+        # add the developer to the testproject
+        project = client.getProject(projectId)
+        project.addMemberById(developerId, userlevels.DEVELOPER)
+
+        # create an AMI build that isn't a part of a release
+        build = client.newBuild(projectId,
+                "Test AMI Build (Unpublished, not in release)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000001', RDT_STRING,
+                validate=False)
+
+        # create an AMI build and add it to an unpublished
+        # (not final) release
+        build = client.newBuild(projectId, "Test AMI Build (Unpublished)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.2-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000002', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+
+        # create an AMI build and add it to a published release
+        build = client.newBuild(projectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.3-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000003', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+
+        # create a published AMI build on the other project
+        build = client.newBuild(otherProjectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.4-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000004', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(otherProjectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+
+        # create a plain ol' AMI build on the other project
+        build = client.newBuild(otherProjectId,
+                "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.5-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000005', RDT_STRING,
+                validate=False)
 
         amiIds = []
         for i in range(0,5):
             amiIds.append(client.createBlessedAMI('ami-%08d' % i,
                     "This is test AMI instance %d" % i))
 
-        return cfg, { 'adminId': adminId, 'amiIds': amiIds }
+        return cfg, { 'adminId': adminId,
+                      'developerId': developerId,
+                      'someOtherDeveloperId': someOtherDeveloperId,
+                      'amiIds': amiIds,
+                      'projectId': projectId,
+                      'otherProjectId': otherProjectId,
+                      }
 
 
     def __del__(self):
