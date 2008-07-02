@@ -12,6 +12,7 @@ import time
 import tempfile
 
 import boto
+import boto.ec2
 from boto.exception import EC2ResponseError
 
 from mint import ec2
@@ -24,6 +25,9 @@ import fixtures
 
 FAKE_PUBLIC_KEY  = '123456789ABCDEFGHIJK'
 FAKE_PRIVATE_KEY = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+
+FAKE_PUBLIC_KEY2  = '987654321ABCDEFGHIJK'
+FAKE_PRIVATE_KEY2 = '987654321ABCDEFGHIJK123456789ABCDEFGHIJK'
 
 class FakeEC2Connection(object):
 
@@ -47,6 +51,38 @@ class FakeEC2Connection(object):
 
     def terminate_instances(self, instance_ids=[]):
         return
+    
+    def get_all_key_pairs(self, keynames=None):
+        if not keynames:
+            return KEY_PAIRS
+        
+        pairs = []
+        for name in keynames:
+            for keyPair in KEY_PAIRS:
+                if keyPair.name == name:
+                    pairs.append(keyPair)
+            
+        return pairs      
+    
+    def get_key_pair(self, keyname):
+        return self.get_all_key_pairs([keyname])
+
+class FakeEC2KeyPair(object):
+    __slots__ = ( 'name', 'fingerprint', 'material')
+    
+    def __init__(self, name, fingerprint, material):
+        self.name = name
+        self.fingerprint = fingerprint
+        self.material = material
+        
+KEY_PAIRS = [FakeEC2KeyPair(
+                 'key1', 
+                 '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f',
+                 'some RSA private key'),
+             FakeEC2KeyPair(
+                 'key2', 
+                 '2f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f',
+                 'another RSA private key')]     
 
 class FakeEC2Reservation(object):
 
@@ -331,6 +367,42 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
         self.failUnless('rapadminpassword = password' in
                 launchedAMIInstance.userData)
+        
+    @fixtures.fixture("EC2")
+    def testGetAMIKeyPairs(self, db, data):
+        client = self.getClient("admin")
+
+        # test getting all
+        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), [])
+        self.assertTrue(pairs == [
+            ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'some RSA private key'), 
+            ('key2', '2f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'another RSA private key')])
+        
+        # test getting 1
+        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), ['key1'])
+        self.assertTrue(pairs == [
+            ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'some RSA private key')])
+        
+        # test getting multiple
+        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), ['key1', 'key2'])
+        self.assertTrue(pairs == [
+            ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'some RSA private key'), 
+            ('key2', '2f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'another RSA private key')])
+        
+    @fixtures.fixture("EC2")
+    def testGetAMIKeyPair(self, db, data):
+        client = self.getClient("admin")
+
+        # test getting all
+        pair = client.getAMIKeyPair(buildEC2AuthToken(self.cfg), 'key1')
+        self.assertTrue(pair == [
+            ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
+             'some RSA private key')])
 
 if __name__ == '__main__':
     testsuite.main()

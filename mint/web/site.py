@@ -378,6 +378,7 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def processCloudSettings(self, auth, **kwargs):
         
+        dataSets = {}
         for key, (dType, default, prompt, errordesc, helpText, password) in \
                 self.user.getDataTemplateAWS().iteritems():
             if dType == data.RDT_BOOL:
@@ -386,7 +387,27 @@ class SiteHandler(WebHandler):
                 val = int(kwargs.get(key, default))
             else:
                 val = str(kwargs.get(key, default))
-            self.user.setDataValue(key, val)
+            # store the value for now, don't add it until validated
+            dataSets[key] = val
+            
+        accountId = dataSets['awsAccountNumber']
+        accessKey = dataSets['awsPublicAccessKeyId']
+        secretKey = dataSets['awsSecretAccessKey']
+        
+        valid, status = self.client.validateAMICredentials((accountId, 
+                            accessKey, secretKey))
+        if not valid:
+            if status == 401:
+                return self._write("error", shortError = "Authentication Error",
+                            error = "AWS was not able to validate the provided"\
+                                    " access credentials")
+            else:
+                return self._write("error", shortError = "Communication Error",
+                            error = "There was an error comunicating with AWS")
+                
+        
+        for key, value in dataSets.iteritems():
+            self.user.setDataValue(key, value)
             
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
