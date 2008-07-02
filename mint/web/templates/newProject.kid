@@ -92,6 +92,11 @@
                             </p>
                         </td>
                     </tr>
+                </table>
+
+
+                <h3>Advanced Options</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                     <tr>
                         <th>Repository Commits Email</th>
                         <td>
@@ -106,13 +111,26 @@
                              </p>
                         </td>
                     </tr>
+
+                    <tr>
+                        <th><em class="required">Repository Domain Name</em></th>
+                        <td>
+                            <input type="text" name="domainname" value="${kwargs['domainname']}" />
+                            <p class="help">
+                                If an alternate domain name is required for this repository, it may
+                                be typed here. The Domain Name will be appended to the Short Name
+                                to form the permanent repository hostname, and can not be changed
+                                after the ${projectText().lower()} is created. The default is
+                                typically sufficient.
+                            </p>
+                        </td>
+                    </tr>
                 </table>
                 <p>
                     <button class="img" type="submit">
                         <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
                     </button>
                 </p>
-                <input type="hidden" name="domainname" value="${kwargs['domainname']}" />
             </form>
         </div>
     </body>
