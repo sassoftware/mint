@@ -69,6 +69,9 @@ static-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
 	cp $(static_files) $(DESTDIR)$(STATICDEST)/
 
+cgi-install:
+	mkdir -p $(DESTDIR)$(CGIDEST)
+	cp $(cgi_files) $(DESTDIR)$(CGIDEST)/
 
 kid-clean:
 

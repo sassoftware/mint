@@ -62,45 +62,57 @@ def setup():
     global testPath
     global archivePath
 
-    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary-2.0'))
-    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test-2.0')))
+    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary'))
+    conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test')))
     mcpPath         = os.getenv('MCP_PATH',         os.path.realpath('../../mcp'))
     mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.realpath(os.path.join(mcpPath, 'test')))
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath('../../jobslave'))
     mintPath        = os.getenv('MINT_PATH',        os.path.realpath('..'))
     mintTestPath    = os.getenv('MINT_TEST_PATH',   os.path.realpath('.'))
-    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa'))
-    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test'))
+    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa-2.1'))
+    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test-2.1'))
     raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
-    proddefPath     = os.getenv('PRODDEF_PATH',     os.path.realpath('../../proddef'))
+    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../product-definition'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
+
+    #Package creator
+    packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath('../../package-creator-service'))
+    if not os.path.exists(packageCreatorPath):
+        print >> sys.stderr, "Please set PACKAGE_CREATOR_SERVICE_PATH"
+        sys.exit(1)
+    conaryFactoryTestPath = os.getenv('CONARY_FACTORY_TEST_PATH',    os.path.realpath('../../conary-factory-test'))
+    if not os.path.exists(conaryFactoryTestPath):
+        print >> sys.stderr, "Please set CONARY_FACTORY_TEST_PATH"
+        sys.exit(1)
 
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
-        raaPath, raaTestPath, raaPluginsPath, proddefPath,
-        coveragePath)] + sys.path
+        raaPath, raaTestPath, raaPluginsPath, proddefPath, coveragePath,
+        packageCreatorPath, conaryFactoryTestPath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,
         JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
-        PRODDEF_PATH=proddefPath,
+        PRODUCT_DEFINITION_PATH=proddefPath,
         COVERAGE_PATH=coveragePath, 
+        PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
+        CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,
         PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
     from conary_test import resources
 
     resources.testPath = testPath = testhelp.getTestPath()
-    resources.archivePath = archivePath = testPath + '/' + "archive"
+    resources.mintArchivePath = archivePath = testPath + '/' + "archive"
+
+    # Set conary's archivePath as well
+    resources.archivePath = conaryTestPath + '/archive'
 
     global conaryDir
 
     resources.conaryDir = conaryDir = os.environ['CONARY_PATH']
-
-    from conary.lib import util
-    sys.excepthook = util.genExcepthook(True)
 
     # if we're running with COVERAGE_DIR, we'll start covering now
     from conary.lib import coveragehook

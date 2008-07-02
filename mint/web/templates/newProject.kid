@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version', 'commitEmail']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -51,6 +51,20 @@
                         </td>
                     </tr>
 
+                    <tr>
+                        <th><em class="required">${projectText().title()} Namespace:</em></th>
+                        <td>
+                            <input type="text" name="namespace" value="${kwargs['namespace']}" size="16" maxlength="128"/>
+                            <p class="help">
+                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
+                                Namespaces usually represent the organization behind the ${projectText().lower()}, or the namespace of
+                                the ${projectText().lower()} that is being derived.  Namespaces must start with an alphanumeric
+                                character and can be followed by any number of other alphanumeric characters.
+                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
+                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
+                             </p>
+                        </td>
+                    </tr>
                     <tr>
                         <th><em class="required">${projectText().title()} Major Version:</em></th>
                         <td>

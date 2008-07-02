@@ -13,6 +13,7 @@ import sys
 import tempfile
 
 import mint_rephelp
+from mint import config
 from mint import copyutils
 from mint import templates
 from mint import flavors
@@ -274,7 +275,8 @@ Much like Powdermilk Biscuits[tm]."""
     # the developer's system anyway.
     @testsuite.context("unfriendly")
     def testJavascript(self):
-        whiteList = ['json.js']
+        # whizzyupload.js was validated with jslint
+        whiteList = ['json.js', 'whizzyupload.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
@@ -621,6 +623,19 @@ Much like Powdermilk Biscuits[tm]."""
         # invalid should return string text explainign what is wrong
         text = validateNamespace("rpl@blah")
         self.assertTrue(isinstance(text, str))
+        
+    def testBuildEC2AuthToken(self):
+        
+        # test empty
+        cfg = None
+        self.assertTrue(buildEC2AuthToken(cfg) == ())
+        
+        # test with daya
+        cfg = config.MintConfig()
+        cfg.awsAccountId = 'accountId'
+        cfg.awsPublicKey = 'awsPublicKey'
+        cfg.awsPrivateKey = 'awsPrivateKey'
+        self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
         
 
 if __name__ == "__main__":

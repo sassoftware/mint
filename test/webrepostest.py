@@ -15,6 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from repostest import testRecipe
 from conary import versions
 from conary.conaryclient import ConaryClient
+from conary_test import resources
 
 testDirRecipe = """
 class TestCase(PackageRecipe):
@@ -121,7 +122,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.openRepository(1)
         extProjectId = client.newExternalProject("External Project",
             "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
-            'http://localhost:%d/conary/' % self.servers.getServer(1).port, False)
+            'http://localhost:%d/conary/' % self.mintServers.getServer(1).port, False)
 
         self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:devel'))
         page = self.assertCode('/repos/external/browse', code = 200)
@@ -452,7 +453,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # add archive/key.asc to project
         project = client.getProject(projectId)
-        gpgData = file(os.path.join(self.archiveDir, 'key.asc'))
+        gpgData = file(os.path.join(resources.mintArchivePath, 'key.asc'))
 
         from conary import conaryclient
         cclient = conaryclient.ConaryClient(project.getConaryConfig())

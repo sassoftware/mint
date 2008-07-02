@@ -17,6 +17,7 @@ from rpath_common.proddef import api1 as proddef
 
 import copy
 import htmlentitydefs
+import inspect
 import re
 import random
 import string
@@ -274,7 +275,7 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
 def getProjectText():
     """Returns project if rBO and product if rBA"""
-    return isRBO() and "project" or "product"
+    return "product"
 
 def genPassword(length):
     """
@@ -518,8 +519,45 @@ def validateNamespace(ns):
     @param ns: a namespace to validate
     @return: True if valid, else a string explaining what is wrong
     """
+    if len(ns) > 16:
+        return "The namespace cannot be more than 16 characters long"
+
     valid = ns and "@" not in ns and ':' not in ns
     if not valid:
         return "The namespace can not contain '@' or ':'."
     
     return True
+
+
+def weak_signature_call(_func, *args, **kwargs):
+    '''
+    Call I{func} with keyword arguments I{kwargs}, removing any keyword
+    arguments not expected by I{func}.
+    '''
+
+    # Iterate down the chain of decorators until we hit the actual
+    # function
+    target_func = _func
+    while hasattr(target_func, '__wrapped_func__'):
+        target_func = target_func.__wrapped_func__
+
+    argnames, _, varkw, _ = inspect.getargspec(target_func)
+    if varkw:
+        # We can't guess what variable keywords are in use, so just pass
+        # them on. With any luck, the function will not care about extras
+        # in a dictionary.
+        keep_args = kwargs
+    else:
+        keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
+            if arg in argnames)
+    return _func(*args, **keep_args)
+
+def buildEC2AuthToken(cfg):
+        """
+        Convenience function to build the EC2 auth token from the config data
+        """
+        at = ()
+        if cfg:
+            at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
+        
+        return at

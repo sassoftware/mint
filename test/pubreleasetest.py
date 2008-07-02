@@ -9,8 +9,7 @@ testsuite.setup()
 import time
 
 import fixtures
-import mint_rephelp
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, MintRepositoryHelper
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import buildtypes
 from mint import pubreleases
@@ -19,7 +18,7 @@ from mint.mint_error import *
 from conary import versions
 from conary.conaryclient import ConaryClient
 
-class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
+class PublishedReleaseTest(fixtures.FixturedUnitTest):
     @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testPublishedReleaseCreation(self, db, data):
@@ -450,8 +449,6 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest, MintRepositoryHelper):
     # TODO rework me completely
     @fixtures.fixture("Full")
     def testPublishedReleasesList(self, db, data):
-        #client, userId = self.quickMintUser("testuser", "testpass")
-        #adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
         raise testsuite.SkipTestException("rework me completely")
 
         client = self.getClient("owner")

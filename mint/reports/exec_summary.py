@@ -87,14 +87,13 @@ class ExecSummary(MintReport):
         data.append(('',''))
         data.append(('Top Projects',' Users'))
 
-        cu.execute("""SELECT Projects.name,
-                             COUNT(Projects.projectId) AS numUsers
-                          FROM ProjectUsers
-                          LEFT JOIN Projects
-                              ON ProjectUsers.projectId = Projects.projectId
-                          GROUP BY Projects.projectId
-                          ORDER BY numUsers DESC, name
-                          LIMIT 5""")
+        cu.execute("""select p.name, coalesce(pu.numUsers, 0) as numUsers
+                      from Projects as p
+                      left join (select projectId, count(userId) as numUsers
+                          from ProjectUsers group by projectId) as pu
+                          using (projectId)
+                     order by numUsers desc, name
+                     limit 5""")
 
         data.extend([(x[0], x[1]) for x in cu.fetchall()])
 
