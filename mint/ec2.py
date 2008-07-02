@@ -130,11 +130,9 @@ class EC2Wrapper(object):
                             str(pair.material)))            
         return keyPairs
     
-    @staticmethod
-    def validateCredentials(authToken):
+    def validateCredentials(self):
         try:
-            wrapper = EC2Wrapper(authToken)
-            wrapper.getAllKeyPairs()
+            self.getAllKeyPairs()
             rc = True, None
         except EC2ResponseError, e:
             rc = False, e.status

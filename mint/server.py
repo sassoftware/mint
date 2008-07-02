@@ -4390,7 +4390,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(tuple)
     @private
     def validateAMICredentials(self, authToken):
-        return ec2.EC2Wrapper.validateCredentials(authToken)
+        return ec2.EC2Wrapper(authToken).validateCredentials()
     
     @typeCheck(tuple, list)
     @private
