@@ -10,6 +10,7 @@
     from mint.web.templatesupport import projectText
     from rpath_common.proddef import api1 as proddef
     for var in [ 'name',
+                 'namespace',
                  'description' ]:
         kwargs[var] = kwargs.get(var, '')
 ?>
@@ -178,13 +179,21 @@
             </tr>
         </div>
         
-        <div py:def="upstreamSourcesOptions(ordinal='bt')" py:strip="True">
+        <div py:def="upstreamSourcesOptions(usource=None, ordinal='bt')" py:strip="True">
+        <?python
+            if usource:
+                troveName = usource.troveName or ''
+                label = usource.label or ''
+            else:
+                troveName = ''
+                label = ''
+        ?>
             <tr id="pdusource-${ordinal}">
                 <td>
-                    <input type="text" name="pdusource-${ordinal}-package" value="foo 1 package" />
+                    <input type="text" name="pdusource-${ordinal}-troveName" value="${troveName}" />
                 </td>
                 <td>
-                    <input type="text" name="pdusource-${ordinal}-label" value="foo1 label" />
+                    <input type="text" name="pdusource-${ordinal}-label" value="${label}" />
                 </td>
                 <td class="row-button"><a class="pdusource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete-n.gif" title="Delete" /></a></td>
             </tr>
@@ -240,6 +249,26 @@
                     class="mainformhorizontal">
                     <tr>
                         <th>
+                            <!--! namespace only required if creating new one -->
+                            <div py:if="not isNew">Namespace:</div>
+                            <em py:if="isNew" class="required">Namespace:</em>
+                        </th>
+                        <td py:if="isNew">
+                            <input type="text" autocomplete="off" name="namespace"
+                                value="${kwargs['namespace']}"/>
+                            <p class="help">
+                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
+                                Namespaces usually represent the organization behind the project, or the namespace of
+                                the project that is being derived.  Namespaces must start with an alphanumeric
+                                character and can be followed by any number of other alphanumeric characters.
+                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
+                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
+                            </p>
+                        </td>
+                        <td py:if="not isNew">${kwargs['namespace']}<input type="hidden" name="namespace" value="${kwargs['namespace']}" /></td>
+                    </tr>
+                     <tr>
+                        <th>
                             <!--! version only required if creating new one -->
                             <div py:if="not isNew">Major Version:</div>
                             <em py:if="isNew" class="required">Major Version:</em>
@@ -290,39 +319,7 @@
                             </table>
                         </td>
                     </tr>
-                    <!--  Upstream Sources currently disabled -->
-                    <tr py:if="False">
-                        <th>Upstream Sources:</th>
-                        <td>
-                            <table id="pdusource" class="pretty-fullwidth">
-                                <thead>
-                                    <tr>
-                                        <th>Project</th>
-                                        <th>Version</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <div py:strip="True" py:for="us in kwargs['upstreamSources']"
-                                         py:content="upstreamSourcesOptions()" />
-                                     <tr id="pdusource-empty" py:attrs="{'style': len(kwargs['upstreamSources']) and 'display: none;' or None}">
-                                        <td colspan="4">No upstream sources defined.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table id="pdusource-bt-all" style="display: none">
-                                <tbody py:content="upstreamSourcesOptions()" />
-                            </table>
-                            <p>
-                                <a class="pdusource-adder">
-                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />
-                                    Add a new upstream source
-                                </a>
-                            </p>
-                        </td>
-                    </tr>
+                    
                     <tr>
                         <th>Image Sets:</th>
                         <td>

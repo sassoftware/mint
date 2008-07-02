@@ -24,6 +24,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
+from conary_test import resources
 
 from conary.lib import util
 from conary import versions
@@ -899,7 +900,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testUploadKey(self):
-        keyFile = open(testsuite.archivePath + '/key.asc')
+        keyFile = open(resources.mintArchivePath + '/key.asc')
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1809,6 +1810,32 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         bf.write(XMLbulletinContent)
         bf.close()
         self.assertContent('/', content=XMLbulletinContent)
+
+    def testCloudSettings(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        
+        def validateAMICredentials(self, authToken):
+            return True, None
+                
+        oldValidateAMICredentials = client.server._server.validateAMICredentials
+        client.server._server.validateAMICredentials = validateAMICredentials
+        try:
+            page = self.webLogin('foouser', 'foopass')
+            page = self.fetchWithRedirect('/cloudSettings')
+            page = page.postForm(1, page.post,
+                              { 'awsAccountNumber': '1234-5678-9011',
+                                'awsPublicAccessKeyId': '01010101010101010101',
+                                'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123' })
+    
+            ec2Creds = client.getEC2CredentialsForUser(userId)
+            self.failUnlessEqual(ec2Creds['awsAccountNumber'], '123456789011')
+            self.failUnlessEqual(ec2Creds['awsPublicAccessKeyId'],
+                    '01010101010101010101')
+            self.failUnlessEqual(ec2Creds['awsSecretAccessKey'],
+                    '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
+        finally:
+            client.server._server.validateAMICredentials = oldValidateAMICredentials
+
 
 if __name__ == "__main__":
     testsuite.main()

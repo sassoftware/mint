@@ -138,6 +138,17 @@ class UsersTest(fixtures.FixturedUnitTest):
             user.setDataValue(key, template[key][1])
             self.failIf(key in user.getDefaultedData(),
                         "%s was not removed from defaulted data when set"% key)
+            
+    @fixtures.fixture("Full")
+    def testDefaultedDataAWS(self, db, data):
+        client = self.getClient('user')
+        user = client.getUser(data['user'])
+
+        template = user.getDataTemplateAWS()
+        for key in user.getDefaultedDataAWS():
+            user.setDataValue(key, template[key][1])
+            self.failIf(key in user.getDefaultedDataAWS(),
+                        "%s was not removed from defaulted data when set"% key)
 
     @fixtures.fixture("Full")
     def testMissingSearchResults(self, db, data):
@@ -193,6 +204,18 @@ class UsersTest(fixtures.FixturedUnitTest):
         newDict = user.getDataDict()
         assert(baseDict != newDict)
         assert(newDict['newsletter'] == True)
+        
+    @fixtures.fixture('Full')
+    def testUserDataDictAWS(self, db, data):
+        client = self.getClient('user')
+        user = client.getUser(data['user'])
+        baseDict = user.getDataDict(user.getDataTemplateAWS())
+        self.failIf(not isinstance(baseDict, dict))
+        # ['awsSecretAccessKey', 'awsAccessKeyId', 'awsAccountId']
+        user.setDataValue('awsSecretAccessKey', 'foo')
+        newDict = user.getDataDict(user.getDataTemplateAWS())
+        assert(baseDict != newDict)
+        assert(newDict['awsSecretAccessKey'] == 'foo')
 
     @ fixtures.fixture('Full')
     def testGetUserPublic(self, db, data):

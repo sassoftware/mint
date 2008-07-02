@@ -450,15 +450,21 @@ class User(database.TableObject):
 
     def getDataTemplate(self):
         return usertemplates.userPrefsVisibleTemplate
+    
+    def getDefaultedDataAWS(self):
+        return self.server.getUserDataDefaultedAWS(self.username)
+    
+    def getDataTemplateAWS(self):
+        return usertemplates.userPrefsAWSTemplate
 
-    def getDataDict(self):
+    def getDataDict(self, template = None):
         dataDict = self.server.getUserDataDict(self.username)
-        template = self.getDataTemplate()
+        if not template:
+            template = self.getDataTemplate()
         for name in template:
             if name not in dataDict:
                 dataDict[name] = template[name][1]
         return dataDict
-        return self.server.getUserDataTemplate()
 
 
 class ProjectUsersTable(database.DatabaseTable):

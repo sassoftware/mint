@@ -18,6 +18,7 @@ from mint import database
 from mint import server
 from mint import shimclient
 from mint import users, userlevels
+from mint.helperfuncs import weak_signature_call, getProjectText
 from mint.mint_error import *
 from mint.session import SqlSession, COOKIE_NAME
 from mint.web import cache, fields
@@ -139,7 +140,7 @@ class MintApp(WebHandler):
             return tb
 
         try:
-            output = method(**d)
+            output = weak_signature_call(method, **d)
             if self.auth.authorized:
                 self.session.save()
             elif 'cacheable' in method.__dict__:
@@ -239,7 +240,7 @@ class MintApp(WebHandler):
         # Handle messages stashed in the session
         self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', '')
-        self.searchType = self.session.setdefault('searchType', 'Projects')
+        self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
 

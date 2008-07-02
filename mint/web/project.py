@@ -7,8 +7,8 @@ import email
 import os
 import re
 import sys
-import tempfile
 import time
+import tempfile
 from mod_python import apache
 
 from mint.web import basictroves
@@ -695,6 +695,94 @@ class ProjectHandler(WebHandler):
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest)
 
+    @writersOnly
+    def newPackage(self, auth):
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
+        versions = self.project.getProductVersionList()
+        if not versions:
+            self._addErrors('You must create a product version before using the package creator')
+            self._predirect('editVersion', temporary=True)
+        return self._write('createPackage', message = '',
+                uploadDirectoryHandle = uploadDirectoryHandle,
+                versions = versions, versionId = -1, name=None)
+
+    @writersOnly
+    @strFields(uploadId=None, fieldname=None)
+    def upload_iframe(self, auth, uploadId, fieldname):
+        return self._write('uploadPackageFrame', uploadId = uploadId,
+                fieldname = fieldname, project = self.project.hostname)
+
+    @writersOnly
+    @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
+    @intFields(versionId=-1)
+    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url, sessionHandle):
+        if sessionHandle:
+            editing = True
+        else:
+            editing = False
+        try:
+            #Start the session first
+            sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        if not factories:
+            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                editing = editing, sessionHandle = sessionHandle,
+                factories = factories, message = None)
+
+    @writersOnly
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def newUpload(self, name, label, prodVer, namespace):
+        """"""
+        #Start both the upload and the pc sessions
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
+        versions = []
+        sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
+        return self._write('createPackage', message = '',
+                uploadDirectoryHandle = uploadDirectoryHandle,
+                versions = [], versionId = -1, sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
+
+    @writersOnly
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def maintainPackageInterview(self, name, label, prodVer, namespace):
+        """"""
+        try:
+            sessionHandle, factories = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                editing = True, sessionHandle = sessionHandle,
+                factories = factories, message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None, factoryHandle=None)
+    def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+        #It is assumed that the package creator service will validate the input
+        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+        return self._write('buildPackage', sessionHandle = sessionHandle,
+                message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None)
+    def getPackageBuildLogs(self, auth, sessionHandle):
+        try:
+            logs = self.client.getPackageBuildLogs(sessionHandle)
+        except MintError, e:
+            self._addErrors("Build logs are not available for this build: %s" % str(e))
+            self._predirect('index', temporary=True)
+
+        self.req.content_type = 'text/plain'
+        return logs
+
+    @writersOnly
+    def packageCreatorPackages(self, auth):
+        pkgList = self.client.getPackageCreatorPackages(self.project.getId())
+
+        return self._write('packageList', pkgList=pkgList, message=None)
 
     @ownerOnly
     def newRelease(self, auth):
@@ -1136,10 +1224,13 @@ class ProjectHandler(WebHandler):
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             pd = self.client.getProductDefinitionForVersion(id)
+            kwargs['namespace'] = pd.getConaryNamespace()
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
             pd = proddef.ProductDefinition()
             helperfuncs.addDefaultStagesToProductDefinition(pd)
+            # XXX: this should be carried forward when images and other values are
+            kwargs['namespace'] = self.project.namespace
 
         return self._write("editVersion",
                 isNew = isNew,
@@ -1150,13 +1241,20 @@ class ProjectHandler(WebHandler):
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor,
             **kwargs):
 
         isNew = (id == -1)
+
+        if not namespace:
+            self._addErrors('Missing namespace')
+        else:
+            err = helperfuncs.validateNamespace(namespace)
+            if err != True:
+                self._addErrors(err)
 
         if not name:
             self._addErrors("Missing major version")
@@ -1178,8 +1276,17 @@ class ProjectHandler(WebHandler):
                     self.project.shortname,
                     name,
                     description,
-                    self.cfg.namespace,
+                    namespace,
                     pd)
+
+        if isNew and not self._getErrors():
+            ##### DELETE #####
+            # this value was hard coded for the june 23, 2008 release of rBO
+            # this code must be removed when a proper solution is implemented
+            cCfg = self.project.getConaryConfig()
+            cClient = conaryclient.ConaryClient(cCfg)
+            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+            ##### END DELETE #####
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1211,19 +1318,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 ~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
 ~!xorg-x11.xprint
 """)
-
-        # Process upstream sources
-        usources = collatedDict.get('pdusources',{})
-        # TODO: Include upstream sources, baseFlavor, etc.
-        #       from the UI (which needs to be invented).
-        #       Until then, we'll leave any changes a user
-        #       makes in the repos alone.
-        # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
-        if not pd.getUpstreamSources():
-            pd.addUpstreamSource(troveName="group-rap-linux-service",
-                                 label="rap.rpath.com@rpath:linux-1")
-            pd.addUpstreamSource(troveName="group-os",
-                                 label="conary.rpath.com@rpl:1")
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
@@ -1274,7 +1368,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             if id == -1:
                 try:
                     id = self.client.addProductVersion(self.project.id,
-                            name, description)
+                            namespace, name, description)
                 except ProductVersionInvalid, e:
                     self._addErrors(str(e))
             else:
@@ -1300,6 +1394,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                               (action, getProjectText().lower(), name))
             self._predirect()
         else:
+            kwargs.update(name=name, description=description)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
@@ -1331,6 +1426,35 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             # value since we allow it to be empty
             if not stage.has_key('labelSuffix'):
                 stage['labelSuffix'] = ""
+                
+    def _getValidatedUpstreamSource(self, us):
+        """
+        Return the validated troveName and label for the specified upstream
+        sources dict.  Any keys missing from the dict will be set to '' so 
+        that errors can be properly handled.
+        """
+        
+        # validate the trove name
+        if not us.has_key('troveName'):
+            troveName = ''
+            self._addErrors("Missing trove name for upstream source")
+        else:
+            troveName = us['troveName']
+            
+        # validate the label
+        if not us.has_key('label'):
+            label = ''
+            self._addErrors("Missing label for upstream source")
+        else:
+            try:
+                labelObj = versions.Label(us['label'])
+                label = labelObj.freeze()
+            except Exception ,e:
+                label = us['label']
+                self._addErrors("Invalid label for upstream source: %s" \
+                                % str(e))
+            
+        return troveName, label
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()

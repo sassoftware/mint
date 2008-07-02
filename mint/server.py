@@ -56,6 +56,7 @@ from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint import packagecreator
 
 from mcp import client as mcpClient
 from mcp import mcp_error
@@ -94,8 +95,11 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [6]
+SERVER_VERSIONS = [7]
 # XMLRPC Schema History
+# Version 7
+#  * Added package creator methods
+#  * Added namespace parameter to newPackage, addProductVersion
 # Version 6
 #  * Reworked exception marshalling API. All exceptions derived from MintError
 #    are now marshalled automatically.
@@ -510,22 +514,25 @@ class MintServer(object):
         if not cclient:
             del client
 
-    def _getProductDefinitionForVersionObj(self, versionId):
-        version = projects.ProductVersions(self, versionId)
-        project = projects.Project(self, version.projectId)
+    def _getProductDefinition(self, project, version):
         projectCfg = project.getConaryConfig()
         cclient = conaryclient.ConaryClient(projectCfg)
 
         pd = proddef.ProductDefinition()
         pd.setProductShortname(project.shortname)
         pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(self.cfg.namespace)
+        pd.setConaryNamespace(version.namespace)
         pd.setProductVersion(version.name)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
             raise ProductDefinitionVersionNotFound
         return pd
+
+    def _getProductDefinitionForVersionObj(self, versionId):
+        version = projects.ProductVersions(self, versionId)
+        project = projects.Project(self, version.projectId)
+        return self._getProductDefinition(project, version)
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -735,6 +742,11 @@ class MintServer(object):
             raise InvalidShortname
         return None
 
+    def _validateNamespace(self, namespace):
+        v = helperfuncs.validateNamespace(namespace)
+        if v != True:
+            raise InvalidNamespace
+
     def _validateProductVersion(self, version):
         if not version:
             raise ProductVersionInvalid
@@ -742,10 +754,10 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -755,6 +767,11 @@ class MintServer(object):
         self._validateShortname(shortname, domainname, reservedHosts)
         self._validateHostname(hostname, domainname, reservedHosts)
         self._validateProductVersion(version)
+        if namespace:
+            self._validateNamespace(namespace)
+        else:
+            #If none was set use the default namespace set in config
+            namespace = self.cfg.namespace
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
             raise projects.InvalidProdType
 
@@ -772,7 +789,7 @@ class MintServer(object):
         # initial product definition
         pd = helperfuncs.sanitizeProductDefinition(projectName,
                 desc, hostname, domainname, shortname, version,
-                '', self.cfg.namespace)
+                '', namespace)
 
         label = pd.getDefaultLabel()
 
@@ -787,6 +804,7 @@ class MintServer(object):
                                       description = desc,
                                       hostname = hostname,
                                       domainname = domainname,
+                                      namespace = namespace,
                                       isAppliance = applianceValue,
                                       projecturl = projecturl,
                                       timeModified = time.time(),
@@ -1614,6 +1632,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
             res.remove(ent)
         return res
+    
+    @typeCheck(str)
+    @requiresAuth
+    @private
+    def getUserDataDefaultedAWS(self, username):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        cu = self.db.cursor()
+        cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
+        res = usertemplates.userPrefsAWSTemplate.keys()
+        for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
+            res.remove(ent)
+        return res
 
     @typeCheck(str)
     @requiresAuth
@@ -2138,33 +2171,47 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Create/start each build.
         buildIds = []
         for buildDefinition, nvf in filteredBuilds:
-            buildId = self._createBuildDefBuild(projectId, buildDefinition,
-                    nvf, project.getName())
+            buildImageType = buildDefinition.getBuildImageType()
+            buildSettings = buildImageType.fields.copy()
+            buildType = buildImageType.tag
+
+            n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+            projectName = project.getName()
+            buildId = self.newBuildWithOptions(projectId, projectName,
+                                               n, v, f, buildType,
+                                               buildSettings)
             buildIds.append(buildId)
             self.startImageJob(buildId)
-
         return buildIds
 
-    def _createBuildDefBuild(self, projectId, buildDefinition, nvf, buildName):
-        """
-        Create a new build from build definition info
-        @return: the build id
-        """
+
+    @typeCheck(int, str, str, str, str, str, dict)
+    @requiresAuth
+    @private
+    def newBuildWithOptions(self, projectId, productName,
+                            groupName, groupVersion, groupFlavor,
+                            buildType, buildSettings):
         customTroveDict = { 'mediaTemplateTrove' : 'media-template',
                             'anacondaCustomTrove' : 'anaconda-custom',
                             'anacondaTemplatesTrove' : 'anaconda-templates'}
+        self._filterProjectAccess(projectId)
+        buildId = self.builds.new(projectId = projectId,
+                                      name = productName,
+                                      timeCreated = time.time(),
+                                      buildCount = 0)
+        mc = self._getMcpClient()
 
-        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+        try:
+            self.buildData.setDataValue(buildId, 'jsversion',
+                str(mc.getJSVersion()),
+                data.RDT_STRING)
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError()
 
-        project = projects.Project(self, projectId)
-        buildId = self.newBuild(projectId, buildName)
         newBuild = builds.Build(self, buildId)
-        newBuild.setTrove(n, v, f)
-        buildType = buildtypes.xmlTagNameImageTypeMap[buildDefinition.getBuildImageType().tag]
+        newBuild.setTrove(groupName, groupVersion, groupFlavor)
+        buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
-
-        buildImageType = buildDefinition.getBuildImageType()
-        buildSettings = buildImageType.fields.copy()
 
         template = newBuild.getDataTemplate()
 
@@ -2174,8 +2221,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if buildSettings.has_key(customTroveSetting):
                 troveName = customTroveDict[customTroveSetting]
                 troveVersion = str(buildSettings.pop(customTroveSetting))
-                customTroveSpec = project.resolveExtraTrove(troveName, v, f,
-                        troveVersion)
+                customTroveSpec = self.resolveExtraTrove(projectId, troveName,
+                                                     troveVersion, '',
+                                                     groupVersion, groupFlavor)
                 if customTroveSpec:
                     newBuild.setDataValue(troveName, customTroveSpec)
 
@@ -4352,6 +4400,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
     #
     # EC2 Support for rBO
     #
+    
+    @typeCheck(tuple)
+    @private
+    def validateAMICredentials(self, authToken):
+        return ec2.EC2Wrapper(authToken).validateCredentials()
+    
+    @typeCheck(tuple, list)
+    @private
+    def getAMIKeyPairs(self, authToken, keyNames):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        return ec2Wrapper.getAllKeyPairs(keyNames)
 
     @typeCheck(str, str)
     @requiresAdmin
@@ -4394,16 +4453,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getActiveLaunchedAMIs(self):
         return self.launchedAMIs.getActive()
 
-    @typeCheck(int)
+    @typeCheck(tuple, int)
     @private
-    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
-    @typeCheck(int)
+    @typeCheck(tuple, int)
     @private
-    def launchAMIInstance(self, blessedAMIId):
+    def launchAMIInstance(self, authToken, blessedAMIId):
         # get blessed instance
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
@@ -4431,7 +4490,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             userData = None
 
         # attempt to boot it up
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
                 useNATAddressing=self.cfg.ec2UseNATAddressing)
@@ -4448,10 +4507,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 launchedAt = toDatabaseTimestamp(),
                 userData = userData)
 
+    @typeCheck(tuple)
     @requiresAdmin
     @private
-    def terminateExpiredAMIInstances(self):
-        ec2Wrapper = ec2.EC2Wrapper(self.cfg)
+    def terminateExpiredAMIInstances(self, authToken):
+        ec2Wrapper = ec2.EC2Wrapper(authToken)
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
         for launchedAMIId, ec2InstanceId in instancesToKill:
@@ -4492,17 +4552,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, str, ((str, unicode),))
-    def addProductVersion(self, projectId, name, description):
+    @typeCheck(int, str, str, ((str, unicode),))
+    def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         
+        # Check the namespace
+        self._validateNamespace(namespace)
         # make sure it is a valid product version
         self._validateProductVersion(name)
         
         try:
+            # XXX: Should this add an entry to the labels table?
             return self.productVersions.new(projectId = projectId,
+                                                 namespace = namespace,
                                                  name = name,
                                                  description = description) 
         except DuplicateItem:
@@ -4612,6 +4676,402 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return taskList
 
+    @requiresAuth
+    def createPackageTmpDir(self):
+        '''
+        Creates a directory for use by the package creator UI and Service.
+        This directory is the receiving target for uploads, and the cache
+        location for pc service operations.
+
+        @rtype: String
+        @return: A X{uploadDirectoryHandle} to be used with subsequent calls to
+        file upload methods
+        '''
+        path = tempfile.mkdtemp('', packagecreator.PCREATOR_TMPDIR_PREFIX,
+            dir = os.path.join(self.cfg.dataPath, 'tmp'))
+        return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
+
+    def _getMinCfg(self, project):
+        cfg = project.getConaryConfig()
+        cfg['name'] = self.auth.username
+        cfg['contact'] = self.auth.fullName or ''
+        #package creator service should get the searchpath from the product definition
+        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
+        return mincfg
+
+    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
+    @requiresAuth
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url):
+        '''
+            Given a file represented by L{uploadDirectoryHandle}, query the PC Service for
+            possible factories to handle it.
+
+            @param projectId: The id for the project being worked on
+            @type projectId: int
+            @param uploadDirectoryHandle: Unique key generated by the call to
+            L{createPackageTmpDir}
+            @type uploadDirectoryHandle: string
+            @param versionId: A product version ID
+            @type versionId: int
+            @param sessionHandle: A sessionHandle.  If empty, one will be created
+            @type sessionHandle: string
+            @param upload_url: Not used (yet)
+            @type upload_url: string
+
+            @return: L{sessionHandle} and A list of the candidate build factories and the data scanned
+            from the uploaded file
+            @rtype: list of 3-tuples.  The 3-tuple consists of the
+            factory name (i.e. X{factoryHandle}, the factory definition XML and a
+            dictionary of key-value pairs representing the scanned data.
+
+            @raise PackageCreatorError: If the file provided is not supported by
+            the package creator service, or if the L{uploadDirectoryHandle} does not
+            contain a valid manifest file as generated by the upload CGI script.
+        '''
+        from mint.web import whizzyupload
+        from conary import versions as conaryVer
+
+        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
+        fileuploader = whizzyupload.fileuploader(path, 'uploadfile')
+        try:
+            info = fileuploader.parseManifest()
+        except IOError, e:
+            raise PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
+        #TODO: Check for a URL
+        #Now go ahead and start the Package Creator Service
+
+        #Register the file
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        project = projects.Project(self, projectId)
+        mincfg = self._getMinCfg(project)
+
+        if not sessionHandle:
+            #Get the version object
+            version = projects.ProductVersions(self, versionId)
+            sesH = pc.startSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=version.namespace,
+                version=version.name), mincfg)
+        else:
+            sesH = sessionHandle
+
+        # Start the PCS session, and "upload" the data
+        pc.uploadData(sesH, info['filename'], info['tempfile'],
+                info['content-type'])
+
+        return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
+
+    @requiresAuth
+    def getPackageCreatorPackages(self, projectId):
+        """
+            Return a list of all of the packages that are available for maintenance by the package creator UI.  This is done via a conary API call to retrieve all source troves with the PackageCreator troveInfo.
+            @param projectId: Project ID of the project for which to request the list
+            @type projectId: int
+
+            @rtype: list
+            @return: The list of packages
+        """
+        # Get the conary repository client
+        project = projects.Project(self, projectId)
+        repo = self._getProjectRepo(project)
+
+        troves = repo.getPackageCreatorTroves(project.getFQDN())
+        #Set up a dictionary structure
+        ret = dict()
+
+        for (n, v, f), sjdata in troves:
+            data = simplejson.loads(sjdata)
+            # First version
+            # We expect data to look like {'productDefinition':
+            # dict(hostname='repo.example.com', shortname='repo',
+            # namespace='rbo', version='2.0'), 'develStageLabel':
+            # 'repo.example.com@rbo:repo-2.0-devel'}
+
+            #Filter out labels that don't match the develStageLabel
+            label = v.trailingLabel()
+            if label != str(data['develStageLabel']):
+                pDefDict = data['productDefinition']
+                manip = ret.setdefault(pDefDict['version'], dict())
+                manipns = manip.setdefault(pDefDict['namespace'], dict())
+                manipns[n] = data
+        return ret
+
+    @requiresAuth
+    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
+        project = projects.Project(self, projectId)
+
+        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
+
+        return sesH
+
+    def _startPackageCreatorSession(self, project, prodVer, namespace, troveName, label):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        mincfg = self._getMinCfg(project)
+        try:
+            sesH = pc.startSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=namespace,
+                version=prodVer), mincfg, "%s=%s" % (troveName, label))
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error starting the package creator service session: %s", str(err))
+        return sesH, pc
+
+    @requiresAuth
+    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
+        """
+            Get the list of factories, but instead of using an uploaded file,
+            it uses the archive that is stored in the :source trove referred to
+            by C{troveSpec}.
+
+            @param projectId: Project ID
+            @type projectId: int
+            @param troveSpec:
+        """
+        project = projects.Project(self, projectId)
+        #start the session
+        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
+        return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
+
+    @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
+    @requiresAuth
+    def savePackage(self, sessionHandle, factoryHandle, data, build):
+        """
+        Save the package to the devel repository and optionally start building it
+
+        @param sessionHandle: Unique key generated by the call to
+        L{createPackageTmpDir}
+        @type sessionHandle: string
+        @param factoryHandle: The handle to the chosen factory as returned by
+        L{getPackageFactories}
+        @type factoryHandle: string
+        @param data: The data requested by the factory definition referred to
+        by the L{factoryHandle}
+        @type data: dictionary
+        @param build: Build the package after it's been saved?
+        @type build: boolean
+
+        @return: True
+        @rtype: boolean
+        """
+        from conary import versions as conaryVer
+        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+
+        datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
+
+        try:
+            srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
+        except packagecreator.errors.ConstraintsValidationError, err:
+            raise PackageCreatorValidationError(*err.args)
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error attempting to create source trove: %s", str(err))
+        if build:
+            try:
+                pc.build(sessionHandle, commit=True)
+            except packagecreator.errors.PackageCreatorError, err:
+                raise PackageCreatorError( \
+                        "Error attempting to build package: %s", str(err))
+        return True
+
+    @typeCheck(((str,unicode),))
+    @requiresAuth
+    def getPackageBuildStatus(self, sessionHandle):
+        """
+        Retrieve the build status of the package referred to by L{sessionHandle}, if any.
+
+        @param sessionHandle: Unique key generated by the call to
+        L{createPackageTmpDir}
+        @type sessionHandle: string
+
+        @return: a list of three items: whether or not the build is complete, a build status code (as returned by rmake), and a message
+        @rtype: list(bool, int, string)
+        """
+        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        try:
+            return pc.isBuildFinished(sessionHandle, commit=True)
+        except packagecreator.errors.PackageCreatorError, e:
+            # TODO: Get a real error status code
+            return [True, -1, str(e)]
+
+    @typeCheck(((str,unicode),))
+    @requiresAuth
+    def getPackageBuildLogs(self, sessionHandle):
+        """
+        Get the build logs for the package creator build, if a build has been performed.
+
+        @param sessionHandle: Unique key generated by the call to
+        L{createPackageTmpDir}
+        @type sessionHandle: string
+
+        @return: The entire rmake build log
+        @rtype: string
+        @raise PackageCreatorError: If no build has been attempted, or an error
+        occurs talking to the build process.
+        """
+        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        try:
+            return pc.getBuildLogs(sessionHandle)
+        except packagecreator.errors.PackageCreatorError, e:
+            raise PackageCreatorError("Error retrieving build logs: %s" % str(e))
+
+    @typeCheck(((str,unicode),), ((str,unicode),))
+    @requiresAuth
+    def pollUploadStatus(self, uploadDirectoryHandle, fieldname):
+        """
+        Check the status of the upload to the CGI script by reading the status
+        file.  Return some measurements useful for displaying progress.
+
+        @param uploadDirectoryHandle: Unique key generated by the call to
+        L{createPackageTmpDir}
+        @type uploadDirectoryHandle: string
+        @param fieldname: The name of the upload field (default in package
+        creator is B{fileupload}).  This is used if more than one fileupload is
+        to happen on the same form as a sort of namespace.
+        @type fieldname: string
+
+        @return: See L{mint.web.whizzyupload.pollStatus}.  Contains the
+        metadata, the current status, and the current time for calculating
+        upload speed, and estimated time remaining.
+        @rtype: dictionary
+
+        @raise PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
+        invalid.
+        """
+        from mint.web import whizzyupload
+        fieldname = str(fieldname)
+        ## Connect up to the tmpdir
+        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
+
+        if os.path.isdir(path):
+            #Look for the status and metadata files
+            return whizzyupload.fileuploader(path, fieldname).pollStatus()
+        else:
+            raise PermissionDenied("You are not allowed to check status on this file")
+
+    @typeCheck(((str,unicode),), (list, ((str,unicode),)))
+    @requiresAuth
+    def cancelUploadProcess(self, uploadDirectoryHandle, fieldnames):
+        """
+        If an upload is in progress to the cgi script, kill the processId being
+        used to handle it
+
+        @param uploadDirectoryHandle: Unique key generated by the call to
+        L{createPackageTmpDir}
+        @type uploadDirectoryHandle: string
+        @param fieldnames: The name(s) of the upload fields (default in package
+        creator is B{fileupload}).  This is used if more than one fileupload is
+        to happen on the same form as a sort of namespace.
+        @type fieldname: list of strings
+
+        @return: True if the uploadDirectoryHandle is a valid session, False otherwise.
+        @rtype: boolean
+        """
+        from mint.web import whizzyupload
+        str_fieldnames = [str(x) for x in fieldnames]
+        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
+        if os.path.isdir(path):
+            for fieldname in str_fieldnames:
+                whizzyupload.fileuploader(path, fieldname).cancelUpload()
+            return True
+        else:
+            return False
+
+    @typeCheck(int)
+    @requiresAuth
+    def getEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, returns a dict of credentials used for
+        Amazon EC2.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: a dictionary of EC2 credentials
+          - 'awsAccountNumber': the Amazon account ID
+          - 'awsPublicAccessKeyId': the public access key
+          - 'awsSecretAccessKey': the secret access key
+        @rtype: C{boolean}
+        @raises: C{ItemNotFound} if there is no such user
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),))
+    @requiresAuth
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey):
+        """
+        Given a userId, update the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @param awsPublicAccessKeyId: the public access key identifier
+        @type  awsPublicAccessKeyId: C{str}
+        @param awsSecretAccessKey: the secret access key
+        @type  awsSecretAccessKey: C{str}
+        @return: True if updated successfully, False otherwise
+        @rtype C{bool}
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        
+        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
+                         awsPublicAccessKeyId=awsPublicAccessKeyId,
+                         awsSecretAccessKey=awsSecretAccessKey)
+
+        # validate the credentials with EC2
+        self._validateEC2Credentials(newValues['awsAccountNumber'],
+                                     newValues['awsPublicAccessKeyId'],
+                                     newValues['awsSecretAccessKey'])
+        
+        try:
+            self.db.transaction()
+            for key, (dType, default, _, _, _, _) in \
+                    usertemplates.userPrefsAWSTemplate.iteritems():
+                val = newValues.get(key, default)
+                self.userData.setDataValue(userId, key, val, dType,
+                        commit=False)
+        except:
+            self.db.rollback()
+            return False
+        else:
+            self.db.commit()
+            return True
+        
+    @typeCheck(int)
+    @requiresAuth
+    def removeEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, remove the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: True if removed successfully, False otherwise
+        @rtype C{bool}
+        """
+        return self.setEC2CredentialsForUser(userId, '', '', '')
+        
+    def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
+                                awsSecretAccessKey):
+        """
+        Validate the EC2 credentials if one or more of them are set.  We 
+        don't validate if they are all empty since we are just deleting the 
+        credentials.
+        """
+        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
+            valid, status = self.validateAMICredentials(
+                                (awsAccountNumber,
+                                 awsPublicAccessKeyId,
+                                 awsSecretAccessKey))
+            if not valid:
+                if status == 401:
+                    raise InvalidAMICredentials()
+                else:
+                    raise AMIException()
+            
+        return True
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

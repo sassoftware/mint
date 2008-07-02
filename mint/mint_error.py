@@ -50,6 +50,8 @@ class AlreadyConfirmed(MintError):
 class AMIBuildNotConfigured(MintError):
     "This rBuilder is missing information necessary to build " \
         "Amazon Machine Images. Please consult your site administrator."
+class AMIException(MintError):
+    "There was a problem communicating with AWS."
 class AuthRepoError(MintError):
     "Authentication token could not be manipulated."
 class BuildDataNameError(MintError):
@@ -95,6 +97,8 @@ class GroupTroveVersionError(MintError):
     "Invalid version for group: letters, numbers, periods allowed."
 class HtmlTagNotAllowed(MintError): pass
 class HtmlParseError(MintError): pass
+class InvalidNamespace(MintError):
+    "Invalid namespace: may not contain @ or : and may not be more than 16 characters"
 class InvalidShortname(MintError):
     "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
 class InvalidProdType(MintError):
@@ -154,6 +158,8 @@ class UserInduction(MintError):
         "illegal fashion"
 class UpdateServiceNotFound(MintError):
     "The Update Service was not found."
+class PackageCreatorError(MintError):
+    "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 
@@ -328,6 +334,29 @@ class ProductDefinitionInvalidStage(MintError):
     def __str__(self):
         return "Invalid product definition stage: %s" % self.msg
 
+class PackageCreatorValidationError(PackageCreatorError):
+    "Package Creator Validation Error:"
+    def __init__(self, reasons):
+        PackageCreatorError.__init__(self)
+        self.reasons = reasons
+
+    def freeze(self): return (self.reasons,)
+
+    def __str__(self):
+        return "Field validation failed: %s" % ', '.join(self.reasons)
+
+class ProductDefinitionLabelLookupError(MintError):
+    "Product Definition Label Lookup Error:"
+    def __init__(self, label, possibles):
+        MintError.__init__(self)
+        self.lookup = label
+        self.set = possibles
+
+    def freeze(self): return (self.lookup, self.set)
+
+    def __str__(self):
+        return self.msg + " Could not map the label %s to a product definition.  The versioned default labels are %s" % (self.lookup, ", ".join(self.set))
+
 ## Subclassed exceptions
 # MessageException
 class InvalidReport(MessageException): pass
@@ -335,6 +364,7 @@ class InvalidClientVersion(MessageException): pass
 class InvalidServerVersion(MessageException): pass
 # PermissionDenied
 class InvalidLogin(PermissionDenied): "Invalid username or password"
+class InvalidAMICredentials(AMIException): "AWS was not able to validate the provided access credentials"
 
 
 class UnknownException(Exception):

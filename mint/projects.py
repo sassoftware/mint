@@ -36,14 +36,12 @@ transTables = {
     'postgresql': string.maketrans("-.:", "___")
 }
 
-
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
-    __slots__ = ('projectId', 'creatorId', 'name',
-                 'description', 'hostname', 'domainname', 'projecturl', 
-                 'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail', 'shortname',
-                 'prodtype', 'version', 'backupExternal')
+    __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',
+        'domainname', 'namespace', 'projecturl', 'hidden', 'external',
+        'isAppliance', 'disabled', 'timeCreated', 'timeModified',
+        'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -292,10 +290,10 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
-    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
-              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail', 'backupExternal',
-              'shortname', 'prodtype', 'version']
+    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname',
+        'namespace', 'projecturl', 'description', 'disabled', 'hidden',
+        'external', 'isAppliance', 'timeCreated', 'timeModified',
+        'commitEmail', 'backupExternal', 'shortname', 'prodtype', 'version']
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -867,6 +865,7 @@ class ProductVersions(database.TableObject):
 
     __slots__ = ( 'productVersionId',
                   'projectId',
+                  'namespace',
                   'name',
                   'description',
                 )
@@ -874,12 +873,12 @@ class ProductVersions(database.TableObject):
     def getItem(self, id):
         return self.server.getProductVersion(id)
 
-
 class ProductVersionsTable(database.KeyedTable):
     name = 'ProductVersions'
     key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
+               'namespace',
                'name',
                'description',
              ]
