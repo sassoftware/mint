@@ -4992,6 +4992,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
           - 'awsSecretAccessKey': the secret access key
         @rtype: C{boolean}
         @raises: C{ItemNotFound} if there is no such user
+        @raises: C{PermissionDenied} if requesting userId is either
+           an admin or isn't the same userId as the currently logged
+           in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
@@ -5014,6 +5017,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type  awsSecretAccessKey: C{str}
         @return: True if updated successfully, False otherwise
         @rtype C{bool}
+        @raises: C{PermissionDenied} if requesting userId is either
+           an admin or isn't the same userId as the currently logged
+           in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
@@ -5052,7 +5058,35 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype C{bool}
         """
         return self.setEC2CredentialsForUser(userId, '', '', '')
-        
+
+    @typeCheck(int)
+    @requiresAuth
+    def getAMIBuildsForUser(self, userId):
+        """
+        Given a userId, give a list of dictionaries for each AMI build
+        that was created in a project that the user is a member of.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @returns A list of dictionaries with the following members:
+           - amiID: the AMI identifier of the Amazon Machine Image
+           - projectId: the projectId of the project containing the build
+           - isPublished: 1 if the build is published, 0 otherwise
+           - level: the userlevel (see mint.userlevels) of the user
+               with respect to the containing project
+           - isPrivate: 1 if the containing project is private (hidden),
+               0 otherwise
+        @rtype: C{list} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if requesting userId is either
+           an admin or isn't the same userId as the currently logged
+           in user.
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        # Check to see if the user even exists.
+        # This will raise ItemNotFound if the user doesn't exist
+        dummy = self.users.get(userId)
+        return self.users.getAMIBuildsForUser(userId)
+
     def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
                                 awsSecretAccessKey):
         """

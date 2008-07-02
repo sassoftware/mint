@@ -884,6 +884,9 @@ class MintClient:
     def removeEC2CredentialsForUser(self, userId):
         return self.server.removeEC2CredentialsForUser(userId)
 
+    def getAMIBuildsForUser(self, userId):
+        return self.server.getAMIBuildsForUser(userId)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
