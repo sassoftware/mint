@@ -118,10 +118,10 @@
                             <input type="text" name="domainname" value="${kwargs['domainname']}" />
                             <p class="help">
                                 If an alternate domain name is required for this repository, it may
-                                be typed here. The Domain Name will be appended to the Short Name
-                                to form the permanent repository hostname, and can not be changed
-                                after the ${projectText().lower()} is created. The default is
-                                typically sufficient.
+                                be typed here. The domain name will be appended to the Product Short
+                                Name to form the permanent repository hostname, and can not be
+                                changed after the ${projectText().lower()} is created. Typically,
+                                the default is sufficient.
                             </p>
                         </td>
                     </tr>
