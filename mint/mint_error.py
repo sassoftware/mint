@@ -210,7 +210,7 @@ class ProductDefinitionError(MintError):
     def freeze(self): return (self.reason,)
 
     def __str__(self):
-        return "There is was a problem that occurred when tryin to access the product definition for %s" % self.reason
+        return "There is was a problem that occurred when trying to access the product definition for %s" % self.reason
 
 class UnmountFailed(MintError):
     def __init__(self, dev):
