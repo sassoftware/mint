@@ -605,8 +605,9 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
                     'pcreator', 'storagePath')
             pccfg.tmpFileStorage = os.path.join(self.workDir,
                     'pcreator', 'tmpFileStorage')
-            port, pid = pcreator.server.getServer(pccfg)
-            url = 'http://%s.%s:%s' % (MINT_HOST, MINT_DOMAIN, port)
+            hostname = '%s.%s' %(MINT_HOST, MINT_DOMAIN)
+            port, pid = pcreator.server.getServer(pccfg, hostname)
+            url = 'http://%s:%s' % (hostname, port)
             self.mintCfg.packageCreatorURL = url
             client, userId = self.quickMintUser('testuser', 'testpass')
             pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
