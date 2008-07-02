@@ -50,6 +50,8 @@ class AlreadyConfirmed(MintError):
 class AMIBuildNotConfigured(MintError):
     "This rBuilder is missing information necessary to build " \
         "Amazon Machine Images. Please consult your site administrator."
+class AMIException(MintError):
+    "There was a problem communicating with AWS."
 class AuthRepoError(MintError):
     "Authentication token could not be manipulated."
 class BuildDataNameError(MintError):
@@ -362,6 +364,7 @@ class InvalidClientVersion(MessageException): pass
 class InvalidServerVersion(MessageException): pass
 # PermissionDenied
 class InvalidLogin(PermissionDenied): "Invalid username or password"
+class InvalidAMICredentials(AMIException): "AWS was not able to validate the provided access credentials"
 
 
 class UnknownException(Exception):

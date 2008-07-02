@@ -5003,9 +5003,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
+        
         newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
+        
+        # validate the credentials with EC2
+        self._validateEC2Credentials(newValues['awsAccountNumber'],
+                                     newValues['awsPublicAccessKeyId'],
+                                     newValues['awsSecretAccessKey'])
+        
         try:
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
@@ -5019,6 +5026,26 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             self.db.commit()
             return True
+        
+    def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
+                                awsSecretAccessKey):
+        """
+        Validate the EC2 credentials if one or more of them are set.  We 
+        don't validate if they are all empty since we are just deleting the 
+        credentials.
+        """
+        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
+            valid, status = self.validateAMICredentials(
+                                (awsAccountNumber,
+                                 awsPublicAccessKeyId,
+                                 awsSecretAccessKey))
+            if not valid:
+                if status == 401:
+                    raise InvalidAMICredentials()
+                else:
+                    raise AMICommunicationException()
+            
+        return True
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
