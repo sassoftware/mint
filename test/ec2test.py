@@ -403,6 +403,37 @@ conaryproxy = http://proxy.hostname.com/proxy/
         self.assertTrue(pair == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key')])
+                
+    @fixtures.fixture("EC2")
+    def testEC2CredentialsForUser(self, db, data):
+        """
+        This tests getting, setting, and removing credentials
+        """
+        client = self.getClient("admin")
+        
+        def validateAMICredentials(authToken):
+            return True, None
+                
+        oldValidateAMICredentials = client.server._server.validateAMICredentials
+        client.server._server.validateAMICredentials = validateAMICredentials
+        
+        try:
+            # add some credentials and make sure they are saved
+            client.setEC2CredentialsForUser(data['adminId'], 'id', 'publicKey',
+                                            'secretKey')
+            ec2cred = client.getEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKey', 
+                                        'awsSecretAccessKey': 'secretKey', 
+                                        'awsAccountNumber': 'id'})
+            
+            # now remove the credentials and make sure they are gone
+            client.removeEC2CredentialsForUser(data['adminId'])
+            ec2cred = client.getEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(ec2cred == {'awsPublicAccessKeyId': '', 
+                                        'awsSecretAccessKey': '', 
+                                        'awsAccountNumber': ''})
+        finally:
+            client.server._server.validateAMICredentials = oldValidateAMICredentials
 
 if __name__ == '__main__':
     testsuite.main()

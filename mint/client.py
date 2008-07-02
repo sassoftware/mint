@@ -880,6 +880,9 @@ class MintClient:
         return self.server.setEC2CredentialsForUser(userId,
                 awsAccountNumber, awsPublicAccessKeyId,
                 awsSecretAccessKey)
+        
+    def removeEC2CredentialsForUser(self, userId):
+        return self.server.removeEC2CredentialsForUser(userId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

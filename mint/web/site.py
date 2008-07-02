@@ -390,18 +390,37 @@ class SiteHandler(WebHandler):
         # make sure all or none of the fields are set
         if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
             if not (awsAccountNumber and awsPublicAccessKeyId and awsSecretAccessKey):
-                self._addErrors("Missing EC2 credential data")
+                self._addErrors("Missing EC2 settings data")
                 return self._write("cloudSettings", dataDict=getDataDict())
         
         try:
             self.client.setEC2CredentialsForUser(self.user.id,
                 awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey)
-            self._setInfo("Updated EC2 credentials")
+            self._setInfo("Updated EC2 settings")
             self._redirect("http://%s%suserSettings" %
                     (self.cfg.siteHost, self.cfg.basePath))
         except mint_error.AMIException, e:
-            self._addErrors("Failed to update EC2 credentials: %s" % str(e))
+            self._addErrors("Failed to update EC2 settings: %s" % str(e))
             return self._write("cloudSettings", dataDict=getDataDict())
+        
+    @requiresAuth
+    @redirectHttps
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def removeCloudSettings(self, auth, confirmed, **yesArgs):
+        
+        if confirmed:
+            # clear the credentials
+            self.client.removeEC2CredentialsForUser(self.user.id)
+            self._setInfo("Removed EC2 settings")
+            self._redirect("http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self._write("confirm", 
+                message = "Are you sure you want to remove your EC2 settings?",
+                yesArgs = {'func':'removeCloudSettings', 'confirmed':'1'}, 
+                noLink = "http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
     @redirectHttps

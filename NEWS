@@ -9,8 +9,6 @@ Internal Changes
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)
 * The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
-* The user settings page now contains fields for entering EC2 credentials.
-  (RBL-3029)
 * The backend now allows EC2 calls to be run using user supplied credentials.
   (RBL-3039)
 * The user's EC2 credentials are now validated by the EC2 web service.
@@ -20,6 +18,10 @@ Web Front End Changes
 ---------------------
 * Fixed a bug where the cook group page mistakenly referenced the "Images" 
   link instead of the "Manage Images" link. (RBL-3014)
+* There is now a link on the account settings page to edit a user's EC2
+  settings. (RBL-3029)
+* There is now a link on the account settings page to clear a user's EC2 
+  settings. (RBL-3045)
 
 
 Changes in 4.1.0

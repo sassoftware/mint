@@ -5007,7 +5007,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
-        
+
         # validate the credentials with EC2
         self._validateEC2Credentials(newValues['awsAccountNumber'],
                                      newValues['awsPublicAccessKeyId'],
@@ -5026,6 +5026,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             self.db.commit()
             return True
+        
+    @typeCheck(int)
+    @requiresAuth
+    def removeEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, remove the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: True if removed successfully, False otherwise
+        @rtype C{bool}
+        """
+        return self.setEC2CredentialsForUser(userId, '', '', '')
         
     def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
                                 awsSecretAccessKey):
