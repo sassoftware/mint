@@ -22,6 +22,28 @@ import __builtin__
 testPath = None
 archivePath = None
 
+### TEMPORARY HACK to try to figure out a 404 error on a repository
+import shutil
+import conary.lib.util
+_shutilrmtree = shutil.rmtree
+def wrappedshrmtree(*args, **kw):
+    if args[0].endswith('httpd'):
+        print >>sys.stderr, "**********************shutilrmtree called with the following arguments", args, kw
+    return _shutilrmtree(*args, **kw)
+shutil.rmtree = wrappedshrmtree
+
+_librmtree = conary.lib.util.rmtree
+def wrappedclurmtree(*args, **kw):
+    if args[0].endswith('httpd'):
+        print >>sys.stderr, "**********************conary.lib.util.rmtree called with the following arguments", args, kw
+    return _librmtree(*args, **kw)
+conary.lib.util.rmtree = wrappedclurmtree
+def reportStartup(dir, idx):
+    if idx !=0:
+        dir = dir + '-%d' % idx
+    if not os.path.isdir(os.path.join(dir, 'httpd')):
+        print >>sys.stderr, "**********************Fresh repository starting on", dir
+
 #from pychecker import checker
 
 def enforceBuiltin(result):
