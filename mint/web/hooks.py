@@ -373,7 +373,27 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     print >>large
     print >>large, 'Full stack:'
     print >>large
-    conary_util.formatTrace(exception, e, bt, stream=large, withLocals=True)
+    try:
+        conary_util.formatTrace(exception, e, bt, stream=large, withLocals=True)
+    except:
+        # The extended traceback formatter can crash when uncooperative
+        # objects do something special when marshalled. For example,
+        # derivatives of Thread may abort before Thread itself is
+        # initialized, which causes __repr__ to crash, and
+        # ServerProxy derivatives may crash when __safe_str__ is
+        # improperly sent as a remote procedure call instead of
+        # throwing an AttributeError.
+        #
+        # None of these conditions should prevent the original
+        # exception from being logged and emailed, if only in their
+        # short form.
+
+        handlerErrorType, handlerErrorValue, handlerErrorTB = sys.exc_info()
+        print >>large
+        print >>large, '*** Traceback formatter crashed! ***'
+        print >>large, 'Formatter crash follows:'
+        conary_util.formatTrace(handlerErrorType, handlerErrorValue,
+            handlerErrorTB, stream=large, withLocals=False)
     print >>large
     print >>large, 'Environment:'
     for key, val in sorted(info_dict.items()):
