@@ -219,7 +219,7 @@ class EC2Wrapper(object):
             ec2Instance = ec2Reservation.instances[0]
             return str(ec2Instance.id)
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
 
     def getInstanceStatus(self, ec2InstanceId):
         try:
@@ -227,14 +227,14 @@ class EC2Wrapper(object):
             instance = rs[0].instances[0]
             return str(instance.state), str(instance.dns_name)
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
 
     def terminateInstance(self, ec2InstanceId):
         try:
             self.ec2conn.terminate_instances(instance_ids=[ec2InstanceId])
             return True
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
         
     def getAllKeyPairs(self, keyNames=None):
         try:
@@ -245,7 +245,7 @@ class EC2Wrapper(object):
                                 str(pair.material)))
             return keyPairs
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
     
     def validateCredentials(self):
         self.getAllKeyPairs()
