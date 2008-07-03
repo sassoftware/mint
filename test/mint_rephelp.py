@@ -408,7 +408,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def openMintRepository(self, serverIdx = 0, requireSigs = False, 
                            serverName = None):
-        testsuite.reportStartup(self.reposDir, serverIdx)
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
                 requireSigs, serverName, serverCache=self.mintServers)
 
