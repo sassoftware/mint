@@ -1668,6 +1668,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             raise PermissionDenied
 
+
     @typeCheck(str, int, int)
     @requiresAuth
     @private
@@ -5069,10 +5070,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
 
-        if not force:
-            # validate the credentials with EC2
-            self.validateEC2Credentials((awsAccountNumber, awsPublicAccessKeyId, 
-                                     awsSecretAccessKey))
+        found, oldAwsAccountNumber = self.userData.getDataValue(userId, 
+                                        'awsAccountNumber')
+       
+        removing = True
+
+        # Validate and add the credentials with EC2 if they're specified.
+        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
+            if not force:
+                self.validateEC2Credentials((newValues['awsAccountNumber'],
+                                             newValues['awsPublicAccessKeyId'],
+                                             newValues['awsSecretAccessKey']))
+            removing = False
         
         try:
             self.db.transaction()
@@ -5085,6 +5094,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.rollback()
             return False
         else:
+            if found:
+                # Remove all old launch permissions
+                self.removeEC2LaunchPermissions(userId, oldAwsAccountNumber)
+            if not removing:
+                # Add launch permissions
+                self.addEC2LaunchPermissions(userId, 
+                                             newValues['awsAccountNumber'])
             self.db.commit()
             return True
         
@@ -5109,7 +5125,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @param userId: the numeric userId of the rBuilder user
         @type  userId: C{int}
         @returns A list of dictionaries with the following members:
-           - amiID: the AMI identifier of the Amazon Machine Image
+           - amiId: the AMI identifier of the Amazon Machine Image
            - projectId: the projectId of the project containing the build
            - isPublished: 1 if the build is published, 0 otherwise
            - level: the userlevel (see mint.userlevels) of the user
@@ -5127,6 +5143,89 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # This will raise ItemNotFound if the user doesn't exist
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
+
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def removeEC2LaunchPermissions(self, userId, awsAccountNumber):
+        """
+        Given a userId and awsAccountNumber, remove launch permissions to each
+        eligible AMI build for userId.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @rtype: C{bool} indicating success
+        @raises C{EC2Exception} if there is a problem contacting EC2.
+        """
+        ec2Wrap = ec2.EC2Wrapper((self.cfg.awsAccountId,
+                                  self.cfg.awsPublicKey,
+                                  self.cfg.awsPrivateKey))
+        amiIds = self._getAMIIdsForPermChange(userId)
+
+        for amiId in amiIds:
+            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
+        return True
+
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def addEC2LaunchPermissions(self, userId, awsAccountNumber):
+        """
+        Given a userId and awsAccountNumber, add launch permissions to each
+        eligible AMI build for userId.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @rtype: C{bool} indicating success
+        @raises C{EC2Exception} if there is a problem contacting EC2.
+        """
+        ec2Wrap = ec2.EC2Wrapper((self.cfg.awsAccountId,
+                                  self.cfg.awsPublicKey,
+                                  self.cfg.awsPrivateKey))
+
+        amiIds = self._getAMIIdsForPermChange(userId)
+
+        for amiId in amiIds:
+            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
+        return True
+
+    def _getAMIIdsForPermChange(self, userId):
+        """
+        Returns a list of AMI ids that need their launch permissions altered
+        for the given userId.
+
+        The logic is as follows:
+        For private (hidden) products, the AMI id is affected in all cases
+        except where userId is a regular user and the AMI is not published.
+
+        For public products, the AMI id is affected only if userId is an owner
+        or developer and the AMI is not published.
+        """
+        affectedAMIIds = []
+
+        # This returns all AMI ids that the user could interact with.
+        amiIds = self.getAMIBuildsForUser(userId)
+
+        for amiIdData in amiIds:
+            if amiIdData['isPrivate']:
+                # Product is private.
+                # We want all cases except where the user is a regular user
+                # and the image is not published.
+                if not (amiIdData['level'] == userlevels.USER and \
+                        not amiIdData['isPublished']):
+                    affectedAMIIds.append(amiIdData['amiId'])
+            else:
+                # Product is public.
+                # We only want the caes where the user is owner or developer
+                # and the image is not published.
+                if amiIdData['level'] in (userlevels.OWNER,
+                                          userlevels.DEVELOPER) and \
+                   not amiIdData['isPublished']:
+                    affectedAMIIds.append(amiIdData['amiId'])
+
+        return affectedAMIIds
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

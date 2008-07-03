@@ -465,11 +465,17 @@ class FixtureCache(object):
         someOtherDeveloperId = self.createUser(cfg, db,
                 username = 'someotherdeveloper', isAdmin = False)
 
+        normalUserId = self.createUser(cfg, db,
+                username = 'normaluser', isAdmin = False)
+
         client    = shimclient.ShimMintClient(cfg,
                 ('admin', 'adminpass'))
 
         someOtherClient = shimclient.ShimMintClient(cfg,
                 ('someotherdeveloper', 'someotherdeveloperpass'))
+
+        normalUserClient = shimclient.ShimMintClient(cfg,
+                ('normaluser', 'normaluserpass'))
 
         hostname = shortname = "testproject"
         projectId = someOtherClient.newProject("Test Project",
@@ -487,9 +493,28 @@ class FixtureCache(object):
                                       version="1.0",
                                       prodtype="Component")
 
+        hostname = shortname = "hiddenproject"
+        hiddenprojectId = someOtherClient.newProject("Hidden Test Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+        hiddenproject = client.getProject(hiddenprojectId)
+
         # add the developer to the testproject
         project = client.getProject(projectId)
         project.addMemberById(developerId, userlevels.DEVELOPER)
+        # add the normal user to the testproject
+        normalProject = normalUserClient.getProject(projectId)
+        normalProject.addMemberById(normalUserId, userlevels.USER)
+
+        # add the developer to the hiddenproject
+        hiddenproject.addMemberById(developerId, userlevels.DEVELOPER)
+        # add the normal user to the hiddenproject
+        normalHiddenProject = normalUserClient.getProject(hiddenprojectId)
+        normalHiddenProject.addMemberById(normalUserId, userlevels.USER)
+        ret = client.hideProject(hiddenprojectId)
 
         # create an AMI build that isn't a part of a release
         build = client.newBuild(projectId,
@@ -551,13 +576,45 @@ class FixtureCache(object):
         build.setDataValue('amiId', 'ami-00000005', RDT_STRING,
                 validate=False)
 
+        # create an AMI build and add it to an unpublished
+        # (not final) release on the hiddenproject
+        build = client.newBuild(hiddenprojectId, "Test AMI Build (Unpublished)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.2-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000006', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(hiddenprojectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+
+        # create an AMI build and add it to a published release on the hidden
+        # project.
+        build = client.newBuild(hiddenprojectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.3-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000007', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(hiddenprojectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+
+
+
         amiIds = []
-        for i in range(0,5):
+        for i in range(0,7):
             amiIds.append(client.createBlessedAMI('ami-%08d' % i,
                     "This is test AMI instance %d" % i))
 
         return cfg, { 'adminId': adminId,
                       'developerId': developerId,
+                      'normalUserId': normalUserId,
                       'someOtherDeveloperId': someOtherDeveloperId,
                       'amiIds': amiIds,
                       'projectId': projectId,
