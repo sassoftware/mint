@@ -4418,6 +4418,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type  keyNames: C{list}
         @return: a tuple consisting of the key name, fingerprint, and material
         @rtype: C{tuple}
+        @raises: C{EC2Exception}
         """
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         return ec2Wrapper.getAllKeyPairs(keyNames)
@@ -4466,6 +4467,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(tuple, int)
     @private
     def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        """
+        Get the status of a launched AMI instance
+        @param authToken: the EC2 authentication credentials
+        @type  authToken: C{tuple}
+        @param launchedAMIId: the ID of a launched AMI
+        @type  launchedAMIId: C{int}
+        @return: the state and dns name of the launched AMI
+        @rtype: C{tuple}
+        @raises: C{EC2Exception}
+        """
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
@@ -4473,6 +4484,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(tuple, int)
     @private
     def launchAMIInstance(self, authToken, blessedAMIId):
+        """
+        Launch the specified AMI instance
+        @param authToken: the EC2 authentication credentials
+        @type  authToken: C{tuple}
+        @param blessedAMIId: the ID of the blessed AMI to launch
+        @type  blessedAMIId: C{int}
+        @return: the ID of the launched AMI
+        @rtype: C{int}
+        @raises: C{EC2Exception}
+        """
         # get blessed instance
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
@@ -4521,6 +4542,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     @private
     def terminateExpiredAMIInstances(self, authToken):
+        """
+        Terminate all expired AMI isntances
+        @param authToken: the EC2 authentication credentials
+        @type  authToken: C{tuple}
+        @return: a list of the terminated instance IDs
+        @rtype: C{list}
+        @raises: C{EC2Exception}
+        """
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []

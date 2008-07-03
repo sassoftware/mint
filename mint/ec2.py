@@ -218,35 +218,35 @@ class EC2Wrapper(object):
                     user_data=userData, addressing_type=addressingType)
             ec2Instance = ec2Reservation.instances[0]
             return str(ec2Instance.id)
-        except EC2ResponseError:
-            return None
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))
 
     def getInstanceStatus(self, ec2InstanceId):
         try:
             rs = self.ec2conn.get_all_instances(instance_ids=[ec2InstanceId])
             instance = rs[0].instances[0]
             return str(instance.state), str(instance.dns_name)
-        except EC2ResponseError:
-            return "unknown", ""
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))
 
     def terminateInstance(self, ec2InstanceId):
         try:
             self.ec2conn.terminate_instances(instance_ids=[ec2InstanceId])
             return True
-        except EC2ResponseError:
-            return False
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))
         
     def getAllKeyPairs(self, keyNames=None):
-        keyPairs = []
-        rs = self.ec2conn.get_all_key_pairs(keynames=keyNames)
-        for pair in rs:
-            keyPairs.append((str(pair.name), str(pair.fingerprint),
-                            str(pair.material)))
-        return keyPairs
+        try:
+            keyPairs = []
+            rs = self.ec2conn.get_all_key_pairs(keynames=keyNames)
+            for pair in rs:
+                keyPairs.append((str(pair.name), str(pair.fingerprint),
+                                str(pair.material)))
+            return keyPairs
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))
     
     def validateCredentials(self):
-        try:
-            self.getAllKeyPairs()
-            return True
-        except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))       
+        self.getAllKeyPairs()
+        return True
