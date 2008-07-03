@@ -90,6 +90,7 @@
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
                         
+                        <!--!  Removed for now RBL-3047
                         <tr>
                             <td colspan="2">
                                 <p>
@@ -104,7 +105,7 @@
                                     </ul>
                                 </p>
                             </td>
-                        </tr>
+                        </tr>-->
                         
                         <tr>
                             <td colspan="2">
