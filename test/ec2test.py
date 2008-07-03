@@ -6,27 +6,22 @@
 import testsuite
 testsuite.setup()
 
-import os
-import sys
 import time
-import tempfile
 
 import boto
-import boto.ec2
 from boto.exception import EC2ResponseError
 
 from mint import ec2
-from mint.mint_error import *
+from mint import mint_error
 
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, buildEC2AuthToken
-from conary.lib import util
 
 import fixtures
 
 from mint import buildtypes
 from mint import userlevels
 from mint.data import RDT_STRING
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 FAKE_PUBLIC_KEY  = '123456789ABCDEFGHIJK'
 FAKE_PRIVATE_KEY = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
@@ -290,12 +285,12 @@ Please log in via raa using the following password. %(raaPassword)s"""
     @fixtures.fixture("Empty")
     def testGetNonexistentBlessedAMI(self, db, data):
         client = self.getClient("admin")
-        self.assertRaises(ItemNotFound, client.getBlessedAMI, 1)
+        self.assertRaises(mint_error.ItemNotFound, client.getBlessedAMI, 1)
 
     @fixtures.fixture("Empty")
     def testGetNonexistentLaunchedAMI(self, db, data):
         client = self.getClient("admin")
-        self.assertRaises(ItemNotFound, client.getLaunchedAMI, 1)
+        self.assertRaises(mint_error.ItemNotFound, client.getLaunchedAMI, 1)
 
     @fixtures.fixture("EC2")
     def testLaunchAMIInstance(self, db, data):
@@ -600,13 +595,13 @@ conaryproxy = http://proxy.hostname.com/proxy/
     @fixtures.fixture("EC2")
     def testAMIBuildsForDifferentUser(self, db, data):
         client = self.getClient('developer')
-        self.failUnlessRaises(PermissionDenied,
+        self.failUnlessRaises(mint_error.PermissionDenied,
                 client.getAMIBuildsForUser, data['adminId'])
 
     @fixtures.fixture("EC2")
     def testAMIBuildsForNonExisistentUser(self, db, data):
         client = self.getClient('admin')
-        self.failUnlessRaises(ItemNotFound,
+        self.failUnlessRaises(mint_error.ItemNotFound,
                 client.getAMIBuildsForUser, 238494)
 
     @fixtures.fixture("EC2")
