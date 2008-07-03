@@ -774,11 +774,11 @@ class MintClient:
     def validateEC2Credentials(self, authToken):
         return self.server.validateEC2Credentials(authToken)
     
-    def getAMIKeyPair(self, authToken, keyName):
-        return self.server.getAMIKeyPairs(authToken, [keyName])
+    def getEC2KeyPair(self, authToken, keyName):
+        return self.getEC2KeyPairs(authToken, [keyName])
     
-    def getAMIKeyPairs(self, authToken, keyNames):
-        return self.server.getAMIKeyPairs(authToken, keyNames)
+    def getEC2KeyPairs(self, authToken, keyNames):
+        return self.server.getEC2KeyPairs(authToken, keyNames)
     
     def createBlessedAMI(self, ec2AMIId, shortDescription):
         return self.server.createBlessedAMI(ec2AMIId, shortDescription)

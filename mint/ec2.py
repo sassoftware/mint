@@ -241,7 +241,7 @@ class EC2Wrapper(object):
         rs = self.ec2conn.get_all_key_pairs(keynames=keyNames)
         for pair in rs:
             keyPairs.append((str(pair.name), str(pair.fingerprint),
-                            str(pair.material)))            
+                            str(pair.material)))
         return keyPairs
     
     def validateCredentials(self):
