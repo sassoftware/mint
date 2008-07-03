@@ -487,11 +487,11 @@ conaryproxy = http://proxy.hostname.com/proxy/
         """
         client = self.getClient("admin")
         
-        def validateAMICredentials(authToken):
+        def validateEC2Credentials(authToken):
             return True
                 
-        oldValidateAMICredentials = client.server._server.validateAMICredentials
-        client.server._server.validateAMICredentials = validateAMICredentials
+        oldValidateAMICredentials = client.server._server.validateEC2Credentials
+        client.server._server.validateEC2Credentials = validateEC2Credentials
         
         try:
             # add some credentials and make sure they are saved
@@ -509,7 +509,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
                                         'awsSecretAccessKey': '', 
                                         'awsAccountNumber': ''})
         finally:
-            client.server._server.validateAMICredentials = oldValidateAMICredentials
+            client.server._server.validateEC2Credentials = oldValidateAMICredentials
             
     def testErrorResponseObject(self):
         

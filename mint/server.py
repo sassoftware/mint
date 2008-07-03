@@ -4403,7 +4403,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     
     @typeCheck(tuple)
     @private
-    def validateAMICredentials(self, authToken):
+    def validateEC2Credentials(self, authToken):
         return ec2.EC2Wrapper(authToken).validateCredentials()
     
     @typeCheck(tuple, list)
@@ -5032,10 +5032,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if not force:
             # validate the credentials with EC2
-
-            self._validateEC2Credentials(newValues['awsAccountNumber'],
-                                         newValues['awsPublicAccessKeyId'],
-                                         newValues['awsSecretAccessKey'])
+            self.validateEC2Credentials((awsAccountNumber, awsPublicAccessKeyId, 
+                                     awsSecretAccessKey))
         
         try:
             self.db.transaction()
@@ -5061,7 +5059,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: True if removed successfully, False otherwise
         @rtype C{bool}
         """
-        return self.setEC2CredentialsForUser(userId, '', '', '', False)
+        return self.setEC2CredentialsForUser(userId, '', '', '', True)
         
     @typeCheck(int)
     @requiresAuth
@@ -5090,19 +5088,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # This will raise ItemNotFound if the user doesn't exist
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
-
-    def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
-                                awsSecretAccessKey):
-        """
-        Validate the EC2 credentials if one or more of them are set.  We 
-        don't validate if they are all empty since we are just deleting the 
-        credentials.
-        """
-        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
-            self.validateAMICredentials((awsAccountNumber, awsPublicAccessKeyId, 
-                                         awsSecretAccessKey))
-            
-        return True
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

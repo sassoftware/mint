@@ -778,8 +778,8 @@ class MintClient:
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
     # ec2 "try it now" support
-    def validateAMICredentials(self, authToken):
-        return self.server.validateAMICredentials(authToken)
+    def validateEC2Credentials(self, authToken):
+        return self.server.validateEC2Credentials(authToken)
     
     def getAMIKeyPair(self, authToken, keyName):
         return self.server.getAMIKeyPairs(authToken, [keyName])

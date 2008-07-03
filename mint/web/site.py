@@ -388,11 +388,16 @@ class SiteHandler(WebHandler):
             dataDict['awsSecretAccessKey'] = awsSecretAccessKey
             return dataDict
         
-        # make sure all or none of the fields are set
-        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
-            if not (awsAccountNumber and awsPublicAccessKeyId and awsSecretAccessKey):
-                self._addErrors("Missing EC2 settings data")
-                return self._write("cloudSettings", dataDict=getDataDict())
+        # make sure all the fields are set
+        if not awsAccountNumber:
+            self._addErrors("Missing account number")
+        if not awsPublicAccessKeyId:
+            self._addErrors("Missing access key ID")
+        if not awsSecretAccessKey:
+            self._addErrors("Missing secret access key")
+            
+        if self._getErrors():
+            return self._write("cloudSettings", dataDict=getDataDict())
         
         try:
             self.client.setEC2CredentialsForUser(self.user.id,
