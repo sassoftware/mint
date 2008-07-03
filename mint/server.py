@@ -4498,12 +4498,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
         except ItemNotFound:
-            raise ec2.FailedToLaunchAMIInstance()
+            raise FailedToLaunchAMIInstance()
 
         launchedFromIP = self.remoteIp
         if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
                 self.cfg.ec2MaxInstancesPerIP):
-           raise ec2.TooManyAMIInstancesPerIP()
+           raise TooManyAMIInstancesPerIP()
 
         userDataTemplate = bami['userDataTemplate']
 

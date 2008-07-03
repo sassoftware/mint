@@ -348,7 +348,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
             try:
                 client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
                                          amiIds[0])
-            except ec2.TooManyAMIInstancesPerIP:
+            except mint_error.TooManyAMIInstancesPerIP:
                 self.fail()
 
         # this should not fail
@@ -358,7 +358,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         #    self.fail()
 
         # but this should
-        self.assertRaises(ec2.TooManyAMIInstancesPerIP,
+        self.assertRaises(mint_error.TooManyAMIInstancesPerIP,
                 client.launchAMIInstance, buildEC2AuthToken(self.cfg), 
                 amiIds[0])
 
@@ -385,7 +385,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
     def testLaunchNonexistentAMIInstance(self, db, data):
         client = self.getClient("admin")
 
-        self.assertRaises(ec2.FailedToLaunchAMIInstance,
+        self.assertRaises(mint_error.FailedToLaunchAMIInstance,
                 client.launchAMIInstance, buildEC2AuthToken(self.cfg), 3431)
 
     @fixtures.fixture("EC2")

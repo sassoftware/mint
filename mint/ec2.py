@@ -15,7 +15,7 @@ except ImportError:
 
 
 from mint import database
-from mint.mint_error import *
+from mint import mint_error
 from mint.helperfuncs import toDatabaseTimestamp
 from rpath_common.xmllib import api1 as xmllib
 
