@@ -4984,10 +4984,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
 
-    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),))
+    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),), bool)
     @requiresAuth
     def setEC2CredentialsForUser(self, userId, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey):
+            awsPublicAccessKeyId, awsSecretAccessKey, force):
         """
         Given a userId, update the set of EC2 credentials for a user.
         @param userId: a numeric rBuilder userId to operate on
@@ -4998,6 +4998,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type  awsPublicAccessKeyId: C{str}
         @param awsSecretAccessKey: the secret access key
         @type  awsSecretAccessKey: C{str}
+        @param force: do not validate the credentials
+        @type  force: C{bool}
         @return: True if updated successfully, False otherwise
         @rtype C{bool}
         """
@@ -5008,10 +5010,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
 
-        # validate the credentials with EC2
-        self._validateEC2Credentials(newValues['awsAccountNumber'],
-                                     newValues['awsPublicAccessKeyId'],
-                                     newValues['awsSecretAccessKey'])
+        if not force:
+            # validate the credentials with EC2
+
+            self._validateEC2Credentials(newValues['awsAccountNumber'],
+                                         newValues['awsPublicAccessKeyId'],
+                                         newValues['awsSecretAccessKey'])
         
         try:
             self.db.transaction()
@@ -5037,7 +5041,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: True if removed successfully, False otherwise
         @rtype C{bool}
         """
-        return self.setEC2CredentialsForUser(userId, '', '', '')
+        return self.setEC2CredentialsForUser(userId, '', '', '', False)
         
     def _validateEC2Credentials(self, awsAccountNumber, awsPublicAccessKeyId, 
                                 awsSecretAccessKey):
@@ -5047,15 +5051,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         credentials.
         """
         if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
-            valid, status = self.validateAMICredentials(
-                                (awsAccountNumber,
-                                 awsPublicAccessKeyId,
-                                 awsSecretAccessKey))
-            if not valid:
-                if status == 401:
-                    raise InvalidAMICredentials()
-                else:
-                    raise AMIException()
+            self.validateAMICredentials((awsAccountNumber, awsPublicAccessKeyId, 
+                                         awsSecretAccessKey))
             
         return True
 
