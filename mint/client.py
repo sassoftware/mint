@@ -887,6 +887,13 @@ class MintClient:
     def getAMIBuildsForUser(self, userId):
         return self.server.getAMIBuildsForUser(userId)
 
+    def addEC2LaunchPermissions(self, userId, awsAccountNumber):
+        return self.server.addEC2LaunchPermissions(userId, awsAccountNumber)
+
+    def removeEC2LaunchPermissions(self, userId, awsAccountNumber):
+        return self.server.removeEC2LaunchPermissions(userId,
+                                                      awsAccountNumber)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

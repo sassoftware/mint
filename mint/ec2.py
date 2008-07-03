@@ -244,6 +244,22 @@ class EC2Wrapper(object):
                             str(pair.material)))            
         return keyPairs
     
+    def addLaunchPermission(self, ec2AMIId, awsAccountId):
+        try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                 'add', awsAccountId)
+            return True
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))       
+
+    def removeLaunchPermission(self, ec2AMIId, awsAccountId):
+        try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                 'remove', awsAccountId)
+            return True
+        except EC2ResponseError, e:
+            raise EC2Exception(ErrorResponseObject(e))       
+
     def validateCredentials(self):
         try:
             self.getAllKeyPairs()

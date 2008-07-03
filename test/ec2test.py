@@ -263,8 +263,8 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         client = self.getClient("admin")
 
-        # five blessed AMIs set up by the fixture
-        self.failUnlessEqual([1, 2, 3, 4, 5], \
+        # seven blessed AMIs set up by the fixture
+        self.failUnlessEqual([1, 2, 3, 4, 5, 6, 7], \
                 [x.id for x in client.getAvailableBlessedAMIs()])
 
         # Now take one out of the pool and make sure it worked
@@ -273,7 +273,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         blessedAMI.isAvailable = False
         blessedAMI.save()
 
-        self.failUnlessEqual([2, 3, 4, 5], \
+        self.failUnlessEqual([2, 3, 4, 5, 6, 7], \
                 [x.id for x in client.getAvailableBlessedAMIs()])
 
     @fixtures.fixture("Empty")
@@ -487,30 +487,101 @@ conaryproxy = http://proxy.hostname.com/proxy/
         """
         client = self.getClient("admin")
         
+        self.addLaunchPermsCalled = False
+        self.removeLaunchPermsCalled = False
+
+        def addEC2LaunchPermissions(userId, awsAccountNumber):
+            self.addLaunchPermsCalled = True
+
+        def removeEC2LaunchPermissions(userId, awsAccountNumber):
+            self.removeLaunchPermsCalled = True
+
         def validateEC2Credentials(authToken):
             return True
                 
         oldValidateAMICredentials = client.server._server.validateEC2Credentials
         client.server._server.validateEC2Credentials = validateEC2Credentials
+        oldAddEC2LaunchPermissions = \
+            client.server._server.addEC2LaunchPermissions
+        client.server._server.addEC2LaunchPermissions = addEC2LaunchPermissions
+        oldRemoveEC2LaunchPermissions = \
+            client.server._server.removeEC2LaunchPermissions
+        client.server._server.removeEC2LaunchPermissions = \
+            removeEC2LaunchPermissions
         
         try:
             # add some credentials and make sure they are saved
             client.setEC2CredentialsForUser(data['adminId'], 'id', 'publicKey',
                                             'secretKey', False)
+            self.assertTrue(self.addLaunchPermsCalled)
+            self.assertFalse(self.removeLaunchPermsCalled)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKey', 
                                         'awsSecretAccessKey': 'secretKey', 
                                         'awsAccountNumber': 'id'})
             
+            # now replace the credentials and make sure they are replaced
+            self.addLaunchPermsCalled = False
+            self.removeLaunchPermsCalled = False
+            client.setEC2CredentialsForUser(data['adminId'], 'newId',
+                    'newPublicKey', 'newSecretKey', False)
+            self.assertTrue(self.removeLaunchPermsCalled)
+            self.assertTrue(self.addLaunchPermsCalled)
+            ec2cred = client.getEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'newPublicKey', 
+                                        'awsSecretAccessKey': 'newSecretKey', 
+                                        'awsAccountNumber': 'newId'})
+
             # now remove the credentials and make sure they are gone
+            self.addLaunchPermsCalled = False
+            self.removeLaunchPermsCalled = False
             client.removeEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(self.removeLaunchPermsCalled)
+            self.assertFalse(self.addLaunchPermsCalled)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': '', 
                                         'awsSecretAccessKey': '', 
                                         'awsAccountNumber': ''})
         finally:
-            client.server._server.validateEC2Credentials = oldValidateAMICredentials
+            client.server._server.validateEC2Credentials = \
+                oldValidateAMICredentials
+            client.server._server.addEC2LaunchPermissions = \
+                oldAddEC2LaunchPermissions
+            client.server._server.removeEC2LaunchPermissions = \
+                oldRemoveEC2LaunchPermissions
             
+    @fixtures.fixture("EC2")
+    def testAddRemoveEC2LaunchPermissions(self, db, data):
+        client = self.getClient("admin")
+
+        launchableAMIIds = []
+
+        def addLaunchPermission(self, ec2AMIId, awsAccountNumber):
+            launchableAMIIds.append(ec2AMIId)
+        def removeLaunchPermission(self, ec2AMIId, awsAccountNumber):
+            spot = launchableAMIIds.index(ec2AMIId)
+            launchableAMIIds.pop(spot)
+
+        oldAddLaunchPermission = ec2.EC2Wrapper.addLaunchPermission
+        oldRemoveLaunchPermission = ec2.EC2Wrapper.removeLaunchPermission
+        ec2.EC2Wrapper.addLaunchPermission = addLaunchPermission
+        ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
+
+        try:
+            client.addEC2LaunchPermissions(data['developerId'], 'acctnum')
+            self.assertEquals(launchableAMIIds,
+               ['ami-00000001', 'ami-00000002', 'ami-00000006', 'ami-00000007'])
+            client.removeEC2LaunchPermissions(data['developerId'], 'acctnum')
+            self.assertEquals(launchableAMIIds, [])
+
+            client.addEC2LaunchPermissions(data['normalUserId'], 'acctnum')
+            self.assertEquals(launchableAMIIds, ['ami-00000007'])
+            client.removeEC2LaunchPermissions(data['normalUserId'], 'acctnum')
+            self.assertEquals(launchableAMIIds, [])
+        finally:
+            ec2.EC2Wrapper.addLaunchPermission = oldAddLaunchPermission
+            ec2.EC2Wrapper.removeLaunchPermission = oldRemoveLaunchPermission
+        
     def testErrorResponseObject(self):
         
         # test single error
@@ -592,11 +663,12 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client = self.getClient('developer')
         AMIbuilds = client.getAMIBuildsForUser(data['developerId'])
         self.failUnlessEqual(set([x['amiId'] for x in AMIbuilds]),
-                set(['ami-00000001', 'ami-00000002', 'ami-00000003']))
+                set(['ami-00000001', 'ami-00000002', 'ami-00000003',
+                     'ami-00000006', 'ami-00000007']))
 
         client = self.getClient('someotherdeveloper')
         otherAMIbuilds = client.getAMIBuildsForUser(data['someOtherDeveloperId'])
-        self.failUnlessEqual(len(otherAMIbuilds), 5)
+        self.failUnlessEqual(len(otherAMIbuilds), 7)
 
     @fixtures.fixture("EC2")
     def testAMIBuildsForDifferentUser(self, db, data):
@@ -621,8 +693,8 @@ conaryproxy = http://proxy.hostname.com/proxy/
     def testAMIBuildsForAdminUser(self, db, data):
         client = self.getClient('admin')
         AMIbuilds = client.getAMIBuildsForUser(data['someOtherDeveloperId'])
-        self.failUnlessEqual(len(AMIbuilds), 5,
-                "Expected to see five AMI builds")
+        self.failUnlessEqual(len(AMIbuilds), 7,
+                "Expected to see seven AMI builds")
 
     @fixtures.fixture("Empty")
     def testAMIBuildsData(self, db, data):
