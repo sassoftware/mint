@@ -444,11 +444,11 @@ conaryproxy = http://proxy.hostname.com/proxy/
                 launchedAMIInstance.userData)
         
     @fixtures.fixture("EC2")
-    def testGetAMIKeyPairs(self, db, data):
+    def testGetEC2KeyPairs(self, db, data):
         client = self.getClient("admin")
 
         # test getting all
-        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), [])
+        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), [])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key'), 
@@ -456,13 +456,13 @@ conaryproxy = http://proxy.hostname.com/proxy/
              'another RSA private key')])
         
         # test getting 1
-        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), ['key1'])
+        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), ['key1'])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key')])
         
         # test getting multiple
-        pairs = client.getAMIKeyPairs(buildEC2AuthToken(self.cfg), ['key1', 'key2'])
+        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), ['key1', 'key2'])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key'), 
@@ -470,11 +470,11 @@ conaryproxy = http://proxy.hostname.com/proxy/
              'another RSA private key')])
         
     @fixtures.fixture("EC2")
-    def testGetAMIKeyPair(self, db, data):
+    def testGetEC2KeyPair(self, db, data):
         client = self.getClient("admin")
 
         # test getting all
-        pair = client.getAMIKeyPair(buildEC2AuthToken(self.cfg), 'key1')
+        pair = client.getEC2KeyPair(buildEC2AuthToken(self.cfg), 'key1')
         self.assertTrue(pair == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key')])

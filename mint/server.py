@@ -4404,11 +4404,29 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(tuple)
     @private
     def validateEC2Credentials(self, authToken):
+        """
+        Validate the EC2 credentials
+        @param authToken: the EC2 authentication credentials
+        @type  authToken: C{tuple}
+        @return: True if the credentials are valid
+        @rtype: C{bool}
+        @raises: C{EC2Exception}
+        """
         return ec2.EC2Wrapper(authToken).validateCredentials()
     
     @typeCheck(tuple, list)
     @private
-    def getAMIKeyPairs(self, authToken, keyNames):
+    def getEC2KeyPairs(self, authToken, keyNames):
+        """
+        Get the EC2 key pairs given a list of key names, or get all key pairs
+        if no key names are specified.
+        @param authToken: the EC2 authentication credentials
+        @type  authToken: C{tuple}
+        @param keyNames: a list of string key names or an empty list
+        @type  keyNames: C{list}
+        @return: a tuple consisting of the key name, fingerprint, and material
+        @rtype: C{tuple}
+        """
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         return ec2Wrapper.getAllKeyPairs(keyNames)
 
