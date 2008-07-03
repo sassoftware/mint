@@ -13,6 +13,7 @@ Internal Changes
   (RBL-3039)
 * The user's EC2 credentials are now validated by the EC2 web service.
   (RBL-3038)
+* The EC2 backend calls now have common error handling. (RBL-3043)
 * A backend call has been added to get all AMI builds for a particular
   user. (RBL-3053)
 

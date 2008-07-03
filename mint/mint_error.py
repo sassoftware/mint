@@ -50,8 +50,6 @@ class AlreadyConfirmed(MintError):
 class AMIBuildNotConfigured(MintError):
     "This rBuilder is missing information necessary to build " \
         "Amazon Machine Images. Please consult your site administrator."
-class AMIException(MintError):
-    "There was a problem communicating with AWS."
 class AuthRepoError(MintError):
     "Authentication token could not be manipulated."
 class BuildDataNameError(MintError):
@@ -210,7 +208,7 @@ class ProductDefinitionError(MintError):
     def freeze(self): return (self.reason,)
 
     def __str__(self):
-        return "There is was a problem that occurred when tryin to access the product definition for %s" % self.reason
+        return "There is was a problem that occurred when trying to access the product definition for %s" % self.reason
 
 class UnmountFailed(MintError):
     def __init__(self, dev):
@@ -251,7 +249,7 @@ class BuildOptionValidationException(MintError):
     def freeze(self): return (self.errlist,)
 
     def __str__(self):
-        return "The following errors occurred: %s" % ", ".join(self.errlist)
+        return "The following error(s) occurred: %s" % ", ".join(self.errlist)
     
 class TroveNotFoundForBuildDefinition(MintError):
     "The trove for one or more images was not found."
@@ -262,7 +260,7 @@ class TroveNotFoundForBuildDefinition(MintError):
     def freeze(self): return (self.errlist,)
 
     def __str__(self):
-        return "The following errors occurred: %s" % ", ".join(self.errlist)
+        return "The following error(s) occurred: %s" % ", ".join(self.errlist)
 
 class UpdateServiceAuthError(MintError):
     def __init__(self, hostname):
@@ -357,6 +355,28 @@ class ProductDefinitionLabelLookupError(MintError):
     def __str__(self):
         return self.msg + " Could not map the label %s to a product definition.  The versioned default labels are %s" % (self.lookup, ", ".join(self.set))
 
+class EC2Exception(MintError):
+    "A generic EC2 exception"
+    def __init__(self, ec2ResponseObj):
+        MintError.__init__(self)
+        self.ec2ResponseObj = ec2ResponseObj
+
+    def freeze(self): 
+        return self.ec2ResponseObj.freeze()
+    
+    @classmethod
+    def thaw(cls, blob):
+        from mint import ec2
+        ec2ResponseObj = ec2.ErrorResponseObject()
+        ec2ResponseObj.thaw(blob)
+        return cls(ec2ResponseObj)
+
+    def __str__(self):
+        errlist = []
+        for error in self.ec2ResponseObj.errors:
+            errlist.append(error['message'])
+        return ", ".join(errlist)
+
 ## Subclassed exceptions
 # MessageException
 class InvalidReport(MessageException): pass
@@ -364,7 +384,6 @@ class InvalidClientVersion(MessageException): pass
 class InvalidServerVersion(MessageException): pass
 # PermissionDenied
 class InvalidLogin(PermissionDenied): "Invalid username or password"
-class InvalidAMICredentials(AMIException): "AWS was not able to validate the provided access credentials"
 
 
 class UnknownException(Exception):

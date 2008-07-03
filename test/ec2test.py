@@ -2,6 +2,7 @@
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
+from _xmlplus.xpath.XPathParser import SELF
 
 import testsuite
 testsuite.setup()
@@ -33,6 +34,76 @@ FAKE_PRIVATE_KEY = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
 FAKE_PUBLIC_KEY2  = '987654321ABCDEFGHIJK'
 FAKE_PRIVATE_KEY2 = '987654321ABCDEFGHIJK123456789ABCDEFGHIJK'
+
+AWS_ERROR_XML_SINGLE = \
+    '''<?xml version="1.0"?>\n
+       <Response>
+           <Errors>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>AWS was not able to validate the provided access credentials</Message>
+               </Error>
+           </Errors>
+           <RequestID>2410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
+       </Response>'''
+       
+AWS_ERROR_XML_MULTIPLE = \
+    '''<?xml version="1.0"?>\n
+       <Response>
+           <Errors>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>AWS was not able to validate the provided access credentials</Message>
+               </Error>
+               <Error>
+                   <Code>IQTooLow</Code>
+                   <Message>You&apos;re an idiot, back off</Message>
+               </Error>
+           </Errors>
+           <RequestID>3410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
+       </Response>'''
+
+AWS_ERROR_XML_DUP_MESSAGES = \
+    '''<?xml version="1.0"?>\n
+       <Response>
+           <Errors>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>AWS was not able to validate the provided access credentials</Message>
+               </Error>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>AWS was not able to validate the provided access credentials</Message>
+               </Error>
+           </Errors>
+           <RequestID>3410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
+       </Response>'''
+       
+AWS_ERROR_XML_DUP_CODES = \
+    '''<?xml version="1.0"?>\n
+       <Response>
+           <Errors>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>Some message</Message>
+               </Error>
+               <Error>
+                   <Code>AuthFailure</Code>
+                   <Message>Different message</Message>
+               </Error>
+           </Errors>
+           <RequestID>3410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
+       </Response>'''
+
+AWS_ERROR_XML_UNKNOWN = \
+    '''<?xml version="1.0"?>\n
+       <Response>
+           <Errors>
+               <Error>
+               </Error>
+           </Errors>
+           <RequestID>4410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
+       </Response>'''
 
 class FakeEC2Connection(object):
 
@@ -417,7 +488,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client = self.getClient("admin")
         
         def validateAMICredentials(authToken):
-            return True, None
+            return True
                 
         oldValidateAMICredentials = client.server._server.validateAMICredentials
         client.server._server.validateAMICredentials = validateAMICredentials
@@ -425,7 +496,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         try:
             # add some credentials and make sure they are saved
             client.setEC2CredentialsForUser(data['adminId'], 'id', 'publicKey',
-                                            'secretKey')
+                                            'secretKey', False)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKey', 
                                         'awsSecretAccessKey': 'secretKey', 
@@ -439,6 +510,82 @@ conaryproxy = http://proxy.hostname.com/proxy/
                                         'awsAccountNumber': ''})
         finally:
             client.server._server.validateAMICredentials = oldValidateAMICredentials
+            
+    def testErrorResponseObject(self):
+        
+        # test single error
+        errObj = ec2.EC2ResponseError(401, '', AWS_ERROR_XML_SINGLE)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == 401)
+        self.assertTrue(ec2error.requestId == u'2410d7ed-986c-4e86-a35b-68d4a4062024')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'AWS was not able to validate the provided access credentials', 
+              'code': u'AuthFailure'}])
+        
+        # test multiple errors
+        errObj = ec2.EC2ResponseError(403, '', AWS_ERROR_XML_MULTIPLE)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == 403)
+        self.assertTrue(ec2error.requestId == u'3410d7ed-986c-4e86-a35b-68d4a4062024')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'AWS was not able to validate the provided access credentials', 
+              'code': u'AuthFailure'},
+             {'message': u'You\'re an idiot, back off', 
+              'code': u'IQTooLow'}])
+        
+        # test that duplicate error messages are only reported once
+        errObj = ec2.EC2ResponseError(403, '', AWS_ERROR_XML_DUP_MESSAGES)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == 403)
+        self.assertTrue(ec2error.requestId == u'3410d7ed-986c-4e86-a35b-68d4a4062024')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'AWS was not able to validate the provided access credentials', 
+              'code': u'AuthFailure'}])
+        
+        # test that duplicate error codes with different messages are reported
+        errObj = ec2.EC2ResponseError(403, '', AWS_ERROR_XML_DUP_CODES)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == 403)
+        self.assertTrue(ec2error.requestId == u'3410d7ed-986c-4e86-a35b-68d4a4062024')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'Some message', 
+              'code': u'AuthFailure'},
+             {'message': u'Different message', 
+              'code': u'AuthFailure'}])
+        
+        # test unknown errors (i.e. no XML for the errors)
+        errObj = ec2.EC2ResponseError(400, '', AWS_ERROR_XML_UNKNOWN)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == 400)
+        self.assertTrue(ec2error.requestId == u'4410d7ed-986c-4e86-a35b-68d4a4062024')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'An unknown failure occurred', 
+              'code': u'UnknownFailure'}])
+        
+        # test unknown errors when no response data at all
+        errObj = ec2.EC2ResponseError(None, '', "<foo><bar></bar></foo>")
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.status == None)
+        self.assertTrue(ec2error.requestId == u'')
+        self.assertTrue(ec2error.errors == [
+             {'message': u'An unknown failure occurred', 
+              'code': u'UnknownFailure'}])
+        
+        # test freeze (marshal)
+        errObj = ec2.EC2ResponseError(401, '', AWS_ERROR_XML_SINGLE)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        self.assertTrue(ec2error.freeze() == (401, 
+            u'2410d7ed-986c-4e86-a35b-68d4a4062024', 
+            [{'message': u'AWS was not able to validate the provided access credentials', 
+              'code': u'AuthFailure'}]))
+        
+        # test thaw (unmarshal)
+        errObj = ec2.EC2ResponseError(401, '', AWS_ERROR_XML_SINGLE)
+        ec2error = ec2.ErrorResponseObject(errObj)
+        marshalledData = ec2error.freeze()
+        newEc2error = ec2.ErrorResponseObject()
+        newEc2error.thaw(marshalledData)
+        self.assertTrue(marshalledData == ec2error.freeze())
 
     @fixtures.fixture("EC2")
     def testAMIBuildsForUser(self, db, data):

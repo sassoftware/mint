@@ -375,10 +375,11 @@ class SiteHandler(WebHandler):
 
     @strFields(awsAccountNumber = "", awsPublicAccessKeyId = "",
                awsSecretAccessKey = "")
+    @boolFields(force = False)
     @requiresHttps
     @requiresAuth
     def processCloudSettings(self, auth, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey):
+            awsPublicAccessKeyId, awsSecretAccessKey, force):
 
         def getDataDict():
             dataDict = self.user.getDataDict()
@@ -395,11 +396,12 @@ class SiteHandler(WebHandler):
         
         try:
             self.client.setEC2CredentialsForUser(self.user.id,
-                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey)
+                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey,
+                force)
             self._setInfo("Updated EC2 settings")
             self._redirect("http://%s%suserSettings" %
                     (self.cfg.siteHost, self.cfg.basePath))
-        except mint_error.AMIException, e:
+        except mint_error.EC2Exception, e:
             self._addErrors("Failed to update EC2 settings: %s" % str(e))
             return self._write("cloudSettings", dataDict=getDataDict())
         

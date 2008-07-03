@@ -876,10 +876,10 @@ class MintClient:
         return self.server.getEC2CredentialsForUser(userId)
 
     def setEC2CredentialsForUser(self, userId, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey):
+            awsPublicAccessKeyId, awsSecretAccessKey, force):
         return self.server.setEC2CredentialsForUser(userId,
                 awsAccountNumber, awsPublicAccessKeyId,
-                awsSecretAccessKey)
+                awsSecretAccessKey, force)
         
     def removeEC2CredentialsForUser(self, userId):
         return self.server.removeEC2CredentialsForUser(userId)
