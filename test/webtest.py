@@ -1812,6 +1812,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertContent('/', content=XMLbulletinContent)
 
     def testCloudSettings(self):
+        raise testsuite.SkipTestException(
+            'Need a way to mock out EC2 calls. See RBL-3059')
         client, userId = self.quickMintUser('foouser', 'foopass')
         
         self.webLogin('foouser', 'foopass')
@@ -1830,6 +1832,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
         
     def testRemoveCloudSettings(self):
+        raise testsuite.SkipTestException(
+            'Need a way to mock out EC2 calls. See RBL-3059')
         client, userId = self.quickMintUser('foouser', 'foopass')
         
         self.webLogin('foouser', 'foopass')
