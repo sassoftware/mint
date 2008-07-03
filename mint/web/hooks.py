@@ -9,6 +9,7 @@ from mod_python import apache
 import os
 import re
 import socket
+import shutil
 import sys
 import tempfile
 import time
