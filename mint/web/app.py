@@ -87,10 +87,16 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        if self.cfg.cookieSecretKey:
-            cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
-        else:
-            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        try:
+            if self.cfg.cookieSecretKey:
+                cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
+            else:
+                cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        except:
+            # Parsing the cookies failed, so just pretend there aren't
+            # any and they'll get overwritten when our response goes
+            # out.
+            cookies = {}
 
         if 'pysid' not in cookies:
             rh = cache.reqHash(self.req)
