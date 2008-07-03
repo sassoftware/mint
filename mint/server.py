@@ -12,12 +12,10 @@ import random
 import simplejson
 import socket
 import stat
-import string
 import sys
 import time
 import tempfile
 import urllib
-from urlparse import urlparse
 import StringIO
 
 from mint import buildtypes
@@ -51,8 +49,6 @@ from mint import spotlight
 from mint import selections
 from mint import urltypes
 from mint import useit
-from mint import constants
-from mint.flavors import stockFlavors, getStockFlavor, getStockFlavorPath
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
@@ -64,22 +60,18 @@ from mcp import mcp_error
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
-from conary import sqlite3
 from conary import versions
 from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, RoleAlreadyExists
-from conary.repository.errors import UserAlreadyExists, RoleNotFound
+from conary.repository.errors import TroveNotFound, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary import errors as conary_errors
-from conary.dbstore import sqlerrors, sqllib
-from conary import checkin
-from conary.build import use
+from conary.dbstore import sqlerrors
 
 from rpath_common.proddef import api1 as proddef
 

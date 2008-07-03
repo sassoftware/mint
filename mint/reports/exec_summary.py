@@ -5,7 +5,6 @@
 
 import time
 
-from mint import buildtypes
 from mint.reports.mint_reports import MintReport
 
 class ExecSummary(MintReport):

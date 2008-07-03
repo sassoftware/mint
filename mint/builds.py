@@ -4,18 +4,15 @@
 # All Rights Reserved
 #
 
-import sys
 import time
-import urlparse
 
 from mint import buildtemplates
 from mint import buildtypes
 from mint import database
 from mint import flavors
 from mint import helperfuncs
-from mint import jobs
 
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.data import RDT_ENUM
 from mint.mint_error import *
 
 from conary import versions

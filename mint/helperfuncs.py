@@ -4,16 +4,13 @@
 # All rights reserved
 #
 
-from conary import versions
 from conary.deps import arch, deps
 from conary.repository.errors import RoleAlreadyExists
 
 from mint import constants
 from mint import buildtypes
-from mint.config import isRBO
 from mint.mint_error import MintError
 
-from rpath_common.proddef import api1 as proddef
 
 import copy
 import htmlentitydefs
@@ -497,6 +494,7 @@ def sanitizeProductDefinition(projectName, projectDescription,
     If a productDefinition object isn't passed in, one is
     created and returned.
     """
+    from rpath_common.proddef import api1 as proddef
     if not productDefinition:
         productDefinition = proddef.ProductDefinition()
     productDefinition.setProductName(projectName)

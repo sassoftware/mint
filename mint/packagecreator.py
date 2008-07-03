@@ -4,7 +4,6 @@
 #
 
 import os
-import simplejson
 from StringIO import StringIO
 
 from pcreator.backend import errors

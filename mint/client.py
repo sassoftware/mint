@@ -4,14 +4,11 @@
 # All rights reserved
 #
 import base64
-import os
-import sys
 import time
 import StringIO
 import xmlrpclib
 
 from mint import builds
-from mint import database
 from mint import ec2
 from mint import grouptrove
 from mint import jobs
@@ -20,10 +17,6 @@ from mint import projects
 from mint import pubreleases
 from mint import users
 from mint.mint_error import *
-
-from conary.repository import repository
-from conary.repository.netclient import UserNotFound
-from conary.deps import deps
 
 from rpath_common.proddef import api1 as proddef
 

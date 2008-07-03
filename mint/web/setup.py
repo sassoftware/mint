@@ -4,29 +4,22 @@
 # All rights reserved
 #
 
-from cStringIO import StringIO
 from copy import deepcopy
 from mint import helperfuncs
 import kid
-import sys
 import os
 import random
 random = random.SystemRandom()
 import time
 
-from mod_python import apache
-
-from mint import constants
 from mint import helperfuncs
-from mint import mint_error
 from mint import shimclient
 from mint import config
 from mint.config import RBUILDER_GENERATED_CONFIG
 from mint.config import keysForGeneratedConfig
-from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
-from mint.web.fields import strFields, intFields, listFields, boolFields
+from mint.web.fields import intFields
 
 from conary.repository.netrepos import netauth
 

@@ -17,17 +17,12 @@ from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
 from mint import userlevels
-from mint import builds
 from mint.mint_error import *
 
 from conary import dbstore
-from conary import sqlite3
-from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
-from conary.conarycfg import ConaryConfiguration, UserInformation, \
-        EntitlementList
-
+from conary.conarycfg import ConaryConfiguration
 
 # functions to convert a repository name to a database-safe name string
 transTables = {

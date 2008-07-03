@@ -8,6 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, WebRepositoryHelper
 
+from mint.mint_error import UpdateServiceNotFound
 from conary.dbstore import sqlerrors
 
 from mint import database
@@ -112,7 +113,7 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
     def testFetchNonExistentUpdateService(self, db, data):
         # Expect an exception if it we attempt to retrieve it
         adminClient = self.getClient("admin")
-        self.failUnlessRaises(mirror.UpdateServiceNotFound,
+        self.failUnlessRaises(UpdateServiceNotFound,
                 adminClient.getUpdateService, 34343)
 
     @fixtures.fixture("Full")

@@ -8,7 +8,6 @@ from mint import database
 from mint import helperfuncs
 from mint import projects
 from mint import scriptlibrary
-from mint import server
 from mint import pkgindex
 
 from conary import conaryclient
@@ -18,7 +17,6 @@ from conary import versions
 from conary.repository import repository
 
 import os
-import sys
 import time
 
 hiddenLabels = [

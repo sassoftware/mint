@@ -6,15 +6,12 @@
 import os
 import sys
 
-from mint import constants
 from mint import buildtypes
 from mint import urltypes
 from mint import mint_error
 
-from conary import conarycfg
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
-from mint.mint_error import ConfigurationMissing
 
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"

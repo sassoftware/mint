@@ -17,8 +17,6 @@ import os
 import random
 import smtplib
 import socket
-import string
-import sys
 import time
 from email import MIMEText
 
@@ -33,9 +31,7 @@ from mint import userlisting
 from mint.mint_error import *
 from mint import usertemplates
 
-from conary import conaryclient
 from conary import repository
-from conary import sqlite3
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet

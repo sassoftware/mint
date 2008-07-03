@@ -8,21 +8,17 @@ import kid
 from kid.pull import START, TEXT, END
 
 import os
-import textwrap
 import time
 
 import gettext
 
 from mod_python import apache
-from mod_python import Cookie
 
 from mint import helperfuncs
 from mint import shimclient
 from mint import profile
 from mint import users
 from mint.session import SqlSession
-from mint.web.cache import pageCache, reqHash
-
 
 class HttpError(Exception):
     def __str__(self):

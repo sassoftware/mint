@@ -4,7 +4,7 @@
 #
 
 from StringIO import StringIO
-import os, sys, struct, tempfile, time, signal
+import os, struct, tempfile, time, signal
 
 import conary.lib.util
 

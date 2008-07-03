@@ -22,6 +22,7 @@ from mint.client import timeDelta
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
 
+from conary import versions
 from conary.lib import util
 from conary.deps import deps
 

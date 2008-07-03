@@ -3,34 +3,25 @@
 #
 # All rights reserved
 #
-import base64
 import email
 import os
 import stat
-import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
 from mimetypes import guess_type
-import simplejson
 
-from mod_python import apache
-
-from mint import buildtemplates
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
-from mint import database
 from mint import data
 from mint import helperfuncs
 from mint import mint_error
-from mint import jobs
 from mint import maintenance
 from mint import mailinglists
 from mint import projects
 from mint import searcher
 from mint import shimclient
 from mint import users
-from mint import usertemplates
 from mint import userlevels
 from mint.client import timeDelta
 from mint.helperfuncs import getProjectText
@@ -41,12 +32,11 @@ from mint.web.fields import boolFields, dictFields, intFields, listFields, strFi
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpPartialContent, HttpOK, HttpMethodNotAllowed, HttpForbidden
+     HttpOK, HttpMethodNotAllowed, HttpForbidden
 
 from conary.lib import util
 from conary import versions
-from conary.deps import deps
-from conary import conarycfg, conaryclient
+from conary import conaryclient
 
 from rpath_common.proddef import api1 as proddef
 

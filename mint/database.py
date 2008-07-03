@@ -3,14 +3,12 @@
 #
 # All Rights Reserved
 #
-import sys, time
+import sys
 import weakref
 
 from conary.dbstore import sqlerrors
 
 from mint.mint_error import *
-
-from mint import schema
 
 def concat(db, *items):
     if db.driver == "mysql":

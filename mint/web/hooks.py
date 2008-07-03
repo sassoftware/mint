@@ -5,41 +5,31 @@
 #
 
 from mod_python import apache
-from mod_python import util
 
 import os
-import xmlrpclib
-import zlib
 import re
-import stat
-import shutil
 import socket
 import sys
 import tempfile
 import time
 import traceback
-import simplejson
-import urllib
 
 from mint import config
-from mint import mirror
 from mint import users
 from mint import profile
 from mint import mint_error
 from mint import maintenance
-from mint import server
 from mint.helperfuncs import extractBasePath
 from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
-from mint.web.webhandler import normPath, HttpError, getHttpAuth
+from mint.web.webhandler import normPath, HttpError
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary import versions
 from conary.dbstore import sqlerrors
-from conary.lib import log
 from conary.lib import coveragehook
 from conary.lib import util as conary_util
 from conary.repository import shimclient

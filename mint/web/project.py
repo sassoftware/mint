@@ -8,19 +8,14 @@ import os
 import re
 import sys
 import time
-import tempfile
-from mod_python import apache
-
 from mint.web import basictroves
 from mint import communitytypes
-from mint import database
 from mint import mailinglists
 from mint import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
 from mint import userlevels
-from mint import users
 from mint.mint_error import *
 
 from mint import buildtemplates
@@ -34,8 +29,6 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 
-import conary
-from conary.lib import util
 from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
