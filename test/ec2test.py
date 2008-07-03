@@ -2,7 +2,6 @@
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
-from _xmlplus.xpath.XPathParser import SELF
 
 import testsuite
 testsuite.setup()
