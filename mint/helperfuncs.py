@@ -551,11 +551,11 @@ def weak_signature_call(_func, *args, **kwargs):
     return _func(*args, **keep_args)
 
 def buildEC2AuthToken(cfg):
-        """
-        Convenience function to build the EC2 auth token from the config data
-        """
-        at = ()
-        if cfg:
-            at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
-        
-        return at
+    """
+    Convenience function to build the EC2 auth token from the config data
+    """
+    at = ()
+    if cfg:
+        at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
+    
+    return at
