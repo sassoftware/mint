@@ -396,7 +396,7 @@ class SiteHandler(WebHandler):
             self._setInfo("Updated EC2 settings")
             self._redirect("http://%s%suserSettings" %
                     (self.cfg.siteHost, self.cfg.basePath))
-        except mint_error.EC2Exception, e:
+        except mint_error.MintError, e:
             self._addErrors("Failed to update EC2 settings: %s" % str(e))
             return self._write("cloudSettings", dataDict=getDataDict())
         
