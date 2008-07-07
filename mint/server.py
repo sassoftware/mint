@@ -4465,7 +4465,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getActiveLaunchedAMIs(self):
         return self.launchedAMIs.getActive()
 
-    @typeCheck(tuple, int)
+    @typeCheck(((list, tuple),), int)
     @private
     def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
         """
@@ -4482,7 +4482,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
-    @typeCheck(tuple, int)
+    @typeCheck(((list, tuple),), int)
     @private
     def launchAMIInstance(self, authToken, blessedAMIId):
         """
@@ -4539,7 +4539,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 launchedAt = toDatabaseTimestamp(),
                 userData = userData)
 
-    @typeCheck(tuple)
+    @typeCheck(((list, tuple),))
     @requiresAdmin
     @private
     def terminateExpiredAMIInstances(self, authToken):
