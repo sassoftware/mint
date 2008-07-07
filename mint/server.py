@@ -5218,7 +5218,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     affectedAMIIds.append(amiIdData['amiId'])
             else:
                 # Product is public.
-                # We only want the caes where the user is owner or developer
+                # We only want the case where the user is owner or developer
                 # and the image is not published.
                 if amiIdData['level'] in (userlevels.OWNER,
                                           userlevels.DEVELOPER) and \
