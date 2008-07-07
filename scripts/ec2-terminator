@@ -37,7 +37,7 @@ class EC2Terminator(scriptlibrary.SingletonScript):
         client = MintClient(self.xmlrpcUrl)
         try:
             instancesKilled = [client.getLaunchedAMI(x) for x in \
-                    client.terminateExpiredAMIInstances()]
+                    client.terminateExpiredAMIInstances((mintCfg.ec2AccountId, mintCfg.ec2PublicKey, mintCfg.ec2PrivateKey))]
         except Exception, e:
             self.log.error(str(e))
             return 1
