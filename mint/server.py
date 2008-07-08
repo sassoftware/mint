@@ -1454,14 +1454,37 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @private
     def cancelUserAccount(self, userId):
-        """ Checks to see if the the user to be deleted is leaving in a
-            lurch developers of projects that would be left ownerless.
-            Then deletes the user.
+        """ 
+        Make sure accounts and privileges belonging to the user are removed
+        prior to removing the user.
         """
         if (self.auth.userId != userId) and (not self.auth.admin):
             raise PermissionDenied()
+
+        self._ensureNoOrphans(userId)
+        
+        # remove EC2 launch permissions
+        ec2cred = self.getEC2CredentialsForUser(userId)
+        if ec2cred and ec2cred.has_key('awsAccountNumber'):
+            if ec2cred['awsAccountNumber']:
+                # revoke launch permissions
+                self.removeEC2LaunchPermissions(userId, 
+                                                ec2cred['awsAccountNumber'])
+                
+        # remove EC2 credentials
+        self.removeEC2CredentialsForUser(userId)
+
+        self.membershipRequests.userAccountCanceled(userId)
+
+        self.removeUserAccount(userId)
+        
+        return True
+    
+    def _ensureNoOrphans(self, userId):
+        """
+        Make sure there won't be any orphans
+        """
         cu = self.db.cursor()
-        username = self.users.getUsername(userId)
 
         # Find all projects of which userId is an owner, has no other owners, and/or
         # has developers.
@@ -1480,10 +1503,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r = cu.fetchone()
         if r and r[0]:
             raise users.LastOwner
-
-        self.membershipRequests.userAccountCanceled(userId)
-
-        self.removeUserAccount(userId)
+        
         return True
 
     @typeCheck(int)
@@ -5184,7 +5204,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         amiIds = self._getAMIIdsForPermChange(userId)
-
+        
         for amiId in amiIds:
             ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
         return True

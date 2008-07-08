@@ -16,6 +16,8 @@ Internal Changes
 * The EC2 backend calls now have common error handling. (RBL-3043)
 * A backend call has been added to get all AMI builds for a particular
   user. (RBL-3053)
+* EC2 credentials and AMI launch permissions are now properly removed when a
+  user account is removed. (RBL-3065)
 
 Web Front End Changes
 ---------------------

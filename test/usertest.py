@@ -187,12 +187,92 @@ class UsersTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testCancelUserAccount(self, db, data):
-        # XXX: This test fails under sqlite.
         client = self.getClient('owner')
         user = client.getUser(data['owner'])
 
         self.assertRaises(users.LastOwner, user.cancelUserAccount)
+        
+    @fixtures.fixture('EC2')
+    def testCancelUserAccountEC2(self, db, data):
+        """
+        Test canceling user account with EC2 credentials and permissions.
+        """
+        client = self.getClient('developer')
+        user = client.getUser(data['developerId'])
+        
+        self.addLaunchPermsCalled = False
+        self.removeLaunchPermsCalled = False
+        self.removeUserAccountCalled = False
 
+        def addEC2LaunchPermissions(userId, awsAccountNumber):
+            self.addLaunchPermsCalled = True
+            return True
+
+        def removeEC2LaunchPermissions(userId, awsAccountNumber):
+            self.removeLaunchPermsCalled = True
+            return True
+
+        def validateEC2Credentials(authToken):
+            return True
+        
+        def ensureNoOrphans(userId):
+            return True
+        
+        def removeUserAccount(userId):
+            self.removeUserAccountCalled = True
+            return True
+                
+        oldValidateAMICredentials = client.server._server.validateEC2Credentials
+        client.server._server.validateEC2Credentials = validateEC2Credentials
+        oldAddEC2LaunchPermissions = \
+            client.server._server.addEC2LaunchPermissions
+        client.server._server.addEC2LaunchPermissions = addEC2LaunchPermissions
+        oldRemoveEC2LaunchPermissions = \
+            client.server._server.removeEC2LaunchPermissions
+        client.server._server.removeEC2LaunchPermissions = \
+            removeEC2LaunchPermissions
+        oldEnsureNoOrphans = client.server._server._ensureNoOrphans
+        client.server._server._ensureNoOrphans = ensureNoOrphans
+        oldRemoveUserAccount = client.server._server.removeUserAccount
+        client.server._server.removeUserAccount = removeUserAccount
+        
+        try:
+            # set some EC2 credentials
+            client.setEC2CredentialsForUser(user.id, '012345678901',
+                'awsPublicAccessKeyId', 'awsSecretAccessKey', force=True)
+            self.assertTrue(client.getEC2CredentialsForUser(user.id) ==\
+                {'awsPublicAccessKeyId': 'awsPublicAccessKeyId', 
+                 'awsSecretAccessKey': 'awsSecretAccessKey', 
+                 'awsAccountNumber': '012345678901'})
+            
+            # add some launch permissions
+            client.addEC2LaunchPermissions(user.id, '012345678901')
+            self.assertTrue(self.addLaunchPermsCalled)
+            
+            # cancel the account
+            user.cancelUserAccount()
+            
+            # make sure no launch permissions are present
+            self.assertTrue(self.removeLaunchPermsCalled)
+            
+            # make sure credentials are gone
+            self.assertTrue(client.getEC2CredentialsForUser(user.id) ==\
+                {'awsPublicAccessKeyId': '', 
+                 'awsSecretAccessKey': '', 
+                 'awsAccountNumber': ''})
+            
+            # make sure account is gone
+            self.assertTrue(self.removeUserAccountCalled)
+        finally:
+            client.server._server.validateEC2Credentials = \
+                oldValidateAMICredentials
+            client.server._server.addEC2LaunchPermissions = \
+                oldAddEC2LaunchPermissions
+            client.server._server.removeEC2LaunchPermissions = \
+                oldRemoveEC2LaunchPermissions
+            client.server._server._ensureNoOrphans = oldEnsureNoOrphans
+            client.server._server.removeUserAccount = oldRemoveUserAccount
+                
     @fixtures.fixture('Full')
     def testUserDataDict(self, db, data):
         client = self.getClient('user')
