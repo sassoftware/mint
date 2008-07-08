@@ -445,8 +445,9 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
         repos.commitChangeSet(cs)
         
         res = client.getPackageCreatorPackages(projectId)
-        self.assertEquals(res,
-{u'vs1': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+        self.assertEquals(res, getPackageCreatorFactoriesData1)
+
+getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns1',
                                                               u'shortname': u'testproject',
@@ -465,7 +466,7 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns2',
                                                               u'shortname': u'testproject',
-                                                              u'version': u'vs2'}}}}})
+                                                              u'version': u'vs2'}}}}}
 
 prodDef1 = """\
 <?xml version="1.0" encoding="UTF-8"?>
