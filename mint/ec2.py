@@ -253,7 +253,7 @@ class EC2Wrapper(object):
                                                  'add', awsAccountId)
             return True
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))       
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def removeLaunchPermission(self, ec2AMIId, awsAccountId):
         try:
@@ -261,7 +261,7 @@ class EC2Wrapper(object):
                                                  'remove', awsAccountId)
             return True
         except EC2ResponseError, e:
-            raise EC2Exception(ErrorResponseObject(e))       
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def validateCredentials(self):
         self.getAllKeyPairs()
