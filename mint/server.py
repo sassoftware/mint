@@ -4896,9 +4896,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
 
-        datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
 
         try:
+            datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
             srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
         except packagecreator.errors.ConstraintsValidationError, err:
             raise PackageCreatorValidationError(*err.args)
