@@ -149,12 +149,13 @@ def getPackageCreatorFactories(pc, sessionHandle):
     """
     try:
         factories = pc.getCandidateBuildFactories(sessionHandle)
+        data = pc.getExistingFactoryData(sessionHandle)
     except errors.UnsupportedFileFormat, e:
         raise mint_error.PackageCreatorError("Error gathering Candidate Build Factories: %s",
             "The file uploaded is not a supported file type")
     [x[1].seek(0) for x in factories]
     ret = [(x[0],x[1].read(),x[3]) for x in factories]
-    return ret
+    return ret, data
 
 def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     """

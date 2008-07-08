@@ -21,7 +21,7 @@ from mint.mint_error import *
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [7]
+CLIENT_VERSIONS = [8]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -379,15 +379,15 @@ class MintClient:
         @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
         @rtype: tuple(tuple, str)
         """
-        sesH, factories = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
-        return sesH, self._filterFactories(factories)
+        sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+        return sesH, self._filterFactories(factories), data
 
     def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
         return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
 
     def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
-        sesH, factories = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
-        return sesH, self._filterFactories(factories)
+        sesH, factories, data = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
+        return sesH, self._filterFactories(factories), data
 
     def savePackage(self, sessionHandle, factoryHandle, data, build=True):
         "See L{mint.server.MintServer.savePackage}"

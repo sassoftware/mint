@@ -87,8 +87,10 @@ except ImportError:
 import gettext
 gettext.install('rBuilder')
 
-SERVER_VERSIONS = [7]
+SERVER_VERSIONS = [8]
 # XMLRPC Schema History
+# Version 8
+# * Added preexisting data retrieval to getPackageFactories*
 # Version 7
 #  * Added package creator methods
 #  * Added namespace parameter to newPackage, addProductVersion
@@ -4808,17 +4810,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not sessionHandle:
             #Get the version object
             version = projects.ProductVersions(self, versionId)
+            #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version.namespace,
                 version=version.name), mincfg)
         else:
             sesH = sessionHandle
 
-        # Start the PCS session, and "upload" the data
+        # "upload" the data
         pc.uploadData(sesH, info['filename'], info['tempfile'],
                 info['content-type'])
+        fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
 
-        return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
+        return sesH, fact, data
 
     @requiresAuth
     def getPackageCreatorPackages(self, projectId):
@@ -4889,7 +4893,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         #start the session
         sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
-        return sesH, packagecreator.getPackageCreatorFactories(pc, sesH)
+        fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
+
+        return sesH, fact, data
 
     @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
     @requiresAuth

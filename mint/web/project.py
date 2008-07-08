@@ -715,7 +715,7 @@ class ProjectHandler(WebHandler):
             editing = False
         try:
             #Start the session first
-            sessionHandle, factories = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+            sessionHandle, factories, trove_data = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -743,7 +743,7 @@ class ProjectHandler(WebHandler):
     def maintainPackageInterview(self, name, label, prodVer, namespace):
         """"""
         try:
-            sessionHandle, factories = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+            sessionHandle, factories, trove_data = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)

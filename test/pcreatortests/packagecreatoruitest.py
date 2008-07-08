@@ -168,7 +168,7 @@ content-type=text/plain
 
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        sesH, factories = self.client.getPackageFactories(projectId, self.uploadSes, 1)
+        sesH, factories, data = self.client.getPackageFactories(projectId, self.uploadSes, 1)
         self.assertEquals(sesH, '88889')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
@@ -185,7 +185,7 @@ content-type=text/plain
             return 'session-88889'
         self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
         projectId = data['projectId']
-        sesH, factories = self.client.getPackageFactoriesFromRepoArchive(projectId, 1, 'gina', 'foobar', 'barrage.rpath.com@gina:sdi-1-devel')
+        sesH, factories, data = self.client.getPackageFactoriesFromRepoArchive(projectId, 1, 'gina', 'foobar', 'barrage.rpath.com@gina:sdi-1-devel')
         self.assertEquals(sesH, 'session-88889')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
@@ -198,7 +198,7 @@ content-type=text/plain
             return [('rpm', basicXmlDef, {'a': 'b'})]
         self._setup_mocks(getCandidateBuildFactories)
         projectId = data['projectId']
-        sesH, factories = self.client.getPackageFactories(projectId, self.uploadSes, 1, 'session_handle_test')
+        sesH, factories, data = self.client.getPackageFactories(projectId, self.uploadSes, 1, 'session_handle_test')
         self.assertEquals(sesH, 'session_handle_test')
         self.assertEquals(factories[0][0], 'rpm')
         assert isinstance(factories[0][1], FactoryDefinition)
