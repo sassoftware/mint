@@ -93,6 +93,9 @@ class FixtureCache(object):
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
         cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
+        cfg.awsAccountId = '012345678901'
+        cfg.awsPublicKey = 'publicKey'
+        cfg.awsPrivateKey = 'secretKey'
 
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')

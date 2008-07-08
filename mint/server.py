@@ -2501,13 +2501,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         if f:
                             f.close()
                 else:
-                    raise AMIBuildNotConfigured
+                    raise EC2NotConfigured
 
             for k in ( 'ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups'):
                 amiData[k] = self.cfg[k]
                 if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
-                    raise AMIBuildNotConfigured
+                    raise EC2NotConfigured
 
             amiData['ec2CertificateKey'] = \
                     _readX509File(self.cfg.ec2CertificateKeyFile)
@@ -5158,9 +5158,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        ec2Wrap = ec2.EC2Wrapper((self.cfg.awsAccountId,
-                                  self.cfg.awsPublicKey,
-                                  self.cfg.awsPrivateKey))
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
         amiIds = self._getAMIIdsForPermChange(userId)
 
         for amiId in amiIds:
@@ -5181,9 +5180,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        ec2Wrap = ec2.EC2Wrapper((self.cfg.awsAccountId,
-                                  self.cfg.awsPublicKey,
-                                  self.cfg.awsPrivateKey))
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
 
         amiIds = self._getAMIIdsForPermChange(userId)
 

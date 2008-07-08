@@ -629,9 +629,16 @@ Much like Powdermilk Biscuits[tm]."""
         
         # test empty
         cfg = None
-        self.assertTrue(buildEC2AuthToken(cfg) == ())
+        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
         
-        # test with daya
+        # test with some empty data
+        cfg = config.MintConfig()
+        cfg.awsAccountId = 'accountId'
+        cfg.awsPublicKey = ''
+        cfg.awsPrivateKey = ''
+        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
+        
+        # test with data
         cfg = config.MintConfig()
         cfg.awsAccountId = 'accountId'
         cfg.awsPublicKey = 'awsPublicKey'
