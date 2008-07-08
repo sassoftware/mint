@@ -480,6 +480,10 @@ class FixtureCache(object):
         normalUserClient = shimclient.ShimMintClient(cfg,
                 ('normaluser', 'normaluserpass'))
 
+        # Create a user to be used for joining products in the tests.
+        loneUserId = self.createUser(cfg, db,
+                username = 'loneuser', isAdmin = False)
+
         hostname = shortname = "testproject"
         projectId = someOtherClient.newProject("Test Project",
                                       hostname,
@@ -497,13 +501,13 @@ class FixtureCache(object):
                                       prodtype="Component")
 
         hostname = shortname = "hiddenproject"
-        hiddenprojectId = someOtherClient.newProject("Hidden Test Project",
+        hiddenProjectId = someOtherClient.newProject("Hidden Test Project",
                                       hostname,
                                       MINT_PROJECT_DOMAIN,
                                       shortname=shortname,
                                       version="1.0",
                                       prodtype="Component")
-        hiddenproject = client.getProject(hiddenprojectId)
+        hiddenproject = client.getProject(hiddenProjectId)
 
         # add the developer to the testproject
         project = client.getProject(projectId)
@@ -515,9 +519,9 @@ class FixtureCache(object):
         # add the developer to the hiddenproject
         hiddenproject.addMemberById(developerId, userlevels.DEVELOPER)
         # add the normal user to the hiddenproject
-        normalHiddenProject = normalUserClient.getProject(hiddenprojectId)
+        normalHiddenProject = normalUserClient.getProject(hiddenProjectId)
         normalHiddenProject.addMemberById(normalUserId, userlevels.USER)
-        ret = client.hideProject(hiddenprojectId)
+        ret = client.hideProject(hiddenProjectId)
 
         # create an AMI build that isn't a part of a release
         build = client.newBuild(projectId,
@@ -581,13 +585,13 @@ class FixtureCache(object):
 
         # create an AMI build and add it to an unpublished
         # (not final) release on the hiddenproject
-        build = client.newBuild(hiddenprojectId, "Test AMI Build (Unpublished)")
+        build = client.newBuild(hiddenProjectId, "Test AMI Build (Unpublished)")
         build.setTrove("group-dist", "/testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.2-1-1", "1#x86")
         build.setBuildType(buildtypes.AMI)
         build.setDataValue('amiId', 'ami-00000006', RDT_STRING,
                 validate=False)
-        pubRelease = client.newPublishedRelease(hiddenprojectId)
+        pubRelease = client.newPublishedRelease(hiddenProjectId)
         pubRelease.name = "(Not final) Release"
         pubRelease.version = "1.1"
         pubRelease.addBuild(build.id)
@@ -595,13 +599,13 @@ class FixtureCache(object):
 
         # create an AMI build and add it to a published release on the hidden
         # project.
-        build = client.newBuild(hiddenprojectId, "Test AMI Build (Published)")
+        build = client.newBuild(hiddenProjectId, "Test AMI Build (Published)")
         build.setTrove("group-dist", "/testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.3-1-1", "1#x86")
         build.setBuildType(buildtypes.AMI)
         build.setDataValue('amiId', 'ami-00000007', RDT_STRING,
                 validate=False)
-        pubRelease = client.newPublishedRelease(hiddenprojectId)
+        pubRelease = client.newPublishedRelease(hiddenProjectId)
         pubRelease.name = "Release"
         pubRelease.version = "1.0"
         pubRelease.addBuild(build.id)
@@ -622,6 +626,8 @@ class FixtureCache(object):
                       'amiIds': amiIds,
                       'projectId': projectId,
                       'otherProjectId': otherProjectId,
+                      'hiddenProjectId': hiddenProjectId,
+                      'loneUserId': loneUserId,
                       }
 
 
