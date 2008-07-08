@@ -16,6 +16,7 @@ from mint import mint_error
 from mint import projects
 from mint import pubreleases
 from mint import users
+from mint import packagecreator
 from mint.mint_error import *
 
 from rpath_common.proddef import api1 as proddef
@@ -377,17 +378,27 @@ class MintClient:
         @param upload_url: URL of a package or ''.  Not currently used
         @type upload_url: str
         @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
-        @rtype: tuple(tuple, str)
+        @rtype: tuple(tuple, str, dict)
         """
         sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
-        return sesH, self._filterFactories(factories), data
+
+        #Parse the factory data xml
+        prevChoices = packagecreator.getFactoryDataFromXML(data)
+
+        return sesH, self._filterFactories(factories), prevChoices
 
     def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
+        """See L{mint.server.startPackageCreatorSession}"""
         return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
 
     def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
+        "See getPackageFactories, this method is used when you merely want to edit the interview data"
         sesH, factories, data = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
-        return sesH, self._filterFactories(factories), data
+
+        #Parse the factory data xml
+        prevChoices = packagecreator.getFactoryDataFromXML(data)
+
+        return sesH, self._filterFactories(factories), prevChoices
 
     def savePackage(self, sessionHandle, factoryHandle, data, build=True):
         "See L{mint.server.MintServer.savePackage}"

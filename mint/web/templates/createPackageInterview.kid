@@ -6,7 +6,7 @@ import simplejson
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
-from mint.packagecreator import drawField, isChecked, isSelected, workingValue
+from mint.packagecreator import drawField, isChecked, isSelected, effectiveValue, expandme
 lang = None;
 
 ?>
@@ -124,58 +124,62 @@ lang = None;
             ?>
             <div py:if="desc" id='${fieldId}_help' class="help">${desc}</div>
         </div>
-        <div py:def="drawTextField(fieldId, field, possibles, prefilled)" py:strip="True">
+        <div py:def="drawHiddenReference(fieldId, field, prefilled, prevChoices)" py:strip="True">
+          <input id="${fieldId + '_reference'}" type="hidden" name="${field.name + '_reference'}" value="${effectiveValue(field, prefilled, prevChoices)[1]}"/>
+        </div>
+        <div py:def="drawTextField(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
           ${drawLabel(fieldId, field)}
           <?python
-            value = workingValue(field, prefilled)
+            value, reference = effectiveValue(field, prefilled, prevChoices)
           ?>
-          <div py:if="value is None or '\n' not in workingValue(field, prefilled)" py:strip="True">
-            <div class="expandableformgroupItems">
+          <div class="expandableformgroupItems">
+            <div py:if="not expandme(value)" py:strip="True">
               <input type="text" id="${fieldId}" name="${field.name}"
-                  value="${workingValue(field, prefilled)}"/>
+                  value="${value}"/>
               <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
                 &nbsp;
               </div>
-              ${drawDescription(fieldId, field)}
             </div>
-          </div>
-          <div py:if="value is not None and '\n' in workingValue(field, prefilled)" py:strip="True">
-            <div class="expandableformgroupItems">
-              <textarea id="${fieldId}" name="${field.name}" rows="5">${workingValue(field, prefilled)}</textarea>
-              ${drawDescription(fieldId, field)}
+            <div py:if="expandme(value)" py:strip="True">
+              <textarea id="${fieldId}" name="${field.name}" rows="5">${value}</textarea>
             </div>
+            ${drawDescription(fieldId, field)}
+            ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
           </div>
         </div>
 
-        <div py:def="drawSelectField(fieldId, field, possibles, prefilled)" py:strip="True">
+        <div py:def="drawSelectField(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
           ${drawLabel(fieldId, field)}
           <div class="expandableformgroupItems">
             <select name="${field.name}" id="${fieldId}" py:attrs="{'multiple': field.multiple and 'multiple' or None}">
-              <option py:for="val in sorted(possibles)" id="${fieldId}_${val}" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled) and 'selected' or None}" py:content="val"/>
+              <option py:for="val in sorted(possibles)" id="${fieldId}_${val}" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled, prevChoices) and 'selected' or None}" py:content="val"/>
             </select>
             ${drawDescription(fieldId, field)}
+            ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
           </div>
         </div>
 
-        <div py:def="drawCheckBoxes(fieldId, field, possibles, prefilled)" py:strip="True">
+        <div py:def="drawCheckBoxes(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
           ${drawLabel(fieldId, field)}
              <div class="expandableformgroupItems">
              <div py:for="val in sorted(possibles)">
-               <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" py:attrs="{'type': field.multiple and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled) and 'checked' or None}" value="${val}"/>
+               <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" py:attrs="{'type': field.multiple and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
                <label class="check_label" for="${fieldId}_${val}">${val}</label>
              </div> <!--possibles-->
              ${drawDescription(fieldId, field)}
+             ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
              </div> <!--expandableformgroupItems-->
         </div>
 
-        <div py:def="drawBooleanField(fieldId, field, prefilled)" py:strip="True">
+        <div py:def="drawBooleanField(fieldId, field, prefilled, prevChoices)" py:strip="True">
           ${drawLabel(fieldId, field)}
             <div class="expandableformgroupItems">
             <div py:for="val in ['True', 'False']">
-              <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" type="radio" py:attrs="{'checked': isChecked(field, val, prefilled) and 'checked' or None}" value="${val}"/>
+              <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" type="radio" py:attrs="{'checked': isChecked(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
               <label class="check_label" for="${fieldId}_${val}">${val}</label>
             </div> <!--for-->
             ${drawDescription(fieldId, field)}
+            ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
             </div> <!--expandableformgroupItems-->
         </div>
 
@@ -190,7 +194,7 @@ lang = None;
             <div style="display: none" id="factory_dumping_ground">
         <div py:for="(factoryIndex, (factoryHandle, factoryDef, values)) in enumerate(factories)" id="${factoryHandle}">
           <div py:for="field in factoryDef.getDataFields()" py:strip="True">
-${drawField(factoryIndex, field, values, dict(unconstrained = drawTextField, medium_enumeration=drawSelectField, small_enumeration=drawCheckBoxes, large_enumeration=drawTextField, boolean = drawBooleanField))}
+${drawField(factoryIndex, field, values, prevChoices, dict(unconstrained = drawTextField, medium_enumeration=drawSelectField, small_enumeration=drawCheckBoxes, large_enumeration=drawTextField, boolean = drawBooleanField))}
             <div class="expandableformgroupSeparator">&nbsp;</div>
           </div>
         </div>

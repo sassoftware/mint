@@ -247,6 +247,74 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.failUnless(elem)
         self.failIf('checked' in elem)
 
+        #Large descriptions
+        self.prefilled['description'] = 'a' * 49
+        page = func(auth=context['auth'], **context['fields'])
+        #The description of 49 characters should be a text area
+        elem = self.extractElement(page, 'textarea', 'name', 'description')
+        self.failIf(elem)
+        #Should not also have an input
+        elem = self.extractElement(page, 'input', 'name', 'description')
+        self.failUnless(elem)
+        self.failUnless(self.prefilled['description'] in page)
+
+        self.prefilled['description'] = 'a' * 50
+        page = func(auth=context['auth'], **context['fields'])
+        elem = self.extractElement(page, 'input', 'name', 'description')
+        self.failIf(elem)
+        elem = self.extractElement(page, 'textarea', 'name', 'description')
+        self.failUnless(elem)
+        self.failUnless(self.prefilled['description'] in page)
+
+
+    def _setupMaintainInterviewEnvironment(self, mockMethod):
+        fields = {
+            'name': 'grnotify',
+            'label': 'foo.local.test@foo:bar',
+            'prodVer': 'v1',
+            'namespace': 'ns1',
+        }
+        cmd = 'testproject/maintainPackageInterview'
+
+        projectHandler,auth = self._setupProjectHandlerMockClientMethod(
+                            'getPackageFactoriesFromRepoArchive', mockMethod, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+
+        func = projectHandler.handle(context)
+        return func, context
+
+    def testMaintainPackageInterview(self):
+        self.factorystream = StringIO.StringIO(basicXmlDef)
+        def fakePackageFactories(s, *args):
+            ret = []
+            ret.append(('rpm1', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
+            self.factorystream.seek(0)
+            ret.append(('rpm2', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
+            return 'foobarbaz', ret, {}
+
+        func, context = self._setupMaintainInterviewEnvironment(fakePackageFactories)
+
+        page = func(auth=context['auth'], **context['fields'])
+        self.failUnless('form action="savePackage"' in page)
+
+    def testNewUpload(self):
+        fields = {
+            'name': 'grnotify',
+            'label': 'foo.local.test@foo:bar',
+            'prodVer': 'v1',
+            'namespace': 'ns1',
+        }
+        cmd = 'testproject/newUpload'
+        def fakeStartPackageCreatorSession(s, *args):
+            return 'asdfiafisd'
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('startPackageCreatorSession', fakeStartPackageCreatorSession, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        elem = self.extractElement(page, 'input', 'name', 'sessionHandle')
+        self.failUnless('value="asdfiafisd"' in elem)
+        self.failUnless('Editing grnotify' in page)
+
     def testSavePackage(self):
         from factory_test.packagecreatortest import expectedFactories1
         from factory_test.factorydatatest import dictDef

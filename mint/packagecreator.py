@@ -28,7 +28,15 @@ def getUploadDir(cfg, id):
     path = os.path.join(cfg.dataPath, 'tmp', '%s%s' % (PCREATOR_TMPDIR_PREFIX, id))
     return path
 
-def isSelected(field, value, prefilled):
+def expandme(value):
+    if value is None:
+        return False
+    if ('\n' in value) or (len(value) >= 50):
+        return True
+    else:
+        return False
+
+def isSelected(field, value, prefilled, prevChoices):
     '''
     Determines whether a checkbox or select box item should be selected/checked.  It does this by comparing the prefilled value, or in its abscense the default with the value representing the item.
 
@@ -37,27 +45,50 @@ def isSelected(field, value, prefilled):
     @param value: The value to compare against the field.
     @type value: any comparable type
     @param prefilled: The value prefilled from the uploaded file.
-    @type value: any comparable type
+    @type prefilled: any comparable type
     @return: True if "value" should be selected in the interface.  False otherwise.
     @rtype: boolean
     '''
-    v = workingValue(field, prefilled)
+    v, x = effectiveValue(field, prefilled, prevChoices)
     if v is None:
         return False
     return str(v) == str(value)
 
 ### default value could be "0" "False", etc.
 ### value could be "True" or "False"
-def isChecked(field, value, prefilled):
+def isChecked(field, value, prefilled, prevChoices):
     """
         Same as L{isSelected}, except meant to be used to compare possible boolean values
     """
-    v = workingValue(field, prefilled)
+    v, x = effectiveValue(field, prefilled, prevChoices)
     if v is None:
         return False
     vb = v.upper() in ('TRUE', '0')
     pb = value.upper() in ('TRUE', '0')
     return vb == pb
+
+def effectiveValue(field, prefilled, prevChoices):
+    """
+        For the field provided, return what should be sent to the UI, as well
+        as what the working value from the factory was.
+
+        @param field: The field, retrieved by parsing the factory definition object
+        @type field: PresentationField
+        @param value: The value to compare against the field.
+        @type value: any comparable type
+        @param prefilled: The value prefilled from the uploaded file.
+        @type prefilled: any comparable type
+        @return: (display value, factory value)
+        @rtype: tuple(str, str)
+    """
+    wv = workingValue(field, prefilled)
+    #Get from the previous choices the previous value and whether it was
+    #modified
+    prev_val = prevChoices.get(field.name, (None, False))
+    if prev_val[1]:
+        return prev_val[0], wv
+    else:
+        return wv, wv
 
 def workingValue(field, prefilled):
     '''
@@ -68,7 +99,7 @@ def workingValue(field, prefilled):
     else:
         return field.default
 
-def drawField(factoryIndex, field, values, drawingMethods): 
+def drawField(factoryIndex, field, values, prevChoices, drawingMethods): 
     """
     @param field: the field to draw
     @type field: X{pcreator.factorydata.PresentationField}
@@ -84,12 +115,12 @@ def drawField(factoryIndex, field, values, drawingMethods):
 
     #Take care of Boolean types
     if field.type == 'bool':
-        return drawingMethods['boolean'](fieldId, field, prefilled)
+        return drawingMethods['boolean'](fieldId, field, prefilled, prevChoices)
 
     if len(constraints) != 1:
-        return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
+        return drawingMethods['unconstrained'](fieldId, field, [], prefilled, prevChoices)
     if set(('regexp', 'length')).intersection(set([x['constraintName'] for x in constraints])):
-        return drawingMethods['unconstrained'](fieldId, field, [], prefilled)
+        return drawingMethods['unconstrained'](fieldId, field, [], prefilled, prevChoices)
 
     #We only have one constraint, and it's a legalValues, or a range
     # Blow up the possible list
@@ -99,12 +130,12 @@ def drawField(factoryIndex, field, values, drawingMethods):
     elif constraint['constraintName'] == 'legalValues':
         possibles = constraint['values']
     if len(possibles) <= 7:
-        return drawingMethods['small_enumeration'](fieldId, field, possibles, prefilled)
+        return drawingMethods['small_enumeration'](fieldId, field, possibles, prefilled, prevChoices)
     elif 7 < len(possibles) and len(possibles) < 40:
-        return drawingMethods['medium_enumeration'](fieldId, field, possibles, prefilled)
+        return drawingMethods['medium_enumeration'](fieldId, field, possibles, prefilled, prevChoices)
     else:
         #TODO: If it's an integer field, maybe we should use a slider
-        return drawingMethods['large_enumeration'](fieldId, field, [], prefilled)
+        return drawingMethods['large_enumeration'](fieldId, field, [], prefilled, prevChoices)
 
 class _Method(object):
     def __init__(self, name, realMethod, authMethod):
@@ -157,6 +188,20 @@ def getPackageCreatorFactories(pc, sessionHandle):
     ret = [(x[0],x[1].read(),x[3]) for x in factories]
     return ret, data
 
+def getFactoryDataFromXML(xmldata):
+    """
+    Given an xml blob (e.g. from getPackageFactories), we need to parse it so that it's useful
+
+    """
+    from pcreator import factorydata
+    
+    if xmldata:
+        prevChoices = factorydata.xmlToDictWithModified( \
+                StringIO(xmldata))
+        return prevChoices
+    else:
+        return {}
+
 def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
     """
     This is a convenience method: since we always get a dictionary as a result
@@ -172,7 +217,9 @@ def getFactoryDataFromDataDict(pcclient, sesH, factH, dataDict):
 
     for field in factDef.getDataFields():
         name = field.name
-        factoryData.addField(name, dataDict.get(name, ''))
+        val = dataDict.get(name, '')
+        rval = dataDict.get(name + "_reference", '')
+        factoryData.addField(name, val, modified=rval != val)
     xmldatastream = StringIO()
     factoryData.serialize(xmldatastream)
     xmldatastream.seek(0)

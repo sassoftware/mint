@@ -715,7 +715,7 @@ class ProjectHandler(WebHandler):
             editing = False
         try:
             #Start the session first
-            sessionHandle, factories, trove_data = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+            sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -724,11 +724,11 @@ class ProjectHandler(WebHandler):
             self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 editing = editing, sessionHandle = sessionHandle,
-                factories = factories, message = None)
+                factories = factories, message = None, prevChoices = prevChoices)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
-    def newUpload(self, name, label, prodVer, namespace):
+    def newUpload(self, auth, name, label, prodVer, namespace):
         """"""
         #Start both the upload and the pc sessions
         uploadDirectoryHandle = self.client.createPackageTmpDir()
@@ -740,16 +740,17 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
-    def maintainPackageInterview(self, name, label, prodVer, namespace):
+    def maintainPackageInterview(self, auth, name, label, prodVer, namespace):
         """"""
         try:
-            sessionHandle, factories, trove_data = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+            sessionHandle, factories, prevChoices = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 editing = True, sessionHandle = sessionHandle,
-                factories = factories, message = None)
+                factories = factories, message = None, prevChoices=prevChoices)
 
     @writersOnly
     @strFields(sessionHandle=None, factoryHandle=None)
