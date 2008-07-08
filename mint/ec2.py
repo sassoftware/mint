@@ -110,6 +110,23 @@ class ErrorResponseObject(xmllib.BaseNode):
         if exceptionObj:
             self.status = exceptionObj.status
             self.parseXML(exceptionObj.body)
+            
+    def addError(self, code, message):
+        """
+        Add an error code and message
+        @param code: a short error code description, such as "AuthError"
+        @type  code: C{unicode}
+        @param message: the error message
+        @type  message: C{unicode}
+        """
+        doIt = True
+        for error in self.errors:
+            if error['message'].lower() == message.lower():
+                doIt = False
+                break
+            
+        if doIt:
+            self.errors.append(dict(code=code, message=message))
                 
     def addChild(self, childNode):
         """
@@ -137,7 +154,7 @@ class ErrorResponseObject(xmllib.BaseNode):
                 
         # there should always be error data present since this is an error obj
         if not self.errors:
-            self._addError(ErrorResponseObject.unknownCode, 
+            self.addError(ErrorResponseObject.unknownCode, 
                            ErrorResponseObject.unknownMessage)
             
     def freeze(self):
@@ -179,21 +196,7 @@ class ErrorResponseObject(xmllib.BaseNode):
                 message = messageNodes[0].getText()
                 
             # add the error
-            self._addError(code, message)
-            
-    def _addError(self, code, message):
-        """
-        Add an error and make sure error messages are not reported more than 
-        once.  Error codes can be reported more than once.
-        """
-        doIt = True
-        for error in self.errors:
-            if error['message'].lower() == message.lower():
-                doIt = False
-                break
-            
-        if doIt:
-            self.errors.append(dict(code=code, message=message))
+            self.addError(code, message)
         
 
 class EC2Wrapper(object):
@@ -201,6 +204,14 @@ class EC2Wrapper(object):
     __slots__ = ( 'ec2conn', 'accountId', 'accessKey', 'secretKey')
 
     def __init__(self, (accountId, accessKey, secretKey)):
+        
+        # quick sanity check to prevent boto death
+        if not accountId or not accessKey or not secretKey:
+            errRespObj = ErrorResponseObject()
+            errRespObj.addError(u'IncompleteCredentials', 
+                                u'Incomplete set of credentials')
+            raise mint_error.EC2Exception(errRespObj)    
+        
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey

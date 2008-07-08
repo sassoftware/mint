@@ -437,6 +437,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
         self.failUnless('rapadminpassword = password' in
                 launchedAMIInstance.userData)
+
+    def testGetIncompleteEC2Credentials(self):
+        self.failUnlessRaises(mint_error.EC2Exception,
+                ec2.EC2Wrapper, ('id', '', 'secretKey'))
         
     @fixtures.fixture("EC2")
     def testGetEC2KeyPairs(self, db, data):
@@ -651,6 +655,18 @@ conaryproxy = http://proxy.hostname.com/proxy/
         newEc2error = ec2.ErrorResponseObject()
         newEc2error.thaw(marshalledData)
         self.assertTrue(marshalledData == ec2error.freeze())
+        
+        # test creating standalone
+        errRespObj = ec2.ErrorResponseObject()
+        errRespObj.addError(u"IncompleteCredentials", 
+                            u"Incomplete set of credentials")
+        marshalledData = errRespObj.freeze()
+        self.assertTrue(errRespObj.freeze() == (0, u'', 
+            [{'message': u'Incomplete set of credentials', 
+              'code': u'IncompleteCredentials'}]))
+        newEc2error = ec2.ErrorResponseObject()
+        newEc2error.thaw(marshalledData)
+        self.assertTrue(marshalledData == errRespObj.freeze())
 
     @fixtures.fixture("EC2")
     def testAMIBuildsForUser(self, db, data):
