@@ -29,6 +29,8 @@ from types import MethodType
 
 from rpath_common.proddef import api1 as proddef
 
+import pcreatortests.packagecreatoruitest
+
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
@@ -355,6 +357,71 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.assertEquals(projectHandler._getErrors(), ['Missing major version'])
         # make sure that rebase did NOT get called
         pagek['productDefinition'].rebase._mock.assertNotCalled()
+
+    def testListPackagesEmpty(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList1(s, projectId):
+            return {}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList1, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        assert 'No packages available' in page, "Should show a message for the empty results"
+
+    def testListPackagesSimple(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList(s, projectId):
+            return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+
+        h3eadings, uploadLines = self._extractPackageListLines(page)
+
+        self.assertEquals(len(uploadLines), 2)
+        self.assertEquals(len(h3eadings), 1)
+        self.assertEquals(h3eadings[0], '<h3>Product Version vs1</h3>')
+
+    def _extractPackageListLines(self, page):
+        #Extract all lines containing "newUpload"
+        strio = StringIO.StringIO(page)
+        uploadLines = []
+        h3eadings = []
+        while True:
+            line = strio.readline()
+            if not line: break
+            line = line.strip()
+            if 'newUpload' in line:
+                uploadLines.append(line)
+            if '<h3>' in line:
+                h3eadings.append(line)
+        return h3eadings, uploadLines
+
+    def testListPackagesMeaty(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList(s, projectId):
+            return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+
+        h3eadings, uploadLines = self._extractPackageListLines(page)
+
+        self.assertEquals(len(uploadLines), 4)
+        assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
+        assert '"newUpload?name=zope:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1"' in uploadLines[1]
+        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns1"' in uploadLines[2]
+        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns2:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns2"' in uploadLines[3]
+
+        self.assertEquals( len(h3eadings), 3)
+        assert 'Product Version vs1 (ns1)' in h3eadings[0]
+        assert 'Product Version vs2 (ns1)' in h3eadings[1]
+        assert 'Product Version vs2 (ns2)' in h3eadings[2]
 
     def testCreateProject(self):
         self.called = False

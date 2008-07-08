@@ -49,8 +49,8 @@
                     <h4>${troveName.replace(':source','')}</h4>
                     <ul>
                       <li>
-                        <a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">new archive</a>
-                        <a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">edit data</a>
+                        <a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Archive</a>
+                        <a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Details</a>
                       </li>
                     </ul>
                   </div>
@@ -60,6 +60,8 @@
               <p>The packages listed above are those that were previously
               created using Package Creator.  For other packages, you will need
               to use the normal <a href="http://wiki.rpath.com/wiki/Conary:Packaging">package maintenance</a> work flow.</p>
+              <p>Click the "Update Archive" button to provide a new archive and build it.</p>
+              <p>Click the "Update Details" button to review the package details, and build the package.</p>
             </div><!--middle-->
         </div><!--layout-->
     </body>
