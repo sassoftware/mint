@@ -404,29 +404,43 @@ Much like Powdermilk Biscuits[tm]."""
         finally:
             scriptlibrary.setupScriptLogger = _setup
 
-    def testUnwritableScriptLog2(self):
+    def testMissingScriptLogFile(self):
         '''
-
-        Check that the script logger deals with an unwritable log by
-        not opening the file logger.
+        Check that a writable log directory but no log file still
+        results in a log being opened.
 
         @tests: RBL-3042
         '''
 
+        logdir = tempfile.mkdtemp()
+        logfile = os.path.join(logdir, "foo.log")
+
+        calls = [0]
         def mockSetup(path):
             scriptlibrary._scriptLogger.setup = True
-            self.failUnlessEqual(path, None)
-            class MockLogger(object):
-                def warning(xself, msg, *args):
-                    pass
-            return MockLogger()
+            if not calls[0]:
+                # First call is implicit and has no logfile
+                self.failUnlessEqual(path, None)
+            else:
+                # Second call is by us
+                self.failUnlessEqual(path, logfile)
+            calls[0] += 1
+            return True
 
         _setup = scriptlibrary.setupScriptLogger
         try:
             scriptlibrary.setupScriptLogger = mockSetup
-            scriptlibrary.GenericScript()
+            script = scriptlibrary.GenericScript()
+            script.logPath = logfile
+            script.resetLogging()
+            self.failUnless(os.path.exists(logfile),
+                "log file was not opened")
+            # check that mockSetup got called twice
+            self.failUnlessEqual(calls, [2],
+                "script log was not re-opened")
         finally:
             scriptlibrary.setupScriptLogger = _setup
+            util.rmtree(logdir)
 
     def testShortTroveSpec(self):
         from mint.web.templatesupport import shortTroveSpec
