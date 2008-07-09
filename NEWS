@@ -27,6 +27,8 @@ Web Front End Changes
   settings. (RBL-3029)
 * There is now a link on the account settings page to clear a user's EC2 
   settings. (RBL-3045)
+* There is now a checkbox on the "Create Product" page to create private
+  products. (RBL-3080)
 
 
 Changes in 4.1.1

@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail', 'isPrivate']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -98,7 +98,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>${projectText().title()} Home Page</th>
+                        <th>${projectText().title()} Home Page:</th>
                         <td>
                             <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
                             <p class="help">
@@ -112,8 +112,19 @@
 
                 <h3>Advanced Options</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+
                     <tr>
-                        <th>Repository Commits Email</th>
+                        <th>${projectText().title()} is Private:</th>
+                        <td>
+                            <input type="checkbox" class='check' name="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                            <p class="help">
+                                <strong>Need help text here (DOC-1364)</strong>
+                             </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th>Repository Commits Email:</th>
                         <td>
                             <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
                             <p class="help">
@@ -128,7 +139,7 @@
                     </tr>
 
                     <tr py:if="not isRBO()">
-                        <th><em class="required">Repository Domain Name</em></th>
+                        <th><em class="required">Repository Domain Name:</em></th>
                         <td>
                             <input type="text" name="domainname" value="${kwargs['domainname']}" />
                             <p class="help">

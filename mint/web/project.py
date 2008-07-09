@@ -1259,7 +1259,6 @@ class ProjectHandler(WebHandler):
         if isNew:
             pd = proddef.ProductDefinition()
         else:
-            version = self.client.getProductVersion(id)
             pd = self.client.getProductDefinitionForVersion(id)
 
         pd = helperfuncs.sanitizeProductDefinition(
@@ -1376,14 +1375,13 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 # we got here from the "create a product menu" so output
                 # accordingly.  Note that the value of linked is the name
                 # of the project.
-                self._setInfo("Successfully created %s '%s' version '%s'" % \
-                              (getProjectText().lower(), self.project.name,
+                visibility = self.project.hidden and "private" or "public"
+                self._setInfo("Successfully created %s %s '%s' version '%s'" % \
+                              (visibility, getProjectText().lower(), 
+                               self.project.name,
                                name))
             else:
-                if isNew:
-                    action = "Created"
-                else:
-                    action = "Updated"
+                action = isNew and "Created" or "Updated"
                 self._setInfo("%s %s version '%s'" % \
                               (action, getProjectText().lower(), name))
             self._predirect()

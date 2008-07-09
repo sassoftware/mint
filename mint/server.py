@@ -748,10 +748,12 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, 
+                   appliance, shortname, namespace, prodtype, version, 
+                   commitEmail, isPrivate):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -837,7 +839,7 @@ class MintServer(object):
                 pass # really, this is OK -- and even if it weren't,
                      # there's nothing you can do about it, anyway
 
-        if self.cfg.hideNewProjects:
+        if self.cfg.hideNewProjects or isPrivate:
             repos = self._getProjectRepo(project)
             helperfuncs.deleteUserFromRepository(repos, 'anonymous',
                 project.getLabel())

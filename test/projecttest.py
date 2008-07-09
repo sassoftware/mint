@@ -919,14 +919,48 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def testHideAllProjects(self, db, data):
         client = self.getClient('nobody')
 
+        oldHideNewProjects = client.server._server.cfg.hideNewProjects
         client.server._server.cfg.hideNewProjects = True
-        hostname = "quux"
-        projectId = client.newProject("Quux", hostname, "localhost", 
-                                      shortname=hostname,
-                                      version='1.0', prodtype='Component')
-
-        project = client.getProject(projectId)
-        self.failUnlessEqual(project.hidden, True)
+        
+        try:
+            hostname = "quux"
+            projectId = client.newProject("Quux", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component')
+    
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, True)
+        finally:
+            client.server._server.cfg.hideNewProjects = oldHideNewProjects
+        
+    @fixtures.fixture('Full')
+    def testPrivateProjects(self, db, data):
+        client = self.getClient('nobody')
+        
+        # make sure not using cfg val so we now param works
+        oldHideNewProjects = client.server._server.cfg.hideNewProjects
+        client.server._server.cfg.hideNewProjects = False
+        
+        try:
+            # tets public
+            hostname = "manny"
+            projectId = client.newProject("BoSox", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component',
+                                          isPrivate = False)
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, False)
+            
+            # tets private
+            hostname = "ortiz"
+            projectId = client.newProject("BoSox2", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component',
+                                          isPrivate = True)
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, True)
+        finally:
+            client.server._server.cfg.hideNewProjects = oldHideNewProjects
 
     @fixtures.fixture("Full")
     def testVAMData(self, db, data):
