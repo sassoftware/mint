@@ -18,6 +18,8 @@ Bug Fixes
   will no longer be pinned by default in generated images. (RBL-3000)
 * domU-flavored images based on rPath Linux 2 now have the correct root
   device label. (RBL-3036)
+* Log files written by scripts such as outbound mirrors are now properly
+  created after they are rotated. (RBL-3042)
 
 
 Changes in 4.1.0

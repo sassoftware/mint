@@ -8,12 +8,14 @@ import unittest
 testsuite.setup()
 
 import kid
+import logging
 import os
 import sys
 import tempfile
 
 import mint_rephelp
 from mint import copyutils
+from mint import scriptlibrary
 from mint import templates
 from mint import flavors
 from mint.helperfuncs import *
@@ -354,8 +356,6 @@ Much like Powdermilk Biscuits[tm]."""
             assert(name in x)
 
     def testScriptLogger(self):
-        from mint import scriptlibrary
-        import logging
         fd, fn = tempfile.mkstemp()
 
         try:
@@ -374,6 +374,59 @@ Much like Powdermilk Biscuits[tm]."""
                 assert(x in logContents)
         finally:
             os.unlink(fn)
+
+    def testUnwritableScriptLog(self):
+        '''
+        Check that the script logger deals with an unwritable log by
+        not opening the file logger.
+
+        @tests: RBL-3042
+        '''
+
+        def mockSetup(path):
+            scriptlibrary._scriptLogger.setup = True
+            self.failUnlessEqual(path, None)
+            class MockLogger(object):
+                def warning(xself, msg, *args):
+                    pass
+            return MockLogger()
+
+        _setup = scriptlibrary.setupScriptLogger
+        try:
+            scriptlibrary.setupScriptLogger = mockSetup
+
+            fd, fn = tempfile.mkstemp()
+            os.chmod(fn, 0)
+            os.close(fd)
+            script = scriptlibrary.GenericScript()
+            script.logPath = fn
+            script.resetLogging()
+        finally:
+            scriptlibrary.setupScriptLogger = _setup
+
+    def testUnwritableScriptLog2(self):
+        '''
+
+        Check that the script logger deals with an unwritable log by
+        not opening the file logger.
+
+        @tests: RBL-3042
+        '''
+
+        def mockSetup(path):
+            scriptlibrary._scriptLogger.setup = True
+            self.failUnlessEqual(path, None)
+            class MockLogger(object):
+                def warning(xself, msg, *args):
+                    pass
+            return MockLogger()
+
+        _setup = scriptlibrary.setupScriptLogger
+        try:
+            scriptlibrary.setupScriptLogger = mockSetup
+            scriptlibrary.GenericScript()
+        finally:
+            scriptlibrary.setupScriptLogger = _setup
 
     def testShortTroveSpec(self):
         from mint.web.templatesupport import shortTroveSpec

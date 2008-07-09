@@ -33,9 +33,12 @@ class GenericScript:
         You can override the logPath after __init__ by calling this method.
         """
         oldLogPath = None
+        # Check if the log path is writable before opening the logger
         if self.logPath:
-            if not (os.access(self.logPath, os.W_OK) \
-                and os.access(os.path.dirname(self.logPath), os.W_OK)):
+            try:
+                open(self.logPath, 'a').close()
+            except (OSError, IOError):
+                # If it is not, then fall back to having no file
                 oldLogPath = self.logPath
                 self.logPath = None
 
