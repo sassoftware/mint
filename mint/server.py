@@ -2171,7 +2171,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
-                                      buildCount = 0)
+                                      buildCount = 0,
+                                      createdBy = self.auth.userId)
 
         mc = self._getMcpClient()
 
@@ -2269,7 +2270,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
-                                      buildCount = 0)
+                                      buildCount = 0,
+                                      createdBy = self.auth.userId)
         mc = self._getMcpClient()
 
         try:
