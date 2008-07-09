@@ -24,7 +24,6 @@ class MembershipRequestTable(database.DatabaseTable):
         self.db.commit()
 
     def deleteRequest(self, projectId, userId, commit=True):
-        self.db.transaction()
         cu = self.db.cursor()
         cu.execute("DELETE from MembershipRequests where projectId=? and userId=?", projectId, userId)
         if commit:
