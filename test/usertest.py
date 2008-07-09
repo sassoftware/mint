@@ -204,11 +204,11 @@ class UsersTest(fixtures.FixturedUnitTest):
         self.removeLaunchPermsCalled = False
         self.removeUserAccountCalled = False
 
-        def addEC2LaunchPermissions(userId, awsAccountNumber):
+        def addAllEC2LaunchPermissions(userId, awsAccountNumber):
             self.addLaunchPermsCalled = True
             return True
 
-        def removeEC2LaunchPermissions(userId, awsAccountNumber):
+        def removeAllEC2LaunchPermissions(userId, awsAccountNumber):
             self.removeLaunchPermsCalled = True
             return True
 
@@ -224,13 +224,14 @@ class UsersTest(fixtures.FixturedUnitTest):
                 
         oldValidateAMICredentials = client.server._server.validateEC2Credentials
         client.server._server.validateEC2Credentials = validateEC2Credentials
-        oldAddEC2LaunchPermissions = \
-            client.server._server.addEC2LaunchPermissions
-        client.server._server.addEC2LaunchPermissions = addEC2LaunchPermissions
-        oldRemoveEC2LaunchPermissions = \
-            client.server._server.removeEC2LaunchPermissions
-        client.server._server.removeEC2LaunchPermissions = \
-            removeEC2LaunchPermissions
+        oldAddAllEC2LaunchPermissions = \
+            client.server._server.addAllEC2LaunchPermissions
+        client.server._server.addAllEC2LaunchPermissions = \
+            addAllEC2LaunchPermissions
+        oldRemoveAllEC2LaunchPermissions = \
+            client.server._server.removeAllEC2LaunchPermissions
+        client.server._server.removeAllEC2LaunchPermissions = \
+            removeAllEC2LaunchPermissions
         oldEnsureNoOrphans = client.server._server._ensureNoOrphans
         client.server._server._ensureNoOrphans = ensureNoOrphans
         oldRemoveUserAccount = client.server._server.removeUserAccount
@@ -246,7 +247,7 @@ class UsersTest(fixtures.FixturedUnitTest):
                  'awsAccountNumber': '012345678901'})
             
             # add some launch permissions
-            client.addEC2LaunchPermissions(user.id, '012345678901')
+            client.addAllEC2LaunchPermissions(user.id, '012345678901')
             self.assertTrue(self.addLaunchPermsCalled)
             
             # cancel the account
@@ -266,10 +267,10 @@ class UsersTest(fixtures.FixturedUnitTest):
         finally:
             client.server._server.validateEC2Credentials = \
                 oldValidateAMICredentials
-            client.server._server.addEC2LaunchPermissions = \
-                oldAddEC2LaunchPermissions
-            client.server._server.removeEC2LaunchPermissions = \
-                oldRemoveEC2LaunchPermissions
+            client.server._server.addAllEC2LaunchPermissions = \
+                oldAddAllEC2LaunchPermissions
+            client.server._server.removeAllEC2LaunchPermissions = \
+                oldRemoveAllEC2LaunchPermissions
             client.server._server._ensureNoOrphans = oldEnsureNoOrphans
             client.server._server.removeUserAccount = oldRemoveUserAccount
                 

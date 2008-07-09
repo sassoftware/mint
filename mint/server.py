@@ -1040,12 +1040,14 @@ class MintServer(object):
             raise users.UserInduction()
     
         try:
+            # TODO: RBL-3064 change these to commit=False once we figure out
+            # what's causing the DatabaseLocked errors. 
             if level != userlevels.USER:
                 self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=False)
+                                                      commit=True)
             try:
                 self.projectUsers.new(projectId, userId, level,
-                                      commit=False)
+                                      commit=True)
             except DuplicateItem:
                 project.updateUserLevel(userId, level)
                 # only attempt to modify acl's of local projects.
@@ -1061,6 +1063,7 @@ class MintServer(object):
                                          level == userlevels.OWNER)
                     repos.setRoleCanMirror(label, username,
                                            int(level == userlevels.OWNER))
+                self.db.commit()
                 return True
         except:
             self.db.rollback()
