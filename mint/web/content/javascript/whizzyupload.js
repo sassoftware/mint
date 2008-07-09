@@ -52,12 +52,12 @@ function format_eta(secs)
     var ret = "";
     if (secs > 3600)
     {
-        ret += Math.floor(secs/3600) + ":";
+        ret += Math.round(secs/3600) + ":";
         secs = secs % 3600;
     }
     if (ret || secs > 60)
     {
-        ret += zeropad(Math.floor(secs/60)) + ":";
+        ret += zeropad(Math.round(secs/60)) + ":";
         secs = secs % 60;
     }
     if (ret)
@@ -184,6 +184,16 @@ FileUploadForm.prototype =
         }
     },
 
+    set100: function()
+    {
+        logDebug("setting complete status");
+        //Probably don't need this, but it'd be silly to stop at 99% because of a rounding error
+        var percent = 100;
+        $('progress_indicator_bar').style.width= "" + percent + "%";
+        $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
+        $('upload_progress_wait').innerHTML = 'Upload complete, processing file...';
+    },
+
     showStatistics: function(sTime, cTime, read, total)
     {
         if (total == undefined)
@@ -195,12 +205,12 @@ FileUploadForm.prototype =
         {
             logDebug("Showing statistics");
             $('upload_progress_cancel_button').disabled=false;
-            var percent = Math.floor(100*read/total);
+            var percent = Math.round(100*read/total);
             $('progress_indicator_bar').style.width= "" + percent + "%";
             $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
             var rate = read/(cTime-sTime);
             $('upload_progress_rate').innerHTML = ""  + Math.round(rate/1024) + " KB/s";
-            $('upload_progress_bytes').innerHTML = "uploaded " + Math.floor(read/1024) + " of " + Math.floor(total/1024) + " KB";
+            $('upload_progress_bytes').innerHTML = "uploaded " + Math.round(read/1024) + " of " + Math.round(total/1024) + " KB";
             $('upload_progress_eta').innerHTML = format_eta(Math.ceil((total-read)/rate));
             $('upload_progress_statistics').style.display='block';
             $('upload_progress_wait').style.display='none';
@@ -285,6 +295,7 @@ FileUploadForm.prototype =
                 //Set the hidden value to "UPLOADED" to prevent it from being resubmitted
                 logDebug("We're finished, hiding statistics");
                 this.hideStatistics();
+                this.set100();
                 $(key).value = 'UPLOADED';
                 this.uploadComplete();
             }
