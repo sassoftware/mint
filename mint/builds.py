@@ -146,6 +146,35 @@ class BuildsTable(database.KeyedTable):
         else:
             return None
 
+    def getAllAMIBuilds(self):
+        cu = self.db.cursor()
+        cu.execute("""
+             SELECT bd.value AS amiId,
+                    b.buildId,
+                    p.name AS productName,
+                    b.name AS buildName,
+                    COALESCE(b.description,'') AS buildDescription,
+                    COALESCE(pr.timePublished,0) != 0 AS isPublished,
+                    p.hidden AS isPrivate,
+                    COALESCE(u.username, 'Unknown') AS createdBy,
+                    CASE
+                        WHEN pu.level = 0 THEN 'Owner'
+                        WHEN pu.level = 1 THEN 'Developer'
+                        WHEN pu.level = 2 THEN 'User'
+                        ELSE 'Non-affiliated'
+                    END AS level,
+                    COALESCE(ud.value,'Unknown') AS awsAccountNumber
+             FROM projects p
+                 JOIN builds b USING (projectId)
+                 LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+                 JOIN buildData bd ON (bd.buildId = b.buildId)
+                 LEFT OUTER JOIN users u ON (b.createdBy = u.userId)
+                 LEFT OUTER JOIN projectUsers pu
+                    ON (b.createdBy = pu.userId AND b.projectId = pu.projectId)
+                 LEFT OUTER JOIN userData ud
+                    ON (b.createdBy = ud.userId AND ud.name = 'awsAccountNumber')
+             WHERE bd.name = 'amiId' AND b.deleted = 0""")
+        return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict()])
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various

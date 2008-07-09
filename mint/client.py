@@ -888,6 +888,9 @@ class MintClient:
     def removeEC2CredentialsForUser(self, userId):
         return self.server.removeEC2CredentialsForUser(userId)
 
+    def getAllAMIBuilds(self):
+        return self.server.getAllAMIBuilds()
+
     def getAMIBuildsForUser(self, userId):
         return self.server.getAMIBuildsForUser(userId)
 

@@ -707,6 +707,43 @@ conaryproxy = http://proxy.hostname.com/proxy/
         self.failUnlessEqual(len(AMIbuilds), 7,
                 "Expected to see seven AMI builds")
 
+    @fixtures.fixture("EC2")
+    def testAllAMIBuilds(self, db, data):
+        client = self.getClient('admin')
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(len(AMIbuilds), 7,
+                "Expected to see seven AMI builds")
+
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'Unknown')
+        # now add some EC2 credentials to the admin user
+        client.setEC2CredentialsForUser(data['adminId'], 'newId',
+            'newPublicKey', 'newSecretKey', False)
+
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'newId')
+
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['level'],
+                'Non-affiliated')
+
+        # remove EC2 credentials to the admin user
+        client.setEC2CredentialsForUser(data['adminId'], 'newId',
+            'newPublicKey', 'newSecretKey', False)
+
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'newId')
+
+        # now add admin as a developer to the build's project
+        client.removeEC2CredentialsForUser(data['adminId'])
+        bld = client.getBuild(AMIbuilds['ami-00000006']['buildId'])
+        prj = client.getProject(bld.getProjectId())
+        prj.addMemberById(data['adminId'], userlevels.DEVELOPER)
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['level'],
+                'Developer')
+
     @fixtures.fixture("Empty")
     def testAMIBuildsData(self, db, data):
         client = self.getClient('admin')

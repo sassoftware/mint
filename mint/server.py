@@ -5207,6 +5207,35 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.setEC2CredentialsForUser(userId, '', '', '', True)
         
+    @requiresAuth
+    def getAllAMIBuilds(self):
+        """
+        Returns a list of all of the AMI images that this rBuilder
+        manages.
+        @returns A dictionary of dictionaries, keyed by amiId,
+          with the following members:
+          - productName: the name of the product containing this build
+          - buildId: the id of the build that created the AMI
+          - buildName: the name of the build
+          - buildDescription: the description of the build, if given
+          - createdBy: the rBuilder user name of the person who
+              initiated the build (if known), otherwise returns
+              'Unknown' if we don't know (in the case of builds
+              created before RBL-3076 was fixed)
+          - awsAccountNumber: the AWS Account number of the user who
+              created the build (if the user supplied credentials)
+              otherwise, returns 'Unknown'
+          - role: the role of the user (as a meatstring, e.g.
+              'User', 'Owner', 'Developer', or 'Non-affiliated')
+              who created the build with respect to the containing
+              project
+          - isPrivate: 1 if the containing project is private (hidden),
+              0 otherwise
+        @rtype: C{dict} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if user is not logged in
+        """
+        return self.builds.getAllAMIBuilds()
+
     @typeCheck(int)
     @requiresAuth
     def getAMIBuildsForUser(self, userId):
