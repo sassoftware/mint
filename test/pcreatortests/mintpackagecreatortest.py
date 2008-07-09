@@ -37,6 +37,7 @@ if _envName in os.environ:
     from pcreator import client as pcreatorClient
 
 class mockfield(object):
+    name='foo'
     default = None
 
 
@@ -78,11 +79,18 @@ class TestPackageCreatorHelperMethods(testsuite.TestCase):
 
     def testIsSelected(self):
         field = mockfield()
-        self.failIf(packagecreator.isSelected(field, 'asdf', None))
-        self.failUnless(packagecreator.isSelected(field, 'asdf', 'asdf'))
+        self.failIf(packagecreator.isSelected(field, 'asdf', None, {}))
+        self.failUnless(packagecreator.isSelected(field, 'asdf', 'asdf', {}))
         field.default = 'asdf'
-        self.failUnless(packagecreator.isSelected(field, 'asdf', None))
-        self.failUnless(packagecreator.isSelected(field, 'asdf', 'asdf'))
+        self.failUnless(packagecreator.isSelected(field, 'asdf', None, {}))
+        self.failUnless(packagecreator.isSelected(field, 'asdf', 'asdf', {}))
+
+        #Now for preexisting values
+        field.default = None
+        self.failIf(packagecreator.isSelected(field, 'asdf', None, {field.name: ('asdf', False)}))
+        self.failUnless(packagecreator.isSelected(field, 'asdf1', 'asdf1', {field.name: ('asdf', False)}))
+        self.failUnless(packagecreator.isSelected(field, 'asdf', None, {field.name: ('asdf', True)}))
+        self.failIf(packagecreator.isSelected(field, 'asdf', 'asdf', {field.name: ('asdf1', True)}))
 
     def testMinCfgMarshalling(self):
         cfg = conarycfg.ConaryConfiguration()
@@ -136,26 +144,31 @@ generatedXML = """<?xml version='1.0' encoding='UTF-8'?>
     <name>name</name>
     <type>str</type>
     <value>tags</value>
+    <modified>true</modified>
   </field>
   <field>
     <name>version</name>
     <type>str</type>
     <value>1.2</value>
+    <modified>true</modified>
   </field>
   <field>
     <name>license</name>
     <type>str</type>
     <value>Some License</value>
+    <modified>true</modified>
   </field>
   <field>
     <name>summary</name>
     <type>str</type>
     <value>Some Summary</value>
+    <modified>true</modified>
   </field>
   <field>
     <name>description</name>
     <type>str</type>
     <value>Some Description</value>
+    <modified>true</modified>
   </field>
 </factoryData>
 """

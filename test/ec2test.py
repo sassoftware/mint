@@ -437,6 +437,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
         self.failUnless('rapadminpassword = password' in
                 launchedAMIInstance.userData)
+
+    def testGetIncompleteEC2Credentials(self):
+        self.failUnlessRaises(mint_error.EC2Exception,
+                ec2.EC2Wrapper, ('id', '', 'secretKey'))
         
     @fixtures.fixture("EC2")
     def testGetEC2KeyPairs(self, db, data):
@@ -481,57 +485,58 @@ conaryproxy = http://proxy.hostname.com/proxy/
         """
         client = self.getClient("admin")
         
-        self.addLaunchPermsCalled = False
-        self.removeLaunchPermsCalled = False
+        self.addAllLaunchPermsCalled = False
+        self.removeAllLaunchPermsCalled = False
 
-        def addEC2LaunchPermissions(userId, awsAccountNumber):
-            self.addLaunchPermsCalled = True
+        def addAllEC2LaunchPermissions(userId, awsAccountNumber):
+            self.addAllLaunchPermsCalled = True
 
-        def removeEC2LaunchPermissions(userId, awsAccountNumber):
-            self.removeLaunchPermsCalled = True
+        def removeAllEC2LaunchPermissions(userId, awsAccountNumber):
+            self.removeAllLaunchPermsCalled = True
 
         def validateEC2Credentials(authToken):
             return True
                 
         oldValidateAMICredentials = client.server._server.validateEC2Credentials
         client.server._server.validateEC2Credentials = validateEC2Credentials
-        oldAddEC2LaunchPermissions = \
-            client.server._server.addEC2LaunchPermissions
-        client.server._server.addEC2LaunchPermissions = addEC2LaunchPermissions
-        oldRemoveEC2LaunchPermissions = \
-            client.server._server.removeEC2LaunchPermissions
-        client.server._server.removeEC2LaunchPermissions = \
-            removeEC2LaunchPermissions
+        oldAddAllEC2LaunchPermissions = \
+            client.server._server.addAllEC2LaunchPermissions
+        client.server._server.addAllEC2LaunchPermissions = \
+            addAllEC2LaunchPermissions
+        oldRemoveAllEC2LaunchPermissions = \
+            client.server._server.removeAllEC2LaunchPermissions
+        client.server._server.removeAllEC2LaunchPermissions = \
+            removeAllEC2LaunchPermissions
         
         try:
             # add some credentials and make sure they are saved
             client.setEC2CredentialsForUser(data['adminId'], 'id', 'publicKey',
                                             'secretKey', False)
-            self.assertTrue(self.addLaunchPermsCalled)
-            self.assertFalse(self.removeLaunchPermsCalled)
+            self.assertTrue(self.addAllLaunchPermsCalled)
+            self.assertFalse(self.removeAllLaunchPermsCalled)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKey', 
                                         'awsSecretAccessKey': 'secretKey', 
                                         'awsAccountNumber': 'id'})
             
             # now replace the credentials and make sure they are replaced
-            self.addLaunchPermsCalled = False
-            self.removeLaunchPermsCalled = False
+            self.addAllLaunchPermsCalled = False
+            self.removeAllLaunchPermsCalled = False
             client.setEC2CredentialsForUser(data['adminId'], 'newId',
                     'newPublicKey', 'newSecretKey', False)
-            self.assertTrue(self.removeLaunchPermsCalled)
-            self.assertTrue(self.addLaunchPermsCalled)
+            self.assertTrue(self.removeAllLaunchPermsCalled)
+            self.assertTrue(self.addAllLaunchPermsCalled)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'newPublicKey', 
                                         'awsSecretAccessKey': 'newSecretKey', 
                                         'awsAccountNumber': 'newId'})
 
             # now remove the credentials and make sure they are gone
-            self.addLaunchPermsCalled = False
-            self.removeLaunchPermsCalled = False
+            self.addAllLaunchPermsCalled = False
+            self.removeAllLaunchPermsCalled = False
             client.removeEC2CredentialsForUser(data['adminId'])
-            self.assertTrue(self.removeLaunchPermsCalled)
-            self.assertFalse(self.addLaunchPermsCalled)
+            self.assertTrue(self.removeAllLaunchPermsCalled)
+            self.assertFalse(self.addAllLaunchPermsCalled)
             ec2cred = client.getEC2CredentialsForUser(data['adminId'])
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': '', 
                                         'awsSecretAccessKey': '', 
@@ -539,10 +544,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
         finally:
             client.server._server.validateEC2Credentials = \
                 oldValidateAMICredentials
-            client.server._server.addEC2LaunchPermissions = \
-                oldAddEC2LaunchPermissions
-            client.server._server.removeEC2LaunchPermissions = \
-                oldRemoveEC2LaunchPermissions
+            client.server._server.addAllEC2LaunchPermissions = \
+                oldAddAllEC2LaunchPermissions
+            client.server._server.removeAllEC2LaunchPermissions = \
+                oldRemoveAllEC2LaunchPermissions
             
     @fixtures.fixture("EC2")
     def testAddRemoveEC2LaunchPermissions(self, db, data):
@@ -562,15 +567,15 @@ conaryproxy = http://proxy.hostname.com/proxy/
         ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
 
         try:
-            client.addEC2LaunchPermissions(data['developerId'], 'acctnum')
+            client.addAllEC2LaunchPermissions(data['developerId'], 'acctnum')
             self.assertEquals(launchableAMIIds,
                ['ami-00000001', 'ami-00000002', 'ami-00000006', 'ami-00000007'])
-            client.removeEC2LaunchPermissions(data['developerId'], 'acctnum')
+            client.removeAllEC2LaunchPermissions(data['developerId'], 'acctnum')
             self.assertEquals(launchableAMIIds, [])
 
-            client.addEC2LaunchPermissions(data['normalUserId'], 'acctnum')
+            client.addAllEC2LaunchPermissions(data['normalUserId'], 'acctnum')
             self.assertEquals(launchableAMIIds, ['ami-00000007'])
-            client.removeEC2LaunchPermissions(data['normalUserId'], 'acctnum')
+            client.removeAllEC2LaunchPermissions(data['normalUserId'], 'acctnum')
             self.assertEquals(launchableAMIIds, [])
         finally:
             ec2.EC2Wrapper.addLaunchPermission = oldAddLaunchPermission
@@ -651,6 +656,18 @@ conaryproxy = http://proxy.hostname.com/proxy/
         newEc2error = ec2.ErrorResponseObject()
         newEc2error.thaw(marshalledData)
         self.assertTrue(marshalledData == ec2error.freeze())
+        
+        # test creating standalone
+        errRespObj = ec2.ErrorResponseObject()
+        errRespObj.addError(u"IncompleteCredentials", 
+                            u"Incomplete set of credentials")
+        marshalledData = errRespObj.freeze()
+        self.assertTrue(errRespObj.freeze() == (0, u'', 
+            [{'message': u'Incomplete set of credentials', 
+              'code': u'IncompleteCredentials'}]))
+        newEc2error = ec2.ErrorResponseObject()
+        newEc2error.thaw(marshalledData)
+        self.assertTrue(marshalledData == errRespObj.freeze())
 
     @fixtures.fixture("EC2")
     def testAMIBuildsForUser(self, db, data):
@@ -755,6 +772,118 @@ conaryproxy = http://proxy.hostname.com/proxy/
             [dict(amiId='ami-00000001', isPublished=1,
                  level=1, isPrivate=1, projectId=1)],
             "Expected isPrivate to be set")
+
+    @fixtures.fixture("EC2")
+    def testPublicProductMemberModification(self, db, data):
+        self.setupLaunchPermissionsTest()
+        client = self.getClient("admin")
+        loneClient = self.getClient("loneuser")
+
+        try:
+            # Set some aws creds for the user
+            loneClient.setEC2CredentialsForUser(data['loneUserId'], 'id', 
+                                                'publicKey',
+                                                'secretKey', False)
+
+            project = loneClient.getProject(data['projectId'])
+
+            # Watch Product
+            project.addMemberByName("loneuser", userlevels.USER)
+            # Users get no explicit launch permissions on public products.
+            self.assertEquals(self.launchableAMIIds, [])
+
+            # Promote to Developer
+            project.updateUserLevel(data['loneUserId'], userlevels.DEVELOPER)
+            # Should now have launch perms on private AMI's.
+            self.assertEquals(self.launchableAMIIds, 
+                              ['ami-00000001', 'ami-00000002'])
+
+            # Demote to regular user
+            project.updateUserLevel(data['loneUserId'], userlevels.USER)
+            # Users get no explicit launch permissions on public products.
+            self.assertEquals(self.launchableAMIIds, [])
+            # Promote to Owner
+            project.updateUserLevel(data['loneUserId'], userlevels.DEVELOPER)
+            # Should now have launch perms on private AMI's.
+            self.assertEquals(self.launchableAMIIds, 
+                              ['ami-00000001', 'ami-00000002'])
+
+            # Leave Product
+            project.delMemberById(data['loneUserId'])
+            # Should have no launch permissions
+            self.assertEquals(self.launchableAMIIds, [])
+        finally:
+            self.tearDownLaunchPermissionsTest()
+            
+    @fixtures.fixture("EC2")
+    def testPrivateProductMemberModification(self, db, data):
+        self.setupLaunchPermissionsTest()
+        client = self.getClient("admin")
+        loneClient = self.getClient("loneuser")
+
+        try:
+            # Set some aws creds for the user
+            loneClient.setEC2CredentialsForUser(data['loneUserId'], 'id', 
+                                                'publicKey',
+                                                'secretKey', False)
+
+            project = client.getProject(data['hiddenProjectId'])
+
+            # Add the user as a developer to the product
+            project.addMemberById(data['loneUserId'], userlevels.DEVELOPER)
+            # Should have launch perms on all AMIs in the product
+            self.assertEquals(self.launchableAMIIds, 
+                              ['ami-00000006', 'ami-00000007'])
+
+            # Promote to Owner
+            project.updateUserLevel(data['loneUserId'], userlevels.OWNER)
+            # Should have launch perms on all AMIs in the product
+            self.assertEquals(self.launchableAMIIds, 
+                              ['ami-00000006', 'ami-00000007'])
+
+            # Leave Product
+            project.delMemberById(data['loneUserId'])
+            # Should have no launch permissions
+            self.assertEquals(self.launchableAMIIds, [])
+        finally:
+            self.tearDownLaunchPermissionsTest()
+
+    def setupLaunchPermissionsTest(self):
+        client = self.getClient("admin")
+
+        launchableAMIIds = []
+        self.launchableAMIIds = launchableAMIIds
+
+        def addLaunchPermission(self, ec2AMIId, awsAccountNumber):
+            launchableAMIIds.append(ec2AMIId)
+        def removeLaunchPermission(self, ec2AMIId, awsAccountNumber):
+            try:
+                spot = launchableAMIIds.index(ec2AMIId)
+                launchableAMIIds.pop(spot)
+            except ValueError:
+                pass
+
+        self.oldAddLaunchPermission = ec2.EC2Wrapper.addLaunchPermission
+        self.oldRemoveLaunchPermission = ec2.EC2Wrapper.removeLaunchPermission
+        ec2.EC2Wrapper.addLaunchPermission = addLaunchPermission
+        ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
+
+        def validateEC2Credentials(authToken):
+            return True
+                
+        self.oldValidateAMICredentials = \
+            client.server._server.validateEC2Credentials
+        client.server._server.validateEC2Credentials = validateEC2Credentials
+
+    def tearDownLaunchPermissionsTest(self):
+        client = self.getClient("admin")
+
+        ec2.EC2Wrapper.addLaunchPermission = self.oldAddLaunchPermission
+        ec2.EC2Wrapper.removeLaunchPermission = self.oldRemoveLaunchPermission
+
+        client.server._server.validateEC2Credentials = \
+            self.oldValidateAMICredentials
+
 
 if __name__ == '__main__':
     testsuite.main()

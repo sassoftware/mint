@@ -47,9 +47,6 @@ class MintError(Exception):
 class AdminSelfDemotion(MintError): "You cannot demote yourself."
 class AlreadyConfirmed(MintError):
     "Your registration has already been confirmed"
-class AMIBuildNotConfigured(MintError):
-    "This rBuilder is missing information necessary to build " \
-        "Amazon Machine Images. Please consult your site administrator."
 class AuthRepoError(MintError):
     "Authentication token could not be manipulated."
 class BuildDataNameError(MintError):
@@ -78,6 +75,8 @@ class DuplicateName(MintError):
     "A %(project)s using this title already exists"
 class DuplicateLabel(MintError): "Label already exists"
 class DuplicateProductVersion(MintError): "Product version already exists"
+class EC2NotConfigured(MintError): "This rBuilder is missing information " \
+    "necessary to communicate with EC2.  Please consult your site administrator."
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."

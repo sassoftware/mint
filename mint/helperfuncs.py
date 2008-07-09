@@ -9,7 +9,7 @@ from conary.repository.errors import RoleAlreadyExists
 
 from mint import constants
 from mint import buildtypes
-from mint.mint_error import MintError
+from mint import mint_error
 
 
 import copy
@@ -482,7 +482,7 @@ def getDefaultImageGroupName(shortname):
     (e.g. group-<shortname>-appliance).
     """
     if not shortname:
-        raise MintError("Shortname missing when trying to determine default image group name")
+        raise mint_error.MintError("Shortname missing when trying to determine default image group name")
     return 'group-%s-appliance' % shortname
 
 def sanitizeProductDefinition(projectName, projectDescription,
@@ -551,11 +551,17 @@ def weak_signature_call(_func, *args, **kwargs):
     return _func(*args, **keep_args)
 
 def buildEC2AuthToken(cfg):
-        """
-        Convenience function to build the EC2 auth token from the config data
-        """
-        at = ()
-        if cfg:
-            at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
+    """
+    Convenience function to build the EC2 auth token from the config data
+    """
+    at = ()
+    if cfg:
+        # make sure all the values are set
+        if not cfg.awsAccountId or not cfg.awsPublicKey or not cfg.awsPrivateKey:
+            raise mint_error.EC2NotConfigured()
+        at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
         
-        return at
+    if not at:
+        raise mint_error.EC2NotConfigured()
+    
+    return at

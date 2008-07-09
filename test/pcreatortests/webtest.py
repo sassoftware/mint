@@ -29,6 +29,8 @@ from types import MethodType
 
 from rpath_common.proddef import api1 as proddef
 
+import pcreatortests.packagecreatoruitest
+
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
@@ -125,7 +127,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             ret.append(('rpm1', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
             self.factorystream.seek(0)
             ret.append(('rpm2', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
-            return 'foobarbaz', ret
+            return 'foobarbaz', ret, {}
 
         func,context = self._setupInterviewEnvironment(fakepackagefactories)
         page = func(auth=context['auth'], **context['fields'])
@@ -152,7 +154,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):
             self.factorystream.seek(0)
-            return 'foobarbaz', [('stub', factorydata.FactoryDefinition(fromStream=self.factorystream), self.prefilled)]
+            return 'foobarbaz', [('stub', factorydata.FactoryDefinition(fromStream=self.factorystream), self.prefilled)], {}
 
         func,context = self._setupInterviewEnvironment(fakepackagefactories)
 
@@ -244,6 +246,74 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         elem = self.extractElement(page, 'input', 'id', '0_boolean_value_id_False')
         self.failUnless(elem)
         self.failIf('checked' in elem)
+
+        #Large descriptions
+        self.prefilled['description'] = 'a' * 49
+        page = func(auth=context['auth'], **context['fields'])
+        #The description of 49 characters should be a text area
+        elem = self.extractElement(page, 'textarea', 'name', 'description')
+        self.failIf(elem)
+        #Should not also have an input
+        elem = self.extractElement(page, 'input', 'name', 'description')
+        self.failUnless(elem)
+        self.failUnless(self.prefilled['description'] in page)
+
+        self.prefilled['description'] = 'a' * 50
+        page = func(auth=context['auth'], **context['fields'])
+        elem = self.extractElement(page, 'input', 'name', 'description')
+        self.failIf(elem)
+        elem = self.extractElement(page, 'textarea', 'name', 'description')
+        self.failUnless(elem)
+        self.failUnless(self.prefilled['description'] in page)
+
+
+    def _setupMaintainInterviewEnvironment(self, mockMethod):
+        fields = {
+            'name': 'grnotify',
+            'label': 'foo.local.test@foo:bar',
+            'prodVer': 'v1',
+            'namespace': 'ns1',
+        }
+        cmd = 'testproject/maintainPackageInterview'
+
+        projectHandler,auth = self._setupProjectHandlerMockClientMethod(
+                            'getPackageFactoriesFromRepoArchive', mockMethod, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+
+        func = projectHandler.handle(context)
+        return func, context
+
+    def testMaintainPackageInterview(self):
+        self.factorystream = StringIO.StringIO(basicXmlDef)
+        def fakePackageFactories(s, *args):
+            ret = []
+            ret.append(('rpm1', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
+            self.factorystream.seek(0)
+            ret.append(('rpm2', factorydata.FactoryDefinition(fromStream=self.factorystream), {'a': 'b'}),)
+            return 'foobarbaz', ret, {}
+
+        func, context = self._setupMaintainInterviewEnvironment(fakePackageFactories)
+
+        page = func(auth=context['auth'], **context['fields'])
+        self.failUnless('form action="savePackage"' in page)
+
+    def testNewUpload(self):
+        fields = {
+            'name': 'grnotify',
+            'label': 'foo.local.test@foo:bar',
+            'prodVer': 'v1',
+            'namespace': 'ns1',
+        }
+        cmd = 'testproject/newUpload'
+        def fakeStartPackageCreatorSession(s, *args):
+            return 'asdfiafisd'
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('startPackageCreatorSession', fakeStartPackageCreatorSession, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        elem = self.extractElement(page, 'input', 'name', 'sessionHandle')
+        self.failUnless('value="asdfiafisd"' in elem)
+        self.failUnless('Editing grnotify' in page)
 
     def testSavePackage(self):
         from factory_test.packagecreatortest import expectedFactories1
@@ -355,6 +425,71 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.assertEquals(projectHandler._getErrors(), ['Missing major version'])
         # make sure that rebase did NOT get called
         pagek['productDefinition'].rebase._mock.assertNotCalled()
+
+    def testListPackagesEmpty(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList1(s, projectId):
+            return {}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList1, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+        assert 'No packages available' in page, "Should show a message for the empty results"
+
+    def testListPackagesSimple(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList(s, projectId):
+            return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+
+        h3eadings, uploadLines = self._extractPackageListLines(page)
+
+        self.assertEquals(len(uploadLines), 2)
+        self.assertEquals(len(h3eadings), 1)
+        self.assertEquals(h3eadings[0], '<h3>Product Version vs1</h3>')
+
+    def _extractPackageListLines(self, page):
+        #Extract all lines containing "newUpload"
+        strio = StringIO.StringIO(page)
+        uploadLines = []
+        h3eadings = []
+        while True:
+            line = strio.readline()
+            if not line: break
+            line = line.strip()
+            if 'newUpload' in line:
+                uploadLines.append(line)
+            if '<h3>' in line:
+                h3eadings.append(line)
+        return h3eadings, uploadLines
+
+    def testListPackagesMeaty(self):
+        fields = {}
+        cmd = 'testproject/packageCreatorPackages'
+        def getPackageList(s, projectId):
+            return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        page = func(auth=auth, **fields)
+
+        h3eadings, uploadLines = self._extractPackageListLines(page)
+
+        self.assertEquals(len(uploadLines), 4)
+        assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
+        assert '"newUpload?name=zope:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1"' in uploadLines[1]
+        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns1"' in uploadLines[2]
+        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns2:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns2"' in uploadLines[3]
+
+        self.assertEquals( len(h3eadings), 3)
+        assert 'Product Version vs1 (ns1)' in h3eadings[0]
+        assert 'Product Version vs2 (ns1)' in h3eadings[1]
+        assert 'Product Version vs2 (ns2)' in h3eadings[2]
 
     def testCreateProject(self):
         self.called = False

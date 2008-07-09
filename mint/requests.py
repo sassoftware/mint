@@ -23,10 +23,11 @@ class MembershipRequestTable(database.DatabaseTable):
         cu.execute("DELETE from MembershipRequests where userId=?", userId)
         self.db.commit()
 
-    def deleteRequest(self, projectId, userId):
+    def deleteRequest(self, projectId, userId, commit=True):
         cu = self.db.cursor()
         cu.execute("DELETE from MembershipRequests where projectId=? and userId=?", projectId, userId)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     def listRequests(self, projectId):
         cu = self.db.cursor()
