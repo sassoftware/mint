@@ -937,7 +937,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def testPrivateProjects(self, db, data):
         client = self.getClient('nobody')
         
-        # make sure not using cfg val so we now param works
+        # make sure not using cfg val so we know param works
         oldHideNewProjects = client.server._server.cfg.hideNewProjects
         client.server._server.cfg.hideNewProjects = False
         
