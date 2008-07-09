@@ -5121,7 +5121,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
 
-        return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
+        ret = dict()
+        for x in usertemplates.userPrefsAWSTemplate.keys():
+            ret[x] = ''
+        ret.update(self.userData.getDataDict(userId))
+        return ret
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),), bool)
     @requiresAuth
@@ -5169,9 +5173,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
-                val = newValues.get(key, default)
-                self.userData.setDataValue(userId, key, val, dType,
-                        commit=False)
+                if removing:
+                    self.userData.removeDataValue(userId, key)
+                else:
+                    val = newValues.get(key, default)
+                    self.userData.setDataValue(userId, key, val, dType,
+                            commit=False)
         except:
             self.db.rollback()
             return False
