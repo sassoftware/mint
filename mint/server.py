@@ -1036,27 +1036,42 @@ class MintServer(object):
 
         if (self.auth.userId != userId) and level == userlevels.USER:
             raise users.UserInduction()
-
-        if level != userlevels.USER:
-            self.membershipRequests.deleteRequest(projectId, userId)
+    
         try:
-            self.projectUsers.new(projectId, userId, level)
-        except DuplicateItem:
-            project.updateUserLevel(userId, level)
-            # only attempt to modify acl's of local projects.
-            if not project.external:
-                repos = self._getProjectRepo(project)
-                # edit vice/drop+add is intentional to honor acl tweaks by
-                # admins.
-                repos.editAcl(label, username, None, None, None,
-                              None, write=level in userlevels.WRITERS,
-                              canRemove=False)
-                repos.setRoleIsAdmin(label, username,
-                                     self.cfg.projectAdmin and
-                                     level == userlevels.OWNER)
-                repos.setRoleCanMirror(label, username,
-                                       int(level == userlevels.OWNER))
-            return True
+            if level != userlevels.USER:
+                self.membershipRequests.deleteRequest(projectId, userId,
+                                                      commit=False)
+            try:
+                self.projectUsers.new(projectId, userId, level,
+                                      commit=False)
+            except DuplicateItem:
+                project.updateUserLevel(userId, level)
+                # only attempt to modify acl's of local projects.
+                if not project.external:
+                    repos = self._getProjectRepo(project)
+                    # edit vice/drop+add is intentional to honor acl tweaks by
+                    # admins.
+                    repos.editAcl(label, username, None, None, None,
+                                  None, write=level in userlevels.WRITERS,
+                                  canRemove=False)
+                    repos.setRoleIsAdmin(label, username,
+                                         self.cfg.projectAdmin and
+                                         level == userlevels.OWNER)
+                    repos.setRoleCanMirror(label, username,
+                                           int(level == userlevels.OWNER))
+                return True
+        except:
+            self.db.rollback()
+            raise
+        else:
+            # Set any EC2 launch permissions if the user has aws 
+            # credentials set.
+            awsFound, awsAccountNumber = self.userData.getDataValue(userId,
+                                             'awsAccountNumber')
+            if awsFound:
+                self.addProductEC2LaunchPermissions(userId, awsAccountNumber,
+                                                    projectId)
+            self.db.commit()
 
         if not project.external:
 
@@ -1075,21 +1090,13 @@ class MintServer(object):
                          write=(level in userlevels.WRITERS),
                          remove=False)
             repos.setRoleIsAdmin(label, username,
-                                 self.cfg.projectAdmin and level == userlevels.OWNER)
+                      self.cfg.projectAdmin and level == userlevels.OWNER)
             repos.setRoleCanMirror(label, username,
                                    int(level == userlevels.OWNER))
 
-        # Set any EC2 launch permissions if the user has aws credentials set.
-        awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            # Add launch permissions.
-            self.addEC2LaunchPermissionsForProduct(userId, awsAccountNumber,
-                                                   projectId)
 
         self._notifyUser('Added', self.getUser(userId),
                          projects.Project(self,projectId), level)
-
         return True
 
     typeCheck(int, int)
@@ -1148,17 +1155,27 @@ class MintServer(object):
                                          'awsAccountNumber')
         if awsFound:
             # Remove all old launch permissions.
-            self.removeEC2LaunchPermissionsForProduct(userId,
-                 awsAccountNumber, projectId)
+            amiIds = self._getProductAMIIdsForPermChange(userId, projectId)
 
-        project = projects.Project(self, projectId)
-        self.projectUsers.delete(projectId, userId)
+        try:
+            project = projects.Project(self, projectId)
+            self.projectUsers.delete(projectId, userId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            if awsFound:
+                self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
+                                                amiIds)
+            self.db.commit()
+
         repos = self._getProjectRepo(project)
         user = self.getUser(userId)
 
         label = versions.Label(project.getLabel())
         if not project.external:
-            helperfuncs.deleteUserFromRepository(repos, user['username'], label)
+            helperfuncs.deleteUserFromRepository(repos, 
+                            user['username'], label)
             try:
                 # TODO: This will go away when using role-based permissions
                 # instead of one-role-per-user. Without this, admin users'
@@ -1168,8 +1185,9 @@ class MintServer(object):
                 # Conary deleted the (unprivileged) role for us
                 pass
 
-        if notify:
-            self._notifyUser('Removed', user, project)
+            if notify:
+                self._notifyUser('Removed', user, project)
+
         return True
 
     def _notifyUser(self, action, user, project, userlevel=None):
@@ -1354,14 +1372,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         awsFound, awsAccountNumber = self.userData.getDataValue(userId,
                                          'awsAccountNumber')
         if awsFound:
-            # Since we're editing a user level, it's safest to just remove all
-            # launch permissions for the product, and then add back the ones
-            # that are supposed to be there.  This is saner than querying EC2
-            # to get a full list of what perms are already there and trying to
-            # calculate a delta.
-            self.removeEC2LaunchPermissionsForProduct(userId,
-                 awsAccountNumber, projectId)
-
+            currentAMIIds = self._getProductAMIIdsForPermChange(userId,
+                                                               projectId)
 
         #update the level on the project
         project = projects.Project(self, projectId)
@@ -1385,8 +1397,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db.commit()
 
         if awsFound:
-            self.addEC2LaunchPermissionsForProduct(userId,
-                 awsAccountNumber, projectId)
+            newAMIIds = self._getProductAMIIdsForPermChange(userId, projectId)
+            if level == userlevels.USER:
+                self.removeEC2LaunchPermissions(userId, awsAccountNumber,
+                         [id for id in currentAMIIds if id not in newAMIIds])
+            else:
+                self.addEC2LaunchPermissions(userId, awsAccountNumber,
+                         [id for id in newAMIIds if id not in currentAMIIds])
 
         self._notifyUser('Changed', user, project, level)
         return True
@@ -1504,8 +1521,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if ec2cred and ec2cred.has_key('awsAccountNumber'):
             if ec2cred['awsAccountNumber']:
                 # revoke launch permissions
-                self.removeEC2LaunchPermissions(userId, 
-                                                ec2cred['awsAccountNumber'])
+                self.removeAllEC2LaunchPermissions(userId, 
+                                                   ec2cred['awsAccountNumber'])
                 
         # remove EC2 credentials
         self.removeEC2CredentialsForUser(userId)
@@ -5152,11 +5169,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             if found:
                 # Remove all old launch permissions
-                self.removeEC2LaunchPermissions(userId, oldAwsAccountNumber)
+                self.removeAllEC2LaunchPermissions(userId, oldAwsAccountNumber)
             if not removing:
                 # Add launch permissions
-                self.addEC2LaunchPermissions(userId, 
-                                             newValues['awsAccountNumber'])
+                self.addAllEC2LaunchPermissions(userId, 
+                                                newValues['awsAccountNumber'])
             self.db.commit()
             return True
         
@@ -5200,10 +5217,57 @@ If you would not like to be %s %s of this project, you may resign from this proj
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
+
+    @typeCheck(int, str, list)
+    @requiresAuth
+    @private
+    def removeEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
+        """
+        Given a userId, awsAccountNumber, and a list of amiIds, remove launch
+        permissions from each amiId for userId.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @param amiIds: The list of Amazon ami ids.
+        @type amiIds: C{list}
+        @rtype: C{bool} indicating success
+        @raises C{EC2Exception} if there is a problem contacting EC2.
+        """
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        for amiId in amiIds:
+            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
+        return True
+
+    @typeCheck(int, str, list)
+    @requiresAuth
+    @private
+    def addEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
+        """
+        Given a userId, awsAccountNumber, and a list of amiIds, add launch
+        permissions to each amiId for userId.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @param awsAccountNumber: the Amazon account number
+        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
+        @param amiIds: The list of Amazon ami ids.
+        @type amiIds: C{list}
+        @rtype: C{bool} indicating success
+        @raises C{EC2Exception} if there is a problem contacting EC2.
+        """
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        for amiId in amiIds:
+            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
+        return True
+
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def removeEC2LaunchPermissions(self, userId, awsAccountNumber):
+    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
         """
         Given a userId and awsAccountNumber, remove launch permissions to each
         eligible AMI build for userId.
@@ -5216,7 +5280,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
-        amiIds = self._getAMIIdsForPermChange(userId)
+        amiIds = self._getAllAMIIdsForPermChange(userId)
 
         for amiId in amiIds:
             ec2Wrap.removeLaunchPermission(amiId[0], awsAccountNumber)
@@ -5225,7 +5289,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def addEC2LaunchPermissions(self, userId, awsAccountNumber):
+    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
         """
         Given a userId and awsAccountNumber, add launch permissions to each
         eligible AMI build for userId.
@@ -5239,7 +5303,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
-        amiIds = self._getAMIIdsForPermChange(userId)
+        amiIds = self._getAllAMIIdsForPermChange(userId)
         
         for amiId in amiIds:
             ec2Wrap.addLaunchPermission(amiId[0], awsAccountNumber)
@@ -5248,8 +5312,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str, int)
     @requiresAuth
     @private
-    def addEC2LaunchPermissionsForProduct(self, userId, awsAccountNumber,
-                                          productId):
+    def addProductEC2LaunchPermissions(self, userId, awsAccountNumber,
+                                       productId):
         """
         Given a userId, awsAccountNumber, and productId, add launch
         permissions for each eligible AMI id in the product to the user's
@@ -5266,8 +5330,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
-        amiIds = self._getAMIIdsForPermChange(userId)
-        amiIds = [ami[0] for ami in amiIds if ami[1] == productId]
+        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
         for amiId in amiIds:
             ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
@@ -5276,8 +5339,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str, int)
     @requiresAuth
     @private
-    def removeEC2LaunchPermissionsForProduct(self, userId, awsAccountNumber,
-                                   productId):
+    def removeProductEC2LaunchPermissions(self, userId, awsAccountNumber,
+                                          productId):
         """
         Given a userId, awsAccountNumber, and productId, remove launch
         permissions for each eligible AMI id in the product to the user's
@@ -5294,15 +5357,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
-        amiIds = self._getAMIIdsForPermChange(userId)
-        amiIds = [ami[0] for ami in amiIds if ami[1] == productId]
+        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
         for amiId in amiIds:
             ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
         return True
 
 
-    def _getAMIIdsForPermChange(self, userId):
+    def _getAllAMIIdsForPermChange(self, userId):
         """
         Returns a list of AMI ids that need their launch permissions altered
         for the given userId.
@@ -5339,6 +5401,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                            amiIdData['projectId']))
 
         return affectedAMIIds
+
+    def _getProductAMIIdsForPermChange(self, userId, productId):
+        amiIds = self._getAllAMIIdsForPermChange(userId)
+        # Save only those where it's the productId we want.
+        return [ami[0] for ami in amiIds if ami[1] == productId]
+
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

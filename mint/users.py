@@ -521,7 +521,7 @@ class ProjectUsersTable(database.DatabaseTable):
         else:
             raise ItemNotFound()
 
-    def new(self, projectId, userId, level):
+    def new(self, projectId, userId, level, commit=True):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
 
@@ -533,7 +533,8 @@ class ProjectUsersTable(database.DatabaseTable):
 
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
                    userId, level)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
@@ -553,12 +554,13 @@ class ProjectUsersTable(database.DatabaseTable):
             return False
         return self.onlyOwner(projectId, userId)
 
-    def delete(self, projectId, userId):
+    def delete(self, projectId, userId, commit=True):
         if self.lastOwner(projectId, userId):
             raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
 
 class Authorization(object):
