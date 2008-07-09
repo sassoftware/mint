@@ -32,8 +32,8 @@ class GenericDataTable(database.DatabaseTable):
 
         cu = self.db.cursor()
 
-        # audited for SQL injection
-        cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
+        self.removeDataValue(id, name, commit=False)
+
         # audited for SQL injection
         cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.name, self.front),
                    (id, name, value, dataType))
