@@ -126,6 +126,8 @@ class NotEntitledError(MintError):
 class ParameterError(MintError):
     "A required parameter had an incorrect data type."
 class PermissionDenied(MintError): "Permission Denied"
+class PublicToPrivateConversionError(MintError):
+    "Converting public products to private products is not supported."
 class ProductDefinitionVersionNotFound(MintError):
     "The product definition for the specified product version was not found."
 class ProductVersionNotFound(MintError):

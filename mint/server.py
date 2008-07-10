@@ -748,10 +748,12 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, 
+                   appliance, shortname, namespace, prodtype, version, 
+                   commitEmail, isPrivate):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -826,6 +828,12 @@ class MintServer(object):
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
+        
+        if self.cfg.hideNewProjects or isPrivate:
+            repos = self._getProjectRepo(project)
+            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
+                project.getLabel())
+            self.projects.hide(projectId)
 
         if commitEmail:
             project.setCommitEmail(commitEmail)
@@ -836,12 +844,6 @@ class MintServer(object):
             except GroupTroveTemplateExists:
                 pass # really, this is OK -- and even if it weren't,
                      # there's nothing you can do about it, anyway
-
-        if self.cfg.hideNewProjects:
-            repos = self._getProjectRepo(project)
-            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
-                project.getLabel())
-            self.projects.hide(projectId)
 
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
@@ -1319,9 +1321,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.projects.update(projectId, backupExternal=backupExternal)
 
     @typeCheck(int)
-    @requiresAdmin
     @private
     def unhideProject(self, projectId):
+
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
@@ -1332,6 +1337,36 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
+        return True
+    
+    @typeCheck(int, bool, bool)
+    @requiresAuth
+    @private
+    def setProductVisibility(self, projectId, makePrivate):
+        """
+        Set the visibility of a product
+        @param projectId: the project id
+        @type  projectId: C{int}
+        @param makePrivate: True to make private, False to make public
+        @type  makePrivate: C{bool}
+        @raise PermissionDenied: if not the product owner
+        @raise PublicToPrivateConversionError: if trying to convert a public
+               product to private
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+
+        project = projects.Project(self, projectId)
+        
+        # if the product is currently hidden and they want to go public, do it
+        if project.hidden and not makePrivate:
+            self.unhideProject(projectId)
+            return True
+            
+        # if the product is currently public, do not allow them to go private
+        if not project.hidden and makePrivate:
+            raise PublicToPrivateConversionError()
+        
         return True
 
     # user methods

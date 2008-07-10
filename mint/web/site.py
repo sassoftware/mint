@@ -518,7 +518,12 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance', 'namespace': self.cfg.namespace})
+        return self._write("newProject", errors=[], 
+           kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
+                   'appliance': 'unknown', 
+                   'prodtype' : 'Appliance', 
+                   'namespace': self.cfg.namespace,
+                   'isPrivate': False})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -543,10 +548,16 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', namespace='', prodtype = '', version = '', commitEmail='')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
+               blurb = '', appliance = 'unknown', shortname = '', namespace='',
+               prodtype = '', version = '', commitEmail='', isPrivate = 'off')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, namespace, prodtype, version, commitEmail):
+    def createProject(self, auth, title, hostname, domainname, projecturl, 
+                      blurb, optlists, appliance, shortname, namespace, 
+                      prodtype, version, commitEmail, isPrivate):
+                    
+        isPrivate = (isPrivate.lower() == 'on') and True or False
         
         shortname = shortname.lower()
         if not hostname:
@@ -572,7 +583,8 @@ class SiteHandler(WebHandler):
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance, shortname, namespace, prodtype, version, commitEmail)
+                    domainname, projecturl, blurb, appliance, shortname, 
+                    namespace, prodtype, version, commitEmail, isPrivate)
                 
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
@@ -618,7 +630,19 @@ class SiteHandler(WebHandler):
             # version.  Status will be updated after that.
             self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
+            kwargs = {'title': title, 
+                      'hostname': hostname, 
+                      'domainname': domainname, 
+                      'projecturl': projecturl, 
+                      'blurb': blurb, 
+                      'optlists': optlists, 
+                      'appliance': appliance,
+                      'commitEmail': commitEmail,
+                      'shortname' : shortname, 
+                      'prodtype' : prodtype, 
+                      'namespace' : namespace,
+                      'version' : version,
+                      'isPrivate' : isPrivate}
             return self._write("newProject", kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)

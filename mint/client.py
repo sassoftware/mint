@@ -43,7 +43,9 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", namespace="", prodtype="",  version="", commitEmail=""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "",
+                   appliance = "unknown", shortname="", namespace="", 
+                   prodtype="",  version="", commitEmail="", isPrivate=False):
         """
         Create a new project.
         @param name: name of new project
@@ -59,9 +61,12 @@ class MintClient:
         @param prodtype: the type of product being created.
         @param version:  the initial product version.
         @param commitEmail: email address to which commit messages are sent.
+        @param isPrivate: whether or not this should be a private product
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail)
+        return self.server.newProject(name, hostname, domainname, projecturl, 
+                                      desc, appliance, shortname, namespace, 
+                                      prodtype, version, commitEmail, isPrivate)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -322,6 +327,19 @@ class MintClient:
         access methods, and not just to project developers and owners.
         """
         return self.server.unhideProject(projectId)
+    
+    def setProductVisibility(self, projectId, makePrivate):
+        """
+        Set the visibility of a product
+        @param projectId: the project id
+        @type  projectId: C{int}
+        @param makePrivate: True to make private, False to make public
+        @type  makePrivate: C{bool}
+        @raise PermissionDenied: if not the product owner
+        @raise PublicToPrivateConversionError: if trying to convert a public
+               product to private
+        """
+        return self.server.setProductVisibility(projectId, makePrivate)
 
     def getAvailableBuildTypes(self):
         return self.server.getAvailableBuildTypes()
