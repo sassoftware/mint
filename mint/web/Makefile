@@ -11,6 +11,7 @@ python_files = \
 	admin.py	\
 	app.py		\
 	cache.py	\
+	catalog.py	\
 	fields.py	\
 	repos.py	\
 	rpchooks.py	\
