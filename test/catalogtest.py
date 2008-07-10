@@ -41,7 +41,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 '<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
 
     def testGetImagesNoSession(self):
-        import epdb; epdb.st()
         page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [403])
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body,
