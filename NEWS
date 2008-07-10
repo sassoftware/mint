@@ -29,6 +29,11 @@ Web Front End Changes
   settings. (RBL-3045)
 * There is now a checkbox on the "Create Product" page to create private
   products. (RBL-3080)
+* The "Administrative Options" area of the product hompegae has been removed.
+  (RBL-3080)
+* There is now a checkbox on the "Edit Product Settings" page to convert
+  a private product to a public product.  Note that a public product cannot
+  be converted to a private product. (RBL-3080)
 
 
 Changes in 4.1.1

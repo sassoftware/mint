@@ -942,7 +942,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client.server._server.cfg.hideNewProjects = False
         
         try:
-            # tets public
+            # test public
             hostname = "manny"
             projectId = client.newProject("BoSox", hostname, "localhost", 
                                           shortname=hostname,
@@ -951,7 +951,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
             project = client.getProject(projectId)
             self.failUnlessEqual(project.hidden, False)
             
-            # tets private
+            # test private
             hostname = "ortiz"
             projectId = client.newProject("BoSox2", hostname, "localhost", 
                                           shortname=hostname,
@@ -961,6 +961,42 @@ class ProjectTest(fixtures.FixturedUnitTest):
             self.failUnlessEqual(project.hidden, True)
         finally:
             client.server._server.cfg.hideNewProjects = oldHideNewProjects
+            
+    @fixtures.fixture('Full')
+    def testVisibilityConversion(self, db, data):
+        """
+        Test converting public to private and vice versa
+        """
+                
+        # test private to public
+        client = self.getClient('owner')
+        hostname = "manny"
+        projectId = client.newProject("BoSox", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = True)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, True)
+        client.setProductVisibility(projectId, False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        
+        # test public to private
+        client = self.getClient('admin')
+        hostname = "ortiz"
+        projectId = client.newProject("BoSox2", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        self.failUnlessRaises(PublicToPrivateConversionError, 
+                              client.setProductVisibility, projectId, True)
+        
+        # make sure you must be owner or admin to do it
+        client = self.getClient('nobody')
+        self.failUnlessRaises(PermissionDenied, 
+                              client.setProductVisibility, projectId, True)
 
     @fixtures.fixture("Full")
     def testVAMData(self, db, data):

@@ -480,6 +480,44 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
         self.failUnlessEqual(project.commitEmail, 'email@example.com')
+        
+    def testProcessEditProjectVisibilityPublicToPrivate(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'Bar',
+                           'isPrivate': 'on'},
+                          ok_codes = [200])
+
+        project = client.getProject(projectId)
+        # not allowed, so should still be public
+        self.failUnlessEqual(project.hidden, False)
+        
+    def testProcessEditProjectVisibilityPrivateToPublic(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component",
+                        isPrivate = True)
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'Bar',
+                           'isPrivate': 'off'},
+                          ok_codes = [301])
+
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
 
     @testsuite.context("quick")
     def testSearchProjects(self):

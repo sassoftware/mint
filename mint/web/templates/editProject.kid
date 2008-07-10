@@ -54,8 +54,23 @@
                                 </p>
                             </td>
                         </tr>
+                    </table>
+                    
+                    <h3>Advanced Options</h3>
+                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+    
                         <tr>
-                            <th>Repository Commits Email</th>
+                            <th>${projectText().title()} is Private:</th>
+                            <td>
+                                <input type="checkbox" class='check' name="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None, 'disabled' : not kwargs['isPrivate'] and 'checked' or None}"/>
+                                <p class="help">
+                                    <strong>Need help text here (DOC-1364)</strong>
+                                 </p>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th>Repository Commits Email:</th>
                             <td>
                                 <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
                                 <p class="help">
@@ -65,10 +80,9 @@
                                     Conary repository during appliance development.  Emails also include 
                                     Conary's summary of what was committed, typically a list of things that 
                                     changed between the previous commit and the current commit.
-                                </p>
+                                 </p>
                             </td>
                         </tr>
-
                     </table>
 
                     <button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>

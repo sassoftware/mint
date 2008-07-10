@@ -327,6 +327,19 @@ class MintClient:
         access methods, and not just to project developers and owners.
         """
         return self.server.unhideProject(projectId)
+    
+    def setProductVisibility(self, projectId, makePrivate):
+        """
+        Set the visibility of a product
+        @param projectId: the project id
+        @type  projectId: C{int}
+        @param makePrivate: True to make private, False to make public
+        @type  makePrivate: C{bool}
+        @raise PermissionDenied: if not the product owner
+        @raise PublicToPrivateConversionError: if trying to convert a public
+               product to private
+        """
+        return self.server.setProductVisibility(projectId, makePrivate)
 
     def getAvailableBuildTypes(self):
         return self.server.getAvailableBuildTypes()

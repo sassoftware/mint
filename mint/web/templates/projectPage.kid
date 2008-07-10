@@ -50,7 +50,8 @@ from mint.web.templatesupport import projectText
 
                     <p>${projectText().title()} was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="vmtnId">This ${projectText().lower()} is listed on the <a href="http://www.vmware.com/vmtn/appliances/directory/${vmtnId}">VMware(R) Virtual Appliance Marketplace</a></p>
-                    <p py:if="project.hidden">This ${projectText().lower()} is hidden.</p>
+                    <p py:if="project.hidden">This a private ${projectText().lower()}.</p>
+                    <p py:if="not project.hidden">This a public ${projectText().lower()}.</p>
                     <p py:if="project.external and not auth.admin">This ${projectText().lower()} is externally managed.</p>
                     <p py:if="not (projectCommits or project.external)">This ${projectText().lower()} is considered to be a fledgling
                         (i.e. no software has been committed to its repository).</p>
@@ -81,22 +82,6 @@ from mint.web.templatesupport import projectText
                     <ul>
                         <li>Maintain <a href="${basePath}packageCreatorPackages">packages</a></li>
                     </ul>
-                </div>
-                <div py:if="auth.admin" py:strip="True">
-                    <h2>Administrative Options</h2>
-
-                    <p py:if="project.external">This ${projectText().lower()} is externally managed and cannot be administered from this interface.</p>
-                    <form py:if="not project.external" action="${basePath}processProjectAction" method="post">
-                        <label for="projectAdminOptions">Choose an action:&nbsp;</label>
-                        <select id="projectAdminOptions" name="operation">
-                            <option value="project_noop" selected="selected">--</option>
-                            <option py:if="not project.hidden" value="project_hide">Hide ${projectText().title()}</option>
-                            <option py:if="project.hidden" value="project_unhide">Unhide ${projectText().title()}</option>
-                        </select>
-
-                        <button id="projectAdminSubmitButton" type="submit">Go</button>
-                        <input type="hidden" value="${project.getId()}" name="projectId" />
-                    </form>
                 </div>
 
                 <p class="help" py:if="not (projectCommits or project.external) and cfg.hideFledgling and not auth.admin">
