@@ -152,6 +152,7 @@ class BuildsTable(database.KeyedTable):
              SELECT bd.value AS amiId,
                     b.buildId,
                     p.name AS productName,
+                    p.description AS productDescription,
                     b.name AS buildName,
                     COALESCE(b.description,'') AS buildDescription,
                     COALESCE(pr.timePublished,0) != 0 AS isPublished,

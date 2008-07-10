@@ -5250,6 +5250,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @returns A dictionary of dictionaries, keyed by amiId,
           with the following members:
           - productName: the name of the product containing this build
+          - productDescription: the description of the product containing
+              this build
           - buildId: the id of the build that created the AMI
           - buildName: the name of the build
           - buildDescription: the description of the build, if given
