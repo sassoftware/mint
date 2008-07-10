@@ -5260,10 +5260,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
           - awsAccountNumber: the AWS Account number of the user who
               created the build (if the user supplied credentials)
               otherwise, returns 'Unknown'
-          - role: the role of the user (as a meatstring, e.g.
-              'User', 'Owner', 'Developer', or 'Non-affiliated')
-              who created the build with respect to the containing
-              project
+          - role: the role of the user who created the build with
+              respoect to the containing product as a meatstring, e.g.
+              'Product User', 'Product Owner', 'Product Developer',
+              or '' (in the case where a user is not affiliated with
+              the product, or the relationship is unknown)
           - isPrivate: 1 if the containing project is private (hidden),
               0 otherwise
         @rtype: C{dict} of C{dict} objects (see above)

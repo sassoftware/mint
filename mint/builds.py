@@ -158,10 +158,10 @@ class BuildsTable(database.KeyedTable):
                     p.hidden AS isPrivate,
                     COALESCE(u.username, 'Unknown') AS createdBy,
                     CASE
-                        WHEN pu.level = 0 THEN 'Owner'
-                        WHEN pu.level = 1 THEN 'Developer'
-                        WHEN pu.level = 2 THEN 'User'
-                        ELSE 'Non-affiliated'
+                        WHEN pu.level = 0 THEN 'Product Owner'
+                        WHEN pu.level = 1 THEN 'Product Developer'
+                        WHEN pu.level = 2 THEN 'Product User'
+                        ELSE ''
                     END AS role,
                     COALESCE(ud.value,'Unknown') AS awsAccountNumber
              FROM projects p

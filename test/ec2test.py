@@ -725,7 +725,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
                 'newId')
 
         self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
-                'Non-affiliated')
+                '')
 
         # remove EC2 credentials to the admin user
         client.setEC2CredentialsForUser(data['adminId'], 'newId',
@@ -742,7 +742,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         prj.addMemberById(data['adminId'], userlevels.DEVELOPER)
         AMIbuilds = client.getAllAMIBuilds()
         self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
-                'Developer')
+                'Product Developer')
 
     @fixtures.fixture("Empty")
     def testAMIBuildsData(self, db, data):
