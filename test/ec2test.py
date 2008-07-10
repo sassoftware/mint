@@ -724,7 +724,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
                 'newId')
 
-        self.failUnlessEqual(AMIbuilds['ami-00000006']['level'],
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
                 'Non-affiliated')
 
         # remove EC2 credentials to the admin user
@@ -741,7 +741,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         prj = client.getProject(bld.getProjectId())
         prj.addMemberById(data['adminId'], userlevels.DEVELOPER)
         AMIbuilds = client.getAllAMIBuilds()
-        self.failUnlessEqual(AMIbuilds['ami-00000006']['level'],
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
                 'Developer')
 
     @fixtures.fixture("Empty")

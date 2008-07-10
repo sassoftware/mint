@@ -162,7 +162,7 @@ class BuildsTable(database.KeyedTable):
                         WHEN pu.level = 1 THEN 'Developer'
                         WHEN pu.level = 2 THEN 'User'
                         ELSE 'Non-affiliated'
-                    END AS level,
+                    END AS role,
                     COALESCE(ud.value,'Unknown') AS awsAccountNumber
              FROM projects p
                  JOIN builds b USING (projectId)
