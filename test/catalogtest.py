@@ -38,13 +38,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [400])
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body,
-                '<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
+                '<?xml version="1.0">\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
 
     def testGetImagesNoSession(self):
         page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [403])
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body,
-                '<fault>\n  <code>403</code>\n  <message>Permission Denied</message>\n</fault>')
+                '<?xml version="1.0">\n<fault>\n  <code>403</code>\n  <message>Permission Denied</message>\n</fault>')
 
     def testEnumerateNoImages(self):
         raise testsuite.SkipTestException("This test case will really try to talk to EC2")
