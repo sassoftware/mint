@@ -20,10 +20,14 @@
     
         <script type="text/javascript">
         <![CDATA[
-            function handleYes() {
+            function doSubmit() {
                 var form = document.getElementById('createForm');
-                i = 0;
                 form.submit();
+            }
+        
+            function handleYes() {
+                // they confirmed to create public, so do it
+                doSubmit();
             }
             
             function handleNo() {
@@ -32,8 +36,14 @@
         
             function handleVisibility() {
                 var isPrivate = document.getElementById('isPrivate');
-                if(isPrivate && !isPrivate.checked) {
-                   modalYesNo(handleYes, handleNo);
+                if(isPrivate) {
+                   if(!isPrivate.checked) {
+                      // make them confirm creating public
+                      modalYesNo(handleYes, handleNo);
+                   } else {
+                      // creating private, just do it
+                      doSubmit();
+                   }
                 }
             }
         ]]>
