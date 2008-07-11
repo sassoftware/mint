@@ -101,6 +101,7 @@ def setup():
         COVERAGE_PATH=coveragePath, 
         PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
         CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,
+        CATALOG_SERVICE_PATH=catalogServicePath,
         PYTHONPATH=(':'.join(sys.path))))
 
     import testhelp
