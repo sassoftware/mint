@@ -79,6 +79,7 @@ class ProjectHandler(WebHandler):
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+        self.isReader = (self.userLevel in userlevels.READERS) or self.auth.admin
 
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:

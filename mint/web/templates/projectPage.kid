@@ -44,7 +44,7 @@ from mint.web.templatesupport import projectText
 
                 ${downloadsMenu(latestBuildsWithFiles)}
 
-                <div py:if="auth.admin" py:strip="True">
+                <div py:if="isWriter or isReader" py:strip="True">
 
                     <h2>${projectText().title()} Status</h2>
 

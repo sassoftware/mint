@@ -155,11 +155,11 @@
                                     public?
                             </div>
                             <p class="help">
-                                Toggle the check box if you want the new ${projectText().title()} to be a private one. 
-                                Private ${projectText().title()}s are only accessible by ${projectText().title()} Team Members 
-                                (Owners, Developers, and Users) and are not visible to registered 
-                                users or anonymous users. If you choose to make your ${projectText().title()} public, 
-                                do not toggle the check box.
+                                Check the box if you want the new ${projectText().title()} to be 
+                                a private one. Private ${projectText().title()}s are only accessible
+                                by ${projectText().title()} Team Members (Owners, Developers, and 
+                                Users).  If you choose to make your ${projectText().title()} public, 
+                                do not check the box.
                             </p>
                         </td>
                     </tr>

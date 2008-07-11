@@ -88,27 +88,27 @@
                         <tr>
                             <th>${projectText().title()} is Private:</th>
                             <td>
-                                <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None, 'disabled' : not kwargs['isPrivate'] and 'checked' or None}"/>
-                                <div py:if="kwargs['isPrivate']" id="modalYesNo" title="Confirmation" style="display: none;">
-                                    Making this ${projectText().title()} public will open 
-                                    ${projectText().title()} repositories and Releases to 
-                                    the general public. You will not be able to revert back 
-                                    to a private ${projectText().title()}. Are you sure you 
-                                    want to make this ${projectText().title()} public?
+                                <div py:if="kwargs['isPrivate']" py:strip="True">
+                                    <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None, 'disabled' : not kwargs['isPrivate'] and 'checked' or None}"/>
+                                    <div id="modalYesNo" title="Confirmation" style="display: none;">
+                                        Making this ${projectText().title()} public will open 
+                                        ${projectText().title()} repositories and Releases to 
+                                        the general public. You will not be able to revert back 
+                                        to a private ${projectText().title()}. Are you sure you 
+                                        want to make this ${projectText().title()} public?
+                                    </div>
+                                    <p class="help">
+                                        Check the box if you want your Private ${projectText().title()} 
+                                        to become public. Public ${projectText().title()}s are visible 
+                                        to all users whether they are a ${projectText().title()} Team 
+                                        Member or not. Once your ${projectText().title()} is public you
+                                        cannot make it private again.
+                                    </p>
                                 </div>
-                                <p py:if="kwargs['isPrivate']" class="help">
-                                    Toggle the check box if you want your Private ${projectText().title()}
-                                    to become public. Public ${projectText().title()}s are visible to all
-                                    users whether they are a ${projectText().title()} Team Member or not.
-                                    Once your ${projectText().title()} is public you cannot make it 
-                                    private again.
-                                </p>
-                                <p py:if="not kwargs['isPrivate']" class="help">
-                                    rBuilder public repositories are distributed, which make it possible
-                                    for any ${projectText().title()} Team to derive software from each 
-                                    ${projectText().title()}. Accordingly, once a ${projectText().title()}
-                                    is public, it cannot be made private.
-                                </p>
+                                <div py:if="not kwargs['isPrivate']" py:strip="True">
+                                    This ${projectText().title()} is public and cannot be made private.
+                                    <input type="hidden" name="isPrivate" id="isPrivate" value="kwargs['isPrivate']"/>
+                                </div>
                             </td>
                         </tr>
                         
