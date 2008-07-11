@@ -5246,10 +5246,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getAllAMIBuilds(self):
         """
         Returns a list of all of the AMI images that this rBuilder
-        manages.
+        manages. If the requesting user is an admin, the user will
+        be able to see all AMIs created for all projects regardless of
+        their visibility. Otherwise, the user will only see AMIs for
+        projects that they are able to see (i.e. AMIs created in hidden
+        projects of which the user is not a developer or owner
+        will remain hidden).
         @returns A dictionary of dictionaries, keyed by amiId,
           with the following members:
           - productName: the name of the product containing this build
+          - projectId: the id of the project (product) containing this build
           - productDescription: the description of the product containing
               this build
           - buildId: the id of the build that created the AMI
@@ -5269,10 +5275,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
               the product, or the relationship is unknown)
           - isPrivate: 1 if the containing project is private (hidden),
               0 otherwise
+          - isPublished: 1 if the build is published, 0 if not
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        return self.builds.getAllAMIBuilds()
+        return self.builds.getAllAMIBuilds(self.auth.userId,
+                not self.auth.admin)
+
 
     @typeCheck(int)
     @requiresAuth
