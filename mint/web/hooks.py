@@ -25,6 +25,7 @@ from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
+from mint.web.catalog import catalogHandler
 from mint.web.webhandler import normPath, HttpError
 
 from conary.web import webauth
@@ -323,6 +324,7 @@ urls = (
     (r'^/changeset/',        conaryHandler),
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
+    (r'^/catalog/',          catalogHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),

@@ -82,7 +82,7 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonOption basePath "/"
-    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@'] + sys.path"
+    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@'] + sys.path"
     PythonDebug Off
 </Location>
 

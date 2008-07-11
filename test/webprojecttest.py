@@ -605,45 +605,6 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.assertRaises(HttpMoved, self.ph.resign, auth = auth,
             confirmed = True, id = data['developer'])
 
-    @fixtures.fixture('Full')
-    def testProjectActions(self, db, data):
-        pText = helperfuncs.getProjectText()
-        client = self.getClient("admin")
-        p = client.getProject(data['projectId'])
-
-        self.ph.cfg = self.cfg
-        self.ph.client = client
-        self.ph.project = p
-        self.ph.userLevel = userlevels.OWNER
-
-        auth = users.Authorization(userId = data['admin'],
-            authorized = True, admin = True)
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_hide")
-        p.refresh()
-        self.failUnless(p.hidden)
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_hide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already hidden'%pText.title()])
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_unhide")
-        p.refresh()
-        self.failUnless(not p.hidden)
-        self.ph.session = {}
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_unhide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already visible'%pText.title()])
-
-        self.ph.session = {}
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_not_valid")
-        self.failUnlessEqual(self.ph.session['errorMsgList'],
-            ['Please select a valid %s administration option from the menu'%pText.lower()])
-
 
 if __name__ == "__main__":
     testsuite.main()

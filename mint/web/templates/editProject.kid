@@ -14,6 +14,32 @@
         <title>${formatTitle('%s Settings: %s'%(projectText().title(),project.getNameForDisplay()))}</title>
     </head>
     <body>
+    
+        <script type="text/javascript">
+        <![CDATA[
+            function handleYes() {
+                var isPrivate = document.getElementById('isPrivate');
+                if(isPrivate) {
+                   isPrivate.checked = false;
+                }
+            }
+            
+            function handleNo() {
+                var isPrivate = document.getElementById('isPrivate');
+                if(isPrivate) {
+                   isPrivate.checked = true;
+                }
+            }
+        
+            function handleVisibility() {
+                var isPrivate = document.getElementById('isPrivate');
+                if(isPrivate && !isPrivate.checked) {
+                   modalYesNo(handleYes, handleNo);
+                }
+            }
+        ]]>
+        </script>
+    
         <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
@@ -54,8 +80,40 @@
                                 </p>
                             </td>
                         </tr>
+                    </table>
+                    
+                    <h3>Advanced Options</h3>
+                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+    
                         <tr>
-                            <th>Repository Commits Email</th>
+                            <th>${projectText().title()} is Private:</th>
+                            <td>
+                                <div py:if="kwargs['isPrivate']" py:strip="True">
+                                    <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None, 'disabled' : not kwargs['isPrivate'] and 'checked' or None}"/>
+                                    <div id="modalYesNo" title="Confirmation" style="display: none;">
+                                        Making this ${projectText().title()} public will open 
+                                        ${projectText().title()} repositories and Releases to 
+                                        the general public. You will not be able to revert back 
+                                        to a private ${projectText().title()}. Are you sure you 
+                                        want to make this ${projectText().title()} public?
+                                    </div>
+                                    <p class="help">
+                                        Check the box if you want your Private ${projectText().title()} 
+                                        to become public. Public ${projectText().title()}s are visible 
+                                        to all users whether they are a ${projectText().title()} Team 
+                                        Member or not. Once your ${projectText().title()} is public you
+                                        cannot make it private again.
+                                    </p>
+                                </div>
+                                <div py:if="not kwargs['isPrivate']" py:strip="True">
+                                    This ${projectText().title()} is public and cannot be made private.
+                                    <input type="hidden" name="isPrivate" id="isPrivate" value="kwargs['isPrivate']"/>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th>Repository Commits Email:</th>
                             <td>
                                 <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
                                 <p class="help">
@@ -65,10 +123,9 @@
                                     Conary repository during appliance development.  Emails also include 
                                     Conary's summary of what was committed, typically a list of things that 
                                     changed between the previous commit and the current commit.
-                                </p>
+                                 </p>
                             </td>
                         </tr>
-
                     </table>
 
                     <button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>

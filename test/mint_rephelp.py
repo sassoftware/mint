@@ -187,14 +187,16 @@ class MintApacheServer(rephelp.ApacheServer):
                     " -e 's|@PRODDEFPATH@|%s|g'"
                     " -e 's|@CONARYPATH@|%s|g'"
                     " -e 's|@PCREATORPATH@|%s|g'"
+                    " -e 's|@CATALOGSERVICEPATH@|%s|g'"
                     " < %s/httpd.conf.in > %s/httpd.conf" % \
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
                        os.environ['MINT_PATH'],
                        os.environ['MCP_PATH'], os.environ['PRODUCT_DEFINITION_PATH'],
                        os.environ['CONARY_PATH'], 
-                       os.environ['PACKAGE_CREATOR_SERVICE_PATH'], self.serverRoot,
-                       self.serverRoot))
+                       os.environ['PACKAGE_CREATOR_SERVICE_PATH'],
+                       os.environ['CATALOG_SERVICE_PATH'],
+                       self.serverRoot, self.serverRoot))
             os.system(cmd)
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
                 (os.path.join(self.mintPath, "mint", "web", "content"),

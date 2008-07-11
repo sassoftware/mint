@@ -707,6 +707,94 @@ conaryproxy = http://proxy.hostname.com/proxy/
         self.failUnlessEqual(len(AMIbuilds), 7,
                 "Expected to see seven AMI builds")
 
+    @fixtures.fixture("EC2")
+    def testAllAMIBuilds(self, db, data):
+        client = self.getClient('admin')
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(len(AMIbuilds), 7,
+                "Expected to see seven AMI builds")
+
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'Unknown')
+        # now add some EC2 credentials to the admin user
+        client.setEC2CredentialsForUser(data['adminId'], 'newId',
+            'newPublicKey', 'newSecretKey', False)
+
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'newId')
+
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
+                '')
+
+        # remove EC2 credentials to the admin user
+        client.setEC2CredentialsForUser(data['adminId'], 'newId',
+            'newPublicKey', 'newSecretKey', False)
+
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['awsAccountNumber'],
+                'newId')
+
+        # now add admin as a developer to the build's project
+        client.removeEC2CredentialsForUser(data['adminId'])
+        bld = client.getBuild(AMIbuilds['ami-00000006']['buildId'])
+        prj = client.getProject(bld.getProjectId())
+        prj.addMemberById(data['adminId'], userlevels.DEVELOPER)
+        AMIbuilds = client.getAllAMIBuilds()
+        self.failUnlessEqual(AMIbuilds['ami-00000006']['role'],
+                'Product Developer')
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsDataVisibilityDeveloper(self, db, data):
+        client = self.getClient('developer')
+        amiIds = client.getAllAMIBuilds().keys()
+        self.failUnless('ami-00000001' in amiIds,
+                "developer should see this unpublished build")
+        self.failUnless('ami-00000003' in amiIds,
+                "developer should see this published build")
+        self.failUnless('ami-00000006' in amiIds,
+                "developer should see the unpublished build in the" \
+                " hidden project he is a member of")
+        self.failUnless('ami-00000007' in amiIds,
+                "developer should see the published build in the" \
+                " hidden project he is a member of")
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsDataVisibilityNormalUser(self, db, data):
+        client = self.getClient('normaluser')
+        amiIds = client.getAllAMIBuilds().keys()
+        self.failIf('ami-00000001' in amiIds,
+                "normal user should not see this unpublished build")
+        self.failUnless('ami-00000003' in amiIds,
+                "normal user should see this published build")
+        self.failIf('ami-00000006' in amiIds,
+                "normal user should not see the unpublished build in" \
+                " the hidden project he is a member of")
+        self.failUnless('ami-00000007' in amiIds,
+                "normal user should see the published build in the" \
+                " hidden project he is a member of")
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsDataVisibilityNobody(self, db, data):
+        client = self.getClient('loneuser')
+        amiIds = client.getAllAMIBuilds().keys()
+        self.failIf('ami-00000001' in amiIds,
+                "lone user should not see this unpublished build")
+        self.failUnless('ami-00000003' in amiIds,
+                "lone user should see this published build")
+        self.failIf('ami-00000006' in amiIds,
+                "lone user should not see unpublished builds " \
+                        "in hidden projects")
+        self.failIf('ami-00000007' in amiIds,
+                "lone user should not see published builds " \
+                        "in hidden projects")
+
+    @fixtures.fixture("EC2")
+    def testAMIBuildsDataVisibilityAdmin(self, db, data):
+        client = self.getClient('admin')
+        amiIds = client.getAllAMIBuilds()
+        self.failUnlessEqual(len(amiIds), 7, 'admin should see everything')
+
     @fixtures.fixture("Empty")
     def testAMIBuildsData(self, db, data):
         client = self.getClient('admin')

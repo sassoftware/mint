@@ -748,10 +748,12 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool)
     @requiresCfgAdmin('adminNewProjects')
     @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, appliance, shortname, namespace, prodtype, version, commitEmail):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc, 
+                   appliance, shortname, namespace, prodtype, version, 
+                   commitEmail, isPrivate):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -826,6 +828,12 @@ class MintServer(object):
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
+        
+        if self.cfg.hideNewProjects or isPrivate:
+            repos = self._getProjectRepo(project)
+            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
+                project.getLabel())
+            self.projects.hide(projectId)
 
         if commitEmail:
             project.setCommitEmail(commitEmail)
@@ -836,12 +844,6 @@ class MintServer(object):
             except GroupTroveTemplateExists:
                 pass # really, this is OK -- and even if it weren't,
                      # there's nothing you can do about it, anyway
-
-        if self.cfg.hideNewProjects:
-            repos = self._getProjectRepo(project)
-            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
-                project.getLabel())
-            self.projects.hide(projectId)
 
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
@@ -1324,9 +1326,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.projects.update(projectId, backupExternal=backupExternal)
 
     @typeCheck(int)
-    @requiresAdmin
     @private
     def unhideProject(self, projectId):
+
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
@@ -1337,6 +1342,36 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
+        return True
+    
+    @typeCheck(int, bool, bool)
+    @requiresAuth
+    @private
+    def setProductVisibility(self, projectId, makePrivate):
+        """
+        Set the visibility of a product
+        @param projectId: the project id
+        @type  projectId: C{int}
+        @param makePrivate: True to make private, False to make public
+        @type  makePrivate: C{bool}
+        @raise PermissionDenied: if not the product owner
+        @raise PublicToPrivateConversionError: if trying to convert a public
+               product to private
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+
+        project = projects.Project(self, projectId)
+        
+        # if the product is currently hidden and they want to go public, do it
+        if project.hidden and not makePrivate:
+            self.unhideProject(projectId)
+            return True
+            
+        # if the product is currently public, do not allow them to go private
+        if not project.hidden and makePrivate:
+            raise PublicToPrivateConversionError()
+        
         return True
 
     # user methods
@@ -1386,6 +1421,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                                projectId)
 
         try:
+            # RBL-3062 uncomment this when we are ready for this to run in a
+            # single transaction.
             # self.db.transaction()
             #update the level on the project
             project = projects.Project(self, projectId)
@@ -2185,7 +2222,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
-                                      buildCount = 0)
+                                      buildCount = 0,
+                                      createdBy = self.auth.userId)
 
         mc = self._getMcpClient()
 
@@ -2283,7 +2321,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
-                                      buildCount = 0)
+                                      buildCount = 0,
+                                      createdBy = self.auth.userId)
         mc = self._getMcpClient()
 
         try:
@@ -5142,7 +5181,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
 
-        return dict([x for x in self.userData.getDataDict(userId).iteritems() if x[0] in usertemplates.userPrefsAWSTemplate.keys()])
+        ret = dict()
+        for x in usertemplates.userPrefsAWSTemplate.keys():
+            ret[x] = ''
+        ret.update(self.userData.getDataDict(userId))
+        return ret
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),), bool)
     @requiresAuth
@@ -5190,9 +5233,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
-                val = newValues.get(key, default)
-                self.userData.setDataValue(userId, key, val, dType,
-                        commit=False)
+                if removing:
+                    self.userData.removeDataValue(userId, key)
+                else:
+                    val = newValues.get(key, default)
+                    self.userData.setDataValue(userId, key, val, dType,
+                            commit=False)
         except:
             self.db.rollback()
             return False
@@ -5219,6 +5265,47 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.setEC2CredentialsForUser(userId, '', '', '', True)
         
+    @requiresAuth
+    def getAllAMIBuilds(self):
+        """
+        Returns a list of all of the AMI images that this rBuilder
+        manages. If the requesting user is an admin, the user will
+        be able to see all AMIs created for all projects regardless of
+        their visibility. Otherwise, the user will only see AMIs for
+        projects that they are able to see (i.e. AMIs created in hidden
+        projects of which the user is not a developer or owner
+        will remain hidden).
+        @returns A dictionary of dictionaries, keyed by amiId,
+          with the following members:
+          - productName: the name of the product containing this build
+          - projectId: the id of the project (product) containing this build
+          - productDescription: the description of the product containing
+              this build
+          - buildId: the id of the build that created the AMI
+          - buildName: the name of the build
+          - buildDescription: the description of the build, if given
+          - createdBy: the rBuilder user name of the person who
+              initiated the build (if known), otherwise returns
+              'Unknown' if we don't know (in the case of builds
+              created before RBL-3076 was fixed)
+          - awsAccountNumber: the AWS Account number of the user who
+              created the build (if the user supplied credentials)
+              otherwise, returns 'Unknown'
+          - role: the role of the user who created the build with
+              respoect to the containing product as a meatstring, e.g.
+              'Product User', 'Product Owner', 'Product Developer',
+              or '' (in the case where a user is not affiliated with
+              the product, or the relationship is unknown)
+          - isPrivate: 1 if the containing project is private (hidden),
+              0 otherwise
+          - isPublished: 1 if the build is published, 0 if not
+        @rtype: C{dict} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if user is not logged in
+        """
+        return self.builds.getAllAMIBuilds(self.auth.userId,
+                not self.auth.admin)
+
+
     @typeCheck(int)
     @requiresAuth
     def getAMIBuildsForUser(self, userId):

@@ -79,6 +79,7 @@ class ProjectHandler(WebHandler):
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+        self.isReader = (self.userLevel in userlevels.READERS) or self.auth.admin
 
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
@@ -1177,15 +1178,19 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
-            'desc': self.project.getDesc()
+            'desc': self.project.getDesc(),
+            'isPrivate': self.project.hidden
         }
         return self._write("editProject", kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '',
-               commitEmail = '')
+               commitEmail = '', isPrivate = 'off')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           commitEmail):
+                           commitEmail, isPrivate):
+
+        isPrivate = (isPrivate.lower() == 'on') and True or False
+        
         pText = getProjectText()
         if not name:
             self._addErrors("You must supply a %s title"%pText.lower())
@@ -1196,10 +1201,13 @@ class ProjectHandler(WebHandler):
                 self.project.setCommitEmail(commitEmail)
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
+            
+        # set the product visibility
+        self.client.setProductVisibility(self.project.id, isPrivate)
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'commitEmail': commitEmail}
+                      'commitEmail': commitEmail, 'isPrivate': isPrivate}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
@@ -1259,7 +1267,6 @@ class ProjectHandler(WebHandler):
         if isNew:
             pd = proddef.ProductDefinition()
         else:
-            version = self.client.getProductVersion(id)
             pd = self.client.getProductDefinitionForVersion(id)
 
         pd = helperfuncs.sanitizeProductDefinition(
@@ -1376,14 +1383,13 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 # we got here from the "create a product menu" so output
                 # accordingly.  Note that the value of linked is the name
                 # of the project.
-                self._setInfo("Successfully created %s '%s' version '%s'" % \
-                              (getProjectText().lower(), self.project.name,
+                visibility = self.project.hidden and "private" or "public"
+                self._setInfo("Successfully created %s %s '%s' version '%s'" % \
+                              (visibility, getProjectText().lower(), 
+                               self.project.name,
                                name))
             else:
-                if isNew:
-                    action = "Created"
-                else:
-                    action = "Updated"
+                action = isNew and "Created" or "Updated"
                 self._setInfo("%s %s version '%s'" % \
                               (action, getProjectText().lower(), name))
             self._predirect()
@@ -1702,27 +1708,3 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 
     def help(self, auth):
         return self._write("help")
-
-    @intFields(projectId = None)
-    @strFields(operation = None)
-    @requiresAdmin
-    def processProjectAction(self, auth, projectId, operation):
-        pText = getProjectText()
-        project = self.client.getProject(projectId)
-
-        if operation == "project_hide":
-            if not project.hidden:
-                self.client.hideProject(projectId)
-                self._setInfo("%s hidden"%pText.title())
-            else:
-                self._addErrors("%s is already hidden"%pText.title())
-        elif operation == "project_unhide":
-            if project.hidden:
-                self.client.unhideProject(projectId)
-                self._setInfo("%s is now visible"%pText.title())
-            else:
-                self._addErrors("%s is already visible"%pText.title())
-        else:
-            self._addErrors("Please select a valid %s administration option from the menu"%pText.lower())
-
-        return self._predirect()
