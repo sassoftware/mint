@@ -17,11 +17,32 @@
         <title>${formatTitle('Create a %s'%projectText().title())}</title>
     </head>
     <body>
+    
+        <script type="text/javascript">
+        <![CDATA[
+            function handleYes() {
+                var form = document.getElementById('createForm');
+                i = 0;
+                form.submit();
+            }
+            
+            function handleNo() {
+                // do nothing
+            }
+        
+            function handleVisibility() {
+                var isPrivate = document.getElementById('isPrivate');
+                if(isPrivate && !isPrivate.checked) {
+                   modalYesNo(handleYes, handleNo);
+                }
+            }
+        ]]>
+        </script>
+    
         <div id="layout">
             <h2>Create a ${projectText().title()}</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="createProject" >
-
+            <form id="createForm" name="createForm" method="post" action="createProject">
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                     <tr>
                         <th><em class="required">${projectText().title()} Title:</em></th>
@@ -116,10 +137,20 @@
                     <tr>
                         <th>${projectText().title()} is Private:</th>
                         <td>
-                            <input type="checkbox" class='check' name="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                            <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                            <div id="modalYesNo" title="Confirmation" style="display: none;">
+                                    You have selected to create a public ${projectText().title()}. 
+                                    Once a ${projectText().title()} is public it cannot be made 
+                                    private. Are you sure you want to make this ${projectText().title()} 
+                                    public?
+                            </div>
                             <p class="help">
-                                <strong>Need help text here (DOC-1364)</strong>
-                             </p>
+                                Toggle the check box if you want the new ${projectText().title()} to be a private one. 
+                                Private ${projectText().title()}s are only accessible by ${projectText().title()} Team Members 
+                                (Owners, Developers, and Users) and are not visible to registered 
+                                users or anonymous users. If you choose to make your ${projectText().title()} public, 
+                                do not toggle the check box.
+                            </p>
                         </td>
                     </tr>
                     
@@ -153,7 +184,7 @@
                     </tr>
                 </table>
                 <p>
-                    <button class="img" type="submit">
+                    <button class="img" type="button" onclick="handleVisibility()">
                         <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
                     </button>
                 </p>
