@@ -277,3 +277,29 @@ class EC2Wrapper(object):
     def validateCredentials(self):
         self.getAllKeyPairs()
         return True
+
+    def addPublicLaunchPermission(self, ec2AMIId):
+         try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                'add', user_ids=None,
+                                                groups=['all'] )
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+       
+    def removePublicLaunchPermission(self, ec2AMIId):
+         try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                'remove', user_ids=None,
+                                                groups=['all'] )
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+
+    def resetLaunchPermissions(self, ec2AMIId):
+         try:
+            self.ec2conn.reset_image_attribute(ec2AMIId, 'launchPermission')
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+
