@@ -1000,6 +1000,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.resetLaunchPermissionsCalled = True
         def addLaunchPermission(cls, amiId, awsAccountNumber):
             self.launchPermissions.append((amiId, awsAccountNumber))
+        def removeLaunchPermission(cls, amiId, awsAccountNumber):
+            self.launchPermissions.append((amiId, awsAccountNumber))
+        def resetLaunchPermissions(cls, amiId):
+            self.launchPermissions = []
 
         oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
         ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
@@ -1009,6 +1013,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
         ec2.EC2Wrapper.removePublicLaunchPermission = removePublicLaunchPermission
         oldaddLaunchPermission = ec2.EC2Wrapper.addLaunchPermission
         ec2.EC2Wrapper.addLaunchPermission = addLaunchPermission
+        oldremoveLaunchPermission = ec2.EC2Wrapper.removeLaunchPermission
+        ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
+        oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
+        ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
 
         try:
             # Set some aws creds for the user
@@ -1021,15 +1029,28 @@ conaryproxy = http://proxy.hostname.com/proxy/
                                                 'secretKey', False)
              
             reset()
+
+            # Get the published release id that we need.
             pubReleases = client.getPublishedReleaseList()
             for pubRelease in pubReleases:
                 if pubRelease[1] == 'testproject':
                     id = pubRelease[2].id
+            # Unpublish the release of a public product
             client.unpublishPublishedRelease(id)
+            # Public launch perms were removed
             self.assertTrue(self.removePublicLaunchPermissionCalled)
+            # launch perms were added to the owner and developer in the product
             self.assertEquals(2, len(self.launchPermissions))
             self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
             self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
+            reset()
+
+            # Publish the release of a public product
+            client.publishPublishedRelease(id, False)
+            # Public launch perms were added
+            self.assertTrue(addPublicLaunchPermission)
+            # Launch perms for the owner and developer in the product were removed
+            self.assertEquals(0, len(self.launchPermissions))
             reset()
 
         finally:
@@ -1037,6 +1058,8 @@ conaryproxy = http://proxy.hostname.com/proxy/
             ec2.EC2Wrapper.addPublicLaunchPermission = oldaddPublicLaunchPermission
             ec2.EC2Wrapper.removePublicLaunchPermission = oldremovePublicLaunchPermission
             ec2.EC2Wrapper.addLaunchPermission = oldaddLaunchPermission
+            ec2.EC2Wrapper.removeLaunchPermission = oldremoveLaunchPermission
+            ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
           
 
 if __name__ == '__main__':

@@ -5523,6 +5523,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
     def addEC2LaunchPermsForPublish(self, pubReleaseId):
+        """
+        Given a pubReleaseId, set the EC2 launch permissions for publishing.
+        @param pubReleaseId: The id of the published release
+        @type pubReleaseId: C{int}
+        @rtype: C{bool} indicating success
+        """
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
         affectedAMIIds = \
@@ -5555,8 +5561,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
             for amiIdData in affectedAMIIds:
                 ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
                 ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
+        return True                                              
+
 
     def removeEC2LaunchPermsForUnpublish(self, pubReleaseId):
+        """
+        Given a pubReleaseId, set the EC2 launch permissions for unpublishing.
+        @param pubReleaseId: The id of the published release
+        @type pubReleaseId: C{int}
+        @rtype: C{bool} indicating success
+        """
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
         affectedAMIIds = \
@@ -5595,6 +5609,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if awsFound and user[2] != userlevels.USER:
                         ec2Wrap.addLaunchPermission(amiIdData['amiId'],
                                                     awsAccountNumber)
+        return True                                              
 
 
 
