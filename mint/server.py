@@ -5230,7 +5230,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             removing = False
         
         try:
-            self.db.transaction()
+            # RBL-3062 need to uncomment the trasaction and change 
+            # to commit=False when the transactions are fixed.
+            # self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
                 if removing:
@@ -5238,7 +5240,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 else:
                     val = newValues.get(key, default)
                     self.userData.setDataValue(userId, key, val, dType,
-                            commit=False)
+                            commit=True)
         except:
             self.db.rollback()
             return False

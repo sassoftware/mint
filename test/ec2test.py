@@ -137,6 +137,12 @@ class FakeEC2Connection(object):
     def get_key_pair(self, keyname):
         return self.get_all_key_pairs([keyname])
 
+    def reset_image_attribute(self, amiId, attribute):
+        return True
+
+    def modify_image_attribute(self, *args, **kw):
+        return True
+
 class FakeEC2KeyPair(object):
     __slots__ = ( 'name', 'fingerprint', 'material')
     
@@ -972,6 +978,66 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client.server._server.validateEC2Credentials = \
             self.oldValidateAMICredentials
 
+    @fixtures.fixture("EC2")
+    def testPublishPublishedRelease(self, db, data):
+        client = self.getClient("admin")
+        devclient = self.getClient("developer")
+        sodevclient = self.getClient("someotherdeveloper")
+
+        def reset():
+            self.resetLaunchPermissionsCalled = False
+            self.addPublicLaunchPermissionCalled = False
+            self.removePublicLaunchPermissionCalled = False
+            self.launchPermissions = []
+
+        reset()
+        
+        def addPublicLaunchPermission(cls, amiId):
+            self.addPublicLaunchPermissionCalled = True
+        def removePublicLaunchPermission(cls, amiId):
+            self.removePublicLaunchPermissionCalled = True
+        def resetLaunchPermissions(cls, amiId):
+            self.resetLaunchPermissionsCalled = True
+        def addLaunchPermission(cls, amiId, awsAccountNumber):
+            self.launchPermissions.append((amiId, awsAccountNumber))
+
+        oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
+        ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
+        oldaddPublicLaunchPermission = ec2.EC2Wrapper.addPublicLaunchPermission
+        ec2.EC2Wrapper.addPublicLaunchPermission = addPublicLaunchPermission
+        oldremovePublicLaunchPermission = ec2.EC2Wrapper.removePublicLaunchPermission
+        ec2.EC2Wrapper.removePublicLaunchPermission = removePublicLaunchPermission
+        oldaddLaunchPermission = ec2.EC2Wrapper.addLaunchPermission
+        ec2.EC2Wrapper.addLaunchPermission = addLaunchPermission
+
+        try:
+            # Set some aws creds for the user
+            devclient.setEC2CredentialsForUser(data['developerId'], 'devid',
+                                                'devPublicKey',
+                                                'secretKey', False)
+            # Set some aws creds for the user
+            sodevclient.setEC2CredentialsForUser(data['someOtherDeveloperId'], 'sodevid',
+                                                'sodevPublicKey',
+                                                'secretKey', False)
+             
+            reset()
+            pubReleases = client.getPublishedReleaseList()
+            for pubRelease in pubReleases:
+                if pubRelease[1] == 'testproject':
+                    id = pubRelease[2].id
+            client.unpublishPublishedRelease(id)
+            self.assertTrue(self.removePublicLaunchPermissionCalled)
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
+            reset()
+
+        finally:
+            ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
+            ec2.EC2Wrapper.addPublicLaunchPermission = oldaddPublicLaunchPermission
+            ec2.EC2Wrapper.removePublicLaunchPermission = oldremovePublicLaunchPermission
+            ec2.EC2Wrapper.addLaunchPermission = oldaddLaunchPermission
+          
 
 if __name__ == '__main__':
     testsuite.main()

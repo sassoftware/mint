@@ -116,7 +116,8 @@ class PublishedReleasesTable(database.KeyedTable):
                  ON bd.buildId = b.buildId
             WHERE bd.name = 'amiId'
               AND b.deleted = 0
-            """)
+              AND pr.pubReleaseId = ?
+            """, pubReleaseId)
         return cu.fetchall_dict()
          
 
