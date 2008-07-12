@@ -19,7 +19,7 @@
     <body>
     
         <script type="text/javascript">
-        <![CDATA[
+        <!--
             function doSubmit() {
                 var form = document.getElementById('createForm');
                 form.submit();
@@ -46,7 +46,7 @@
                    }
                 }
             }
-        ]]>
+        //-->
         </script>
     
         <div id="layout">

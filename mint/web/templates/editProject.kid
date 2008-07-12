@@ -16,7 +16,7 @@
     <body>
     
         <script type="text/javascript">
-        <![CDATA[
+        <!-- 
             function handleYes() {
                 var isPrivate = document.getElementById('isPrivate');
                 if(isPrivate) {
@@ -37,7 +37,7 @@
                    modalYesNo(handleYes, handleNo);
                 }
             }
-        ]]>
+        //-->
         </script>
     
         <div id="layout">
