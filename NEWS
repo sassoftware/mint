@@ -18,6 +18,10 @@ Internal Changes
   user. (RBL-3053)
 * EC2 credentials and AMI launch permissions are now properly removed when a
   user account is removed. (RBL-3065)
+* Modifying a user's product membership status now sets EC2 launch permissions 
+  appropriately. (RBL-3062)
+* Publishing and Unpublishing AMI images now sets EC2 launch permissions 
+  appropriately. (RBL-3064)
 
 Web Front End Changes
 ---------------------
