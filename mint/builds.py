@@ -146,10 +146,34 @@ class BuildsTable(database.KeyedTable):
         else:
             return None
 
-    def getAllAMIBuilds(self):
+    def getAllAMIBuilds(self, requestingUserId, limitToUserId=False):
+
+        def _filterAMIBuildVisibility(rs, okHiddenProjectIds):
+            # admins see all
+            if not limitToUserId:
+                return True
+            else:
+                # restrict hidden projects unless you're a member
+                if (not rs['isPrivate'] or (rs['isPrivate'] and (rs['projectId'] in okHiddenProjectIds))) and \
+                   (rs['isPublished'] or ((not rs['isPublished']) and (rs['role'] in ('Product Developer', 'Product Owner')))):
+                    return True
+            return False
+
         cu = self.db.cursor()
+
+        # Get the list of hidden projects to accept if we need to filter
+        okHiddenProjectIds = []
+        if limitToUserId:
+            cu.execute("""
+                 SELECT pu.projectId
+                 FROM   projectUsers pu JOIN projects p USING (projectId)
+                 WHERE  p.hidden = 1 AND pu.userId = ?
+                 """, requestingUserId)
+            okHiddenProjectIds = [result[0] for result in cu.fetchall()]
+
         cu.execute("""
              SELECT bd.value AS amiId,
+                    p.projectId,
                     b.buildId,
                     p.name AS productName,
                     p.description AS productDescription,
@@ -171,11 +195,13 @@ class BuildsTable(database.KeyedTable):
                  JOIN buildData bd ON (bd.buildId = b.buildId)
                  LEFT OUTER JOIN users u ON (b.createdBy = u.userId)
                  LEFT OUTER JOIN projectUsers pu
-                    ON (b.createdBy = pu.userId AND b.projectId = pu.projectId)
+                    ON (b.projectId = pu.projectId AND pu.userId = ?)
                  LEFT OUTER JOIN userData ud
                     ON (b.createdBy = ud.userId AND ud.name = 'awsAccountNumber')
-             WHERE bd.name = 'amiId' AND b.deleted = 0""")
-        return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict()])
+             WHERE bd.name = 'amiId' AND b.deleted = 0""",
+             requestingUserId)
+        return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict() \
+                if _filterAMIBuildVisibility(rs, okHiddenProjectIds)])
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various

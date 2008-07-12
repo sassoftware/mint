@@ -99,6 +99,27 @@ class PublishedReleasesTable(database.KeyedTable):
             """, projectId)
         return [x[0] for x in cu.fetchall()]
 
+    def getAMIBuildsForPublishedRelease(self, pubReleaseId):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT pr.pubReleaseId,
+                   IFNULL(pr.timePublished,0) != 0 as isPublished,
+                   p.hidden as isPrivate,
+                   bd.value as amiId,
+                   p.projectId as projectId
+            FROM PublishedReleases pr
+                 JOIN Projects p
+                 ON p.projectId = pr.projectId
+                 JOIN Builds b
+                 ON b.pubReleaseId = pr.pubReleaseId
+                 JOIN BuildData bd
+                 ON bd.buildId = b.buildId
+            WHERE bd.name = 'amiId'
+              AND b.deleted = 0
+            """)
+        return cu.fetchall_dict()
+         
+
 class PublishedRelease(database.TableObject):
 
     __slots__ = PublishedReleasesTable.fields

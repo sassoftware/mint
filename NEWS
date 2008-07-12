@@ -34,6 +34,8 @@ Web Front End Changes
 * There is now a checkbox on the "Edit Product Settings" page to convert
   a private product to a public product.  Note that a public product cannot
   be converted to a private product. (RBL-3080)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on IE 6/7. (RBL-3094)
 
 
 Changes in 4.1.1
