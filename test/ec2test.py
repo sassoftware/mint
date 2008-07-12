@@ -983,6 +983,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client = self.getClient("admin")
         devclient = self.getClient("developer")
         sodevclient = self.getClient("someotherdeveloper")
+        nuclient = self.getClient("normaluser")
 
         def reset():
             self.resetLaunchPermissionsCalled = False
@@ -1004,6 +1005,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.launchPermissions.append((amiId, awsAccountNumber))
         def resetLaunchPermissions(cls, amiId):
             self.launchPermissions = []
+            self.resetLaunchPermissionsCalled = True
 
         oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
         ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
@@ -1028,6 +1030,10 @@ conaryproxy = http://proxy.hostname.com/proxy/
                                                 'sodevPublicKey',
                                                 'secretKey', False)
              
+            # Set some aws creds for the user
+            nuclient.setEC2CredentialsForUser(data['normalUserId'], 'nuid',
+                                                'nuPublicKey',
+                                                'secretKey', False)
             reset()
 
             # Get the published release id that we need.
@@ -1053,6 +1059,26 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertEquals(0, len(self.launchPermissions))
             reset()
 
+            # Unpublish the release of a private product.
+            client.unpublishPublishedRelease(data['hiddenProjPubPubReleaseId'])
+            # Perms were reset
+            self.assertTrue(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for owners and developers
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000007', 'sodevid') in self.launchPermissions)
+            reset()
+
+            # Publish the release of a private product.
+            client.publishPublishedRelease(data['hiddenProjPubPubReleaseId'], False)
+            # adding Public launch perms wasn't done
+            self.assertFalse(self.addPublicLaunchPermissionCalled)
+            # Perms weren't reset
+            self.assertFalse(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for a normal user
+            self.assertEquals(1, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'nuid') in self.launchPermissions)
+            reset()
         finally:
             ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
             ec2.EC2Wrapper.addPublicLaunchPermission = oldaddPublicLaunchPermission
