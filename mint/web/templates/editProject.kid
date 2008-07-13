@@ -16,7 +16,7 @@
     <body>
     
         <script type="text/javascript">
-        <!-- 
+        <![CDATA[ 
             function handleYes() {
                 var isPrivate = document.getElementById('isPrivate');
                 if(isPrivate) {
@@ -33,11 +33,13 @@
         
             function handleVisibility() {
                 var isPrivate = document.getElementById('isPrivate');
-                if(isPrivate && !isPrivate.checked) {
-                   modalYesNo(handleYes, handleNo);
+                if(isPrivate) {
+                   if(!isPrivate.checked) {
+                      modalYesNo(handleYes, handleNo);
+                   }
                 }
             }
-        //-->
+        ]]>
         </script>
     
         <div id="layout">
