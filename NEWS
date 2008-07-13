@@ -43,6 +43,8 @@ Web Front End Changes
 * Fixed a bug where creating a public product or making a private product
   public resulted in a JavaScript error on FF3.  This was caused by RBL-3094.
   (RBL-3100)
+* Admin users are now allowed to convert public projects to private.
+  (RBL-3095)
 
 
 Changes in 4.1.1

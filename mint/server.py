@@ -1369,8 +1369,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return True
             
         # if the product is currently public, do not allow them to go private
+        # unless admin
         if not project.hidden and makePrivate:
-            raise PublicToPrivateConversionError()
+            if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] \
+                    or self.auth.admin:
+                self.hideProject(projectId)
+            else:
+                raise PublicToPrivateConversionError()
         
         return True
 
