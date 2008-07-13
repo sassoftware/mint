@@ -2730,7 +2730,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
                    }
 
         result = self.publishedReleases.update(pubReleaseId, **valDict)
-        self.addEC2LaunchPermsForPublish(pubReleaseId) 
+
+        try:
+            self.addEC2LaunchPermsForPublish(pubReleaseId)
+        except EC2NotConfigured, me:
+            # We don't want to fail if this rBuilder is not configured to talk
+            # to EC2.
+            pass
+            
         return result
 
     @typeCheck(int)
@@ -2787,7 +2794,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
         result = self.publishedReleases.update(pubReleaseId, **valDict)
-        self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
+
+        try:
+            self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
+        except EC2NotConfigured, me:
+            # We don't want to fail if this rBuilder is not configured to talk
+            # to EC2.
+            pass
+
         return result
 
     @typeCheck(int)
