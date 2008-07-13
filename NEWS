@@ -40,6 +40,9 @@ Web Front End Changes
   be converted to a private product. (RBL-3080)
 * Fixed a bug where creating a public product or making a private product
   public resulted in a JavaScript error on IE 6/7. (RBL-3094)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on FF3.  This was caused by RBL-3094.
+  (RBL-3100)
 
 
 Changes in 4.1.1
