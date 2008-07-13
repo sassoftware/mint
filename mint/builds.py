@@ -97,7 +97,7 @@ class BuildsTable(database.KeyedTable):
 
     def getPublished(self, buildId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
+        cu.execute("SELECT COALESCE((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
         pubReleaseId = cu.fetchone()[0]
         if pubReleaseId:
             cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)

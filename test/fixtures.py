@@ -148,7 +148,7 @@ class FixtureCache(object):
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
-                cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
                                  FROM UserGroups""")
                 groupId = cu.fetchone()[0]
                 cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",

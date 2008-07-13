@@ -588,7 +588,7 @@ class ProjectsTable(database.KeyedTable):
 
     def isHidden(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
+        cu.execute("SELECT COALESCE(hidden, 0) from Projects WHERE projectId=?", projectId)
         res = cu.fetchone()
         return res and res[0] or 0
 

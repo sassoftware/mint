@@ -396,7 +396,7 @@ class UsersTable(database.KeyedTable):
         cu.execute("""\
             SELECT bd.value as amiId,
                    b.projectId,
-                   IFNULL(pr.timePublished,0) != 0 as isPublished,
+                   COALESCE(pr.timePublished,0) != 0 as isPublished,
                    p.hidden as isPrivate,
                    pu.level
             FROM projectusers pu
