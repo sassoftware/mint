@@ -1042,15 +1042,13 @@ class MintServer(object):
             raise users.UserInduction()
     
         try:
-            # TODO: RBL-3062 change these to commit=False once we figure out
-            # what's causing the DatabaseLocked errors. 
-            #self.db.transaction()
+            self.db.transaction()
             if level != userlevels.USER:
                 self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=True)
+                                                      commit=False)
             try:
                 self.projectUsers.new(projectId, userId, level,
-                                      commit=True)
+                                      commit=False)
             except DuplicateItem:
                 project.updateUserLevel(userId, level)
                 # only attempt to modify acl's of local projects.
@@ -1169,10 +1167,8 @@ class MintServer(object):
 
         try:
             project = projects.Project(self, projectId)
-            # RBL-3062 this needs to be changed to commit=False
-            # when we want this to run in a single transaction.
-            # self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=True)
+            self.db.transaction()
+            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
@@ -1479,9 +1475,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                                projectId)
 
         try:
-            # RBL-3062 uncomment this when we are ready for this to run in a
-            # single transaction.
-            # self.db.transaction()
+            self.db.transaction()
             #update the level on the project
             project = projects.Project(self, projectId)
             user = self.getUser(userId)
@@ -2787,14 +2781,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
                    'shouldMirror': int(shouldMirror),
                    }
 
-        result = self.publishedReleases.update(pubReleaseId, **valDict)
-
         try:
-            self.addEC2LaunchPermsForPublish(pubReleaseId)
-        except EC2NotConfigured, me:
-            # We don't want to fail if this rBuilder is not configured to talk
-            # to EC2.
-            pass
+            self.db.transaction()
+            result = self.publishedReleases.update(pubReleaseId, commit=False,
+                                                   **valDict)
+            try:
+                self.addEC2LaunchPermsForPublish(pubReleaseId)
+            except EC2NotConfigured, me:
+                # We don't want to fail if this rBuilder is not configured to talk
+                # to EC2.
+                pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
             
         return result
 
@@ -2851,14 +2852,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
                    'publishedBy': None}
 
 
-        result = self.publishedReleases.update(pubReleaseId, **valDict)
-
         try:
-            self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
-        except EC2NotConfigured, me:
-            # We don't want to fail if this rBuilder is not configured to talk
-            # to EC2.
-            pass
+            self.db.transaction()
+            result = self.publishedReleases.update(pubReleaseId, commit=False,
+                                                   **valDict)
+            try:
+                self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
+            except EC2NotConfigured, me:
+                # We don't want to fail if this rBuilder is not configured to talk
+                # to EC2.
+                pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
         return result
 
@@ -5288,7 +5296,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
 
-        found, oldAwsAccountNumber = self.userData.getDataValue(userId, 
+        awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
        
         removing = True
@@ -5302,9 +5310,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             removing = False
         
         try:
-            # RBL-3062 need to uncomment the trasaction and change 
-            # to commit=False when the transactions are fixed.
-            # self.db.transaction()
+            self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
                 if removing:
@@ -5312,18 +5318,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 else:
                     val = newValues.get(key, default)
                     self.userData.setDataValue(userId, key, val, dType,
-                            commit=True)
-        except:
-            self.db.rollback()
-            return False
-        else:
-            if found:
+                            commit=False)
+
+            if awsFound:
                 # Remove all old launch permissions
                 self.removeAllEC2LaunchPermissions(userId, oldAwsAccountNumber)
             if not removing:
                 # Add launch permissions
                 self.addAllEC2LaunchPermissions(userId, 
                                                 newValues['awsAccountNumber'])
+        except:
+            self.db.rollback()
+            return False
+        else:
             self.db.commit()
             return True
         
