@@ -5670,11 +5670,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if db:
             dbConnection = db
 
+        # Flag to indicate if we created a new self.db and need to force a
+        # call to getTables
+        reloadTables = False
+
         if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
             dbConnection = self.db
+            reloadTables = True
 
         # reopen a dead database
         if self.db.reopen():
@@ -5683,7 +5688,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         genConaryRc = False
         global tables
-        if not tables or alwaysReload:
+        if not tables or alwaysReload or reloadTables:
             tables = getTables(self.db, self.cfg)
             genConaryRc = True
 
