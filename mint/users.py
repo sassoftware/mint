@@ -521,6 +521,27 @@ class ProjectUsersTable(database.DatabaseTable):
         else:
             raise ItemNotFound()
 
+    def getEC2AccountNumbersForProjectUsers(self, projectId):
+        writers = []
+        readers = []
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT CASE WHEN MIN(pu.level) <= 1 THEN 1 ELSE 0 END AS isWriter,
+                ud.value AS awsAccountNumber
+            FROM projectUsers AS pu
+                JOIN userData AS ud
+                    ON ud.name = 'awsAccountNumber'
+                       AND pu.userId = ud.userId
+                       AND length(ud.value) > 0
+            WHERE pu.projectId = ?
+            GROUP BY ud.value""", projectId)
+        for res in cu.fetchall():
+            if res[0]:
+                writers.append(res[1])
+            else:
+                readers.append(res[1])
+        return writers, readers
+
     def new(self, projectId, userId, level, commit=True):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()

@@ -1311,19 +1311,39 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
+
+        # Get a list of published and unpublished AMIs for this project
+        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
+
+        # Set up EC2 connection
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        # all project members, including users, can see published builds
+        for publishedAMIId in published:
+            ec2Wrap.resetLaunchPermissions(publishedAMIId)
+            if writers or readers:
+                ec2Wrap.addLaunchPermissions(publishedAMIId, writers + readers)
+
+        # only project developers and owners can see unpublished builds
+        for unpublishedAMIId in unpublished:
+            ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+            if writers:
+                ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+
+        # Remove the anonymous user from the project's repository
         repos = self._getProjectRepo(project)
         helperfuncs.deleteUserFromRepository(repos, 'anonymous',
             project.getLabel())
 
+        # Hide the project
         self.projects.hide(projectId)
+
         self._generateConaryRcFile()
         return True
-
-    @typeCheck(int, bool)
-    @requiresAdmin
-    @private
-    def setBackupExternal(self, projectId, backupExternal):
-        return self.projects.update(projectId, backupExternal=backupExternal)
 
     @typeCheck(int)
     @private
@@ -1331,7 +1351,28 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
-        
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, _ = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
+
+        # Get a list of published and unpublished AMIs for this project
+        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
+
+        # Set up EC2 connection
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        # published builds will be made public
+        for publishedAMIId in published:
+            ec2Wrap.resetLaunchPermissions(publishedAMIId)
+            ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+
+        # only project developers and owners can see unpublished builds
+        for unpublishedAMIId in unpublished:
+            ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+            if writers:
+                ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
@@ -1343,7 +1384,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
         return True
-    
+
+    @typeCheck(int, bool)
+    @requiresAdmin
+    @private
+    def setBackupExternal(self, projectId, backupExternal):
+        return self.projects.update(projectId, backupExternal=backupExternal)
+
     @typeCheck(int, bool, bool)
     @requiresAuth
     @private

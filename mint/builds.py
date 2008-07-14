@@ -203,6 +203,23 @@ class BuildsTable(database.KeyedTable):
         return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict() \
                 if _filterAMIBuildVisibility(rs, okHiddenProjectIds)])
 
+    def getAMIBuildsForProject(self, projectId):
+        published = []
+        unpublished = []
+        cu = self.db.cursor()
+        cu.execute("""SELECT COALESCE(pr.timePublished,0) != 0 AS isPublished,
+                             bd.value AS amiId
+                      FROM builds b
+                          LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+                          JOIN buildData bd ON (bd.buildId = b.buildId AND bd.name = 'amiId')
+                      WHERE b.projectId = ? AND b.deleted = 0""", projectId)
+        for res in cu.fetchall():
+            if res[0]:
+                published.append(res[1])
+            else:
+                unpublihsed.append(res[1])
+        return published, unpublished
+
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various
        characteristics that a flavor may have, defined by the
