@@ -16,7 +16,7 @@
     <body>
     
         <script type="text/javascript">
-        <![CDATA[
+        <![CDATA[ 
             function handleYes() {
                 var isPrivate = document.getElementById('isPrivate');
                 if(isPrivate) {
@@ -33,8 +33,10 @@
         
             function handleVisibility() {
                 var isPrivate = document.getElementById('isPrivate');
-                if(isPrivate && !isPrivate.checked) {
-                   modalYesNo(handleYes, handleNo);
+                if(isPrivate) {
+                   if(!isPrivate.checked) {
+                      modalYesNo(handleYes, handleNo);
+                   }
                 }
             }
         ]]>
@@ -89,7 +91,7 @@
                             <th>${projectText().title()} is Private:</th>
                             <td>
                                 <div py:if="kwargs['isPrivate']" py:strip="True">
-                                    <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None, 'disabled' : not kwargs['isPrivate'] and 'checked' or None}"/>
+                                    <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
                                     <div id="modalYesNo" title="Confirmation" style="display: none;">
                                         Making this ${projectText().title()} public will open 
                                         ${projectText().title()} repositories and Releases to 
@@ -106,8 +108,19 @@
                                     </p>
                                 </div>
                                 <div py:if="not kwargs['isPrivate']" py:strip="True">
-                                    This ${projectText().title()} is public and cannot be made private.
-                                    <input type="hidden" name="isPrivate" id="isPrivate" value="kwargs['isPrivate']"/>
+                                    <div py:if="not auth.admin" py:strip="True">
+                                        This ${projectText().title()} is public and cannot be made private.
+                                        <input type="hidden" name="isPrivate" id="isPrivate" value="kwargs['isPrivate']"/>
+                                    </div>
+                                    <div py:if="auth.admin" py:strip="True">
+                                        <input type="checkbox" class='check' name="isPrivate" id="isPrivate" onclick="return handleVisibility()" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                                        <p class="help">
+                                            Check the box if you want your Public ${projectText().title()} to be 
+                                            a private one. Private ${projectText().title()}s are only accessible
+                                            by ${projectText().title()} Team Members (Owners, Developers, and 
+                                            Users).
+                                        </p>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

@@ -212,7 +212,7 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                         shortname=hostname, version="1.0", prodtype="Component")
         cu = self.db.cursor()
         for name in ('package1', 'package2', 'package3'):
-            cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+            cu.execute("SELECT COALESCE(MAX(pkgId) + 1, 1) FROM PackageIndex")
             pkgId = cu.fetchone()[0]
             r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, '/test.project.test@test:test/1.1-1-1', ?, 'test:test', 0)", (pkgId, projectId, name, MINT_PROJECT_DOMAIN))
         self.db.commit()

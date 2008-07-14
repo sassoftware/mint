@@ -18,6 +18,10 @@ Internal Changes
   user. (RBL-3053)
 * EC2 credentials and AMI launch permissions are now properly removed when a
   user account is removed. (RBL-3065)
+* Modifying a user's product membership status now sets EC2 launch permissions 
+  appropriately. (RBL-3062)
+* Publishing and Unpublishing AMI images now sets EC2 launch permissions 
+  appropriately. (RBL-3064)
 
 Web Front End Changes
 ---------------------
@@ -34,6 +38,13 @@ Web Front End Changes
 * There is now a checkbox on the "Edit Product Settings" page to convert
   a private product to a public product.  Note that a public product cannot
   be converted to a private product. (RBL-3080)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on IE 6/7. (RBL-3094)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on FF3.  This was caused by RBL-3094.
+  (RBL-3100)
+* Admin users are now allowed to convert public projects to private.
+  (RBL-3095)
 
 
 Changes in 4.1.1

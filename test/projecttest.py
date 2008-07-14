@@ -981,8 +981,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, False)
         
-        # test public to private
-        client = self.getClient('admin')
+        # test public to private by owner (not allowed)
+        client = self.getClient('owner')
         hostname = "ortiz"
         projectId = client.newProject("BoSox2", hostname, "localhost", 
                                       shortname=hostname,
@@ -993,7 +993,20 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(PublicToPrivateConversionError, 
                               client.setProductVisibility, projectId, True)
         
-        # make sure you must be owner or admin to do it
+        # test public to private by admin (allowed)
+        client = self.getClient('admin')
+        hostname = "ortiz2"
+        projectId = client.newProject("BoSox3", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        client.setProductVisibility(projectId, True)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, True)
+        
+        # make sure you must be owner or admin to do it at all
         client = self.getClient('nobody')
         self.failUnlessRaises(PermissionDenied, 
                               client.setProductVisibility, projectId, True)

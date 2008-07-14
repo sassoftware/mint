@@ -259,17 +259,25 @@ class EC2Wrapper(object):
             raise mint_error.EC2Exception(ErrorResponseObject(e))
     
     def addLaunchPermission(self, ec2AMIId, awsAccountId):
+        return self.addLaunchPermissions(self, ec2AMIId, [awsAccountId])
+
+    def addLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
             self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
-                                                 'add', awsAccountId)
+                                                 'add',
+                                                 user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def removeLaunchPermission(self, ec2AMIId, awsAccountId):
+        return self.removeLaunchPermission(self, ec2AMIId, [awsAccountId])
+
+    def removeLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
             self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
-                                                 'remove', awsAccountId)
+                                                 'remove',
+                                                 user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
@@ -277,3 +285,29 @@ class EC2Wrapper(object):
     def validateCredentials(self):
         self.getAllKeyPairs()
         return True
+
+    def addPublicLaunchPermission(self, ec2AMIId):
+         try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                'add', user_ids=None,
+                                                groups=['all'] )
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+       
+    def removePublicLaunchPermission(self, ec2AMIId):
+         try:
+            self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
+                                                'remove', user_ids=None,
+                                                groups=['all'] )
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+
+    def resetLaunchPermissions(self, ec2AMIId):
+         try:
+            self.ec2conn.reset_image_attribute(ec2AMIId, 'launchPermission')
+            return True
+         except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+

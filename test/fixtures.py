@@ -148,7 +148,7 @@ class FixtureCache(object):
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
-                cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
                                  FROM UserGroups""")
                 groupId = cu.fetchone()[0]
                 cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
@@ -596,6 +596,7 @@ class FixtureCache(object):
         pubRelease.version = "1.1"
         pubRelease.addBuild(build.id)
         pubRelease.save()
+        hiddenProjUnpubPubReleaseId = pubRelease.id
 
         # create an AMI build and add it to a published release on the hidden
         # project.
@@ -611,6 +612,7 @@ class FixtureCache(object):
         pubRelease.addBuild(build.id)
         pubRelease.save()
         pubRelease.publish()
+        hiddenProjPubPubReleaseId = pubRelease.id
 
 
 
@@ -628,6 +630,8 @@ class FixtureCache(object):
                       'otherProjectId': otherProjectId,
                       'hiddenProjectId': hiddenProjectId,
                       'loneUserId': loneUserId,
+                      'hiddenProjUnpubPubReleaseId': hiddenProjUnpubPubReleaseId,
+                      'hiddenProjPubPubReleaseId': hiddenProjPubPubReleaseId,
                       }
 
 

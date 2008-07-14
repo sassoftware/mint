@@ -137,6 +137,12 @@ class FakeEC2Connection(object):
     def get_key_pair(self, keyname):
         return self.get_all_key_pairs([keyname])
 
+    def reset_image_attribute(self, amiId, attribute):
+        return True
+
+    def modify_image_attribute(self, *args, **kw):
+        return True
+
 class FakeEC2KeyPair(object):
     __slots__ = ( 'name', 'fingerprint', 'material')
     
@@ -972,6 +978,196 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client.server._server.validateEC2Credentials = \
             self.oldValidateAMICredentials
 
+    @fixtures.fixture("EC2")
+    def testPublishPublishedRelease(self, db, data):
+        client = self.getClient("admin")
+        devclient = self.getClient("developer")
+        sodevclient = self.getClient("someotherdeveloper")
+        nuclient = self.getClient("normaluser")
+
+        def reset():
+            self.resetLaunchPermissionsCalled = False
+            self.addPublicLaunchPermissionCalled = False
+            self.removePublicLaunchPermissionCalled = False
+            self.launchPermissions = []
+
+        reset()
+        
+        def addPublicLaunchPermission(cls, amiId):
+            self.addPublicLaunchPermissionCalled = True
+        def removePublicLaunchPermission(cls, amiId):
+            self.removePublicLaunchPermissionCalled = True
+        def resetLaunchPermissions(cls, amiId):
+            self.resetLaunchPermissionsCalled = True
+        def addLaunchPermission(cls, amiId, awsAccountNumber):
+            self.launchPermissions.append((amiId, awsAccountNumber))
+        def removeLaunchPermission(cls, amiId, awsAccountNumber):
+            self.launchPermissions.append((amiId, awsAccountNumber))
+        def resetLaunchPermissions(cls, amiId):
+            self.launchPermissions = []
+            self.resetLaunchPermissionsCalled = True
+
+        oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
+        ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
+        oldaddPublicLaunchPermission = ec2.EC2Wrapper.addPublicLaunchPermission
+        ec2.EC2Wrapper.addPublicLaunchPermission = addPublicLaunchPermission
+        oldremovePublicLaunchPermission = ec2.EC2Wrapper.removePublicLaunchPermission
+        ec2.EC2Wrapper.removePublicLaunchPermission = removePublicLaunchPermission
+        oldaddLaunchPermission = ec2.EC2Wrapper.addLaunchPermission
+        ec2.EC2Wrapper.addLaunchPermission = addLaunchPermission
+        oldremoveLaunchPermission = ec2.EC2Wrapper.removeLaunchPermission
+        ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
+        oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
+        ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
+
+        try:
+            # Set some aws creds for the user
+            devclient.setEC2CredentialsForUser(data['developerId'], 'devid',
+                                                'devPublicKey',
+                                                'secretKey', False)
+            # Set some aws creds for the user
+            sodevclient.setEC2CredentialsForUser(data['someOtherDeveloperId'], 'sodevid',
+                                                'sodevPublicKey',
+                                                'secretKey', False)
+             
+            # Set some aws creds for the user
+            nuclient.setEC2CredentialsForUser(data['normalUserId'], 'nuid',
+                                                'nuPublicKey',
+                                                'secretKey', False)
+            reset()
+
+            # Get the published release id that we need.
+            pubReleases = client.getPublishedReleaseList()
+            for pubRelease in pubReleases:
+                if pubRelease[1] == 'testproject':
+                    id = pubRelease[2].id
+            # Unpublish the release of a public product
+            client.unpublishPublishedRelease(id)
+            # Public launch perms were removed
+            self.assertTrue(self.removePublicLaunchPermissionCalled)
+            # launch perms were added to the owner and developer in the product
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
+            reset()
+
+            # Publish the release of a public product
+            client.publishPublishedRelease(id, False)
+            # Public launch perms were added
+            self.assertTrue(addPublicLaunchPermission)
+            # Launch perms for the owner and developer in the product were removed
+            self.assertEquals(0, len(self.launchPermissions))
+            reset()
+
+            # Unpublish the release of a private product.
+            client.unpublishPublishedRelease(data['hiddenProjPubPubReleaseId'])
+            # Perms were reset
+            self.assertTrue(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for owners and developers
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000007', 'sodevid') in self.launchPermissions)
+            reset()
+
+            # Publish the release of a private product.
+            client.publishPublishedRelease(data['hiddenProjPubPubReleaseId'], False)
+            # adding Public launch perms wasn't done
+            self.assertFalse(self.addPublicLaunchPermissionCalled)
+            # Perms weren't reset
+            self.assertFalse(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for a normal user
+            self.assertEquals(1, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'nuid') in self.launchPermissions)
+            reset()
+        finally:
+            ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
+            ec2.EC2Wrapper.addPublicLaunchPermission = oldaddPublicLaunchPermission
+            ec2.EC2Wrapper.removePublicLaunchPermission = oldremovePublicLaunchPermission
+            ec2.EC2Wrapper.addLaunchPermission = oldaddLaunchPermission
+            ec2.EC2Wrapper.removeLaunchPermission = oldremoveLaunchPermission
+            ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
+          
+    @fixtures.fixture('EC2')
+    def testCancelUserAccountEC2(self, db, data):
+        """
+        Test canceling user account with EC2 credentials and permissions.
+        """
+        client = self.getClient('developer')
+        user = client.getUser(data['developerId'])
+        
+        self.addLaunchPermsCalled = False
+        self.removeLaunchPermsCalled = False
+        self.removeUserAccountCalled = False
+
+        def addAllEC2LaunchPermissions(userId, awsAccountNumber):
+            self.addLaunchPermsCalled = True
+            return True
+
+        def removeAllEC2LaunchPermissions(userId, awsAccountNumber):
+            self.removeLaunchPermsCalled = True
+            return True
+
+        def validateEC2Credentials(authToken):
+            return True
+        
+        def ensureNoOrphans(userId):
+            return True
+        
+        def removeUserAccount(userId):
+            self.removeUserAccountCalled = True
+            return True
+                
+        oldValidateAMICredentials = client.server._server.validateEC2Credentials
+        client.server._server.validateEC2Credentials = validateEC2Credentials
+        oldAddAllEC2LaunchPermissions = \
+            client.server._server.addAllEC2LaunchPermissions
+        client.server._server.addAllEC2LaunchPermissions = \
+            addAllEC2LaunchPermissions
+        oldRemoveAllEC2LaunchPermissions = \
+            client.server._server.removeAllEC2LaunchPermissions
+        client.server._server.removeAllEC2LaunchPermissions = \
+            removeAllEC2LaunchPermissions
+        oldEnsureNoOrphans = client.server._server._ensureNoOrphans
+        client.server._server._ensureNoOrphans = ensureNoOrphans
+        oldRemoveUserAccount = client.server._server.removeUserAccount
+        client.server._server.removeUserAccount = removeUserAccount
+        
+        try:
+            # set some EC2 credentials
+            client.setEC2CredentialsForUser(user.id, '012345678901',
+                'awsPublicAccessKeyId', 'awsSecretAccessKey', force=True)
+            self.assertTrue(client.getEC2CredentialsForUser(user.id) ==\
+                {'awsPublicAccessKeyId': 'awsPublicAccessKeyId', 
+                 'awsSecretAccessKey': 'awsSecretAccessKey', 
+                 'awsAccountNumber': '012345678901'})
+            
+            # add some launch permissions
+            client.addAllEC2LaunchPermissions(user.id, '012345678901')
+            self.assertTrue(self.addLaunchPermsCalled)
+            
+            # cancel the account
+            user.cancelUserAccount()
+            
+            # make sure no launch permissions are present
+            self.assertTrue(self.removeLaunchPermsCalled)
+            
+            # make sure credentials are gone
+            self.assertTrue(client.getEC2CredentialsForUser(user.id) ==\
+                {'awsPublicAccessKeyId': '', 
+                 'awsSecretAccessKey': '', 
+                 'awsAccountNumber': ''})
+            
+            # make sure account is gone
+            self.assertTrue(self.removeUserAccountCalled)
+        finally:
+            client.server._server.validateEC2Credentials = \
+                oldValidateAMICredentials
+            client.server._server.addAllEC2LaunchPermissions = \
+                oldAddAllEC2LaunchPermissions
+            client.server._server.removeAllEC2LaunchPermissions = \
+                oldRemoveAllEC2LaunchPermissions
+            client.server._server._ensureNoOrphans = oldEnsureNoOrphans
+            client.server._server.removeUserAccount = oldRemoveUserAccount
 
 if __name__ == '__main__':
     testsuite.main()

@@ -56,7 +56,7 @@ class UpdatePackageIndex(PackageIndexer):
             cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
             if not cu.fetchone()[0]:
                 cu.execute('INSERT INTO PackageIndexMark VALUES(0)')
-            cu.execute("SELECT IFNULL(MAX(timestamp), 0) FROM Commits")
+            cu.execute("SELECT COALESCE(MAX(timestamp), 0) FROM Commits")
             newMark = cu.fetchone()[0]
 
             # Clear out Package index if the timestamp in PackageIndexMark == 0
