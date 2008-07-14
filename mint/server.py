@@ -1318,21 +1318,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Get a list of published and unpublished AMIs for this project
         published, unpublished = self.builds.getAMIBuildsForProject(projectId)
 
-        # Set up EC2 connection
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        # If there are any AMI builds, handle them
+        if published or unpublished:
 
-        # all project members, including users, can see published builds
-        for publishedAMIId in published:
-            ec2Wrap.resetLaunchPermissions(publishedAMIId)
-            if writers or readers:
-                ec2Wrap.addLaunchPermissions(publishedAMIId, writers + readers)
+            # Set up EC2 connection
+            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            ec2Wrap = ec2.EC2Wrapper(authToken)
 
-        # only project developers and owners can see unpublished builds
-        for unpublishedAMIId in unpublished:
-            ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
-            if writers:
-                ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+            # all project members, including users, can see published builds
+            for publishedAMIId in published:
+                ec2Wrap.resetLaunchPermissions(publishedAMIId)
+                if writers or readers:
+                    ec2Wrap.addLaunchPermissions(publishedAMIId, writers + readers)
+
+            # only project developers and owners can see unpublished builds
+            for unpublishedAMIId in unpublished:
+                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+                if writers:
+                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
 
         # Remove the anonymous user from the project's repository
         repos = self._getProjectRepo(project)
@@ -1358,20 +1361,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Get a list of published and unpublished AMIs for this project
         published, unpublished = self.builds.getAMIBuildsForProject(projectId)
 
-        # Set up EC2 connection
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        # If there are any AMI builds, handle them
+        if published or unpublished:
 
-        # published builds will be made public
-        for publishedAMIId in published:
-            ec2Wrap.resetLaunchPermissions(publishedAMIId)
-            ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+            # Set up EC2 connection
+            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            ec2Wrap = ec2.EC2Wrapper(authToken)
 
-        # only project developers and owners can see unpublished builds
-        for unpublishedAMIId in unpublished:
-            ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
-            if writers:
-                ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+            # published builds will be made public
+            for publishedAMIId in published:
+                ec2Wrap.resetLaunchPermissions(publishedAMIId)
+                ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+
+            # only project developers and owners can see unpublished builds
+            for unpublishedAMIId in unpublished:
+                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+                if writers:
+                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
 
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
