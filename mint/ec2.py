@@ -259,7 +259,7 @@ class EC2Wrapper(object):
             raise mint_error.EC2Exception(ErrorResponseObject(e))
     
     def addLaunchPermission(self, ec2AMIId, awsAccountId):
-        return self.addLaunchPermissions(self, ec2AMIId, [awsAccountId])
+        return self.addLaunchPermissions(ec2AMIId, [awsAccountId])
 
     def addLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
@@ -271,7 +271,7 @@ class EC2Wrapper(object):
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def removeLaunchPermission(self, ec2AMIId, awsAccountId):
-        return self.removeLaunchPermission(self, ec2AMIId, [awsAccountId])
+        return self.removeLaunchPermissions(ec2AMIId, [awsAccountId])
 
     def removeLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
