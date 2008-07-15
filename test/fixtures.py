@@ -667,12 +667,10 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
@@ -791,12 +789,10 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
@@ -958,12 +954,10 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
