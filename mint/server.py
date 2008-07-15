@@ -5329,7 +5329,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                 newValues['awsAccountNumber'])
         except:
             self.db.rollback()
-            return False
+            raise
         else:
             self.db.commit()
             return True
