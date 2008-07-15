@@ -2477,7 +2477,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        cu = self.db.cursor()
+
+        try:
+            self.db.transaction()
+            self.builds.deleteBuild(buildId, commit=False)
+
+            amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
+            if amiBuild:
+                self.deleteAMI(amiId)
+        except AMIInstanceDoesNotExist:
+            # We do not want to fail this operation in this case.
+            pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+
         for filelist in self.getBuildFilenames(buildId):
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
@@ -2500,8 +2516,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             # ignore permission denied, dir not empty, no such file/dir
                             if e.errno not in (2, 13, 39):
                                 raise
-        self.builds.deleteBuild(buildId)
+
         return True
+
+    @typeCheck(str)
+    @requiresAuth
+    def deleteAMI(self, amiId):
+        """
+        Delete the given amiId from Amazon's S3 service.
+        @param amiId: the id of the ami to delete
+        @type amiId: C{str}
+        @return the ami id deleted
+        @rtype C{str}
+        """
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        s3Wrap = ec2.S3Wrapper(authToken)
+        return s3Wrap.deleteAMI(amiId)
 
     @typeCheck(int, dict)
     @requiresAuth
