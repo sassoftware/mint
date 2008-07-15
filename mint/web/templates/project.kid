@@ -152,7 +152,7 @@
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
                                           (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
-                                          (userlevels.USER, '%ss I Am Watching'%projectText().title())]"
+                                          (userlevels.USER, '%ss I Use'%projectText().title())]"
                  py:strip="True">
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>

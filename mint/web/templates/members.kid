@@ -78,7 +78,7 @@
                         You are currently not involved in this ${projectText().lower()}.
                     </p>
                     <p py:if="userLevel == userlevels.USER">
-                        You are currently watching this ${projectText().lower()}.
+                        You are currently a registered user of this ${projectText().lower()}.
                     </p>
                     <p py:if="userLevel == userlevels.DEVELOPER">
                         You are currently a developer of this ${projectText().lower()}.
@@ -89,10 +89,10 @@
                     <p py:if="not isTrueOwner">Actions:
                         <ul>
                             <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
-                            <a href="${basePath}watch">Watch this ${projectText().lower()}</a>
+                            <a href="${basePath}watch">Register as a user of this ${projectText().lower()}</a>
                             </li>
                             <li py:if="userLevel == userlevels.USER">
-                                <a href="${basePath}unwatch">Stop watching this ${projectText().lower()}</a>
+                                <a href="${basePath}unwatch">Remove your registration from this ${projectText().lower()}</a>
                             </li>
                             <div py:strip="True" py:if="not project.external">
                                 <li py:if="isWriter"><a href="${basePath}resign">Resign from this ${projectText().lower()}</a></li>
@@ -160,13 +160,13 @@
                             <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a>
                         </td>
                     </tr>
-                    <tr><td py:if="not users[userlevels.USER]">No users are watching this ${projectText().lower()}</td></tr>
+                    <tr><td py:if="not users[userlevels.USER]">Nobody has registered as a user of this ${projectText().lower()}</td></tr>
                 </table>
                 </div>
                 <div py:if="not isOwner" py:strip="True">
-                    <p py:if="not users[userlevels.USER]">There are no users watching this ${projectText().lower()}.</p>
-                    <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this ${projectText().lower()}.</p>
-                    <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this ${projectText().lower()}.</p>
+                    <p py:if="not users[userlevels.USER]">Nobody has registered as a user of this ${projectText().lower()}.</p>
+                    <p py:if="len(users[userlevels.USER]) == 1">There is one registered user of this ${projectText().lower()}.</p>
+                    <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} registered users of this ${projectText().lower()}.</p>
                 </div>
                 <div py:if="isWriter">
                     <h3>OpenPGP Signing Keys</h3>
