@@ -114,7 +114,7 @@ class BuildsTable(database.KeyedTable):
         res = cu.fetchall()
         return [x[0] for x in res]
 
-    def deleteBuild(self, buildId):
+    def deleteBuild(self, buildId, commit=True):
         try:
             cu = self.db.cursor()
             cu.execute("UPDATE Builds SET deleted=1 WHERE buildId=?", buildId)
@@ -122,7 +122,8 @@ class BuildsTable(database.KeyedTable):
             self.db.rollback()
             raise
         else:
-            self.db.commit()
+            if commit:
+                self.db.commit()
 
     def buildExists(self, buildId):
         cu = self.db.cursor()

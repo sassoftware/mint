@@ -148,6 +148,8 @@ class SchemaMigrationError(MintError): pass
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    
+class AMIInstanceDoesNotExist(MintError):
+    "The AMI instance does not exist, it may have already been deleted."
 class TroveNotSet(MintError):
     "This build is not associated with a group."
 class UserAlreadyAdmin(MintError): "User is already an administrator."

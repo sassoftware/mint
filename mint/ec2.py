@@ -8,11 +8,14 @@ global _boto_present
 
 try:
     import boto
-    from boto.exception import EC2ResponseError
+    import boto.s3
+    import boto.s3.key
+    from boto.exception import EC2ResponseError, S3ResponseError
     _boto_present = True
 except ImportError:
     _boto_present = False
 
+import xml.dom.minidom
 
 from mint import database
 from mint import mint_error
@@ -198,10 +201,77 @@ class ErrorResponseObject(xmllib.BaseNode):
             # add the error
             self.addError(code, message)
         
+class S3Wrapper(object):
+
+    __slots__ = ('s3conn', 'ec2conn', 'accountId', 'accessKey', 'secretKey')
+
+    def __init__(self, (accountId, accessKey, secretKey)):
+        
+        # quick sanity check to prevent boto death
+        if not accountId or not accessKey or not secretKey:
+            errRespObj = ErrorResponseObject()
+            errRespObj.addError(u'IncompleteCredentials', 
+                                u'Incomplete set of credentials')
+            raise mint_error.EC2Exception(errRespObj)    
+        
+        self.accountId = accountId
+        self.accessKey = accessKey
+        self.secretKey = secretKey
+        self.s3conn = boto.connect_s3(self.accessKey, self.secretKey)
+        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey)
+
+    def deleteAMI(self, amiId):
+        """
+        Deletes an ami id from Amazon S3.
+        @param amiId: the ami id to delete.
+        @type amiId: C{str}
+        @return: the ami id deleted
+        @rtype: C{str}
+        """
+        # Returns a one item list of the amiId we asked for.
+        image = self.ec2conn.get_all_images(image_ids=amiId)
+
+        # It's possible this image has already been deleted, handle that case
+        # gracefully.
+        if not image:
+            raise mint_error.AMIInstanceDoesNotExist()
+        image = image[0]
+
+        # Image location should be of the format:
+        # bucket-name/manifest-xml-file-name.xml
+        manifest_path_bits = image.location.split('/')
+        bucketName = manifest_path_bits[0]
+        keyName = ''.join(manifest_path_bits[1:])
+
+        bucket = self.s3conn.get_bucket(bucketName)
+        key = boto.s3.key.Key(bucket, keyName)
+
+        parts = []
+        try:
+            # Load the contents of the manifest, and read all the part
+            # filenames and save them in parts.
+            manifest_contents = key.get_contents_as_string()
+            document = xml.dom.minidom.parseString(manifest_contents)
+            parts = [x.firstChild.data \
+                     for x in document.getElementsByTagName("filename")]
+
+            # Delete each part.
+            for part in parts:
+                bucket.delete_key(part)
+
+            # Delete the manifest.
+            bucket.delete_key(keyName)
+        except S3ResponseError:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
+
+        # Deregister the AMI, this removes the entry from AWS completely.
+        self.ec2conn.deregister_image(amiId)
+
+        return amiId
 
 class EC2Wrapper(object):
 
-    __slots__ = ( 'ec2conn', 'accountId', 'accessKey', 'secretKey')
+    __slots__ = ('ec2conn', 'accountId', 'accessKey', 'secretKey')
 
     def __init__(self, (accountId, accessKey, secretKey)):
         
@@ -311,3 +381,9 @@ class EC2Wrapper(object):
          except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
+    def deregisterAMI(self, ec2AMIId):
+        try:
+            self.ec2conn.deregister_image(ec2AMIId)
+            return True
+        except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))       
