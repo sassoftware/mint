@@ -7,7 +7,7 @@
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'layout.kid'">
+      py:extends="'catalogLayout.kid'">
     <head>
         <title>${formatTitle('Cloud Catalog')}</title>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/swfobject.js"></script>
