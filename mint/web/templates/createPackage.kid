@@ -12,11 +12,6 @@ import simplejson
     <head>
         <title>${formatTitle('Create Package: %s' % project.getNameForDisplay())}</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
-        <!-- Dialog and dependencies -->
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}/apps/yui/build/container/assets/container.css"/>
-        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo/yahoo-min.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/yahoo-dom-event/yahoo-dom-event.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/yui/build/container/container-min.js" />
     </head>
 
     <body>
@@ -96,9 +91,13 @@ import simplejson
                   <td py:if='versions'>
                     ${versionSelection(dict(name='versionId'), versions, False)}
                   </td>
-                  <td py:if="not versions">
+                  <td py:if="not versions and sessionHandle">
                     ${prodVer} (${namespace})
                     <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
+                  </td>
+                  <td py:if="not versions and not sessionHandle">
+                    ${prodVer} (${namespace})
+                    <input type="hidden" name="versionId" value="${versionId}"/>
                   </td>
                   </tr>
                   <tr>
@@ -122,7 +121,7 @@ import simplejson
             <p>Select your binary archive (rpm, tar archive) from your computer.</p>
 
             <div style="display:none">
-            <div id="upload_progress">
+            <div id="upload_progress" title="File Upload Progress">
                 <div class="bd">
                     <div id="progress_indicator">
                         <p id="upload_progress_percent_complete">0%</p>

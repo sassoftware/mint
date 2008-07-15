@@ -104,28 +104,22 @@ FileUploadForm.prototype =
     displayUploadProgress: function()
     {
         this.disableSubmit();
-        if(! this.progressDialogId)
-        {
-            this.progressDialogId = 'upload_progress';
-        }
-
-        this.progressDialog = new YAHOO.widget.Dialog($(this.progressDialogId).cloneNode(true),
-            {
-                width: '380px', fixedcenter: true, close: false, draggable: false,
-                zindex: 4, modal: true, visible: true
+        if (this.progressDialog !== null)
+            this.progressDialog = jQuery("#upload_progress").dialog({
+                modal: true,
+                width: 475,
+                height: 160,
+                overlay: {
+                    opacity: 0.5,
+                    background: "black"
+                }
             });
-        this.progressDialog.setHeader("File upload progress");
-        var body = $(this.progressDialogId);
-        if (! body)
-        {
-            this.progressDialog.setBody('<div id="' + this.progressDialogId + '">Override this div in your template.</div>');
+        else {
+            this.progressDialog.dialog('open');
         }
-        // This dialog is appended to the element identified this.form_key + "_outerdiv"
-        this.progressDialog.render(this.form_key + "_outerdiv");
         //Attach the cancel handler
-        this.cancel_event = connect('upload_progress_cancel_button', 
-                "onclick", this, 'cancelUpload');
-        this.progressDialog.show();
+        this.cancel_event = connect('upload_progress_cancel_button',
+                  "onclick", this, 'cancelUpload');
     },
 
     resetUploadForm: function()
@@ -134,6 +128,7 @@ FileUploadForm.prototype =
         this.reloadIframes(); //Reset any iframes
 
         this.finishUpload();
+        this.set0();
     },
 
     cancelUploadRequestFinished: function(req)
@@ -165,7 +160,7 @@ FileUploadForm.prototype =
         //Hide the progress dialog, and call the cancel method
         if (this.progressDialog !== null)
         {
-            this.progressDialog.destroy();
+            this.progressDialog.dialog('close');
         }
         // kill the cancel button event
         if (this.cancel_event)
@@ -182,6 +177,17 @@ FileUploadForm.prototype =
         {
             disconnect(this.cancel_event);
         }
+    },
+
+    set0: function()
+    {
+        logDebug("resetting progress bar to 0");
+        var percent = 0;
+        $('progress_indicator_bar').style.width= "" + percent + "%";
+        $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
+        $('upload_progress_wait').innerHTML = 'Please Wait...';
+        $('upload_progress_statistics').style.display='none';
+        $('upload_progress_wait').style.display='block';
     },
 
     set100: function()
