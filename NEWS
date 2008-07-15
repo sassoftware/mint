@@ -45,6 +45,9 @@ Web Front End Changes
   (RBL-3100)
 * Admin users are now allowed to convert public projects to private.
   (RBL-3095)
+* There was a conceptual disconnect between the role "User" and "Watching" a
+  product.  This has been changed so that users now "register for" and "use"
+  products. (RBL-2972)
 
 
 Changes in 4.1.1
