@@ -316,10 +316,11 @@ class SiteHandler(WebHandler):
             self._redirect(nextHop)
 
     def loginFailed(self, auth):
-        c = self.session.make_cookie()
-        c.expires = 0
-        self.req.err_headers_out.add('Set-Cookie', str(c))
-        self.req.err_headers_out.add('Cache-Control',
+        if isinstance(self.session, SqlSession):
+            c = self.session.make_cookie()
+            c.expires = 0
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control',
                                      'no-cache="set-cookie"')
         return self._write('error', shortError = "Login Failed",
                            error = 'You cannot log in because your browser is blocking cookies to this site.')

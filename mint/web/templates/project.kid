@@ -45,7 +45,7 @@
             <li py:if="projectAdmin and cfg.rBuilderOnline" py:attrs="{'class': (lastchunk in ('userlist', 'addGroupForm', 'addPermForm', 'manageGroupForm')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist">Manage Repository Permissions</a></li>
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
-            <li py:attrs="{'class': (lastchunk == 'cloudCatalog') and 'selectedItem' or None}"><a href="cloudCatalog">Cloud Catalog</a></li>
+            <li py:attrs="{'class': (lastchunk == 'cloudCatalog') and 'selectedItem' or None}"><a href="${projectUrl}cloudCatalog">Cloud Catalog</a></li>
             <li py:if="isWriter and cfg.rBuilderOnline"><a href="${projectUrl}downloads">Download Statistics</a></li>
         </ul>
     </div>

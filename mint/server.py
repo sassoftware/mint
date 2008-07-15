@@ -1042,15 +1042,13 @@ class MintServer(object):
             raise users.UserInduction()
     
         try:
-            # TODO: RBL-3062 change these to commit=False once we figure out
-            # what's causing the DatabaseLocked errors. 
-            #self.db.transaction()
+            self.db.transaction()
             if level != userlevels.USER:
                 self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=True)
+                                                      commit=False)
             try:
                 self.projectUsers.new(projectId, userId, level,
-                                      commit=True)
+                                      commit=False)
             except DuplicateItem:
                 project.updateUserLevel(userId, level)
                 # only attempt to modify acl's of local projects.
@@ -1169,10 +1167,8 @@ class MintServer(object):
 
         try:
             project = projects.Project(self, projectId)
-            # RBL-3062 this needs to be changed to commit=False
-            # when we want this to run in a single transaction.
-            # self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=True)
+            self.db.transaction()
+            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
@@ -1311,19 +1307,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
+
+        # Get a list of published and unpublished AMIs for this project
+        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
+
+        # If there are any AMI builds, handle them
+        if published or unpublished:
+
+            # Set up EC2 connection
+            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            ec2Wrap = ec2.EC2Wrapper(authToken)
+
+            # all project members, including users, can see published builds
+            for publishedAMIId in published:
+                ec2Wrap.resetLaunchPermissions(publishedAMIId)
+                if writers or readers:
+                    ec2Wrap.addLaunchPermissions(publishedAMIId, writers + readers)
+
+            # only project developers and owners can see unpublished builds
+            for unpublishedAMIId in unpublished:
+                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+                if writers:
+                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+
+        # Remove the anonymous user from the project's repository
         repos = self._getProjectRepo(project)
         helperfuncs.deleteUserFromRepository(repos, 'anonymous',
             project.getLabel())
 
+        # Hide the project
         self.projects.hide(projectId)
+
         self._generateConaryRcFile()
         return True
-
-    @typeCheck(int, bool)
-    @requiresAdmin
-    @private
-    def setBackupExternal(self, projectId, backupExternal):
-        return self.projects.update(projectId, backupExternal=backupExternal)
 
     @typeCheck(int)
     @private
@@ -1331,7 +1350,31 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
-        
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, _ = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
+
+        # Get a list of published and unpublished AMIs for this project
+        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
+
+        # If there are any AMI builds, handle them
+        if published or unpublished:
+
+            # Set up EC2 connection
+            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            ec2Wrap = ec2.EC2Wrapper(authToken)
+
+            # published builds will be made public
+            for publishedAMIId in published:
+                ec2Wrap.resetLaunchPermissions(publishedAMIId)
+                ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+
+            # only project developers and owners can see unpublished builds
+            for unpublishedAMIId in unpublished:
+                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
+                if writers:
+                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
@@ -1343,7 +1386,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
         return True
-    
+
+    @typeCheck(int, bool)
+    @requiresAdmin
+    @private
+    def setBackupExternal(self, projectId, backupExternal):
+        return self.projects.update(projectId, backupExternal=backupExternal)
+
     @typeCheck(int, bool, bool)
     @requiresAuth
     @private
@@ -1426,9 +1475,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                                projectId)
 
         try:
-            # RBL-3062 uncomment this when we are ready for this to run in a
-            # single transaction.
-            # self.db.transaction()
+            self.db.transaction()
             #update the level on the project
             project = projects.Project(self, projectId)
             user = self.getUser(userId)
@@ -2734,8 +2781,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                    'shouldMirror': int(shouldMirror),
                    }
 
-        result = self.publishedReleases.update(pubReleaseId, **valDict)
-        self.addEC2LaunchPermsForPublish(pubReleaseId) 
+        try:
+            self.db.transaction()
+            result = self.publishedReleases.update(pubReleaseId, commit=False,
+                                                   **valDict)
+            try:
+                self.addEC2LaunchPermsForPublish(pubReleaseId)
+            except EC2NotConfigured, me:
+                # We don't want to fail if this rBuilder is not configured to talk
+                # to EC2.
+                pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            
         return result
 
     @typeCheck(int)
@@ -2791,8 +2852,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                    'publishedBy': None}
 
 
-        result = self.publishedReleases.update(pubReleaseId, **valDict)
-        self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
+        try:
+            self.db.transaction()
+            result = self.publishedReleases.update(pubReleaseId, commit=False,
+                                                   **valDict)
+            try:
+                self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
+            except EC2NotConfigured, me:
+                # We don't want to fail if this rBuilder is not configured to talk
+                # to EC2.
+                pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+
         return result
 
     @typeCheck(int)
@@ -5221,7 +5296,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          awsPublicAccessKeyId=awsPublicAccessKeyId,
                          awsSecretAccessKey=awsSecretAccessKey)
 
-        found, oldAwsAccountNumber = self.userData.getDataValue(userId, 
+        awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
        
         removing = True
@@ -5235,9 +5310,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             removing = False
         
         try:
-            # RBL-3062 need to uncomment the trasaction and change 
-            # to commit=False when the transactions are fixed.
-            # self.db.transaction()
+            self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
                 if removing:
@@ -5245,18 +5318,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 else:
                     val = newValues.get(key, default)
                     self.userData.setDataValue(userId, key, val, dType,
-                            commit=True)
-        except:
-            self.db.rollback()
-            return False
-        else:
-            if found:
+                            commit=False)
+
+            if awsFound:
                 # Remove all old launch permissions
                 self.removeAllEC2LaunchPermissions(userId, oldAwsAccountNumber)
             if not removing:
                 # Add launch permissions
                 self.addAllEC2LaunchPermissions(userId, 
                                                 newValues['awsAccountNumber'])
+        except:
+            self.db.rollback()
+            return False
+        else:
             self.db.commit()
             return True
         
@@ -5656,11 +5730,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if db:
             dbConnection = db
 
+        # Flag to indicate if we created a new self.db and need to force a
+        # call to getTables
+        reloadTables = False
+
         if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
             dbConnection = self.db
+            reloadTables = True
 
         # reopen a dead database
         if self.db.reopen():
@@ -5669,7 +5748,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         genConaryRc = False
         global tables
-        if not tables or alwaysReload:
+        if not tables or alwaysReload or reloadTables:
             tables = getTables(self.db, self.cfg)
             genConaryRc = True
 

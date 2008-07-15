@@ -259,17 +259,25 @@ class EC2Wrapper(object):
             raise mint_error.EC2Exception(ErrorResponseObject(e))
     
     def addLaunchPermission(self, ec2AMIId, awsAccountId):
+        return self.addLaunchPermissions(ec2AMIId, [awsAccountId])
+
+    def addLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
             self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
-                                                 'add', awsAccountId)
+                                                 'add',
+                                                 user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def removeLaunchPermission(self, ec2AMIId, awsAccountId):
+        return self.removeLaunchPermissions(ec2AMIId, [awsAccountId])
+
+    def removeLaunchPermissions(self, ec2AMIId, awsAccountIdList):
         try:
             self.ec2conn.modify_image_attribute(ec2AMIId, 'launchPermission',
-                                                 'remove', awsAccountId)
+                                                 'remove',
+                                                 user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       

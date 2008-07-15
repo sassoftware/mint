@@ -103,7 +103,7 @@ class PublishedReleasesTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("""
             SELECT pr.pubReleaseId,
-                   IFNULL(pr.timePublished,0) != 0 as isPublished,
+                   COALESCE(pr.timePublished,0) != 0 as isPublished,
                    p.hidden as isPrivate,
                    bd.value as amiId,
                    p.projectId as projectId
