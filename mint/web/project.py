@@ -1709,5 +1709,3 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
     def help(self, auth):
         return self._write("help")
 
-    def cloudCatalog(self, auth):
-        return self._write("cloudCatalog")

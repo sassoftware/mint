@@ -1125,6 +1125,11 @@ class SiteHandler(WebHandler):
         util.copyfileobj(self.req, targetF)
         return ''
 
+    def cloudCatalog(self, auth):
+        userCredentials = self.client.getEC2CredentialsForUser(self.auth.userId)
+        hasCredentials = userCredentials.get('awsAccountNumber', None)
+        return self._write("cloudCatalog", hasCredentials = hasCredentials)
+
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')

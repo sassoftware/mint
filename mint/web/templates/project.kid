@@ -45,7 +45,6 @@
             <li py:if="projectAdmin and cfg.rBuilderOnline" py:attrs="{'class': (lastchunk in ('userlist', 'addGroupForm', 'addPermForm', 'manageGroupForm')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist">Manage Repository Permissions</a></li>
             <li py:if="cfg.EnableMailLists" py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">${isOwner and 'Manage' or 'View'} Mailing Lists</a></li>
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
-            <li py:attrs="{'class': (lastchunk == 'cloudCatalog') and 'selectedItem' or None}"><a href="${projectUrl}cloudCatalog">Cloud Catalog</a></li>
             <li py:if="isWriter and cfg.rBuilderOnline"><a href="${projectUrl}downloads">Download Statistics</a></li>
         </ul>
     </div>
@@ -146,8 +145,10 @@
             </ul>
 
             <p  py:if="isRBO()">To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
+            <div id="cloudCatalog"><a href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
+            
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
@@ -168,6 +169,7 @@
                 </div>
             </div>
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new ${projectText().lower()}</strong></a></div>
+            <div id="cloudCatalog"><a href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>

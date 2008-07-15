@@ -865,13 +865,10 @@ div#projectsPane a.signout {
     color: white;
 }
 
-div#projectsPane div#newProject {
-    text-align: center;
-}
-div#projectsPane div#userSettings {
-    text-align: center;
-}
-div#projectsPane div#administer {
+div#projectsPane div#newProject,
+div#projectsPane div#userSettings,
+div#projectsPane div#administer,
+div#projectsPane div#cloudCatalog {
     text-align: center;
 }
 
