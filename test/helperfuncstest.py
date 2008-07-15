@@ -277,7 +277,7 @@ Much like Powdermilk Biscuits[tm]."""
     @testsuite.context("unfriendly")
     def testJavascript(self):
         # whizzyupload.js was validated with jslint
-        whiteList = ['json.js', 'whizzyupload.js']
+        whiteList = ['json.js', 'whizzyupload.js', 'swf_deeplink_history.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
