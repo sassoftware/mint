@@ -93,9 +93,9 @@ class FixtureCache(object):
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
         cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
-        cfg.awsAccountId = '012345678901'
-        cfg.awsPublicKey = 'publicKey'
-        cfg.awsPrivateKey = 'secretKey'
+        cfg.ec2AccountId = '012345678901'
+        cfg.ec2PublicKey = 'publicKey'
+        cfg.ec2PrivateKey = 'secretKey'
 
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
@@ -667,8 +667,8 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
         testCfg.ec2PublicKey   = '1234567890ABCDEFG'
@@ -791,8 +791,8 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
         testCfg.ec2PublicKey   = '1234567890ABCDEFG'
@@ -958,8 +958,8 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
         testCfg.ec2PublicKey   = '1234567890ABCDEFG'

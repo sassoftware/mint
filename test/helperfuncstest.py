@@ -633,16 +633,16 @@ Much like Powdermilk Biscuits[tm]."""
         
         # test with some empty data
         cfg = config.MintConfig()
-        cfg.awsAccountId = 'accountId'
-        cfg.awsPublicKey = ''
-        cfg.awsPrivateKey = ''
+        cfg.ec2AccountId = 'accountId'
+        cfg.ec2PublicKey = ''
+        cfg.ec2PrivateKey = ''
         self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
         
         # test with data
         cfg = config.MintConfig()
-        cfg.awsAccountId = 'accountId'
-        cfg.awsPublicKey = 'awsPublicKey'
-        cfg.awsPrivateKey = 'awsPrivateKey'
+        cfg.ec2AccountId = 'accountId'
+        cfg.ec2PublicKey = 'awsPublicKey'
+        cfg.ec2PrivateKey = 'awsPrivateKey'
         self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
         
 

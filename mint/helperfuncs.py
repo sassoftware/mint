@@ -557,9 +557,9 @@ def buildEC2AuthToken(cfg):
     at = ()
     if cfg:
         # make sure all the values are set
-        if not cfg.awsAccountId or not cfg.awsPublicKey or not cfg.awsPrivateKey:
+        if not cfg.ec2AccountId or not cfg.ec2PublicKey or not cfg.ec2PrivateKey:
             raise mint_error.EC2NotConfigured()
-        at = (cfg.awsAccountId, cfg.awsPublicKey, cfg.awsPrivateKey)
+        at = (cfg.ec2AccountId, cfg.ec2PublicKey, cfg.ec2PrivateKey)
         
     if not at:
         raise mint_error.EC2NotConfigured()

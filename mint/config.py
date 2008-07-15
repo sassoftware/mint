@@ -195,14 +195,11 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    awsAccountId            = (cfgtypes.CfgString, '', "The AWS account id")
-    awsPublicKey            = (cfgtypes.CfgString, '', "The AWS public key")
-    awsPrivateKey           = (cfgtypes.CfgString, '', "The AWS private key")
 
     # AMI configuration data
-    ec2PublicKey            = None
-    ec2PrivateKey           = None
-    ec2AccountId            = None
+    ec2PublicKey            = (cfgtypes.CfgString, '', "The AWS account id")
+    ec2PrivateKey           = (cfgtypes.CfgString, '', "The AWS public key")
+    ec2AccountId            = (cfgtypes.CfgString, '', "The AWS private key")
     ec2S3Bucket             = None
     ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
     ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
