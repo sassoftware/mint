@@ -63,7 +63,7 @@ onload = "javascript:;"
                 </div>
                 <div id="prodLogo" style="margin-top: 14px;">
                     <a href="http://${SITE}">
-                        <img py:if="not cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/catalog-logo.png" alt="rBuilder Logo" />
+                        <img src="${cfg.staticPath}/apps/mint/images/catalog-logo.png" alt="rBuilder catalog" />
                     </a>
                 </div>
             </div>
