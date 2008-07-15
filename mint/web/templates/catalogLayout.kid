@@ -63,7 +63,7 @@ onload = "javascript:;"
                 </div>
                 <div id="prodLogo" style="margin-top: 14px;">
                     <a href="http://${SITE}">
-                        <img src="${cfg.staticPath}/apps/mint/images/catalog-logo.png" alt="rBuilder catalog" />
+                        <img src="${cfg.staticPath}/apps/mint/images/catalog-logo.gif" alt="rBuilder catalog" />
                     </a>
                 </div>
             </div>
