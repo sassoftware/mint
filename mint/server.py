@@ -3444,6 +3444,36 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'amiManifestName,',
                 amiManifestName, data.RDT_STRING)
         self.buildData.removeDataValue(buildId, 'outputToken')
+
+        # Set AMI image permissions for build here
+        from mint.shimclient import ShimMintClient
+        authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
+                                               self.cfg.authPass))
+
+        bld = authclient.getBuild(buildId)
+        project = authclient.getProject(bld.projectId)
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(bld.projectId)
+
+        # Allow the readers to also launch the AMI if its hidden
+        launchers = writers
+        if project.hidden:
+            launchers += readers
+
+        # Set up EC2 connection
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        try:
+            if launchers:
+                ec2Wrap.addLaunchPermissions(amiId, writers + readers)
+        except EC2Exception, e:
+            # This is a really lame way to handle this error, but until the jobslave can
+            # return a status of "built with warnings", then we'll have to go with this.
+            print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
+            sys.stderr.flush()
+
         return True
 
     @typeCheck(int, list, (list, str, int))
