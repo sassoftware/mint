@@ -1486,14 +1486,14 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
-            self._setInfo("You are now watching %s" % self.project.getNameForDisplay())
+            self._setInfo("You are now a registered user of %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @requiresAuth
     def unwatch(self, auth):
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
-            self._setInfo("You are no longer watching %s" % self.project.getNameForDisplay())
+            self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @strFields(comments = '', keepReq = None)
