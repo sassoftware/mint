@@ -51,7 +51,7 @@ def catalogHandler(req, cfg, pathInfo = None):
     client_address = req.connection.remote_addr
     server = type('Server', (object,), {'server_port': req.server.port})
     aReq = handler_apache.ApacheRequest(req)
-    storagePath = os.path.join(cfg.dataPath)
+    storagePath = os.path.join(cfg.dataPath, 'catalog')
     hdlr = handler_apache.ApacheHandler(topLevel, storagePath,
             aReq, client_address, server)
     hdlr.mintCfg = cfg
