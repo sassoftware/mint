@@ -11,7 +11,7 @@ from mint.web.templatesupport import projectText
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Edit Amazon EC2 Settings: %s'%auth.fullName)}</title>
+        <title>${formatTitle('Edit Amazon Web Services(TM) Settings: %s'%auth.fullName)}</title>
         <?python
             from mint import data
             from mint.web.templatesupport import projectText
@@ -19,7 +19,7 @@ from mint.web.templatesupport import projectText
     </head>
     <body>
         <div id="layout">
-            <h2>Edit Amazon EC2 Settings</h2>
+            <h2>Edit Amazon Web Services&trade; Settings</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="processCloudSettings">
 
