@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import os
+
 from mod_python import Cookie
 from conary.lib import coveragehook
 from mint import maintenance
@@ -49,7 +51,9 @@ def catalogHandler(req, cfg, pathInfo = None):
     client_address = req.connection.remote_addr
     server = type('Server', (object,), {'server_port': req.server.port})
     aReq = handler_apache.ApacheRequest(req)
-    hdlr = handler_apache.ApacheHandler(topLevel, aReq, client_address, server)
+    storagePath = os.path.join(cfg.dataPath)
+    hdlr = handler_apache.ApacheHandler(topLevel, storagePath,
+            aReq, client_address, server)
     hdlr.mintCfg = cfg
 
     auth = tuple(getAuthFromSession(req, cfg)[:2])
