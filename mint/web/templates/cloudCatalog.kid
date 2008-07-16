@@ -27,8 +27,8 @@
     <body>
         <div id="layout">
             <div py:if="hasCredentials" id="cloudCatalog">
-                rBuilder Catalog for EC2&trade; requires the Adobe Flash Player.
-                    <a href="http://www.adobe.com/go/getflash/">Get Flash.</a>
+                rBuilder Catalog for EC2&trade; requires the Adobe&reg; Flash&reg; Player.
+                    <a href="http://www.adobe.com/go/getflash/">Get Adobe&reg; Flash&reg; Player.</a>
             </div>
             <div py:if="not hasCredentials" style="width: 100%; height: 400px; text-align: center">
                  <h1>Before You Begin...</h1>
