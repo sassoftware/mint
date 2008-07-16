@@ -21,7 +21,7 @@
                 };
             var attributes = {};
             swfobject.embedSWF(staticPath + '/apps/catalog-client/iClouds.swf', 'cloudCatalog',
-                '950', '480', '9.0.28', flashvars, params, attributes);
+                '950', '550', '9.0.28', flashvars, params, attributes);
         </script>
     </head>
     <body>
