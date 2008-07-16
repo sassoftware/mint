@@ -48,6 +48,7 @@ Web Front End Changes
 * There was a conceptual disconnect between the role "User" and "Watching" a
   product.  This has been changed so that users now "register for" and "use"
   products. (RBL-2972)
+* EC2 credentials will now be stripped of whitespace. (RBL-3119)
 
 
 Changes in 4.1.1

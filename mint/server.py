@@ -5340,9 +5340,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
         
-        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
-                         awsPublicAccessKeyId=awsPublicAccessKeyId,
-                         awsSecretAccessKey=awsSecretAccessKey)
+        # cleanup the data
+        accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
+        publicKey = awsPublicAccessKeyId.strip().replace(' ','')
+        secretKey = awsSecretAccessKey.strip().replace(' ','')
+        
+        newValues = dict(awsAccountNumber=accountNum,
+                         awsPublicAccessKeyId=publicKey,
+                         awsSecretAccessKey=secretKey)
 
         awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
