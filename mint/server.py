@@ -1038,9 +1038,6 @@ class MintServer(object):
             else:
                 username = r[0]
 
-        if (self.auth.userId != userId) and level == userlevels.USER:
-            raise users.UserInduction()
-    
         try:
             self.db.transaction()
             if level != userlevels.USER:
@@ -1155,8 +1152,6 @@ class MintServer(object):
             userLevel = self.getUserLevel(userId, projectId)
         except ItemNotFound:
             raise netclient.UserNotFound()
-        if (self.auth.userId != userId) and userLevel == userlevels.USER:
-            raise users.UserInduction()
 
         # Set any EC2 launch permissions if the user has aws credentials set.
         awsFound, awsAccountNumber = self.userData.getDataValue(userId,
@@ -1461,8 +1456,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def setUserLevel(self, userId, projectId, level):
         self._filterProjectAccess(projectId)
-        if (self.auth.userId != userId) and (level == userlevels.USER):
-            raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
             raise users.LastOwner

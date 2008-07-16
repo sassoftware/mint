@@ -1462,10 +1462,12 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
+        hidden = self.project.hidden
         return self._write("members",
                 userHasReq = self.client.userHasRequested(self.project.getId(),
                     auth.userId),
-                reqList = reqList)
+                reqList = reqList,
+                hidden = hidden)
 
     @requiresAuth
     def adopt(self, auth):
