@@ -89,25 +89,7 @@ onload = "javascript:;"
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
             <div id="layout" py:replace="item[:]" />
-            <div id="footer">
-                <div>
-                    <span id="topOfPage"><a href="#top">Top of Page</a></span>
-                    <ul class="footerLinks">
-                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
-                        <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li py:if="cfg.legaleseLink"><a href="${cfg.legaleseLink}">Legal</a></li>
-                        <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
-                        <li><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} User Guide</a></li>
-                        <li py:if="auth.admin"><a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">rBuilder ${constants.mintVersion} Administration Guide</a></li>
-                    </ul>
-                </div>
-                <div id="bottomText">
-                    <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
-                    <span id="tagline">rPath. The Software Appliance Company.</span>
-                </div>
-                <!-- ${cfg.productName} version ${constants.fullVersion} -->
-                <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
-            </div>
+            ${layoutFooter()}
         </div>
         <div py:if="cfg.googleAnalyticsTracker" py:strip="True">
 <script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
