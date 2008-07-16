@@ -3486,18 +3486,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Get the list of AWSAccountNumbers for the projects members
         writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(bld.projectId)
 
-        # Allow the readers to also launch the AMI if its hidden
-        launchers = writers
-        if project.hidden:
-            launchers += readers
-
         # Set up EC2 connection
         authToken = helperfuncs.buildEC2AuthToken(self.cfg)
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         try:
-            if launchers:
-                ec2Wrap.addLaunchPermissions(amiId, writers + readers)
+            if writers:
+                ec2Wrap.addLaunchPermissions(amiId, writers)
         except EC2Exception, e:
             # This is a really lame way to handle this error, but until the jobslave can
             # return a status of "built with warnings", then we'll have to go with this.
