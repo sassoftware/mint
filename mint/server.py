@@ -5434,7 +5434,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.builds.getAllAMIBuilds(self.auth.userId,
                 not self.auth.admin)
 
-
     @typeCheck(int)
     @requiresAuth
     def getAMIBuildsForUser(self, userId):
@@ -5744,6 +5743,46 @@ If you would not like to be %s %s of this project, you may resign from this proj
         amiIds = self._getAllAMIIdsForPermChange(userId)
         # Save only those where it's the productId we want.
         return [ami[0] for ami in amiIds if ami[1] == productId]
+
+    @requiresAuth
+    def getAllGlobusBuilds(self):
+        """
+        Returns a list of all of the Globus compatible images that this
+        rBuilder manages. Globus images are merely raw filesystem images
+        with a xen domU flavor. If the requesting user is an admin, the
+        user will be able to see all Globus images created for all
+        projects regardless of their visibility. Otherwise, the user
+        will only see Globus images for projects that they are able to
+        see (i.e. Globus images created in hidden projects of which the
+        user is not a developer or owner will remain hidden).
+        @returns A dictionary of dictionaries, keyed by buildId,
+          with the following members:
+          - productName: the name of the product containing this build
+          - projectId: the id of the project (product) containing this build
+          - productDescription: the description of the product containing
+              this build
+          - buildId: the id of the build that created the Globus image
+          - buildName: the name of the build
+          - buildDescription: the description of the build, if given
+          - createdBy: the rBuilder user name of the person who
+              initiated the build (if known), otherwise returns
+              'Unknown' if we don't know (in the case of builds
+              created before RBL-3076 was fixed)
+          - awsAccountNumber: unused. always 'Unknown'
+          - role: the role of the user who created the build with
+              respoect to the containing product as a meatstring, e.g.
+              'Product User', 'Product Owner', 'Product Developer',
+              or '' (in the case where a user is not affiliated with
+              the product, or the relationship is unknown)
+          - isPrivate: 1 if the containing project is private (hidden),
+              0 otherwise
+          - isPublished: 1 if the build is published, 0 if not
+        @rtype: C{dict} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if user is not logged in
+        """
+        return self.builds.getAllGlobusBuilds(self.auth.userId,
+                not self.auth.admin)
+
 
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
