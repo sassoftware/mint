@@ -214,13 +214,6 @@ class AccountTest(fixtures.FixturedUnitTest):
             except DuplicateItem:
                 pass
 
-            # Try to demote developer to user
-            try:
-                ownerProject.updateUserLevel(develId, userlevels.USER)
-                self.fail("Project allowed demotion from developer to user")
-            except UserInduction:
-                pass
-
             ## Now that there is a developer ...
 
             # Make sure owner is still the only owner
@@ -257,20 +250,8 @@ class AccountTest(fixtures.FixturedUnitTest):
             except UserNotFound:
                 pass
 
-            # Try to force user to watch the project
-            try:
-                ownerProject.addMemberById(userId, userlevels.USER)
-                self.fail('Owner inducted a user')
-            except UserInduction:
-                pass
-
-            # Try to force user to stop watching the project
+            # Add back the user
             userProject.addMemberById(userId, userlevels.USER)
-            try:
-                ownerProject.delMemberById(userId)
-                self.fail('owner ejected a reader')
-            except UserInduction:
-                pass
 
             ownerProject.delMemberById(develId)
 
