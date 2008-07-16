@@ -32,8 +32,8 @@
             </div>
             <div py:if="not hasCredentials" style="width: 100%; height: 400px; text-align: center">
                  <h1>Before You Begin...</h1>
-                 <p>rBuilder Catalog for EC2 requires that your user account has valid
-                    credentials for Amazon Web Services.</p>
+                 <p>rBuilder Catalog for EC2&trade; requires that your user account has valid
+                    credentials for Amazon Web Services&trade;.</p>
                 <p>Please <a href="http://${SITE}cloudSettings">click here to setup your credentials</a>.</p>
                 <p>Alternatively, you may <a href="http://${SITE}">return to ${cfg.productName}</a>.</p>
             </div>
