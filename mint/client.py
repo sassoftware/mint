@@ -919,8 +919,8 @@ class MintClient:
         return self.server.removeAllEC2LaunchPermissions(userId,
                                                       awsAccountNumber)
 
-    def getAllGlobusBuilds(self):
-        return self.server.getAllGlobusBuilds()
+    def getAllWorkspacesBuilds(self):
+        return self.server.getAllWorkspacesBuilds()
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

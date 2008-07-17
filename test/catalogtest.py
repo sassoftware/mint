@@ -56,20 +56,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertEquals(page.body,
                 '<fault code="400">Cloud credentials are not set in rBuilder</fault>')
 
-    def testEnumerateNoGlobusImages(self):
+    def testEnumerateNoWorkspacesImages(self):
+        # we don't need special remote credentials to see rBuilder images
         client, userId = self.quickMintUser('foouser', 'foopass')
-        client.setEC2CredentialsForUser(userId, 'testAccountNumber',
-                'testPublicKey', 'testSecretAccessKey', True)
-
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/catalog/clouds/globus/images?_method=GET', ok_codes = [400])
-        import epdb; epdb.st()
+        page = self.fetch('/catalog/clouds/workspaces/images?_method=GET')
         self.assertEquals(page.headers['content-type'], 'application/xml')
-        self.assertEquals(page.body,
-                '<fault code="400">Cloud credentials are not set in rBuilder</fault>')
-
-
+        self.assertEquals(page.body, "<?xml version='1.0' encoding='UTF-8'?>\n<images/>\n")
 
 
 if __name__ == "__main__":

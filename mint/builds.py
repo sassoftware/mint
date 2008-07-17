@@ -224,7 +224,7 @@ class BuildsTable(database.KeyedTable):
                 unpublihsed.append(res[1])
         return published, unpublished
 
-    def getAllGlobusBuilds(self, requestingUserId, limitToUserId=False):
+    def getAllWorkspacesBuilds(self, requestingUserId, limitToUserId=False):
 
         cu = self.db.cursor()
 

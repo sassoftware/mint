@@ -12,11 +12,11 @@ from mint import buildtypes
 from mint.data import RDT_BOOL
 
 
-class GlobusTest(fixtures.FixturedUnitTest):
+class WorkspacesTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
-    def testGetAllGlobusBuilds(self, db, data):
+    def testGetAllWorkspacesBuilds(self, db, data):
         client = self.getClient("admin")
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [])
         cu = db.cursor()
         buildId = data['buildId']
@@ -25,11 +25,11 @@ class GlobusTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [])
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [{'productDescription': '',
                                             'buildId': 1,
                                             'projectId': 1,
@@ -42,7 +42,7 @@ class GlobusTest(fixtures.FixturedUnitTest):
                                             'buildName': 'Test Build'}])
 
         client = self.getClient("owner")
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [{'productDescription': '',
                                             'buildId': 1,
                                             'projectId': 1,
@@ -63,15 +63,15 @@ class GlobusTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [])
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         db.commit()
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.failIf(len(buildList) != 1)
         client = self.getClient('nobody')
-        buildList = client.getAllGlobusBuilds()
+        buildList = client.getAllWorkspacesBuilds()
         self.assertEquals(buildList, [])
 
 

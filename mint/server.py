@@ -5750,15 +5750,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return [ami[0] for ami in amiIds if ami[1] == productId]
 
     @requiresAuth
-    def getAllGlobusBuilds(self):
+    def getAllWorkspacesBuilds(self):
         """
-        Returns a list of all of the Globus compatible images that this
-        rBuilder manages. Globus images are merely raw filesystem images
+        Returns a list of all of the Workspaces compatible images that this
+        rBuilder manages. Workspaces images are merely raw filesystem images
         with a xen domU flavor. If the requesting user is an admin, the
-        user will be able to see all Globus images created for all
+        user will be able to see all Workspaces images created for all
         projects regardless of their visibility. Otherwise, the user
-        will only see Globus images for projects that they are able to
-        see (i.e. Globus images created in hidden projects of which the
+        will only see Workspaces images for projects that they are able to
+        see (i.e. Workspaces images created in hidden projects of which the
         user is not a developer or owner will remain hidden).
         @returns A dictionary of dictionaries, keyed by buildId,
           with the following members:
@@ -5766,7 +5766,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
           - projectId: the id of the project (product) containing this build
           - productDescription: the description of the product containing
               this build
-          - buildId: the id of the build that created the Globus image
+          - buildId: the id of the build that created the Workspaces image
           - buildName: the name of the build
           - buildDescription: the description of the build, if given
           - createdBy: the rBuilder user name of the person who
@@ -5785,7 +5785,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        return self.builds.getAllGlobusBuilds(self.auth.userId,
+        return self.builds.getAllWorkspacesBuilds(self.auth.userId,
                 not self.auth.admin)
 
 
