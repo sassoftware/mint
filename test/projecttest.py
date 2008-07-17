@@ -364,7 +364,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient.getProject(data['projectId'])
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
+
+        # This no longer raises ItemNotFound because normal users can browse
+        # private products they are a member of.
+        watcherClient.getProject(data['projectId'])
+
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
@@ -406,11 +410,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
                           data['projectId'], data['owner'])
         self.assertRaises(ItemNotFound, nobodyClient.server.onlyOwner,
                           data['projectId'], data['owner'])
-        self.assertRaises(ItemNotFound,
-                          watcherClient.server.delMember, data['projectId'],
-                          data['user'], False)
 
-        ownerClient.server.getUserLevel(data['user'], data['projectId'])
+        # This no longer raises ItemNotFound, a user can be deleted from a
+        # private product they are a member of.
+        watcherClient.server.delMember(data['projectId'], data['user'], False)
+
+        self.assertRaises(ItemNotFound, ownerClient.server.getUserLevel, data['user'], 
+                          data['projectId'])
 
         adminClient.unhideProject(data['projectId'])
 

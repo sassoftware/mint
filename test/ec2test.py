@@ -644,6 +644,18 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': '', 
                                         'awsSecretAccessKey': '', 
                                         'awsAccountNumber': ''})
+            
+            # add some credentials with a dash and whitespace
+            self.addAllLaunchPermsCalled = False
+            client.setEC2CredentialsForUser(data['adminId'], 'id-fo o ', 
+                                            'publicKey foo',
+                                            'secr foo etKey', False)
+            self.assertTrue(self.addAllLaunchPermsCalled)
+            ec2cred = client.getEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKeyfoo', 
+                                        'awsSecretAccessKey': 'secrfooetKey', 
+                                        'awsAccountNumber': 'idfoo'})
+            
         finally:
             client.server._server.validateEC2Credentials = \
                 oldValidateAMICredentials

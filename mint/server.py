@@ -532,13 +532,17 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
+        # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
+        # Allow anyone to see public projects
         if not self.projects.isHidden(projectId):
             return
+        # Project is hidden, so user must be a member to see it.
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.WRITERS):
+            self.auth.userId) in userlevels.LEVELS):
                 return
+        # All the above checks must have failed, raise exception.
         raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
@@ -1163,33 +1167,35 @@ class MintServer(object):
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
-
             label = versions.Label(project.getLabel())
-            if not project.external:
-                helperfuncs.deleteUserFromRepository(repos, 
-                                user['username'], label)
-                try:
-                    # TODO: This will go away when using role-based permissions
-                    # instead of one-role-per-user. Without this, admin users'
-                    # roles would not be deleted due to CNY-2775
-                    repos.deleteRole(label, user['username'])
-                except RoleNotFound:
-                    # Conary deleted the (unprivileged) role for us
-                    pass
+
+            if notify:
+                self._notifyUser('Removed', user, project)
+
+            self.projectUsers.delete(projectId, userId, commit=False)
+
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
 
-        if notify:
-            self._notifyUser('Removed', user, project)
+        if not project.external:
+            helperfuncs.deleteUserFromRepository(repos, 
+                            user['username'], label)
+            try:
+                # TODO: This will go away when using role-based permissions
+                # instead of one-role-per-user. Without this, admin users'
+                # roles would not be deleted due to CNY-2775
+                repos.deleteRole(label, user['username'])
+            except RoleNotFound:
+                # Conary deleted the (unprivileged) role for us
+                pass
 
         return True
 
@@ -3823,26 +3829,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(unicode)
     @requiresAuth
     def getJobStatus(self, uuid):
-
+        """
+        Note: this is only used for group builder cooks,
+        and needs to be deprecated.
+        """
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        buildId = helperfuncs.getBuildIdFromUuid(uuid)
-        buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType']
+        mc = self._getMcpClient()
 
-        if buildtype != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
-
-            try:
-                status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
-                status, message = \
-                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
-        else:
-            # status is always finished since no build is actually done
-            status, message = jobstatus.FINISHED, \
-                jobstatus.statusNames[jobstatus.FINISHED]
+        try:
+            status, message = mc.jobStatus(uuid)
+        except mcp_error.UnknownJob:
+            status, message = \
+                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
         return { 'status' : status, 'message' : message }
 
@@ -5340,9 +5340,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
         
-        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
-                         awsPublicAccessKeyId=awsPublicAccessKeyId,
-                         awsSecretAccessKey=awsSecretAccessKey)
+        # cleanup the data
+        accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
+        publicKey = awsPublicAccessKeyId.strip().replace(' ','')
+        secretKey = awsSecretAccessKey.strip().replace(' ','')
+        
+        newValues = dict(awsAccountNumber=accountNum,
+                         awsPublicAccessKeyId=publicKey,
+                         awsSecretAccessKey=secretKey)
 
         awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
