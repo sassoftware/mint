@@ -30,6 +30,9 @@
                 rBuilder Catalog for EC2&trade; requires the Adobe&reg; Flash&reg; Player.
                     <a target="_blank" href="http://www.adobe.com/go/getflash/">Get Adobe&reg; Flash&reg; Player.</a>
             </div>
+            <p>
+                <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder_Online:Catalog_EC2" target="_blank">Read more about the rBuilder Catalog for EC2&trade;</a>
+            </p>
         </div>
     </body>
 </html>
