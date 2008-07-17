@@ -364,7 +364,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient.getProject(data['projectId'])
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
+
+        # This no longer raises ItemNotFound because normal users can browse
+        # private products they are a member of.
+        watcherClient.getProject(data['projectId'])
+
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
