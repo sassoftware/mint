@@ -49,6 +49,8 @@ Web Front End Changes
   product.  This has been changed so that users now "register for" and "use"
   products. (RBL-2972)
 * EC2 credentials will now be stripped of whitespace. (RBL-3119)
+* Fixed a bug where the arrows indicating required fields were not present
+  on the "Edit Amazon Web Services Settings" page. (RBL-3126)
 
 
 Changes in 4.1.1
