@@ -46,7 +46,9 @@ def catalogHandler(req, cfg, pathInfo = None):
 
     # the leading portion of the URI in an rBuilder context. catalog-service
     # string substitutes, so leading and trailing slashes aren't needed.
-    topLevel = 'catalog'
+    topLevel = os.path.join(cfg.basePath, 'catalog')
+    if topLevel.startswith('/'):
+        topLevel = topLevel[1:]
 
     client_address = req.connection.remote_addr
     server = type('Server', (object,), {'server_port': req.server.port})

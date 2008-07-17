@@ -451,7 +451,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
         self.assertEquals(len(uploadLines), 2)
         self.assertEquals(len(h3eadings), 1)
-        self.assertEquals(h3eadings[0], '<h3>Product Version vs1</h3>')
+        self.assertEquals(h3eadings[0], '<h3>Product Version vs1 (ns1)</h3>')
 
     def _extractPackageListLines(self, page):
         #Extract all lines containing "newUpload"

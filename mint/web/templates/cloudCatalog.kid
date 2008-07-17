@@ -12,7 +12,7 @@
         <title>${formatTitle('rBuilder Catalog for EC2(TM)')}</title>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/swfobject.js"></script>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/swf_deeplink_history.js"></script>
-        <script py:if="hasCredentials" type="text/javascript">
+        <script type="text/javascript">
             var flashvars = {};
             var params = {
                 'menu': false,
@@ -21,22 +21,18 @@
                 };
             var attributes = {};
             swfobject.embedSWF(staticPath + '/apps/catalog-client/iClouds.swf', 'cloudCatalog',
-                '950', '480', '9.0.28', flashvars, params, attributes);
+                '950', '550', '9.0.28', flashvars, params, attributes);
         </script>
     </head>
     <body>
         <div id="layout">
-            <div py:if="hasCredentials" id="cloudCatalog">
+            <div id="cloudCatalog">
                 rBuilder Catalog for EC2&trade; requires the Adobe&reg; Flash&reg; Player.
-                    <a href="http://www.adobe.com/go/getflash/">Get Adobe&reg; Flash&reg; Player.</a>
+                    <a target="_blank" href="http://www.adobe.com/go/getflash/">Get Adobe&reg; Flash&reg; Player.</a>
             </div>
-            <div py:if="not hasCredentials" style="width: 100%; height: 400px; text-align: center">
-                 <h1>Before You Begin...</h1>
-                 <p>rBuilder Catalog for EC2&trade; requires that your user account has valid
-                    credentials for Amazon Web Services&trade;.</p>
-                <p>Please <a href="http://${SITE}cloudSettings">click here to setup your credentials</a>.</p>
-                <p>Alternatively, you may <a href="http://${SITE}">return to ${cfg.productName}</a>.</p>
-            </div>
+            <p>
+                <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder_Online:Catalog_EC2" target="_blank">Read more about the rBuilder Catalog for EC2&trade;</a>
+            </p>
         </div>
     </body>
 </html>

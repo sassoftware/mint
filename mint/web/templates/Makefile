@@ -16,6 +16,7 @@ kid_files = \
 	createPackage.kid	\
 	createPackageInterview.kid \
 	cloudCatalog.kid	\
+	cloudCatalogNoCredentials.kid	\
 	cloudSettings.kid	\
 	confirmEmail.kid	\
 	confirmPublish.kid	\
