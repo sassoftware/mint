@@ -1496,7 +1496,10 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
             self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
-        self._predirect("members")
+        if self.project.hidden:
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._predirect("members")
 
     @strFields(comments = '', keepReq = None)
     @requiresAuth

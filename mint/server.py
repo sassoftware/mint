@@ -1167,14 +1167,13 @@ class MintServer(object):
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
-
             label = versions.Label(project.getLabel())
+
             if not project.external:
                 helperfuncs.deleteUserFromRepository(repos, 
                                 user['username'], label)
@@ -1186,14 +1185,17 @@ class MintServer(object):
                 except RoleNotFound:
                     # Conary deleted the (unprivileged) role for us
                     pass
+
+            if notify:
+                self._notifyUser('Removed', user, project)
+
+            self.projectUsers.delete(projectId, userId, commit=False)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
 
-        if notify:
-            self._notifyUser('Removed', user, project)
 
         return True
 
