@@ -532,13 +532,17 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
+        # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
+        # Allow anyone to see public projects
         if not self.projects.isHidden(projectId):
             return
+        # Project is hidden, so user must be a member to see it.
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.WRITERS):
+            self.auth.userId) in userlevels.LEVELS):
                 return
+        # All the above checks must have failed, raise exception.
         raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
