@@ -1174,28 +1174,28 @@ class MintServer(object):
             user = self.getUser(userId)
             label = versions.Label(project.getLabel())
 
-            if not project.external:
-                helperfuncs.deleteUserFromRepository(repos, 
-                                user['username'], label)
-                try:
-                    # TODO: This will go away when using role-based permissions
-                    # instead of one-role-per-user. Without this, admin users'
-                    # roles would not be deleted due to CNY-2775
-                    repos.deleteRole(label, user['username'])
-                except RoleNotFound:
-                    # Conary deleted the (unprivileged) role for us
-                    pass
-
             if notify:
                 self._notifyUser('Removed', user, project)
 
             self.projectUsers.delete(projectId, userId, commit=False)
+
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
 
+        if not project.external:
+            helperfuncs.deleteUserFromRepository(repos, 
+                            user['username'], label)
+            try:
+                # TODO: This will go away when using role-based permissions
+                # instead of one-role-per-user. Without this, admin users'
+                # roles would not be deleted due to CNY-2775
+                repos.deleteRole(label, user['username'])
+            except RoleNotFound:
+                # Conary deleted the (unprivileged) role for us
+                pass
 
         return True
 

@@ -249,7 +249,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
                  'developer': (False, PermissionDenied),
-                 'user': (False, ItemNotFound),
+                 'user': (False, PermissionDenied),
                  'nobody': (False, ItemNotFound),
                  'anonymous': (False, PermissionDenied) }
 
