@@ -3823,26 +3823,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(unicode)
     @requiresAuth
     def getJobStatus(self, uuid):
-
+        """
+        Note: this is only used for group builder cooks,
+        and needs to be deprecated.
+        """
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        buildId = helperfuncs.getBuildIdFromUuid(uuid)
-        buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType']
+        mc = self._getMcpClient()
 
-        if buildtype != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
-
-            try:
-                status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
-                status, message = \
-                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
-        else:
-            # status is always finished since no build is actually done
-            status, message = jobstatus.FINISHED, \
-                jobstatus.statusNames[jobstatus.FINISHED]
+        try:
+            status, message = mc.jobStatus(uuid)
+        except mcp_error.UnknownJob:
+            status, message = \
+                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
         return { 'status' : status, 'message' : message }
 
