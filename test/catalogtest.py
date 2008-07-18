@@ -32,6 +32,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                         (expectedRedirect, redirectUrl))
 
     def testGetImagesNoCred(self):
+        raise testsuite.SkipTestException("Skipped since the kid template is delivered by catalog-client now")
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
@@ -41,6 +42,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 '<?xml version="1.0" encoding="UTF-8"?>\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
 
     def testGetImagesNoSession(self):
+        raise testsuite.SkipTestException("Skipped since the kid template is delivered by catalog-client now")
         page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [403])
 
     def testEnumerateNoImages(self):
