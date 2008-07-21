@@ -44,13 +44,14 @@ from mint.web.templatesupport import projectText
 
                 ${downloadsMenu(latestBuildsWithFiles)}
 
-                <div py:if="auth.admin" py:strip="True">
+                <div py:if="isWriter or isReader" py:strip="True">
 
                     <h2>${projectText().title()} Status</h2>
 
                     <p>${projectText().title()} was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="vmtnId">This ${projectText().lower()} is listed on the <a href="http://www.vmware.com/vmtn/appliances/directory/${vmtnId}">VMware(R) Virtual Appliance Marketplace</a></p>
-                    <p py:if="project.hidden">This ${projectText().lower()} is hidden.</p>
+                    <p py:if="project.hidden">This a private ${projectText().lower()}.</p>
+                    <p py:if="not project.hidden">This a public ${projectText().lower()}.</p>
                     <p py:if="project.external and not auth.admin">This ${projectText().lower()} is externally managed.</p>
                     <p py:if="not (projectCommits or project.external)">This ${projectText().lower()} is considered to be a fledgling
                         (i.e. no software has been committed to its repository).</p>
@@ -63,29 +64,24 @@ from mint.web.templatesupport import projectText
                         <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
                         <li py:if="versions and not external">
                             Edit ${projectText().lower()} version
-                            <select py:attrs="{'id': 'version', 'name': 'version', 'class': 'field'}" onchange="editVersionRedirect('${basePath}', this.options[this.selectedIndex].value);">
-                                <option py:if="versions" py:content="'--'" value="-1" selected="selected"/>
-                                <option py:for="ver in versions" py:content="ver[2]" value="${ver[0]}"/>
-                            </select>
+                            <?python
+                            d = {'id':'version', 'name':'version', 'class':'field', 'onchange':"editVersionRedirect('" + basePath + "', this.options[this.selectedIndex].value);"}
+                            ?>
+                            ${versionSelection(d, versions, True)}
                         </li>
                     </ul>
                 </div>
-
-                <div py:if="auth.admin" py:strip="True">
-                    <h2>Administrative Options</h2>
-
-                    <p py:if="project.external">This ${projectText().lower()} is externally managed and cannot be administered from this interface.</p>
-                    <form py:if="not project.external" action="${basePath}processProjectAction" method="post">
-                        <label for="projectAdminOptions">Choose an action:&nbsp;</label>
-                        <select id="projectAdminOptions" name="operation">
-                            <option value="project_noop" selected="selected">--</option>
-                            <option py:if="not project.hidden" value="project_hide">Hide ${projectText().title()}</option>
-                            <option py:if="project.hidden" value="project_unhide">Unhide ${projectText().title()}</option>
-                        </select>
-
-                        <button id="projectAdminSubmitButton" type="submit">Go</button>
-                        <input type="hidden" value="${project.getId()}" name="projectId" />
-                    </form>
+                <div py:if="isWriter" py:strip="True">
+                    <h2>Add ${projectText().title()} Contents</h2>
+                    <ul>
+                        <li>Create a <a href="${basePath}newBuild">new image</a></li>
+                        <li py:if="isOwner">Create a <a href="${basePath}newRelease">new release</a></li>
+                        <li>Create a <a href="${basePath}newPackage">new package</a></li>
+                    </ul>
+                    <h2>Maintain ${projectText().title()} Contents</h2>
+                    <ul>
+                        <li>Maintain <a href="${basePath}packageCreatorPackages">packages</a></li>
+                    </ul>
                 </div>
 
                 <p class="help" py:if="not (projectCommits or project.external) and cfg.hideFledgling and not auth.admin">

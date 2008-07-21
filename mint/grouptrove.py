@@ -54,7 +54,7 @@ class GroupTroveTable(database.KeyedTable):
             raise GroupTroveVersionError
 
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(MAX(groupTroveId), 0) + 1 AS groupTroveId FROM GroupTroves")
+        cu.execute("SELECT COALESCE(MAX(groupTroveId), 0) + 1 AS groupTroveId FROM GroupTroves")
         groupTroveId = cu.fetchone()[0]
         timeStamp = time.time()
         self.new(groupTroveId = groupTroveId,
@@ -169,7 +169,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         if cu.fetchone()[0] > 0:
             raise DuplicateItem
 
-        cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
+        cu.execute("SELECT COALESCE(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
 
         groupTroveItemId = cu.fetchone()[0]
         self.new(groupTroveItemId = groupTroveItemId,

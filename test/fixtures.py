@@ -26,6 +26,7 @@ from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
+from mint.data import RDT_STRING
 
 from conary import dbstore
 from conary.deps import deps
@@ -92,6 +93,9 @@ class FixtureCache(object):
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
         cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
+        cfg.ec2AccountId = '012345678901'
+        cfg.ec2PublicKey = 'publicKey'
+        cfg.ec2PrivateKey = 'secretKey'
 
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
@@ -144,7 +148,7 @@ class FixtureCache(object):
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
-                cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
                                  FROM UserGroups""")
                 groupId = cu.fetchone()[0]
                 cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
@@ -300,9 +304,9 @@ class FixtureCache(object):
         imagelessRelease.save()
 
         # create 2 product versions in the project
-        versionId = client.addProductVersion(projectId, 'FooV1',
+        versionId = client.addProductVersion(projectId, 'ns', 'FooV1',
                 'FooV1Description')
-        versionId2 = client.addProductVersion(projectId, 'FooV2',
+        versionId2 = client.addProductVersion(projectId, 'ns2', 'FooV2',
                 'FooV2Description')
 
         # create a group trove for the "foo" project
@@ -455,15 +459,190 @@ class FixtureCache(object):
     def fixtureEC2(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
-        adminId = self.createUser(cfg, db, username = 'admin', isAdmin = True)
-        client = shimclient.ShimMintClient(cfg, ('admin', 'adminpass'))
+        adminId = self.createUser(cfg, db,
+                username = 'admin', isAdmin = True)
+
+        developerId = self.createUser(cfg, db,
+                username = 'developer', isAdmin = False)
+
+        someOtherDeveloperId = self.createUser(cfg, db,
+                username = 'someotherdeveloper', isAdmin = False)
+
+        normalUserId = self.createUser(cfg, db,
+                username = 'normaluser', isAdmin = False)
+
+        client    = shimclient.ShimMintClient(cfg,
+                ('admin', 'adminpass'))
+
+        someOtherClient = shimclient.ShimMintClient(cfg,
+                ('someotherdeveloper', 'someotherdeveloperpass'))
+
+        normalUserClient = shimclient.ShimMintClient(cfg,
+                ('normaluser', 'normaluserpass'))
+
+        # Create a user to be used for joining products in the tests.
+        loneUserId = self.createUser(cfg, db,
+                username = 'loneuser', isAdmin = False)
+
+        hostname = shortname = "testproject"
+        projectId = someOtherClient.newProject("Test Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+
+        hostname = shortname = "otherproject"
+        otherProjectId = someOtherClient.newProject("Other Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+
+        hostname = shortname = "hiddenproject"
+        hiddenProjectId = someOtherClient.newProject("Hidden Test Project",
+                                      hostname,
+                                      MINT_PROJECT_DOMAIN,
+                                      shortname=shortname,
+                                      version="1.0",
+                                      prodtype="Component")
+        hiddenproject = client.getProject(hiddenProjectId)
+
+        # add the developer to the testproject
+        project = client.getProject(projectId)
+        project.addMemberById(developerId, userlevels.DEVELOPER)
+        # add the normal user to the testproject
+        normalProject = normalUserClient.getProject(projectId)
+        normalProject.addMemberById(normalUserId, userlevels.USER)
+
+        # add the developer to the hiddenproject
+        hiddenproject.addMemberById(developerId, userlevels.DEVELOPER)
+        # add the normal user to the hiddenproject
+        normalHiddenProject = normalUserClient.getProject(hiddenProjectId)
+        normalHiddenProject.addMemberById(normalUserId, userlevels.USER)
+        ret = client.hideProject(hiddenProjectId)
+
+        # create an AMI build that isn't a part of a release
+        build = client.newBuild(projectId,
+                "Test AMI Build (Unpublished, not in release)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000001', RDT_STRING,
+                validate=False)
+
+        # create an AMI build and add it to an unpublished
+        # (not final) release
+        build = client.newBuild(projectId, "Test AMI Build (Unpublished)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.2-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000002', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        buildId1 = build.id
+
+        # create an AMI build and add it to a published release
+        build = client.newBuild(projectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.3-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000003', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+        buildId2 = build.id
+
+        # create a published AMI build on the other project
+        build = client.newBuild(otherProjectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.4-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000004', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(otherProjectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+        buildId3 = build.id
+
+        # create a plain ol' AMI build on the other project
+        build = client.newBuild(otherProjectId,
+                "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.5-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000005', RDT_STRING,
+                validate=False)
+        buildId4 = build.id
+
+        # create an AMI build and add it to an unpublished
+        # (not final) release on the hiddenproject
+        build = client.newBuild(hiddenProjectId, "Test AMI Build (Unpublished)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.2-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000006', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(hiddenProjectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        hiddenProjUnpubPubReleaseId = pubRelease.id
+        buildId5 = build.id
+
+        # create an AMI build and add it to a published release on the hidden
+        # project.
+        build = client.newBuild(hiddenProjectId, "Test AMI Build (Published)")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.3-1-1", "1#x86")
+        build.setBuildType(buildtypes.AMI)
+        build.setDataValue('amiId', 'ami-00000007', RDT_STRING,
+                validate=False)
+        pubRelease = client.newPublishedRelease(hiddenProjectId)
+        pubRelease.name = "Release"
+        pubRelease.version = "1.0"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+        pubRelease.publish()
+        hiddenProjPubPubReleaseId = pubRelease.id
+        buildId6 = build.id
 
         amiIds = []
-        for i in range(0,5):
+        for i in range(0,7):
             amiIds.append(client.createBlessedAMI('ami-%08d' % i,
                     "This is test AMI instance %d" % i))
 
-        return cfg, { 'adminId': adminId, 'amiIds': amiIds }
+        return cfg, { 'adminId': adminId,
+                      'developerId': developerId,
+                      'normalUserId': normalUserId,
+                      'someOtherDeveloperId': someOtherDeveloperId,
+                      'amiIds': amiIds,
+                      'projectId': projectId,
+                      'otherProjectId': otherProjectId,
+                      'hiddenProjectId': hiddenProjectId,
+                      'loneUserId': loneUserId,
+                      'hiddenProjUnpubPubReleaseId': hiddenProjUnpubPubReleaseId,
+                      'hiddenProjPubPubReleaseId': hiddenProjPubPubReleaseId,
+                      'buildId1' : buildId1,
+                      'buildId2' : buildId2,
+                      'buildId3' : buildId3,
+                      'buildId4' : buildId4,
+                      'buildId5' : buildId5,
+                      'buildId6' : buildId6,
+                      }
 
 
     def __del__(self):
@@ -498,12 +677,10 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
@@ -622,12 +799,10 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
@@ -789,12 +964,10 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-        testCfg.awsPublicKey = '123456789ABCDEFGHIJK'
-        testCfg.awsPrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
 
         # AMI testing
-        testCfg.ec2PublicKey   = '1234567890ABCDEFG'
-        testCfg.ec2PrivateKey  = '1234567890ABCEDFGHIJKLMNOPQRSTUV'
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
         testCfg.ec2AccountId   = '000000000000'
         testCfg.ec2S3Bucket    = 'extracrispychicken'
         testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
@@ -967,12 +1140,6 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             os.dup2(oldOut, sys.stdout.fileno())
 
     def setUp(self):
-        for dir in sys.path:
-            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
-            if os.path.isdir(thisdir):
-                self.archiveDir = thisdir
-                break
-
         testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 

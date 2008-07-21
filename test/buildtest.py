@@ -71,6 +71,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         assert(build.timeUpdated)
         assert desc == build.getDesc()
 
+        self.failUnless(build.createdBy, 'createdBy was not set (RBL-3076)')
+
     @fixtures.fixture("Full")
     def testBuildData(self, db, data):
         client = self.getClient("owner")
@@ -1047,9 +1049,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         stageNames = [x.name for x in pd.getStages() \
                 if x.name not in ('Booya', 'Elsewhere', 'Custom')]
 
-        pd.addUpstreamSource('group-rap-standard',
+        pd.addSearchPath('group-rap-standard',
                 'rap.rpath.com@rpath:linux-1')
-        pd.addUpstreamSource('group-postgres',
+        pd.addSearchPath('group-postgres',
                     'products.rpath.com@rpath:postgres-8.2')
 
         pd.addBuildDefinition(name='ISO 32',
@@ -1148,6 +1150,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                                   False)
         # Should have created 4 builds for Development stage
         self.assertEquals(4, len(buildIds))
+
+        bld = client.getBuild(buildIds[0])
+        self.failUnless(bld.createdBy,
+                'createdBy was not set (RBL-3076)')
 
         buildIds = \
             client.newBuildsFromProductDefinition(versionId, 'Booya', False)

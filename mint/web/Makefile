@@ -11,6 +11,7 @@ python_files = \
 	admin.py	\
 	app.py		\
 	cache.py	\
+	catalog.py	\
 	fields.py	\
 	repos.py	\
 	rpchooks.py	\
@@ -22,7 +23,8 @@ python_files = \
 	webhandler.py	\
 	templatesupport.py \
 	basictroves.py	\
-	vmtn.py
+	vmtn.py		\
+	whizzyupload.py
 
 all: default-all
 

@@ -1,14 +1,65 @@
 Changes in @NEW@
-================
+===============
+Internal Changes
+----------------
+* A new api method, newBuildWithOptions, has been added. (RBL-2959)
+* Fixed a bug where a missing GROUP BY argument in an SQL statement was
+  causing a traceback in MySQL. (RBL-2995)
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
+* The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
+* The backend now allows EC2 calls to be run using user supplied credentials.
+  (RBL-3039)
+* The user's EC2 credentials are now validated by the EC2 web service.
+  (RBL-3038)
+* The EC2 backend calls now have common error handling. (RBL-3043)
+* A backend call has been added to get all AMI builds for a particular
+  user. (RBL-3053)
+* EC2 credentials and AMI launch permissions are now properly removed when a
+  user account is removed. (RBL-3065)
+* Modifying a user's product membership status now sets EC2 launch permissions 
+  appropriately. (RBL-3062)
+* Publishing and Unpublishing AMI images now sets EC2 launch permissions 
+  appropriately. (RBL-3064)
 
-Bug Fixes
+Web Front End Changes
 ---------------------
+* Fixed a bug where the cook group page mistakenly referenced the "Images" 
+  link instead of the "Manage Images" link. (RBL-3014)
+* There is now a link on the account settings page to edit a user's EC2
+  settings. (RBL-3029)
+* There is now a link on the account settings page to clear a user's EC2 
+  settings. (RBL-3045)
+* There is now a checkbox on the "Create Product" page to create private
+  products. (RBL-3080)
+* The "Administrative Options" area of the product hompegae has been removed.
+  (RBL-3080)
+* There is now a checkbox on the "Edit Product Settings" page to convert
+  a private product to a public product.  Note that a public product cannot
+  be converted to a private product. (RBL-3080)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on IE 6/7. (RBL-3094)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on FF3.  This was caused by RBL-3094.
+  (RBL-3100)
+* Admin users are now allowed to convert public projects to private.
+  (RBL-3095)
+* There was a conceptual disconnect between the role "User" and "Watching" a
+  product.  This has been changed so that users now "register for" and "use"
+  products. (RBL-2972)
+* EC2 credentials will now be stripped of whitespace. (RBL-3119)
+* Fixed a bug where the arrows indicating required fields were not present
+  on the "Edit Amazon Web Services Settings" page. (RBL-3126)
+* The "rBuilder Catalog for EC2" page now contains a link to the EC2
+  documentation. (RB-3127)
+* Fixed a bug where the "rBuilder Catalog for EC2" was being blocked by
+  the adblock extension on Firefox 3. (RBL-3123)
 * The default search settings in the web interface was not being set
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)
 * Fixed a bug preventing admin users from being able to browse the
   repository for private products they are not members of. (RBL-3108)
-
 
 Changes in 4.1.1
 ================

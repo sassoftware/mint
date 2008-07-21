@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -10,8 +10,14 @@ kid_files = \
 	applianceSpotlight.kid	\
 	build.kid		\
 	buildDefs.kid		\
+	buildPackage.kid	\
 	builds.kid		\
+	createPackage.kid	\
+	createPackageInterview.kid \
+	cloudCatalogNoCredentials.kid	\
+	cloudSettings.kid	\
 	confirmEmail.kid	\
+	confirmPublish.kid	\
 	confirm.kid		\
 	cookGroup.kid		\
 	downloads.kid		\
@@ -35,6 +41,7 @@ kid_files = \
 	newBuildsFromProductDefinition.kid	\
 	newGroup.kid		\
 	newProject.kid		\
+	packageList.kid		\
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\
@@ -50,11 +57,11 @@ kid_files = \
 	searchResults.kid	\
 	tryItNow.kid		\
 	uploadKey.kid		\
+	uploadPackageFrame.kid	\
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid		\
-	viewJoinRequest.kid	\
-	confirmPublish.kid
+	viewJoinRequest.kid
 
 python_files = __init__.py
 

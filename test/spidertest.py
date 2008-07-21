@@ -134,6 +134,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'rAA' in link or '8003' in link:
             # don't try to contact rAPA
             return False
+        if 'cloudCatalog' in link:
+            # cloudCatalog is delivered by catalog-client
+            return False
 
         #print "inspecting", link
         if page is None:

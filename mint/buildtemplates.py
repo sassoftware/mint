@@ -8,8 +8,10 @@ from mint.mint_error import InvalidBuildOption, BuildOptionValidationException
 
 class BuildOption(tuple):
     errordesc = None
+    help = None
+    password = False
     def __new__(cls):
-        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc))
+        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc, cls.help, cls.password))
     def validate(self, value):
         pass
 

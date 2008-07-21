@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-import elementtree
 from elementtree.XMLTreeBuilder import FancyTreeBuilder
 
 from mint.mint_error import *

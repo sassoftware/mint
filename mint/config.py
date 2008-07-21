@@ -6,15 +6,12 @@
 import os
 import sys
 
-from mint import constants
 from mint import buildtypes
 from mint import urltypes
 from mint import mint_error
 
-from conary import conarycfg
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
-from mint.mint_error import ConfigurationMissing
 
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
@@ -198,13 +195,11 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    awsPublicKey            = None
-    awsPrivateKey           = None
 
     # AMI configuration data
-    ec2PublicKey            = None
-    ec2PrivateKey           = None
-    ec2AccountId            = None
+    ec2PublicKey            = (cfgtypes.CfgString, '', "The AWS account id")
+    ec2PrivateKey           = (cfgtypes.CfgString, '', "The AWS public key")
+    ec2AccountId            = (cfgtypes.CfgString, '', "The AWS private key")
     ec2S3Bucket             = None
     ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
     ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
@@ -264,6 +259,9 @@ class MintConfig(ConfigFile):
 
     # anaconda-templates fallback label
     anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
+
+    # package creator related settings
+    packageCreatorURL       = None
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

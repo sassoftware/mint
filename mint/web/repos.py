@@ -3,28 +3,22 @@
 #
 # All Rights Reserved
 #
-import base64
 import difflib
 import itertools
 import os
 import string
 import sys
-import traceback
 
 from mimetypes import guess_type
-
-from mod_python import apache
 
 from urllib import quote, unquote
 
 import simplejson
 
 
-from mint import database
 from mint import userlevels
 from mint import helperfuncs
 from mint.mint_error import *
-from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound

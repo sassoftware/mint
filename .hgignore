@@ -7,6 +7,12 @@
 ^bin/rbuilder(|-wrapper)$
 ^mint/constants\.py$
 ^mint/web/content/javascript/(buildtypes|buildtemplates|jobstatus)\.js$
+^mint/web/content/css/history.css
+^mint/web/content/javascript/AC_OETags.js
+^mint/web/content/javascript/history.js
+^mint/web/content/javascript/iClouds.js
+^mint/web/templates/catalogLayout.kid
+^mint/web/templates/cloudCatalog.kid
 
 ^doc/rbuilder.1$
 

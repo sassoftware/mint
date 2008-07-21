@@ -5,41 +5,33 @@
 #
 
 from mod_python import apache
-from mod_python import util
 
 import os
-import xmlrpclib
-import zlib
 import re
-import stat
-import shutil
 import socket
+import shutil
 import sys
 import tempfile
 import time
 import traceback
-import simplejson
-import urllib
 
 from mint import config
-from mint import mirror
 from mint import users
 from mint import profile
 from mint import mint_error
 from mint import maintenance
-from mint import server
 from mint.helperfuncs import extractBasePath
 from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
-from mint.web.webhandler import normPath, HttpError, getHttpAuth
+from mint.web.catalog import catalogHandler
+from mint.web.webhandler import normPath, HttpError
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary import versions
 from conary.dbstore import sqlerrors
-from conary.lib import log
 from conary.lib import coveragehook
 from conary.lib import util as conary_util
 from conary.repository import shimclient
@@ -332,6 +324,7 @@ urls = (
     (r'^/changeset/',        conaryHandler),
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
+    (r'^/catalog/',          catalogHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
@@ -362,12 +355,15 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     }
 
     timeStamp = time.ctime(time.time())
+    realHostName = socket.getfqdn()
 
     # Format large traceback to file
     (fd, tb_path) = tempfile.mkstemp('.txt', 'mint-error-')
     large = os.fdopen(fd, 'w')
-    print >>large, 'Unhandled exception from mint web interface:'
+    print >>large, 'Unhandled exception from mint web interface on %s:' \
+        % realHostName
     print >>large, 'Time of occurrence: %s' % timeStamp
+    print >>large, 'See also: %s' % tb_path
     print >>large
     conary_util.formatTrace(exception, e, bt, stream=large, withLocals=False)
     print >>large
@@ -402,7 +398,8 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
     # Format small traceback to memory
     small = conary_util.BoundedStringIO()
-    print >>small, 'Unhandled exception from mint web interface:'
+    print >>small, 'Unhandled exception from mint web interface on %s:' \
+        % realHostName
     conary_util.formatTrace(exception, e, bt, stream=small, withLocals=False)
     print >>small, 'Extended traceback at %s' % tb_path
     small.seek(0)
@@ -414,9 +411,13 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     small.seek(0)
 
     # send email
-    try:
-        extra = {'hostname': socket.getfqdn()}
+    base_exception = traceback.format_exception_only(exception, e)[-1].strip()
+    if cfg.rBuilderOnline:
+        subject = '%s: %s' % (realHostName, base_exception)
+    else:
+        extra = {'hostname': realHostName}
         subject = cfg.bugsEmailSubject % extra
+    try:
         if cfg.bugsEmail:
             users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.bugsEmail, subject, large.read())

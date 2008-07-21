@@ -4,14 +4,11 @@
 # All rights reserved
 #
 import base64
-import os
-import sys
 import time
 import StringIO
 import xmlrpclib
 
 from mint import builds
-from mint import database
 from mint import ec2
 from mint import grouptrove
 from mint import jobs
@@ -19,16 +16,13 @@ from mint import mint_error
 from mint import projects
 from mint import pubreleases
 from mint import users
+from mint import packagecreator
 from mint.mint_error import *
-
-from conary.repository import repository
-from conary.repository.netclient import UserNotFound
-from conary.deps import deps
 
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [6]
+CLIENT_VERSIONS = [8]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -49,7 +43,9 @@ class MintClient:
 
         self.server._protocolVersion = max(intersection)
 
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "", appliance = "unknown", shortname="", prodtype="",  version="", commitEmail=""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = "",
+                   appliance = "unknown", shortname="", namespace="", 
+                   prodtype="",  version="", commitEmail="", isPrivate=False):
         """
         Create a new project.
         @param name: name of new project
@@ -60,12 +56,17 @@ class MintClient:
         @param appliance: whether or not this project represents a
                a software appliance ('yes', 'no', 'unknown')
         @param shortname: the shortname of the product being created
+        @param namespace: for rBuilder Online, the namespace to use in the
+               first Product Version, not relevant for rBA
         @param prodtype: the type of product being created.
         @param version:  the initial product version.
         @param commitEmail: email address to which commit messages are sent.
+        @param isPrivate: whether or not this should be a private product
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, projecturl, desc, appliance, shortname, prodtype, version, commitEmail)
+        return self.server.newProject(name, hostname, domainname, projecturl, 
+                                      desc, appliance, shortname, namespace, 
+                                      prodtype, version, commitEmail, isPrivate)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -326,6 +327,19 @@ class MintClient:
         access methods, and not just to project developers and owners.
         """
         return self.server.unhideProject(projectId)
+    
+    def setProductVisibility(self, projectId, makePrivate):
+        """
+        Set the visibility of a product
+        @param projectId: the project id
+        @type  projectId: C{int}
+        @param makePrivate: True to make private, False to make public
+        @type  makePrivate: C{bool}
+        @raise PermissionDenied: if not the product owner
+        @raise PublicToPrivateConversionError: if trying to convert a public
+               product to private
+        """
+        return self.server.setProductVisibility(projectId, makePrivate)
 
     def getAvailableBuildTypes(self):
         return self.server.getAvailableBuildTypes()
@@ -350,6 +364,71 @@ class MintClient:
         """
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
+
+    def createPackageTmpDir(self):
+        """
+        Create a new temporary location for storing package data
+        @returns: an ID that uniquely references this temporary location
+        @rtype: str
+        """
+        return self.server.createPackageTmpDir()
+
+    def _filterFactories(self, factories):
+        """
+            Converts the return value from the server (which passes an xmlblob)
+            to an object tree
+        """
+        from pcreator import factorydata
+        #Factories comes across as an xml file, need to parse that to something useable
+        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
+
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle='', upload_url=''):
+        """
+        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
+        @param projectId: Project ID
+        @type projectId: int
+        @param id: ID returned from L{createPackageTmpDir}
+        @type id: str
+        @param versionId: ID of the version chosen
+        @type versionId: int
+        @param sessionHandle: A sessionHandle.  If empty, one will be created (and returned)
+        @type sessionHandle: string
+        @param upload_url: URL of a package or ''.  Not currently used
+        @type upload_url: str
+        @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
+        @rtype: tuple(tuple, str, dict)
+        """
+        sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+
+        #Parse the factory data xml
+        prevChoices = packagecreator.getFactoryDataFromXML(data)
+
+        return sesH, self._filterFactories(factories), prevChoices
+
+    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
+        """See L{mint.server.startPackageCreatorSession}"""
+        return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
+
+    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
+        "See getPackageFactories, this method is used when you merely want to edit the interview data"
+        sesH, factories, data = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
+
+        #Parse the factory data xml
+        prevChoices = packagecreator.getFactoryDataFromXML(data)
+
+        return sesH, self._filterFactories(factories), prevChoices
+
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+        "See L{mint.server.MintServer.savePackage}"
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
+
+    def getPackageBuildLogs(self, sessionHandle):
+        '''See L{mint.server.MintServer.getPackageBuildLogs}'''
+        return self.server.getPackageBuildLogs(sessionHandle)
+
+    def getPackageCreatorPackages(self, projectId):
+        '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
+        return self.server.getPackageCreatorPackages(projectId)
 
     def getBuildFilenames(self, buildId):
         """
@@ -721,6 +800,15 @@ class MintClient:
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
     # ec2 "try it now" support
+    def validateEC2Credentials(self, authToken):
+        return self.server.validateEC2Credentials(authToken)
+    
+    def getEC2KeyPair(self, authToken, keyName):
+        return self.getEC2KeyPairs(authToken, [keyName])
+    
+    def getEC2KeyPairs(self, authToken, keyNames):
+        return self.server.getEC2KeyPairs(authToken, keyNames)
+    
     def createBlessedAMI(self, ec2AMIId, shortDescription):
         return self.server.createBlessedAMI(ec2AMIId, shortDescription)
 
@@ -738,14 +826,15 @@ class MintClient:
         return [self.getLaunchedAMI(x) for x in \
                 self.server.getActiveLaunchedAMIs()]
 
-    def getLaunchedAMIInstanceStatus(self, launchedAMIId):
-        return self.server.getLaunchedAMIInstanceStatus(launchedAMIId)
+    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
+        return self.server.getLaunchedAMIInstanceStatus(authToken,
+                                                        launchedAMIId)
 
-    def launchAMIInstance(self, blessedAMIId):
-        return self.server.launchAMIInstance(blessedAMIId)
+    def launchAMIInstance(self, authToken, blessedAMIId):
+        return self.server.launchAMIInstance(authToken, blessedAMIId)
 
-    def terminateExpiredAMIInstances(self):
-        return self.server.terminateExpiredAMIInstances()
+    def terminateExpiredAMIInstances(self, authToken):
+        return self.server.terminateExpiredAMIInstances(authToken)
 
     def extendLaunchedAMITimeout(self, launchedAMIId):
         return self.server.extendLaunchedAMITimeout(launchedAMIId)
@@ -770,8 +859,8 @@ class MintClient:
         return self.server.setBuildAMIDataSafe(buildId, outputToken,
                 amiId, amiManifestName)
 
-    def addProductVersion(self, projectId, name, description=''):
-        return self.server.addProductVersion(projectId, name, description)
+    def addProductVersion(self, projectId, namespace, name, description=''):
+        return self.server.addProductVersion(projectId, namespace, name, description)
 
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
@@ -805,6 +894,30 @@ class MintClient:
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
+    def getEC2CredentialsForUser(self, userId):
+        return self.server.getEC2CredentialsForUser(userId)
+
+    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey, force):
+        return self.server.setEC2CredentialsForUser(userId,
+                awsAccountNumber, awsPublicAccessKeyId,
+                awsSecretAccessKey, force)
+        
+    def removeEC2CredentialsForUser(self, userId):
+        return self.server.removeEC2CredentialsForUser(userId)
+
+    def getAllAMIBuilds(self):
+        return self.server.getAllAMIBuilds()
+
+    def getAMIBuildsForUser(self, userId):
+        return self.server.getAMIBuildsForUser(userId)
+
+    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
+        return self.server.addAllEC2LaunchPermissions(userId, awsAccountNumber)
+
+    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
+        return self.server.removeAllEC2LaunchPermissions(userId,
+                                                      awsAccountNumber)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

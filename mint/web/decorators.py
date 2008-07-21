@@ -5,11 +5,9 @@
 #
 
 import inspect
-import sys
 
 from mod_python import apache
 
-from mint import database
 from mint import mailinglists
 from mint import mint_error
 from mint import userlevels

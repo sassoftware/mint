@@ -3,24 +3,18 @@
 #
 # All rights reserved
 #
-import base64
-import os
 import re
 import sys
-import time
-from urllib import quote, unquote
 
 from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-from mint import database
 from mint import server
 from mint import shimclient
-from mint import users, userlevels
-from mint.helperfuncs import getProjectText
+from mint import userlevels
+from mint.helperfuncs import weak_signature_call, getProjectText
 from mint.mint_error import *
-from mint.session import SqlSession, COOKIE_NAME
 from mint.web import cache, fields
 from mint.web.admin import AdminHandler
 from mint.web.cache import pageCache, reqHash
@@ -93,10 +87,16 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        if self.cfg.cookieSecretKey:
-            cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
-        else:
-            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        try:
+            if self.cfg.cookieSecretKey:
+                cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
+            else:
+                cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        except:
+            # Parsing the cookies failed, so just pretend there aren't
+            # any and they'll get overwritten when our response goes
+            # out.
+            cookies = {}
 
         if 'pysid' not in cookies:
             rh = cache.reqHash(self.req)
@@ -140,7 +140,7 @@ class MintApp(WebHandler):
             return tb
 
         try:
-            output = method(**d)
+            output = weak_signature_call(method, **d)
             if self.auth.authorized:
                 self.session.save()
             elif 'cacheable' in method.__dict__:

@@ -36,6 +36,7 @@
         <div class="boxHeader">${projectText().title()} Resources</div>
         <ul>
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">${projectText().title()} Home</a></li>
+            <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('newPackage', 'getPackageFactories', 'savePackage')) and 'selectedItem' or None}"><a href="${projectUrl}newPackage">Create Package</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Manage Images</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">${isOwner and 'Manage' or 'View'} Releases</a></li>
             <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} ${projectText().title()} Membership</a></li>
@@ -46,6 +47,20 @@
             <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
             <li py:if="isWriter and cfg.rBuilderOnline"><a href="${projectUrl}downloads">Download Statistics</a></li>
         </ul>
+    </div>
+
+    <div py:def="versionSelection(attributes, versions, unselected)" py:strip="True">
+        <?python
+    v = set([x[2] for x in versions])
+    showNamespace = len(v) > 1
+        ?>
+        <select py:attrs="attributes">
+            <option py:if="unselected" value="-1" selected="selected">--</option>
+            <option py:for="ver in versions" value="${ver[0]}">
+                <div py:strip="True" py:if="showNamespace">${ver[3]} (${ver[2]})</div>
+                <div py:strip="True" py:if="not showNamespace">${ver[3]}</div>
+            </option>
+        </select>
     </div>
 
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
@@ -130,13 +145,15 @@
             </ul>
 
             <p  py:if="isRBO()">To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
+            <div id="cloudCatalog"><a target="_blank" href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2&trade;</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
+            
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
                                           (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
-                                          (userlevels.USER, '%ss I Am Watching'%projectText().title())]"
+                                          (userlevels.USER, '%ss I Use'%projectText().title())]"
                  py:strip="True">
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>
@@ -152,6 +169,7 @@
                 </div>
             </div>
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new ${projectText().lower()}</strong></a></div>
+            <div id="cloudCatalog"><a target="_blank" href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2&trade;</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>

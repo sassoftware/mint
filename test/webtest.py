@@ -24,6 +24,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
+from conary_test import resources
 
 from conary.lib import util
 from conary import versions
@@ -479,6 +480,44 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
         self.failUnlessEqual(project.commitEmail, 'email@example.com')
+        
+    def testProcessEditProjectVisibilityPublicToPrivate(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'Bar',
+                           'isPrivate': 'on'},
+                          ok_codes = [200])
+
+        project = client.getProject(projectId)
+        # not allowed, so should still be public
+        self.failUnlessEqual(project.hidden, False)
+        
+    def testProcessEditProjectVisibilityPrivateToPublic(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component",
+                        isPrivate = True)
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'Bar',
+                           'isPrivate': 'off'},
+                          ok_codes = [301])
+
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
 
     @testsuite.context("quick")
     def testSearchProjects(self):
@@ -899,7 +938,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testUploadKey(self):
-        keyFile = open(testsuite.archivePath + '/key.asc')
+        keyFile = open(resources.mintArchivePath + '/key.asc')
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1809,6 +1848,57 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         bf.write(XMLbulletinContent)
         bf.close()
         self.assertContent('/', content=XMLbulletinContent)
+
+    def testCloudSettings(self):
+        raise testsuite.SkipTestException(
+            'Need a way to mock out EC2 calls. See RBL-3059')
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        
+        self.webLogin('foouser', 'foopass')
+        page = self.fetchWithRedirect('/cloudSettings')
+        page = page.postForm(1, page.post,
+                          { 'awsAccountNumber': '1234-5678-9011',
+                            'awsPublicAccessKeyId': '01010101010101010101',
+                            'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
+                            'force': "1"})
+
+        ec2Creds = client.getEC2CredentialsForUser(userId)
+        self.failUnlessEqual(ec2Creds['awsAccountNumber'], '123456789011')
+        self.failUnlessEqual(ec2Creds['awsPublicAccessKeyId'],
+                '01010101010101010101')
+        self.failUnlessEqual(ec2Creds['awsSecretAccessKey'],
+                '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
+        
+    def testRemoveCloudSettings(self):
+        raise testsuite.SkipTestException(
+            'Need a way to mock out EC2 calls. See RBL-3059')
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        
+        self.webLogin('foouser', 'foopass')
+        
+        # add some settings and enusre they are there
+        page = self.fetchWithRedirect('/cloudSettings')
+        page = page.postForm(1, page.post,
+                          { 'awsAccountNumber': '1234-5678-9011',
+                            'awsPublicAccessKeyId': '01010101010101010101',
+                            'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
+                            'force': "1"})
+
+        ec2Creds = client.getEC2CredentialsForUser(userId)
+        self.failUnlessEqual(ec2Creds['awsAccountNumber'], '123456789011')
+        self.failUnlessEqual(ec2Creds['awsPublicAccessKeyId'],
+                '01010101010101010101')
+        self.failUnlessEqual(ec2Creds['awsSecretAccessKey'],
+                '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
+        
+        # remove them and make sure they are gone
+        page = self.fetchWithRedirect('/removeCloudSettings')
+        page = page.postForm(1, page.post, {'confirm': "1"})
+        ec2Creds = client.getEC2CredentialsForUser(userId)
+        self.assertTrue(ec2Creds == {'awsPublicAccessKeyId': '', 
+                                     'awsSecretAccessKey': '', 
+                                     'awsAccountNumber': ''})
+
 
 if __name__ == "__main__":
     testsuite.main()

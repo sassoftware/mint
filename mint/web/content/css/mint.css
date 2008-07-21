@@ -865,13 +865,10 @@ div#projectsPane a.signout {
     color: white;
 }
 
-div#projectsPane div#newProject {
-    text-align: center;
-}
-div#projectsPane div#userSettings {
-    text-align: center;
-}
-div#projectsPane div#administer {
+div#projectsPane div#newProject,
+div#projectsPane div#userSettings,
+div#projectsPane div#administer,
+div#projectsPane div#cloudCatalog {
     text-align: center;
 }
 
@@ -947,6 +944,7 @@ span#editProject {
     font-size: x-small;
 }
 
+.expandableformgroup,
 .formgroup,
 .formsubgroup {
     border-top: 0;
@@ -960,6 +958,7 @@ span#editProject {
     height: 1%;
 }
 
+.expandableformgroupTitle img,
 .formgroupTitle img {
     float: right;
 }
@@ -971,7 +970,9 @@ span#editProject {
     margin-right: 20px;
 }
 
-tr.editGroupHeader, .formgroupTitle {
+tr.editGroupHeader,
+.expandableformgroupTitle,
+.formgroupTitle {
     border-top: 1px solid #ccc;
     border-left: 1px solid #ccc;
     border-bottom: 1px solid #aaa;
@@ -1044,6 +1045,88 @@ div.clearleft {
 .formgroup input.reversed {
     width: 14px;
     margin-left: 30px;
+}
+
+.expandableformgroupSeparator {
+    width: auto;
+    clear:left;
+    margin:0pt;
+    padding:0pt;
+}
+
+.expandableformgroupItems
+{
+    float: left;
+    width: 60%;
+    padding: 4px;
+}
+
+.expandableformgroup label.check_label
+{
+    display: inline;
+    float: none;
+    width: 60%;
+}
+
+.expandableformgroup input.check {
+    display: inline;
+    margin-bottom: -.25em;
+    float: none;
+    width: auto;
+}
+
+.expandableformgroupItems select{
+    width: 100%;
+}
+.expandableformgroupItems input, textarea{
+    float: left;
+    width: 92%;
+}
+
+.expandableformgroupItems div.resize{
+    width: 16px;
+    height: 16px;
+    display: inline;
+    float: left;
+    cursor: pointer;
+}
+
+.expandableformgroupItems div.expander {
+    background-image: url(../images/TEXTAREA_expanded.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.expander:hover {
+    background-image: url(../images/TEXTAREA_expand.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser {
+    background-image: url(../images/TEXTAREA_collapsed.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser:hover {
+    background-image: url(../images/TEXTAREA_collapse.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroup label{
+    width: 30%;
+    float: left;
+    margin-top: 6px;
+    margin-left: 10px;
+    padding-right: 10px;
+    display: block;
+    text-align: right;
+}
+
+.expandableformgroup label.required{
+    padding-left: 0em;
+}
+
+.expandableformgroup div.help{
+    clear: left;
 }
 
 .smallSpecs,
@@ -1535,3 +1618,30 @@ table.buildDefs tr.dialogButtons td button {
     font-style: italic;
 }
 
+div#progress_indicator {
+    border: 1px solid black;
+    margin: auto;
+    height: 20px;
+    width: 90%;
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+p#upload_progress_percent_complete {
+    margin: 0pt;
+    padding: 0pt;
+    text-align: center;
+    color: black;
+    z-index: 2;
+}
+
+div#progress_indicator_bar {
+    height: 20px;
+    width: 1%;
+    background-color: green;
+    z-index: -1;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+}

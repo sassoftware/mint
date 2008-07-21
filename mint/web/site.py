@@ -3,27 +3,19 @@
 #
 # All rights reserved
 #
-import base64
 import email
 import os
 import stat
-import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
 from mimetypes import guess_type
-import simplejson
 
-from mod_python import apache
-
-from mint import buildtemplates
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
-from mint import database
 from mint import data
 from mint import helperfuncs
 from mint import mint_error
-from mint import jobs
 from mint import maintenance
 from mint import mailinglists
 from mint import projects
@@ -40,12 +32,13 @@ from mint.web.fields import boolFields, dictFields, intFields, listFields, strFi
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpPartialContent, HttpOK, HttpMethodNotAllowed, HttpForbidden
+     HttpOK, HttpMethodNotAllowed, HttpForbidden
 
 from conary.lib import util
 from conary import versions
-from conary.deps import deps
-from conary import conarycfg, conaryclient
+from conary import conaryclient
+
+from rpath_common.proddef import api1 as proddef
 
 BUFFER=1024 * 256
 
@@ -169,9 +162,9 @@ class SiteHandler(WebHandler):
             errors.append("Passwords do not match.")
         if len(password) < 6:
             errors.append("Password must be 6 characters or longer.")
-        if self.cfg.rBuilderOnline or self.cfg.tosLink and not tos:
+        if (self.cfg.rBuilderOnline or self.cfg.tosLink) and not tos:
             errors.append("You must accept the Terms of Service to create an account")
-        if self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink and not privacy:
+        if (self.cfg.rBuilderOnline or self.cfg.privacyPolicyLink) and not privacy:
             errors.append("You must accept the Privacy Policy to create an account")
         if not errors:
             try:
@@ -323,10 +316,11 @@ class SiteHandler(WebHandler):
             self._redirect(nextHop)
 
     def loginFailed(self, auth):
-        c = self.session.make_cookie()
-        c.expires = 0
-        self.req.err_headers_out.add('Set-Cookie', str(c))
-        self.req.err_headers_out.add('Cache-Control',
+        if isinstance(self.session, SqlSession):
+            c = self.session.make_cookie()
+            c.expires = 0
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control',
                                      'no-cache="set-cookie"')
         return self._write('error', shortError = "Login Failed",
                            error = 'You cannot log in because your browser is blocking cookies to this site.')
@@ -365,6 +359,69 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     @redirectHttps
+    def cloudSettings(self, auth):
+        return self._write("cloudSettings",
+                           user = self.user,
+                           dataDict = self.user.getDataDict())
+
+    @strFields(awsAccountNumber = "", awsPublicAccessKeyId = "",
+               awsSecretAccessKey = "")
+    @boolFields(force = False)
+    @requiresHttps
+    @requiresAuth
+    def processCloudSettings(self, auth, awsAccountNumber,
+            awsPublicAccessKeyId, awsSecretAccessKey, force):
+
+        def getDataDict():
+            dataDict = self.user.getDataDict()
+            dataDict['awsAccountNumber'] = awsAccountNumber
+            dataDict['awsPublicAccessKeyId'] = awsPublicAccessKeyId
+            dataDict['awsSecretAccessKey'] = awsSecretAccessKey
+            return dataDict
+        
+        # make sure all the fields are set
+        if not awsAccountNumber:
+            self._addErrors("Missing account number")
+        if not awsPublicAccessKeyId:
+            self._addErrors("Missing access key ID")
+        if not awsSecretAccessKey:
+            self._addErrors("Missing secret access key")
+            
+        if self._getErrors():
+            return self._write("cloudSettings", dataDict=getDataDict())
+        
+        try:
+            self.client.setEC2CredentialsForUser(self.user.id,
+                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey,
+                force)
+            self._setInfo("Updated EC2 settings")
+            self._redirect("http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        except mint_error.MintError, e:
+            self._addErrors("Failed to update EC2 settings: %s" % str(e))
+            return self._write("cloudSettings", dataDict=getDataDict())
+        
+    @requiresAuth
+    @redirectHttps
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def removeCloudSettings(self, auth, confirmed, **yesArgs):
+        
+        if confirmed:
+            # clear the credentials
+            self.client.removeEC2CredentialsForUser(self.user.id)
+            self._setInfo("Removed EC2 settings")
+            self._redirect("http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            return self._write("confirm", 
+                message = "Are you sure you want to remove your EC2 settings?",
+                yesArgs = {'func':'removeCloudSettings', 'confirmed':'1'}, 
+                noLink = "http://%s%suserSettings" %
+                    (self.cfg.siteHost, self.cfg.basePath))
+
+    @requiresAuth
+    @redirectHttps
     def userSettings(self, auth):
         return self._write("userSettings",
                            user = self.user,
@@ -391,7 +448,7 @@ class SiteHandler(WebHandler):
         if fullName != auth.fullName:
             self.user.setFullName(fullName)
 
-        for key, (dType, default, prompt, errordesc) in \
+        for key, (dType, default, prompt, errordesc, helpText, password) in \
                 self.user.getDataTemplate().iteritems():
             if dType == data.RDT_BOOL:
                 val = bool(kwargs.get(key, False))
@@ -413,7 +470,7 @@ class SiteHandler(WebHandler):
                 self._redirectHttp("logout")
 
         self._redirectHttp('/')
-
+        
     @requiresAuth
     @listFields(str, projects=[])
     @strFields(keydata = '')
@@ -462,7 +519,12 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 'appliance': 'unknown', 'prodtype' : 'Appliance'})
+        return self._write("newProject", errors=[], 
+           kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
+                   'appliance': 'unknown', 
+                   'prodtype' : 'Appliance', 
+                   'namespace': self.cfg.namespace,
+                   'isPrivate': False})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -487,16 +549,24 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '', appliance = 'unknown', shortname = '', prodtype = '', version = '', commitEmail='')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
+               blurb = '', appliance = 'unknown', shortname = '', namespace='',
+               prodtype = '', version = '', commitEmail='', isPrivate = 'off')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists, appliance, shortname, prodtype, version, commitEmail):
+    def createProject(self, auth, title, hostname, domainname, projecturl, 
+                      blurb, optlists, appliance, shortname, namespace, 
+                      prodtype, version, commitEmail, isPrivate):
+                    
+        isPrivate = (isPrivate.lower() == 'on') and True or False
         
         shortname = shortname.lower()
         if not hostname:
             hostname = shortname
-        
+
         pText = getProjectText().lower()
+        if not namespace:
+            self._addErrors('You must supply a %s namespace' % pText)
         if not title:
             self._addErrors("You must supply a %s title"%pText)
         if not shortname:
@@ -514,7 +584,8 @@ class SiteHandler(WebHandler):
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    domainname, projecturl, blurb, appliance, shortname, prodtype, version, commitEmail)
+                    domainname, projecturl, blurb, appliance, shortname, 
+                    namespace, prodtype, version, commitEmail, isPrivate)
                 
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():
@@ -534,10 +605,20 @@ class SiteHandler(WebHandler):
         if not self._getErrors():
             # attempt to create the project version
             try:
-                versionId = self.client.addProductVersion(projectId, version);
+                versionId = self.client.addProductVersion(projectId, namespace, version);
+                pd = proddef.ProductDefinition()
                 pd = helperfuncs.sanitizeProductDefinition(title,
                         blurb, hostname, domainname, shortname, version,
-                        '', self.cfg.namespace)
+                        '', namespace)
+                ##### DELETE #####
+                # this value was hard coded for the june 23, 2008 release of rBO
+                # this code must be removed when a proper solution is
+                # implemented
+                project = self.client.getProject(projectId)
+                cCfg = project.getConaryConfig()
+                cClient = conaryclient.ConaryClient(cCfg)
+                pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+                ##### END DELETE #####
                 self.client.setProductDefinitionForVersion(versionId, pd)
 
             except projects.DuplicateProductVersion, e: 
@@ -550,7 +631,19 @@ class SiteHandler(WebHandler):
             # version.  Status will be updated after that.
             self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists, 'appliance': appliance, 'shortname' : shortname, 'prodtype' : prodtype, 'version' : version}
+            kwargs = {'title': title, 
+                      'hostname': hostname, 
+                      'domainname': domainname, 
+                      'projecturl': projecturl, 
+                      'blurb': blurb, 
+                      'optlists': optlists, 
+                      'appliance': appliance,
+                      'commitEmail': commitEmail,
+                      'shortname' : shortname, 
+                      'prodtype' : prodtype, 
+                      'namespace' : namespace,
+                      'version' : version,
+                      'isPrivate' : isPrivate}
             return self._write("newProject", kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
@@ -594,7 +687,7 @@ class SiteHandler(WebHandler):
             limit =  self.user and \
                     self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
-        if type == "Projects":
+        if type in ("Products", "Projects"):
             return self._projectSearch(search, modified, limit, offset, removed, not showAll)
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
@@ -757,7 +850,7 @@ class SiteHandler(WebHandler):
         else:
             extraParams = ";showAll=1"
         
-        return self._write("searchResults", searchType = pText.title(),
+        return self._write("searchResults", searchType = pText.title()+'s',
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
                 columns = columns, count = count, limit = limit,
@@ -1031,6 +1124,12 @@ class SiteHandler(WebHandler):
         targetF = open(targetFn, 'w+')
         util.copyfileobj(self.req, targetF)
         return ''
+
+    def cloudCatalog(self, auth):
+        userCredentials = self.client.getEC2CredentialsForUser(self.auth.userId)
+        template = userCredentials.get('awsAccountNumber', None) and \
+                'cloudCatalog' or 'cloudCatalogNoCredentials'
+        return self._write(template)
 
 
 def helpDocument(page):
