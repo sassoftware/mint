@@ -6,6 +6,8 @@ Bug Fixes
 * The default search settings in the web interface was not being set
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)
+* Fixed a bug preventing admin users from being able to browse the
+  repository for private products they are not members of. (RBL-3108)
 
 
 Changes in 4.1.1

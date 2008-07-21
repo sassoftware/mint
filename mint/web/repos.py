@@ -717,6 +717,15 @@ class ConaryHandler(WebHandler):
     def _handle(self, *args, **kwargs):
         """Handle either an HTTP POST or GET command."""
 
+        if self.auth.admin:
+            # if we are admin, we have the right to touch any repo, but that
+            # particular repo might not know our credentials (not a project
+            # member)... so use the auth user.
+            saveToken = self.authToken
+            self.authToken = (self.cfg.authUser, self.cfg.authPass, [])
+        else:
+            self.authToken = (self.authToken[0], self.authToken[1], [])
+
         localMirror = self.client.isLocalMirror(self.project.id)
         if self.project.external and not localMirror:
             overrideAuth = False
@@ -732,8 +741,6 @@ class ConaryHandler(WebHandler):
         conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
         if os.path.exists(conarycfgFile):
             cfg.read(conarycfgFile)
-
-        self.authToken = (self.authToken[0], self.authToken[1], [])
 
         cfg = helperfuncs.configureClientProxies(cfg,
                 self.cfg.useInternalConaryProxy, self.cfg.proxy)
@@ -754,12 +761,6 @@ class ConaryHandler(WebHandler):
         d = self.fields
         d['auth'] = self.authToken
 
-        if self.auth.admin:
-            # if we are admin, we have the right to touch any repo, but that
-            # particular repo might not know our credentials (not a project
-            # member)... so use the auth user.
-            saveToken = self.authToken
-            self.authToken = (self.cfg.authUser, self.cfg.authPass, [])
         try:
             d['auth'] = self.authToken
             try:
