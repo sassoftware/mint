@@ -11,26 +11,30 @@ import fixtures
 from mint import buildtypes
 from mint.data import RDT_BOOL
 
+# arbitrary sha1 is trhe sha1 of nothing for when it doesn't matter
+fakeSha1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+
 
 class WorkspacesTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testGetAllWorkspacesBuilds(self, db, data):
         client = self.getClient("admin")
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [])
+        self.assertEquals(buildList, {})
         cu = db.cursor()
         buildId = data['buildId']
+        cu.execute('UPDATE BuildFiles SET sha1=?', fakeSha1)
         # now set the build type to raw filesystem image
         # this is still a no-go test, we need XEN_DOMU
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [])
+        self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [{'productDescription': '',
+        self.assertEquals(buildList, {fakeSha1: {'productDescription': '',
                                             'buildId': 1,
                                             'projectId': 1,
                                             'isPublished': 0,
@@ -39,11 +43,11 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
                                             'isPrivate': 0,
                                             'role': '',
                                             'createdBy': 'owner',
-                                            'buildName': 'Test Build'}])
+                                            'buildName': 'Test Build'}})
 
         client = self.getClient("owner")
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [{'productDescription': '',
+        self.assertEquals(buildList, {fakeSha1: {'productDescription': '',
                                             'buildId': 1,
                                             'projectId': 1,
                                             'isPublished': 0,
@@ -52,7 +56,7 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
                                             'isPrivate': 0,
                                             'role': 'Product Owner',
                                             'createdBy': 'owner',
-                                            'buildName': 'Test Build'}])
+                                            'buildName': 'Test Build'}})
 
     @fixtures.fixture('Full')
     def testHiddenVisibility(self, db, data):
@@ -60,11 +64,12 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
         client.hideProject(data['projectId'])
         buildId = data['buildId']
         cu = db.cursor()
+        cu.execute('UPDATE BuildFiles SET sha1=?', fakeSha1)
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [])
+        self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         db.commit()
@@ -72,7 +77,7 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
         self.failIf(len(buildList) != 1)
         client = self.getClient('nobody')
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, [])
+        self.assertEquals(buildList, {})
 
 
 if __name__ == '__main__':

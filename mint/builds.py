@@ -241,6 +241,7 @@ class BuildsTable(database.KeyedTable):
         cu.execute("""
              SELECT p.projectId,
                     b.buildId,
+                    bdf.sha1,
                     p.name AS productName,
                     p.description AS productDescription,
                     b.name AS buildName,
@@ -258,6 +259,7 @@ class BuildsTable(database.KeyedTable):
                  JOIN builds b USING (projectId)
                  LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
                  JOIN buildData bd ON (bd.buildId = b.buildId)
+                 JOIN buildFiles bdf ON (bdf.buildId = b.buildId)
                  LEFT OUTER JOIN users u ON (b.createdBy = u.userId)
                  LEFT OUTER JOIN projectUsers pu
                     ON (b.projectId = pu.projectId AND pu.userId = ?)
@@ -265,9 +267,9 @@ class BuildsTable(database.KeyedTable):
                  AND bd.name = 'XEN_DOMU'
                  AND b.deleted = 0""",
              requestingUserId, buildtypes.RAW_FS_IMAGE)
-        return [rs for rs in cu.fetchall_dict() \
+        return dict([(rs.pop('sha1'), rs) for rs in cu.fetchall_dict() \
                 if self._filterBuildVisibility(rs, okHiddenProjectIds,
-                    limitToUserId)]
+                    limitToUserId) and rs.get('sha1')])
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various
