@@ -712,12 +712,13 @@ class MySqlFixtureCache(SQLServerFixtureCache):
 
     def _dupDb(self, srcDb, destDb):
         self.harness.getDB(destDb)
+        print "COPY", srcDb, destDb
         output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.harness.path, srcDb]
         input = ["mysql", "-u", "root", "-S", "%s/socket" % self.harness.path, destDb]
         dump = subprocess.Popen(output, stdout = subprocess.PIPE)
         load = subprocess.Popen(input, stdin = dump.stdout)
         load.communicate()
-
+        
     def newMintCfg(self, name):
         cfg = super(self.__class__,self).newMintCfg(name)
         dbName = "mf%s" % name
@@ -739,10 +740,10 @@ class MySqlFixtureCache(SQLServerFixtureCache):
         cu.execute("SHOW DATABASES")
         for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
             if '_' in dbname and not dbname.startswith('cr'):
-                newName = "cr%s%s" % (name, dbname)
+                newName = ("cr%s%s" % (name, dbname)).lower()
                 self._dupDb(dbname, newName)
                 self.harness.dropDB(dbname)
-                self.keepDbs.append(newName.lower())
+                self.keepDbs.append(newName)
         return ret
 
     def load(self, name):
@@ -758,15 +759,16 @@ class MySqlFixtureCache(SQLServerFixtureCache):
         testCfg = copy.deepcopy(cfg)
         testCfg.dataPath = testDataPath
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
+                                              os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         self.getAMIConfig(testCfg)
 
         # restore the mint db into a unique copy
-        fixtureMintDbName = "mf%s" % name
-        fixtureCopyMintDbName = "cmf_%s%s" % (name, randomDbName)
+        fixtureMintDbName = ("mf%s" % name).lower()
+        fixtureCopyMintDbName = ("cmf_%s%s" % (name, randomDbName)).lower()
         self._dupDb(fixtureMintDbName, fixtureCopyMintDbName)
         testCfg.dbPath = self._getConnectStringForDb(fixtureCopyMintDbName)
 
@@ -801,29 +803,6 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
     keepDbs = ['postgres', 'testdb', 'template1', 'template0']
     driver = "postgresql"
 
-    def _connect(self):
-        if not self.db:
-            self.db = dbstore.connect(self._getConnectStringForDb('postgres'), 'postgresql')
-
-    def _dropDb(self, name):
-        cu = self.db.cursor()
-        for x in range(20):
-            cu.execute("SELECT COUNT(*) FROM pg_database WHERE datname=?", name)
-            # If this database exists, get the pids of all open connections to
-            # it and kill them.
-            if (cu.fetchone()[0]):
-                try:
-                    cu.execute("SELECT procpid FROM pg_stat_activity WHERE datname=?",
-                                name)
-                    for x in cu.fetchall():
-                        os.system('pg_ctl kill TERM %s 2>/dev/null' % x[0])
-                    cu.execute("DROP DATABASE %s" % name)
-                except:
-                    # Unable to drop database, wait and try again
-                    time.sleep(0.1)
-            else:
-                break
-
     def _dupDb(self, srcDb, destDb):
         self.harness.getDB(destDb)
         output = ["pg_dump", "-U", self.harness.user, '-c', '-O', 
@@ -842,9 +821,9 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         cfg.dbDriver = 'sqlite'
         cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
         cfg.reposDBPath = self._getConnectStringForDb()
+        db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
         from mint import schema
-        schema.loadSchema(db.connect(), cfg)
-        db.stop()
+        schema.loadSchema(db, cfg)
         return cfg
 
     def loadFixture(self, name):
@@ -880,7 +859,7 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
-        getAMIConfig(testCfg)
+        self.getAMIConfig(testCfg)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
@@ -903,7 +882,7 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         cu.execute("SELECT datname FROM pg_database")
         for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
            if '_' in dbname and not dbname.startswith('cr'):
-               self._dropDb(dbname)
+               self.harness.dropDB(dbname)
 
     def __del__(self):
         self.harness.stop()
@@ -930,10 +909,11 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
            fixture data (may be empty).
         """
 
+        # reset the cached db connection
         self.cfg, fixtureData = fixtureCache.load(name)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        server.dbConnection = db # reset the cached db connection
-
+        # this is so fugly it makes me wanna cry --gafton
+        server.dbConnection = db
         return db, fixtureData
 
     def getAdminClient(self):
@@ -1039,6 +1019,9 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
+        if server.dbConnection:
+            server.dbConnection.close()
+        server.dbConnection = None
         testhelp.TestCase.tearDown(self)
         MCPTestMixin.tearDown(self)
         try:
