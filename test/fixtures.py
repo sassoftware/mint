@@ -722,7 +722,6 @@ class MySqlFixtureCache(SQLServerFixtureCache):
 
     def _dupDb(self, srcDb, destDb):
         self.harness.getDB(destDb)
-        print "COPY", srcDb, destDb
         output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.harness.path, srcDb]
         input = ["mysql", "-u", "root", "-S", "%s/socket" % self.harness.path, destDb]
         dump = subprocess.Popen(output, stdout = subprocess.PIPE)
