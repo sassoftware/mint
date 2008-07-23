@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import os
+
 from mod_python import Cookie
 from conary.lib import coveragehook
 from mint import maintenance
@@ -44,12 +46,16 @@ def catalogHandler(req, cfg, pathInfo = None):
 
     # the leading portion of the URI in an rBuilder context. catalog-service
     # string substitutes, so leading and trailing slashes aren't needed.
-    topLevel = 'catalog'
+    topLevel = os.path.join(cfg.basePath, 'catalog')
+    if topLevel.startswith('/'):
+        topLevel = topLevel[1:]
 
     client_address = req.connection.remote_addr
     server = type('Server', (object,), {'server_port': req.server.port})
     aReq = handler_apache.ApacheRequest(req)
-    hdlr = handler_apache.ApacheHandler(topLevel, aReq, client_address, server)
+    storagePath = os.path.join(cfg.dataPath, 'catalog')
+    hdlr = handler_apache.ApacheHandler(topLevel, storagePath,
+            aReq, client_address, server)
     hdlr.mintCfg = cfg
 
     auth = tuple(getAuthFromSession(req, cfg)[:2])

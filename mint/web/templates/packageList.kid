@@ -33,8 +33,7 @@
               <div py:for="version in sorted(pkgList.keys())" class="mailingListButtons">
 
                 <div py:for="namespace in sorted(pkgList[version].keys())" py:strip="True">
-                  <h3 py:if="len(nscount) == 1">Product Version ${version}</h3>
-                  <h3 py:if="len(nscount) != 1">Product Version ${version} (${namespace})</h3>
+                  <h3>Product Version ${version} (${namespace})</h3>
 
                   <?python
                   troveList = pkgList[version][namespace]

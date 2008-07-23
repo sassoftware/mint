@@ -1462,10 +1462,12 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
+        hidden = self.project.hidden
         return self._write("members",
                 userHasReq = self.client.userHasRequested(self.project.getId(),
                     auth.userId),
-                reqList = reqList)
+                reqList = reqList,
+                hidden = hidden)
 
     @requiresAuth
     def adopt(self, auth):
@@ -1486,15 +1488,18 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
-            self._setInfo("You are now watching %s" % self.project.getNameForDisplay())
+            self._setInfo("You are now a registered user of %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @requiresAuth
     def unwatch(self, auth):
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
-            self._setInfo("You are no longer watching %s" % self.project.getNameForDisplay())
-        self._predirect("members")
+            self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
+        if self.project.hidden:
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._predirect("members")
 
     @strFields(comments = '', keepReq = None)
     @requiresAuth

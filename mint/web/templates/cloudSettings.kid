@@ -11,7 +11,7 @@ from mint.web.templatesupport import projectText
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Edit Amazon EC2 Settings: %s'%auth.fullName)}</title>
+        <title>${formatTitle('Edit Amazon Web Services(TM) Settings: %s'%auth.fullName)}</title>
         <?python
             from mint import data
             from mint.web.templatesupport import projectText
@@ -19,23 +19,23 @@ from mint.web.templatesupport import projectText
     </head>
     <body>
         <div id="layout">
-            <h2>Edit Amazon EC2 Settings</h2>
+            <h2>Edit Amazon Web Services&trade; Settings</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="processCloudSettings">
 
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
-                    <tr py:for="key, (dType, default, prompt, errmsg, helpText, password) in sorted(user.getDataTemplateAWS().iteritems())" class="required">
+                    <tr py:for="key, (dType, default, prompt, errmsg, helpText, password) in sorted(user.getDataTemplateAWS().iteritems())">
                         <div py:strip="True" py:if="dType == data.RDT_BOOL">
                             <td colspan="2">
                                 <input type="checkbox" class='check' name="${key}" py:attrs="{'checked' : dataDict.get(key, default) and 'checked' or None}"/> 
-                                ${prompt}
+                                <th><em class="required">${prompt}</em></th>
                                 <div py:if="helpText" class="help">
                                     ${helpText}
                                 </div>
                             </td>
                         </div>
                         <div py:strip="True" py:if="dType == data.RDT_INT or dType == data.RDT_STRING">
-                            <td>${prompt}</td>
+                            <th><em class="required">${prompt}</em></th>
                             <td>
                                 <input py:attrs="{'type': (password and 'password' or 'text'), 'name': key, 'value': dataDict.get(key, default)}" name="$key" value="${dataDict.get(key, default)}"/>
                                 <div py:if="helpText" class="help">

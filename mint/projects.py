@@ -358,12 +358,14 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
         # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
                         ON Projects.projectId=ProjectUsers.projectId
-                    WHERE ProjectUsers.userId=? AND
-                    NOT (hidden=1 AND level not in %s)""" % \
-            str(tuple(userlevels.WRITERS))
+                    WHERE ProjectUsers.userId=?"""
         if filter:
             stmt += " AND hidden=0"
         cu.execute(stmt, userId)

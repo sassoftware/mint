@@ -9,6 +9,8 @@ testsuite.setup()
 import time
 
 import boto
+import boto.s3
+import boto.s3.key
 from boto.exception import EC2ResponseError
 
 from mint import ec2
@@ -99,6 +101,81 @@ AWS_ERROR_XML_UNKNOWN = \
            <RequestID>4410d7ed-986c-4e86-a35b-68d4a4062024</RequestID>
        </Response>'''
 
+AMI_MANIFEST_FILE_XML = \
+    """<?xml version='1.0'?>
+        <manifest>
+            <version>2007-10-10</version>
+            <bundler>
+                <name>ec2-ami-tools</name>
+                <version>1.3</version>
+                <release>15586</release>
+            </bundler>
+            <machine_configuration>
+                <architecture>i386</architecture>
+            </machine_configuration>
+            <image>
+                <name>teletran1-1-x86_18.img</name>
+                <user>941766519978</user>
+                <type>machine</type>
+                <digest algorithm='SHA1'>283de2b0f2dade4f1322be9ea56f4dc8f1beda15</digest>
+                <size>1205432320</size>
+                <bundled_size>89887632</bundled_size>
+                <ec2_encrypted_key algorithm='AES-128-CBC'>encrypted-key</ec2_encrypted_key>
+                <user_encrypted_key algorithm='AES-128-CBC'>user-encrypted-key</user_encrypted_key>
+                <ec2_encrypted_iv>ec2-encrypted-iv</ec2_encrypted_iv>
+                <user_encrypted_iv>user-encrypted-iv</user_encrypted_iv>
+                <parts count='9'>
+                    <part index='0'>
+                        <filename>teletran1-1-x86_18.img.part.0</filename>
+                        <digest algorithm='SHA1'>471c07d6c19a5aca4450474b10422645df8b2c0f</digest>
+                    </part>
+                    <part index='1'>
+                        <filename>teletran1-1-x86_18.img.part.1</filename>
+                        <digest algorithm='SHA1'>2b2f48f7f37c82d5dc92c0430206372481593add</digest>
+                    </part>
+                    <part index='2'>
+                        <filename>teletran1-1-x86_18.img.part.2</filename>
+                        <digest algorithm='SHA1'>f34334c8b0674877b324a932c72a3851995fcaca</digest>
+                    </part>
+                    <part index='3'>
+                        <filename>teletran1-1-x86_18.img.part.3</filename>
+                        <digest algorithm='SHA1'>a81c93f9e07096e411f54b4239a99360da43f2dd</digest>
+                    </part>
+                </parts>
+            </image>
+            <signature>signature</signature>
+    </manifest>"""
+
+deletedKeys = []
+
+class FakeS3Connection(object):
+
+    def __init__(self, (accountId, accessKey, secretKey)):
+        self.accountId = accountId
+        self.accessKey = accessKey
+        self.secretKey = secretKey
+
+    def get_bucket(self, bucketName):
+        return FakeBucket(bucketName)
+
+class FakeBucket(object):
+    
+    def __init__(self, name=''):
+        self.name = name
+
+    def delete_key(self, key):
+        global deletedKeys
+        deletedKeys.append(key)
+
+class FakeKey(object):
+
+    def __init__(self, bucket=FakeBucket(), name=''):
+        self.bucket = bucket
+        self.name = name
+
+    def get_contents_as_string(self):
+        return AMI_MANIFEST_FILE_XML
+
 class FakeEC2Connection(object):
 
     def __init__(self, (accountId, accessKey, secretKey)):
@@ -143,6 +220,13 @@ class FakeEC2Connection(object):
     def modify_image_attribute(self, *args, **kw):
         return True
 
+    def deregister_image(self, amiId):
+        return True
+
+    def get_all_images(self, image_ids=['ami-id']):
+        image = FakeEC2Instance(image_ids[0], 'instance-id')
+        return [image]
+
 class FakeEC2KeyPair(object):
     __slots__ = ( 'name', 'fingerprint', 'material')
     
@@ -169,13 +253,14 @@ class FakeEC2Reservation(object):
 
 class FakeEC2Instance(object):
 
-    __slots__ = ( 'amiId', 'id', 'state', 'dns_name' )
+    __slots__ = ('amiId', 'id', 'state', 'dns_name', 'location')
 
     def __init__(self, amiId, instanceId, state='pending', dns_name=''):
         self.id = instanceId
         self.state = state
         self.dns_name = dns_name
         self.amiId = amiId
+        self.location = 'bucket-name/manifest-file-name.xml'
 
 class FakeEC2ResultSet(object):
 
@@ -188,16 +273,28 @@ class FakeEC2ResultSet(object):
 def getFakeEC2Connection(accessKey, secretKey):
     return FakeEC2Connection((None, accessKey, secretKey))
 
+def getFakeS3Connection(accessKey, secretKey):
+    return FakeS3Connection((None, accessKey, secretKey))
+
 class Ec2Test(fixtures.FixturedUnitTest):
 
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
         self.old_connect_ec2 = boto.connect_ec2
         boto.connect_ec2 = getFakeEC2Connection
+        self.old_connect_s3 = boto.connect_s3
+        boto.connect_s3 = getFakeS3Connection
+        self.oldKey = boto.s3.key.Key
+        boto.s3.key.Key = FakeKey
+        
+        global deletedKeys
+        deletedKeys = []
 
     def tearDown(self):
         fixtures.FixturedUnitTest.tearDown(self)
         boto.connect_ec2 = self.old_connect_ec2
+        boto.connect_s3 = self.old_connect_s3
+        boto.s3.key.Key = self.oldKey
 
     @fixtures.fixture("Full")
     def testBlessedAMI_CRUD(self, db, data):
@@ -547,6 +644,18 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertTrue(ec2cred == {'awsPublicAccessKeyId': '', 
                                         'awsSecretAccessKey': '', 
                                         'awsAccountNumber': ''})
+            
+            # add some credentials with a dash and whitespace
+            self.addAllLaunchPermsCalled = False
+            client.setEC2CredentialsForUser(data['adminId'], 'id-fo o ', 
+                                            'publicKey foo',
+                                            'secr foo etKey', False)
+            self.assertTrue(self.addAllLaunchPermsCalled)
+            ec2cred = client.getEC2CredentialsForUser(data['adminId'])
+            self.assertTrue(ec2cred == {'awsPublicAccessKeyId': 'publicKeyfoo', 
+                                        'awsSecretAccessKey': 'secrfooetKey', 
+                                        'awsAccountNumber': 'idfoo'})
+            
         finally:
             client.server._server.validateEC2Credentials = \
                 oldValidateAMICredentials
@@ -1168,6 +1277,26 @@ conaryproxy = http://proxy.hostname.com/proxy/
                 oldRemoveAllEC2LaunchPermissions
             client.server._server._ensureNoOrphans = oldEnsureNoOrphans
             client.server._server.removeUserAccount = oldRemoveUserAccount
+
+
+    @fixtures.fixture('EC2')
+    def testDeleteAMI(self, db, data):
+        """
+        Test deleting an AMI from s3.
+        """
+        client = self.getClient("admin")
+
+        build1 = client.getBuild(data['buildId1'])
+        build1.deleteBuild()
+
+        global deletedKeys
+        self.assertEquals(deletedKeys, 
+            ['teletran1-1-x86_18.img.part.0',
+             'teletran1-1-x86_18.img.part.1',
+             'teletran1-1-x86_18.img.part.2',
+             'teletran1-1-x86_18.img.part.3',
+             'manifest-file-name.xml'
+            ])
 
 if __name__ == '__main__':
     testsuite.main()

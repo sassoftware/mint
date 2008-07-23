@@ -12,10 +12,9 @@ kid_files = \
 	buildDefs.kid		\
 	buildPackage.kid	\
 	builds.kid		\
-	catalogLayout.kid	\
 	createPackage.kid	\
 	createPackageInterview.kid \
-	cloudCatalog.kid	\
+	cloudCatalogNoCredentials.kid	\
 	cloudSettings.kid	\
 	confirmEmail.kid	\
 	confirmPublish.kid	\

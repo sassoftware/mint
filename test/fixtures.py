@@ -544,6 +544,7 @@ class FixtureCache(object):
         pubRelease.version = "1.1"
         pubRelease.addBuild(build.id)
         pubRelease.save()
+        buildId1 = build.id
 
         # create an AMI build and add it to a published release
         build = client.newBuild(projectId, "Test AMI Build (Published)")
@@ -558,6 +559,7 @@ class FixtureCache(object):
         pubRelease.addBuild(build.id)
         pubRelease.save()
         pubRelease.publish()
+        buildId2 = build.id
 
         # create a published AMI build on the other project
         build = client.newBuild(otherProjectId, "Test AMI Build (Published)")
@@ -572,6 +574,7 @@ class FixtureCache(object):
         pubRelease.addBuild(build.id)
         pubRelease.save()
         pubRelease.publish()
+        buildId3 = build.id
 
         # create a plain ol' AMI build on the other project
         build = client.newBuild(otherProjectId,
@@ -581,6 +584,7 @@ class FixtureCache(object):
         build.setBuildType(buildtypes.AMI)
         build.setDataValue('amiId', 'ami-00000005', RDT_STRING,
                 validate=False)
+        buildId4 = build.id
 
         # create an AMI build and add it to an unpublished
         # (not final) release on the hiddenproject
@@ -596,6 +600,7 @@ class FixtureCache(object):
         pubRelease.addBuild(build.id)
         pubRelease.save()
         hiddenProjUnpubPubReleaseId = pubRelease.id
+        buildId5 = build.id
 
         # create an AMI build and add it to a published release on the hidden
         # project.
@@ -612,8 +617,7 @@ class FixtureCache(object):
         pubRelease.save()
         pubRelease.publish()
         hiddenProjPubPubReleaseId = pubRelease.id
-
-
+        buildId6 = build.id
 
         amiIds = []
         for i in range(0,7):
@@ -631,6 +635,12 @@ class FixtureCache(object):
                       'loneUserId': loneUserId,
                       'hiddenProjUnpubPubReleaseId': hiddenProjUnpubPubReleaseId,
                       'hiddenProjPubPubReleaseId': hiddenProjPubPubReleaseId,
+                      'buildId1' : buildId1,
+                      'buildId2' : buildId2,
+                      'buildId3' : buildId3,
+                      'buildId4' : buildId4,
+                      'buildId5' : buildId5,
+                      'buildId6' : buildId6,
                       }
 
     def getAMIConfig(self, testCfg):

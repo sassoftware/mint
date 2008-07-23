@@ -38,7 +38,10 @@
                             <label for="level">
                                 Membership Type:
                                 <select name="level">
-                                    <option py:for="level in reversed(userlevels.WRITERS)"
+                                    <option py:if="hidden" py:for="level in reversed(userlevels.LEVELS)"
+                                            py:content="userlevels.names[level]"
+                                            value="${level}" />
+                                    <option py:if="not hidden" py:for="level in reversed(userlevels.WRITERS)"
                                             py:content="userlevels.names[level]"
                                             value="${level}" />
                                 </select>

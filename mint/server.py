@@ -532,13 +532,17 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
+        # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
+        # Allow anyone to see public projects
         if not self.projects.isHidden(projectId):
             return
+        # Project is hidden, so user must be a member to see it.
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.WRITERS):
+            self.auth.userId) in userlevels.LEVELS):
                 return
+        # All the above checks must have failed, raise exception.
         raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
@@ -1038,9 +1042,6 @@ class MintServer(object):
             else:
                 username = r[0]
 
-        if (self.auth.userId != userId) and level == userlevels.USER:
-            raise users.UserInduction()
-    
         try:
             self.db.transaction()
             if level != userlevels.USER:
@@ -1155,8 +1156,6 @@ class MintServer(object):
             userLevel = self.getUserLevel(userId, projectId)
         except ItemNotFound:
             raise netclient.UserNotFound()
-        if (self.auth.userId != userId) and userLevel == userlevels.USER:
-            raise users.UserInduction()
 
         # Set any EC2 launch permissions if the user has aws credentials set.
         awsFound, awsAccountNumber = self.userData.getDataValue(userId,
@@ -1168,33 +1167,35 @@ class MintServer(object):
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
-
             label = versions.Label(project.getLabel())
-            if not project.external:
-                helperfuncs.deleteUserFromRepository(repos, 
-                                user['username'], label)
-                try:
-                    # TODO: This will go away when using role-based permissions
-                    # instead of one-role-per-user. Without this, admin users'
-                    # roles would not be deleted due to CNY-2775
-                    repos.deleteRole(label, user['username'])
-                except RoleNotFound:
-                    # Conary deleted the (unprivileged) role for us
-                    pass
+
+            if notify:
+                self._notifyUser('Removed', user, project)
+
+            self.projectUsers.delete(projectId, userId, commit=False)
+
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
 
-        if notify:
-            self._notifyUser('Removed', user, project)
+        if not project.external:
+            helperfuncs.deleteUserFromRepository(repos, 
+                            user['username'], label)
+            try:
+                # TODO: This will go away when using role-based permissions
+                # instead of one-role-per-user. Without this, admin users'
+                # roles would not be deleted due to CNY-2775
+                repos.deleteRole(label, user['username'])
+            except RoleNotFound:
+                # Conary deleted the (unprivileged) role for us
+                pass
 
         return True
 
@@ -1461,8 +1462,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def setUserLevel(self, userId, projectId, level):
         self._filterProjectAccess(projectId)
-        if (self.auth.userId != userId) and (level == userlevels.USER):
-            raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
             raise users.LastOwner
@@ -2477,7 +2476,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise BuildMissing()
         if self.builds.getPublished(buildId):
             raise BuildPublished()
-        cu = self.db.cursor()
+
+        try:
+            self.db.transaction()
+            self.builds.deleteBuild(buildId, commit=False)
+
+            amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
+            if amiBuild:
+                self.deleteAMI(amiId)
+        except AMIInstanceDoesNotExist:
+            # We do not want to fail this operation in this case.
+            pass
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+
         for filelist in self.getBuildFilenames(buildId):
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
@@ -2500,8 +2515,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             # ignore permission denied, dir not empty, no such file/dir
                             if e.errno not in (2, 13, 39):
                                 raise
-        self.builds.deleteBuild(buildId)
+
         return True
+
+    @typeCheck(str)
+    @requiresAuth
+    def deleteAMI(self, amiId):
+        """
+        Delete the given amiId from Amazon's S3 service.
+        @param amiId: the id of the ami to delete
+        @type amiId: C{str}
+        @return the ami id deleted
+        @rtype C{str}
+        """
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        s3Wrap = ec2.S3Wrapper(authToken)
+        return s3Wrap.deleteAMI(amiId)
 
     @typeCheck(int, dict)
     @requiresAuth
@@ -3444,6 +3473,31 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'amiManifestName,',
                 amiManifestName, data.RDT_STRING)
         self.buildData.removeDataValue(buildId, 'outputToken')
+
+        # Set AMI image permissions for build here
+        from mint.shimclient import ShimMintClient
+        authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
+                                               self.cfg.authPass))
+
+        bld = authclient.getBuild(buildId)
+        project = authclient.getProject(bld.projectId)
+
+        # Get the list of AWSAccountNumbers for the projects members
+        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(bld.projectId)
+
+        # Set up EC2 connection
+        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        ec2Wrap = ec2.EC2Wrapper(authToken)
+
+        try:
+            if writers:
+                ec2Wrap.addLaunchPermissions(amiId, writers)
+        except EC2Exception, e:
+            # This is a really lame way to handle this error, but until the jobslave can
+            # return a status of "built with warnings", then we'll have to go with this.
+            print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
+            sys.stderr.flush()
+
         return True
 
     @typeCheck(int, list, (list, str, int))
@@ -3775,26 +3829,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(unicode)
     @requiresAuth
     def getJobStatus(self, uuid):
-
+        """
+        Note: this is only used for group builder cooks,
+        and needs to be deprecated.
+        """
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        buildId = helperfuncs.getBuildIdFromUuid(uuid)
-        buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType']
+        mc = self._getMcpClient()
 
-        if buildtype != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
-
-            try:
-                status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
-                status, message = \
-                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
-        else:
-            # status is always finished since no build is actually done
-            status, message = jobstatus.FINISHED, \
-                jobstatus.statusNames[jobstatus.FINISHED]
+        try:
+            status, message = mc.jobStatus(uuid)
+        except mcp_error.UnknownJob:
+            status, message = \
+                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
         return { 'status' : status, 'message' : message }
 
@@ -5292,9 +5340,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if userId != self.auth.userId and not self.auth.admin:
             raise PermissionDenied
         
-        newValues = dict(awsAccountNumber=awsAccountNumber.replace('-',''),
-                         awsPublicAccessKeyId=awsPublicAccessKeyId,
-                         awsSecretAccessKey=awsSecretAccessKey)
+        # cleanup the data
+        accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
+        publicKey = awsPublicAccessKeyId.strip().replace(' ','')
+        secretKey = awsSecretAccessKey.strip().replace(' ','')
+        
+        newValues = dict(awsAccountNumber=accountNum,
+                         awsPublicAccessKeyId=publicKey,
+                         awsSecretAccessKey=secretKey)
 
         awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')

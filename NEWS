@@ -48,6 +48,13 @@ Web Front End Changes
 * There was a conceptual disconnect between the role "User" and "Watching" a
   product.  This has been changed so that users now "register for" and "use"
   products. (RBL-2972)
+* EC2 credentials will now be stripped of whitespace. (RBL-3119)
+* Fixed a bug where the arrows indicating required fields were not present
+  on the "Edit Amazon Web Services Settings" page. (RBL-3126)
+* The "rBuilder Catalog for EC2" page now contains a link to the EC2
+  documentation. (RB-3127)
+* Fixed a bug where the "rBuilder Catalog for EC2" was being blocked by
+  the adblock extension on Firefox 3. (RBL-3123)
 
 
 Changes in 4.1.1
