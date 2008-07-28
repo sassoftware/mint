@@ -5,8 +5,6 @@
 #
 import os
 import shutil
-import mysqlharness
-import pgsqlharness
 import pwd
 import rephelp
 import socket
@@ -524,6 +522,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         self.mintServers = _servers
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
+        if not os.path.exists(self.reposDir):
+            util.mkdirChain(self.reposDir)
         self.imagePath = os.path.join(self.tmpDir, "images")
         if not os.path.exists(self.imagePath):
             os.mkdir(self.imagePath)

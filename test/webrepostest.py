@@ -115,6 +115,28 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertContent('/repos/test/browse', code = [200],
                 content = 'troveInfo?t=test',
                 server = self.getProjectServerHostname())
+        
+    @testsuite.tests('RBL-3108')
+    def testAdminBrowsePrivateProject(self):
+        """
+        Make sure admins can browser private products they don't belong to
+        """
+        adminClient, _ = self.quickMintAdmin("adminuser", "testpass")
+
+        client, _ = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'test')
+
+        adminClient.hideProject(projectId)
+        self.makeSourceTrove("testcase", testRecipe)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime" ])
+
+        # admin user should see the browser
+        page = self.webLogin('adminuser', 'testpass')
+        page = page.assertContent('/repos/test/browse', code = [200],
+                content = 'troveInfo?t=test',
+                server = self.getProjectServerHostname())
 
     def testBrowseExternalProject(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
