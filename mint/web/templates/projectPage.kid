@@ -3,7 +3,7 @@
 from mint import userlevels
 from mint.client import timeDelta
 from mint.client import upstream
-from mint.helperfuncs import truncateForDisplay
+from mint.helperfuncs import truncateForDisplay, formatProductVersion
 from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -62,12 +62,11 @@ from mint.web.templatesupport import projectText
                     <ul>
                         <li><a href="${basePath}editProject">Edit</a> ${projectText().lower()} settings</li>
                         <li py:if="not external"><a href="${basePath}editVersion">Create</a> a new ${projectText().lower()} version</li>
-                        <li py:if="versions and not external">
-                            Edit ${projectText().lower()} version
-                            <?python
-                            d = {'id':'version', 'name':'version', 'class':'field', 'onchange':"editVersionRedirect('" + basePath + "', this.options[this.selectedIndex].value);"}
-                            ?>
-                            ${versionSelection(d, versions, True)}
+                        <li py:if="versions and not external and currentVersion">
+                            <a href="${basePath}editVersion?id=${currentVersion}">Edit</a> ${projectText().lower()} version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}
+                        </li>
+                        <li py:if="not versions or not currentVersion">
+                            Select a version at the left to edit the product version
                         </li>
                     </ul>
                 </div>

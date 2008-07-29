@@ -565,3 +565,22 @@ def buildEC2AuthToken(cfg):
         raise mint_error.EC2NotConfigured()
     
     return at
+
+def formatProductVersion(versions, currentVersion):
+    if currentVersion is None:
+        return "Not Selected"
+    ret = None
+    namespaces = dict()
+    for vId, b, ns, ver, nada in versions:
+        namespaces[ns] = 1
+        if vId == currentVersion:
+            ret = (ns, ver)
+    if not ret:
+        raise RuntimeError("Could not find the current version in the version list")
+    showNamespace = len(namespaces.keys()) > 1
+    if showNamespace:
+        ret = "%s (%s)" % (ret[1], ret[0])
+    else:
+        ret = "%s" % ret[1]
+    return ret
+

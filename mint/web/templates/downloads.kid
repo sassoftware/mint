@@ -14,6 +14,7 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
+                ${productVersionMenu(versions, currentVersion)}
                 ${releasesMenu(projectPublishedReleases, isOwner)}
                 ${commitsMenu(projectCommits)}
             </div>

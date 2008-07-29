@@ -25,6 +25,8 @@ Internal Changes
 
 Web Front End Changes
 ---------------------
+* Product Version is now set as a view on the Product, affecting all pages that
+  interact with the product version (RBL-3163)
 * Fixed a bug where the cook group page mistakenly referenced the "Images" 
   link instead of the "Manage Images" link. (RBL-3014)
 * There is now a link on the account settings page to edit a user's EC2

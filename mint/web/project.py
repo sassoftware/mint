@@ -23,6 +23,7 @@ from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
+from mint.web import productversion
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
@@ -50,8 +51,7 @@ def getUserDict(members):
         users[level].append((userId, username,))
     return users
 
-
-class ProjectHandler(WebHandler):
+class ProjectHandler(WebHandler, productversion.ProductVersionView):
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -101,6 +101,8 @@ class ProjectHandler(WebHandler):
         self.basePath += "project/%s" % (cmds[0])
         self.basePath = normPath(self.basePath)
 
+        self.setupView()
+
         if not cmds[1]:
             return self.projectPage
         try:
@@ -142,18 +144,17 @@ class ProjectHandler(WebHandler):
             external = True
         else:
             external = False
-            
-        if self.userLevel == userlevels.OWNER and not external:
-            # get the versions associated with a product
-            versions = self.client.getProductVersionListForProduct(
-                                                                self.project.id)
-        else:
-            versions = []
-            
+
         return self._write("projectPage", mirrored = mirrored, 
                            anonymous = anonymous, vmtnId = vmtnId,
-                           versions = versions,
                            external = external)
+
+    @intFields(versionId=-1)
+    @strFields(redirect_to = None)
+    def setProductVersion(self, versionId, redirect_to):
+        self._setCurrentProductVersion(versionId)
+        self.session.save()
+        self._redirect(redirect_to, temporary=True)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -244,7 +245,7 @@ class ProjectHandler(WebHandler):
 
             self._predirect("editGroup?id=%d" % gtId)
         else:
-            kwargs = {'groupName': groupName, 'version': version}
+            kwargs = {'groupName': groupName, 'version': version, 'versions': self.versions, 'currentVersion': self.currentVersion}
             troves, troveDict, metadata, messages = self._getBasicTroves()
 
             return self._write("newGroup", kwargs = kwargs,
@@ -370,29 +371,27 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
-    @writersOnly
+    @productversion.productVersionRequired
     def newBuildsFromProductDefinition(self, auth):
-        return self._write("newBuildsFromProductDefinition",
-            productVersions = self.client.getProductVersionListForProduct(self.project.id))
+        return self._write("newBuildsFromProductDefinition")
 
-    @intFields(productVersionId = -1)
     @strFields(action = "cancel", productStageName = None)
     @boolFields(force = False)
     @dictFields(yesArgs = None)
     @writersOnly
-    def processNewBuildsFromProductDefinition(self, auth, productVersionId, productStageName, action, force, **yesArgs):
+    @productversion.productVersionRequired
+    def processNewBuildsFromProductDefinition(self, auth, productStageName, action, force, **yesArgs):
 
         if action.lower() == 'cancel':
             self._predirect('builds')
 
         try:
-            self.client.newBuildsFromProductDefinition(productVersionId,
+            self.client.newBuildsFromProductDefinition(currentVersion,
                     productStageName, force)
         except TroveNotFoundForBuildDefinition, tnffbd:
             return self._write("confirm",
                     message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
                     yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
-                                'productVersionId': productVersionId,
                                 'productStageName': productStageName,
                                 'action': 'submit',
                                 'force': '1'},
@@ -690,15 +689,15 @@ class ProjectHandler(WebHandler):
                 amiS3Manifest = amiS3Manifest)
 
     @writersOnly
+    @productversion.productVersionRequired
     def newPackage(self, auth):
         uploadDirectoryHandle = self.client.createPackageTmpDir()
-        versions = self.project.getProductVersionList()
-        if not versions:
+        if not self.versions:
             self._addErrors('You must create a product version before using the package creator')
             self._predirect('editVersion', temporary=True)
         return self._write('createPackage', message = '',
                 uploadDirectoryHandle = uploadDirectoryHandle,
-                versions = versions, versionId = -1, name=None)
+                sessionHandle=None, name=None)
 
     @writersOnly
     @strFields(uploadId=None, fieldname=None)
@@ -707,16 +706,16 @@ class ProjectHandler(WebHandler):
                 fieldname = fieldname, project = self.project.hostname)
 
     @writersOnly
+    @productversion.productVersionRequired
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
-    @intFields(versionId=-1)
-    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url, sessionHandle):
+    def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
         if sessionHandle:
             editing = True
         else:
             editing = False
         try:
             #Start the session first
-            sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+            sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -733,11 +732,10 @@ class ProjectHandler(WebHandler):
         """"""
         #Start both the upload and the pc sessions
         uploadDirectoryHandle = self.client.createPackageTmpDir()
-        versions = []
         sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
         return self._write('createPackage', message = '',
                 uploadDirectoryHandle = uploadDirectoryHandle,
-                versions = [], versionId = -1, sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
+                sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
@@ -1392,6 +1390,8 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 action = isNew and "Created" or "Updated"
                 self._setInfo("%s %s version '%s'" % \
                               (action, getProjectText().lower(), name))
+            #Set the currentVersion to the just created one
+            self._setCurrentProductVersion(id)
             self._predirect()
         else:
             kwargs.update(name=name, description=description)

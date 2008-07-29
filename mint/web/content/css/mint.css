@@ -38,6 +38,17 @@ a:hover {
     text-decoration: none;
 }
 
+.boxHeader a.headerlink,
+.boxHeader a.headerlink:visited,
+.boxHeader a.headerlink:active,
+.boxHeader a.headerlink:hover {
+    color: #fff;
+    background-color: transparent;
+    font-weight: normal;
+    font-size: small;
+    text-decoration: underline;
+}
+
 .boxHeader a,
 .boxHeader a:visited,
 .boxHeader a:active,
@@ -1644,4 +1655,9 @@ div#progress_indicator_bar {
     left: 0px;
     top: 0px;
     position: absolute;
+}
+
+select.auto,
+input.auto {
+    width: auto;
 }

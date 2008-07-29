@@ -52,7 +52,7 @@ allowNone = ['anaconda-custom', 'media-template']
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
             <div id="right" class="side">
                 ${projectsPane()}

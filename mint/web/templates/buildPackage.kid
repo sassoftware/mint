@@ -83,7 +83,7 @@ addLoadEvent(makeRequest);
         </script>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

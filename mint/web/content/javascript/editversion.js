@@ -132,17 +132,3 @@ jQuery(document).ready(function () {
     });
 });
 
-// given a project path (i.e. /project/foo) and version id, redirect to the 
-// proper edit version page
-function editVersionRedirect(projectPath, versionId) {
-                
-    if(versionId >= 0) {
-    
-       // makes sure projectPath ends in slash
-       if(projectPath.charAt(projectPath.length -1) != '/') {
-           projectPath += '/';
-       }
-    
-       location = projectPath + 'editVersion?id=' + versionId;
-    }
-}
