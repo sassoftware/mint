@@ -5052,11 +5052,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if not sessionHandle:
             #Get the version object
-            version = projects.ProductVersions(self, versionId)
+            version = self.getProductVersion(versionId)
             #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version.namespace,
-                version=version.name), mincfg)
+                shortname=project.shortname, namespace=version['namespace'],
+                version=version['name']), mincfg)
         else:
             sesH = sessionHandle
 
