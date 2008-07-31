@@ -17,6 +17,7 @@ python_files = \
 	rpchooks.py	\
 	decorators.py	\
 	hooks.py	\
+	productversion.py	\
 	project.py	\
 	setup.py	\
 	site.py		\

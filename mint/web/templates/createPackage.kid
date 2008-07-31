@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 import simplejson
+from mint.helperfuncs import formatProductVersion, truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -67,7 +68,7 @@ import simplejson
         </script>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
@@ -75,7 +76,7 @@ import simplejson
 
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
-              <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+              <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
             <h2>Package Creator<span py:if="name" py:strip="True"> - Editing ${name.replace(':source', '')}</span></h2>
             <h3>Step 1 of 3</h3>
             <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
@@ -85,21 +86,8 @@ import simplejson
             <div id="getPackageFactories_outerdiv">
             <form name="getPackageFactories" method="post" action="getPackageFactories" enctype="multipart/form-data" id="getPackageFactories">
                 <input type="hidden" name="uploadDirectoryHandle" value="${uploadDirectoryHandle}"/>
+                <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
-                  <tr>
-                  <th>Product Version</th>
-                  <td py:if='versions'>
-                    ${versionSelection(dict(name='versionId'), versions, False)}
-                  </td>
-                  <td py:if="not versions and sessionHandle">
-                    ${prodVer} (${namespace})
-                    <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
-                  </td>
-                  <td py:if="not versions and not sessionHandle">
-                    ${prodVer} (${namespace})
-                    <input type="hidden" name="versionId" value="${versionId}"/>
-                  </td>
-                  </tr>
                   <tr>
                   <th>Archive</th>
                   <td>

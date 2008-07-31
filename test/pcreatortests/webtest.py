@@ -44,11 +44,18 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
                 server=self.getProjectServerHostname())
         self.assertEquals(page.code, 302, "This call should redirect since there are no versions setup")
         client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
-        client.addProductVersion(projectId, self.mintCfg.namespace, "version2", "Fluff description")
+
+        #Without the current version set, it should redirect
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        self.assertEquals(page.code, 302, "This call should redirect since there is no current version set")
+
+        #set the current version
+        page = self.fetch('/project/testproject/setProductVersion?versionId=1&redirect_to=/foo',
+                server=self.getProjectServerHostname())
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
         assert 'version1' in page.body
-        assert 'version2' in page.body
         assert 'value="Upload"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
@@ -57,6 +64,16 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         #Make sure it actually did what we asked
         #Get the tempPath
         tmppath = os.path.join(self.mintCfg.dataPath, 'tmp', 'rb-pc-upload-%s' % sessionHandle)
+
+        #set the current version to the other
+        client.addProductVersion(projectId, self.mintCfg.namespace+'tag', "version2", "Fluff description")
+        page = self.fetch('/project/testproject/setProductVersion?versionId=2&redirect_to=/foo',
+                server=self.getProjectServerHostname())
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        assert 'version2' in page.body
+        assert self.mintCfg.namespace+'tag' in page.body
+
         assert os.path.isdir(tmppath)
 
     @testsuite.context('more_cowbell')
@@ -102,7 +119,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     def _setupInterviewEnvironment(self, mockMethod):
         fields = {
             'uploadDirectoryHandle': 'foobarbaz',
-            'versionId': '1',
         }
         cmd = 'testproject/getPackageFactories'
 
@@ -391,11 +407,12 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         except mint.web.webhandler.HttpMoved:
             pass
 
+        self.assertEquals(projectHandler._getCurrentProductVersion(), 2)  #This should be set to the new version
         client = projectHandler.client
         projectId = projectHandler.projectId
         self.assertEquals(self.called, True)
-        self.assertEquals(client.getProductVersionListForProduct(projectId),
-                [[1, 1, 'foo', '1', '']])
+        #The _setupProjectHandlerMockClientMethod created product version is versionId 1
+        self.failUnless([2, 1, 'foo', '1', ''] in  client.getProductVersionListForProduct(projectId))
 
     def testEditVersionMissingValues(self):
         methodName = 'processEditVersion'
@@ -443,6 +460,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        projectHandler._setCurrentProductVersion(-1)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
@@ -474,6 +492,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        projectHandler._setCurrentProductVersion(-1) #unset the current session so we see all of them
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)

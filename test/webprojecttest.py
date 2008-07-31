@@ -46,6 +46,10 @@ class rogueReq(object):
         self.headers_out = {}
         self.uri = ''
 
+class session(dict):
+    def save(self):
+        pass
+
 class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
     def _setupProjectHandler(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -56,7 +60,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
         projectHandler.client = client
-        projectHandler.session = {}
+        projectHandler.session = session()
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
         projectHandler.auth = users.Authorization(\
@@ -70,6 +74,9 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.inlineMime = None
         projectHandler.infoMsg = None
         projectHandler.errorMsgList = []
+        projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
+        projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
+        projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
 
         return projectHandler
 
@@ -90,7 +97,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.inlineMime = None
         siteHandler.infoMsg = None
         siteHandler.errorMsgList = []
-        siteHandler.session = {}
+        siteHandler.session = session()
 
         return siteHandler,  siteHandler.auth
 
@@ -530,7 +537,7 @@ class WebProjectTest(WebProjectBaseTest):
         projectHandler = project.ProjectHandler()
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
+        projectHandler.session = session()
         projectHandler.client = client
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
@@ -583,7 +590,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
         self.ph = project.ProjectHandler()
-        self.ph.session = {}
+        self.ph.session = session()
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved

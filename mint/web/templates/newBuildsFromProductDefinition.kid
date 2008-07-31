@@ -9,7 +9,7 @@
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
             <div id="right" class="side">
                 ${projectsPane()}
@@ -24,33 +24,29 @@
                     Currently, building images from an external project's
                     product definition is not currently supported.
                 </p>
-                <p py:if="not project.external and not productVersions">
+                <p py:if="not project.external and not versions">
                     Your product does not have any version information set up and,
                     as such, contains no product definitions to use to create a
                     set of images. Please <a href="editVersion">create a product version</a>
                     first.
                 </p>
-                <form py:if="not project.external and productVersions" method="post" action="processNewBuildsFromProductDefinition" id="mainForm">
-                    <div id="step1">
-                        <h3>Step 1: Choose Product Version</h3>
-                        <p>Choose the product version you wish to create a set of images from:</p>
-                        <label for="productVersionSelector">Product Version</label>
-                        ${versionSelection(dict(id="productVersionSelector", name="productVersionId"), productVersions, True)}
-                        <span id="step1-wait" style="display: none;"><img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />&nbsp;Fetching stages for version...</span>
+                <form py:if="not project.external and versions" method="post" action="processNewBuildsFromProductDefinition" id="mainForm">
+                    <div id="step0">
+                        <span id="step0-wait" style="display: none;"><img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />&nbsp;Fetching stages for version...</span>
                     </div>
-
-                    <div id="step2" class="hideOnReset" style="display: none;">
-                        <h3>Step 2: Choose Product Stage</h3>
+                    <div id="step1" class="hideOnReset" style="display: none;">
+                        <h3>Step 1: Choose Product Stage</h3>
                         <p>Choose the stage of the product you wish to create images from:</p>
                         <label for="productStageSelector">Stage</label>
                         <select id="productStageSelector" name="productStageName">
                             <!-- inject stages -->
                         </select>
-                        <span id="step2-wait" style="display: none;"><img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />&nbsp;Fetching tasks for stage...</span>
+                        <span id="step1-wait" style="display: none;"><img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" />&nbsp;Fetching tasks for stage...</span>
                     </div>
 
-                    <div id="step3-confirm" class="hideOnReset" style="display: none;">
-                        <h3>Step 3: Confirm the Set of Images</h3>
+                    <input id="productVersionSelector" type="hidden" name="productVersionId" value="${currentVersion}"/>
+                    <div id="step2-confirm" class="hideOnReset" style="display: none;">
+                        <h3>Step 2: Confirm the Set of Images</h3>
                         <p id="taskListHeader">The following images will be generated:</p>
                         <dl id="taskList" />
                         <p>Note: The actual number of images generated may be
@@ -68,14 +64,14 @@
                            </ul>
                     </div>
 
-                    <div id="step2-error" class="hideOnReset" style="display: none;">
+                    <div id="step1-error" class="hideOnReset" style="display: none;">
 
                         <h3>Error</h3>
                         <p>Failed to find the product definition for the specified
                            version. Please select a different version and try again.
                         </p>
                     </div>
-                    <div id="step3-error" class="hideOnReset" style="display: none;">
+                    <div id="step2-error" class="hideOnReset" style="display: none;">
                         <h3>Error</h3>
                         <p>This product version is not configured to build any
                            images for the selected stage. Choose a different
@@ -90,4 +86,10 @@
             </div>
         </div>
     </body>
+    <script type="text/javascript">
+    jQuery(document).ready( function () {
+        onProductVersionSelection(${currentVersion});
+        resetNewBuildsPage();
+    });
+    </script>
 </html>

@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint.web.templatesupport import downloadTracker, projectText
+from mint.helperfuncs import truncateForDisplay, formatProductVersion
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -73,7 +74,7 @@ from mint.web.templatesupport import downloadTracker, projectText
                 <div py:if="isWriter">
                     You may:
                     <ul>
-                        <li py:if="not project.external"><a href="newBuildsFromProductDefinition">Create a set of images from a product definition</a></li>
+                        <li py:if="not project.external"><a href="newBuildsFromProductDefinition">Create a set of images for version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</a></li>
                         <li><a href="newBuild">Create a single image</a></li>
                     </ul>
                 </div>

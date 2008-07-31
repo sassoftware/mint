@@ -4933,7 +4933,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @typeCheck(int)
-    @requiresAuth
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
 
