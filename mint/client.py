@@ -430,6 +430,23 @@ class MintClient:
         '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
         return self.server.getPackageCreatorPackages(projectId)
 
+    def startApplianceCreatorSession(self, projectId, prodVer, namespace,
+            rebuild):
+        """See L{mint.server.startApplianceCreatorSession}"""
+        return self.server.startApplianceCreatorSession(projectId, prodVer, namespace, rebuild)
+
+    def makeApplianceTrove(self, sessionHandle):
+        return self.server.makeApplianceTrove(sessionHandle)
+
+    def addApplianceTrove(self, sessionHandle, troveSpec):
+        return self.server.addApplianceTrove(sessionHandle, troveSpec)
+
+    def setApplianceTroves(self, sessionHandle, troveList):
+        return self.server.setApplianceTroves(sessionHandle, troveList)
+
+    def listApplianceTroves(self, sessionHandle):
+        return self.server.listApplianceTroves(sessionHandle)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId

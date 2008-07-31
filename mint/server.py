@@ -5288,6 +5288,45 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             return False
 
+    @requiresAuth
+    def startApplianceCreatorSession(self, projectId, prodVer, namespace,
+            rebuild):
+        project = projects.Project(self, projectId)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        mincfg = self._getMinCfg(project)
+        try:
+            sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=namespace,
+                version=prodVer), mincfg, rebuild)
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error starting the appliance creator service session: %s", str(err))
+        return sesH
+
+    @requiresAuth
+    def makeApplianceTrove(self, sessionHandle):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        return pc.makeApplianceTrove(sessionHandle)
+
+    @requiresAuth
+    def addApplianceTrove(self, sessionHandle, troveSpec):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # hard code the explicit flag to True for this codepath
+        return pc.addTrove(sessionHandle, troveSpec, True)
+
+    @requiresAuth
+    def setApplianceTroves(self, sessionHandle, troveList):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # abstract out the implicit troves
+        troveDict = pc.listTroves(sessionHandle)
+        return pc.setTroves(sessionHandle, troveList,
+                troveDict.get('implicitTroves', []))
+
+    def listApplianceTroves(self, sessionHandle):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # abstract out the implicit troves
+        return pc.listTroves(sessionHandle).get('explicitTroves', [])
+
     @typeCheck(int)
     @requiresAuth
     def getEC2CredentialsForUser(self, userId):
