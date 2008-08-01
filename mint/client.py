@@ -772,29 +772,6 @@ class MintClient:
     def delRemappedRepository(self, fromName):
         return self.server.delRemappedRepository(fromName)
 
-    def getUseItIcons(self):
-        return self.server.getUseItIcons()
-
-    def deleteUseItIcon(self, itemId):
-        return self.server.deleteUseItIcon(itemId)
-
-    def addUseItIcon(self, itemId, name, link):
-        return self.server.addUseItIcon(itemId, name, link)
-
-    def getCurrentSpotlight(self):
-        return self.server.getCurrentSpotlight()
-
-    def getSpotlightAll(self):
-        return self.server.getSpotlightAll()
-
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                         endDate):
-         return self.server.addSpotlightItem(title, text, link, logo,
-                                             showArchive, startDate, endDate)
-
-    def deleteSpotlightItem(self, itemId):
-        return self.server.deleteSpotlightItem(itemId)
-
     def addFrontPageSelection(self, name, link, rank):
         return self.server.addFrontPageSelection(name, link, rank)
 

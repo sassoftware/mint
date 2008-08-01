@@ -173,7 +173,6 @@ class MintConfig(ConfigFile):
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
-    spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)

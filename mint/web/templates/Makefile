@@ -7,7 +7,6 @@
 SUBDIRS = repos admin docs setup
 
 kid_files = \
-	applianceSpotlight.kid	\
 	build.kid		\
 	buildDefs.kid		\
 	buildPackage.kid	\

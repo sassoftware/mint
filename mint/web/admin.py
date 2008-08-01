@@ -368,67 +368,9 @@ class AdminHandler(WebHandler):
         return self._write('admin/selections',
                            selectionData=self.client.getFrontPageSelection())
 
-    def useIt(self, *args, **kwargs):
-        data = self.client.getUseItIcons()
-        if data:
-            if len(data) < 4:
-                table1Data = data
-                table2Data = False
-            elif len(data) == 4:
-                table1Data = data[:2]
-                table2Data = data[2:]
-            else:
-                table1Data = data[:3]
-                table2Data = data[3:]
-        else:
-            table1Data = False
-            table2Data = False
-        return self._write('admin/useit', table1Data=table1Data, 
-                           table2Data=table2Data)
-
-    @strFields(name1='', link1='', name2='', link2='', name3='', 
-               link3='', name4='', link4='', name5='', link5='',
-               name6='', link6='', op='preview')
-    def setIcons(self, name1, link1, name2, link2, name3, link3, name4, link4,
-                 name5, link5, name6, link6, op, *args, **kwargs):
-        if op == 'preview':
-            newIcons = []
-            newIcons.append({'itemId':1, 'name':name1, 'link':link1})
-            newIcons.append({'itemId':2, 'name':name2, 'link':link2})
-            newIcons.append({'itemId':3, 'name':name3, 'link':link3})
-            newIcons.append({'itemId':4, 'name':name4, 'link':link4})
-            newIcons.append({'itemId':5, 'name':name5, 'link':link5})
-            newIcons.append({'itemId':6, 'name':name6, 'link':link6})
-            data = self.client.getUseItIcons()
-            newData = []
-            for icon in newIcons:
-                if not icon['name']:
-                    if data:
-                        for item in data:
-                            if item['itemId'] == icon['itemId']:
-                                newData.append(item)
-                else:
-                    newData.append(icon)
-            return self.preview(newData=newData)
-        elif op == "set":
-            self.client.addUseItIcon(1, name1, link1)
-            self.client.addUseItIcon(2, name2, link2)
-            self.client.addUseItIcon(3, name3, link3)
-            self.client.addUseItIcon(4, name4, link4)
-            self.client.addUseItIcon(5, name5, link5)
-            self.client.addUseItIcon(6, name6, link6)
-        return self.useIt()
-
-    @intFields(itemId=None)
-    def deleteUseItIcon(self, itemId, *args, **kwargs):
-        self.client.deleteUseItIcon(itemId)
-        return self.useIt()
-
     @strFields(name=None, link=None)
     @intFields(rank=0)
     def addSelection(self, name, link, rank, op, *args, **kwargs):
-        if op == 'preview':
-            return self.preview(name=name, link=link, rank=rank)
         self.client.addFrontPageSelection(name, link, rank)
         return self.selections()
 
@@ -440,79 +382,6 @@ class AdminHandler(WebHandler):
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
                            spotlightData=self.client.getSpotlightAll())
-
-    @strFields(title = None, text=None, link=None, logo=None, startDate=None, 
-               endDate=None, operation='preview')
-    @intFields(showArchive=0)
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                                 endDate, operation, *args, **kwargs):
-        if not startDate or not endDate:
-            return self.spotlight()
-
-        if operation == 'preview':
-            return self.preview(title=title, text=text, logo=logo,
-                                 showArchive=showArchive, link=link, 
-                                 startDate=startDate, endDate=endDate)
-        elif operation == 'apply':
-            self.client.addSpotlightItem(title, text, link, logo,
-                                         showArchive, startDate, endDate)
-        return self.spotlight()
-
-    @intFields(itemId=None)
-    @strFields(title='')
-    def deleteSpotlightItem(self, itemId, title, *args, **kwargs):
-        message = 'Delete Appliance Spotlight Entry "%s"?' % title
-        noLink = os.path.join(self.cfg.basePath, 'admin', 'spotlight') 
-        yesArgs = dict(func='delSpotlight', itemId=itemId)
-        return self._write('confirm', message=message, noLink=noLink, 
-                           yesArgs=yesArgs)
-
-    @intFields(itemId=None)
-    def delSpotlight(self, itemId, *args, **kwargs):
-        self.client.deleteSpotlightItem(itemId)
-        return self.spotlight()
-
-    def preview(self, *args, **kwargs):
-        if not kwargs.has_key('showArchive'):
-            spotlightData = self.client.getCurrentSpotlight()
-        else:
-            spotlightData = kwargs
-        if spotlightData:
-            if not spotlightData.has_key('logo'):
-                spotlightData['logo'] = ''
-        selectionData = self.client.getFrontPageSelection()
-        if kwargs.has_key('name'):
-            newSelectionData = kwargs
-            if selectionData:
-                selectionData.append(newSelectionData)
-                selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
-            else:
-                selectionData = [newSelectionData]
-        if not kwargs.has_key('newData'):
-            newData = self.client.getUseItIcons()
-        else:
-            newData = kwargs['newData']
-            
-        publishedReleases = self.client.getPublishedReleaseList()
-
-        if newData:
-            if len(newData) < 4:
-                table1Data = newData
-                table2Data = False
-            elif len(newData) == 4:
-                table1Data = newData[:2]
-                table2Data = newData[2:]
-            else:
-                table1Data = newData[:3]
-                table2Data = newData[3:]
-        else:
-            table1Data = False
-            table2Data = False
-
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
-            popularProjects= [], selectionData = selectionData,
-            activeProjects = [], spotlightData=spotlightData,
-            publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     def _makeMirrorOrderingLinks(self, name, count, order, index, id):
         """Helper function to make the up/down links for mirror ordering"""

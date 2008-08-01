@@ -45,10 +45,8 @@ from mint import templates
 from mint import userlevels
 from mint import users
 from mint import usertemplates
-from mint import spotlight
 from mint import selections
 from mint import urltypes
-from mint import useit
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
@@ -271,8 +269,6 @@ def getTables(db, cfg):
     d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
     d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
-    d['useit'] = useit.UseItTable(db, cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['topProjects'] = selections.TopProjectsTable(db)
     d['popularProjects'] = selections.PopularProjectsTable(db)
@@ -2001,50 +1997,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
-
-    @typeCheck()
-    @private
-    def getUseItIcons(self):
-        return self.useit.getIcons()
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteUseItIcon(self, itemId):
-        return self.useit.deleteIcon(itemId)
-
-    @typeCheck(int, str, str)
-    @private
-    @requiresAdmin
-    def addUseItIcon(self, itemId, name, link):
-        if name and link:
-            return self.useit.addIcon(itemId, name, link)
-        else:
-            return False
-
-    @typeCheck(str, str, str, str, int, str, str)
-    @requiresAdmin
-    @private
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                         endDate):
-         return self.spotlight.addItem(title, text, link, logo,
-                                               showArchive, startDate, endDate)
-
-    @typeCheck()
-    @private
-    def getSpotlightAll(self):
-        return self.spotlight.getAll()
-
-    @typeCheck()
-    @private
-    def getCurrentSpotlight(self):
-        return self.spotlight.getCurrent()
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteSpotlightItem(self, itemId):
-        return self.spotlight.deleteItem(itemId)
 
     @typeCheck(str, str, int)
     @private

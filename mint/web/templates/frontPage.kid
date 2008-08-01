@@ -27,35 +27,6 @@ from mint.web.templatesupport import projectText
         <div id="right" class="side">
             ${resourcePane()}
         </div>
-        <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div class="cssbox2">
-        <div class="cssbox_head2">
-            <div>&nbsp;</div>
-        </div>
-        <div class="cssbox_body2">
-        <table>
-        <tr>
-        <td py:if="spotlightData['logo']" style="vertical-align: middle; width: 100px; text-align: center;" rowspan="3">
-            <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
-        </td>
-	<td id="spotlightTitle">Virtual Appliance Spotlight</td>
-	</tr>
-	<tr>
-        <td>
-            <div id="applianceTitle">${spotlightData['title']}</div>
-            <div id="applianceText">${spotlightData['text']}</div>
-	</td>
-	</tr>
-	<tr>
-	<td style="vertical-align: bottom;">
-            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
-            <div id="applianceInfo">Click for more information.</div>
-        </td>
-        </tr>
-        </table>
-        </div>
-        </div>
-        </div>
         <!--
         Marketing block start
         -->
