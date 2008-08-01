@@ -92,11 +92,19 @@ class SiteHandler(WebHandler):
             table1Data = False
             table2Data = False
 
+        #insert marketing block
+        frontPageBlockFile = self.cfg.frontPageBlock
+        if os.path.exists(frontPageBlockFile) and os.access(frontPageBlockFile, os.R_OK):
+            f = open(frontPageBlockFile, "r")
+            frontPageBlock = f.read()
+        else:
+            frontPageBlock = ""
+
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
             popularProjects=popularProjects, selectionData = selectionData,
             topProjects = topProjects, spotlightData = spotlightData,
             publishedReleases = publishedReleases, table1Data = table1Data,
-            table2Data = table2Data)
+            table2Data = table2Data, frontPageBlock = frontPageBlock)
 
     @strFields(user = '', password = '')
     def pwCheck(self, auth, user, password):

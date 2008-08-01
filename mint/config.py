@@ -242,6 +242,10 @@ class MintConfig(ConfigFile):
     bulletinPath            = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'config', 'bulletin.txt')
 
+    #marketing block file
+    frontPageBlock          = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'config', 'frontPageBlock.html')
+
     # colo workarounds
     injectUserAuth          = (cfgtypes.CfgBool, True,
                                 'Inject user authentication into proxy '

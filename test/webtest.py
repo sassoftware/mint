@@ -1900,5 +1900,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'awsAccountNumber': ''})
 
 
+    def testFrontPageBlock(self):
+        HTMLcontent = """<div>The MARKETING block of code</div>"""
+
+        # gotta be logged in, otherwise frontPage caching will kill us
+        self.quickMintUser('foouser','foopass')
+        self.webLogin('foouser', 'foopass')
+
+        # Sanity check
+        self.assertCode('/', code=[200])
+
+        # Make sure marketing block is not there
+        page = self.fetch('/')
+        self.failIf(HTMLcontent in page.body)
+
+        # Put content into file
+        f = open(self.mintCfg.frontPageBlock, 'w')
+        f.write(HTMLcontent)
+        f.close()
+
+        # Check it is on page
+        page = self.fetch('/')
+        self.assertContent('/', content=HTMLcontent)
+
+
 if __name__ == "__main__":
     testsuite.main()
