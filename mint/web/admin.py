@@ -286,8 +286,9 @@ class AdminHandler(WebHandler):
     @intFields(projectId = None)
     def editExternal(self, projectId, *args, **kwargs):
         project = self.client.getProject(projectId)
-        labelInfo = self.client.getLabel(projectId)
-        label = labelInfo['label']
+        labelIdMap = self.client.getLabelsForProject(projectId)[0]
+        label, labelId = labelIdMap.items()[0]
+        labelInfo = self.client.getLabel(labelId)
         conaryCfg = project.getConaryConfig()
 
         initialKwargs = {}
