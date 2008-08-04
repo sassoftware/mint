@@ -5620,7 +5620,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         affectedAMIIds = []
 
         # This returns all AMI ids that the user could interact with.
-        amiIds = self.getAMIBuildsForUser(userId)
+        amiIds = self.users.getAMIBuildsForUser(userId)
 
         for amiIdData in amiIds:
             if amiIdData['isPrivate']:
