@@ -234,7 +234,7 @@
 
     <div py:strip="True" py:def="getBuildIcon(build)">
         <?python icon = build.getBrandingIcon() ?>
-        <a py:if="icon" title="${icon['text']}" href="${icon['href']}">
+        <a py:if="icon" title="${icon['text']}" href="${icon['href']}" target="_blank">
             <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icon['icon']}" alt="${icon['text']}" />
         </a>
     </div>
