@@ -23,7 +23,7 @@ from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
-from mint.web import productversion
+from mint.web import productversion, logErrorAndEmail
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
@@ -386,7 +386,7 @@ class ProjectHandler(WebHandler, productversion.ProductVersionView):
             self._predirect('builds')
 
         try:
-            self.client.newBuildsFromProductDefinition(currentVersion,
+            self.client.newBuildsFromProductDefinition(self.currentVersion,
                     productStageName, force)
         except TroveNotFoundForBuildDefinition, tnffbd:
             return self._write("confirm",
@@ -397,6 +397,7 @@ class ProjectHandler(WebHandler, productversion.ProductVersionView):
                                 'force': '1'},
                     noLink = "builds")
         except Exception, e:
+            logErrorAndEmail(self.req, self.cfg, *sys.exc_info())
             self._addErrors("Problem encountered when creating build(s): %s" % str(e))
             self._predirect('newBuildsFromProductDefinition')
         else:
