@@ -430,6 +430,40 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': ''})
         self.failUnlessEqual(p.getLabel(), "conary.rpath.com@rpl:1-newlabel")
 
+    @testsuite.tests('RBL-3179')
+    def testEditExternalProjectWithLabelTableBreakage(self):
+        """
+        This tests the case where the labelId of a project != the projectId
+        (bad assumption in code).
+        """
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        projectId1 = self.newProject(client, 'Created before external project',
+                hostname = 'before')
+
+        # make a bogus label to knock the assumption off
+        cu = self.db.cursor()
+        cu.execute("""INSERT INTO Labels VALUES(NULL, -1, 'boguslabel.example.com@foo:bar', 'http://boguslabel.example.com/conary/', 'none', '', '', '')""")
+        self.db.commit()
+
+        page = self.fetch("/admin/addExternal")
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'myexternal',
+                              'name' : 'Thee External Project and Tra-La-La Band (with Choir)',
+                              'label' : 'myexternal.example.com@sgp:1',
+                              'url' : '',
+                              'useMirror': 'none',
+                              'authType': 'none',
+                              'externalUser': '',
+                              'externalPass': ''})
+
+        projectExt = client.getProjectByHostname('myexternal')
+
+        # make sure project has the right label
+        page = self.assertContent('/admin/editExternal?projectId=%d' % projectExt.id,
+                content = 'myexternal.example.com@sgp:1')
+
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
