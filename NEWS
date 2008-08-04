@@ -8,6 +8,8 @@ Bug Fixes
   This has been corrected. (RBL-3002)
 * Fixed a bug preventing admin users from being able to browse the
   repository for private products they are not members of. (RBL-3108)
+* The edit external products page now retrieves the correct label
+  information in all cases. (RBL-3179)
 
 
 Changes in 4.1.1
