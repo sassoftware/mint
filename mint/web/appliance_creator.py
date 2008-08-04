@@ -164,11 +164,10 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     @output_handler('editGroupWiz')
     @wizard_position(WIZ_EDIT_GROUP)
     def editGroup(self):
-        ### TODO: Flush this out
         version = self.client.getProductVersion(self.currentVersion)
         sesH = self._getApplianceSessionHandle()
         pkglist = self.client.getPackageCreatorPackages(self.project.getId())
-        pkgs = []
+        pkgs = {}
         for n, info in pkglist.get(version['name'], {}).get(version['namespace'], {}).iteritems():
             if not n.startswith('group-'):
                 pkgs[n] = info
@@ -186,16 +185,30 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         explicitTroves = self.client.listApplianceTroves(self._getApplianceSessionHandle())
         return dict(message=None, explicitTroves = explicitTroves)
 
-    @output_handler('buildGroupWiz')
-    @wizard_position(WIZ_BUILD_GROUP)
+    @output_handler(redirect="buildGroupStatus")
     def buildGroup(self):
         #Save the group, and kick off the build.  Javascript to watch
         sesH = self._getApplianceSessionHandle()
         buildId = self.client.makeApplianceTrove(sesH)
+
+    @output_handler('buildGroupWiz')
+    @wizard_position(WIZ_BUILD_GROUP)
+    def buildGroupStatus(self):
+        sesH = self._getApplianceSessionHandle()
         return dict(message=None, applianceSessionHandle=sesH)
 
+    @output_handler(redirect="imageBuildStatus")
     def generateImages(self):
         # Kick off a build on the devel stage
         buildIds = self.client.newBuildsFromProductDefinition(self.currentVersion, 'Development', True)
-        self._setInfo("Builds created.")
-        self._predirect('builds')
+        self.session['last_image_set'] = buildIds
+        self.session.save()
+
+    @output_handler('generateImagesWiz')
+    @wizard_position(WIZ_GENERATE)
+    def imageBuildStatus(self):
+        buildIds = self.session.get('last_image_set', [])
+        builds = {}
+        for bid in buildIds:
+            builds[bid] = self.client.getBuild(bid)
+        return {'builds': builds}
