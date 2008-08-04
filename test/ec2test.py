@@ -666,7 +666,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             
     @fixtures.fixture("EC2")
     def testAddRemoveEC2LaunchPermissions(self, db, data):
-        client = self.getClient("admin")
+        client = self.getClient("developer")
 
         launchableAMIIds = []
 
@@ -979,7 +979,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
     @fixtures.fixture("EC2")
     def testPublicProductMemberModification(self, db, data):
         self.setupLaunchPermissionsTest()
-        client = self.getClient("admin")
+        client = self.getClient("developer")
         loneClient = self.getClient("loneuser")
 
         try:
@@ -1021,7 +1021,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
     @fixtures.fixture("EC2")
     def testPrivateProductMemberModification(self, db, data):
         self.setupLaunchPermissionsTest()
-        client = self.getClient("admin")
+        client = self.getClient("developer")
         loneClient = self.getClient("loneuser")
 
         try:
