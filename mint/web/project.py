@@ -89,6 +89,24 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
 
         self.handler_customizations(context)
 
+        # add the project name to the base path
+        self.basePath += "project/%s" % (cmds[0])
+        self.basePath = normPath(self.basePath)
+
+        self.setupView()
+
+        if not cmds[1]:
+            return self.index
+        try:
+            method = self.__getattribute__(cmds[1])
+        except AttributeError:
+            raise HttpNotFound
+
+        if not callable(method):
+            raise HttpNotFound
+
+        return method
+
     def handler_customizations(self, context):
         """ Override this if necessary """
 
@@ -111,24 +129,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             self.latestPublishedRelease = None
             self.latestBuildsWithFiles = []
-
-        # add the project name to the base path
-        self.basePath += "project/%s" % (cmds[0])
-        self.basePath = normPath(self.basePath)
-
-        self.setupView()
-
-        if not cmds[1]:
-            return self.projectPage
-        try:
-            method = self.__getattribute__(cmds[1])
-        except AttributeError:
-            raise HttpNotFound
-
-        if not callable(method):
-            raise HttpNotFound
-
-        return method
 
     @redirectHttp
     def projectPage(self, auth):
@@ -161,13 +161,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                            anonymous = anonymous, vmtnId = vmtnId,
                            external = external)
     index = projectPage
-
-    @intFields(versionId=-1)
-    @strFields(redirect_to = None)
-    def setProductVersion(self, versionId, redirect_to):
-        self._setCurrentProductVersion(versionId)
-        self.session.save()
-        self._redirect(redirect_to, temporary=True)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -258,7 +251,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
             self._predirect("editGroup?id=%d" % gtId)
         else:
-            kwargs = {'groupName': groupName, 'version': version, 'versions': self.versions, 'currentVersion': self.currentVersion}
+            kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata, messages = self._getBasicTroves()
 
             return self._write("newGroup", kwargs = kwargs,
@@ -725,7 +718,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @productversion.productVersionRequired
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
     def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
-        ret = self._getPackageFactories(uploadDirectoryHandle, sessionHandle, upload_url)
+        ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
         return self._write('createPackageInterview', message=None, **ret)
 
     @writersOnly
