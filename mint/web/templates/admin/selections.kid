@@ -35,8 +35,7 @@
                 </tr>
                 <tr>
                     <td/>
-                    <td><button name="op" value="add" type="submit">Add</button>
-                    <button name="op" value="preview" type="submit">Preview</button></td>
+                    <td><button name="op" value="add" type="submit">Add</button></td>
                 </tr>
             </table>
             </form>

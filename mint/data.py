@@ -23,7 +23,7 @@ class GenericDataTable(database.DatabaseTable):
         self.fields = ['%sId' % self.front, 'name', 'value', 'dataType']
         return database.DatabaseTable.__init__(self, db)
 
-    def setDataValue(self, id, name, value, dataType):
+    def setDataValue(self, id, name, value, dataType, commit=True):
         # do any data conversions necessary to safely store value as a string
         if dataType == RDT_BOOL:
             value=str(int(value))
@@ -32,12 +32,13 @@ class GenericDataTable(database.DatabaseTable):
 
         cu = self.db.cursor()
 
-        # audited for SQL injection
-        cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
+        self.removeDataValue(id, name, commit=False)
+
         # audited for SQL injection
         cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.name, self.front),
                    (id, name, value, dataType))
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return True
 
     def getDataValue(self, id, name):
@@ -70,11 +71,12 @@ class GenericDataTable(database.DatabaseTable):
             dataDict[name] = value
         return dataDict
 
-    def removeDataValue(self, id, name):
+    def removeDataValue(self, id, name, commit=True):
         cu = self.db.cursor()
 
         cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
         return True
 

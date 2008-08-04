@@ -233,7 +233,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 3)
+    Version = (45, 5)
 
     # 45.0
     # - Create UpdateServices table
@@ -367,6 +367,25 @@ class MigrateTo_45(SchemaMigration):
         cu.execute("""UPDATE Projects SET shortname=hostname
                     WHERE shortname is NULL""")
         return True
+
+    # 45.4
+    # - Store the namespace with the Product Version
+    def migrate4(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'ProductVersions', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        #Drop and readd the unique index
+        self.db.dropIndex('ProductVersions', 'ProductVersionsProjects')
+        self.db.createIndex('ProductVersions', 'ProductVersionsNamespacesProjects',
+            'projectId,namespace,name', unique = True)
+        return True
+
+    # 45.5
+    # - Add namespace column to Project
+    def migrate5(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'Projects', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

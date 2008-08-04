@@ -3,9 +3,7 @@
 #
 # All Rights Reserved
 #
-import base64
 import simplejson
-import sys
 import xmlrpclib
 
 from mod_python import apache

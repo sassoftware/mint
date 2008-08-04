@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels, constants
-from mint.helperfuncs import truncateForDisplay, projectText
+from mint.helperfuncs import truncateForDisplay
+from mint.web.templatesupport import projectText
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

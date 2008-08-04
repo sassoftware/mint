@@ -8,10 +8,14 @@ import testsuite
 testsuite.setup()
 
 import os
+import re
+import shutil
+import copy
 
 import mint_rephelp
 import fixtures
 from mint.web import project
+from mint.web import site
 from mint import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
 from mint import jobstatus
@@ -42,7 +46,63 @@ class rogueReq(object):
         self.headers_out = {}
         self.uri = ''
 
-class WebProjectTest(mint_rephelp.WebRepositoryHelper):
+class session(dict):
+    def save(self):
+        pass
+
+class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
+    def _setupProjectHandler(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        projectHandler = project.ProjectHandler()
+        projectHandler.projectId = projectId
+        projectHandler.project = client.getProject(projectId)
+        projectHandler.userLevel = userlevels.OWNER
+        projectHandler.client = client
+        projectHandler.session = session()
+        projectHandler.cfg = self.mintCfg
+        projectHandler.req = rogueReq()
+        projectHandler.auth = users.Authorization(\
+            token = ('testuser', 'testpass'))
+        projectHandler.isWriter = True
+        projectHandler.isOwner = True
+        projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
+        projectHandler.basePath = self.mintCfg.basePath
+        projectHandler.searchType = None
+        projectHandler.searchTerms = ''
+        projectHandler.inlineMime = None
+        projectHandler.infoMsg = None
+        projectHandler.errorMsgList = []
+        projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
+        projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
+        projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
+
+        return projectHandler
+
+    def _setupSiteHandler(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        siteHandler = site.SiteHandler()
+        siteHandler.client = client
+        siteHandler.cfg = self.mintCfg
+        siteHandler.req = rogueReq()
+        siteHandler.req.hostname = self.mintCfg.siteHost.split(':')[0]
+        siteHandler.auth = users.Authorization(\
+            token = ('testuser', 'testpass'))
+        siteHandler.auth.authorized = True
+        siteHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
+        siteHandler.basePath = self.mintCfg.basePath
+        siteHandler.searchType = None
+        siteHandler.searchTerms = ''
+        siteHandler.inlineMime = None
+        siteHandler.infoMsg = None
+        siteHandler.errorMsgList = []
+        siteHandler.session = session()
+
+        return siteHandler,  siteHandler.auth
+
+
+class WebProjectTest(WebProjectBaseTest):
     def testBuildsPerms(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -422,6 +482,8 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
+        assert 'create package' not in page.body.lower()
+        assert not re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() not in page.body.lower()
 
     def testProjectPageManageOwner(self):
@@ -435,9 +497,12 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
+        assert 'create package' in page.body.lower()
+        assert re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() in page.body.lower()
 
     def testBasicTroves(self):
+        raise testsuite.SkipTestException("This test relies on external repositories!")
         projectHandler = project.ProjectHandler()
         projectHandler.cfg = self.mintCfg
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'config'))
@@ -458,7 +523,10 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(set(troveDict.keys()) != set(metadata),
                     "trove metadata doesn't match the actual trove list")
 
-        self.failIf(set(troveDict.keys()) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(refNamesRpl1) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
+        self.failIf(set(refNamesRaa) != set(troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
+
+        self.assertEquals(set(troveDict.keys()), set(refNamesRaa + refNamesRpl1))
 
 
     testsuite.context('more_cowbell')
@@ -469,7 +537,7 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
         projectHandler = project.ProjectHandler()
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
+        projectHandler.session = session()
         projectHandler.client = client
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
@@ -482,29 +550,10 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                 'group-test testproject.rpath.local@rpl:devel/1.0.1-1-2 []'])
         assert not projectHandler.session['errorMsgList']
 
-    testsuite.context('more_cowbell')
-    def testBadGroupParams(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
-        projectHandler = project.ProjectHandler()
-        projectHandler.project = client.getProject(projectId)
-        projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
-        projectHandler.client = client
-        projectHandler.cfg = self.mintCfg
-        projectHandler.req = rogueReq()
-        projectHandler.auth = users.Authorization(\
-            token = ('testuser', 'testpass'))
-        projectHandler.isWriter = True
-        projectHandler.isOwner = True
-        projectHandler.SITE = self.mintCfg.siteHost + self.mintCfg.basePath
-        projectHandler.searchType = None
-        projectHandler.searchTerms = ''
-        projectHandler.inlineMime = None
-        projectHandler.infoMsg = None
-        projectHandler.errorMsgList = []
 
+    @testsuite.context('more_cowbell')
+    def testBadGroupParams(self):
+        projectHandler = self._setupProjectHandler()
         page = projectHandler.createGroup(auth = ('testuser', 'testpass'),
                                           groupName = '', version = '',
                                           description = '', initialTrove = [])
@@ -541,7 +590,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
         self.ph = project.ProjectHandler()
-        self.ph.session = {}
+        self.ph.session = session()
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved
@@ -562,45 +611,6 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         auth = users.Authorization(userId = data['developer'], authorized = True)
         self.assertRaises(HttpMoved, self.ph.resign, auth = auth,
             confirmed = True, id = data['developer'])
-
-    @fixtures.fixture('Full')
-    def testProjectActions(self, db, data):
-        pText = helperfuncs.getProjectText()
-        client = self.getClient("admin")
-        p = client.getProject(data['projectId'])
-
-        self.ph.cfg = self.cfg
-        self.ph.client = client
-        self.ph.project = p
-        self.ph.userLevel = userlevels.OWNER
-
-        auth = users.Authorization(userId = data['admin'],
-            authorized = True, admin = True)
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_hide")
-        p.refresh()
-        self.failUnless(p.hidden)
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_hide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already hidden'%pText.title()])
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_unhide")
-        p.refresh()
-        self.failUnless(not p.hidden)
-        self.ph.session = {}
-
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_unhide")
-        self.failUnlessEqual(self.ph.session['errorMsgList'], ['%s is already visible'%pText.title()])
-
-        self.ph.session = {}
-        self.assertRaises(HttpMoved, self.ph.processProjectAction,
-            auth = auth, projectId = p.id, operation = "project_not_valid")
-        self.failUnlessEqual(self.ph.session['errorMsgList'],
-            ['Please select a valid %s administration option from the menu'%pText.lower()])
 
 
 if __name__ == "__main__":

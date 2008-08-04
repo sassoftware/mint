@@ -378,7 +378,7 @@ class RepositoryTest(MintRepositoryHelper):
         self.openRepository(1)
         extProjectId = client.newExternalProject("External Project",
             "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
-            'http://localhost:%d/conary/' % self.servers.getServer(1).port, False)
+            'http://localhost:%d/conary/' % self.mintServers.getServer(1).port, False)
 
         # two versions, different branches
         for x in "tag1", "tag2":

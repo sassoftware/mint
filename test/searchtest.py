@@ -135,7 +135,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
 
     def _fakePackage(self, projectId, name):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+        cu.execute("SELECT COALESCE(MAX(pkgId) + 1, 1) FROM PackageIndex")
         pkgId = cu.fetchone()[0]
 
         r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares', 'who', 'cares', 0)", (pkgId, projectId, name))

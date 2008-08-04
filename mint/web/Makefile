@@ -11,18 +11,21 @@ python_files = \
 	admin.py	\
 	app.py		\
 	cache.py	\
+	catalog.py	\
 	fields.py	\
 	repos.py	\
 	rpchooks.py	\
 	decorators.py	\
 	hooks.py	\
+	productversion.py	\
 	project.py	\
 	setup.py	\
 	site.py		\
 	webhandler.py	\
 	templatesupport.py \
 	basictroves.py	\
-	vmtn.py
+	vmtn.py		\
+	whizzyupload.py
 
 all: default-all
 

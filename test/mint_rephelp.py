@@ -5,8 +5,6 @@
 #
 import os
 import shutil
-import mysqlharness
-import pgsqlharness
 import pwd
 import rephelp
 import socket
@@ -182,14 +180,29 @@ class MintApacheServer(rephelp.ApacheServer):
         if 'finished-images' not in f.read():
             os.rename("%s/httpd.conf" % self.serverRoot,
                       "%s/httpd.conf.in" % self.serverRoot)
-            os.system("sed 's|@IMAGESPATH|%s|g'"
+            cmd = ("sed -e 's|@IMAGESPATH@|%s|g' -e 's|@MINTPATH@|%s|g'"
+                    " -e 's|@MCPPATH@|%s|g'"
+                    " -e 's|@PRODDEFPATH@|%s|g'"
+                    " -e 's|@CONARYPATH@|%s|g'"
+                    " -e 's|@PCREATORPATH@|%s|g'"
+                    " -e 's|@CATALOGSERVICEPATH@|%s|g'"
                     " < %s/httpd.conf.in > %s/httpd.conf" % \
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
+                       os.environ['MINT_PATH'],
+                       os.environ['MCP_PATH'], os.environ['PRODUCT_DEFINITION_PATH'],
+                       os.environ['CONARY_PATH'], 
+                       os.environ['PACKAGE_CREATOR_SERVICE_PATH'],
+                       os.environ['CATALOG_SERVICE_PATH'],
                        self.serverRoot, self.serverRoot))
+            os.system(cmd)
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
                 (os.path.join(self.mintPath, "mint", "web", "content"),
                  self.serverRoot))
+            scriptPath = os.path.join( \
+                    os.path.dirname(os.path.dirname(__file__)), 'scripts')
+            os.system("sed -i 's|@SCRIPTSPATH@|%s|g' %s/httpd.conf" % \
+                    (scriptPath, self.serverRoot))
         f.close()
 
         if not self.sslDisabled:
@@ -355,6 +368,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.reposLog = False
 
         cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
+        cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
 
         f = open(cfg.conaryRcFile, 'w')
         f.close()
@@ -371,27 +385,50 @@ class MintServerCache(rephelp.ServerCache):
         return server, serverClass, serverDir, None, None
 
 
-rephelp._servers = MintServerCache()
+_servers = MintServerCache()
 rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
+rephelpCleanup = rephelp._cleanUp
+def _cleanUp():
+    _servers.stopAllServers(clean=not testsuite.isIndividual())
+    rephelpCleanup()
+
+rephelp._cleanUp = _cleanUp
+
+_reposDir = None
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     # Repository tests tend to be slow, so tag them with this context
     contexts = ('slow',)
 
-    def openRepository(self, serverIdx = 0, requireSigs = False, serverName = None):
-        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs, serverName)
+    def _getReposDir(self):
+        global _reposDir
+        _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
+        return _reposDir
+
+    def openMintRepository(self, serverIdx = 0, requireSigs = False, 
+                           serverName = None):
+        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
+                requireSigs, serverName, serverCache=self.mintServers)
 
         if serverIdx == 0:
-            self.port = self.servers.getServer(serverIdx).port
-            self.mintCfg = self.servers.getServer(serverIdx).mintCfg
+            self.port = self.mintServers.getServer(serverIdx).port
+            self.mintCfg = self.mintServers.getServer(serverIdx).mintCfg
             if self.mintCfg.SSL:
-                self.securePort = self.servers.getServer(serverIdx).securePort
+                self.securePort = self.mintServers.getServer(serverIdx).securePort
             else:
                 self.securePort = 0
 
         return ret
+
+
+    def openRepository(self, *args, **kw):
+        return self.openMintRepository(*args, **kw)
+
+    def reset(self):
+        self.mintServers.resetAllServersIfNeeded()
+        return rephelp.RepositoryHelper.reset(self)
 
     def __init__(self, methodName):
         rephelp.RepositoryHelper.__init__(self, methodName)
@@ -427,7 +464,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         cu.execute("""SELECT COUNT(*) FROM UserGroups
                           WHERE UserGroup = 'MintAdmin'""")
         if cu.fetchone()[0] == 0:
-            cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+            cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
                              FROM UserGroups""")
             groupId = cu.fetchone()[0]
             cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
@@ -483,12 +520,15 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                                        description, False)
 
     def setUp(self):
+        self.mintServers = _servers
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
+        if not os.path.exists(self.reposDir):
+            util.mkdirChain(self.reposDir)
         self.imagePath = os.path.join(self.tmpDir, "images")
         if not os.path.exists(self.imagePath):
             os.mkdir(self.imagePath)
-        self.openRepository()
+        self.openMintRepository()
 
         util.mkdirChain(os.path.join(self.reposDir, "tmp"))
 
@@ -592,15 +632,15 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def moveToServer(self, project, serverIdx = 1):
         """Call this to set up a project's Labels table to access a different
            serverIdx instead of 0. Useful for multi-repos tests."""
-        self.openRepository(serverIdx)
+        self.openMintRepository(serverIdx)
 
         defaultLabel = project.getLabelIdMap().keys()[0]
         labelId = project.getLabelIdMap()[defaultLabel]
         label = project.server.getLabel(labelId)
 
         port = self.mintCfg.SSL and \
-                self.servers.getServer(serverIdx).securePort or \
-                self.servers.getServer(serverIdx).port
+                self.mintServers.getServer(serverIdx).securePort or \
+                self.mintServers.getServer(serverIdx).port
 
         protocol = self.mintCfg.SSL and 'https' or 'http'
         project.editLabel(labelId, defaultLabel,
@@ -657,9 +697,9 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getServerData(self):
         server = self.getServerHostname()
         # spawn a server if needed, then point our code at it...
-        if self.servers.servers[0] is None:
-            self.openRepository()
-        return server, self.servers.servers[0].port
+        if self.mintServers.servers[0] is None:
+            self.openMintRepository()
+        return server, self.mintServers.servers[0].port
 
     def getServerHostname(self):
         return '%s.%s' % (MINT_HOST, MINT_DOMAIN)

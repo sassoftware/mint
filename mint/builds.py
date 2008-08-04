@@ -4,18 +4,15 @@
 # All Rights Reserved
 #
 
-import sys
 import time
-import urlparse
 
 from mint import buildtemplates
 from mint import buildtypes
 from mint import database
 from mint import flavors
 from mint import helperfuncs
-from mint import jobs
 
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.data import RDT_ENUM
 from mint.mint_error import *
 
 from conary import versions
@@ -100,7 +97,7 @@ class BuildsTable(database.KeyedTable):
 
     def getPublished(self, buildId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
+        cu.execute("SELECT COALESCE((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
         pubReleaseId = cu.fetchone()[0]
         if pubReleaseId:
             cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
@@ -117,7 +114,7 @@ class BuildsTable(database.KeyedTable):
         res = cu.fetchall()
         return [x[0] for x in res]
 
-    def deleteBuild(self, buildId):
+    def deleteBuild(self, buildId, commit=True):
         try:
             cu = self.db.cursor()
             cu.execute("UPDATE Builds SET deleted=1 WHERE buildId=?", buildId)
@@ -125,7 +122,8 @@ class BuildsTable(database.KeyedTable):
             self.db.rollback()
             raise
         else:
-            self.db.commit()
+            if commit:
+                self.db.commit()
 
     def buildExists(self, buildId):
         cu = self.db.cursor()
@@ -149,6 +147,79 @@ class BuildsTable(database.KeyedTable):
         else:
             return None
 
+    def getAllAMIBuilds(self, requestingUserId, limitToUserId=False):
+
+        def _filterAMIBuildVisibility(rs, okHiddenProjectIds):
+            # admins see all
+            if not limitToUserId:
+                return True
+            else:
+                # restrict hidden projects unless you're a member
+                if (not rs['isPrivate'] or (rs['isPrivate'] and (rs['projectId'] in okHiddenProjectIds))) and \
+                   (rs['isPublished'] or ((not rs['isPublished']) and (rs['role'] in ('Product Developer', 'Product Owner')))):
+                    return True
+            return False
+
+        cu = self.db.cursor()
+
+        # Get the list of hidden projects to accept if we need to filter
+        okHiddenProjectIds = []
+        if limitToUserId:
+            cu.execute("""
+                 SELECT pu.projectId
+                 FROM   projectUsers pu JOIN projects p USING (projectId)
+                 WHERE  p.hidden = 1 AND pu.userId = ?
+                 """, requestingUserId)
+            okHiddenProjectIds = [result[0] for result in cu.fetchall()]
+
+        cu.execute("""
+             SELECT bd.value AS amiId,
+                    p.projectId,
+                    b.buildId,
+                    p.name AS productName,
+                    p.description AS productDescription,
+                    b.name AS buildName,
+                    COALESCE(b.description,'') AS buildDescription,
+                    COALESCE(pr.timePublished,0) != 0 AS isPublished,
+                    p.hidden AS isPrivate,
+                    COALESCE(u.username, 'Unknown') AS createdBy,
+                    CASE
+                        WHEN pu.level = 0 THEN 'Product Owner'
+                        WHEN pu.level = 1 THEN 'Product Developer'
+                        WHEN pu.level = 2 THEN 'Product User'
+                        ELSE ''
+                    END AS role,
+                    COALESCE(ud.value,'Unknown') AS awsAccountNumber
+             FROM projects p
+                 JOIN builds b USING (projectId)
+                 LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+                 JOIN buildData bd ON (bd.buildId = b.buildId)
+                 LEFT OUTER JOIN users u ON (b.createdBy = u.userId)
+                 LEFT OUTER JOIN projectUsers pu
+                    ON (b.projectId = pu.projectId AND pu.userId = ?)
+                 LEFT OUTER JOIN userData ud
+                    ON (b.createdBy = ud.userId AND ud.name = 'awsAccountNumber')
+             WHERE bd.name = 'amiId' AND b.deleted = 0""",
+             requestingUserId)
+        return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict() \
+                if _filterAMIBuildVisibility(rs, okHiddenProjectIds)])
+
+    def getAMIBuildsForProject(self, projectId):
+        published = []
+        unpublished = []
+        cu = self.db.cursor()
+        cu.execute("""SELECT COALESCE(pr.timePublished,0) != 0 AS isPublished,
+                             bd.value AS amiId
+                      FROM builds b
+                          LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+                          JOIN buildData bd ON (bd.buildId = b.buildId AND bd.name = 'amiId')
+                      WHERE b.projectId = ? AND b.deleted = 0""", projectId)
+        for res in cu.fetchall():
+            if res[0]:
+                published.append(res[1])
+            else:
+                unpublihsed.append(res[1])
+        return published, unpublished
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various

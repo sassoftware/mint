@@ -4,7 +4,6 @@
 # All rights reserved
 #
 from mint import database
-from mint import urltypes
 from mint.mint_error import *
 
 class JobsTable(database.KeyedTable):

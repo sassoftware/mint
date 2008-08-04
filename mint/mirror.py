@@ -12,8 +12,6 @@ import sys
 import optparse
 import traceback
 
-from mint.mint_error import UpdateServiceNotFound
-
 EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo"]
 INCLUDE_ALL_MATCH_TROVES = ["+.*"]
 

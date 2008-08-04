@@ -17,17 +17,12 @@ from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
 from mint import userlevels
-from mint import builds
 from mint.mint_error import *
 
 from conary import dbstore
-from conary import sqlite3
-from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
-from conary.conarycfg import ConaryConfiguration, UserInformation, \
-        EntitlementList
-
+from conary.conarycfg import ConaryConfiguration
 
 # functions to convert a repository name to a database-safe name string
 transTables = {
@@ -36,14 +31,12 @@ transTables = {
     'postgresql': string.maketrans("-.:", "___")
 }
 
-
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
-    __slots__ = ('projectId', 'creatorId', 'name',
-                 'description', 'hostname', 'domainname', 'projecturl', 
-                 'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail', 'shortname',
-                 'prodtype', 'version', 'backupExternal')
+    __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',
+        'domainname', 'namespace', 'projecturl', 'hidden', 'external',
+        'isAppliance', 'disabled', 'timeCreated', 'timeModified',
+        'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -292,10 +285,10 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
-    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
-              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail', 'backupExternal',
-              'shortname', 'prodtype', 'version']
+    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname',
+        'namespace', 'projecturl', 'description', 'disabled', 'hidden',
+        'external', 'isAppliance', 'timeCreated', 'timeModified',
+        'commitEmail', 'backupExternal', 'shortname', 'prodtype', 'version']
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -365,12 +358,14 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
         # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
                         ON Projects.projectId=ProjectUsers.projectId
-                    WHERE ProjectUsers.userId=? AND
-                    NOT (hidden=1 AND level not in %s)""" % \
-            str(tuple(userlevels.WRITERS))
+                    WHERE ProjectUsers.userId=?"""
         if filter:
             stmt += " AND hidden=0"
         cu.execute(stmt, userId)
@@ -595,7 +590,7 @@ class ProjectsTable(database.KeyedTable):
 
     def isHidden(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
+        cu.execute("SELECT COALESCE(hidden, 0) from Projects WHERE projectId=?", projectId)
         res = cu.fetchone()
         return res and res[0] or 0
 
@@ -867,6 +862,7 @@ class ProductVersions(database.TableObject):
 
     __slots__ = ( 'productVersionId',
                   'projectId',
+                  'namespace',
                   'name',
                   'description',
                 )
@@ -874,12 +870,12 @@ class ProductVersions(database.TableObject):
     def getItem(self, id):
         return self.server.getProductVersion(id)
 
-
 class ProductVersionsTable(database.KeyedTable):
     name = 'ProductVersions'
     key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
+               'namespace',
                'name',
                'description',
              ]
