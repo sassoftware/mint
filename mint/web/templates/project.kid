@@ -31,7 +31,7 @@
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
       <li>Version: 
         <span py:if="not readOnly" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
-        <span py:if="readOnly" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</span>
+        <span py:if="readOnly" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
       </li>
       <div py:if="not readOnly" py:strip="True">
         <li id="changeVersionWidget">

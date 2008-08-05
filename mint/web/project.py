@@ -24,7 +24,6 @@ from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web import productversion, logErrorAndEmail
-from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
@@ -52,8 +51,7 @@ def getUserDict(members):
         users[level].append((userId, username,))
     return users
 
-class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
-
+class ProjectHandler(WebHandler, productversion.ProductVersionView):
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -87,37 +85,6 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
             raise HttpNotFound
 
-        self.handler_customizations(context)
-
-        # add the project name to the base path
-        self.basePath += "project/%s" % (cmds[0])
-        self.basePath = normPath(self.basePath)
-
-        self.setupView()
-
-        if not cmds[1]:
-            return self.index
-        try:
-            method = self.__getattribute__(cmds[1])
-        except AttributeError:
-            raise HttpNotFound
-
-        if not callable(method):
-            raise HttpNotFound
-
-        return method
-
-    def handler_customizations(self, context):
-        """ Override this if necessary """
-
-    def _predirect(self, path = "", temporary = False):
-        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
-
-    def help(self, auth):
-        return self._write("help")
-
-class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
-    def handler_customizations(self, context):
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
         self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
@@ -129,6 +96,27 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             self.latestPublishedRelease = None
             self.latestBuildsWithFiles = []
+
+        # add the project name to the base path
+        self.basePath += "project/%s" % (cmds[0])
+        self.basePath = normPath(self.basePath)
+
+        self.setupView()
+
+        if not cmds[1]:
+            return self.projectPage
+        try:
+            method = self.__getattribute__(cmds[1])
+        except AttributeError:
+            raise HttpNotFound
+
+        if not callable(method):
+            raise HttpNotFound
+
+        return method
+
+    def _predirect(self, path = "", temporary = False):
+        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
 
     @redirectHttp
     def projectPage(self, auth):
@@ -160,7 +148,13 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         return self._write("projectPage", mirrored = mirrored, 
                            anonymous = anonymous, vmtnId = vmtnId,
                            external = external)
-    index = projectPage
+
+    @intFields(versionId=-1)
+    @strFields(redirect_to = None)
+    def setProductVersion(self, versionId, redirect_to):
+        self._setCurrentProductVersion(versionId)
+        self.session.save()
+        self._redirect(redirect_to, temporary=True)
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -251,7 +245,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
             self._predirect("editGroup?id=%d" % gtId)
         else:
-            kwargs = {'groupName': groupName, 'version': version}
+            kwargs = {'groupName': groupName, 'version': version, 'versions': self.versions, 'currentVersion': self.currentVersion}
             troves, troveDict, metadata, messages = self._getBasicTroves()
 
             return self._write("newGroup", kwargs = kwargs,
@@ -708,18 +702,30 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @writersOnly
     @strFields(uploadId=None, fieldname=None)
-    @boolFields(debug=False)
-    def upload_iframe(self, auth, uploadId, fieldname, debug):
+    def upload_iframe(self, auth, uploadId, fieldname):
         return self._write('uploadPackageFrame', uploadId = uploadId,
-                fieldname = fieldname, project = self.project.hostname,
-                debug=debug)
+                fieldname = fieldname, project = self.project.hostname)
 
     @writersOnly
     @productversion.productVersionRequired
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
     def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
-        ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
-        return self._write('createPackageInterview', message=None, **ret)
+        if sessionHandle:
+            editing = True
+        else:
+            editing = False
+        try:
+            #Start the session first
+            sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        if not factories:
+            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                editing = editing, sessionHandle = sessionHandle,
+                factories = factories, message = None, prevChoices = prevChoices)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
@@ -753,6 +759,18 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return self._write('buildPackage', sessionHandle = sessionHandle,
                 message = None)
+
+    @writersOnly
+    @strFields(sessionHandle=None)
+    def getPackageBuildLogs(self, auth, sessionHandle):
+        try:
+            logs = self.client.getPackageBuildLogs(sessionHandle)
+        except MintError, e:
+            self._addErrors("Build logs are not available for this build: %s" % str(e))
+            self._predirect('index', temporary=True)
+
+        self.req.content_type = 'text/plain'
+        return logs
 
     @writersOnly
     def packageCreatorPackages(self, auth):
@@ -1693,4 +1711,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             desc = ""
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
+
+    def help(self, auth):
+        return self._write("help")
 

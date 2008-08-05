@@ -190,17 +190,6 @@ FileUploadForm.prototype =
         $('upload_progress_wait').style.display='block';
     },
 
-    set0: function()
-    {
-        logDebug("resetting progress bar to 0");
-        var percent = 0;
-        $('progress_indicator_bar').style.width= "" + percent + "%";
-        $('upload_progress_percent_complete').innerHTML = "" + percent + "%";
-        $('upload_progress_wait').innerHTML = 'Please Wait...';
-        $('upload_progress_statistics').style.display='none';
-        $('upload_progress_wait').style.display='block';
-    },
-
     set100: function()
     {
         logDebug("setting complete status");
