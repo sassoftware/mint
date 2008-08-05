@@ -4,11 +4,13 @@
 # All rights reserved
 #
 
+from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
+
 def productVersionRequired(func):
     def prodVerReqWrap(s, *args, **kwargs):
         if s.currentVersion is None:
             s._addErrors("You must have a version selected before you can visit this page.  Select one from the left menu before trying again.")
-            s._predirect('/', temporary=True)
+            s._predirect('', temporary=True)
         return func(s, *args, **kwargs)
     prodVerReqWrap.__wrapped_func__ = func
     return prodVerReqWrap
@@ -36,5 +38,12 @@ class ProductVersionView(object):
         else:
             self.session.setdefault('currentVersion', {})[self.project.getId()] = versionId
         self.session.save()
+
+    @intFields(versionId=-1)
+    @strFields(redirect_to = None)
+    def setProductVersion(self, versionId, redirect_to):
+        self._setCurrentProductVersion(versionId)
+        self.session.save()
+        self._redirect(redirect_to, temporary=True)
 
 
