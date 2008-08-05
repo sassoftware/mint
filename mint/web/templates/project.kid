@@ -25,15 +25,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 
-    <?python
-?>
-
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
-      <li>Version: 
-        <span py:if="not readOnly" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
-        <span py:if="readOnly" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
+      <li>Version:
+        <span py:if="not readOnly and auth.authorized" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
+        <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
       </li>
-      <div py:if="not readOnly" py:strip="True">
+      <div py:if="not readOnly and auth.authorized" py:strip="True">
         <li id="changeVersionWidget">
         <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
             <?python
