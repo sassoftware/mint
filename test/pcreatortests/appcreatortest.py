@@ -34,8 +34,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
                 public(lambda *args, **kwargs: refSesH))
 
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 'prodVer',
-                'namespace', False)
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
         self.assertEquals(sesH, refSesH)
 
     @fixtures.fixture('Full')
@@ -49,8 +48,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         self.mock(pcreator.backend.BaseBackend, '_listTroves',
                 public(lambda *args, **kwargs: troveList))
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 'prodVer',
-                'namespace', False)
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
         troveList = client.listApplianceTroves(sesH)
         self.assertEquals(troveList, refTroveList)
 
@@ -72,8 +70,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
             return True
         self.mock(pcreator.backend.BaseBackend, '_setTroves', MockedSetTroves)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 'prodVer',
-                'namespace', False)
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.setApplianceTroves(sesH, ['test', 'list'])
         self.assertEquals(self.setCall, (['test', 'list'], ['not', 'listed']))
 
@@ -89,8 +86,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
             return True
         self.mock(pcreator.backend.BaseBackend, '_addTrove', MockedAddTrove)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 'prodVer',
-                'namespace', False)
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.addApplianceTrove(sesH, 'test')
         self.assertEquals(self.addCall, ('test', True))
 
@@ -108,8 +104,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         self.mock(pcreator.backend.BaseBackend,
                 '_makeApplianceTrove', MockedMakeTrove)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 'prodVer',
-                'namespace', False)
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.makeApplianceTrove(sesH)
         self.failIf(not self.called, "Expected makeApplianceTrove to be called")
 
@@ -181,8 +176,7 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
 
     def testTroveManipulation(self):
         sesH = self.mintClient.startApplianceCreatorSession( \
-                self.projectId, self.prodDef.getProductVersion(),
-                self.prodDef.getConaryNamespace(), False)
+                self.projectId, self.versionId, False)
         self.mintClient.addApplianceTrove(sesH, 'foo')
         trvs = self.mintClient.listApplianceTroves(sesH)
         self.assertEquals(trvs, ['foo'])
@@ -195,8 +189,7 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
 
     def _makeApplianceTrove(self, rebuild, troveName, troveList):
         sesH = self.mintClient.startApplianceCreatorSession( \
-                self.projectId, self.prodDef.getProductVersion(),
-                self.prodDef.getConaryNamespace(), rebuild)
+                self.projectId, self.versionId, rebuild)
         self.mintClient.addApplianceTrove(sesH, troveName)
         self.mintClient.makeApplianceTrove(sesH)
         project = self.mintClient.getProject(self.projectId)
