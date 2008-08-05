@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 import simplejson
-from mint.helperfuncs import truncateForDisplay, formatProductVersion
-from mint.web.templatesupport import projectText
+from mint.helperfuncs import truncateForDisplay
 
 if 'message' not in locals():
     message = None
@@ -22,21 +21,31 @@ if 'message' not in locals():
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                Next steps go here
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
 
             <div id="middle">
-              <p py:if="message" class="message" py:content="message"/>
-              <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              <h2>Appliance Creator</h2>
-
-              <div class="mailingListButtons">
-                <ul><li><a href="startApplianceCreator" class="option">Start a New Version</a></li>
-                </ul>
-              </div>
+            <p py:if="message" class="message" py:content="message"/>
+            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Appliance Creator</h2>
+            <form action="selectVersion" method="post" name="selectVersion">
+            <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                <tr>
+                  <th>Product Version</th>
+                  <td py:if="versions">
+                    ${versionSelection(dict(name='versionId'), versions, False)}
+                  </td>
+                  <td py:if="not versions">
+                    ${prodVer} (${namespace})
+                    <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
+                  </td>
+                </tr>
+            </table>
+            <p><input type="submit" id="submitButton" value="Begin Appliance"/></p>
+            </form>
             </div>
         </div>
     </body>

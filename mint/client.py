@@ -430,10 +430,10 @@ class MintClient:
         '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
         return self.server.getPackageCreatorPackages(projectId)
 
-    def startApplianceCreatorSession(self, projectId, versionId,
+    def startApplianceCreatorSession(self, projectId, prodVer, namespace,
             rebuild):
         """See L{mint.server.startApplianceCreatorSession}"""
-        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild)
+        return self.server.startApplianceCreatorSession(projectId, prodVer, namespace, rebuild)
 
     def makeApplianceTrove(self, sessionHandle):
         return self.server.makeApplianceTrove(sessionHandle)
