@@ -77,6 +77,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
         projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
         projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
+        projectHandler.latestRssNews = {}
 
         return projectHandler
 
@@ -98,6 +99,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.infoMsg = None
         siteHandler.errorMsgList = []
         siteHandler.session = session()
+        siteHandler.latestRssNews = {}
 
         return siteHandler,  siteHandler.auth
 
