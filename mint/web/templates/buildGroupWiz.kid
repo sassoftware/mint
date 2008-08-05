@@ -31,7 +31,7 @@
               </div>
               <div id="build_fail" style="display:none">
                   <p>Your package did not build successfully.</p>
-                  <p><a href="editGroup">Edit appliance contents</a></p>
+                  <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               </div>
             </div>
         </div>
