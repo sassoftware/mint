@@ -168,7 +168,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        return self._write("builds", builds = builds)
+        projectLabels = self.client.getAllProjectLabels(self.project.id)
+        return self._write("builds", builds = builds, projectLabels = projectLabels)
 
     @writersOnly
     def groups(self, auth):

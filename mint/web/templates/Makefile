@@ -15,7 +15,6 @@ app_creator_kid_files = \
 	createPackage.kid		\
         createPackageWiz.kid		\
 	editGroupWiz.kid		\
-	generateImagesWiz.kid		\
 	reviewGroupWiz.kid		\
         packagecreator.kid		\
 	packageList.kid			\
@@ -26,7 +25,6 @@ kid_files = \
 	build.kid		\
 	buildDefs.kid		\
 	builds.kid		\
-	builds_common.kid	\
 	cloudCatalogNoCredentials.kid	\
 	cloudSettings.kid	\
 	confirmEmail.kid	\
