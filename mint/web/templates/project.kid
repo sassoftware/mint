@@ -26,7 +26,7 @@
       xmlns:py="http://purl.org/kid/ns#">
 
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
-      <li>Version:
+      <li py:if="versions">Version:
         <span py:if="not readOnly and auth.authorized" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
         <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
       </li>
@@ -53,6 +53,7 @@
         </script>
         </li>
       </div>
+      <li py:if="not versions">Version: none available</li>
     </div>
 
     <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
