@@ -51,12 +51,12 @@ onload = "javascript:;"
         <div py:if="bulletin" id="bulletin">${XML(bulletin)}</div>
         <div id="main">
             <a name="top" />
-            <div id="top">
-                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
-                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
+            <div id="top" style="margin-bottom:5px">
+                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left-small.png" alt="" />
+                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right-small.png" alt="" />
                 <div id="corpLogo">
                     <a href="http://${SITE}">
-                        <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" width="80" height="98" alt="rPath Logo" />
+                        <img src="${cfg.staticPath}/apps/mint/images/corplogo-small.gif" width="40" height="49" alt="rPath Logo" />
                     </a>
                 </div>
                 <div id="prodLogo">
@@ -66,14 +66,15 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <div class="about">
+                    <div class="__about">
                         <a href="${cfg.basePath}admin/maintenance" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
                           <b style="color: red;">
                           Maintenance Mode&nbsp;
                           </b>
                         </a>
-                        <a py:if="cfg.rBuilderOnline" href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                        <!--
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
+                        -->
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
                         <div>
@@ -92,6 +93,10 @@ onload = "javascript:;"
                         </div>
                     </form>
                 </div>
+            </div>
+            <div py:if="latestRssNews" id="rssnews">
+                Latest ${self.cfg.productName} news:
+                <a target="_blank" href="${latestRssNews['link']}">${latestRssNews['title']}</a><span class="newsAge" py:if="'age' in latestRssNews">&nbsp;(posted ${latestRssNews['age']})</span>
             </div>
             <?python
                 if 'errors' in locals():
