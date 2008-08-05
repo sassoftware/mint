@@ -66,16 +66,6 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <div class="__about">
-                        <a href="${cfg.basePath}admin/maintenance" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
-                          <b style="color: red;">
-                          Maintenance Mode&nbsp;
-                          </b>
-                        </a>
-                        <!--
-                        <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
-                        -->
-                    </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
                         <div>
                             <label class="search" for="searchLabel">I'm looking for a...</label>
@@ -94,9 +84,13 @@ onload = "javascript:;"
                     </form>
                 </div>
             </div>
-            <div py:if="latestRssNews" id="rssnews">
+            <div py:if="latestRssNews and not maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="rssnews">
                 Latest ${self.cfg.productName} news:
                 <a target="_blank" href="${latestRssNews['link']}">${latestRssNews['title']}</a><span class="newsAge" py:if="'age' in latestRssNews">&nbsp;(posted ${latestRssNews['age']})</span>
+            </div>
+            <div py:if="maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="maintmode">
+                ${cfg.productName} is currently in maintenance mode.
+                <a py:if="auth.admin" href="${cfg.basePath}admin/maintenance">Click here to enter the site administration menu.</a>
             </div>
             <?python
                 if 'errors' in locals():

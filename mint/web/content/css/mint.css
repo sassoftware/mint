@@ -84,6 +84,14 @@ div#main {
     text-align: center;
 }
 
+#maintmode {
+    background-color: #edc2c2;
+    margin: 1em auto;
+    padding: 0.5em 0;
+    font-size: larger;
+    text-align: center;
+}
+
 .newsAge {
     font-size: small;
     color: #333;
