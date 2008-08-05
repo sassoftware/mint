@@ -31,16 +31,16 @@
               </ul>
               <h2>Next Steps</h2>
               <ul>
-                <li><a href="newPackage">Add another package</a></li>
-                <li><a href="buildGroup">Build appliance</a></li>
+                <li><a href="newPackage">Create a new package</a></li>
+                <li><a href="buildApplianceGroup">Build appliance</a></li>
               </ul>
               </div>
               <div py:if="not explicitTroves">
                 No troves selected
               <h2>Next Steps</h2>
               <ul>
-                <li><a href="editGroup">Select packages</a></li>
-                <li><a href="newPackage">Add a package</a></li>
+                <li><a href="editApplianceGroup">Select packages</a></li>
+                <li><a href="newPackage">Create a new package</a></li>
               </ul>
               </div>
             </div>

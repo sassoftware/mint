@@ -27,8 +27,8 @@
                      successful or not -->
               <div id="build_success" style="display:none">
                   <p>Your package has built successfully, and has been added to your appliance.</p>
-                  <p><a href="newPackage">Add another package</a></p>
-                  <p><a href="editGroup">Edit appliance contents</a></p>
+                  <p><a href="newPackage">Create a new package</a></p>
+                  <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               </div>
               <div id="build_fail" style="display:none">
                   <p>Your package did not build successfully.</p>

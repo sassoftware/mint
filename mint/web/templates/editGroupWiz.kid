@@ -25,7 +25,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
               <h2>Appliance Creator - Editing Appliance Group</h2>
               <div py:if="packageList" py:strip="True">
-              <form name="packagecreatortroves" action="processEditGroup" method="post">
+              <form name="packagecreatortroves" action="processEditApplianceGroup" method="post">
               <ul>
                 <li py:for="troveName in sorted(packageList.keys())">
                     <?python
@@ -40,7 +40,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               <div py:if="not packageList" py:strip="True">
                 <h2>Additional Options</h2>
                 <ul>
-                  <li><a href="newPackage">Add a new package</a></li>
+                  <li><a href="newPackage">Create a new package</a></li>
                 </ul>
               </div>
             </div>

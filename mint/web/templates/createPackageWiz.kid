@@ -27,7 +27,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
             ${createPackage(uploadDirectoryHandle, sessionHandle, name)}
             <div>
-              <a href="editGroup">Skip package creator</a>
+              <a href="editApplianceGroup">Skip package creator</a>
             </div>
         </div>
         </div>

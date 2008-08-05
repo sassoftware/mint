@@ -39,16 +39,16 @@ WIZ_MAINT_ONLY = () #(WIZ_REBASE, WIZ_EDIT_GROUP)
 
 wizard_steps = {
     #constant:        (Text value, URL value)
-    WIZ_LAND:       ("Select Product Version", 'landing'),
+    WIZ_LAND:       ("Start Page", 'landing'),
    #WIZ_REBASE:     ("Rebase", 'rebase'),
    #WIZ_COMPONENTS: ("Select Application Stack", "selectComponents"),
    #WIZ_SELECT_PACK:("Select Appliance Packages", "packageCreatorAdd"),
     WIZ_PACKCREAT:  ("Create Packages", 'newPackage'),
-    WIZ_EDIT_GROUP: ("Edit Appliance Contents", 'editGroup'),
-    WIZ_REVIEW:     ("Review Appliance", 'review'),
-    WIZ_BUILD_GROUP:("Build Appliance", 'buildGroup'),
-    WIZ_GENERATE:   ("Generate Images", 'build'),
-    WIZ_DEPLOY:     ("Deploy Images", 'deploy'),
+    WIZ_EDIT_GROUP: ("Edit Appliance Contents", 'editApplianceGroup'),
+    WIZ_REVIEW:     ("Review Appliance", 'reviewApplianceGroup'),
+    WIZ_BUILD_GROUP:("Build Appliance", 'buildApplianceGroup'),
+    WIZ_GENERATE:   ("Generate Images", 'generateImages'),
+    #WIZ_DEPLOY:     ("Deploy Images", 'deploy'),
 }
 
 def wizard_position(pos):
@@ -163,7 +163,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @output_handler('editGroupWiz')
     @wizard_position(WIZ_EDIT_GROUP)
-    def editGroup(self):
+    def editApplianceGroup(self):
         version = self.client.getProductVersion(self.currentVersion)
         sesH = self._getApplianceSessionHandle()
         pkglist = self.client.getPackageCreatorPackages(self.project.getId())
@@ -174,19 +174,19 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         selected = self.client.listApplianceTroves(sesH)
         return dict(message=None, packageList = pkgs, selected = selected)
 
-    @output_handler(redirect="review")
+    @output_handler(redirect="reviewApplianceGroup")
     @listFields(str, troves=[])
-    def processEditGroup(self, troves):
+    def processEditApplianceGroup(self, troves):
         self.client.setApplianceTroves(self._getApplianceSessionHandle(), troves)
 
     @output_handler('reviewGroupWiz')
     @wizard_position(WIZ_REVIEW)
-    def review(self):
+    def reviewApplianceGroup(self):
         explicitTroves = self.client.listApplianceTroves(self._getApplianceSessionHandle())
         return dict(message=None, explicitTroves = explicitTroves)
 
     @output_handler(redirect="buildGroupStatus")
-    def buildGroup(self):
+    def buildApplianceGroup(self):
         #Save the group, and kick off the build.  Javascript to watch
         sesH = self._getApplianceSessionHandle()
         buildId = self.client.makeApplianceTrove(sesH)
