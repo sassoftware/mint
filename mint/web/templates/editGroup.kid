@@ -29,6 +29,26 @@ from mint.grouptrove import KNOWN_COMPONENTS
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
             <h1>Edit Group</h1>
+            
+            <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
+            <p>You have a group. Now add packages to it from any
+            ${cfg.productName} ${projectText().lower()}. To add a package, search or browse for
+            the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
+            link.</p>
+
+            <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
+            <p>"Cooking" the group assembles your chosen packages, resolves any
+            library dependencies, and creates a binary representation of the group
+            that is committed into your ${projectText().lower()}'s repository.</p>
+
+            <h3 style="color:#ff7001;">Step 3: Create An Image</h3>
+            <p>Once your group has cooked successfully, create a
+            <a href="builds"><b>New Image</b></a> by selecting the name of
+            the group you just cooked. Select a version, architecture, and a
+            handful of other options, and you will have an installable
+            CD/DVD image in minutes!
+            </p>
+            
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
                     <tr class="editGroupHeader">
@@ -113,24 +133,6 @@ from mint.grouptrove import KNOWN_COMPONENTS
                 <input name="action" type="submit" value="Delete This Group" />
             </form>
 
-            <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
-            <p>You have a group. Now add packages to it from any
-            ${cfg.productName} ${projectText().lower()}. To add a package, search or browse for
-            the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
-            link.</p>
-
-            <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
-            <p>"Cooking" the group assembles your chosen packages, resolves any
-            library dependencies, and creates a binary representation of the group
-            that is committed into your ${projectText().lower()}'s repository.</p>
-
-            <h3 style="color:#ff7001;">Step 3: Create An Image</h3>
-            <p>Once your group has cooked successfully, create a
-            <a href="builds"><b>New Image</b></a> by selecting the name of
-            the group you just cooked. Select a version, architecture, and a
-            handful of other options, and you will have an installable
-            CD/DVD image in minutes!
-            </p>
             </div>
         </div>
     </body>
