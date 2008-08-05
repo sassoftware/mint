@@ -9,8 +9,6 @@ from mint.grouptrove import KNOWN_COMPONENTS
 from mint.packagecreator import drawField, isChecked, isSelected, effectiveValue, expandme
 lang = None;
 
-message = locals().get('message', None)
-
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
