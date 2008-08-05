@@ -12,7 +12,6 @@
         <input name="project" type="hidden" value="${project}"/>
         <input name="uploadfile" type="file"/>
         <input name="fieldname" type="hidden" value="${fieldname}"/>
-        <input name="submit" type="submit" value="Upload" py:if="debug"/>
     </form>
   </body>
 </html>
