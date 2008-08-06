@@ -6,12 +6,12 @@
 
 import os, time, socket, tempfile, sys, traceback, shutil
 from conary.lib import util as conary_util
-from mod_python import apache
 
 from mint.mint_error import MailError
 from mint import users
 
 def logErrorAndEmail(req, cfg, exception, e, bt):
+    from mod_python import apache
     c = req.connection
     req.add_common_vars()
     info_dict = {
