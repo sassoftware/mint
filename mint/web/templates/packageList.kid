@@ -45,19 +45,21 @@
                     ?>
                     <h4 py:if="not troveList">No packages available for this Product Version</h4>
                     <div py:for="troveName in sorted(troveList.keys())" py:strip="True">
-                      <?python
-                      data = troveList[troveName]
-                      label = data['develStageLabel']
-                      prodVer = data['productDefinition']['version']
-                      namespace = data['productDefinition']['namespace']
-                      ?>
-                      <h4>${troveName.replace(':source','')}</h4>
-                      <ul>
-                        <li>
-                          <a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Archive</a>
-                          <a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Details</a>
-                        </li>
-                      </ul>
+                      <div py:if="not troveName.startswith('group-')" py:strip="True">
+                        <?python
+                        data = troveList[troveName]
+                        label = data['develStageLabel']
+                        prodVer = data['productDefinition']['version']
+                        namespace = data['productDefinition']['namespace']
+                        ?>
+                        <h4>${troveName.replace(':source','')}</h4>
+                        <ul>
+                          <li>
+                            <a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Archive</a>
+                            <a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Details</a>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
