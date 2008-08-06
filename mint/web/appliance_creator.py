@@ -108,6 +108,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     def _apcredirect(self, path = "", temporary = False):
         self._redirect("http://%s%sapc/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
 
+    @writersOnly
     @output_handler(redirect='landing')
     def index(self):
         """Convenience method to clear all session variables...for now"""
@@ -115,22 +116,30 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
             self.session.pop(x, None)
         self.session.save()
 
+    @writersOnly
     @productversion.productVersionRequired
     @boolFields(maintain=False)
     @output_handler('landing')
     def landing(self, maintain):
         """All appliance creator actions must land here to set whether we're in
         maintenance mode or creation mode"""
-        self.session['appliance_creator_maintenance'] = maintain
-        self.session.save()
-        return dict(message=None)
+        version = self.client.getProductVersion(self.currentVersion)
+        pkglist = self.client.getPackageCreatorPackages(self.project.getId())
+        pkgs = {}
+        for n, info in pkglist.get(version['name'], {}).get(version['namespace'], {}).iteritems():
+            #unlike the editApplianceGroup method, we only want the groups here
+            if n.startswith('group-'):
+                pkgs[n] = info
+        return dict(message=None, groups=pkgs)
 
+    @writersOnly
     @output_handler(redirect='newPackage')
     def startApplianceCreator(self):
         projectId = self.project.getId()
         sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, False)
         self._setApplianceCreatorSession(sesH)
 
+    @writersOnly
     @output_handler('createPackageWiz')
     @wizard_position(WIZ_PACKCREAT)
     def newPackage(self):
@@ -139,6 +148,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         return dict(message = '', uploadDirectoryHandle =
             uploadDirectoryHandle, sessionHandle=None, name=None)
 
+    @writersOnly
     @strFields(uploadId=None, fieldname=None)
     @boolFields(debug=False)
     @output_handler('uploadPackageFrame')
@@ -147,6 +157,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         return {'uploadId': uploadId, 'fieldname': fieldname, 'project':
                 self.project.hostname, 'debug': debug}
 
+    @writersOnly
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
     @output_handler('createPackageInterviewWiz')
     @wizard_position(WIZ_PACKCREAT)
@@ -154,6 +165,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
         return ret
 
+    @writersOnly
     @strFields(sessionHandle=None, factoryHandle=None)
     @output_handler('buildPackageWiz')
     @wizard_position(WIZ_PACKCREAT)
@@ -161,6 +173,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return dict(sessionHandle = sessionHandle, message = None)
 
+    @writersOnly
     @output_handler('editGroupWiz')
     @wizard_position(WIZ_EDIT_GROUP)
     def editApplianceGroup(self):
@@ -174,29 +187,34 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         selected = self.client.listApplianceTroves(sesH)
         return dict(message=None, packageList = pkgs, selected = selected)
 
+    @writersOnly
     @output_handler(redirect="reviewApplianceGroup")
     @listFields(str, troves=[])
     def processEditApplianceGroup(self, troves):
         self.client.setApplianceTroves(self._getApplianceSessionHandle(), troves)
 
+    @writersOnly
     @output_handler('reviewGroupWiz')
     @wizard_position(WIZ_REVIEW)
     def reviewApplianceGroup(self):
         explicitTroves = self.client.listApplianceTroves(self._getApplianceSessionHandle())
         return dict(message=None, explicitTroves = explicitTroves)
 
+    @writersOnly
     @output_handler(redirect="buildGroupStatus")
     def buildApplianceGroup(self):
         #Save the group, and kick off the build.  Javascript to watch
         sesH = self._getApplianceSessionHandle()
         buildId = self.client.makeApplianceTrove(sesH)
 
+    @writersOnly
     @output_handler('buildGroupWiz')
     @wizard_position(WIZ_BUILD_GROUP)
     def buildGroupStatus(self):
         sesH = self._getApplianceSessionHandle()
         return dict(message=None, applianceSessionHandle=sesH)
 
+    @writersOnly
     @output_handler(redirect="imageBuildStatus")
     def generateImages(self):
         # Kick off a build on the devel stage
@@ -204,6 +222,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         self.session['last_image_set'] = buildIds
         self.session.save()
 
+    @writersOnly
     @output_handler('generateImagesWiz')
     @wizard_position(WIZ_GENERATE)
     def imageBuildStatus(self):
