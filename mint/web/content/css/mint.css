@@ -76,6 +76,27 @@ div#main {
     width: 955px;
 }
 
+#rssnews {
+    background-color: #ffc;
+    margin: 1em auto;
+    padding: 0.5em 0;
+    font-size: larger;
+    text-align: center;
+}
+
+#maintmode {
+    background-color: #edc2c2;
+    margin: 1em auto;
+    padding: 0.5em 0;
+    font-size: larger;
+    text-align: center;
+}
+
+.newsAge {
+    font-size: small;
+    color: #333;
+}
+
 div#middle {
     width: 475px;
     margin-left: 235px;
@@ -167,9 +188,9 @@ div#top {
     padding-top: 0px;
     margin-top: 0px;
     margin-bottom: 20px;
-    height: 112px;
+    height: 72px;
     width: 955px;
-    background: url(../images/topgrad.png);
+    background: url(../images/topgrad-small.png);
 }
 
 div#prodLogo {

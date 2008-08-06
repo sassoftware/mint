@@ -10,6 +10,7 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
+from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels
@@ -244,6 +245,17 @@ class MintApp(WebHandler):
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
 
+        # get the news for the frontpage (only in non-maint mode)
+        self.latestRssNews = dict()
+        if not maintenance.getMaintenanceMode(self.cfg):
+            newNews = self.client.getNews()
+            if len(newNews) > 0:
+                self.latestRssNews = newNews[0]
+                if 'pubDate' in self.latestRssNews:
+                    self.latestRssNews['age'] = \
+                            timeDelta(self.latestRssNews['pubDate'],
+                                    capitalized=False)
+
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
@@ -271,7 +283,8 @@ class MintApp(WebHandler):
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
-            'remoteIp':         self.remoteIp
+            'remoteIp':         self.remoteIp,
+            'latestRssNews':    self.latestRssNews
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:
