@@ -38,7 +38,7 @@ if 'message' not in locals():
                   <?python
                   pkgname = troveName.replace(':source', '')
                   ?>
-                  <h3>${pkgname}</h3>
+                  <h3>Edit ${pkgname}</h3>
                   <ul>
                     <li><a class="option" href="startApplianceCreator">Edit Appliance</a></li>
                   </ul>

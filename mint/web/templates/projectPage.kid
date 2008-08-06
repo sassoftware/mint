@@ -68,12 +68,12 @@ from mint.web.templatesupport import projectText
                         <li py:if="not versions or not currentVersion">
                             Select a version at the left to edit the product version
                         </li>
+                        <li><a href="${cfg.basePath}apc/${project.shortname}/">Manage</a> the ${project.getNameForDisplay(maxWordLen=25)} ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)} appliance</li>
                     </ul>
                 </div>
                 <div py:if="isWriter" py:strip="True">
                     <h2>Add ${projectText().title()} Contents</h2>
                     <ul>
-                        <li>Create your <a href="${cfg.basePath}apc/${project.shortname}/">appliance</a></li>
                         <li>Create a <a href="${basePath}newBuild">new image</a></li>
                         <li py:if="isOwner">Create a <a href="${basePath}newRelease">new release</a></li>
                         <li>Create a <a href="${basePath}newPackage">new package</a></li>
