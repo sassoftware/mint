@@ -2248,6 +2248,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         level group for the image, otherwise use the top level group defined
         in the
         product defintion.
+
+        @return: buildIds
+        @rtype: list of ints
         """
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
@@ -5026,8 +5029,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @param projectId: Project ID of the project for which to request the list
             @type projectId: int
 
-            @rtype: list
-            @return: The list of packages
+            @rtype: dict(dict(dict(data)))
+            @return: The available packages: outer dict uses the version string
+            as the key, inner uses the namespace, third uses the trove name as
+            keys.  Data is a dict containing the c{productDefinition} dict and
+            the C{develStageLabel}.
         """
         # Get the conary repository client
         project = projects.Project(self, projectId)
@@ -5240,15 +5246,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return False
 
     @requiresAuth
-    def startApplianceCreatorSession(self, projectId, prodVer, namespace,
-            rebuild):
+    def startApplianceCreatorSession(self, projectId, versionId, rebuild):
         project = projects.Project(self, projectId)
+        version = self.getProductVersion(versionId)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         mincfg = self._getMinCfg(project)
         try:
             sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=namespace,
-                version=prodVer), mincfg, rebuild)
+                shortname=project.shortname, namespace=version['namespace'],
+                version=version['name']), mincfg, rebuild)
         except packagecreator.errors.PackageCreatorError, err:
             raise PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
