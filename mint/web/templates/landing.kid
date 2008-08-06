@@ -34,7 +34,17 @@ if 'message' not in locals():
               <h2>Appliance Creator</h2>
 
               <div class="mailingListButtons">
-                <ul><li><a href="startApplianceCreator" class="option">Start a New Version</a></li>
+                <div py:for="troveName in sorted(groups.keys())" py:strip="True">
+                  <?python
+                  pkgname = troveName.replace(':source', '')
+                  ?>
+                  <h3>${pkgname}</h3>
+                  <ul>
+                    <li><a class="option" href="startApplianceCreator">Edit Appliance</a></li>
+                  </ul>
+                </div>
+                <h3>Discard current appliance contents and start over</h3>
+                <ul><li><a href="startApplianceCreator?maintain=0" class="option">Create Appliance</a></li>
                 </ul>
               </div>
             </div>

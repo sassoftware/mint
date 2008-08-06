@@ -134,9 +134,12 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @writersOnly
     @output_handler(redirect='newPackage')
-    def startApplianceCreator(self):
+    @boolFields(maintain=True)
+    def startApplianceCreator(self, maintain):
         projectId = self.project.getId()
-        sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, False)
+        # session is saved in the _setApplianceCreatorSession call
+        self.session['appliance_creator_maintenance'] = maintain
+        sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, maintain)
         self._setApplianceCreatorSession(sesH)
 
     @writersOnly
