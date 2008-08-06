@@ -218,7 +218,7 @@ class BuildsTable(database.KeyedTable):
             if res[0]:
                 published.append(res[1])
             else:
-                unpublihsed.append(res[1])
+                unpublished.append(res[1])
         return published, unpublished
 
 def getExtraFlags(buildFlavor):
