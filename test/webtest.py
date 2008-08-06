@@ -61,7 +61,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         pageURI = '/project/testproject/releases'
         page = self.fetch(pageURI)
 
-        page = page.postForm(2, self.fetchWithRedirect,
+        page = page.postForm(1, self.fetchWithRedirect,
                 {'username':'foouser', 'password':'foopass'})
 
         self.failIf(pageURI not in page.url,
@@ -385,7 +385,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/')
         startUrl = page.url
 
-        page = page.postForm(2, self.fetchWithRedirect, 
+        page = page.postForm(1, self.fetchWithRedirect, 
                 {'username': 'foouser', 'password': 'foopass'})
         assert(page.url.endswith(startUrl))
 
