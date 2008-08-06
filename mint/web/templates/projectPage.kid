@@ -73,7 +73,7 @@ from mint.web.templatesupport import projectText
                 <div py:if="isWriter" py:strip="True">
                     <h2>Add ${projectText().title()} Contents</h2>
                     <ul>
-                        <li>Create your <a href="${cfg.basePath}/apc/${project.shortname}/">appliance</a></li>
+                        <li>Create your <a href="${cfg.basePath}apc/${project.shortname}/">appliance</a></li>
                         <li>Create a <a href="${basePath}newBuild">new image</a></li>
                         <li py:if="isOwner">Create a <a href="${basePath}newRelease">new release</a></li>
                         <li>Create a <a href="${basePath}newPackage">new package</a></li>
