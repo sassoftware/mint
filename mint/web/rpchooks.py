@@ -29,7 +29,7 @@ def rpcHandler(req, cfg, pathInfo = None):
     elif "xmlrpc-private" in req.uri.split("/")[1]:
         allowPrivate = True
 
-    if req.headers_in['Content-Type'] == 'text/xml':
+    if req.headers_in['Content-Type'].startswith('text/xml'):
         isXMLrpc = True
     elif req.headers_in['Content-Type'].startswith('application/x-json'):
         isJSONrpc = True

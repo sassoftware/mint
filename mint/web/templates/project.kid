@@ -25,15 +25,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 
-    <?python
-?>
-
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
-      <li>Version: 
-        <span py:if="not readOnly" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
-        <span py:if="readOnly" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</span>
+      <li py:if="versions">Version:
+        <span py:if="not readOnly and auth.authorized" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
+        <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
       </li>
-      <div py:if="not readOnly" py:strip="True">
+      <div py:if="not readOnly and auth.authorized" py:strip="True">
         <li id="changeVersionWidget">
         <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
             <?python
@@ -56,6 +53,7 @@
         </script>
         </li>
       </div>
+      <li py:if="not versions">Version: none available</li>
     </div>
 
     <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
@@ -234,7 +232,7 @@
 
     <div py:strip="True" py:def="getBuildIcon(build)">
         <?python icon = build.getBrandingIcon() ?>
-        <a py:if="icon" title="${icon['text']}" href="${icon['href']}">
+        <a py:if="icon" title="${icon['text']}" href="${icon['href']}" target="_blank">
             <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icon['icon']}" alt="${icon['text']}" />
         </a>
     </div>
