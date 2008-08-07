@@ -24,7 +24,7 @@ from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web import productversion
-from mint.web.logError import logErrorAndEmail
+from mint.web.logerror import logErrorAndEmail
 from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \

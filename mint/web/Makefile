@@ -18,6 +18,7 @@ python_files = \
 	rpchooks.py	\
 	decorators.py	\
 	hooks.py	\
+	logerror.py	\
 	packagecreator.py	\
 	productversion.py	\
 	project.py	\
