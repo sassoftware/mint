@@ -24,31 +24,23 @@ def check_session(func):
 # updated when new things are added below
 
 #Landing, component selection
-WIZ_LAND        = 1.0
-WIZ_REBASE      = 2.0
-WIZ_COMPONENTS  = 3.0
-WIZ_SELECT_PACK = 4.0
+#WIZ_REBASE      = 2.0
 WIZ_PACKCREAT   = 5.0
 WIZ_EDIT_GROUP  = 6.0
 WIZ_REVIEW      = 7.0
 WIZ_BUILD_GROUP = 8.0
 WIZ_GENERATE    = 9.0
-WIZ_DEPLOY      = 10.0
 
 WIZ_MAINT_ONLY = () #(WIZ_REBASE, WIZ_EDIT_GROUP)
 
 wizard_steps = {
     #constant:        (Text value, URL value)
-    WIZ_LAND:       ("Start Page", 'landing'),
    #WIZ_REBASE:     ("Rebase", 'rebase'),
-   #WIZ_COMPONENTS: ("Select Application Stack", "selectComponents"),
-   #WIZ_SELECT_PACK:("Select Appliance Packages", "packageCreatorAdd"),
     WIZ_PACKCREAT:  ("Create Packages", 'newPackage'),
     WIZ_EDIT_GROUP: ("Edit Appliance Contents", 'editApplianceGroup'),
     WIZ_REVIEW:     ("Review Appliance", 'reviewApplianceGroup'),
     WIZ_BUILD_GROUP:("Build Appliance", 'buildApplianceGroup'),
     WIZ_GENERATE:   ("Generate Images", 'generateImages'),
-    #WIZ_DEPLOY:     ("Deploy Images", 'deploy'),
 }
 
 def wizard_position(pos):
@@ -56,7 +48,7 @@ def wizard_position(pos):
     MUST be called before the output handler, e.g.
     
     @output_handler(template = 'blank')
-    @wizard_position(WIZ_LAND)
+    @wizard_position(WIZ_EDIT_GROUP)
     def land(self, ....):
     """
     def wizard_position_register(func):
