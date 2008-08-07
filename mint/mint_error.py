@@ -58,6 +58,8 @@ class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
+class BuildSystemDown(MintError):
+    "There was a problem contacting the build system."
 class ConfigurationMissing(MintError):
     "The rBuilder configuration is missing."
     # this init must be in here because this gets thrown from config.py

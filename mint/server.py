@@ -2222,20 +2222,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName,
-                                      timeCreated = time.time(),
-                                      buildCount = 0,
-                                      createdBy = self.auth.userId)
+                                  name = productName,
+                                  timeCreated = time.time(),
+                                  buildCount = 0,
+                                  createdBy = self.auth.userId)
+        self.buildData.setDataValue(buildId, 'jsversion',
+            jsversion, data.RDT_STRING)
 
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
         return buildId
 
     @typeCheck(int, ((str, unicode),), bool)
@@ -2321,19 +2316,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'anacondaCustomTrove' : 'anaconda-custom',
                             'anacondaTemplatesTrove' : 'anaconda-templates'}
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
+
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
                                       buildCount = 0,
                                       createdBy = self.auth.userId)
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+        self.buildData.setDataValue(buildId, 'jsversion', jsversion,
+            data.RDT_STRING)
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
@@ -3107,12 +3098,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildDict['buildType']
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             data = self.serializeBuild(buildId)
             try:
+                mc = self._getMcpClient()
                 return mc.submitJob(data)
             except mcp_error.NotEntitledError:
                 raise NotEntitledError()
+            except mcp_error.NetworkError:
+                raise BuildSystemDown
+
 
     @typeCheck(int, str)
     @private
@@ -3124,12 +3118,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
-        mc = self._getMcpClient()
-        data = self.serializeGroupTrove(groupTroveId, arch)
         try:
+            mc = self._getMcpClient()
+            data = self.serializeGroupTrove(groupTroveId, arch)
             return mc.submitJob(data)
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
         except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+            raise NotEntitledError
 
     @typeCheck()
     @requiresAuth
@@ -3765,10 +3761,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                   self.cfg.externalDomainName, buildId, count)
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             try:
+                mc = self._getMcpClient()
                 status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
+            except (mcp_error.UnknownJob, mcp_error.NetworkError):
                 status, message = \
                     jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
         else:
@@ -3788,11 +3784,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        mc = self._getMcpClient()
-
         try:
+            mc = self._getMcpClient()
             status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
+        except (mcp_error.UnknownJob, mcp_error.NetworkError):
             status, message = \
                 jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
@@ -3942,6 +3937,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @requiresAuth
     def serializeGroupTrove(self, groupTroveId, arch):
+
+        # get the jobslave version; this could fail early
+        jsversion = self._getJSVersion()
+
         # performed at the mint server level to have access to
         # groupTrove, project and groupTroveItems objects
         projectId = self.groupTroves.getProjectId(groupTroveId)
@@ -3972,8 +3971,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
                 (self.cfg.siteHost, self.cfg.basePath)
 
-        mc = self._getMcpClient()
-
         r = {}
         r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
         r['type'] = 'cook'
@@ -3983,12 +3980,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['autoResolve'] = groupTrove.autoResolve
 
-        try:
-            jsversion = mc.getJSVersion()
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+
         r['data'] = {'arch' : arch,
-                     'jsversion': str(jsversion)}
+                     'jsversion': jsversion}
 
         r['description'] = groupTrove.description
 
@@ -4603,6 +4597,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
         return self.mcpClient
+
+    def _getJSVersion(self):
+        try:
+            mc = self._getMcpClient()
+            return str(mc.getJSVersion())
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
 
     def __del__(self):
         if self.mcpClient:
