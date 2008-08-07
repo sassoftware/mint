@@ -27,77 +27,13 @@ from mint.web.templatesupport import projectText
         <div id="right" class="side">
             ${resourcePane()}
         </div>
-        <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div class="cssbox2">
-        <div class="cssbox_head2">
-            <div>&nbsp;</div>
-        </div>
-        <div class="cssbox_body2">
-        <table>
-        <tr>
-        <td py:if="spotlightData['logo']" style="vertical-align: middle; width: 100px; text-align: center;" rowspan="3">
-            <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
-        </td>
-	<td id="spotlightTitle">Virtual Appliance Spotlight</td>
-	</tr>
-	<tr>
-        <td>
-            <div id="applianceTitle">${spotlightData['title']}</div>
-            <div id="applianceText">${spotlightData['text']}</div>
-	</td>
-	</tr>
-	<tr>
-	<td style="vertical-align: bottom;">
-            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
-            <div id="applianceInfo">Click for more information.</div>
-        </td>
-        </tr>
-        </table>
-        </div>
-        </div>
-        </div>
-            <span py:if="not table1Data">
-                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
-                    Check out the software appliances others have built.
-                </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
-                    Make your own software appliance.
-                </span>
-            </span>
-
-            <span py:if="table1Data">
-                <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
-                    <div id="inactiveOrangeTitle">Build it.</div>
-                        Make your own software appliance.
-                </div>
-                <div id="activeLeft" >
-                    <div id="orangeTitle">Use It.</div>
-                    Check out the software appliances others have built.
-                </div>
-            </span>
-
-            <div id="applianceLogos" py:attrs="{'style': 'width: 720px; height: 234px;' + (not table1Data and 'display:none;' or '')}">
-            <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
-                <tr>
-                    <td id="useIt" py:for="td in table1Data">
-                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
-                    </td>
-                </tr>
-            </table>
-            <table id="doubleTable" py:if="table2Data">
-                <tr>
-                    <td id="useIt" py:for="td in table2Data">
-                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
-                    </td>
-                </tr>
-            </table>
-            </div>
-
-        <div id="steps" py:attrs="{'style': table1Data and 'display:none;' or None}">
-            <div id="threeEasySteps" >
-                <a class="imageButton" href="http://wiki.rpath.com/wiki/Application_to_Appliance"><img src="${cfg.staticPath}/apps/mint/images/appliance_guide.png" alt="Check out our appliance guide" /></a>
-            </div>
-        </div>
+        <!--
+        Marketing block start
+        -->
+        ${XML(frontPageBlock)}
+        <!--
+        Marketing block end
+        -->
 
         <div py:if="selectionData or topProjects or popularProjects" id="topten">
             <div class="cssbox">

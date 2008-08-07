@@ -430,6 +430,23 @@ class MintClient:
         '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
         return self.server.getPackageCreatorPackages(projectId)
 
+    def startApplianceCreatorSession(self, projectId, versionId,
+            rebuild):
+        """See L{mint.server.startApplianceCreatorSession}"""
+        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild)
+
+    def makeApplianceTrove(self, sessionHandle):
+        return self.server.makeApplianceTrove(sessionHandle)
+
+    def addApplianceTrove(self, sessionHandle, troveSpec):
+        return self.server.addApplianceTrove(sessionHandle, troveSpec)
+
+    def setApplianceTroves(self, sessionHandle, troveList):
+        return self.server.setApplianceTroves(sessionHandle, troveList)
+
+    def listApplianceTroves(self, sessionHandle):
+        return self.server.listApplianceTroves(sessionHandle)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
@@ -529,42 +546,10 @@ class MintClient:
         """
         Start a new image generation job.
         @param buildId: the build id which describes the image to be created.
-        @return: an object representing the new job
-        @rtype: L{mint.jobs.Job}
+        @return: the unique identifier of the job
+        @rtype: C{str}
         """
         return self.server.startImageJob(buildId)
-
-    def getJob(self, jobId):
-        """
-        Retrieve a L{jobs.Job} object by job id.
-        @param jobId: the database id of the requested job.
-        @type jobId: int
-        @returns: an object representing the requested job.
-        @rtype: L{jobs.Job}
-        """
-        raise NotImplementedError
-        return jobs.Job(self.server, jobId)
-
-    def listActiveJobs(self, filter):
-        """List the jobs in the job queue.
-        @param filter: If True it will only show running or waiting jobs.
-          If False it will show all jobs for past 24 hours.
-        @return: list of jobIds"""
-        return self.server.listActiveJobs(filter)
-
-    def startNextJob(self, archTypes, jobTypes, jobServerVersion):
-        jobId = self.server.startNextJob(archTypes, jobTypes, jobServerVersion)
-        if jobId:
-            return self.getJob(jobId)
-        return None
-
-    def getJobs(self):
-        """
-        Iterates through all jobs.
-        @returns: list jobs found
-        @rtype: list of L{jobs.Job}s
-        """
-        return [self.getJob(x) for x in self.server.getJobIds()]
 
     def addDownloadHit(self, urlId, ip):
         return self.server.addDownloadHit(urlId, ip)
@@ -754,29 +739,6 @@ class MintClient:
 
     def delRemappedRepository(self, fromName):
         return self.server.delRemappedRepository(fromName)
-
-    def getUseItIcons(self):
-        return self.server.getUseItIcons()
-
-    def deleteUseItIcon(self, itemId):
-        return self.server.deleteUseItIcon(itemId)
-
-    def addUseItIcon(self, itemId, name, link):
-        return self.server.addUseItIcon(itemId, name, link)
-
-    def getCurrentSpotlight(self):
-        return self.server.getCurrentSpotlight()
-
-    def getSpotlightAll(self):
-        return self.server.getSpotlightAll()
-
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                         endDate):
-         return self.server.addSpotlightItem(title, text, link, logo,
-                                             showArchive, startDate, endDate)
-
-    def deleteSpotlightItem(self, itemId):
-        return self.server.deleteSpotlightItem(itemId)
 
     def addFrontPageSelection(self, name, link, rank):
         return self.server.addFrontPageSelection(name, link, rank)

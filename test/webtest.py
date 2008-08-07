@@ -396,7 +396,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(1, self.fetchWithRedirect,
+        page = page.postForm(2, self.fetchWithRedirect,
                 {'title': 'Test Project', 'shortname': 'test',
                  'prodtype': 'Component', 'version': '1.0'})
 
@@ -415,7 +415,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(1, self.fetchWithRedirect,
+        page = page.postForm(2, self.fetchWithRedirect,
                 {'title': 'Test Project', 'hostname': 'test',
                  'appliance': 'yes'})
 
@@ -429,7 +429,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(1, self.fetchWithRedirect,
+        page = page.postForm(2, self.fetchWithRedirect,
                 {'title': 'Test Project 2', 'shortname': 'test2',
                  'prodtype': 'Component', 'version': '1.0'})
 
@@ -443,7 +443,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(1, self.fetchWithRedirect,
+        page = page.postForm(2, self.fetchWithRedirect,
                 {'title': 'Test Project 3', 'shortname': 'test3',
                  'prodtype': 'Component', 'version': '1.0'})
 
@@ -576,7 +576,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/members/', 
                 ok_codes = [200])
-        page = page.postForm(1, self.post, {'username' : 'testuser',
+        page = page.postForm(2, self.post, {'username' : 'testuser',
                                             'level' : 0})
 
 
@@ -986,7 +986,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/newGroup',
                 server = self.getProjectServerHostname())
 
-        page.postForm(1, self.post, {'groupName' : 'bar', 'version' : '1.1'})
+        page.postForm(2, self.post, {'groupName' : 'bar', 'version' : '1.1'})
 
     def testPickArch(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1005,7 +1005,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/editGroup2?id=1&version=1.0.0&action=Save%20and%20Cook')
 
         # this line would trigger a group cook if a job server were running
-        page.postForm(1, self.post, {'arch' : "1#x86", 'id' : '1'})
+        page.postForm(2, self.post, {'arch' : "1#x86", 'id' : '1'})
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1405,7 +1405,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/editGroup2?id=%d&action=Save%%20and%%20Cook&version=1.0' % \
                           groupTrove.id)
 
-        page = page.postForm(1, self.post, {'flavor': ['1#x86']})
+        page = page.postForm(2, self.post, {'flavor': ['1#x86']})
 
         page = self.assertNotContent('/project/testproject/builds',
                               content = 'closeCurrentGroup')
@@ -1440,14 +1440,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/editGroup2?id=%d&action=Save%%20and%%20Cook&version=1.0' % \
                           groupTrove.id)
 
-        page.postForm(1, self.post, {"flavor" : ["1#x86"]})
+        page.postForm(2, self.post, {"flavor" : ["1#x86"]})
 
         cu = self.db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
         self.db.commit()
 
-        page = page.postForm(1, self.post, {"flavor" : ["1#x86"]})
+        page = page.postForm(2, self.post, {"flavor" : ["1#x86"]})
 
         self.failIf('Error' in page.body,
                     "recooking triggered backtrace")
@@ -1615,7 +1615,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/newBuild')
 
         troveSpec = 'group-test=/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/0.0:1.0-1-1' + '[is: x86]'
-        page = page.postForm(1, self.post,
+        page = page.postForm(2, self.post,
                              {'name' : 'Foo',
                               'distTroveSpec': troveSpec,
                               'anaconda_templatesSpec': troveSpec,
@@ -1856,7 +1856,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         
         self.webLogin('foouser', 'foopass')
         page = self.fetchWithRedirect('/cloudSettings')
-        page = page.postForm(1, page.post,
+        page = page.postForm(2, page.post,
                           { 'awsAccountNumber': '1234-5678-9011',
                             'awsPublicAccessKeyId': '01010101010101010101',
                             'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
@@ -1878,7 +1878,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         
         # add some settings and enusre they are there
         page = self.fetchWithRedirect('/cloudSettings')
-        page = page.postForm(1, page.post,
+        page = page.postForm(2, page.post,
                           { 'awsAccountNumber': '1234-5678-9011',
                             'awsPublicAccessKeyId': '01010101010101010101',
                             'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
@@ -1893,11 +1893,35 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         
         # remove them and make sure they are gone
         page = self.fetchWithRedirect('/removeCloudSettings')
-        page = page.postForm(1, page.post, {'confirm': "1"})
+        page = page.postForm(2, page.post, {'confirm': "1"})
         ec2Creds = client.getEC2CredentialsForUser(userId)
         self.assertTrue(ec2Creds == {'awsPublicAccessKeyId': '', 
                                      'awsSecretAccessKey': '', 
                                      'awsAccountNumber': ''})
+
+
+    def testFrontPageBlock(self):
+        HTMLcontent = """<div>The MARKETING block of code</div>"""
+
+        # gotta be logged in, otherwise frontPage caching will kill us
+        self.quickMintUser('foouser','foopass')
+        self.webLogin('foouser', 'foopass')
+
+        # Sanity check
+        self.assertCode('/', code=[200])
+
+        # Make sure marketing block is not there
+        page = self.fetch('/')
+        self.failIf(HTMLcontent in page.body)
+
+        # Put content into file
+        f = open(self.mintCfg.frontPageBlock, 'w')
+        f.write(HTMLcontent)
+        f.close()
+
+        # Check it is on page
+        page = self.fetch('/')
+        self.assertContent('/', content=HTMLcontent)
 
 
 if __name__ == "__main__":

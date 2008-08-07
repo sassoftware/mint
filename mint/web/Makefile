@@ -10,6 +10,7 @@ python_files = \
 	__init__.py	\
 	admin.py	\
 	app.py		\
+	appliance_creator.py	\
 	cache.py	\
 	catalog.py	\
 	fields.py	\
@@ -17,6 +18,9 @@ python_files = \
 	rpchooks.py	\
 	decorators.py	\
 	hooks.py	\
+	logerror.py	\
+	packagecreator.py	\
+	productversion.py	\
 	project.py	\
 	setup.py	\
 	site.py		\

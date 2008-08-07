@@ -677,6 +677,7 @@ def _createApplianceSpotlight(db):
     cu = db.cursor()
     commit = False
 
+    # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'ApplianceSpotlight' not in db.tables:
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
@@ -703,6 +704,7 @@ def _createApplianceSpotlight(db):
         db.tables['FrontPageSelections'] = []
         commit = True
 
+    # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'UseIt' not in db.tables:
         cu.execute("""
         CREATE TABLE UseIt (

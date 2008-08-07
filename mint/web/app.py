@@ -10,6 +10,7 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
+from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels
@@ -19,6 +20,7 @@ from mint.web import cache, fields
 from mint.web.admin import AdminHandler
 from mint.web.cache import pageCache, reqHash
 from mint.web.project import ProjectHandler
+from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.setup import SetupHandler
@@ -74,6 +76,7 @@ class MintApp(WebHandler):
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
+        self.apcHandler = APCHandler()
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
@@ -212,6 +215,7 @@ class MintApp(WebHandler):
 
         # mapping of url regexps to handlers
         urls = (
+            (r'^/apc/',         self.apcHandler),
             (r'^/project/',     self.projectHandler),
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
@@ -244,6 +248,17 @@ class MintApp(WebHandler):
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
 
+        # get the news for the frontpage (only in non-maint mode)
+        self.latestRssNews = dict()
+        if not maintenance.getMaintenanceMode(self.cfg):
+            newNews = self.client.getNews()
+            if len(newNews) > 0:
+                self.latestRssNews = newNews[0]
+                if 'pubDate' in self.latestRssNews:
+                    self.latestRssNews['age'] = \
+                            timeDelta(self.latestRssNews['pubDate'],
+                                    capitalized=False)
+
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
@@ -271,7 +286,8 @@ class MintApp(WebHandler):
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
-            'remoteIp':         self.remoteIp
+            'remoteIp':         self.remoteIp,
+            'latestRssNews':    self.latestRssNews
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:

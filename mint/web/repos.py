@@ -19,6 +19,7 @@ import simplejson
 from mint import userlevels
 from mint import helperfuncs
 from mint.mint_error import *
+from mint.web import productversion
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
@@ -35,7 +36,7 @@ from conary import conarycfg
 from conary import errors as conaryerrors
 from conary.trove import Trove
 
-class ConaryHandler(WebHandler):
+class ConaryHandler(WebHandler, productversion.ProductVersionView):
     def _filterAuth(self, **kwargs):
         memberList = kwargs.get('memberList', [])
         if isinstance(memberList, str):
@@ -754,6 +755,8 @@ class ConaryHandler(WebHandler):
 
         d = self.fields
         d['auth'] = self.authToken
+
+        self.setupView()
 
         try:
             d['auth'] = self.authToken

@@ -75,28 +75,21 @@ class SiteHandler(WebHandler):
         popularProjects = self.client.getPopularProjects()
         topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
-        spotlightData = self.client.getCurrentSpotlight()
         publishedReleases = self.client.getPublishedReleaseList()
-        data = self.client.getUseItIcons()
-        if data:
-            if len(data) < 4:
-                table1Data = data
-                table2Data = False
-            elif len(data) == 4:
-                table1Data = data[:2]
-                table2Data = data[2:]
-            else:
-                table1Data = data[:3]
-                table2Data = data[3:]
+
+        #insert marketing block
+        frontPageBlockFile = self.cfg.frontPageBlock
+        if os.path.exists(frontPageBlockFile) and os.access(frontPageBlockFile, os.R_OK):
+            f = open(frontPageBlockFile, "r")
+            frontPageBlock = f.read()
         else:
-            table1Data = False
-            table2Data = False
+            frontPageBlock = ""
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
             popularProjects=popularProjects, selectionData = selectionData,
-            topProjects = topProjects, spotlightData = spotlightData,
-            publishedReleases = publishedReleases, table1Data = table1Data,
-            table2Data = table2Data)
+            topProjects = topProjects,
+            publishedReleases = publishedReleases,
+            frontPageBlock = frontPageBlock)
 
     @strFields(user = '', password = '')
     def pwCheck(self, auth, user, password):
@@ -104,32 +97,6 @@ class SiteHandler(WebHandler):
         if not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off':
             ret = str(bool(self.client.pwCheck(user, password))).lower()
         return """<auth valid="%s" />\n""" % ret
-
-    @intFields(pageId=1)
-    def applianceSpotlight(self, pageId, *args, **kwargs):
-        spotlightData = self.client.getSpotlightAll()
-        if spotlightData:
-            data=[x for x in spotlightData if time.time() > x['endDate']]
-            pageCount = len(data)/self.cfg.bannersPerPage
-            if len(data)%self.cfg.bannersPerPage:
-                pageCount += 1
-            if pageId < pageCount:
-                showNext = True
-            else:
-                showNext = False
-            if pageId != 1:
-                showPrev = True
-            else:
-                showPrev = False
-            data = data[(pageId-1)*self.cfg.bannersPerPage:(pageId-1)*\
-                   self.cfg.bannersPerPage + self.cfg.bannersPerPage]
-        else:
-            data = False
-            showNext = False
-            showPrev = False
-            pageCount = 0
-        return self._write("applianceSpotlight", data=data, pageCount=pageCount,
-                           showNext=showNext, showPrev=showPrev, pageId=pageId)
 
     @redirectHttps
     def register(self, auth):

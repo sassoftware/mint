@@ -25,9 +25,7 @@
             <li py:attrs="{'class': (lastchunk in ('outbound', 'editOutbound', 'processEditOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
             <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
-            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
             <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
-            <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'useIt') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/useIt">Manage 'Use It' Icons</a></li>
             <li py:if="not cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'setup') and 'selectedItem' or None}"><a href="${cfg.basePath}setup/">Re-run Initial Setup</a></li>
             <li py:if="not cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${cfg.hostName}.${cfg.siteDomainName.split(':')[0]}:8003/rAA/" target="_blank">Enter rPath Appliance Agent</a></li>
         </ul>

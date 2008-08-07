@@ -71,7 +71,7 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         # ensure cookies are set
         self.failIf(not self.cookies, "admin user got no session cookies.")
 
-        self.failIf('Maintenance Mode' not in page.body,
+        self.failIf('maintenance mode' not in page.body,
                     "Page does not indicate maintenance mode")
 
     def testProjects(self):

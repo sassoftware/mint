@@ -6,14 +6,26 @@
 
 SUBDIRS = repos admin docs setup
 
-kid_files = \
-	applianceSpotlight.kid	\
+app_creator_kid_files = \
+	buildPackage.kid		\
+        buildPackageWiz.kid		\
+	createPackageInterview.kid	\
+	createPackageInterviewWiz.kid	\
+	createPackage.kid		\
+        createPackageWiz.kid		\
+	editGroupWiz.kid		\
+	generateImagesWiz.kid		\
+	reviewGroupWiz.kid		\
+        packagecreator.kid		\
+	packageList.kid			\
+	uploadPackageFrame.kid		\
+	wizard.kid
+
+kid_files = $(app_creator_kid_files) \
 	build.kid		\
 	buildDefs.kid		\
-	buildPackage.kid	\
 	builds.kid		\
-	createPackage.kid	\
-	createPackageInterview.kid \
+	builds_common.kid	\
 	cloudCatalogNoCredentials.kid	\
 	cloudSettings.kid	\
 	confirmEmail.kid	\
@@ -41,7 +53,6 @@ kid_files = \
 	newBuildsFromProductDefinition.kid	\
 	newGroup.kid		\
 	newProject.kid		\
-	packageList.kid		\
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\
@@ -57,7 +68,6 @@ kid_files = \
 	searchResults.kid	\
 	tryItNow.kid		\
 	uploadKey.kid		\
-	uploadPackageFrame.kid	\
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid		\

@@ -54,10 +54,8 @@ python_files =			\
 	session.py		\
 	sessiondb.py		\
 	shimclient.py		\
-	spotlight.py		\
 	stats.py		\
 	urltypes.py		\
-	useit.py		\
 	userlevels.py		\
 	userlisting.py		\
 	users.py		\

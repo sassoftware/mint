@@ -8,7 +8,7 @@
     from mint import userlevels, buildtypes, constants
     from mint.client import timeDelta
     from mint.client import upstream
-    from mint.helperfuncs import truncateForDisplay
+    from mint.helperfuncs import truncateForDisplay, formatProductVersion
     from mint import urltypes
     from mint.builds import getExtraFlags
     from mint.config import isRBO
@@ -25,7 +25,38 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 
-    <div py:def="projectResourcesMenu" id="project" class="palette">
+    <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
+      <li py:if="versions">Version:
+        <span py:if="not readOnly and auth.authorized" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
+        <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
+      </li>
+      <div py:if="not readOnly and auth.authorized" py:strip="True">
+        <li id="changeVersionWidget">
+        <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
+            <?python
+            attrs = {'name': "versionId", 'id': 'productVersionSelectorDropdown'}
+            ?>
+            ${versionSelection(attrs, versions, True, currentVersion)}
+            <input id="product_version_redirect" type="hidden" name="redirect_to" value=""/>
+        </form>
+        <script type="text/javascript" >
+            jQuery('#currentVersionLink').click(function() {
+                jQuery('#changeVersionWidget').slideToggle('fast')
+            });
+            jQuery('#productVersionSelectorDropdown').change(function() {
+                jQuery('#versionSelectorForm').submit();
+            });
+            jQuery(document.body).ready(function() {
+                jQuery('#product_version_redirect').val(document.location);
+                jQuery('#changeVersionWidget').hide();
+            });
+        </script>
+        </li>
+      </div>
+      <li py:if="not versions">Version: none available</li>
+    </div>
+
+    <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
             projectUrl = project.getUrl()
@@ -35,8 +66,10 @@
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
         <div class="boxHeader">${projectText().title()} Resources</div>
         <ul>
+            ${productVersionMenu(readOnlyVersion)}
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">${projectText().title()} Home</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('newPackage', 'getPackageFactories', 'savePackage')) and 'selectedItem' or None}"><a href="${projectUrl}newPackage">Create Package</a></li>
+            <li py:if="isWriter"><a href="${cfg.basePath}apc/${project.shortname}/">Manage Appliance</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Manage Images</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">${isOwner and 'Manage' or 'View'} Releases</a></li>
             <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} ${projectText().title()} Membership</a></li>
@@ -49,14 +82,14 @@
         </ul>
     </div>
 
-    <div py:def="versionSelection(attributes, versions, unselected)" py:strip="True">
+    <div py:def="versionSelection(attributes, versions, unselected=False, currentVersion=None)" py:strip="True">
         <?python
     v = set([x[2] for x in versions])
     showNamespace = len(v) > 1
         ?>
         <select py:attrs="attributes">
-            <option py:if="unselected" value="-1" selected="selected">--</option>
-            <option py:for="ver in versions" value="${ver[0]}">
+            <option py:if="unselected" value="-1" py:attrs="{'selected': (unselected and not currentVersion) and 'selected' or None}">--</option>
+            <option py:for="ver in versions" value="${ver[0]}" py:attrs="{'selected': (ver[0] == currentVersion) and 'selected' or None}">
                 <div py:strip="True" py:if="showNamespace">${ver[3]} (${ver[2]})</div>
                 <div py:strip="True" py:if="not showNamespace">${ver[3]}</div>
             </option>
@@ -200,7 +233,7 @@
 
     <div py:strip="True" py:def="getBuildIcon(build)">
         <?python icon = build.getBrandingIcon() ?>
-        <a py:if="icon" title="${icon['text']}" href="${icon['href']}">
+        <a py:if="icon" title="${icon['text']}" href="${icon['href']}" target="_blank">
             <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icon['icon']}" alt="${icon['text']}" />
         </a>
     </div>

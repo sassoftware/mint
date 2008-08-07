@@ -72,7 +72,7 @@ def setup():
     raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa-2.1'))
     raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test-2.1'))
     raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
-    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../product-definition'))
+    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../rpath-product-definition'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
     catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath('../../catalog-service'))
 

@@ -190,6 +190,11 @@ buildTypeIcons = {
         href="http://www.citrix.com/xenserver/getexpress",
         text="Citrix XenServer Express Edition: Download Now",
         ),
+    VIRTUAL_PC_IMAGE: dict(
+        icon="get-hyper-v.png",
+        href="http://www.microsoft.com/Hyper-V",
+        text="Learn more about Microsoft Hyper-V",
+        ),
 }
 
 typeFlavorOverride = {

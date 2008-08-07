@@ -173,7 +173,6 @@ class MintConfig(ConfigFile):
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
-    spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
@@ -241,6 +240,10 @@ class MintConfig(ConfigFile):
     # bulletin file
     bulletinPath            = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'config', 'bulletin.txt')
+
+    #marketing block file
+    frontPageBlock          = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'config', 'frontPageBlock.html')
 
     # colo workarounds
     injectUserAuth          = (cfgtypes.CfgBool, True,
