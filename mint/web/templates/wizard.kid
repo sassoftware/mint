@@ -19,8 +19,7 @@
     <ul>
         <li>Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</li>
         <li py:for="step in sorted([x for x in wizard_steps.keys() if x not in wizard_maint_steps])" py:attrs="{'class': (wizard_position == step) and 'selectedItem' or None}">
-            <a py:if="wizard_maint" href="${wizard_steps[step][1]}">${wizard_steps[step][0]}</a>
-            <span py:if="not wizard_maint" py:replace="wizard_steps[step][0]"/>
+            <span py:replace="wizard_steps[step][0]"/>
         </li>
     </ul>
 </div>
