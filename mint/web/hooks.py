@@ -23,7 +23,8 @@ from mint import maintenance
 from mint.helperfuncs import extractBasePath
 from mint.projects import transTables
 from mint.users import MailError
-from mint.web import app, logErrorAndEmail
+from mint.web import app
+from mint.web.logError import logErrorAndEmail
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
 from mint.web.webhandler import normPath, HttpError
