@@ -9,9 +9,8 @@ SUBDIRS = repos admin docs setup
 app_creator_kid_files = \
 	buildPackage.kid		\
         buildPackageWiz.kid		\
-        componentSelection.kid		\
 	createPackageInterview.kid	\
-        createPackageInterviewWiz.kid	\
+	createPackageInterviewWiz.kid	\
 	createPackage.kid		\
         createPackageWiz.kid		\
 	editGroupWiz.kid		\
@@ -22,7 +21,7 @@ app_creator_kid_files = \
 	uploadPackageFrame.kid		\
 	wizard.kid
 
-kid_files = \
+kid_files = $(app_creator_kid_files) \
 	build.kid		\
 	buildDefs.kid		\
 	builds.kid		\
