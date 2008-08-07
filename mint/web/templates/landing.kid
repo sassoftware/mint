@@ -33,18 +33,16 @@ if 'message' not in locals():
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
               <h2>Appliance Creator</h2>
 
-              <div class="mailingListButtons">
-                <div py:for="troveName in sorted(groups.keys())" py:strip="True">
-                  <?python
-                  pkgname = troveName.replace(':source', '')
-                  ?>
-                  <h3>Edit ${pkgname}</h3>
-                  <ul>
-                    <li><a class="option" href="startApplianceCreator">Edit Appliance</a></li>
-                  </ul>
-                </div>
-                <h3>Discard current appliance contents and start over</h3>
-                <ul><li><a href="startApplianceCreator?maintain=0" class="option">Create Appliance</a></li>
+              <div class="inlineButtonList">
+                <p py:if="groups">You can use Appliance Creator to either make revisions to the existing appliance, or to disregard the existing work and completely restart the appliance creation process.</p>
+                <p py:if="groups"> Click the "Revise Appliance" button to make changes to the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance.</p>
+                <p py:if="groups">Click the "Start Over" button to restart the appliance creation process.</p>
+                <p py:if="not groups">Appliance Creator can help you more easily create an appliance for ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} by guiding you through the steps necessary to deploy your software in an appliance form-factor.
+                </p>
+                <p py:if="not groups">Click the "Create Appliance" button to start.</p>
+                <ul>
+                  <li py:if="groups"><a class="option" href="startApplianceCreator">Revise Appliance</a></li>
+                  <li><a href="startApplianceCreator?maintain=0" class="option"><span py:if="groups" py:strip="True">Start Over</span><span py:if="not groups" py:strip="True">Create Appliance</span></a></li>
                 </ul>
               </div>
             </div>

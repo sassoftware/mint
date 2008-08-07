@@ -23,11 +23,10 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
             <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-            <h2>Appliance Creator<span py:if="name" py:strip="True"> - Editing ${name.replace(':source', '')}</span></h2>
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
-            ${createPackage(uploadDirectoryHandle, sessionHandle, name)}
+            ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive of binary software you would like to incorporate as part of the %s version %s appliance, you can package it here, or you can click the "Skip Package Creation" link to move to the next step.' % (project.getNameForDisplay(), formatProductVersion(versions, currentVersion)))}
             <div>
-              <a href="editApplianceGroup">Skip package creator</a>
+              <a href="editApplianceGroup">Skip Package Creation</a>
             </div>
         </div>
         </div>

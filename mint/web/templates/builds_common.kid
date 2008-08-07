@@ -4,6 +4,7 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
+from mint import jobstatus
 from mint.web.templatesupport import downloadTracker, projectText
 from mint.helperfuncs import truncateForDisplay, formatProductVersion
 ?>
@@ -19,13 +20,16 @@ from mint.helperfuncs import truncateForDisplay, formatProductVersion
             isPublished = build.getPublished()
         ?>
         <tr py:attrs="rowAttrs">
-            <td colspan="3" class="buildName"><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a>
+            <td colspan="2" class="buildName">
+                <span><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a></span>
+                <span py:if="build.description">- ${truncateForDisplay(build.description)}</span>
                 <span py:if="isPublished" class="buildAssociated">
                     <?python
                         release = self.client.getPublishedRelease(build.pubReleaseId)
                     ?>
                     <br />Part of ${isPublished and 'published' or 'unpublished'} release <a href="${basePath}release?id=${release.id}">${release.name} (Version ${release.version}) </a></span>
             </td>
+            <td class="buildShortStatus">${jobstatus.statusNames[build.getStatus()['status']]}</td>
         </tr>
         <tr py:attrs="rowAttrs">
             <td class="buildInfo">${build.getTroveName()}<br />${"%s/%s" % (build.getTroveVersion().trailingLabel(), build.getTroveVersion().trailingRevision())}</td>
