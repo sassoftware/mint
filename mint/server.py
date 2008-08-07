@@ -242,7 +242,6 @@ def getTables(db, cfg):
     d = {}
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
-    d['jobs'] = jobs.JobsTable(db)
     d['buildFiles'] = jobs.BuildFilesTable(db)
     d['filesUrls'] = jobs.FilesUrlsTable(db)
     d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
@@ -2222,20 +2221,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName,
-                                      timeCreated = time.time(),
-                                      buildCount = 0,
-                                      createdBy = self.auth.userId)
+                                  name = productName,
+                                  timeCreated = time.time(),
+                                  buildCount = 0,
+                                  createdBy = self.auth.userId)
+        self.buildData.setDataValue(buildId, 'jsversion',
+            jsversion, data.RDT_STRING)
 
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
         return buildId
 
     @typeCheck(int, ((str, unicode),), bool)
@@ -2324,19 +2318,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'anacondaCustomTrove' : 'anaconda-custom',
                             'anacondaTemplatesTrove' : 'anaconda-templates'}
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
+
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
                                       buildCount = 0,
                                       createdBy = self.auth.userId)
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+        self.buildData.setDataValue(buildId, 'jsversion', jsversion,
+            data.RDT_STRING)
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
@@ -3110,12 +3100,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildDict['buildType']
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             data = self.serializeBuild(buildId)
             try:
+                mc = self._getMcpClient()
                 return mc.submitJob(data)
             except mcp_error.NotEntitledError:
                 raise NotEntitledError()
+            except mcp_error.NetworkError:
+                raise BuildSystemDown
 
     @typeCheck(int, str)
     @private
@@ -3127,275 +3119,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
-        mc = self._getMcpClient()
-        data = self.serializeGroupTrove(groupTroveId, arch)
         try:
+            mc = self._getMcpClient()
+            data = self.serializeGroupTrove(groupTroveId, arch)
             return mc.submitJob(data)
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
         except mcp_error.NotEntitledError:
-            raise NotEntitledError()
-
-    @typeCheck()
-    @requiresAuth
-    @private
-    def getJobIds(self):
-        raise NotImplementedError
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs ORDER BY timeSubmitted")
-
-        return [x[0] for x in cu.fetchall()]
-
-    @typeCheck(bool)
-    @requiresAuth
-    def listActiveJobs(self, filter):
-        """List the jobs in the job queue.
-        @param filter: If True it will only show running or waiting jobs.
-          If False it will show all jobs for past 24 hours plus waiting jobs.
-        @return: list of jobIds"""
-        raise NotImplementedError
-        cu = self.db.cursor()
-
-        if filter:
-            cu.execute("""SELECT jobId FROM Jobs
-                              WHERE status IN (?, ?) ORDER BY timeSubmitted""",
-                       jobstatus.WAITING, jobstatus.RUNNING)
-        else:
-            cu.execute("""SELECT jobId FROM Jobs WHERE timeSubmitted > ?
-                              OR status IN (?, ?) ORDER BY timeSubmitted""",
-                       time.time() - 86400, jobstatus.WAITING,
-                       jobstatus.RUNNING)
-
-        ret = []
-        for x in cu.fetchall():
-            job = self.jobs.get(x[0])
-            hostname = self.getJobDataValue(x[0], 'hostname')
-            if hostname[0]:
-                job['hostname'] = hostname[1]
-            else:
-                job['hostname'] = "None"
-            ret.append(job)
-        return ret
-
-    @typeCheck((list, str), (dict, (list, int)), str)
-    @requiresAuth
-    @private
-    def startNextJob(self, archTypes, jobTypes, jobserverVersion):
-        """Select a job to execute from the list of pending jobs
-        @param archTypes: list of frozen flavors. only specify arch flags.
-        @param jobTypes: dict. keys are the kinds of jobs.
-          values are lists of valid types for that job.
-        @param jobserverVersion: string. version of the job server.
-        @return: jobId of job to execute, or 0 for no job.
-        """
-
-        raise NotImplementedError
-
-        from mint import cooktypes
-
-        # what to return if we no job has been started
-        jobId = 0
-
-        # scrub archTypes and jobTypes.
-        maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = "Repositories are currently offline.")
-        for arch in archTypes:
-            if arch not in ("1#x86", "1#x86_64"):
-                raise ParameterError("Not a legal architecture")
-
-        buildTypes = []
-        try:
-            buildTypes = jobTypes['buildTypes']
-        except KeyError:
-            # This is to handle deprecated jobservers who insist on sending
-            # imageTypes
-            buildTypes = jobTypes.get('imageTypes', [])
-
-        cookTypes = jobTypes.get('cookTypes', [])
-
-        if sum([(x not in buildtypes.TYPES) \
-                for x in buildTypes]):
-            raise ParameterError("Not a legal Build Type")
-
-        if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
-            raise ParameterError("Not a legal Cook Type")
-
-        if jobserverVersion not in jsversion.getVersions(self.cfg):
-            raise ParameterError("Not a legal job server version: %s (wants: %s)" % \
-                (jobserverVersion, str(jsversion.getVersions(self.cfg))))
-        # client asked for nothing, client gets nothing.
-        if not (buildTypes or cookTypes) or (not archTypes):
-            return 0
-
-        # the pid would suffice, except that fails to be good enough
-        # if multiple web servers use one database backend.
-        ownerId = (os.getpid() << 47) + random.randint(0, (2 << 47) - 1)
-
-        # lock the jobs using ownerId
-        try:
-            cu = self.db.transaction()
-            cu.execute("""UPDATE Jobs SET owner=?
-                              WHERE owner IS NULL AND status=?""",
-                       ownerId, jobstatus.WAITING)
-            self.db.commit()
-        except:
-            # do nothing if we fail to lock any rows; we'll be back...
-            self.db.rollback()
-            return 0
-
-        # we are now in a locked situation; wrap in try/finally
-        # to ensure that no matter what happens, we unlock any rows 
-        # we may have locked
-        try:
-            try:
-                cu = self.db.transaction()
-                archTypeQuery = archTypes and "(%s)" % \
-                                ', '.join(['?' for x in archTypes]) or ''
-
-                buildTypeQuery = buildTypes and "(%s)" % \
-                                ', '.join(['?' for x in buildTypes]) or ''
-
-                # at least one of buildTypes or cookTypes will be defined,
-                # or this code would have already bailed out.
-                if not buildTypes:
-                    #client wants only cooks
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               WHERE status=?
-                                   AND Jobs.buildId IS NULL
-                                   AND owner=?
-                               ORDER BY timeSubmitted"""
-                    cu.execute(query, jobstatus.WAITING, ownerId)
-                elif not cookTypes:
-                    # client wants only image jobs
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN JobData
-                                   ON Jobs.jobId=JobData.jobId
-                                       AND JobData.name='arch'
-                               LEFT JOIN BuildsView AS Builds
-                                   ON Builds.buildId=Jobs.buildId
-                               LEFT JOIN BuildData
-                                   ON BuildData.buildId=Jobs.buildId
-                                       AND BuildData.name='jsversion'
-                               WHERE status=?
-                                   AND Jobs.groupTroveId IS NULL
-                                   AND owner=?
-                                   AND BuildData.value=?
-                                   AND JobData.value IN %s
-                                   AND Builds.buildType IN %s
-                               ORDER BY timeSubmitted
-                               LIMIT 1""" % (archTypeQuery, buildTypeQuery)
-                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                               *(archTypes + buildTypes))
-                else:
-                    # client wants both cook and image jobs
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN BuildsView AS Builds
-                                   ON Builds.buildId=Jobs.buildId
-                               LEFT JOIN BuildData
-                                   ON BuildData.buildId=Jobs.buildId
-                                       AND BuildData.name='jsversion'
-                               WHERE status=? AND owner=?
-                                   AND ((BuildData.value=? AND
-                                       Builds.buildType IN %s) OR
-                                        (groupTroveId IS NOT NULL))
-                               ORDER BY timeSubmitted
-                               """ % (buildTypeQuery)
-                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                               *(buildTypes))
-
-                res = cu.fetchall()
-                for r in res:
-                    arch = deps.ThawFlavor(self.jobData.getDataValue(r[0], "arch")[1])
-                    for x in archTypes:
-                        if arch.satisfies(deps.ThawFlavor(x)):
-                            jobId = r[0]
-                            break # match first usable job we find
-                    if jobId:
-                        break
-
-                if jobId:
-                    cu.execute("""UPDATE Jobs
-                                  SET status=?, statusMessage=?, timeStarted=?
-                                  WHERE jobId=?""",
-                               jobstatus.RUNNING, 'Starting', time.time(),
-                               jobId)
-                    if self.req:
-                        self.jobData.setDataValue(jobId, "hostname", self.remoteIp, data.RDT_STRING)
-                    cu.execute("SELECT jobId FROM Jobs WHERE status=?",
-                               jobstatus.WAITING)
-                    # this is done inside the job lock. there is a small chance of race
-                    # condition, but the consequence would be that jobs might not
-                    # reflect the correct number on admin page. if this proves to be
-                    # too costly, move it outside the lock
-                    for ordJobId in [x[0] for x in cu.fetchall()]:
-                        cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
-                                   self.getJobWaitMessage(ordJobId), ordJobId)
-
-                self.db.commit()
-            except:
-                self.db.rollback()
-
-        finally:
-            # This absolutely must happen, so retry at most 10 times,
-            # waiting one second between tries. Exceptions other than
-            # DatabaseLocked are passed up to the caller.
-            tries = 0
-            while tries < 10:
-                try:
-                    cu = self.db.transaction()
-                    cu.execute("""UPDATE Jobs SET owner=NULL
-                                      WHERE owner=?""", ownerId)
-                    self.db.commit()
-                    break
-                except:
-                    # rollback and try again
-                    self.db.rollback()
-                    tries += 1
-                    time.sleep(1)
-
-        return jobId
-
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getJobIdForBuild(self, buildId):
-        raise NotImplementedError
-        self._filterBuildAccess(buildId)
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?", buildId)
-        r = cu.fetchone()
-        if r:
-            return r[0]
-        else:
-            return 0
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getJobIdForCook(self, groupTroveId):
-        raise NotImplementedError
-        projectId = self.groupTroves.getProjectId(groupTroveId)
-        self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
-
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?", groupTroveId)
-        r = cu.fetchone()
-        if r:
-            return r[0]
-        else:
-            return 0
-
-    @typeCheck(int, int, str)
-    @private
-    def setJobStatus(self, jobId, newStatus, statusMessage):
-        raise NotImplementedError
-        self._filterJobAccess(jobId)
-        self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
-        return True
+            raise NotEntitledError
 
     @typeCheck(int, str, list, (list, str, int))
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3768,10 +3499,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                   self.cfg.externalDomainName, buildId, count)
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             try:
+                mc = self._getMcpClient()
                 status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
+            except (mcp_error.UnknownJob, mcp_error.NetworkError):
                 status, message = \
                     jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
         else:
@@ -3791,11 +3522,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        mc = self._getMcpClient()
-
         try:
+            mc = self._getMcpClient()
             status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
+        except (mcp_error.UnknownJob, mcp_error.NetworkError):
             status, message = \
                 jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
@@ -3945,6 +3675,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @requiresAuth
     def serializeGroupTrove(self, groupTroveId, arch):
+
+        # get the jobslave version; this could fail early
+        jsversion = self._getJSVersion()
+
         # performed at the mint server level to have access to
         # groupTrove, project and groupTroveItems objects
         projectId = self.groupTroves.getProjectId(groupTroveId)
@@ -3975,8 +3709,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
                 (self.cfg.siteHost, self.cfg.basePath)
 
-        mc = self._getMcpClient()
-
         r = {}
         r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
         r['type'] = 'cook'
@@ -3986,12 +3718,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['autoResolve'] = groupTrove.autoResolve
 
-        try:
-            jsversion = mc.getJSVersion()
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+
         r['data'] = {'arch' : arch,
-                     'jsversion': str(jsversion)}
+                     'jsversion': jsversion}
 
         r['description'] = groupTrove.description
 
@@ -4606,6 +4335,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
         return self.mcpClient
+
+    def _getJSVersion(self):
+        try:
+            mc = self._getMcpClient()
+            return str(mc.getJSVersion())
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
 
     def __del__(self):
         if self.mcpClient:
