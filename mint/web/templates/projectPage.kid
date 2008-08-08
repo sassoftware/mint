@@ -66,9 +66,9 @@ from mint.web.templatesupport import projectText
                             <a href="${basePath}editVersion?id=${currentVersion}">Edit</a> ${projectText().lower()} version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}
                         </li>
                         <li py:if="not versions or not currentVersion">
-                            Select a version at the left to edit the product version, or manage the appliance
+                            Select a version at the left to edit the product version<span py:if="project.isAppliance" py:strip="True">, or manage the appliance</span>
                         </li>
-                        <li py:if="versions and currentVersion"><a href="${cfg.basePath}apc/${project.shortname}/">Manage</a> the ${project.getNameForDisplay(maxWordLen=25)} ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)} appliance</li>
+                        <li py:if="versions and currentVersion and project.isAppliance"><a href="${cfg.basePath}apc/${project.shortname}/">Manage</a> the ${project.getNameForDisplay(maxWordLen=25)} ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)} appliance</li>
                     </ul>
                 </div>
                 <div py:if="isWriter" py:strip="True">
