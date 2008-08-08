@@ -214,6 +214,18 @@ from mint import constants
                         <th>Type</th>
                         <td>${buildtypes.typeNames.get(build.getBuildType(), 'Unknown')} <span py:if="extraFlags">(${", ".join(extraFlags)})</span></td>
                     </tr>
+                    <tr py:if="anacondaVars['anaconda-custom']">
+                        <th>Anaconda<br/>Custom</th>
+                        <td>${anacondaVars['anaconda-custom']}</td>
+                    </tr>
+                    <tr py:if="anacondaVars['anaconda-templates']">
+                        <th>Anaconda<br/>Templates</th>
+                        <td>${anacondaVars['anaconda-templates']}</td>
+                    </tr>
+                    <tr py:if="anacondaVars['media-template']">
+                        <th>Media<br/>Template</th>
+                        <td>${anacondaVars['media-template']}</td>
+                    </tr>
                 </table>
 
                 <h3>Notes</h3>
