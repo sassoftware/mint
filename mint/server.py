@@ -2328,7 +2328,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return baseFileName
 
     def _getBuildPageUrl(self, buildId, hostname = None):
-        # hostname arg is an optimization for getAllVWSBuilds
+        # hostname arg is an optimization for getAllVwsBuilds
         if not hostname:
             projectId = self.getBuild(buildId)['projectId']
             project = self.getProject(projectId)
@@ -5527,7 +5527,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return [ami[0] for ami in amiIds if ami[1] == productId]
 
     @requiresAuth
-    def getAllVWSBuilds(self):
+    def getAllVwsBuilds(self):
         """
         Returns a list of all of the Workspaces compatible images that this
         rBuilder manages. Workspaces images are merely raw filesystem images
@@ -5568,7 +5568,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.cfg.basePath, 'downloadImage')
         urlTemplate = "http://%s?id=%%d" % url
 
-        res = self.builds.getAllVWSBuilds(self.auth.userId,
+        res = self.builds.getAllVwsBuilds(self.auth.userId,
                 not self.auth.admin)
 
         for buildData in res.itervalues():
