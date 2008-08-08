@@ -6,73 +6,7 @@
 
 SUBDIRS = repos admin docs setup
 
-app_creator_kid_files = \
-	buildPackage.kid		\
-        buildPackageWiz.kid		\
-	createPackageInterview.kid	\
-	createPackageInterviewWiz.kid	\
-	createPackage.kid		\
-        createPackageWiz.kid		\
-	editGroupWiz.kid		\
-	generateImagesWiz.kid		\
-	landing.kid			\
-	reviewGroupWiz.kid		\
-        packagecreator.kid		\
-	packageList.kid			\
-	uploadPackageFrame.kid		\
-	wizard.kid
-
-kid_files = $(app_creator_kid_files) \
-	build.kid		\
-	buildDefs.kid		\
-	builds.kid		\
-	builds_common.kid	\
-	cloudCatalogNoCredentials.kid	\
-	cloudSettings.kid	\
-	confirmEmail.kid	\
-	confirmPublish.kid	\
-	confirm.kid		\
-	cookGroup.kid		\
-	downloads.kid		\
-	editGroup.kid		\
-	editProject.kid		\
-	editBuild.kid		\
-	editPubrelease.kid	\
-	editVersion.kid		\
-	error.kid		\
-	findRefs.kid		\
-	forgotPassword.kid	\
-	frontPage.kid		\
-	groups.kid		\
-	help.kid		\
-	joinRequest.kid		\
-	layout.kid		\
-	library.kid		\
-	mailingLists.kid	\
-	maintenance.kid		\
-	members.kid		\
-	newBuildsFromProductDefinition.kid	\
-	newGroup.kid		\
-	newProject.kid		\
-	passwordReset.kid	\
-	pickArch.kid		\
-	project.kid		\
-	projectPage.kid		\
-	register_active.kid	\
-	register_conf.kid	\
-	register.kid		\
-	register_reconf.kid	\
-	rejectJoinRequest.kid   \
-	pubrelease.kid		\
-	pubreleases.kid		\
-	rss20.kid		\
-	searchResults.kid	\
-	tryItNow.kid		\
-	uploadKey.kid		\
-	userInfo.kid		\
-	userSettings.kid	\
-	users.kid		\
-	viewJoinRequest.kid
+kid_files = *.kid
 
 python_files = __init__.py
 
