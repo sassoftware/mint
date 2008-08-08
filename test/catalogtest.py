@@ -56,7 +56,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertEquals(page.body,
                 '<fault code="400">Cloud credentials are not set in rBuilder</fault>')
 
-    def testEnumerateNoWorkspacesImages(self):
+    def testEnumerateNoVwsImages(self):
         # we don't need special remote credentials to see rBuilder images
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
