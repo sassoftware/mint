@@ -2307,6 +2307,41 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.startImageJob(buildId)
         return buildIds
 
+    @typeCheck(int)
+    def getBuildBaseFileName(self, buildId):
+        self._filterBuildAccess(buildId)
+        build = builds.Build(self, buildId)
+        project = self.getProject(build.projectId)
+        found, baseFileName = \
+                self.buildData.getDataValue(buildId, 'baseFileName')
+        if not found:
+            baseFileName = ''
+        baseFileName = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
+                for x in baseFileName])
+        arch = build.getArch()
+        ver = versions.ThawVersion(build.troveVersion)
+        baseFileName = baseFileName or \
+                "%(name)s-%(version)s-%(arch)s" % {
+                'name': project['hostname'],
+                'version': ver.trailingRevision().version,
+                'arch': arch}
+        return baseFileName
+
+    def _getBuildPageUrl(self, buildId, hostname = None):
+        # hostname arg is an optimization for getAllWorkspacesBuilds
+        if not hostname:
+            projectId = self.getBuild(buildId)['projectId']
+            project = self.getProject(projectId)
+            hostname = project.get('hostname')
+        url = util.joinPaths(self.cfg.projectSiteHost, self.cfg.basePath,
+                'project', hostname, 'build')
+        return "http://%s?id=%d" % (url, buildId)
+
+    @typeCheck(int)
+    def getBuildPageUrl(self, buildId):
+        # break this function to avoid excessive filter checks for local calls
+        self._filterBuildAccess(buildId)
+        return self._getBuildPageUrl(buildId)
 
     @typeCheck(int, str, str, str, str, str, dict)
     @requiresAuth
@@ -3339,6 +3374,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         results = cu.fetchall_dict()
 
+        # joinPaths will render any occurance of // into / and therefore
+        # normalize the URL. on systems where pathsep is not / this may
+        # be inappropriate
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        downloadUrlTemplate = "http://%s?id=%%d" % (url)
+
         buildFilesList = []
         lastFileId = -1
         lastDict   = {}
@@ -3353,7 +3395,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                              'idx': x['idx'],
                              'size': x['size'] or 0,
                              'sha1': x['sha1'] or '',
-                             'fileUrls': [] }
+                             'fileUrls': [] ,
+                             'downloadUrl': downloadUrlTemplate % lastFileId}
 
             lastDict['fileUrls'].append((x['urlId'], x['urlType'], x['url']))
             if x['urlType'] == urltypes.LOCAL and not lastDict['size']:
@@ -3361,7 +3404,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     lastDict['size'] = os.stat(x['url'])[stat.ST_SIZE]
                 except (OSError, IOError):
                     lastDict['size'] = 0
-            
+
             # convert size to a string for XML-RPC's sake (RBL-2789)
             lastDict['size'] = str(lastDict['size'])
 
@@ -5519,10 +5562,26 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        return self.builds.getAllWorkspacesBuilds(self.auth.userId,
+        # the downloadUrl is now provided by the getFiles method of a build
+        # object, but we really need to minimize the db hits in the loop below
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        urlTemplate = "http://%s?id=%%d" % url
+
+        res = self.builds.getAllWorkspacesBuilds(self.auth.userId,
                 not self.auth.admin)
 
-
+        for buildData in res.itervalues():
+            # we want to drop the hostname. it was collected by the builds
+            # module call for speed reasons
+            hostname = buildData.pop('hostname')
+            buildId = buildData['buildId']
+            buildData['buildPageUrl'] = \
+                    self._getBuildPageUrl(buildId, hostname = hostname)
+            buildData['downloadUrl'] = urlTemplate % \
+                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+        return res
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

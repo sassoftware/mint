@@ -34,29 +34,26 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, {fakeSha1: {'productDescription': '',
-                                            'buildId': 1,
-                                            'projectId': 1,
-                                            'isPublished': 0,
-                                            'buildDescription': '',
-                                            'productName': 'Foo',
-                                            'isPrivate': 0,
-                                            'role': '',
-                                            'createdBy': 'owner',
-                                            'buildName': 'Test Build'}})
+        self.assertEquals(buildList,
+                {fakeSha1: {'productDescription': '',
+                    'buildId': 1,
+                    'projectId': 1,
+                    'isPublished': 0,
+                    'buildDescription': '',
+                    'productName': 'Foo',
+                    'isPrivate': 0,
+                    'role': '',
+                    'createdBy': 'owner',
+                    'buildName': 'Test Build',
+                    'buildPageUrl':
+                            'http://test.rpath.local2/project/foo/build?id=1',
+                    'downloadUrl':
+                            'http://test.rpath.local2/downloadImage?id=1',
+                    'baseFileName': 'foo-1.1-x86_64' }})
 
         client = self.getClient("owner")
         buildList = client.getAllWorkspacesBuilds()
-        self.assertEquals(buildList, {fakeSha1: {'productDescription': '',
-                                            'buildId': 1,
-                                            'projectId': 1,
-                                            'isPublished': 0,
-                                            'buildDescription': '',
-                                            'productName': 'Foo',
-                                            'isPrivate': 0,
-                                            'role': 'Product Owner',
-                                            'createdBy': 'owner',
-                                            'buildName': 'Test Build'}})
+        self.assertEquals(buildList[fakeSha1]['role'], 'Product Owner')
 
     @fixtures.fixture('Full')
     def testHiddenVisibility(self, db, data):

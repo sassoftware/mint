@@ -240,6 +240,7 @@ class BuildsTable(database.KeyedTable):
 
         cu.execute("""
              SELECT p.projectId,
+                    p.hostname,
                     b.buildId,
                     bdf.sha1,
                     p.name AS productName,
@@ -503,3 +504,17 @@ class Build(database.TableObject):
             return override
         else:
             return buildtypes.buildTypeIcons.get(self.getBuildType(), None)
+
+    def getBaseFileName(self):
+        """
+        Return the baseFileName of a build. This was either set by the user
+        from advanced options or is <hostname>-<upstream version>-<arch>
+        Note this is not the full build filename: the extension is not supplied.
+        """
+        return self.server.getBuildBaseFileName(self.buildId)
+
+    def getBuildPageUrl(self):
+        """
+        Return the URL to the build's rBuilder page.
+        """
+        return self.server.getBuildPageUrl(self.buildId)
