@@ -66,8 +66,10 @@ Web Front End Changes
   repository for private products they are not members of. (RBL-3108)
 * The edit external products page now retrieves the correct label
   information in all cases. (RBL-3179)
-* The help text for Group Builder has been moved to the top of the page. 
-  (RBL-3182)
+* The help text for Group Builder and package creator has been moved to the top
+  of the page. (RBL-3083, RBL-3182)
+* A tool for guiding users through the process of creating an appliance, named
+  Appliance Creator, has been added (RDST-407)
 
 
 Changes in 4.1.1
