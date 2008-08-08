@@ -296,10 +296,6 @@ a.option:hover {
 	text-decoration:none;
 }
 
-.inlineButtonList ul {
-    margin-left: -3em;
-}
-
 .inlineButtonList ul li,
 .mailingListButtons ul li {
     display: inline
