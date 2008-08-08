@@ -61,7 +61,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/catalog/clouds/workspaces/images?_method=GET')
+        raise testsuite.SkipTestException('We need a real cloud or a way to mock')
+        page = self.fetch('/catalog/clouds/vws/cloudid/images?_method=GET')
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body, "<?xml version='1.0' encoding='UTF-8'?>\n<images/>\n")
 
