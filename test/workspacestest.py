@@ -15,11 +15,11 @@ from mint.data import RDT_BOOL
 fakeSha1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
 
 
-class WorkspacesTest(fixtures.FixturedUnitTest):
+class VwsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
-    def testGetAllWorkspacesBuilds(self, db, data):
+    def testGetAllVwsBuilds(self, db, data):
         client = self.getClient("admin")
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList, {})
         cu = db.cursor()
         buildId = data['buildId']
@@ -29,11 +29,11 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList,
                 {fakeSha1: {'productDescription': '',
                     'buildId': 1,
@@ -52,7 +52,7 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
                     'baseFileName': 'foo-1.1-x86_64' }})
 
         client = self.getClient("owner")
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList[fakeSha1]['role'], 'Product Owner')
 
     @fixtures.fixture('Full')
@@ -65,15 +65,15 @@ class WorkspacesTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         db.commit()
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.failIf(len(buildList) != 1)
         client = self.getClient('nobody')
-        buildList = client.getAllWorkspacesBuilds()
+        buildList = client.getAllVwsBuilds()
         self.assertEquals(buildList, {})
 
 
