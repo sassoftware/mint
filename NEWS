@@ -1,6 +1,11 @@
 Changes in @NEW@
 ================
 
+Web Front End Changes
+---------------------
+* The versions of special troves used to build an Installable
+  ISO is now displayed in the image build's detail page. (RBL-2600)
+
 Bug Fixes
 ---------------------
 * The default search settings in the web interface was not being set

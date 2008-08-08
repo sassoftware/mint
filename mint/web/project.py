@@ -675,6 +675,15 @@ class ProjectHandler(WebHandler):
             files = build.getFiles()
 
             fileIds = list(set([x['fileId'] for x in files]))
+
+            anacondaVars = {'anaconda-custom':'', 'anaconda-templates':'', 'media-template':''}
+            for key in anacondaVars:
+                anacondaVars[key] = build.getDataValue(key, validate = False)
+                if anacondaVars[key]:
+                    n,v,f = parseTroveSpec(anacondaVars[key])
+                    vObj = versions.VersionFromString(v)
+                    anacondaVars[key] = '%s/%s' % (vObj.trailingLabel(), vObj.trailingRevision())
+
             amiId = build.getDataValue('amiId', validate = False)
             amiS3Manifest = build.getDataValue('amiS3Manifest', validate=False)
         except builds.TroveNotSet:
@@ -693,7 +702,8 @@ class ProjectHandler(WebHandler):
                 buildInProgress = buildInProgress,
                 extraFlags = extraFlags,
                 amiId = amiId,
-                amiS3Manifest = amiS3Manifest)
+                amiS3Manifest = amiS3Manifest,
+                anacondaVars = anacondaVars)
 
 
     @ownerOnly
