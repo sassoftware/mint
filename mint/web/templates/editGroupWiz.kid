@@ -23,10 +23,12 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <div id="middle">
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              <h2>Appliance Creator - Editing Appliance Group</h2>
+              <h2>Edit Appliance Contents</h2>
+              <p>Select the packages to be included as part of the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance and click the "Update Contents" button below.</p>
               <div py:if="packageList" py:strip="True">
               <form name="packagecreatortroves" action="processEditApplianceGroup" method="post">
-              <ul>
+              <ul class="unnestedList">
+                <!-- handle the no troves case -->
                 <li py:for="troveName in sorted(packageList.keys())">
                     <?python
                     pkgname = troveName.replace(':source', '')
@@ -34,7 +36,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                     <input type="checkbox" name="troves" id="trove_${pkgname}" value="${pkgname}" py:attrs="{'checked': (pkgname in selected) and 'checked' or None}"/> <label for="trove_${pkgname}">${pkgname}=${packageList[troveName]['develStageLabel']}</label>
                 </li>
               </ul>
-              <input value="Submit" type="submit"/>
+              <input value="Update Contents" type="submit"/>
               </form>
               </div>
               <div py:if="not packageList" py:strip="True">

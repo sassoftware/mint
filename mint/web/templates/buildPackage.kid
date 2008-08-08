@@ -23,7 +23,7 @@
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
               <h2>Package Creator - Build</h2>
-              ${buildPackage(sessionHandle)}
+              ${buildPackage(sessionHandle, 'Package', 'Your package has been created and will now be built.  Depending on the software being packaged, the build process may take some time.')}
               <!-- The following are displayed based on whether the build was successful or not -->
               <div id="build_success" style="display:none">
                   <p>Your package has built successfully</p>

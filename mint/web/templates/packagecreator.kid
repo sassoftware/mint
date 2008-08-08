@@ -11,7 +11,7 @@ lang = None;
     Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:strip="True" py:def="createPackage(uploadDirectoryHandle, sessionHandle, name)">
+    <div py:strip="True" py:def="createPackage(uploadDirectoryHandle, sessionHandle, name, helpText)">
         <script type="text/javascript">
         <![CDATA[
             logDebug('Creating the fileuploadform object');
@@ -63,7 +63,7 @@ lang = None;
         ]]>
         </script>
         <h3>Upload an Archive</h3>
-        <p>Select your binary (not source) archive (rpm, tar archive) from your computer.</p>
+        <p py:content="helpText">Select your binary (not source) archive (rpm, tar archive) from your computer.</p>
         <div id="getPackageFactories_outerdiv">
         <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
             <iframe id="${fieldname}_iframe" src="${src}" class="fileupload" frameborder="0"/>
@@ -77,6 +77,7 @@ lang = None;
               <th>Archive</th>
               <td>
                   ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % uploadDirectoryHandle, 'uploadfile')}
+                  <div class="help">Specify a binary archive in RPM or tar format.</div>
               </td>
               </tr>
               <!--<tr>
@@ -244,7 +245,9 @@ lang = None;
         ]]>
         </script>
         <h3>Confirm Package Details</h3>
-        <p>Package Creator has selected a list of possible package type(s) to use with the archive that you uploaded, and has gathered as much information from it as possible.  Please confirm the correct package type, and verify the information displayed.</p>
+        <p>All information that could be obtained from the uploaded archive
+        appears below.  Please review (making any necessary changes/additions)
+        and then click the "Create Package" button.</p>
 
         <form name="savePackage" method="post" action="savePackage" id="savePackage">
             <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
@@ -286,7 +289,7 @@ lang = None;
         </div>
     </div>
 
-    <div py:strip="True" py:def="buildPackage(sessionHandle, type='Package')">
+    <div py:strip="True" py:def="buildPackage(sessionHandle, type='Package', helpText='')">
         <script type="text/javascript">
             <![CDATA[
 var polldata = {
@@ -354,11 +357,11 @@ addLoadEvent(makeRequest);
         </script>
 
         <h3>Build ${type.title()}</h3>
-        <p id="building">Your ${type.lower()} has been created and is now building.  Please be patient while the build completes.</p>
+        <p id="building" py:content="helpText"/>
 
         <!-- the poller -->
         ${statusArea("%s Build" % type.title())}
-        <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">Full build log</a></p>
+        <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">View build log</a></p>
     </div>
 
 </html>

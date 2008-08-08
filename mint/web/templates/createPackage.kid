@@ -27,7 +27,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
             <h2>Package Creator<span py:if="name" py:strip="True"> - Editing ${name.replace(':source', '')}</span></h2>
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
-            ${createPackage(uploadDirectoryHandle, sessionHandle, name)}
+            ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive of binary software you would like package for %s, you can package it here.' % project.getNameForDisplay())}
           </div>
         </div>
     </body>

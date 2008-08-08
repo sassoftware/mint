@@ -15,6 +15,7 @@ app_creator_kid_files = \
         createPackageWiz.kid		\
 	editGroupWiz.kid		\
 	generateImagesWiz.kid		\
+	landing.kid			\
 	reviewGroupWiz.kid		\
         packagecreator.kid		\
 	packageList.kid			\
