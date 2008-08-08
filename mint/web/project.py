@@ -169,7 +169,14 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        return self._write("builds", builds = builds)
+        publishedReleases = dict()
+        for build in builds:
+            if build.getPublished() and \
+                    build.pubReleaseId not in publishedReleases:
+                publishedReleases[build.pubReleaseId] = \
+                        self.client.getPublishedRelease(build.pubReleaseId)
+
+        return self._write("builds", builds = builds, publishedReleases = publishedReleases)
 
     @writersOnly
     def groups(self, auth):

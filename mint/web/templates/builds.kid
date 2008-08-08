@@ -40,7 +40,7 @@ from mint.helperfuncs import truncateForDisplay, formatProductVersion
                     </ul>
                 </div>
                 <div py:if="builds" py:strip="True">
-                ${buildsTable(builds)}
+                ${buildsTable(builds, publishedReleases = publishedReleases)}
                 </div>
                 <p py:if="not builds">This ${projectText().lower()} contains no images.</p>
             </div>
