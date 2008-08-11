@@ -58,10 +58,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertEquals(build.getFiles(),
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
                 'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5,
-                'downloadUrl': 'http://test.rpath.local2/downloadImage?id=5'},
+                'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
                  'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6,
-                 'downloadUrl': 'http://test.rpath.local2/downloadImage?id=6'}])
+                 'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=6'}])
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
 
@@ -684,7 +684,7 @@ class BuildTest(fixtures.FixturedUnitTest):
             [{'sha1': 'abcd', 'idx': 0, 'title': 'bar',
               'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')],
               'fileId': 5, 'size': 10,
-              'downloadUrl': 'http://test.rpath.local2/downloadImage?id=5'}]
+              'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'}]
         )
 
         # make sure the outputTokengets removed from the build data
