@@ -8,6 +8,7 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
+    from mint.helperfuncs import truncateForDisplay, formatProductVersion
     from rpath_common.proddef import api1 as proddef
     for var in [ 'name',
                  'namespace',
@@ -349,6 +350,19 @@
                             </p>
                             <p>
                                 <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder:Image_Types" target="_blank">Read more about each image type</a>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr py:if="not isNew">
+                        <th>Update Appliance Platform:</th>
+                        <td>
+                            <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox"/>
+                            <label for="updatePlatformCheckbox">Check this box to update to the latest appliance platform.</label>
+                            <p class="help">
+                            The appliance platform is locked to a specific version and will not change unless you update it.
+                            By checking this checkbox, the latest version of the appliance platform currently available will be
+                            used in all subsequent builds of the ${project.getNameForDisplay()} version
+                            ${formatProductVersion(versions, currentVersion)} appliance.
                             </p>
                         </td>
                     </tr>

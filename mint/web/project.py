@@ -1242,9 +1242,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @intFields(id = -1)
     @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @boolFields(updatePlatform = False)
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor,
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, updatePlatform,
             **kwargs):
 
         isNew = (id == -1)
@@ -1278,13 +1279,16 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     namespace,
                     pd)
 
-        if isNew and not self._getErrors():
+        if (isNew or updatePlatform) and not self._getErrors():
+            label = None
+            if isNew:
+                label = 'conary.rpath.com@rpl:2-devel'
             ##### DELETE #####
             # this value was hard coded for the june 23, 2008 release of rBO
             # this code must be removed when a proper solution is implemented
             cCfg = self.project.getConaryConfig()
             cClient = conaryclient.ConaryClient(cCfg)
-            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
+            pd.rebase(cClient, label)
             ##### END DELETE #####
 
         # Gather all grouped inputs
