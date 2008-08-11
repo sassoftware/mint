@@ -9,6 +9,7 @@ from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
+from mint import mint_error
 
 def check_session(func):
     def check_session_version_wrapper(s, *args, **kwargs):
@@ -131,7 +132,14 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         projectId = self.project.getId()
         # session is saved in the _setApplianceCreatorSession call
         self.session['appliance_creator_maintenance'] = maintain
-        sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, maintain)
+        try:
+            sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, maintain)
+        except mint_error.NoImagesDefined:
+            version = self.client.getProductVersion(self.currentVersion)
+            self._addErrors("No images have been defined for version: %s" % \
+                    version.get('name'))
+            self._predirect('editVersion?id=%d' % self.currentVersion,
+                    temporary=True)
         self._setApplianceCreatorSession(sesH)
 
     @writersOnly
