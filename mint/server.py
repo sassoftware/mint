@@ -5036,6 +5036,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, rebuild)
+        except packagecreator.errors.NoFlavorsToCook, err:
+            raise NoImagesDefined( \
+                    "Error starting the appliance creator service session: %s",
+                    str(err))
         except packagecreator.errors.PackageCreatorError, err:
             raise PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
