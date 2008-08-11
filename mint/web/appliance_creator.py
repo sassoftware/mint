@@ -140,6 +140,13 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
                     version.get('name'))
             self._predirect('editVersion?id=%d' % self.currentVersion,
                     temporary=True)
+
+        except mint_error.OldProductDefinition:
+            version = self.client.getProductVersion(self.currentVersion)
+            self._addErrors("Update to the latest appliance platform to continue.")
+            self._predirect('editVersion?id=%d' % self.currentVersion,
+                    temporary=True)
+
         self._setApplianceCreatorSession(sesH)
 
     @writersOnly

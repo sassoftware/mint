@@ -5040,6 +5040,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise NoImagesDefined( \
                     "Error starting the appliance creator service session: %s",
                     str(err))
+        except packagecreator.errors.ApplianceFactoryNotFound, err:
+            raise OldProductDefinition( \
+                    "Error starting the appliance creator service session: %s",
+                    str(err))
+
         except packagecreator.errors.PackageCreatorError, err:
             raise PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
