@@ -70,6 +70,8 @@ Web Front End Changes
   of the page. (RBL-3083, RBL-3182)
 * A tool for guiding users through the process of creating an appliance, named
   Appliance Creator, has been added (RDST-407)
+* The Edit Version page now allows you to rebase your platform definition.
+  (RBL-2383)
 
 
 Changes in 4.1.1
