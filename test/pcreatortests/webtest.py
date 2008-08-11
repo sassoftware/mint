@@ -385,6 +385,30 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         page = func(auth=auth, **fields)
         self.assertEquals("A big long string", page)
 
+    def testEditVersionRebaseUpdate(self):
+        self.called = False
+        def fakeRebase(pd, cclient, label):
+            self.assertEquals(label, None)
+            self.called = True
+        self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        methodName = 'processEditVersion'
+
+        def getProductDefinition(self, *args, **kwargs):
+            return proddef.ProductDefinition()
+
+        cmd = 'testproject/processEditVersion'
+        fields = {'id': 1, 'namespace': 'foo', 'name': '1', 'description': '',
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel', 'updatePlatform': '1'}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductDefinitionForVersion', getProductDefinition, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        try:
+            page = func(auth = auth, **fields)
+        except mint.web.webhandler.HttpMoved:
+            pass
+        self.assertEquals(self.called, True)
+
+
     def testEditVersionHardcodedValues(self):
         self.called = False
         def fakeRebase(pd, cclient, label):
