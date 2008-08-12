@@ -3379,7 +3379,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # be inappropriate
         url = util.joinPaths(self.cfg.projectSiteHost,
                 self.cfg.basePath, 'downloadImage')
-        downloadUrlTemplate = "http://%s?id=%%d" % (url)
+        downloadUrlTemplate = "http://%s?fileId=%%d" % (url)
 
         buildFilesList = []
         lastFileId = -1
