@@ -165,6 +165,8 @@ class PackageCreatorError(MintError):
     "Package Creator Error:"
 class NoImagesDefined(MintError):
     "Package Creator Error:"
+class OldProductDefinition(MintError):
+    "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 
