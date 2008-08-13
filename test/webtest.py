@@ -18,6 +18,7 @@ import rephelp
 
 from mint import mint_error
 from mint import database
+from mint import data
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
@@ -557,7 +558,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                   code = [200])
 
     def testBuildsPage(self):
-        raise testsuite.SkipTestException("Need MCP mocked in web environment somehow")
         client, userId = self.quickMintUser('foouser', 'foopass')
         hostname = 'foo'
         projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
@@ -591,7 +591,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 content = "Kung Foo Fighting", code = [200])
 
     def testBuildsPageMultipleFileUrls(self):
-        raise testsuite.SkipTestException("Need MCP mocked in web environment somehow")
         client, userId = self.quickMintUser('foouser','foopass')
         hostname = 'foo'
         projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
@@ -635,6 +634,50 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.failIf('urlType=%d' % urltypes.AMAZONS3 in newpage.body,
                 "Removing LOCAL type with S3 in place should not change the page")
+
+    @testsuite.tests('RBL-2600', 'RBL-3251')
+    def testBuildPageAnacondaCustomFields(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        hostname = 'foo'
+        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
+                        shortname=hostname, version="1.0", prodtype="Component")
+
+        build = client.newBuild(projectId, 'Kung Foo Fighting')
+        build.setDesc("It's a little bit frightening!")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        buildSize = 1024 * 1024 * 300
+        buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
+        build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        build.setDataValue('anaconda-custom',
+                'anaconda-custom=/conary.rpath.com@rpl:devel/2.0-1-1[]',
+                
+                data.RDT_TROVE, validate=False)
+
+        # make one of these frozen just to make sure we can handle
+        # cases where a frozen version made it into the database
+        build.setDataValue('anaconda-templates',
+                'anaconda-templates=/conary.rpath.com@rpl:devel/1216663633.443:2.0-2-1[is: x86]', data.RDT_TROVE, validate=False)
+
+        build.setDataValue('media-template',
+                'media-template=/conary.rpath.com@rpl:devel//foresight.rpath.org@fl:1/3.0-1.1-1[]', data.RDT_TROVE, validate=False)
+
+        self.webLogin('foouser', 'foopass')
+
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertContent('/project/foo/builds',
+                content = "Kung Foo Fighting", code = [200])
+
+        page = self.fetch('/project/foo/build?id=%d' % build.id)
+
+        self.failUnless('conary.rpath.com@rpl:devel/2.0-1-1' \
+                in page.body)
+        self.failUnless('conary.rpath.com@rpl:devel/2.0-2-1' \
+                in page.body)
+        self.failUnless('foresight.rpath.org@fl:1/3.0-1.1-1' \
+                in page.body)
 
     def testEmptyReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
