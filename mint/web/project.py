@@ -681,7 +681,10 @@ class ProjectHandler(WebHandler):
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
                     n,v,f = parseTroveSpec(anacondaVars[key])
-                    vObj = versions.VersionFromString(v)
+                    try:
+                        vObj = versions.VersionFromString(v)
+                    except ParseError:
+                        vObj = versions.ThawVersion(v)
                     anacondaVars[key] = '%s/%s' % (vObj.trailingLabel(), vObj.trailingRevision())
 
             amiId = build.getDataValue('amiId', validate = False)
