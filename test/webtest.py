@@ -722,7 +722,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 'NONE', data.RDT_TROVE, validate=False)
 
         page = self.assertNotContent('/project/foo/build?id=%d' % build.id,
-                content = 'Anaconda Custom')
+                content = 'Custom')
+        page = self.assertNotContent('/project/foo/build?id=%d' % build.id,
+                content = 'NONE')
 
 
     def testEmptyReleasesPage(self):
