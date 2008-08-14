@@ -681,7 +681,9 @@ class ProjectHandler(WebHandler):
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
                     n,v,f = parseTroveSpec(anacondaVars[key])
-                    if not v: continue  # skip things that don't have valid versions
+                    if not v:  # skip things that don't have valid versions
+                        anacondaVars[key] = ''
+                        continue
                     try:
                         vObj = versions.VersionFromString(v)
                     except ParseError:
