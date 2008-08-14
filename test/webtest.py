@@ -635,7 +635,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('urlType=%d' % urltypes.AMAZONS3 in newpage.body,
                 "Removing LOCAL type with S3 in place should not change the page")
 
-    @testsuite.tests('RBL-2600', 'RBL-3251')
+    @testsuite.tests('RBL-2600', 'RBL-3251', 'RBL-3259')
     def testBuildPageAnacondaCustomFields(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         hostname = 'foo'
@@ -652,7 +652,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
         build.setDataValue('anaconda-custom',
                 'anaconda-custom=/conary.rpath.com@rpl:devel/2.0-1-1[]',
-                
                 data.RDT_TROVE, validate=False)
 
         # make one of these frozen just to make sure we can handle
@@ -678,6 +677,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 in page.body)
         self.failUnless('foresight.rpath.org@fl:1/3.0-1.1-1' \
                 in page.body)
+
+        # Now set one of the fields as NONE and make sure it doesn't show up
+        build.setDataValue('anaconda-custom',
+                'NONE', data.RDT_TROVE, validate=False)
+
+        page = self.assertNotContent('/project/foo/build?id=%d' % build.id,
+                content = 'Anaconda Custom')
+
 
     def testEmptyReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
