@@ -341,7 +341,6 @@ div.packageList_navigation
 div.packageList_contents
 {
     height: 408px !important;
-    /*height: 433px;*/
     width: 453px !important;
     width: 449px; /* Hack for IE6's buggy width calculator */
     overflow: auto;
