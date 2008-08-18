@@ -340,13 +340,16 @@ div.packageList_navigation
 
 div.packageList_contents
 {
-    height: 406px;
-    width: 453px;
+    height: 408px !important;
+    /*height: 433px;*/
+    width: 453px !important;
+    width: 449px; /* Hack for IE6's buggy width calculator */
     overflow: auto;
 }
 
 div#loading_wait.packageList_contents {
-    width: 449px;
+    width: 449px !important;
+    width: 445px; /* hack for IE6's buggy width calculator */
     padding-left: 2px;
     padding-right: 2px;
 }
@@ -357,7 +360,8 @@ div.packageList_submit {
 }
 
 table#packageList_table {
-    width: 100%;
+    width: 100% !important;
+    width: 95%;
 }
 
 h3.packageList_section_header {
@@ -366,7 +370,7 @@ h3.packageList_section_header {
 }
 
 .packageList_navigation_item strong {
-    font-size: 10pt;
+    font-size: 8pt;
     color: inherit;
 }
 
@@ -429,12 +433,13 @@ div#filter_navigation_link {
     background-color: #ccccee;
     border: 1px solid #ddddff;
     line-height: 20px;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 div#filter_navigation_link:hover {
     background-color: #aaaadd;
     border: 1px solid #333;
-    cursor: pointer;
 }
 
 .selected {

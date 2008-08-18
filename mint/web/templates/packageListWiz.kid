@@ -5,6 +5,7 @@
     Copyright (c) 2008 rPath, Inc.
     All Rights Reserved
 -->
+<body>
     <div id="packageList">
         <?python
         import string
@@ -36,4 +37,5 @@
           </div>
         </table>
     </div>
+</body>
 </html>

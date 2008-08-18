@@ -26,7 +26,7 @@ import string
             <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/packagelist.js?v=${cacheFakeoutVersion}" />
             <h2>Select Additional Packages</h2>
-            <div id="jumpto_box"><span><label for="jumpto">Type a filter term and press enter: </label><input name="jumpto" id="jumpto_box" value="" disabled="disabled"/><input id="jumpto_box_clear" type="image" src="${cfg.staticPath}apps/mint/images/clear_filter.png" title="Clear Filter"/></span></div>
+            <div id="jumpto_box"><span><label for="jumpto">Type a filter term: </label><input name="jumpto" id="jumpto_box" value="" disabled="disabled"/><input id="jumpto_box_clear" type="image" src="${cfg.staticPath}apps/mint/images/clear_filter.gif" title="Clear Filter"/></span></div>
             <div id="filter_selections" style="display:none"/>
             <div style="display:none" id="filter_navigation_link_template"></div>
             <form name="selectPackagesForm" method="post" action="processSelectPackages">
