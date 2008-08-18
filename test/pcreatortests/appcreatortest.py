@@ -16,6 +16,8 @@ testsuite.setup()
 import fixtures
 import mint_rephelp
 
+from conary import versions as conaryver
+from conary.deps import deps as conarydeps
 from conary import conaryclient
 
 import pcreator
@@ -223,7 +225,35 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         self._makeApplianceTrove(False, 'bar', ['bar'])
 
     def testGetAvailablePackages(self):
-        avail = self.mintClient.getAvailablePackages(self.projectId, self.versionId)
+        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
+                public(lambda *args, **kwargs: 'ses-123'))
+
+        retTroveList = \
+            [
+                [
+                    ('foo-package', '/foo@foo:foo/0.000:1.0.1-1-1', '1#x86')
+                    #Frozen strings since this is how the server returns them
+                ]
+            ]
+        refTroveList = []
+        for label in retTroveList:
+            refTroveList.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
+        self.avail_called = False
+        def _getAvailPackages(s, sesH):
+            self.avail_called = True
+            return retTroveList
+        self.mock(pcreator.backend.BaseBackend, '_getAvailablePackages',
+                public(_getAvailPackages))
+        sesH = self.mintClient.startApplianceCreatorSession(self.projectId, 1, False)
+        troveList = self.mintClient.getAvailablePackages(sesH)
+        self.assertEquals(troveList, refTroveList)
+        self.failUnless(self.avail_called)
+
+        #call again to test built in caching
+        self.avail_called=False
+        troveList = self.mintClient.getAvailablePackages(sesH)
+        self.assertEquals(troveList, refTroveList)
+
 
 if __name__ == '__main__':
     testsuite.main()
