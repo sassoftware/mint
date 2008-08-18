@@ -222,8 +222,8 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         self._makeApplianceTrove(False, 'foo', ['foo'])
         self._makeApplianceTrove(False, 'bar', ['bar'])
 
-    def testGetAvailableTroves(self):
-        avail = self.mintClient.getAvailableTroves(self.projectId, self.versionId)
+    def testGetAvailablePackages(self):
+        avail = self.mintClient.getAvailablePackages(self.projectId, self.versionId)
 
 if __name__ == '__main__':
     testsuite.main()
