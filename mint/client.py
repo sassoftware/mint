@@ -888,7 +888,14 @@ class MintClient:
         return self.server.getAllVwsBuilds()
 
     def getAvailablePackages(self, sessionHandle):
-        return self.server.getAvailablePackages(sessionHandle)
+        from conary import versions as conaryver
+        from conary.deps import deps as conarydeps
+        pkgs = self.server.getAvailablePackages(sessionHandle)
+        ret = []
+        for label in pkgs:
+            ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
+        return ret
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

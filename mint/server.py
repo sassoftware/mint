@@ -5086,15 +5086,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return pc.listTroves(sessionHandle).get('explicitTroves', [])
 
     def _cacheAvailablePackages(self, sesH, pkgs):
-        cacheable = []
-        for label in pkgs:
-            cacheable.append([(nvf[0], nvf[1].freeze(), nvf[2].freeze()) for nvf in label])
         filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
         import pickle
         f = open(filen, 'wb')
-        pickle.dump(cacheable, f)
+        pickle.dump(pkgs, f)
         f.close()
-        del cacheable
 
     def _loadAvailablePackages(self, sesH):
         filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
@@ -5102,12 +5098,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             import pickle
             f = open(filen, 'rb')
             loaded = pickle.load(f)
-            ret = []
-            from conary import versions as conaryver
-            from conary.deps import deps as conarydeps
-            for label in loaded:
-                ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
-            return ret
+            return loaded
         else:
             return None
 
@@ -5116,7 +5107,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         pkgs = self._loadAvailablePackages(sessionHandle)
         if pkgs is None:
             pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
-            pkgs =  pc.getAvailablePackages(sessionHandle)
+            # Call the method that doesn't thaw the versions or flavors since
+            # we'd just have to thaw them again
+            pkgs =  pc.getAvailablePackagesFrozen(sessionHandle)
             self._cacheAvailablePackages(sessionHandle, pkgs)
         return pkgs
  
