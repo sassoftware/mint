@@ -31,7 +31,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                   <p>Your package has built successfully.  You can now either create another package, or edit the contents of the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance.</p>
                 <h2>Next Steps</h2>
                   <p><a href="newPackage">Create a new package</a></p>
-                  <p><a href="editApplianceGroup">Edit appliance contents</a></p>
+                  <p><a href="selectPackages">Select additional packages</a></p>
               </div>
               <div id="build_fail" style="display:none">
                   <p>Your package did not build successfully.</p>

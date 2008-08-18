@@ -36,6 +36,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                   <p>Your appliance group did not build successfully.</p>
                   <h2>Next Steps</h2>
                   <p><a href="newPackage">Create a new package</a></p>
+                  <p><a href="selectPackages">Select additional packages</a></p>
                   <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               </div>
             </div>

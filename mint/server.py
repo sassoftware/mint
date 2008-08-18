@@ -5062,6 +5062,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return pc.addTrove(sessionHandle, troveSpec, True)
 
     @requiresAuth
+    def addApplianceTroves(self, sessionHandle, troveList):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # abstract out the implicit troves
+        troveDict = pc.listTroves(sessionHandle)
+        explicit = set(troveDict.get('explicitTroves', []))
+        explicit.update(set(troveList))
+        return pc.setTroves(sessionHandle, list(explicit),
+                troveDict.get('implicitTroves', []))
+
+    @requiresAuth
     def setApplianceTroves(self, sessionHandle, troveList):
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         # abstract out the implicit troves
@@ -5069,11 +5079,47 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return pc.setTroves(sessionHandle, troveList,
                 troveDict.get('implicitTroves', []))
 
+    @requiresAuth
     def listApplianceTroves(self, sessionHandle):
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         # abstract out the implicit troves
         return pc.listTroves(sessionHandle).get('explicitTroves', [])
 
+    def _cacheAvailablePackages(self, sesH, pkgs):
+        cacheable = []
+        for label in pkgs:
+            cacheable.append([(nvf[0], nvf[1].freeze(), nvf[2].freeze()) for nvf in label])
+        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
+        import pickle
+        f = open(filen, 'wb')
+        pickle.dump(cacheable, f)
+        f.close()
+        del cacheable
+
+    def _loadAvailablePackages(self, sesH):
+        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
+        if os.path.exists(filen):
+            import pickle
+            f = open(filen, 'rb')
+            loaded = pickle.load(f)
+            ret = []
+            from conary import versions as conaryver
+            from conary.deps import deps as conarydeps
+            for label in loaded:
+                ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
+            return ret
+        else:
+            return None
+
+    @requiresAuth
+    def getAvailablePackages(self, sessionHandle):
+        pkgs = self._loadAvailablePackages(sessionHandle)
+        if pkgs is None:
+            pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+            pkgs =  pc.getAvailablePackages(sessionHandle)
+            self._cacheAvailablePackages(sessionHandle, pkgs)
+        return pkgs
+ 
     @typeCheck(int)
     @requiresAuth
     def getEC2CredentialsForUser(self, userId):

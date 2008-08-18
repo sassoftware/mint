@@ -3,7 +3,7 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
+    Copyright (c) 2008 rPath, Inc.
     All Rights Reserved
 -->
     <head>

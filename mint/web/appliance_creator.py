@@ -11,6 +11,8 @@ from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint import mint_error
 
+import itertools
+
 def check_session(func):
     def check_session_version_wrapper(s, *args, **kwargs):
         #TODO: Check the session variable for the app sess handle
@@ -25,8 +27,8 @@ def check_session(func):
 # updated when new things are added below
 
 #Landing, component selection
-#WIZ_REBASE      = 2.0
-WIZ_PACKCREAT   = 5.0
+WIZ_PACKCREAT   = 3.0
+WIZ_SELECT_PACKAGES   = 4.0
 WIZ_EDIT_GROUP  = 6.0
 WIZ_REVIEW      = 7.0
 WIZ_BUILD_GROUP = 8.0
@@ -36,13 +38,23 @@ WIZ_MAINT_ONLY = () #(WIZ_REBASE, WIZ_EDIT_GROUP)
 
 wizard_steps = {
     #constant:        (Text value, URL value)
-   #WIZ_REBASE:     ("Rebase", 'rebase'),
     WIZ_PACKCREAT:  ("Create Packages", 'newPackage'),
+    WIZ_SELECT_PACKAGES: ("Select Packages", 'selectPackages'),
     WIZ_EDIT_GROUP: ("Edit Appliance Contents", 'editApplianceGroup'),
     WIZ_REVIEW:     ("Review Appliance", 'reviewApplianceGroup'),
     WIZ_BUILD_GROUP:("Build Appliance", 'buildApplianceGroup'),
     WIZ_GENERATE:   ("Generate Images", 'generateImages'),
 }
+
+
+def collapsePkgList(pkglist, filterfunc):
+    """Collapses a list of lists of packages to a single list of packages with no name duplicates.  Filters packages based on C{filterExpr}.
+    """
+    ret = {}
+    for x in reversed(pkglist):
+        for nvf in itertools.ifilter(filterfunc, x):
+            ret[nvf[0]] = nvf
+    return ret
 
 def wizard_position(pos):
     """ Sets where in the wizard the method being called appears.  This method
@@ -180,8 +192,38 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     @output_handler('buildPackageWiz')
     @wizard_position(WIZ_PACKCREAT)
     def savePackage(self, sessionHandle, factoryHandle, **kwargs):
+        name = kwargs['name']
+        if name:
+            # This needs to be more sophisticated, for now we just try to add
+            # it.  If the package fails to build, an error will occur during
+            # cooking if the user does not remove it in the edit group page
+            self.client.addApplianceTrove(self._getApplianceSessionHandle(), name)
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return dict(sessionHandle = sessionHandle, message = None)
+
+    @writersOnly
+    @output_handler('packageListWiz')
+    def packageList(self):
+        def filtercomponents(nvf):
+            if ':' in nvf[0]:
+                return False
+            return True
+        sesH = self._getApplianceSessionHandle()
+        pkgs = self.client.getAvailablePackages(sesH)
+        pkgs = collapsePkgList(pkgs, filtercomponents)
+        return dict(packageList = pkgs)
+
+    @writersOnly
+    @output_handler('selectPackagesShellWiz')
+    @wizard_position(WIZ_SELECT_PACKAGES)
+    def selectPackages(self):
+        return dict(message=None)
+
+    @writersOnly
+    @output_handler(redirect='editApplianceGroup')
+    @listFields(str, troves=[])
+    def processSelectPackages(self, troves):
+        self.client.addApplianceTroves(self._getApplianceSessionHandle(), troves)
 
     @writersOnly
     @output_handler('editGroupWiz')
@@ -189,13 +231,8 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     def editApplianceGroup(self):
         version = self.client.getProductVersion(self.currentVersion)
         sesH = self._getApplianceSessionHandle()
-        pkglist = self.client.getPackageCreatorPackages(self.project.getId())
-        pkgs = {}
-        for n, info in pkglist.get(version['name'], {}).get(version['namespace'], {}).iteritems():
-            if not n.startswith('group-'):
-                pkgs[n] = info
-        selected = self.client.listApplianceTroves(sesH)
-        return dict(message=None, packageList = pkgs, selected = selected)
+        pkgs = self.client.listApplianceTroves(sesH)
+        return dict(message=None, packageList = pkgs)
 
     @writersOnly
     @output_handler(redirect="reviewApplianceGroup")

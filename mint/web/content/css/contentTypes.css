@@ -314,3 +314,129 @@ ul.unnestedList
 {
     list-style: none;
 }
+
+div.packageList
+{
+    width: 475px;
+    height: 408px;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+}
+
+div.packageList_navigation
+{
+    float: left;
+    height: 406px;
+    width: 20px;
+    font-size: 12px;
+    font-family: monospace;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #bbb;
+    background-color: #ddd;
+    text-align: center;
+}
+
+div.packageList_contents
+{
+    height: 406px;
+    width: 453px;
+    overflow: auto;
+}
+
+div#loading_wait.packageList_contents {
+    width: 449px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+div.packageList_submit {
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+
+table#packageList_table {
+    width: 100%;
+}
+
+h3.packageList_section_header {
+    margin: 0px;
+    border-bottom: 2px solid black;
+}
+
+.packageList_navigation_item strong {
+    font-size: 10pt;
+    color: inherit;
+}
+
+.packageList_navigation_item {
+    height: 15px;
+    color: #888;
+    font-size: 8pt;
+    vertical-align: middle;
+}
+
+#packageList_navigation_link {
+    text-decoration: none;
+}
+
+#packageList_navigation_link:hover {
+    text-decoration: underline;
+}
+
+div#jumpto_box {
+    width: 477px; /* Width of .packageList + border-width */
+    height: 24px; 
+}
+
+div#jumpto_box span {
+    float:right;
+}
+
+div#jumpto_box input#jumpto_box {
+    height: 16px;
+    font-size: 9pt;
+    border: 1px solid #888;
+    position: relative;
+    left: 16px;
+    z-index: 1;
+}
+
+div#jumpto_box input#jumpto_box_clear {
+    border: none;
+    height: 16px;
+    position: relative;
+    top: 4px;
+    right: 2px;
+    z-index: 3;
+}
+
+div#filter_selections {
+    width: 474px; /* Width of .packageList + packageList border-width - padding */
+    padding: 2px;
+    overflow: hidden;
+}
+
+div#filter_navigation_link {
+    display:inline;
+    float:left;
+    height: 16px;
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-right: 3px;
+    margin-top: 3px;
+    background-color: #ccccee;
+    border: 1px solid #ddddff;
+    line-height: 20px;
+}
+
+div#filter_navigation_link:hover {
+    background-color: #aaaadd;
+    border: 1px solid #333;
+    cursor: pointer;
+}
+
+.selected {
+    background-color: #333333;
+    color: #f0f0f0;

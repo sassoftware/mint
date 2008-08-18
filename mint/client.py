@@ -441,6 +441,9 @@ class MintClient:
     def addApplianceTrove(self, sessionHandle, troveSpec):
         return self.server.addApplianceTrove(sessionHandle, troveSpec)
 
+    def addApplianceTroves(self, sessionHandle, troveList):
+        return self.server.addApplianceTroves(sessionHandle, troveList)
+
     def setApplianceTroves(self, sessionHandle, troveList):
         return self.server.setApplianceTroves(sessionHandle, troveList)
 
@@ -883,6 +886,9 @@ class MintClient:
 
     def getAllVwsBuilds(self):
         return self.server.getAllVwsBuilds()
+
+    def getAvailablePackages(self, sessionHandle):
+        return self.server.getAvailablePackages(sessionHandle)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

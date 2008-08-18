@@ -35,6 +35,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               </ul>
               <h2>Next Steps</h2>
               <p><a href="newPackage">Create a new package</a></p>
+              <p><a href="selectPackages">Select additional packages</a></p>
               <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               <a class="option" href="buildApplianceGroup">Build appliance</a>
               </div>
@@ -42,7 +43,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 No packages added
               <h2>Next Steps</h2>
               <p><a href="newPackage">Create a new package</a></p>
-              <p><a href="editApplianceGroup">Edit appliance contents</a></p>
+              <p><a href="selectPackages">Select additional packages</a></p>
               </div>
             </div>
         </div>

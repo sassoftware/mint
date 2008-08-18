@@ -137,18 +137,18 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         self.prodDef.setProductVersionDescription("Test Product 1.0")
         self.prodDef.setImageGroup("group-%s" % prodVersion['namespace'])
         self.prodDef.setBaseFlavor('')
-        self.prodDef.addStage(name = "devel", labelSuffix = "-devel")
-        self.prodDef.addStage(name = "qa", labelSuffix = "-qa")
-        self.prodDef.addStage(name = "release", labelSuffix = "")
+        self.prodDef.addStage(name = "Development", labelSuffix = "-devel")
+        self.prodDef.addStage(name = "QA", labelSuffix = "-qa")
+        self.prodDef.addStage(name = "Release", labelSuffix = "")
         self.prodDef.addBuildDefinition(name = "'x86 Installable ISO Build",
             baseFlavor = 'is: x86',
             imageType = self.prodDef.imageType('installableIsoImage'),
-            stages = ['devel', 'qa', 'release'])
+            stages = ['Development', 'QA', 'Release'])
 
         self.prodDef.addBuildDefinition(name = "'x86_64 Installable ISO Build",
             baseFlavor = 'is: x86_64',
             imageType = self.prodDef.imageType('installableIsoImage'),
-            stages = ['devel', 'qa', 'release'])
+            stages = ['Development', 'QA', 'Release'])
 
         project = self.mintClient.getProject(self.projectId)
         cfg = project.getConaryConfig()
@@ -222,6 +222,8 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         self._makeApplianceTrove(False, 'foo', ['foo'])
         self._makeApplianceTrove(False, 'bar', ['bar'])
 
+    def testGetAvailableTroves(self):
+        avail = self.mintClient.getAvailableTroves(self.projectId, self.versionId)
 
 if __name__ == '__main__':
     testsuite.main()

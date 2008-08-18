@@ -26,7 +26,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
             ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive of binary software you would like to incorporate as part of the %s version %s appliance, you can package it here, or you can click the "Skip Package Creation" link to move to the next step.' % (project.getNameForDisplay(), formatProductVersion(versions, currentVersion)))}
             <div>
-              <a href="editApplianceGroup">Skip Package Creation</a>
+              <a href="selectPackages">Skip Package Creation</a>
             </div>
         </div>
         </div>
