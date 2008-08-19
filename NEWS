@@ -72,6 +72,8 @@ Web Front End Changes
   Appliance Creator, has been added (RDST-407)
 * The Edit Version page now allows you to rebase your platform definition.
   (RBL-2383)
+* The Appliance Creator Wizard has been modified to allow the addition of
+  arbitrary packages to your appliance definition. (RDST-533)
 
 
 Changes in 4.1.1
