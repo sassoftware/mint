@@ -52,9 +52,14 @@ function finished_load_packageList(xhr, textStatus)
 
 var lastselected = null;
 
+function trim(str)
+{
+    return str.replace(/^\s+|\s+$/g, '');
+}
+
 function jump_to_item()
 {
-    linkname = jQuery(this).text();
+    linkname = trim(jQuery(this).text());
     divOffset = jQuery('#packageList_troveList').offset().top;
     row = jQuery('tr[name=row_' + linkname + ']');
     pOffset = row.offset().top;
@@ -77,7 +82,7 @@ var troveNames = [];
 function get_trove_list()
 {
     troveNames = jQuery('.packageList_trove_name').map(function(index, domElem) {
-        return jQuery(domElem).text().replace(/^\s+|\s+$/g,"");
+        return trim(jQuery(domElem).text());
     });
 }
 
