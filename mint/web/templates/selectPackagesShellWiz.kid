@@ -11,7 +11,7 @@ import string
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Create Package: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Select Packages: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
         <div id="layout">
