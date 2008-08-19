@@ -77,7 +77,7 @@ var troveNames = [];
 function get_trove_list()
 {
     troveNames = jQuery('.packageList_trove_name').map(function(index, domElem) {
-        return jQuery(domElem).text();
+        return jQuery(domElem).text().replace(/^\s+|\s+$/g,"");
     });
 }
 
