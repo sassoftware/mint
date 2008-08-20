@@ -31,8 +31,7 @@ function parseResponseAndAppendTo(xhr, wanted_element, append_to) {
     }
 }
 
-function finished_load_packageList(xhr, textStatus)
-{
+function finished_load_packageList(xhr, textStatus) {
     //We don't use the "success" callback because the data is too big to put on the stack
     // See http://dev.jquery.com/ticket/3250
     if (textStatus == 'success') {
@@ -52,13 +51,11 @@ function finished_load_packageList(xhr, textStatus)
 
 var lastselected = null;
 
-function trim(str)
-{
+function trim(str) {
     return str.replace(/^\s+|\s+$/g, '');
 }
 
-function jump_to_item()
-{
+function jump_to_item() {
     linkname = trim(jQuery(this).text());
     divOffset = jQuery('#packageList_troveList').offset().top;
     row = jQuery('tr[name=row_' + linkname + ']');
@@ -72,15 +69,13 @@ function jump_to_item()
     return false;
 }
 
-function reset_filter()
-{
+function reset_filter() {
     jQuery('#filter_selections').empty().hide('fast');
 }
 
 var troveNames = [];
 
-function get_trove_list()
-{
+function get_trove_list() {
     troveNames = jQuery('.packageList_trove_name').map(function(index, domElem) {
         return trim(jQuery(domElem).text());
     });
@@ -102,10 +97,9 @@ function pkg_filter(val){
     var added = 0;
     for (var i = 0; i < troveNames.length; i++) {
         if (troveNames[i].search(regex) != -1){
-            wclone = wrapper.clone()
+            wclone = wrapper.clone();
             wclone.append(document.createTextNode(troveNames[i]));
             added += 1;
-            //results.append(document.createTextNode('\n'));
             results.append(wclone);
         }
     }
@@ -117,8 +111,7 @@ function pkg_filter(val){
     return true;
 }
 
-function pkgs_live_filter(e)
-{
+function pkgs_live_filter(e) {
     searchval = jQuery(this).val();
     switch(e.which) {
         case 13:
@@ -154,19 +147,17 @@ function animate_scroll_to(eventObj) {
     return false;
 }
 
-function linkhere(index, domElement)
-{
+function linkhere(index, domElement) {
     var linktmp = jQuery('#packageList_navigation_link_template > a').clone().get(0);
     linktmp.id = 'packageList_navigation_link';
     linktmp.href = '#' + domElement.id;
     var id = domElement.id.replace('_target', '');
-    var res = jQuery('#' + id).wrapInner(linktmp)
+    var res = jQuery('#' + id).wrapInner(linktmp);
 
     res.click(animate_scroll_to);
 }
 
-function add_anchor_links()
-{
+function add_anchor_links() {
     jQuery('h3.packageList_section_header').map(linkhere);
 }
 
