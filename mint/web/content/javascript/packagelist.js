@@ -148,9 +148,9 @@ function animate_scroll_to(eventObj) {
 }
 
 function linkhere(index, domElement) {
-    var linktmp = jQuery('#packageList_navigation_link_template > a').clone().get(0);
-    linktmp.id = 'packageList_navigation_link';
-    linktmp.href = '#' + domElement.id;
+    var linktmp = jQuery('<a><strong/></a>')
+    linktmp.attr('id', 'packageList_navigation_link');
+    linktmp.attr('href', '#' + domElement.id);
     var id = domElement.id.replace('_target', '');
     var res = jQuery('#' + id).wrapInner(linktmp);
 
