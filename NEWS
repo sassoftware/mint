@@ -74,6 +74,8 @@ Web Front End Changes
   (RBL-2383)
 * The Appliance Creator Wizard has been modified to allow the addition of
   arbitrary packages to your appliance definition. (RDST-533)
+* Fixed a bug where the Edit Version page referred to "Image Sets" when dealing
+  with an "Image Set". (RBL-3281)
 
 
 Changes in 4.1.1

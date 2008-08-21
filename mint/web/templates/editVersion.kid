@@ -322,7 +322,7 @@
                     </tr>
                     
                     <tr>
-                        <th>Image Sets:</th>
+                        <th>Image Set:</th>
                         <td>
                             <table id="pdbuilddefs" class="pretty-fullwidth">
                                 <thead>
