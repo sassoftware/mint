@@ -24,6 +24,7 @@ python_files =			\
 	data.py			\
 	database.py		\
 	ec2.py			\
+	fileupload.py		\
 	flavors.py		\
 	grouptrove.py		\
 	helperfuncs.py		\

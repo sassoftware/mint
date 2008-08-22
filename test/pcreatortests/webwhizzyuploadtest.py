@@ -16,6 +16,7 @@ import struct
 from StringIO import StringIO
 
 import conary.lib.util
+from mint import fileupload
 from mint.web import whizzyupload
 
 multipart_headers_template = """POST /cgi-bin/fileupload.cgi HTTP/1.1
@@ -60,7 +61,7 @@ class TestFileUploader(unittest.TestCase):
         conary.lib.util.rmtree(self.wkdir)
 
     def test_it(self):
-        fup = whizzyupload.fileuploader(self.wkdir, 'field')
+        fup = fileupload.fileuploader(self.wkdir, 'field')
 
         self.assertEquals(fup.manifestfile, os.path.join(self.wkdir, 'field-index'))
         self.assertEquals(fup.statusfile, os.path.join(self.wkdir, 'field-status'))
@@ -68,7 +69,7 @@ class TestFileUploader(unittest.TestCase):
 
     def test_parseManifest(self):
         #create a workdir
-        fup = whizzyupload.fileuploader(self.wkdir, 'field')
+        fup = fileupload.fileuploader(self.wkdir, 'field')
 
         i = open(fup.manifestfile, 'wt')
         i.write("""fieldname=uploadfile
@@ -85,7 +86,7 @@ somethingnumeric=23939
             })
 
     def _baseCancelUpload(self):
-        fup = whizzyupload.fileuploader(self.wkdir, 'field')
+        fup = fileupload.fileuploader(self.wkdir, 'field')
 
         i = open(fup.metadatafile, 'wt')
         i.write("""pid=23939""")
@@ -146,18 +147,18 @@ line2
 
         l = fwrap.buffered_readline()
         self.assertEquals('line1\n', l)
-        self.assertEquals(whizzyupload.readStatus(ofn), 0)
+        self.assertEquals(fileupload.readStatus(ofn), 0)
         fwrap.buffer_reset()
         
         #The next read should be the same as the buffered
         self.assertEquals(fwrap.readline(), 'line1\n')
-        self.assertEquals(whizzyupload.readStatus(ofn), 6)
+        self.assertEquals(fileupload.readStatus(ofn), 6)
         self.assertEquals(fwrap.readline(3), 'lin')
-        self.assertEquals(whizzyupload.readStatus(ofn), 9)
+        self.assertEquals(fileupload.readStatus(ofn), 9)
         self.assertEquals(fwrap.readline(), 'e2\n')
-        self.assertEquals(whizzyupload.readStatus(ofn), 12)
+        self.assertEquals(fileupload.readStatus(ofn), 12)
         self.assertEquals(fwrap.readline(), 'A'*56)
-        self.assertEquals(whizzyupload.readStatus(ofn), 68)
+        self.assertEquals(fileupload.readStatus(ofn), 68)
 
     def testStdinWrapper(self):
         #Set up a writer
@@ -168,7 +169,7 @@ line2
         fwrap = whizzyupload.ProgressFileObject(f, o, 2)
         self.assertEquals(fwrap.read(6), '\x00\x00\x00\x00\x00\x00')
 
-        read = whizzyupload.readStatus(ofn)
+        read = fileupload.readStatus(ofn)
         self.assertEquals(read, 6, "Status file reports a different size than expected")
 
         statusfileconts = open(ofn, 'rb').read()
@@ -178,7 +179,7 @@ line2
         assert f.closed, 'fwrap.close() should have closed the wrapped fileobj'
 
     def testPollStatus(self):
-        fup = whizzyupload.fileuploader(self.wkdir, 'file')
+        fup = fileupload.fileuploader(self.wkdir, 'file')
         info = fup.pollStatus()
         assert info['currenttime']
         del info['currenttime']
@@ -308,7 +309,7 @@ class TestWhizzyCGI(unittest.TestCase):
 
         whizzyupload.handle_cgi_request(stdin, stdout, self.basedir, self.prefix, env)
 
-        r = whizzyupload.pollStatus(self.metadata, self.status, self.manifest)
+        r = fileupload.pollStatus(self.metadata, self.status, self.manifest)
         self.assertEquals(r['read'], int(r['totalsize']))
         self.assertEquals(r['read'], len(stdin.getvalue()))
         assert r['pid'], "Should have had a pid in the status"
