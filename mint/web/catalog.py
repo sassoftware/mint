@@ -53,13 +53,14 @@ def catalogHandler(req, cfg, pathInfo = None):
     client_address = req.connection.remote_addr
     server = type('Server', (object,), {'server_port': req.server.port})
     aReq = handler_apache.ApacheRequest(req)
+    auth = tuple(getAuthFromSession(req, cfg)[:2])
+    aReq.setUser(auth[0])
+    aReq.setPassword(auth[1])
+
     storagePath = os.path.join(cfg.dataPath, 'catalog')
     hdlr = handler_apache.ApacheHandler(topLevel, storagePath,
             aReq, client_address, server)
     hdlr.mintCfg = cfg
 
-    auth = tuple(getAuthFromSession(req, cfg)[:2])
-    hdlr.setAuthHeader(*auth)
-
-    hdlr.handleApacheRequest()
-    return 0
+    ret = hdlr.handleApacheRequest()
+    return ret
