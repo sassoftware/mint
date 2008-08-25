@@ -41,7 +41,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 '<?xml version="1.0" encoding="UTF-8"?>\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
 
     def testGetImagesNoSession(self):
-        page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [200])
+        page = self.fetch('/catalog/clouds/ec2/images?_method=GET', ok_codes = [403])
 
     def testEnumerateNoImages(self):
         raise testsuite.SkipTestException("This test case will really try to talk to EC2")
