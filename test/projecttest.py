@@ -245,8 +245,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testProdTypeAppliance(self, db, data):
-        if not self.cfg.rBuilderOnline:
-            raise testsuite.SkipTestException("test skipped...needs group template creation mocked out to work")
 
         client = self.getClient("owner")
         projectId = client.newProject("Quux", 'footoo', 'localhost', 

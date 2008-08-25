@@ -391,15 +391,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(page.url.endswith(startUrl))
 
     def testNewProject(self):
-        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(2, self.fetchWithRedirect,
+        page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project', 'shortname': 'test',
-                 'prodtype': 'Component', 'version': '1.0'})
+                    'domainname': MINT_PROJECT_DOMAIN,
+                    'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
@@ -410,42 +410,46 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testApplianceFlagYesNewProject(self):
-        raise testsuite.SkipTestException("Skipping until fixed")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(2, self.fetchWithRedirect,
+        page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project', 'hostname': 'test',
-                 'appliance': 'yes'})
+                 'domainname': MINT_PROJECT_DOMAIN,
+                 'shortname': 'test',
+                 'isPrivate': False,
+                 'prodtype': 'Appliance',
+                 'namespace': self.mintCfg.namespace,
+                 'version': '1.0'})
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getApplianceValue(), 'yes')
 
     def testApplianceFlagNoNewProject(self):
-        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(2, self.fetchWithRedirect,
+        page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 2', 'shortname': 'test2',
+                 'domainname': MINT_PROJECT_DOMAIN,
                  'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test2")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
 
     def testApplianceFlagUnknownNewProject(self):
-        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = page.assertCode('/newProject', code = 200)
 
-        page = page.postForm(2, self.fetchWithRedirect,
+        page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 3', 'shortname': 'test3',
+                 'domainname': MINT_PROJECT_DOMAIN,
                  'prodtype': 'Component', 'version': '1.0'})
 
         project = client.getProjectByHostname("test3")
