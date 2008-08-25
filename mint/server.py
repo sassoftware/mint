@@ -466,16 +466,11 @@ class MintServer(object):
     def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
 
         # Get repository + client
-        # XXX: Make this use a shimclient for rBuilder-managed
-        #      repositories so we can run web-based functional tests
-        #      against a single-threaded Apache server.
-        #      Until the shimclient can commit, we cannot do that
-        #      (see CNY-2545)
 
         projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        client = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         # ensure that the changelog message ends with a newline
         if not changeLogMessage.endswith('\n'):
@@ -505,8 +500,9 @@ class MintServer(object):
             del client
 
     def _getProductDefinition(self, project, version):
-        projectCfg = self._getProjectConaryConfig(project)
-        cclient = conaryclient.ConaryClient(projectCfg)
+        projectCfg = self._getProjectConaryConfig(project, internal=False)
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         pd = proddef.ProductDefinition()
         pd.setProductShortname(project.shortname)
@@ -681,9 +677,8 @@ class MintServer(object):
 
         projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
-        #XXX: Can't commit through the shim (CNY-2545)
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        client = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         trvLeaves = repos.getTroveLeavesByLabel(\
                 {groupName: {label: None} }).get(groupName, [])
@@ -4628,8 +4623,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectCfg = self._getProjectConaryConfig(project, internal=False)
         projectCfg['name'] = self.auth.username
         projectCfg['contact'] = self.auth.fullName or ''
-        # XXX: CNY-2545, needs a real client to commit
-        cclient = conaryclient.ConaryClient(projectCfg)
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
         pd.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
         return True
