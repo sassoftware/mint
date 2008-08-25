@@ -392,17 +392,43 @@ class MintServer(object):
         res = cu.fetchone()
         return res and res[0] or fqdn
 
-    def _getProjectRepo(self, project):
+    def _getProjectConaryConfig(self, project, internal=True):
+        ''' Creates a conary configuration object, suitable for internal or external
+        rBuilder use. ''' 
+        ccfg = project.getConaryConfig()
+        conarycfgFile = self.cfg.conaryRcFile
+        if not internal:
+            ccfg.conaryProxy = {} #Clear the internal proxies, as they're "localhost"
+            conarycfgFile += '-v1'
+
+        # This step reads all of the repository maps for cross talk, and, if
+        # external, sets up the cfg object to use the rBuilder conary proxy
+        if os.path.exists(conarycfgFile):
+            ccfg.read(conarycfgFile)
+
+        #Set up the user config lines
+        for otherProjectId, level in \
+          self.getProjectIdsByMember(self.auth.userId):
+            if level in userlevels.WRITERS:
+                otherProject = projects.Project(self, otherProjectId)
+                ccfg.user.addServerGlob(otherProject.getFQDN(),
+                    self.authToken[0], self.authToken[1])
+
+        return ccfg
+
+    def _getProjectRepo(self, project, useshim=True, pcfg = None):
+        '''
+        A helper function to get a NetworkRepositoryClient for doing repository operations.  If you need a client just call _getProjectConaryConfig and instantiate your own client.
+
+        This method returns a shim for local projects.
+        '''
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
+        if pcfg is None:
+            pcfg = self._getProjectConaryConfig(project, internal=False)
         # use a shimclient for mint-handled repositories; netclient if not
-        if project.external and not self.isLocalMirror(project.id):
-            cfg = project.getConaryConfig()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-            if os.path.exists(conarycfgFile):
-                cfg.read(conarycfgFile)
-
-            repo = conaryclient.ConaryClient(cfg).getRepos()
+        if not useshim or (project.external and not self.isLocalMirror(project.id)):
+            repo = conaryclient.ConaryClient(pcfg).getRepos()
         else:
             if self.cfg.SSL:
                 protocol = "https"
@@ -410,14 +436,6 @@ class MintServer(object):
             else:
                 protocol = "http"
                 port = 80
-
-            authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol,
-                                                   self.cfg.authUser,
-                                                   self.cfg.authPass,
-                                                   self.cfg.projectSiteHost,
-                                                   project.getHostname())
-            authLabel = project.getLabel()
-            authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
             fqdn = self._translateProjectFQDN(project.getFQDN())
             reposPath = os.path.join(self.cfg.reposPath, fqdn)
@@ -437,20 +455,12 @@ class MintServer(object):
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
-            cfg = conarycfg.ConaryConfiguration()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-            if os.path.exists(conarycfgFile):
-                cfg.read(conarycfgFile)
-            cfg.repositoryMap.update(authRepo)
-            cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
-                                   self.cfg.authUser, self.cfg.authPass)
-
-            cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
+            pcfg = helperfuncs.configureClientProxies(pcfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
 
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
-                cfg.repositoryMap, cfg.user,
-                conaryProxies=conarycfg.getProxyFromConfig(cfg))
+                pcfg.repositoryMap, pcfg.user,
+                conaryProxies=conarycfg.getProxyFromConfig(pcfg))
         return repo
 
     def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
@@ -462,16 +472,7 @@ class MintServer(object):
         #      Until the shimclient can commit, we cannot do that
         #      (see CNY-2545)
 
-        if not cclient:
-            projectCfg = project.getConaryConfig()
-            projectCfg['buildLabel'] = buildLabel
-            client = conaryclient.ConaryClient(projectCfg)
-        else:
-            client = cclient
-
-        repos = client.getRepos()
-
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
         client = conaryclient.ConaryClient(projectCfg)
         repos = client.getRepos()
@@ -504,7 +505,7 @@ class MintServer(object):
             del client
 
     def _getProductDefinition(self, project, version):
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         cclient = conaryclient.ConaryClient(projectCfg)
 
         pd = proddef.ProductDefinition()
@@ -678,8 +679,9 @@ class MintServer(object):
 
         label = versions.Label(buildLabel)
 
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
+        #XXX: Can't commit through the shim (CNY-2545)
         client = conaryclient.ConaryClient(projectCfg)
         repos = client.getRepos()
 
@@ -2412,9 +2414,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         '''
 
         project = projects.Project(self, projectId)
-        projectCfg = project.getConaryConfig()
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        # For some reason this can't happen through the the ShimClient
+        # (CNY-2545 related?)
+        repos = self._getProjectRepo(project, False)
 
         # Get the major architecture from filterFlavor
         filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
@@ -2585,15 +2587,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
             specialTroveFlavor = deps.ThawFlavor(specialTroveFlavor)
 
         # Get a Conary client
-        cfg = project.getConaryConfig()
+        cfg = self._getProjectConaryConfig(project)
         cfg.installLabelPath = searchPath
         cfg.initializeFlavors()
         cfg.dbPath = cfg.root = ":memory:"
         cfg.proxy = self.cfg.proxy
-        cclient = conaryclient.ConaryClient(cfg)
+        # These special troves may be found anywhere depending on the version
+        # of specialTroveVersion, so don't use a shim client
+        repos = self._getProjectRepo(project, useshim=False, pcfg=cfg)
 
         try:
-            matches = cclient.getRepos().findTrove(searchPath,
+            matches = repos.findTrove(searchPath,
                     (specialTroveName, specialTroveVersion, specialTroveFlavor),
                     cfg.flavor)
             if matches:
@@ -2626,26 +2630,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         project = projects.Project(self, buildDict['projectId'])
 
-        cc = project.getConaryConfig()
+        cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
-
-        # Ignore conaryProxy set by getConaryConfig; it's bound
-        # to be localhost, as getConaryConfig() generates
-        # config objects intended to be used by NetClient /
-        # ConaryClient objects internal to rBuilder (i.e. not the
-        # jobslaves)
-        cc.conaryProxy = None
-
-        # Add authentication for each project to which the builder has access.
-        # This should allow them to run builds that include troves from
-        # hidden projects.
-        for otherProjectId, level in \
-          self.getProjectIdsByMember(self.auth.userId):
-            if level in userlevels.WRITERS:
-                otherProject = projects.Project(self, otherProjectId)
-                cc.user.addServerGlob(otherProject.getFQDN(),
-                    self.cfg.authUser, self.cfg.authPass)
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
@@ -2653,10 +2640,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
-
-        if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
-                (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
         r['protocolVersion'] = builds.PROTOCOL_VERSION
@@ -3459,9 +3442,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         version = None
         flavor = None
 
-        cfg = project.getConaryConfig()
-        nc = conaryclient.ConaryClient(cfg).getRepos()
-        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {trove: None})
+        nc = self._getProjectRepo(project, useshim=False)
+        versionList = nc.getTroveVersionList(project.getFQDN(), {trove: None})
 
         # group trove by major architecture
         return dictByArch(versionList, trove)
@@ -3471,7 +3453,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
 
         troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
         if troveName in troves:
@@ -3485,7 +3467,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
         versionDict = dict((x.freeze(), [y for y in troves[x]]) for x in troves)
@@ -3518,7 +3500,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
 
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
         label = versions.Label(project.getLabel())
         troves = nc.troveNamesOnServer(label.getHost())
 
@@ -3730,16 +3712,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)
         project = projects.Project(self, groupTrove.projectId)
 
-        cc = project.getConaryConfig()
+        cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
-
-        # Ignore conaryProxy set by getConaryConfig; it's bound
-        # to be localhost, as getConaryConfig() generates
-        # config objects intended to be used by NetClient /
-        # ConaryClient objects internal to rBuilder (i.e. not the
-        # jobslaves)
-        cc.conaryProxy = None
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
@@ -3747,10 +3722,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
-
-        if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
-                (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
         r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
@@ -4297,6 +4268,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for projectId in [x[0] for x in cu.fetchall()]:
             if self._checkProjectAccess(projectId, userlevels.LEVELS):
                 p = projects.Project(self, projectId)
+                #This has to be a shimclient for the test suite to work
                 repo = self._getProjectRepo(p)
                 repos.append((p, repo))
 
@@ -4653,9 +4625,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # TODO put back overrides
 
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project, internal=False)
         projectCfg['name'] = self.auth.username
         projectCfg['contact'] = self.auth.fullName or ''
+        # XXX: CNY-2545, needs a real client to commit
         cclient = conaryclient.ConaryClient(projectCfg)
         pd.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
@@ -4733,7 +4706,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
-        cfg = project.getConaryConfig()
+        cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = self.auth.fullName or ''
         #package creator service should get the searchpath from the product definition
