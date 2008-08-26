@@ -15,7 +15,7 @@ import simplejson
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
-from mint import buildtypes, buildtemplates
+from mint import buildtypes, buildtemplates, projects
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
@@ -1408,6 +1408,52 @@ class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
                           templBuildDefs[1]['vmwareEsxImage'])
 
 class BuildTestConaryRepository(MintRepositoryHelper):
+    def testBuildTrovesResolution(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        self.openRepository(1, serverCache=self.servers)
+        repos1 = self.getRepositoryClient(serverIdx=1)
+
+        #create an external project that points to the original project
+        self.openRepository(2, serverName="localhost1", serverCache=self.servers)
+        repos2 = self.getRepositoryClient(serverIdx=2)
+        extProjectId = client.newExternalProject("External Project 2",
+            "external2", MINT_PROJECT_DOMAIN, "localhost1@foo:bar",
+            repos2.c.map[0][1], True)
+
+        self.upstreamMap = dict(repos1.c.map)
+        def projectConfig(s):
+            cfg = conarycfg.ConaryConfiguration(False)
+            # This is a hack since all our configured repositories require
+            # repository maps.  Inject the "non-mirrored" repository map
+            cfg.repositoryMap.update(self.upstreamMap)
+            return cfg
+
+        self.mock(projects.Project, 'getConaryConfig', projectConfig)
+
+        #Create a project
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        self.addComponent("anaconda-templates:runtime", "/localhost1@foo:bar/1.0", "is: x86", repos=repos2)
+        a = self.addCollection("anaconda-templates", "/localhost1@foo:bar/1.0", [(":runtime", "/localhost1@foo:bar/1.0")], defaultFlavor="is: x86", repos=repos2)
+
+        self.addComponent("anaconda-templates:runtime", "/localhost1@foo:bar/1.1", "is: x86", repos=repos1)
+        b = self.addCollection("anaconda-templates", "/localhost1@foo:bar/1.1", [(":runtime", "/localhost1@foo:bar/1.1")], defaultFlavor="is: x86", repos=repos1)
+
+        #make sure they got set up properly
+        self.assertEquals('1.1-1-1', str(repos1.findTrove(b.getVersion().trailingLabel(), (b.getName(), None, b.getFlavor()))[0][1].trailingRevision()))
+        self.assertRaises(TroveNotFound, repos1.findTrove, a.getVersion().trailingLabel(),
+            (a.getName(), a.getVersion(), a.getFlavor()))
+        self.assertEquals('1.0-1-1', str(repos2.findTrove(a.getVersion().trailingLabel(), (a.getName(), None, a.getFlavor()))[0][1].trailingRevision()))
+        self.assertRaises(TroveNotFound, repos2.findTrove, b.getVersion().trailingLabel(),
+            (b.getName(), b.getVersion(), b.getFlavor()))
+
+        x = project.resolveExtraTrove("anaconda-templates",
+                "/testproject.%s@rpl:devel/0.0:1.0-1-1" % MINT_PROJECT_DOMAIN, "1#x86",
+                a.getVersion().freeze(), a.getFlavor().freeze())
+        self.failUnlessEqual(x, "anaconda-templates=/localhost1@foo:bar/1.0-1-1[is: x86]")
+
     def testBuildTroves(self):
         client, userid = self.quickMintUser("test", "testpass")
 
