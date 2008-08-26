@@ -66,6 +66,17 @@
                             </p>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <td>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                            <label for="prodtype">Appliance</label>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                            <label for="prodtype">Component</label>
+                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                        </td>
+                    </tr>
 
                     <tr>
                         <th><em class="required">${projectText().title()} Short Name:</em></th>
@@ -83,20 +94,6 @@
                     </tr>
 
                     <tr>
-                        <th><em class="required">${projectText().title()} Namespace:</em></th>
-                        <td>
-                            <input type="text" name="namespace" value="${kwargs['namespace']}" size="16" maxlength="128"/>
-                            <p class="help">
-                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
-                                Namespaces usually represent the organization behind the ${projectText().lower()}, or the namespace of
-                                the ${projectText().lower()} that is being derived.  Namespaces must start with an alphanumeric
-                                character and can be followed by any number of other alphanumeric characters.
-                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
-                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
-                             </p>
-                        </td>
-                    </tr>
-                    <tr>
                         <th><em class="required">${projectText().title()} Major Version:</em></th>
                         <td>
                             <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
@@ -108,17 +105,6 @@
                                 desired by decimals.  For example: '1', '1.0', '1.A', 'A1', and '2008' are all valid 
                                 versions, but '2008 RC', '.', and '1.' are not valid.
                              </p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th><em class="required">${projectText().title()} Type:</em></th>
-                        <td>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
-                            <label for="prodtype">Appliance</label>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
-                            <label for="prodtype">Component</label>
-                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
                         </td>
                     </tr>
 
@@ -175,6 +161,21 @@
                                 Conary repository during appliance development.  Emails also include 
                                 Conary's summary of what was committed, typically a list of things that 
                                 changed between the previous commit and the current commit.
+                             </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th><em class="required">${projectText().title()} Namespace:</em></th>
+                        <td>
+                            <input type="text" name="namespace" value="${kwargs['namespace']}" size="16" maxlength="128"/>
+                            <p class="help">
+                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
+                                Namespaces usually represent the organization behind the ${projectText().lower()}, or the namespace of
+                                the ${projectText().lower()} that is being derived.  Namespaces must start with an alphanumeric
+                                character and can be followed by any number of other alphanumeric characters.
+                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
+                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
                              </p>
                         </td>
                     </tr>

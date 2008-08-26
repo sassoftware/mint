@@ -33,9 +33,36 @@
                 cursor: pointer;
             }
             ]]>
-        </style>
+         </style>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/tables.css?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/editversion.js?v=${cacheFakeoutVersion}"/>
+        <script type="text/javascript">
+        <![CDATA[
+            function doSubmit() {
+                var form = document.getElementById('processEditVersionForm');
+                if(form) {
+                   form.submit();
+                }
+            }
+        
+            function handleYes() {
+                // they confirmed it, so move along
+                doSubmit();
+            }
+            
+            function handleNo() {
+                // do nothing
+            }
+        
+            function ensureBuildsDefined() {
+               if(!buildsDefined) {
+                  modalEditVersionWarning(handleYes, handleNo);
+               } else {
+                  doSubmit();
+               }
+            }
+            ]]>
+        </script>
     </head>
     <body>
         <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef=None)" py:strip="True">
@@ -245,29 +272,9 @@
             </p>
             <!--! Only new ones have a required field for now -->
             <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="processEditVersion">
+            <form id="processEditVersionForm" method="post" action="processEditVersion">
                 <table border="0" cellspacing="0" cellpadding="0"
                     class="mainformhorizontal">
-                    <tr>
-                        <th>
-                            <!--! namespace only required if creating new one -->
-                            <div py:if="not isNew">Namespace:</div>
-                            <em py:if="isNew" class="required">Namespace:</em>
-                        </th>
-                        <td py:if="isNew">
-                            <input type="text" autocomplete="off" name="namespace"
-                                value="${kwargs['namespace']}"/>
-                            <p class="help">
-                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
-                                Namespaces usually represent the organization behind the project, or the namespace of
-                                the project that is being derived.  Namespaces must start with an alphanumeric
-                                character and can be followed by any number of other alphanumeric characters.
-                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
-                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
-                            </p>
-                        </td>
-                        <td py:if="not isNew">${kwargs['namespace']}<input type="hidden" name="namespace" value="${kwargs['namespace']}" /></td>
-                    </tr>
                      <tr>
                         <th>
                             <!--! version only required if creating new one -->
@@ -338,7 +345,7 @@
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
                                      <tr id="pdbuilddef-empty" py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
-                                        <td colspan="5">No images defined.</td>
+                                        <td colspan="5"><strong>No images defined.</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -368,7 +375,7 @@
                     </tr>
                 </table>
                 <p>
-                    <button class="img" type="submit">
+                    <button class="img" type="button" onclick="ensureBuildsDefined()">
                         <div py:if="kwargs.has_key('linked')">
                             <!--! 
                             Always use create button if coming from create a product page
@@ -383,7 +390,19 @@
                 </p>
                 <input type="hidden" name="id" value="${id}" />
                 <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
+                <input type="hidden" name="namespace" value="${kwargs['namespace']}" />
             </form>
+        </div>
+        <div id="modalEditVersionWarning" title="Warning" style="display: none;">
+            <p>
+            No images have been added to this ${projectText().lower()} version's image set.
+            </p>
+            You will not be able to create an appliance until at least one image has 
+            been added to the image set. You can do this now by clicking the 
+            "Add a new image" link, or later by editing this ${projectText().lower()} version.
+            <p>
+            Would you like to add an image now, or add one later?
+            </p>
         </div>
     </body>
 </html>

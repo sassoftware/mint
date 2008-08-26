@@ -1294,6 +1294,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
 
         return self.projects.update(projectId, commitEmail = commitEmail)
+    
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def setProjectNamespace(self, projectId, namespace):
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+
+        self._validateNamespace(namespace)
+
+        return self.projects.update(projectId, namespace = namespace)
 
     @typeCheck(int)
     @requiresAdmin

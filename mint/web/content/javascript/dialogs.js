@@ -30,3 +30,26 @@ function modalYesNo(yesFunc, noFunc) {
         }
     }).show();
 }
+
+function modalEditVersionWarning(yesFunc, noFunc) {
+    jQuery("#modalEditVersionWarning").dialog({
+        modal: true,
+        draggable: false,
+        width: 450,
+        height: 250,
+        overlay: { 
+            opacity: 0.5, 
+            background: "black" 
+        },
+        buttons: {
+            "Add Image Later": function() {
+                yesFunc();
+                jQuery(this).dialog("close");
+            },
+            "Add Image Now": function() { 
+                noFunc();
+                jQuery(this).dialog("close");
+            }
+        }
+    }).show();
+}

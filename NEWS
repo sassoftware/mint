@@ -76,6 +76,15 @@ Web Front End Changes
   arbitrary packages to your appliance definition. (RDST-533)
 * Fixed a bug where the Edit Version page referred to "Image Sets" when dealing
   with an "Image Set". (RBL-3281)
+* The namespace field has been removed from the edit and create product
+  version pages.  The product versions namespace is obtained through the
+  product now. (RBL-3296)
+* Moved the choice of appliance or component when creating a new product to the
+  top of the page under title. (RBL-3298)
+* Changed the "No images defined." message on the create/edit product version
+  pages to use a bold font. (RBL-3319)
+* When creating or editing a product version, users will now be prompted with
+  a modal warning if they do not define any builds. (RBL-3301)
 
 
 Changes in 4.1.1
