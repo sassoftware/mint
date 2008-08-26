@@ -83,6 +83,8 @@ Web Front End Changes
   top of the page under title. (RBL-3298)
 * Changed the "No images defined." message on the create/edit product version
   pages to use a bold font. (RBL-3319)
+* When creating or editing a product version, users will now be prompted with
+  a modal warning if they do not define any builds. (RBL-3301)
 
 
 Changes in 4.1.1
