@@ -66,6 +66,17 @@
                             </p>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <td>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                            <label for="prodtype">Appliance</label>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                            <label for="prodtype">Component</label>
+                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                        </td>
+                    </tr>
 
                     <tr>
                         <th><em class="required">${projectText().title()} Short Name:</em></th>
@@ -108,17 +119,6 @@
                                 desired by decimals.  For example: '1', '1.0', '1.A', 'A1', and '2008' are all valid 
                                 versions, but '2008 RC', '.', and '1.' are not valid.
                              </p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th><em class="required">${projectText().title()} Type:</em></th>
-                        <td>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
-                            <label for="prodtype">Appliance</label>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
-                            <label for="prodtype">Component</label>
-                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
                         </td>
                     </tr>
 
