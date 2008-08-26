@@ -318,7 +318,7 @@
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
                                      <tr id="pdbuilddef-empty" py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
-                                        <td colspan="5">No images defined.</td>
+                                        <td colspan="5"><strong>No images defined.</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
