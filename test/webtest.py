@@ -520,7 +520,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'isPrivate': 'off'},
+                           'isPrivate': 'off',
+                           'namespace': 'spacemonkey'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
