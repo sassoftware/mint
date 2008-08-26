@@ -104,9 +104,13 @@ def setup():
         CATALOG_SERVICE_PATH=catalogServicePath,
         PYTHONPATH=(':'.join(sys.path))))
 
-    import testhelp
-    from conary_test import resources
-
+    try:
+        from testrunner import testhelp
+        from testrunner import resources
+    except ImportError:
+        import testhelp
+        from conary_test import resources
+        
     resources.testPath = testPath = testhelp.getTestPath()
     resources.mintArchivePath = archivePath = testPath + '/' + "archive"
 
@@ -146,7 +150,11 @@ def isIndividual():
 EXCLUDED_PATHS = ['test', 'scripts']
 
 def main(argv=None, individual=True):
-    import testhelp
+    import bootstrap
+    try:
+        from testrunner import testhelp
+    except ImportError:
+        import testhelp
     testhelp.isIndividual = isIndividual
     class rBuilderTestSuiteHandler(testhelp.TestSuiteHandler):
         suiteClass = testhelp.ConaryTestSuite
