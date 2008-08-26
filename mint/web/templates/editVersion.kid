@@ -248,26 +248,6 @@
             <form method="post" action="processEditVersion">
                 <table border="0" cellspacing="0" cellpadding="0"
                     class="mainformhorizontal">
-                    <tr>
-                        <th>
-                            <!--! namespace only required if creating new one -->
-                            <div py:if="not isNew">Namespace:</div>
-                            <em py:if="isNew" class="required">Namespace:</em>
-                        </th>
-                        <td py:if="isNew">
-                            <input type="text" autocomplete="off" name="namespace"
-                                value="${kwargs['namespace']}"/>
-                            <p class="help">
-                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
-                                Namespaces usually represent the organization behind the project, or the namespace of
-                                the project that is being derived.  Namespaces must start with an alphanumeric
-                                character and can be followed by any number of other alphanumeric characters.
-                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
-                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
-                            </p>
-                        </td>
-                        <td py:if="not isNew">${kwargs['namespace']}<input type="hidden" name="namespace" value="${kwargs['namespace']}" /></td>
-                    </tr>
                      <tr>
                         <th>
                             <!--! version only required if creating new one -->
@@ -383,6 +363,7 @@
                 </p>
                 <input type="hidden" name="id" value="${id}" />
                 <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
+                <input type="hidden" name="namespace" value="${kwargs['namespace']}" />
             </form>
         </div>
     </body>

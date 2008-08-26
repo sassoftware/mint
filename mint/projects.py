@@ -53,6 +53,9 @@ class Project(database.TableObject):
 
     def getDomainname(self):
         return self.domainname
+    
+    def getNamespace(self):
+        return self.namespace
 
     def getProjectUrl(self):
         return self.projecturl
@@ -121,6 +124,9 @@ class Project(database.TableObject):
 
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
+
+    def setNamespace(self, namespace):
+        return self.server.setProjectNamespace(self.id, namespace)
 
     def setCommitEmail(self, commitEmail):
         return self.server.setProjectCommitEmail(self.id, commitEmail)

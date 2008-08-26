@@ -1183,15 +1183,16 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
             'desc': self.project.getDesc(),
-            'isPrivate': self.project.hidden
+            'isPrivate': self.project.hidden,
+            'namespace': self.project.getNamespace(),
         }
         return self._write("editProject", kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '',
-               commitEmail = '', isPrivate = 'off')
+               commitEmail = '', isPrivate = 'off', namespace='')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           commitEmail, isPrivate):
+                           commitEmail, isPrivate, namespace):
 
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
@@ -1202,6 +1203,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         if not self._getErrors():
             try:
                 self.project.editProject(projecturl, desc, name)
+                self.project.setNamespace(namespace)
                 self.project.setCommitEmail(commitEmail)
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
@@ -1211,7 +1213,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'commitEmail': commitEmail, 'isPrivate': isPrivate}
+                      'commitEmail': commitEmail, 'isPrivate': isPrivate,
+                      'namespace': namespace}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
