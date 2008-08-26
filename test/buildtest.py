@@ -988,7 +988,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         nobody = self.getClient('nobody')
         hostname = "bar"
         otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
+                        shortname=hostname, version="1.0",
+                        prodtype="Component", isPrivate=True)
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 

@@ -279,7 +279,6 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         """
         Ensure owner can edit a product version
         """
-        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -289,7 +288,17 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('testuser', 'testpass')
 
         # add product version
-        versionId = client.addProductVersion(projectId, self.cfg.namespace, 'foo', 'foo version')
+        versionId = client.addProductVersion(projectId,
+                'foons', 'foo', 'foo version')
+
+        # stub out an empty product definition version
+        # XXX this is messy; this should be done in the addProductVersion
+        #     call
+        pd = proddef.ProductDefinition()
+        pd = helperfuncs.sanitizeProductDefinition('Foo',
+                '', 'testproject', MINT_PROJECT_DOMAIN, 'testproject',
+                'foo', 'foo version', 'foons')
+        client.setProductDefinitionForVersion(versionId, pd)
 
         page = self.fetchWithRedirect(
            '/project/testproject/editVersion?id=%d'%versionId,
@@ -306,6 +315,15 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         # add product version
         versionId = client.addProductVersion(projectId, 'foons', 'foo', 'foo version')
 
+        # stub out an empty product definition version
+        # XXX this is messy; this should be done in the addProductVersion
+        #     call
+        pd = proddef.ProductDefinition()
+        pd = helperfuncs.sanitizeProductDefinition('Foo',
+                '', 'testproject', MINT_PROJECT_DOMAIN, 'testproject',
+                'foo', 'foo version', 'foons')
+        client.setProductDefinitionForVersion(versionId, pd)
+
         page = self.fetchWithRedirect(
             '/project/testproject/editVersion?id=%d?linked=true'%versionId,
             server=self.getProjectServerHostname())
@@ -316,7 +334,6 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         """
         Ensure owner can edit a product version linked to creating a product
         """
-        raise testsuite.SkipTestException("This test has been skipped and needs some love.  It hangs forever on the postForm (RBL-2823)")
         pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -327,6 +344,15 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
 
         # add product version
         versionId = client.addProductVersion(projectId, 'foons', 'foo', 'foo version')
+
+        # stub out an empty product definition version
+        # XXX this is messy; this should be done in the addProductVersion
+        #     call
+        pd = proddef.ProductDefinition()
+        pd = helperfuncs.sanitizeProductDefinition('Foo',
+                '', 'testproject', MINT_PROJECT_DOMAIN, 'testproject',
+                'foo', 'foo version', 'foons')
+        client.setProductDefinitionForVersion(versionId, pd)
 
         page = self.fetchWithRedirect(
            '/project/testproject/editVersion?id=%d&linked=true'%versionId,
