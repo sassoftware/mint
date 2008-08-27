@@ -4876,8 +4876,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @param build: Build the package after it's been saved?
         @type build: boolean
 
-        @return: True
-        @rtype: boolean
+        @return: a troveSpec pointing to the created source trove
+        @rtype: str
         """
         from conary import versions as conaryVer
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
@@ -4898,7 +4898,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             except packagecreator.errors.PackageCreatorError, err:
                 raise PackageCreatorError( \
                         "Error attempting to build package: %s", str(err))
-        return True
+        return srcHandle
 
     @typeCheck(((str,unicode),))
     @requiresAuth
@@ -5032,6 +5032,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def makeApplianceTrove(self, sessionHandle):
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # If we ever allow jumping past the editApplianceGroup page, this will
+        # have to filter out the :source troves added through package creator
         return pc.makeApplianceTrove(sessionHandle)
 
     @requiresAuth
@@ -5059,10 +5061,30 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 troveDict.get('implicitTroves', []))
 
     @requiresAuth
-    def listApplianceTroves(self, sessionHandle):
+    def listApplianceTroves(self, projectId, sessionHandle):
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
-        # abstract out the implicit troves
-        return pc.listTroves(sessionHandle).get('explicitTroves', [])
+        project = projects.Project(self, projectId)
+        repos = self._getProjectRepo(project, useshim=True)
+        pkgs = []
+        # we only care about explicit troves here
+        for x in pc.listTroves(sessionHandle).get('explicitTroves', []):
+            if ':source' in x:
+                src = (x.replace(":source", '') + '-1').encode('utf-8') #Have to assume the build count
+                ts = conaryclient.cmdline.parseTroveSpec(src)
+                try:
+                    # Later on we can use this to get a specific version, now
+                    # we just care that it doesn't raise a TroveNotFound
+                    # exception
+                    repos.findTrove(None, ts)
+                except TroveNotFound, e:
+                    #Don't add it to our final list, no binary got built
+                    pass
+                else:
+                    pkgs.append(ts[0])
+            else:
+                pkgs.append(x)
+        return pkgs
+
 
     def _cacheAvailablePackages(self, sesH, pkgs):
         filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)

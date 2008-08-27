@@ -193,12 +193,12 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     @wizard_position(WIZ_PACKCREAT)
     def savePackage(self, sessionHandle, factoryHandle, **kwargs):
         name = kwargs['name']
-        if name:
+        pkg = self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+        if pkg:
             # This needs to be more sophisticated, for now we just try to add
             # it.  If the package fails to build, an error will occur during
             # cooking if the user does not remove it in the edit group page
-            self.client.addApplianceTrove(self._getApplianceSessionHandle(), name)
-        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+            self.client.addApplianceTrove(self._getApplianceSessionHandle(), pkg)
         return dict(sessionHandle = sessionHandle, message = None)
 
     @writersOnly
@@ -231,7 +231,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     def editApplianceGroup(self):
         version = self.client.getProductVersion(self.currentVersion)
         sesH = self._getApplianceSessionHandle()
-        pkgs = self.client.listApplianceTroves(sesH)
+        pkgs = self.client.listApplianceTroves(self.project.getId(), sesH)
         return dict(message=None, packageList = pkgs)
 
     @writersOnly

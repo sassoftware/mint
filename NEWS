@@ -89,7 +89,6 @@ Web Front End Changes
   a modal warning if they do not define any builds. (RBL-3301)
 * The "Update Appliance Platform" checkbox is now the proper size. (RBL-3336)
 
-
 Changes in 4.1.1
 ================
 
