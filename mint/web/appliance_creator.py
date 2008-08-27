@@ -244,7 +244,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     @output_handler('reviewGroupWiz')
     @wizard_position(WIZ_REVIEW)
     def reviewApplianceGroup(self):
-        explicitTroves = self.client.listApplianceTroves(self._getApplianceSessionHandle())
+        explicitTroves = self.client.listApplianceTroves(self.project.getId(), sesH)
         return dict(message=None, explicitTroves = explicitTroves)
 
     @writersOnly
