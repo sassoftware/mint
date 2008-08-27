@@ -109,6 +109,8 @@ def setup():
     try:
         from testrunner import testhelp
         from testrunner import resources
+        import epdb
+        epdb.st()
     except ImportError:
         import testhelp
         from conary_test import resources
@@ -127,7 +129,7 @@ def setup():
     from conary.lib import coveragehook
 
     # import tools normally expected in findTrove.
-    from testhelp import context, TestCase, findPorts, SkipTestException
+    from testrunner.testhelp import context, TestCase, findPorts, SkipTestException
     sys.modules[__name__].context = context
     sys.modules[__name__].TestCase = TestCase
     sys.modules[__name__].findPorts = findPorts
