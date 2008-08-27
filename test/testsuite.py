@@ -22,6 +22,8 @@ import __builtin__
 testPath = None
 archivePath = None
 
+import bootstrap
+
 #from pychecker import checker
 
 def enforceBuiltin(result):
