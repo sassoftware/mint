@@ -24,6 +24,8 @@ Internal Changes
   appropriately. (RBL-3064)
 * A bug that prevented non-admins from adding or modifying a product
   team member's permissions has been corrected (RBL-3146).
+* A bug that caused the wrong versions of anaconda templates to be specified to
+  the build system resulting in failed builds has been fixed.  (RBL-2763)
 
 Web Front End Changes
 ---------------------
