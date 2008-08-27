@@ -13,7 +13,7 @@ import unittest
 
 import mint_rephelp
 
-from conary_test import resources
+from testrunner import resources
 
 import os
 import shutil

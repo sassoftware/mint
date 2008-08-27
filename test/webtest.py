@@ -25,7 +25,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
-from conary_test import resources
+from testrunner import resources
 
 from conary.lib import util
 from conary import versions
