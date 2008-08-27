@@ -363,7 +363,7 @@
                     <tr py:if="not isNew">
                         <th>Update Appliance Platform:</th>
                         <td>
-                            <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox"/>
+                            <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox" class="check field"/>
                             <label for="updatePlatformCheckbox">Check this box to update to the latest appliance platform.</label>
                             <p class="help">
                             The appliance platform is locked to a specific version and will not change unless you update it.
