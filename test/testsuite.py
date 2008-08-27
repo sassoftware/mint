@@ -106,15 +106,9 @@ def setup():
         CATALOG_SERVICE_PATH=catalogServicePath,
         PYTHONPATH=(':'.join(sys.path))))
 
-    try:
-        from testrunner import testhelp
-        from testrunner import resources
-        import epdb
-        epdb.st()
-    except ImportError:
-        import testhelp
-        from conary_test import resources
-        
+    from testrunner import testhelp
+    from testrunner import resources
+
     resources.testPath = testPath = testhelp.getTestPath()
     resources.mintArchivePath = archivePath = testPath + '/' + "archive"
 

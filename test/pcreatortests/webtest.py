@@ -17,7 +17,7 @@ from pcreator import factorydata
 import factory_test.testSetup
 factory_test.testSetup.setup()
 
-import conary_test.resources
+import testrunner.resources
 
 from factory_test.factorydatatest import basicXmlDef
 

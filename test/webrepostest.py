@@ -15,7 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from repostest import testRecipe
 from conary import versions
 from conary.conaryclient import ConaryClient
-from conary_test import resources
+from testrunner import resources
 
 testDirRecipe = """
 class TestCase(PackageRecipe):
