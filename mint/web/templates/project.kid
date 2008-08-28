@@ -27,7 +27,8 @@
 
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
       <li py:if="versions">Version:
-        <span py:if="not readOnly and auth.authorized" py:strip="True"><a id="currentVersionLink" href="#" title="Click to change">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</a></span>
+        <span py:if="not readOnly and auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}
+            <a id="currentVersionLink" href="#" title="Click to change">change</a></span>
         <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
       </li>
       <div py:if="not readOnly and auth.authorized" py:strip="True">
