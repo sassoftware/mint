@@ -19,6 +19,7 @@ from mint import mint_error
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, buildEC2AuthToken
 
 import fixtures
+import mock
 
 from mint import buildtypes
 from mint import userlevels
@@ -1297,6 +1298,25 @@ conaryproxy = http://proxy.hostname.com/proxy/
              'teletran1-1-x86_18.img.part.3',
              'manifest-file-name.xml'
             ])
+
+class Ec2DefaultCredentialsTest(fixtures.FixturedUnitTest):
+
+    def setUp(self):
+        self.mockEC2Connect = mock.MockObject()
+        self.mock(boto, 'connect_ec2', self.mockEC2Connect)
+        fixtures.FixturedUnitTest.setUp(self)
+
+    @testsuite.tests('RBL-3342')
+    @fixtures.fixture('EC2')
+    def testTypicalGuidedTourPath(self, db, data):
+        client = self.getClient("admin")
+        launchedInstanceId = client.launchAMIInstance((), 1)
+        self.mockEC2Connect._mock.assertCalled(self.cfg.ec2PublicKey,
+                self.cfg.ec2PrivateKey)
+        client.getLaunchedAMIInstanceStatus((), launchedInstanceId)
+        self.mockEC2Connect._mock.assertCalled(self.cfg.ec2PublicKey,
+                self.cfg.ec2PrivateKey)
+
 
 if __name__ == '__main__':
     testsuite.main()

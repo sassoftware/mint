@@ -520,6 +520,19 @@ class MintServer(object):
         project = projects.Project(self, version.projectId)
         return self._getProductDefinition(project, version)
 
+    def _fillInEmptyEC2Creds(self, authToken):
+        """
+        Convenience method that fills in the rBuilder's default
+        credentials for EC2 if the authToken is an empty tuple.
+        Otherwise it passes back what it was passed in.
+        """
+        assert(isinstance(authToken, tuple))
+        if len(authToken) == 0:
+            return (self.cfg.ec2AccountId,
+                    self.cfg.ec2PublicKey,
+                    self.cfg.ec2PrivateKey)
+        return authToken
+
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -4439,7 +4452,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
         """
         Get the status of a launched AMI instance
-        @param authToken: the EC2 authentication credentials
+        @param authToken: the EC2 authentication credentials.
+            If passed an empty tuple, it will use the default values
+            as set up in rBuilder's configuration.
         @type  authToken: C{tuple}
         @param launchedAMIId: the ID of a launched AMI
         @type  launchedAMIId: C{int}
@@ -4447,6 +4462,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{tuple}
         @raises: C{EC2Exception}
         """
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
@@ -4456,7 +4472,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def launchAMIInstance(self, authToken, blessedAMIId):
         """
         Launch the specified AMI instance
-        @param authToken: the EC2 authentication credentials
+        @param authToken: the EC2 authentication credentials.
+            If passed an empty tuple, it will use the default values
+            as set up in rBuilder's configuration.
         @type  authToken: C{tuple}
         @param blessedAMIId: the ID of the blessed AMI to launch
         @type  blessedAMIId: C{int}
@@ -4491,6 +4509,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             userData = None
 
         # attempt to boot it up
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
@@ -4520,6 +4539,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{list}
         @raises: C{EC2Exception}
         """
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
