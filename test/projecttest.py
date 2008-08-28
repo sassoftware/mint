@@ -142,6 +142,15 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.setCommitEmail("commit@email.com")
         project.refresh()
         self.failUnlessEqual(project.commitEmail, "commit@email.com")
+        
+    @fixtures.fixture("Full")
+    def testEditProjectNamespace(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        project.setNamespace("spacemonkey")
+        project.refresh()
+
+        assert(project.getNamespace() == "spacemonkey")
 
     @fixtures.fixture("Full")
     def testGetProjects(self, db, data):

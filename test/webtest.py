@@ -25,7 +25,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
-from conary_test import resources
+from testrunner import resources
 
 from conary.lib import util
 from conary import versions
@@ -479,12 +479,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'commitEmail': 'email@example.com'},
+                           'commitEmail': 'email@example.com',
+                           'namespace': 'spacemonkey'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
         self.failUnlessEqual(project.commitEmail, 'email@example.com')
+        self.failUnlessEqual(project.namespace, 'spacemonkey')
         
     def testProcessEditProjectVisibilityPublicToPrivate(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -518,7 +520,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
-                           'isPrivate': 'off'},
+                           'isPrivate': 'off',
+                           'namespace': 'spacemonkey'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)

@@ -447,8 +447,8 @@ class MintClient:
     def setApplianceTroves(self, sessionHandle, troveList):
         return self.server.setApplianceTroves(sessionHandle, troveList)
 
-    def listApplianceTroves(self, sessionHandle):
-        return self.server.listApplianceTroves(sessionHandle)
+    def listApplianceTroves(self, projectId, sessionHandle):
+        return self.server.listApplianceTroves(projectId, sessionHandle)
 
     def getBuildFilenames(self, buildId):
         """

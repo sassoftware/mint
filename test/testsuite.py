@@ -22,6 +22,8 @@ import __builtin__
 testPath = None
 archivePath = None
 
+import bootstrap
+
 #from pychecker import checker
 
 def enforceBuiltin(result):
@@ -104,8 +106,8 @@ def setup():
         CATALOG_SERVICE_PATH=catalogServicePath,
         PYTHONPATH=(':'.join(sys.path))))
 
-    import testhelp
-    from conary_test import resources
+    from testrunner import testhelp
+    from testrunner import resources
 
     resources.testPath = testPath = testhelp.getTestPath()
     resources.mintArchivePath = archivePath = testPath + '/' + "archive"
@@ -121,7 +123,7 @@ def setup():
     from conary.lib import coveragehook
 
     # import tools normally expected in findTrove.
-    from testhelp import context, TestCase, findPorts, SkipTestException
+    from testrunner.testhelp import context, TestCase, findPorts, SkipTestException
     sys.modules[__name__].context = context
     sys.modules[__name__].TestCase = TestCase
     sys.modules[__name__].findPorts = findPorts
@@ -146,7 +148,8 @@ def isIndividual():
 EXCLUDED_PATHS = ['test', 'scripts']
 
 def main(argv=None, individual=True):
-    import testhelp
+    import bootstrap
+    from testrunner import testhelp
     testhelp.isIndividual = isIndividual
     class rBuilderTestSuiteHandler(testhelp.TestSuiteHandler):
         suiteClass = testhelp.ConaryTestSuite

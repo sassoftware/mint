@@ -17,7 +17,7 @@ from pcreator import factorydata
 import factory_test.testSetup
 factory_test.testSetup.setup()
 
-import conary_test.resources
+import testrunner.resources
 
 from factory_test.factorydatatest import basicXmlDef
 
@@ -34,7 +34,6 @@ import pcreatortests.packagecreatoruitest
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -76,7 +75,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
         assert os.path.isdir(tmppath)
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorIframe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -165,7 +163,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         # This method only tests that the page was rendered as expected with
         # the proper UI elements
         self.factorystream = open(
-                 os.path.join(conary_test.resources.factoryRecipePath,
+                 os.path.join(testrunner.resources.factoryRecipePath,
                               'factory-stub', 'data-definition.xml'))
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):

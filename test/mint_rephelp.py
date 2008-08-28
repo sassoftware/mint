@@ -408,9 +408,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         return _reposDir
 
     def openMintRepository(self, serverIdx = 0, requireSigs = False, 
-                           serverName = None):
+                           serverName = None, serverCache=None):
+        if serverCache is None:
+            serverCache = self.mintServers
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
-                requireSigs, serverName, serverCache=self.mintServers)
+                requireSigs, serverName, serverCache=serverCache)
 
         if serverIdx == 0:
             self.port = self.mintServers.getServer(serverIdx).port
