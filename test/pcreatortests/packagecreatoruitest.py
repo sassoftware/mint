@@ -37,7 +37,7 @@ import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
 
-from conary_test import resources as conaryTestResources
+from testrunner import resources as conaryTestResources
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks

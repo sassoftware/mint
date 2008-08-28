@@ -4,7 +4,7 @@
 #
 import copy
 import inspect
-import testhelp
+from testrunner import testhelp
 import tempfile
 import random
 import string
