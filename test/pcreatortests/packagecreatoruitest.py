@@ -37,7 +37,7 @@ import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
 
-from testrunner import resources as conaryTestResources
+from testrunner import resources
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
@@ -56,7 +56,6 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
-    @testsuite.context('more_cowbell')
     def testPollUploadStatus(self, db, data):
         self._set_up_path()
         # Have to bypass the auth checks
@@ -73,7 +72,6 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         assert ret['currenttime'], 'The starttime should be non-zero'
 
     @fixtures.fixture('Full')
-    @testsuite.context('more_cowbell')
     def testCancelUpload(self, db, data):
         self._set_up_path()
         # Have to bypass the auth checks
@@ -554,7 +552,7 @@ class FileHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self):
         fname = os.path.basename(self.path)
         # Do we have this file?
-        fPath = os.path.join(testsuite.resources.factoryArchivePath, 'rpms',
+        fPath = os.path.join(resources.factoryArchivePath, 'rpms',
                              fname)
         if not os.path.exists(fPath):
             self.send_response(404)
@@ -697,7 +695,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
-            filePath = os.path.join(conaryTestResources.archivePath, tarFile)
+            filePath = os.path.join(resources.archivePath, tarFile)
             pClient.uploadData(sesH, tarFile, open(filePath),
                     'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)

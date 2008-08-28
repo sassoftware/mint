@@ -34,7 +34,6 @@ import pcreatortests.packagecreatoruitest
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -76,7 +75,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
         assert os.path.isdir(tmppath)
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorIframe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',

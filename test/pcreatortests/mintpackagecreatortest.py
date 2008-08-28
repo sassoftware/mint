@@ -42,7 +42,6 @@ class mockfield(object):
 
 
 class TestPackageCreatorHelperMethods(testsuite.TestCase):
-    @testsuite.context('more_cowbell')
     def testMinConfig(self):
         cfg = conarycfg.ConaryConfiguration(False)
         mincfg = packagecreator.MinimalConaryConfiguration(cfg)
