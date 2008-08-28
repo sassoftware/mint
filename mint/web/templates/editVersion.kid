@@ -17,7 +17,7 @@
 ?>
     <head>
         <title py:if="isNew">${formatTitle('Create New %s Version'%projectText().title())}</title>
-        <div py:if="not isNew">
+        <div py:if="not isNew" py:strip="True">
             <title py:if="kwargs.has_key('linked')">${formatTitle('Update Initial %s Version'%projectText().title())}</title>
             <title py:if="not kwargs.has_key('linked')">${formatTitle('Edit %s Version'%projectText().title())}</title>
         </div>
@@ -279,7 +279,7 @@
                         <th>
                             <!--! version only required if creating new one -->
                             <div py:if="not isNew">Major Version:</div>
-                            <em py:if="isNew" class="required">Major Version:</em>
+                            <em py:if="isNew and kwargs.has_key('linked')" class="required">Major Version:</em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
@@ -360,7 +360,7 @@
                             </p>
                         </td>
                     </tr>
-                    <tr py:if="not isNew">
+                    <tr py:if="not isNew and not 'linked' in kwargs">
                         <th>Update Appliance Platform:</th>
                         <td>
                             <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox" class="check field"/>
@@ -376,13 +376,13 @@
                 </table>
                 <p>
                     <button class="img" type="button" onclick="ensureBuildsDefined()">
-                        <div py:if="kwargs.has_key('linked')">
+                        <div py:if="kwargs.has_key('linked')" py:strip="True">
                             <!--! 
-                            Always use create button if coming from create a product page
+                            When coming from the project page, the version already exists, so use the submit button
                             -->
-                            <img src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
+                            <img src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Update" />
                         </div>
-                        <div py:if="not kwargs.has_key('linked')">
+                        <div py:if="not kwargs.has_key('linked')" py:strip="True">
                             <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
                             <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                         </div>
