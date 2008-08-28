@@ -149,10 +149,7 @@ EXCLUDED_PATHS = ['test', 'scripts']
 
 def main(argv=None, individual=True):
     import bootstrap
-    try:
-        from testrunner import testhelp
-    except ImportError:
-        import testhelp
+    from testrunner import testhelp
     testhelp.isIndividual = isIndividual
     class rBuilderTestSuiteHandler(testhelp.TestSuiteHandler):
         suiteClass = testhelp.ConaryTestSuite
