@@ -109,6 +109,26 @@
                     </tr>
 
                     <tr>
+                        <th>${projectText().title()} is Private:</th>
+                        <td>
+                            <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                            <div id="modalYesNo" title="Confirmation" style="display: none;">
+                                    You have selected to create a public ${projectText().title()}. 
+                                    Once a ${projectText().title()} is public it cannot be made 
+                                    private. Are you sure you want to make this ${projectText().title()} 
+                                    public?
+                            </div>
+                            <p class="help">
+                                Check the box if you want the new ${projectText().title()} to be 
+                                a private one. Private ${projectText().title()}s are only accessible
+                                by ${projectText().title()} Team Members (Owners, Developers, and 
+                                Users).  If you choose to make your ${projectText().title()} public, 
+                                do not check the box.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
                         <th>${projectText().title()} Description:</th>
                         <td>
                             <textarea rows="6" cols="72" name="blurb" py:content="kwargs['blurb']"></textarea>
@@ -130,26 +150,6 @@
                 <h3>Advanced Options</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
 
-                    <tr>
-                        <th>${projectText().title()} is Private:</th>
-                        <td>
-                            <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
-                            <div id="modalYesNo" title="Confirmation" style="display: none;">
-                                    You have selected to create a public ${projectText().title()}. 
-                                    Once a ${projectText().title()} is public it cannot be made 
-                                    private. Are you sure you want to make this ${projectText().title()} 
-                                    public?
-                            </div>
-                            <p class="help">
-                                Check the box if you want the new ${projectText().title()} to be 
-                                a private one. Private ${projectText().title()}s are only accessible
-                                by ${projectText().title()} Team Members (Owners, Developers, and 
-                                Users).  If you choose to make your ${projectText().title()} public, 
-                                do not check the box.
-                            </p>
-                        </td>
-                    </tr>
-                    
                     <tr>
                         <th>Repository Commits Email:</th>
                         <td>
