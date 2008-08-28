@@ -56,7 +56,6 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         fixtures.FixturedUnitTest.tearDown(self)
 
     @fixtures.fixture('Full')
-    @testsuite.context('more_cowbell')
     def testPollUploadStatus(self, db, data):
         self._set_up_path()
         # Have to bypass the auth checks
@@ -73,7 +72,6 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         assert ret['currenttime'], 'The starttime should be non-zero'
 
     @fixtures.fixture('Full')
-    @testsuite.context('more_cowbell')
     def testCancelUpload(self, db, data):
         self._set_up_path()
         # Have to bypass the auth checks
