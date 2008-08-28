@@ -51,7 +51,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
                 public(lambda *args, **kwargs: troveList))
         client = self.getClient('owner')
         sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
-        troveList = client.listApplianceTroves(sesH)
+        troveList = client.listApplianceTroves(data['projectId'], sesH)
         self.assertEquals(troveList, refTroveList)
 
     @fixtures.fixture('Full')
@@ -180,13 +180,13 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         sesH = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, False)
         self.mintClient.addApplianceTrove(sesH, 'foo')
-        trvs = self.mintClient.listApplianceTroves(sesH)
+        trvs = self.mintClient.listApplianceTroves(self.projectId, sesH)
         self.assertEquals(trvs, ['foo'])
-        trvs = self.mintClient.listApplianceTroves(sesH)
+        trvs = self.mintClient.listApplianceTroves(self.projectId, sesH)
         ['foo', 'test=localhost@rpl:1']
         refTrvList = ['widd', 'biff', 'pinko', 'fwee']
         self.mintClient.setApplianceTroves(sesH, refTrvList)
-        trvs = self.mintClient.listApplianceTroves(sesH)
+        trvs = self.mintClient.listApplianceTroves(self.projectId, sesH)
         self.assertEquals(trvs, refTrvList)
 
     def testFilterApplianceTroveFailedBuilds(self):
