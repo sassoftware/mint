@@ -673,7 +673,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             self.cfg.baseClassDir = oldBaseClassDir
 
     def testUploadFileXMLRPC(self):
-        repos = self.openRepository()
+        repos = self.openRepository(1)
         pDefDict = self._saveProdDef()
         self._createFactories(['factory-archive'])
 
