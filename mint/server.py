@@ -527,7 +527,7 @@ class MintServer(object):
         credentials for EC2 if the authToken is an empty tuple.
         Otherwise it passes back what it was passed in.
         """
-        assert(isinstance(authToken, tuple))
+        assert(isinstance(authToken, (list, tuple)))
         if len(authToken) == 0:
             return (self.cfg.ec2AccountId,
                     self.cfg.ec2PublicKey,
