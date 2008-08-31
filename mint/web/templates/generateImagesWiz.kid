@@ -24,8 +24,8 @@ from mint import buildtypes
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-                <h2>Generate Images</h2>
-                <p>rBuilder is now generating the following image(s).  Click the image name to view additional details.  Refresh this page for updated status.</p>
+                <h2>Generate Appliance Images</h2>
+                <p>The following appliance image(s) are now being generated.  Refresh this page for updated status. When an image displays the "Finished" status, it is ready to be deployed.</p>
 
                 <div py:if="builds" py:strip="True">
                     ${buildsTable(builds.values(), allowDelete=False)}
@@ -33,8 +33,7 @@ from mint import buildtypes
                 <div py:if="not builds" py:strip="True">
                     How did you get here?  I'd really like to know
                 </div>
-                <h3>Next Steps</h3>
-                <p><a href="${basePath}">Back to ${project.getNameForDisplay()} home</a></p>
+                <p><a href="${basePath}">Return to ${project.getNameForDisplay()} home</a></p>
                 <p><a href="${basePath}builds">View all images</a></p>
             </div>
         </div>

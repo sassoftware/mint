@@ -10,7 +10,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Create Package: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Review Appliance Contents: %s' % project.getNameForDisplay())}</title>
     </head>
 
     <body>
@@ -25,7 +25,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
               <h2>Review Appliance Contents</h2>
-              <p>The software that comprises the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance appears below.  To edit this list choose one of the "Next Steps", or click the "Build Appliance" button to create the appliance group.</p>
+              <p>The packages you have created and/or selected appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
               <h3>Added Packages</h3>
               <div py:if="explicitTroves">
               <ul class="unnestedList">
@@ -33,16 +33,14 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                   ${trove}
                 </li>
               </ul>
-              <h2>Next Steps</h2>
-              <p><a href="newPackage">Create a new package</a></p>
+              <a class="option" href="buildApplianceGroup">Build Appliance</a>
+              <p><a href="newPackage">Package more files</a></p>
               <p><a href="selectPackages">Select additional packages</a></p>
               <p><a href="editApplianceGroup">Edit appliance contents</a></p>
-              <a class="option" href="buildApplianceGroup">Build appliance</a>
               </div>
               <div py:if="not explicitTroves">
                 No packages added
-              <h2>Next Steps</h2>
-              <p><a href="newPackage">Create a new package</a></p>
+              <p><a href="newPackage">Package more files</a></p>
               <p><a href="selectPackages">Select additional packages</a></p>
               </div>
             </div>

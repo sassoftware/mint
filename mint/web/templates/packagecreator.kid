@@ -245,9 +245,9 @@ lang = None;
         ]]>
         </script>
         <h3>Confirm Package Details</h3>
-        <p>All information that could be obtained from the uploaded archive
-        appears below.  Please review (making any necessary changes/additions)
-        and then click the "Create Package" button.</p>
+        <p>All information that could be obtained from the archive you uploaded
+           appears below. Please review (making any necessary changes or
+           additions) and click the "Create Package" button.</p>
 
         <form name="savePackage" method="post" action="savePackage" id="savePackage">
             <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>

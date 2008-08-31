@@ -10,7 +10,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Create Package: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Package Files: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
         <div id="layout">
@@ -24,9 +24,9 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <p py:if="message" class="message" py:content="message"/>
             <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
-            ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive of binary software you would like to incorporate as part of the %s version %s appliance, you can package it here, or you can click the "Skip Package Creation" link to move to the next step.' % (project.getNameForDisplay(), formatProductVersion(versions, currentVersion)))}
+            ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have files you would like to add to your appliance, you can upload an archive and have its contents packaged for you. If you do not have any files to package, click the "No files to package" link to continue.')}
             <div>
-              <a href="selectPackages">Skip Package Creation</a>
+              <a href="selectPackages">No files to package</a>
             </div>
         </div>
         </div>

@@ -26,6 +26,7 @@ import string
             <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
             <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/packagelist.js?v=${cacheFakeoutVersion}" />
             <h2>Select Additional Packages</h2>
+              <p>rBuilder will automatically add the packages required to deploy your files in an appliance form-factor. However, if there are additional packages your appliance should have, select them from the list below and click the "Select Packages" button; otherwise, click "Continue" to continue the appliance creation process.</p>
             <div id="jumpto_box"><span><label for="jumpto">Type a filter term: </label><input name="jumpto" id="jumpto_box" value="" disabled="disabled"/><input id="jumpto_box_clear" type="image" src="${cfg.staticPath}apps/mint/images/clear_filter.gif" title="Clear Filter"/></span></div>
             <div id="filter_selections" style="display:none"/>
             <div style="display:none" id="filter_navigation_link_template"></div>
@@ -46,7 +47,7 @@ import string
             </div>
             </form>
             <div>
-              <a href="editApplianceGroup">Skip adding additional packages</a>
+              <a href="editApplianceGroup">Continue</a>
             </div>
         </div>
         </div>

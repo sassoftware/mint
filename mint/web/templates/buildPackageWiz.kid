@@ -24,20 +24,18 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
             <div id="middle">
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              ${buildPackage(sessionHandle, type="Package", helpText="Your package has been created and will now be built.  Depending on the software being packaged, the build process may take some time.")}
+              ${buildPackage(sessionHandle, type="Package", helpText="Your files are now being packaged. Depending on the number of files, this process may take some time.")}
                 <!-- The following are displayed based on whether the build was
                      successful or not -->
               <div id="build_success" style="display:none">
-                  <p>Your package has built successfully.  You can now either create another package, or edit the contents of the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance.</p>
-                <h2>Next Steps</h2>
-                  <p><a href="newPackage">Create a new package</a></p>
-                  <p><a href="selectPackages">Select additional packages</a></p>
+                  <p>Your files have been successfully packaged. You can now either package more files, or continue the appliance creation process.</p>
+                  <p><a href="selectPackages">Continue</a></p>
+                  <p><a href="newPackage">Package more files</a></p>
               </div>
               <div id="build_fail" style="display:none">
-                  <p>Your package did not build successfully.</p>
-                <h2>Next Steps</h2>
+                  <p>Your files could not be packaged. You can review the package details, or package more files.</p>
                   <p><a href="javascript: history.go(-1);">Review package details</a></p>
-                  <p><a href="newPackage">Create a new package</a></p>
+                  <p><a href="newPackage">Package more files</a></p>
               </div>
             </div>
         </div>

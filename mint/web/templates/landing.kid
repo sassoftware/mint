@@ -16,7 +16,7 @@ if 'message' not in locals():
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Appliance Creator: %s' % project.getNameForDisplay())}</title>
+        <title>${formatTitle('Create Appliance: %s' % project.getNameForDisplay())}</title>
     </head>
 
     <body>
@@ -31,14 +31,11 @@ if 'message' not in locals():
             <div id="middle">
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              <h2>Appliance Creator</h2>
+              <h2>Create Appliance</h2>
 
               <div class="inlineButtonList">
-                <p py:if="groups">You can use Appliance Creator to either make revisions to the existing appliance, or to completely restart the appliance creation process.</p>
-                <p py:if="groups"> Click the "Revise Appliance" button to make changes to the ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} appliance.</p>
-                <p py:if="groups">Click the "Start Over" button to restart the appliance creation process.</p>
-                <p py:if="not groups">Appliance Creator can help you more easily create an appliance for ${project.getNameForDisplay()} version ${formatProductVersion(versions, currentVersion)} by guiding you through the steps necessary to deploy your software in an appliance form-factor.
-                </p>
+                <p>This dialog will guide you through the steps necessary to deploy your software in an appliance form-factor.</p>
+                <p py:if="groups">Click the "Revise Appliance" button to make changes to your existing appliance, or click "Start Over" to start the appliance creation process from the beginning.</p>
                 <p py:if="not groups">Click the "Create Appliance" button to begin.</p>
                 <ul>
                   <li py:if="groups"><a class="option" href="startApplianceCreator">Revise Appliance</a></li>
