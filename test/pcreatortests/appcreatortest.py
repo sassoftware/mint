@@ -189,6 +189,34 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         trvs = self.mintClient.listApplianceTroves(sesH)
         self.assertEquals(trvs, refTrvList)
 
+    def testFilterApplianceTroveFailedBuilds(self):
+        recipeStr = """
+class TestRecipe(PackageRecipe):
+    name="testpkg%s"
+    version="1.0"
+    clearBuildReqs()
+    def setup(r):
+        r.Create('/srv/foo%s', contents="jack sprat")
+"""
+        sesH = self.mintClient.startApplianceCreatorSession( \
+                self.projectId, self.versionId, False)
+        project = self.mintClient.getProject(self.projectId)
+        repos = self.mintClient.server._server._getProjectRepo(project)
+        bar = self.addComponent('testpkgzero:runtime', '%s/1.0' % 
+            self.prodDef.getDefaultLabel(), repos=repos)
+        self.mintClient.addApplianceTrove(sesH, bar.getName())
+        fooone = self.addComponent('testpkgone:source', '%s/1.0' %
+            self.prodDef.getDefaultLabel(), fileContents= [ ('testpkgone.recipe',
+                recipeStr % ('one', 'one')) ], repos = repos)
+        self.mintClient.addApplianceTrove(sesH, '='.join((fooone.getName(), fooone.getVersion().asString())))
+        footwo = self.addComponent('testpkgtwo:source', '%s/1.0' %
+            self.prodDef.getDefaultLabel(), fileContents= [ ('testpkgtwo.recipe',
+                recipeStr % ('two', 'two')) ], repos = repos)
+        self.mintClient.addApplianceTrove(sesH, '='.join((footwo.getName(), footwo.getVersion().asString())))
+        self.cookFromRepository('testpkgtwo', conaryver.Label(self.prodDef.getDefaultLabel()), repos=repos)
+        l = self.mintClient.listApplianceTroves(self.projectId, sesH)
+        self.assertEquals(set(l), set(['testpkgtwo', 'testpkgzero:runtime']))
+
     def _makeApplianceTrove(self, rebuild, troveName, troveList):
         sesH = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, rebuild)
