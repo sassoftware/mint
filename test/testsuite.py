@@ -22,9 +22,9 @@ import __builtin__
 testPath = None
 archivePath = None
 
-import bootstrap
-
 #from pychecker import checker
+
+import bootstrap
 
 def enforceBuiltin(result):
     failure = False
@@ -148,7 +148,6 @@ def isIndividual():
 EXCLUDED_PATHS = ['test', 'scripts']
 
 def main(argv=None, individual=True):
-    import bootstrap
     from testrunner import testhelp
     testhelp.isIndividual = isIndividual
     class rBuilderTestSuiteHandler(testhelp.TestSuiteHandler):

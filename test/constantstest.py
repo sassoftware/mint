@@ -8,10 +8,7 @@
 import testsuite
 testsuite.setup()
 
-try:
-    from testrunner import testhelp
-except ImportError:
-    import testhelp
+from testrunner import testhelp
 
 from mint import buildtypes as refbuildtypes
 
