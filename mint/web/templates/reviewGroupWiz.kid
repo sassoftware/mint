@@ -33,7 +33,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                   ${trove}
                 </li>
               </ul>
-              <a class="option" href="buildApplianceGroup">Build Appliance</a>
+              <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
               <p><a href="newPackage">Package more files</a></p>
               <p><a href="selectPackages">Select additional packages</a></p>
               <p><a href="editApplianceGroup">Edit appliance contents</a></p>
