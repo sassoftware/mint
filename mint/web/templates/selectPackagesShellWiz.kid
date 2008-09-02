@@ -43,12 +43,9 @@ import string
                 </div>
             </div>
             <div class="packageList_submit">
-                <input id="selectPackagesFormSubmit" value="Select Packages" type="Submit" disabled="disabled"/>
+                <input id="selectPackagesFormSubmit" value="Continue" type="Submit"/>
             </div>
             </form>
-            <div>
-              <a href="editApplianceGroup">Continue</a>
-            </div>
         </div>
         </div>
     </body>

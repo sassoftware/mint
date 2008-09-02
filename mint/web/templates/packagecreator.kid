@@ -62,7 +62,7 @@ lang = None;
 
         ]]>
         </script>
-        <h3>Upload an Archive</h3>
+        <h3>Package Files</h3>
         <p py:content="helpText">Select your binary (not source) archive (rpm, tar archive) from your computer.</p>
         <div id="getPackageFactories_outerdiv">
         <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
@@ -254,7 +254,7 @@ lang = None;
             <div class="expandableformgroupTitle">Package Details</div>
             <div class="expandableformgroup">
               <div>
-                <label for="factoryHandle" class="required">Package Type</label>
+                <label for="factoryHandle" class="required">Archive Type</label>
                 <div class="expandableformgroupItems">
                     <select py:if="len(factories) > 1" name="factoryHandle" id="factoryHandle" onchange="javascript:changeFactory()">
                       <option py:for="(factoryHandle, factoryDef, values) in factories" value="${factoryHandle}">${str(factoryDef.getDisplayName())}</option>
