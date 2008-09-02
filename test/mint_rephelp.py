@@ -376,6 +376,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
 
 class MintServerCache(rephelp.ServerCache):
+    serverType = 'mint'
+
     def getServerClass(self, envname, useSSL):
         name = "mint." + MINT_DOMAIN
         server = None
@@ -414,7 +416,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
                 requireSigs, serverName, serverCache=serverCache)
 
-        if serverIdx == 0:
+        if serverIdx == 0 and serverCache is self.mintServers:
             self.port = self.mintServers.getServer(serverIdx).port
             self.mintCfg = self.mintServers.getServer(serverIdx).mintCfg
             if self.mintCfg.SSL:
