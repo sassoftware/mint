@@ -273,7 +273,6 @@ class SiteHandler(WebHandler):
             else:
                 if auth.timeAccessed > 0:
                     firstTimer = False
-                    client.updateAccessedTime(auth.userId)
                 else:
                     firstTimer = True
 
@@ -282,8 +281,10 @@ class SiteHandler(WebHandler):
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
                 user = client.getUser(auth.userId)
-                if user.getDefaultedData() or firstTimer:
+                if user.getDefaultedData() or (self.cfg.tosPostLoginLink and firstTimer):
                     self.session['firstPage'] = self.cfg.basePath + "userSettings"
+                else:
+                    client.updateAccessedTime(auth.userId)
                 self.session.save()
 
                 # redirect storm if needed
