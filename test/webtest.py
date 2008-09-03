@@ -1193,7 +1193,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Unconfirmed user was unable to confirm.')
 
     def testSessionStability(self):
-        newSid = '1234567890ABCDEF1234567890ABCDEF'
+        newSid = '1234567890ABCDEF1234567890ABCDEF'.lower()
         username = 'foouser'
         client, userId = self.quickMintUser(username, 'foopass')
         # session not in table and not cached

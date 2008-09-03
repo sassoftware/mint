@@ -105,7 +105,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             'mirrorpass', '', 0]])
 
         # and make sure that the 'shell' repository was created
-        assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'rap.rpath.com')))
+        assert(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'rap.rpath.com')))
 
     @testsuite.tests('RBL-2039')
     def testConfigureMirrorBackup(self):
@@ -382,7 +382,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass',
                               'additionalLabelsToMirror': ''})
 
-        self.failIf(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+        self.failIf(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'conary.rpath.com')))
 
         # turn off mirroring
         p = client.getProjectByHostname('rpath')
@@ -398,7 +398,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass'})
 
         self.failUnlessEqual(len(client.getInboundMirrors()), 1)
-        self.failUnless(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+        self.failUnless(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'conary.rpath.com')))
 
     def testEditExternalProject(self):
         # make sure that editing an external projects' label actually does the

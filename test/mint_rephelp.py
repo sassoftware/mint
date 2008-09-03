@@ -534,7 +534,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
             os.mkdir(self.imagePath)
         self.openMintRepository()
 
-        util.mkdirChain(os.path.join(self.reposDir, "tmp"))
+        util.mkdirChain(os.path.join(self.reposDir + '-mint', "tmp"))
 
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.mintServer.mcpClient = self.mcpClient
