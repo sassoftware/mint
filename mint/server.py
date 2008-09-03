@@ -393,8 +393,15 @@ class MintServer(object):
         return res and res[0] or fqdn
 
     def _getProjectConaryConfig(self, project, internal=True):
-        ''' Creates a conary configuration object, suitable for internal or external
-        rBuilder use. ''' 
+        """
+        Creates a conary configuration object, suitable for internal or external
+        rBuilder use.
+        @param project: Project to create a Conary configuration for.
+        @type project: C{mint.project.Project} object
+        @param internal: True if configuration object is to be used by a
+           NetClient/ShimNetClient internal to rBuilder; False otherwise.
+        @type internal: C{bool}
+        """
         ccfg = project.getConaryConfig()
         conarycfgFile = self.cfg.conaryRcFile
         if not internal:
@@ -425,7 +432,7 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
         if pcfg is None:
-            pcfg = self._getProjectConaryConfig(project, internal=False)
+            pcfg = self._getProjectConaryConfig(project)
         # use a shimclient for mint-handled repositories; netclient if not
         if not useshim or (project.external and not self.isLocalMirror(project.id)):
             repo = conaryclient.ConaryClient(pcfg).getRepos()
@@ -501,7 +508,7 @@ class MintServer(object):
             del client
 
     def _getProductDefinition(self, project, version):
-        projectCfg = self._getProjectConaryConfig(project, internal=False)
+        projectCfg = self._getProjectConaryConfig(project)
         repos = self._getProjectRepo(project, pcfg=projectCfg)
         cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
 
@@ -2650,6 +2657,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         project = projects.Project(self, buildDict['projectId'])
 
+        # We should use internal=False here because the configuration we
+        # generate here is used by the jobslave, not internally by rBuilder.
         cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
@@ -3732,6 +3741,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)
         project = projects.Project(self, groupTrove.projectId)
 
+        # We should use internal=False here because the configuration we
+        # generate here is used by the jobslave, not internally by rBuilder.
         cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
@@ -4652,7 +4663,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # TODO put back overrides
 
-        projectCfg = self._getProjectConaryConfig(project, internal=False)
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg['name'] = self.auth.username
         projectCfg['contact'] = self.auth.fullName or ''
         repos = self._getProjectRepo(project, pcfg=projectCfg)
@@ -4733,6 +4744,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
+        # We should use internal=False here because the configuration we
+        # generate here is used by the package creator service, not rBuilder.
         cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = self.auth.fullName or ''
