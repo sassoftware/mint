@@ -109,7 +109,7 @@ class SetupHandler(WebHandler):
         if '.' not in self.req.hostname:
             return self._write("setup/error", error = "You must access the rBuilder server as a fully-qualified domain name:"
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
-            
+        
         newCfg = self._copyCfg()
         
         # enforce acceptance of terms of service
