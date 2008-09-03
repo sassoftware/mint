@@ -468,7 +468,7 @@ class SiteHandler(WebHandler):
             ), key=lambda y: y[0])
 
         added = []
-        for project, level in self.projectList:
+        for project, level, memberReqs in self.projectList:
             if project.getHostname() in projects and level in userlevels.WRITERS:
                 try:
                     project.addUserKey(auth.username, keydata)

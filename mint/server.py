@@ -414,10 +414,12 @@ class MintServer(object):
             ccfg.read(conarycfgFile)
 
         #Set up the user config lines
-        for otherProjectId, level in \
-          self.getProjectIdsByMember(self.auth.userId):
+        for otherProjectData, level, memberReqs in \
+          self.getProjectDataByMember(self.auth.userId):
             if level in userlevels.WRITERS:
-                otherProject = projects.Project(self, otherProjectId)
+                otherProject = projects.Project(self,
+                        otherProjectData['projectId'],
+                        initialData=otherProjectData)
                 ccfg.user.addServerGlob(otherProject.getFQDN(),
                     self.authToken[0], self.authToken[1])
 
@@ -951,6 +953,12 @@ class MintServer(object):
     def getProjectIdsByMember(self, userId):
         filter = (self.auth.userId != userId) and (not self.auth.admin)
         return self.projects.getProjectIdsByMember(userId, filter)
+
+    @typeCheck(int)
+    @private
+    def getProjectDataByMember(self, userId):
+        filter = (self.auth.userId != userId) and (not self.auth.admin)
+        return self.projects.getProjectDataByMember(userId, filter)
 
     @typeCheck(int)
     @private

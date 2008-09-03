@@ -192,10 +192,10 @@
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>
                     <ul>
-                        <li py:for="project in sorted(projectDict[level], key = lambda x: x.name)">
+                        <li py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name)">
                             <a href="${project.getUrl()}">
                                 ${project.getNameForDisplay()}</a>
-                                <span py:if="not level and project.listJoinRequests()">
+                                <span py:if="not level and memberReqs">
                                     <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
                                 </span>
                         </li>

@@ -133,7 +133,7 @@ class MintClient:
         @param userId: database id of the requested user
         @rtype: list of L{mint.projects.Project}
         """
-        return [(projects.Project(self.server, x[0]), x[1]) for x in self.server.getProjectIdsByMember(userId)]
+        return [(projects.Project(self.server, x[0]['projectId'], initialData=x[0]), x[1], x[2]) for x in self.server.getProjectDataByMember(userId)]
 
     def getUser(self, userId):
         """

@@ -15,7 +15,7 @@
     <?python
         ownsProjects = False
         if projectList:
-            for project, level in projectList:
+            for project, level, memberReqs in projectList:
                 if level == userlevels.OWNER:
                     ownsProjects = True
                     break
@@ -39,7 +39,7 @@
                         <p>
                             <label>Select a project:</label><br/>
                             <select name="projectId">
-                                <option py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())"
+                                <option py:for="project, level, memberReqs in sorted(projectList, key = lambda x: x[0].getName())"
                                         py:if="level == userlevels.OWNER"
                                         value="${project.getId()}"
                                         py:content="project.getName()"/>
@@ -80,7 +80,7 @@
 
                 <h3>${projectText().title()}s</h3>
                 <ul py:if="userProjects">
-                    <li py:for="project, level in userProjects">
+                    <li py:for="project, level, memberReq in userProjects">
                         <a
                             href="${project.getUrl()}">${project.getNameForDisplay()}</a>
                         (${userlevels. names[level]})

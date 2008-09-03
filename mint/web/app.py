@@ -121,9 +121,9 @@ class MintApp(WebHandler):
                 self.user = self.client.getUser(self.auth.userId)
                 self.projectList = self.client.getProjectsByMember(self.auth.userId)
                 self.projectDict = {}
-                for project, level in self.projectList:
+                for project, level, memberReqs in self.projectList:
                     l = self.projectDict.setdefault(level, [])
-                    l.append(project)
+                    l.append((project, memberReqs))
             else:
                 if pathInfo not in  ('/maintenance/', '/logout/'):
                     raise MaintenanceMode
