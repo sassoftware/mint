@@ -21,6 +21,7 @@ from mint import builds
 from mint.mint_error import *
 
 from conary import dbstore
+from conary.deps import deps
 from conary import sqlite3
 from conary import versions
 from conary.lib import util
@@ -139,6 +140,8 @@ class Project(database.TableObject):
         return self.server.getLabelsForProject(self.id, False, '', '')[0]
 
     def getConaryConfig(self, overrideAuth = False, newUser = '', newPass = ''):
+        '''Creates a ConaryConfiguration object suitable for repository access
+        from the same server as MintServer'''
 
         labelPath, repoMap, userMap, entMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
 
@@ -146,7 +149,8 @@ class Project(database.TableObject):
         #cfg.root = ":memory:"
         #cfg.dbPath = ":memory:"
 
-        cfg.initializeFlavors()
+        #cfg.initializeFlavors()
+        cfg.buildFlavor = deps.parseFlavor('')
 
         installLabelPath = " ".join(x for x in labelPath.keys())
         cfg.configLine("installLabelPath %s" % installLabelPath)
