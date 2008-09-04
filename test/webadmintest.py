@@ -184,9 +184,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         return self.getRepositoryClient(user = user, password = pw)
 
     def testCreateExternalProjectEntitlement(self):
-        
-        raise testsuite.SkipTestException("Skipping this test because we need a conary repository, but openrepository creates mint servers.")
-        
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
@@ -219,9 +216,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testCreateExternalProjectEntitlementExtraWhitespace(self):
-        
-        raise testsuite.SkipTestException("Skipping this test because we need a conary repository, but openrepository creates mint servers.")
-        
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
