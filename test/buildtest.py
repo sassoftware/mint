@@ -990,7 +990,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         hostname = "bar"
         otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
                         shortname=hostname, version="1.0",
-                        prodtype="Component", isPrivate=True)
+                        prodtype="Component", isPrivate=False)
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
