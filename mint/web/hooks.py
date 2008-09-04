@@ -5,41 +5,34 @@
 #
 
 from mod_python import apache
-from mod_python import util
 
 import os
-import xmlrpclib
-import zlib
 import re
-import stat
-import shutil
 import socket
+import shutil
 import sys
 import tempfile
 import time
 import traceback
-import simplejson
-import urllib
 
 from mint import config
-from mint import mirror
 from mint import users
 from mint import profile
 from mint import mint_error
 from mint import maintenance
-from mint import server
 from mint.helperfuncs import extractBasePath
 from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
+from mint.web.logerror import logErrorAndEmail
 from mint.web.rpchooks import rpcHandler
-from mint.web.webhandler import normPath, HttpError, getHttpAuth
+from mint.web.catalog import catalogHandler
+from mint.web.webhandler import normPath, HttpError
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary import versions
 from conary.dbstore import sqlerrors
-from conary.lib import log
 from conary.lib import coveragehook
 from conary.lib import util as conary_util
 from conary.repository import shimclient
@@ -332,103 +325,12 @@ urls = (
     (r'^/changeset/',        conaryHandler),
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
+    (r'^/catalog/',          catalogHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
     (r'^/',                  mintHandler),
 )
-
-def logErrorAndEmail(req, cfg, exception, e, bt):
-    c = req.connection
-    req.add_common_vars()
-    info_dict = {
-        'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
-        'local_host'     : c.local_host,
-        'protocol'       : req.protocol,
-        'hostname'       : req.hostname,
-        'request_time'   : time.ctime(req.request_time),
-        'status'         : req.status,
-        'method'         : req.method,
-        'headers_in'     : req.headers_in,
-        'headers_out'    : req.headers_out,
-        'uri'            : req.uri,
-        'subprocess_env' : req.subprocess_env,
-        'referer'        : req.headers_in.get('referer', 'N/A')
-    }
-    info_dict_small = {
-        'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
-        'uri'            : req.uri,
-        'request_time'   : time.ctime(req.request_time),
-    }
-
-    timeStamp = time.ctime(time.time())
-
-    # Format large traceback to file
-    (fd, tb_path) = tempfile.mkstemp('.txt', 'mint-error-')
-    large = os.fdopen(fd, 'w')
-    print >>large, 'Unhandled exception from mint web interface:'
-    print >>large, 'Time of occurrence: %s' % timeStamp
-    print >>large
-    conary_util.formatTrace(exception, e, bt, stream=large, withLocals=False)
-    print >>large
-    print >>large, 'Full stack:'
-    print >>large
-    try:
-        conary_util.formatTrace(exception, e, bt, stream=large, withLocals=True)
-    except:
-        # The extended traceback formatter can crash when uncooperative
-        # objects do something special when marshalled. For example,
-        # derivatives of Thread may abort before Thread itself is
-        # initialized, which causes __repr__ to crash, and
-        # ServerProxy derivatives may crash when __safe_str__ is
-        # improperly sent as a remote procedure call instead of
-        # throwing an AttributeError.
-        #
-        # None of these conditions should prevent the original
-        # exception from being logged and emailed, if only in their
-        # short form.
-
-        handlerErrorType, handlerErrorValue, handlerErrorTB = sys.exc_info()
-        print >>large
-        print >>large, '*** Traceback formatter crashed! ***'
-        print >>large, 'Formatter crash follows:'
-        conary_util.formatTrace(handlerErrorType, handlerErrorValue,
-            handlerErrorTB, stream=large, withLocals=False)
-    print >>large
-    print >>large, 'Environment:'
-    for key, val in sorted(info_dict.items()):
-        print >>large, '%s: %s' % (key, val)
-    large.seek(0)
-
-    # Format small traceback to memory
-    small = conary_util.BoundedStringIO()
-    print >>small, 'Unhandled exception from mint web interface:'
-    conary_util.formatTrace(exception, e, bt, stream=small, withLocals=False)
-    print >>small, 'Extended traceback at %s' % tb_path
-    small.seek(0)
-
-    # Log to apache
-    apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
-    shutil.copyfileobj(small, sys.stderr)
-    sys.stderr.flush()
-    small.seek(0)
-
-    # send email
-    try:
-        extra = {'hostname': socket.getfqdn()}
-        subject = cfg.bugsEmailSubject % extra
-        if cfg.bugsEmail:
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.bugsEmail, subject, large.read())
-        if cfg.smallBugsEmail:
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                                     cfg.smallBugsEmail, subject, small.read())
-    except MailError, e:
-        apache.log_error("Failed to send e-mail to %s, reason: %s" % \
-            (cfg.bugsEmail, str(e)))
-
-    small.close()
-    large.close()
 
 cfg = None
 db = None
@@ -608,6 +510,7 @@ def handler(req):
                     # interested parties
                     exception, e, bt = sys.exc_info()
                     logErrorAndEmail(req, cfg, exception, e, bt)
+                    del exception, e, bt
 
                     # Send an error page to the user and set the status
                     # code to 500 (internal server error).

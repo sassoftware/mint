@@ -3,17 +3,11 @@
 #
 # All rights reserved
 #
-import time
-import os
-import sys
 
-from mint import buildtypes
-from mint import userlevels
-from mint import jobstatus
 from mint.cmdline import commands
 
-from conary import versions, conarycfg
-from conary.lib import options, log
+from conary import conarycfg
+from conary.lib import options
 from conary import conaryclient
 from conary.deps import deps
 

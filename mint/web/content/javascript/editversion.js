@@ -5,10 +5,13 @@
 var currentBdefSerial = 0;
 var currentUsourceSerial = 0;
 
+var buildsDefined = false;
+
 jQuery(document).ready(function () {
 
     currentBdefSerial = jQuery(".pdbuilddef-deleter").length;
     currentUsourceSerial = jQuery(".pdusource-deleter").length;
+    buildsDefined = (jQuery(".pdbuilddef-deleter").length > 1);
 
     jQuery('select.pdbuilddef-picker-buildType').change(function() {
         var builddefElement = jQuery(this).parents('tr').get(0);
@@ -75,6 +78,7 @@ jQuery(document).ready(function () {
             var tbody = jQuery('#pdbuilddefs > tbody');
             if (tbody.find('tr').length <= 1) {
                 jQuery('#pdbuilddef-empty').show();
+                buildsDefined = false;
             }
     });
 
@@ -97,6 +101,7 @@ jQuery(document).ready(function () {
         
         // hide the no entries found message
         jQuery('#pdbuilddef-empty').hide();
+        buildsDefined = true;
         currentBdefSerial++;
     });
 
@@ -132,17 +137,3 @@ jQuery(document).ready(function () {
     });
 });
 
-// given a project path (i.e. /project/foo) and version id, redirect to the 
-// proper edit version page
-function editVersionRedirect(projectPath, versionId) {
-                
-    if(versionId >= 0) {
-    
-       // makes sure projectPath ends in slash
-       if(projectPath.charAt(projectPath.length -1) != '/') {
-           projectPath += '/';
-       }
-    
-       location = projectPath + 'editVersion?id=' + versionId;
-    }
-}

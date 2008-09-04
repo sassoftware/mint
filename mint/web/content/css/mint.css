@@ -38,6 +38,17 @@ a:hover {
     text-decoration: none;
 }
 
+.boxHeader a.headerlink,
+.boxHeader a.headerlink:visited,
+.boxHeader a.headerlink:active,
+.boxHeader a.headerlink:hover {
+    color: #fff;
+    background-color: transparent;
+    font-weight: normal;
+    font-size: small;
+    text-decoration: underline;
+}
+
 .boxHeader a,
 .boxHeader a:visited,
 .boxHeader a:active,
@@ -63,6 +74,27 @@ div#main {
     margin-left: auto;
     margin-right: auto;
     width: 955px;
+}
+
+#rssnews {
+    background-color: #ffc;
+    margin: 1em auto;
+    padding: 0.5em 0;
+    font-size: larger;
+    text-align: center;
+}
+
+#maintmode {
+    background-color: #edc2c2;
+    margin: 1em auto;
+    padding: 0.5em 0;
+    font-size: larger;
+    text-align: center;
+}
+
+.newsAge {
+    font-size: small;
+    color: #333;
 }
 
 div#middle {
@@ -156,9 +188,9 @@ div#top {
     padding-top: 0px;
     margin-top: 0px;
     margin-bottom: 20px;
-    height: 112px;
+    height: 72px;
     width: 955px;
-    background: url(../images/topgrad.png);
+    background: url(../images/topgrad-small.png);
 }
 
 div#prodLogo {
@@ -282,290 +314,6 @@ button.img {
     padding: 0;
     cursor: pointer;
 }
-
-div#steps {
-    top: 130px;
-    width: 720px;
-}
-
-div#threeEasySteps {
-    clear: left;
-    padding-top: 12px;
-    padding-left: 12px;
-    margin-bottom: 20px;
-}
-
-img#getStarted {
-    float: right;
-    margin-right: 46px;
-}
-
-div#stepsText {
-    padding: 8px 0px 24px 0px;
-}
-
-img#useitImg {
-    vertical-align: middle;
-}
-
-table#singleTable {
-    width: 715px;
-    height: 234px;
-    border-spacing: 0;
-    top: 0;
-    bottom: 0;
-    margin: 0;
-    padding: 0;
-    margin-left:0 !important;
-    margin-left:-3px;
-    margin-right:0 !important;
-    margin-right:-3px;
-}
-
-table#doubleTable {
-    width: 715px;
-    height: 117px;
-    border-spacing: 0;
-    top: 0;
-    bottom: 0;
-    margin: 0;
-    padding: 0;
-    margin-left:0 !important;
-    margin-left:-3px;
-    margin-right:0 !important;
-    margin-right:-3px;
-}
-
-td#useIt {
-    vertical-align: middle;
-    text-align: center;
-    margin: 0;
-    padding: 0;
-}
-
-div#orangeTitle, div#inactiveOrangeTitle {
-    padding-top: 7px;
-    font-size: 24pt;
-    color: #ffa814;
-    font-weight: bold;
-}
-
-div#activeLeft {
-     background: url(../images/activeBubble.png);
-     text-align: left;
-     width: 326px;
-     height: 129px;
-     padding-left: 24px;
-     padding-right: 3px;
-     margin-right: 3px;
-}
-
-div#inactiveLeft {
-     cursor: pointer;
-     background: url(../images/inactiveBubble.png);
-     text-align: left;
-     width: 327px;
-     height: 129px;
-     padding-left: 24px;
-     padding-right: 3px;
-     margin-right: 3px;
-     background-repeat: no-repeat;
-}
-
-div#activeRight {
-    float: right;
-    background: url(../images/activeBubble.png);
-    text-align: left;
-    width: 327px;
-    height: 129px;
-    padding-left: 24px;
-    margin-right: 8px;
-    background-repeat: no-repeat;
-}
-
-div#inactiveRight {
-    cursor: pointer;
-    float: right;
-    background: url(../images/inactiveBubble.png);
-    text-align: left;
-    width: 326px;
-    height: 129px;
-    padding-left: 24px;
-    margin-right: 8px;
-    background-repeat: no-repeat;
-}
-
-#spotlight .cssbox2,
-#spotlight .cssbox2_archive,
-#spotlight .cssbox_body2,
-#spotlight .cssbox_head2,
-#spotlight .cssbox_head2 div {
-    background: transparent url(../images/spotlight.png) no-repeat bottom right;
-    cursor: pointer;
-}
-#spotlight .cssbox2 {
-    width: 716px !important; /* intended total box width - padding-right(next) */
-    width: 716px; /* IE Win = width - padding */
-    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
-    margin: 20px auto; /* use to position the box */
-    margin-left: 0;
-}
-
-#spotlight .cssbox2_archive {
-    width: 700px !important; /* intended total box width - padding-right(next) */
-    width: 700px; /* IE Win = width - padding */
-    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
-    margin: 20px auto; /* use to position the box */
-    margin-left: 0;
-}
-
-/* set the top-right image */
-#spotlight .cssbox_head2 {
-    background-position: top right;
-    margin-right: 0; /* pull the right image over on top of border */
-    padding-right: 25px; /* right-image-gap + right-inside padding */
-}
-
-/* set the top-left image */
-#spotlight .cssbox_head2 div {
-    background-position: top left;
-    margin: 0; /* reset main site styles*/
-    border: 0; /* ditto */
-    padding: 0 0 0 25px; /* padding-left = image gap + interior padding ... no padding-right */
-    height: 10px !important;
-    height: 1%; /* IE Holly Hack */
-}
-
-
-/* set the lower-left corner image */
-#spotlight .cssbox_body2 {
-    background-position: bottom left;
-    margin-right: 25px; /* interior-padding right */
-    padding: 0 0 0 25px; /* mirror .cssbox_head right/left */
-}
-
-td#spotlightTitle {
-    font-size: 14pt;
-    color: #ffa814;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.1em;
-}
-
-div#applianceTitle {
-    font-size: 11pt;
-    text-align: center;
-    font-weight: bold;
-    line-height: 1.1em;
-}
-
-span#buildit {
-    cursor: pointer;
-    background: url(../images/build_it.png);
-    text-align: left;
-    width: 326px;
-    height: 81px;
-    float: left;
-    padding-top: 48px;
-    padding-left: 24px;
-    padding-right: 3px;
-    margin-right: 3px;
-}
-
-span#findit {
-    cursor: pointer;
-    float: right;
-    background: url(../images/find_it.png);
-    text-align: left;
-    width: 326px;
-    height: 59px;
-    padding-top: 48px;
-    padding-left: 24px;
-    margin-left: 3px;
-    margin-right: 3px;
-}
-
-div#applianceText {
-    font-size: 9pt;
-    line-height: 1.2em;
-    padding-top: 2px;
-    text-align: justify;
-}
-
-img#applianceImg {
-    vertical-align: middle;
-    /*margin-top: -25px;*/
-    margin-right: 15px;
-    padding-bottom: 10px;
-}
-
-div.archiveLink {
-    font-size: 9pt;
-    text-align: left;
-    color: #ffa814;
-    text-decoration: none;
-    width: 50%;
-    padding-top: 2px;
-    padding-bottom: 5px;
-    float: left;
-    
-}
-
-div.archiveLink:hover {
-    text-decoration: underline;
-}
-
-div#applianceInfo {
-    font-size: 9pt;
-    text-align: right;
-    color: #ffa814;
-    text-decoration: none;
-    padding-top: 2px;
-    padding-bottom: 10px;
-}
-
-div#logoBox {
-    float: left;
-    width: 130px;
-    line-height: 100px;
-    text-align: center;
-}
-
-div#textBox {
-    padding-right: 24px;
-    padding-left: 24px;
-}
-
-div#textBoxWide {
-    padding-right: 24px;
-    padding-left: 24px;
-}
-
-td#spotLabel {
-    text-align: right;
-}
-
-td#spotInput {
-}
-
-table#spotTable {
-    margin: 0;
-    padding: 0;
-    width: 99%;
-    border: 1px solid #CCC;
-}
-
-th#spotTh, td#spotTd {
-    font-size: 100%;
-    color: #444;
-    padding: 3px;
-    text-align: center;
-}
-
-th#spotTh {
-    background-color: #EEE;
-}
-
 
 button#signInSubmit {
     margin: 10px 0px;
@@ -865,13 +613,10 @@ div#projectsPane a.signout {
     color: white;
 }
 
-div#projectsPane div#newProject {
-    text-align: center;
-}
-div#projectsPane div#userSettings {
-    text-align: center;
-}
-div#projectsPane div#administer {
+div#projectsPane div#newProject,
+div#projectsPane div#userSettings,
+div#projectsPane div#administer,
+div#projectsPane div#cloudCatalog {
     text-align: center;
 }
 
@@ -947,6 +692,7 @@ span#editProject {
     font-size: x-small;
 }
 
+.expandableformgroup,
 .formgroup,
 .formsubgroup {
     border-top: 0;
@@ -960,6 +706,7 @@ span#editProject {
     height: 1%;
 }
 
+.expandableformgroupTitle img,
 .formgroupTitle img {
     float: right;
 }
@@ -971,7 +718,9 @@ span#editProject {
     margin-right: 20px;
 }
 
-tr.editGroupHeader, .formgroupTitle {
+tr.editGroupHeader,
+.expandableformgroupTitle,
+.formgroupTitle {
     border-top: 1px solid #ccc;
     border-left: 1px solid #ccc;
     border-bottom: 1px solid #aaa;
@@ -1044,6 +793,88 @@ div.clearleft {
 .formgroup input.reversed {
     width: 14px;
     margin-left: 30px;
+}
+
+.expandableformgroupSeparator {
+    width: auto;
+    clear:left;
+    margin:0pt;
+    padding:0pt;
+}
+
+.expandableformgroupItems
+{
+    float: left;
+    width: 60%;
+    padding: 4px;
+}
+
+.expandableformgroup label.check_label
+{
+    display: inline;
+    float: none;
+    width: 60%;
+}
+
+.expandableformgroup input.check {
+    display: inline;
+    margin-bottom: -.25em;
+    float: none;
+    width: auto;
+}
+
+.expandableformgroupItems select{
+    width: 100%;
+}
+.expandableformgroupItems input, textarea{
+    float: left;
+    width: 92%;
+}
+
+.expandableformgroupItems div.resize{
+    width: 16px;
+    height: 16px;
+    display: inline;
+    float: left;
+    cursor: pointer;
+}
+
+.expandableformgroupItems div.expander {
+    background-image: url(../images/TEXTAREA_expanded.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.expander:hover {
+    background-image: url(../images/TEXTAREA_expand.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser {
+    background-image: url(../images/TEXTAREA_collapsed.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroupItems div.collapser:hover {
+    background-image: url(../images/TEXTAREA_collapse.gif);
+    background-repeat: no-repeat;
+}
+
+.expandableformgroup label{
+    width: 30%;
+    float: left;
+    margin-top: 6px;
+    margin-left: 10px;
+    padding-right: 10px;
+    display: block;
+    text-align: right;
+}
+
+.expandableformgroup label.required{
+    padding-left: 0em;
+}
+
+.expandableformgroup div.help{
+    clear: left;
 }
 
 .smallSpecs,
@@ -1535,3 +1366,35 @@ table.buildDefs tr.dialogButtons td button {
     font-style: italic;
 }
 
+div#progress_indicator {
+    border: 1px solid black;
+    margin: auto;
+    height: 20px;
+    width: 90%;
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+p#upload_progress_percent_complete {
+    margin: 0pt;
+    padding: 0pt;
+    text-align: center;
+    color: black;
+    z-index: 2;
+}
+
+div#progress_indicator_bar {
+    height: 20px;
+    width: 1%;
+    background-color: green;
+    z-index: -1;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+}
+
+select.auto,
+input.auto {
+    width: auto;
+}

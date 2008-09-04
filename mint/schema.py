@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(45, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 5)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -145,6 +145,7 @@ def _createProjects(db):
             hostname        varchar(128) UNIQUE,
             shortname       varchar(128),
             domainname      varchar(128) DEFAULT '' NOT NULL,
+            namespace       varchar(16),
             projecturl      varchar(128) DEFAULT '' NOT NULL,
             description     text,
             disabled        INT DEFAULT 0,
@@ -676,6 +677,7 @@ def _createApplianceSpotlight(db):
     cu = db.cursor()
     commit = False
 
+    # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'ApplianceSpotlight' not in db.tables:
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
@@ -702,6 +704,7 @@ def _createApplianceSpotlight(db):
         db.tables['FrontPageSelections'] = []
         commit = True
 
+    # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'UseIt' not in db.tables:
         cu.execute("""
         CREATE TABLE UseIt (
@@ -843,6 +846,7 @@ def _createProductVersions(db):
             CREATE TABLE ProductVersions (
                 productVersionId    %(PRIMARYKEY)s,
                 projectId           INT NOT NULL,
+                namespace           VARCHAR(16),
                 name                VARCHAR(16),
                 description         TEXT,
             CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
@@ -850,8 +854,8 @@ def _createProductVersions(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
         commit = True
-    commit |= db.createIndex('ProductVersions', 'ProductVersionsProjects',
-            'projectId,name', unique = True)
+    commit |= db.createIndex('ProductVersions', 'ProductVersionsNamespacesProjects',
+            'projectId,namespace,name', unique = True)
 
     if commit:
         db.commit()

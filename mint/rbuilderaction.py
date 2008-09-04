@@ -5,7 +5,7 @@
 # All rights reserved.
 #
 
-import os, sys, time
+import os, sys
 import traceback
 import xmlrpclib
 

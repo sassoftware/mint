@@ -64,8 +64,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.getCreatorId() == 2)
-        assert([[x[2],x[3]] for x in project.getProductVersionList()] ==
-                [['FooV1', 'FooV1Description'],['FooV2', 'FooV2Description']])
+        assert([[x[2],x[3],x[4]] for x in project.getProductVersionList()] ==
+                [['ns', 'FooV1', 'FooV1Description'],['ns2', 'FooV2', 'FooV2Description']])
 
     @fixtures.fixture("Full")
     def testNewProjectError(self, db, data):
@@ -78,6 +78,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
                               MINT_PROJECT_DOMAIN, shortname="bar",
                               version='1.0', prodtype='Component')
+
+        self.mock(socket, 'gethostname', lambda: 'sir.robin')
         sData = re.split("\.", socket.gethostname(), 1)
         self.failUnlessRaises(InvalidHostname, client.newProject, "Foo", 
                               sData[0], sData[1], shortname='bar3')
@@ -89,6 +91,22 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(ProductVersionInvalid, client.newProject, "Test", 
                           'barbar', MINT_PROJECT_DOMAIN, 
                            shortname="barbara", version="9 8")
+
+    @fixtures.fixture("Full")
+    def testNewProjectWithNamespace(self, db, data):
+        client = self.getClient('owner')
+        hostname=shortname = "foo2"
+        namespace = 'ns1'
+        newProjectId = client.newProject("Foo2", hostname, MINT_PROJECT_DOMAIN,
+                                         shortname=shortname,
+                                         namespace=namespace,
+                                         version='1.0', prodtype='Component')
+        project = client.getProject(newProjectId)
+
+        #Invalid product
+        self.assertRaises(InvalidNamespace, client.newProject, 'Foo3', hostname, MINT_PROJECT_DOMAIN,
+                                         shortname=shortname, namespace='0123456789abcdefg',
+                                         version='1.1', prodtype='Component')
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
@@ -124,6 +142,15 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.setCommitEmail("commit@email.com")
         project.refresh()
         self.failUnlessEqual(project.commitEmail, "commit@email.com")
+        
+    @fixtures.fixture("Full")
+    def testEditProjectNamespace(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        project.setNamespace("spacemonkey")
+        project.refresh()
+
+        assert(project.getNamespace() == "spacemonkey")
 
     @fixtures.fixture("Full")
     def testGetProjects(self, db, data):
@@ -227,8 +254,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testProdTypeAppliance(self, db, data):
-        if not self.cfg.rBuilderOnline:
-            raise testsuite.SkipTestException("test skipped...needs group template creation mocked out to work")
 
         client = self.getClient("owner")
         projectId = client.newProject("Quux", 'footoo', 'localhost', 
@@ -346,7 +371,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient.getProject(data['projectId'])
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
+
+        # This no longer raises ItemNotFound because normal users can browse
+        # private products they are a member of.
+        watcherClient.getProject(data['projectId'])
+
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
@@ -388,11 +417,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
                           data['projectId'], data['owner'])
         self.assertRaises(ItemNotFound, nobodyClient.server.onlyOwner,
                           data['projectId'], data['owner'])
-        self.assertRaises(ItemNotFound,
-                          watcherClient.server.delMember, data['projectId'],
-                          data['user'], False)
 
-        ownerClient.server.getUserLevel(data['user'], data['projectId'])
+        # This no longer raises ItemNotFound, a user can be deleted from a
+        # private product they are a member of.
+        watcherClient.server.delMember(data['projectId'], data['user'], False)
+
+        self.assertRaises(ItemNotFound, ownerClient.server.getUserLevel, data['user'], 
+                          data['projectId'])
 
         adminClient.unhideProject(data['projectId'])
 
@@ -427,7 +458,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
                               "Foo",  "www", MINT_PROJECT_DOMAIN, "label",
                               "url")
+
+        # mock out hostname for consistency
+        self.mock(socket, 'gethostname', lambda: 'sir.galahad')
         sData = re.split("\.", socket.gethostname(), 1)
+
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
                               "Foo", sData[0], sData[1], "label", "url")
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
@@ -897,14 +932,97 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def testHideAllProjects(self, db, data):
         client = self.getClient('nobody')
 
+        oldHideNewProjects = client.server._server.cfg.hideNewProjects
         client.server._server.cfg.hideNewProjects = True
-        hostname = "quux"
-        projectId = client.newProject("Quux", hostname, "localhost", 
+        
+        try:
+            hostname = "quux"
+            projectId = client.newProject("Quux", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component')
+    
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, True)
+        finally:
+            client.server._server.cfg.hideNewProjects = oldHideNewProjects
+        
+    @fixtures.fixture('Full')
+    def testPrivateProjects(self, db, data):
+        client = self.getClient('nobody')
+        
+        # make sure not using cfg val so we know param works
+        oldHideNewProjects = client.server._server.cfg.hideNewProjects
+        client.server._server.cfg.hideNewProjects = False
+        
+        try:
+            # test public
+            hostname = "manny"
+            projectId = client.newProject("BoSox", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component',
+                                          isPrivate = False)
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, False)
+            
+            # test private
+            hostname = "ortiz"
+            projectId = client.newProject("BoSox2", hostname, "localhost", 
+                                          shortname=hostname,
+                                          version='1.0', prodtype='Component',
+                                          isPrivate = True)
+            project = client.getProject(projectId)
+            self.failUnlessEqual(project.hidden, True)
+        finally:
+            client.server._server.cfg.hideNewProjects = oldHideNewProjects
+            
+    @fixtures.fixture('Full')
+    def testVisibilityConversion(self, db, data):
+        """
+        Test converting public to private and vice versa
+        """
+                
+        # test private to public
+        client = self.getClient('owner')
+        hostname = "manny"
+        projectId = client.newProject("BoSox", hostname, "localhost", 
                                       shortname=hostname,
-                                      version='1.0', prodtype='Component')
-
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = True)
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, True)
+        client.setProductVisibility(projectId, False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        
+        # test public to private by owner (not allowed)
+        client = self.getClient('owner')
+        hostname = "ortiz"
+        projectId = client.newProject("BoSox2", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        self.failUnlessRaises(PublicToPrivateConversionError, 
+                              client.setProductVisibility, projectId, True)
+        
+        # test public to private by admin (allowed)
+        client = self.getClient('admin')
+        hostname = "ortiz2"
+        projectId = client.newProject("BoSox3", hostname, "localhost", 
+                                      shortname=hostname,
+                                      version='1.0', prodtype='Component',
+                                      isPrivate = False)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, False)
+        client.setProductVisibility(projectId, True)
+        project = client.getProject(projectId)
+        self.failUnlessEqual(project.hidden, True)
+        
+        # make sure you must be owner or admin to do it at all
+        client = self.getClient('nobody')
+        self.failUnlessRaises(PermissionDenied, 
+                              client.setProductVisibility, projectId, True)
 
     @fixtures.fixture("Full")
     def testVAMData(self, db, data):

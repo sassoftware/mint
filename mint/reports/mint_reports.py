@@ -8,16 +8,13 @@ import time
 
 global _reportlab_present
 try:
-    from reportlab.pdfgen import canvas
     from reportlab.platypus import *
-    from reportlab.lib.styles import PropertySet, getSampleStyleSheet, ParagraphStyle
-    from reportlab.test.utils import outputfile
+    from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib import colors
     _reportlab_present = True
 except ImportError:
     _reportlab_present = False
 
-import conary
 from conary.lib.util import mkstemp, rmtree
 
 class MintReport(object):

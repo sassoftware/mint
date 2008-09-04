@@ -47,9 +47,6 @@ class MintError(Exception):
 class AdminSelfDemotion(MintError): "You cannot demote yourself."
 class AlreadyConfirmed(MintError):
     "Your registration has already been confirmed"
-class AMIBuildNotConfigured(MintError):
-    "This rBuilder is missing information necessary to build " \
-        "Amazon Machine Images. Please consult your site administrator."
 class AuthRepoError(MintError):
     "Authentication token could not be manipulated."
 class BuildDataNameError(MintError):
@@ -61,6 +58,8 @@ class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
+class BuildSystemDown(MintError):
+    "There was a problem contacting the build system."
 class ConfigurationMissing(MintError):
     "The rBuilder configuration is missing."
     # this init must be in here because this gets thrown from config.py
@@ -78,6 +77,8 @@ class DuplicateName(MintError):
     "A %(project)s using this title already exists"
 class DuplicateLabel(MintError): "Label already exists"
 class DuplicateProductVersion(MintError): "Product version already exists"
+class EC2NotConfigured(MintError): "This rBuilder is missing information " \
+    "necessary to communicate with EC2.  Please consult your site administrator."
 class InvalidHostname(MintError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
@@ -95,6 +96,8 @@ class GroupTroveVersionError(MintError):
     "Invalid version for group: letters, numbers, periods allowed."
 class HtmlTagNotAllowed(MintError): pass
 class HtmlParseError(MintError): pass
+class InvalidNamespace(MintError):
+    "Invalid namespace: may not contain @ or : and may not be more than 16 characters"
 class InvalidShortname(MintError):
     "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
 class InvalidProdType(MintError):
@@ -125,6 +128,8 @@ class NotEntitledError(MintError):
 class ParameterError(MintError):
     "A required parameter had an incorrect data type."
 class PermissionDenied(MintError): "Permission Denied"
+class PublicToPrivateConversionError(MintError):
+    "Converting public products to private products is not supported."
 class ProductDefinitionVersionNotFound(MintError):
     "The product definition for the specified product version was not found."
 class ProductVersionNotFound(MintError):
@@ -145,6 +150,8 @@ class SchemaMigrationError(MintError): pass
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    
+class AMIInstanceDoesNotExist(MintError):
+    "The AMI instance does not exist, it may have already been deleted."
 class TroveNotSet(MintError):
     "This build is not associated with a group."
 class UserAlreadyAdmin(MintError): "User is already an administrator."
@@ -154,6 +161,12 @@ class UserInduction(MintError):
         "illegal fashion"
 class UpdateServiceNotFound(MintError):
     "The Update Service was not found."
+class PackageCreatorError(MintError):
+    "Package Creator Error:"
+class NoImagesDefined(MintError):
+    "Package Creator Error:"
+class OldProductDefinition(MintError):
+    "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 
@@ -204,7 +217,7 @@ class ProductDefinitionError(MintError):
     def freeze(self): return (self.reason,)
 
     def __str__(self):
-        return "There is was a problem that occurred when tryin to access the product definition for %s" % self.reason
+        return "There was a problem that occurred when trying to access the product definition for %s" % self.reason
 
 class UnmountFailed(MintError):
     def __init__(self, dev):
@@ -245,7 +258,7 @@ class BuildOptionValidationException(MintError):
     def freeze(self): return (self.errlist,)
 
     def __str__(self):
-        return "The following errors occurred: %s" % ", ".join(self.errlist)
+        return "The following error(s) occurred: %s" % ", ".join(self.errlist)
     
 class TroveNotFoundForBuildDefinition(MintError):
     "The trove for one or more images was not found."
@@ -256,7 +269,7 @@ class TroveNotFoundForBuildDefinition(MintError):
     def freeze(self): return (self.errlist,)
 
     def __str__(self):
-        return "The following errors occurred: %s" % ", ".join(self.errlist)
+        return "The following error(s) occurred: %s" % ", ".join(self.errlist)
 
 class UpdateServiceAuthError(MintError):
     def __init__(self, hostname):
@@ -327,6 +340,51 @@ class ProductDefinitionInvalidStage(MintError):
 
     def __str__(self):
         return "Invalid product definition stage: %s" % self.msg
+
+class PackageCreatorValidationError(PackageCreatorError):
+    "Package Creator Validation Error:"
+    def __init__(self, reasons):
+        PackageCreatorError.__init__(self)
+        self.reasons = reasons
+
+    def freeze(self): return (self.reasons,)
+
+    def __str__(self):
+        return "Field validation failed: %s" % ', '.join(self.reasons)
+
+class ProductDefinitionLabelLookupError(MintError):
+    "Product Definition Label Lookup Error:"
+    def __init__(self, label, possibles):
+        MintError.__init__(self)
+        self.lookup = label
+        self.set = possibles
+
+    def freeze(self): return (self.lookup, self.set)
+
+    def __str__(self):
+        return self.msg + " Could not map the label %s to a product definition.  The versioned default labels are %s" % (self.lookup, ", ".join(self.set))
+
+class EC2Exception(MintError):
+    "A generic EC2 exception"
+    def __init__(self, ec2ResponseObj):
+        MintError.__init__(self)
+        self.ec2ResponseObj = ec2ResponseObj
+
+    def freeze(self): 
+        return self.ec2ResponseObj.freeze()
+    
+    @classmethod
+    def thaw(cls, blob):
+        from mint import ec2
+        ec2ResponseObj = ec2.ErrorResponseObject()
+        ec2ResponseObj.thaw(blob)
+        return cls(ec2ResponseObj)
+
+    def __str__(self):
+        errlist = []
+        for error in self.ec2ResponseObj.errors:
+            errlist.append(error['message'])
+        return ", ".join(errlist)
 
 ## Subclassed exceptions
 # MessageException

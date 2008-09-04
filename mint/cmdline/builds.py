@@ -17,12 +17,10 @@ from mint import data
 from mint.mint_error import *
 from mint.cmdline import commands
 
-from conary import versions
 from conary.lib import options, log
 from conary.conaryclient import cmdline
 from conary import conarycfg
 from conary import conaryclient
-from conary import errors
 
 def waitForBuild(client, buildId, interval = 30, timeout = 0, quiet = False):
     try:

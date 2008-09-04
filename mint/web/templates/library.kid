@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
+from mint import constants
 from mint import searcher
 from urllib import quote
 from mint import userlevels
@@ -234,6 +235,33 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" style="float: right;" id="statusSpinner" alt="Job Running" />
             <div id="statusMessage" />
        </div>
+    </div>
+
+    <div py:def="layoutFooter()">
+        <div id="footer">
+            <div>
+                <span id="topOfPage"><a href="#top">Top of Page</a></span>
+                <ul class="footerLinks">
+                    <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
+                    <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
+                    <li py:if="cfg.legaleseLink"><a href="${cfg.legaleseLink}">Legal</a></li>
+                    <li py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
+                    <li py:if="not cfg.rBuilderOnline"><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank">
+                        rBuilder ${constants.mintVersion} User Guide</a></li>
+                    <li py:if="cfg.rBuilderOnline"><a href="http://wiki.rpath.com/wiki/rBuilder_Online" target="_blank">
+                        rBuilder Online User Guide</a></li>
+                    <li py:if="auth.admin and not cfg.rBuilderOnline">
+                        <a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">
+                        rBuilder ${constants.mintVersion} Administration Guide</a></li>
+                </ul>
+            </div>
+            <div id="bottomText">
+                <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
+                <span id="tagline">rPath. The Software Appliance Company.</span>
+            </div>
+            <p id="mintFullVersionString" style="display: none">${cfg.productName} version ${constants.fullVersion}</p>
+            <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
+        </div>
     </div>
 
 </html>

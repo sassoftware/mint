@@ -1,60 +1,12 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2008 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 SUBDIRS = repos admin docs setup
 
-kid_files = \
-	applianceSpotlight.kid	\
-	build.kid		\
-	buildDefs.kid		\
-	builds.kid		\
-	confirmEmail.kid	\
-	confirm.kid		\
-	cookGroup.kid		\
-	downloads.kid		\
-	editGroup.kid		\
-	editProject.kid		\
-	editBuild.kid		\
-	editPubrelease.kid	\
-	editVersion.kid		\
-	error.kid		\
-	findRefs.kid		\
-	forgotPassword.kid	\
-	frontPage.kid		\
-	groups.kid		\
-	help.kid		\
-	joinRequest.kid		\
-	layout.kid		\
-	library.kid		\
-	mailingLists.kid	\
-	maintenance.kid		\
-	members.kid		\
-	newBuildsFromProductDefinition.kid	\
-	newGroup.kid		\
-	newProject.kid		\
-	passwordReset.kid	\
-	pickArch.kid		\
-	project.kid		\
-	projectPage.kid		\
-	register_active.kid	\
-	register_conf.kid	\
-	register.kid		\
-	register_reconf.kid	\
-	rejectJoinRequest.kid   \
-	pubrelease.kid		\
-	pubreleases.kid		\
-	rss20.kid		\
-	searchResults.kid	\
-	tryItNow.kid		\
-	uploadKey.kid		\
-	userInfo.kid		\
-	userSettings.kid	\
-	users.kid		\
-	viewJoinRequest.kid	\
-	confirmPublish.kid
+kid_files = *.kid
 
 python_files = __init__.py
 

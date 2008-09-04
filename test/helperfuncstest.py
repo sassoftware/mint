@@ -14,6 +14,7 @@ import sys
 import tempfile
 
 import mint_rephelp
+from mint import config
 from mint import copyutils
 from mint import scriptlibrary
 from mint import templates
@@ -23,6 +24,7 @@ from mint.client import timeDelta
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
 
+from conary import versions
 from conary.lib import util
 from conary.deps import deps
 
@@ -93,9 +95,10 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
     def testMakefiles(self):
         missing = False
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
-                    'mint/web/content', 'scripts', 'test/templates',
-                    'test/annotate', 'test/coverage', 'test/.coverage',
-                    'test/archive/anaconda', 'bin', 'test', 'tom', 'product')
+                    'mint/web/content', 'mint/web/templates', 'scripts',
+                    'test/templates', 'test/annotate', 'test/coverage',
+                    'test/.coverage', 'test/archive/anaconda', 'bin', 'test',
+                    'tom', 'product')
         mint_path = os.getenv('MINT_PATH')
 
         # tweak skipdirs to be fully qualified path
@@ -276,7 +279,8 @@ Much like Powdermilk Biscuits[tm]."""
     # the developer's system anyway.
     @testsuite.context("unfriendly")
     def testJavascript(self):
-        whiteList = ['json.js']
+        # whizzyupload.js was validated with jslint
+        whiteList = ['json.js', 'whizzyupload.js', 'swf_deeplink_history.js', 'history.js', 'iClouds.js', 'AC_OETags.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
@@ -688,6 +692,26 @@ Much like Powdermilk Biscuits[tm]."""
         # invalid should return string text explainign what is wrong
         text = validateNamespace("rpl@blah")
         self.assertTrue(isinstance(text, str))
+        
+    def testBuildEC2AuthToken(self):
+        
+        # test empty
+        cfg = None
+        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
+        
+        # test with some empty data
+        cfg = config.MintConfig()
+        cfg.ec2AccountId = 'accountId'
+        cfg.ec2PublicKey = ''
+        cfg.ec2PrivateKey = ''
+        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
+        
+        # test with data
+        cfg = config.MintConfig()
+        cfg.ec2AccountId = 'accountId'
+        cfg.ec2PublicKey = 'awsPublicKey'
+        cfg.ec2PrivateKey = 'awsPrivateKey'
+        self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
         
 
 if __name__ == "__main__":

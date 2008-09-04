@@ -34,78 +34,6 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
         return cPickle.loads(cu.fetchone()[0])['_data']
 
-    def testApplianceSpotlight(self):
-        adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
-        page = self.webLogin('adminuser', 'adminpass')
-        
-        self.assertContent('/applianceSpotlight', content='There are currently no appliances in the archive.  Please check back later.',
-                           code = [200])
-
-        end = time.strftime('%m/%d/%Y', time.gmtime(time.time() + 7*24*60*60))
-        start = time.strftime('%m/%d/%Y', time.gmtime(time.time() - 7*24*60*60))
-        adminClient.addSpotlightItem('Test Current', 'Description',
-                                     'link', '', 0, 
-                                     start,
-                                     end)
-        self.assertContent('/applianceSpotlight', 
-                           content='There are currently no appliances in the archive.  Please check back later.',
-                           code = [200])
-        adminClient.addSpotlightItem('Test Item', 'Description', 'link', '',
-                                     0, '1/1/1975', '1/2/1975')
-        self.assertContent('/applianceSpotlight', 
-                           content='Test Item',
-                           code = [200])
-        items = []
-        for x in range(10):
-            adminClient.addSpotlightItem('Test %d' % x, 'Description %d' % x,
-                                         'link %d' % x, '', 0, 
-                                         '2/%d/1990' % (x + 1),
-                                         '2/%d/1990' % (x + 2))
-        self.assertContent('/applianceSpotlight', 
-                           content='Test 9',
-                           code = [200])
-        self.assertNotContent('/applianceSpotlight', 
-                           content='Test 4',
-                           code = [200])
-        self.assertNotContent('/applianceSpotlight', 
-                           content='apps/mint/images/prev.gif',
-                           code = [200])
-        self.assertContent('/applianceSpotlight', 
-                           content='apps/mint/images/next.gif',
-                           code = [200])
-        self.assertContent('/applianceSpotlight?pageId=2', 
-                           content='Test 3',
-                           code = [200])
-        self.assertContent('/applianceSpotlight?pageId=2', 
-                           content='apps/mint/images/next.gif',
-                           code = [200])
-        self.assertContent('/applianceSpotlight?pageId=2', 
-                           content='apps/mint/images/prev.gif',
-                           code = [200])
-        self.assertContent('/applianceSpotlight?pageId=3', 
-                           content='Test Item',
-                           code = [200])
-        self.assertContent('/applianceSpotlight?pageId=3', 
-                           content='apps/mint/images/prev.gif',
-                           code = [200])
-        self.assertNotContent('/applianceSpotlight?pageId=3', 
-                           content='apps/mint/images/next.gif',
-                           code = [200])
-        adminClient.addUseItIcon(0, 'test.image', 'test.link')
-        self.assertContent('/', 
-                           content='test.link',
-                           code = [200])
-        for x in (1,2,3):
-            adminClient.addUseItIcon(x, 'test%s.image' % x, 'test%s.link' % x)
-        self.assertContent('/', 
-                           content='test3.link',
-                           code = [200])
-
-        adminClient.addUseItIcon(4, 'test4.image', 'test4.link')
-        self.assertContent('/', 
-                           content='test4.link',
-                           code = [200])
-
     def testEditUserSettings(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
@@ -212,7 +140,7 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
                         shortname=hostname, version="1.0", prodtype="Component")
         cu = self.db.cursor()
         for name in ('package1', 'package2', 'package3'):
-            cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+            cu.execute("SELECT COALESCE(MAX(pkgId) + 1, 1) FROM PackageIndex")
             pkgId = cu.fetchone()[0]
             r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, '/test.project.test@test:test/1.1-1-1', ?, 'test:test', 0)", (pkgId, projectId, name, MINT_PROJECT_DOMAIN))
         self.db.commit()

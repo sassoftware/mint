@@ -17,6 +17,8 @@ from mint.config import MintConfig
 import fixtures
 from conary.lib import util
 
+from testrunner import resources
+
 import mock
 import sys
 import os
@@ -79,13 +81,6 @@ def makeMockPopen(source):
 
 class LoadMirrorUnitTest(unittest.TestCase):
     def setUp(self):
-        # find archiveDir
-        for dir in sys.path:
-            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
-            if os.path.isdir(thisdir):
-                self.archiveDir = thisdir
-                break
-
         # save stuff we're going to blow away
         self.oldPopen = os.popen
         self.oldCall = loadmirror.call
@@ -95,18 +90,18 @@ class LoadMirrorUnitTest(unittest.TestCase):
         loadmirror.call = self.oldCall
 
     def testGetMountPoints(self):
-        points = loadmirror.getMountPoints(source = self.archiveDir + "/partitions")
+        points = loadmirror.getMountPoints(source = resources.mintArchivePath + "/partitions")
         self.failUnlessEqual(['/dev/sda1'], points)
 
     def testGetFsLabel(self):
-        os.popen = makeMockPopen(self.archiveDir + "/dumpe2fs")
+        os.popen = makeMockPopen(resources.mintArchivePath + "/dumpe2fs")
         self.failUnlessEqual('MIRRORLOAD', loadmirror.getFsLabel(None))
 
     def testMounting(self):
         callLog = []
         loadmirror.call = makeMockCall(callLog, 0)
 
-        loadmirror.unmountIfMounted("/dev/sda1", self.archiveDir + "/mounts")
+        loadmirror.unmountIfMounted("/dev/sda1", resources.mintArchivePath + "/mounts")
         self.failUnlessEqual(callLog, ['umount /dev/sda1'])
         callLog.pop()
 
@@ -116,17 +111,17 @@ class LoadMirrorUnitTest(unittest.TestCase):
     def testMountMirrorLoadDrive(self):
         callLog = []
         loadmirror.call = makeMockCall(callLog, 0)
-        os.popen = makeMockPopen(self.archiveDir + "/dumpe2fs")
+        os.popen = makeMockPopen(resources.mintArchivePath + "/dumpe2fs")
 
         loadmirror.mountMirrorLoadDrive(
-            partitions = self.archiveDir + "/partitions",
-            mounts = self.archiveDir + "/mounts")
+            partitions = resources.mintArchivePath + "/partitions",
+            mounts = resources.mintArchivePath + "/mounts")
         self.failUnlessEqual(callLog, ['umount /dev/sda1', 'mount /dev/sda1 /mnt/mirror/'])
 
         self.assertRaises(loadmirror.NoMirrorLoadDiskFound,
             loadmirror.mountMirrorLoadDrive,
-            partitions = self.archiveDir + "/partitions-missing",
-            mounts = self.archiveDir + "/mounts")
+            partitions = resources.mintArchivePath + "/partitions-missing",
+            mounts = resources.mintArchivePath + "/mounts")
 
     def createFile(self, fileName, contents = ''):
         f = open(fileName, "w")

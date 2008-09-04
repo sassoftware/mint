@@ -15,11 +15,8 @@ kid_files =			\
 	outbound.kid		\
 	newUser.kid		\
 	admin.kid	\
-	spotlight.kid		\
-	preview.kid	\
 	selections.kid		\
-	updateServices.kid	\
-	useit.kid
+	updateServices.kid
 
 all: kid-build default-all
 

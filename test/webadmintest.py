@@ -105,7 +105,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             'mirrorpass', '', 0]])
 
         # and make sure that the 'shell' repository was created
-        assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'rap.rpath.com')))
+        assert(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'rap.rpath.com')))
 
     @testsuite.tests('RBL-2039')
     def testConfigureMirrorBackup(self):
@@ -202,7 +202,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             {'hostname':        'external',
              'name':            'External Project',
              'label':           'localhost1@rpl:devel',
-             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
+             'url':             'http://localhost:%d/conary/' % self.mintServers.getServer(1).port,
              'authType':        'entitlement',
              'externalEntKey':  entKey,
             }
@@ -234,7 +234,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             {'hostname':        'external',
              'name':            'External Project',
              'label':           'localhost1@rpl:devel',
-             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
+             'url':             'http://localhost:%d/conary/' % self.mintServers.getServer(1).port,
              'authType':        'entitlement',
              'externalEntKey':  '%s    \n' % entKey,
              'externalEntClass':'  %s' % entClass,
@@ -382,7 +382,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass',
                               'additionalLabelsToMirror': ''})
 
-        self.failIf(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+        self.failIf(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'conary.rpath.com')))
 
         # turn off mirroring
         p = client.getProjectByHostname('rpath')
@@ -398,7 +398,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass'})
 
         self.failUnlessEqual(len(client.getInboundMirrors()), 1)
-        self.failUnless(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+        self.failUnless(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'conary.rpath.com')))
 
     def testEditExternalProject(self):
         # make sure that editing an external projects' label actually does the
@@ -548,52 +548,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.post, {'reportName': 'site_summary'})
         assert(page.body.startswith('%PDF-1.3'))
 
-    def testUseIt(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        self.webLogin('adminuser', 'adminpass')
-
-        # test the /useIt path
-        origPage = self.assertContent('/admin/useIt', code = [200],
-            content = 'Manage Use It Icons')
-
-        client.addUseItIcon(1, 'test name', 'test link')
-        page = self.assertContent('/admin/useIt', code = [200],
-            content = 'Manage Use It Icons')
-
-        for x in range(4):
-            client.addUseItIcon(x, 'test name %d' % x, 'test link')
-        page = self.assertContent('/admin/useIt', code = [200],
-            content = 'Manage Use It Icons')
-
-        for x in range(6):
-            client.addUseItIcon(x, 'test name %d' % x, 'test link')
-        page = self.assertContent('/admin/useIt', code = [200],
-            content = 'Manage Use It Icons')
-
-        # test the setter/previewer
-        params = {'op': 'preview'}
-        for x in range(6):
-            params.update({'name%d' % x: 'link_name_%d' % x, 'link%d' % x: 'link_%d' % x})
-        page = origPage.postForm(1, self.post, params)
-        assert('link_name_1' in page.body)
-
-        params['op'] = 'set'
-        page = origPage.postForm(1, self.post, params)
-        assert('link_name_1' in page.body)
-
-        page = self.fetch('/admin/deleteUseItIcon',
-            postdata = {'itemId': '1'}, ok_codes = [200])
-        assert('link_name_0' not in page.body)
-
     def testSelections(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
-        data = dict(name='name', link='link', rank='1', op='preview')
-        page = self.fetch('/admin/addSelection', postdata = data)
-        assert('<a href="link">name</a>' in page.body)
-
-        data['op'] = 'set'
+        data = dict(name='name', link='link', rank='1', op='set')
         page = self.fetch('/admin/addSelection', postdata = data)
         assert('Manage Front Page Selections' in page.body)
 
@@ -601,34 +560,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/admin/deleteSelection',
             postdata = {'itemId': str(x[0]['itemId'])})
         assert('Manage Front Page Selections' in page.body)
-
-    def testSpotlight(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        self.webLogin('adminuser', 'adminpass')
-
-        origPage = self.assertContent('/admin/spotlight', code = [200],
-            content = 'Manage Spotlight Appliances')
-
-        data = dict(title = 'Title', text = 'This is a test.',
-            link = 'http://www.example.com/', logo = 'logo.gif',
-            showArchive = '1', startDate = '05/05/2000', endDate = '05/06/2030',
-            operation = 'preview')
-        page = origPage.postForm(1, self.post, data)
-        assert('Click for more information.' in page.body)
-
-        data['operation'] = 'apply'
-        page = origPage.postForm(1, self.post, data)
-        assert('This is a test.' in page.body)
-
-        x = client.getSpotlightAll()
-        page = self.fetch('/admin/deleteSpotlightItem',
-            postdata = {'itemId': str(x[0]['itemId']),
-                        'title': x[0]['title']})
-        assert('Delete Appliance Spotlight Entry "Title"?' in page.body)
-
-        page = self.fetch('/admin/delSpotlight',
-            postdata = {'itemId': str(x[0]['itemId'])})
-        self.failUnlessEqual(client.getSpotlightAll(), False)
 
     def testAddOutboundMirror(self):
         '''

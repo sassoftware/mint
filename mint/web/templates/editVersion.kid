@@ -8,14 +8,16 @@
 -->
 <?python
     from mint.web.templatesupport import projectText
+    from mint.helperfuncs import truncateForDisplay, formatProductVersion
     from rpath_common.proddef import api1 as proddef
     for var in [ 'name',
+                 'namespace',
                  'description' ]:
         kwargs[var] = kwargs.get(var, '')
 ?>
     <head>
         <title py:if="isNew">${formatTitle('Create New %s Version'%projectText().title())}</title>
-        <div py:if="not isNew">
+        <div py:if="not isNew" py:strip="True">
             <title py:if="kwargs.has_key('linked')">${formatTitle('Update Initial %s Version'%projectText().title())}</title>
             <title py:if="not kwargs.has_key('linked')">${formatTitle('Edit %s Version'%projectText().title())}</title>
         </div>
@@ -31,9 +33,36 @@
                 cursor: pointer;
             }
             ]]>
-        </style>
+         </style>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/tables.css?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/editversion.js?v=${cacheFakeoutVersion}"/>
+        <script type="text/javascript">
+        <![CDATA[
+            function doSubmit() {
+                var form = document.getElementById('processEditVersionForm');
+                if(form) {
+                   form.submit();
+                }
+            }
+        
+            function handleYes() {
+                // they confirmed it, so move along
+                doSubmit();
+            }
+            
+            function handleNo() {
+                // do nothing
+            }
+        
+            function ensureBuildsDefined() {
+               if(!buildsDefined) {
+                  modalEditVersionWarning(handleYes, handleNo);
+               } else {
+                  doSubmit();
+               }
+            }
+            ]]>
+        </script>
     </head>
     <body>
         <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef=None)" py:strip="True">
@@ -178,13 +207,21 @@
             </tr>
         </div>
         
-        <div py:def="upstreamSourcesOptions(ordinal='bt')" py:strip="True">
+        <div py:def="upstreamSourcesOptions(usource=None, ordinal='bt')" py:strip="True">
+        <?python
+            if usource:
+                troveName = usource.troveName or ''
+                label = usource.label or ''
+            else:
+                troveName = ''
+                label = ''
+        ?>
             <tr id="pdusource-${ordinal}">
                 <td>
-                    <input type="text" name="pdusource-${ordinal}-package" value="foo 1 package" />
+                    <input type="text" name="pdusource-${ordinal}-troveName" value="${troveName}" />
                 </td>
                 <td>
-                    <input type="text" name="pdusource-${ordinal}-label" value="foo1 label" />
+                    <input type="text" name="pdusource-${ordinal}-label" value="${label}" />
                 </td>
                 <td class="row-button"><a class="pdusource-deleter"><img src="${cfg.staticPath}/apps/mint/images/icon_delete-n.gif" title="Delete" /></a></td>
             </tr>
@@ -235,14 +272,14 @@
             </p>
             <!--! Only new ones have a required field for now -->
             <p py:if="isNew">Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="processEditVersion">
+            <form id="processEditVersionForm" method="post" action="processEditVersion">
                 <table border="0" cellspacing="0" cellpadding="0"
                     class="mainformhorizontal">
-                    <tr>
+                     <tr>
                         <th>
                             <!--! version only required if creating new one -->
                             <div py:if="not isNew">Major Version:</div>
-                            <em py:if="isNew" class="required">Major Version:</em>
+                            <em py:if="isNew and kwargs.has_key('linked')" class="required">Major Version:</em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
@@ -290,41 +327,9 @@
                             </table>
                         </td>
                     </tr>
-                    <!--  Upstream Sources currently disabled -->
-                    <tr py:if="False">
-                        <th>Upstream Sources:</th>
-                        <td>
-                            <table id="pdusource" class="pretty-fullwidth">
-                                <thead>
-                                    <tr>
-                                        <th>Project</th>
-                                        <th>Version</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                        <th>&nbsp;</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <div py:strip="True" py:for="us in kwargs['upstreamSources']"
-                                         py:content="upstreamSourcesOptions()" />
-                                     <tr id="pdusource-empty" py:attrs="{'style': len(kwargs['upstreamSources']) and 'display: none;' or None}">
-                                        <td colspan="4">No upstream sources defined.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table id="pdusource-bt-all" style="display: none">
-                                <tbody py:content="upstreamSourcesOptions()" />
-                            </table>
-                            <p>
-                                <a class="pdusource-adder">
-                                    <img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />
-                                    Add a new upstream source
-                                </a>
-                            </p>
-                        </td>
-                    </tr>
+                    
                     <tr>
-                        <th>Image Sets:</th>
+                        <th>Image Set:</th>
                         <td>
                             <table id="pdbuilddefs" class="pretty-fullwidth">
                                 <thead>
@@ -340,7 +345,7 @@
                                     <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
                                          py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
                                      <tr id="pdbuilddef-empty" py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
-                                        <td colspan="5">No images defined.</td>
+                                        <td colspan="5"><strong>No images defined.</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -355,16 +360,29 @@
                             </p>
                         </td>
                     </tr>
+                    <tr py:if="not isNew and not 'linked' in kwargs">
+                        <th>Update Appliance Platform:</th>
+                        <td>
+                            <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox" class="check field"/>
+                            <label for="updatePlatformCheckbox">Check this box to update to the latest appliance platform.</label>
+                            <p class="help">
+                            The appliance platform is locked to a specific version and will not change unless you update it.
+                            By checking this checkbox, the latest version of the appliance platform currently available will be
+                            used in all subsequent builds of the ${project.getNameForDisplay()} version
+                            ${formatProductVersion(versions, currentVersion)} appliance.
+                            </p>
+                        </td>
+                    </tr>
                 </table>
                 <p>
-                    <button class="img" type="submit">
-                        <div py:if="kwargs.has_key('linked')">
+                    <button class="img" type="button" onclick="ensureBuildsDefined()">
+                        <div py:if="kwargs.has_key('linked')" py:strip="True">
                             <!--! 
-                            Always use create button if coming from create a product page
+                            When coming from the project page, the version already exists, so use the submit button
                             -->
-                            <img src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
+                            <img src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Update" />
                         </div>
-                        <div py:if="not kwargs.has_key('linked')">
+                        <div py:if="not kwargs.has_key('linked')" py:strip="True">
                             <img py:if="isNew" src="${cfg.staticPath}/apps/mint/images/create_button.png" title="Create" />
                             <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                         </div>
@@ -372,7 +390,19 @@
                 </p>
                 <input type="hidden" name="id" value="${id}" />
                 <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
+                <input type="hidden" name="namespace" value="${kwargs['namespace']}" />
             </form>
+        </div>
+        <div id="modalEditVersionWarning" title="Warning" style="display: none;">
+            <p>
+            No images have been added to this ${projectText().lower()} version's image set.
+            </p>
+            You will not be able to create an appliance until at least one image has 
+            been added to the image set. You can do this now by clicking the 
+            "Add a new image" link, or later by editing this ${projectText().lower()} version.
+            <p>
+            Would you like to add an image now, or add one later?
+            </p>
         </div>
     </body>
 </html>

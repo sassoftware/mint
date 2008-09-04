@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'version', 'commitEmail']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail', 'isPrivate']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -17,11 +17,42 @@
         <title>${formatTitle('Create a %s'%projectText().title())}</title>
     </head>
     <body>
+    
+        <script type="text/javascript">
+        <![CDATA[
+            function doSubmit() {
+                var form = document.getElementById('createForm');
+                form.submit();
+            }
+        
+            function handleYes() {
+                // they confirmed to create public, so do it
+                doSubmit();
+            }
+            
+            function handleNo() {
+                // do nothing
+            }
+        
+            function handleVisibility() {
+                var isPrivate = document.getElementById('isPrivate');
+                if(isPrivate) {
+                   if(!isPrivate.checked) {
+                      // make them confirm creating public
+                      modalYesNo(handleYes, handleNo);
+                   } else {
+                      // creating private, just do it
+                      doSubmit();
+                   }
+                }
+            }
+        ]]>
+        </script>
+    
         <div id="layout">
             <h2>Create a ${projectText().title()}</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="createProject" >
-
+            <form id="createForm" name="createForm" method="post" action="createProject">
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                     <tr>
                         <th><em class="required">${projectText().title()} Title:</em></th>
@@ -33,6 +64,17 @@
                                 version.  This descriptive title can be changed at any time as a way of
                                 updating references to the ${projectText().lower()}.  For example: <strong>Example Appliance</strong>
                             </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <td>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                            <label for="prodtype">Appliance</label>
+                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                            <label for="prodtype">Component</label>
+                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
                         </td>
                     </tr>
 
@@ -67,13 +109,22 @@
                     </tr>
 
                     <tr>
-                        <th><em class="required">${projectText().title()} Type:</em></th>
+                        <th>${projectText().title()} is Private:</th>
                         <td>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
-                            <label for="prodtype">Appliance</label>
-                            <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
-                            <label for="prodtype">Component</label>
-                            <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                            <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                            <div id="modalYesNo" title="Confirmation" style="display: none;">
+                                    You have selected to create a public ${projectText().title()}. 
+                                    Once a ${projectText().title()} is public it cannot be made 
+                                    private. Are you sure you want to make this ${projectText().title()} 
+                                    public?
+                            </div>
+                            <p class="help">
+                                Check the box if you want the new ${projectText().title()} to be 
+                                a private one. Private ${projectText().title()}s are only accessible
+                                by ${projectText().title()} Team Members (Owners, Developers, and 
+                                Users).  If you choose to make your ${projectText().title()} public, 
+                                do not check the box.
+                            </p>
                         </td>
                     </tr>
 
@@ -84,7 +135,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>${projectText().title()} Home Page</th>
+                        <th>${projectText().title()} Home Page:</th>
                         <td>
                             <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
                             <p class="help">
@@ -98,8 +149,9 @@
 
                 <h3>Advanced Options</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+
                     <tr>
-                        <th>Repository Commits Email</th>
+                        <th>Repository Commits Email:</th>
                         <td>
                             <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
                             <p class="help">
@@ -112,9 +164,24 @@
                              </p>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <th><em class="required">${projectText().title()} Namespace:</em></th>
+                        <td>
+                            <input type="text" name="namespace" value="${kwargs['namespace']}" size="16" maxlength="128"/>
+                            <p class="help">
+                                Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
+                                Namespaces usually represent the organization behind the ${projectText().lower()}, or the namespace of
+                                the ${projectText().lower()} that is being derived.  Namespaces must start with an alphanumeric
+                                character and can be followed by any number of other alphanumeric characters.
+                                For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
+                                are all valid namespaces, but 'rPath Linux', and '#' are not valid.
+                             </p>
+                        </td>
+                    </tr>
 
                     <tr py:if="not isRBO()">
-                        <th><em class="required">Repository Domain Name</em></th>
+                        <th><em class="required">Repository Domain Name:</em></th>
                         <td>
                             <input type="text" name="domainname" value="${kwargs['domainname']}" />
                             <p class="help">
@@ -128,7 +195,7 @@
                     </tr>
                 </table>
                 <p>
-                    <button class="img" type="submit">
+                    <button class="img" type="button" onclick="handleVisibility()">
                         <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
                     </button>
                 </p>

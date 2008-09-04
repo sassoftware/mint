@@ -3,7 +3,7 @@
 # All Rights Reserved
 #
 
-from mint import config, client, database
+from mint import config, client
 from mint import scriptlibrary, copyutils
 from mint.helperfuncs import getProjectText, addUserToRepository
 from mint.mint_error import *

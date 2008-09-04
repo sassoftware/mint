@@ -285,8 +285,9 @@ table.memberstable {
 	padding:0em 0em 0.5em 0.5em; margin:0em;
 }
 a.option {
+        white-space: nowrap;
 	border:1px #ccc solid; background-image:none;
-	display:block; padding:0.1em 0.25em; margin:0;
+	padding:0.1em 0.25em; margin:0;
 	font-size:0.9091em; text-transform:uppercase; font-weight:bold;
         text-decoration:none;
 }
@@ -295,18 +296,152 @@ a.option:hover {
 	text-decoration:none;
 }
 
+.inlineButtonList ul li,
 .mailingListButtons ul li {
     display: inline
 }
 
-.mailingListButtons ul li a.option {
-    display: inline;
-    white-space: nowrap;
-    border:1px #ccc solid; background-image:none;
-    padding:0.1em 0.25em; margin:-2px 0px 0px 0px;
-    font-size:0.9091em; text-transform:uppercase; font-weight:bold;
+.fileupload {
+    height: 50px;
+    margin: 0px 0px -2em 0px;
+    padding: 0px;
+    width: 100%;
+    border: 0px;
+    display: block;
 }
-.mailingListButtons ul li a.option:hover {
-    background-color:#ccc; background-image:none;
-    text-decoration:none;
+
+ul.unnestedList
+{
+    list-style: none;
+}
+
+div.packageList
+{
+    width: 475px;
+    height: 408px;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+}
+
+div.packageList_navigation
+{
+    float: left;
+    height: 406px;
+    width: 20px;
+    font-size: 12px;
+    font-family: monospace;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #bbb;
+    background-color: #ddd;
+    text-align: center;
+}
+
+div.packageList_contents
+{
+    height: 408px !important;
+    width: 453px !important;
+    width: 449px; /* Hack for IE6's buggy width calculator */
+    overflow: auto;
+}
+
+div#loading_wait.packageList_contents {
+    width: 449px !important;
+    width: 445px; /* hack for IE6's buggy width calculator */
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+div.packageList_submit {
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+
+table#packageList_table {
+    width: 100% !important;
+    width: 95%;
+}
+
+h3.packageList_section_header {
+    margin: 0px;
+    border-bottom: 2px solid black;
+}
+
+.packageList_navigation_item strong {
+    font-size: 8pt;
+    color: inherit;
+}
+
+.packageList_navigation_item {
+    height: 15px;
+    color: #888;
+    font-size: 8pt;
+    vertical-align: middle;
+}
+
+#packageList_navigation_link {
+    text-decoration: none;
+}
+
+#packageList_navigation_link:hover {
+    text-decoration: underline;
+}
+
+div#jumpto_box {
+    width: 477px; /* Width of .packageList + border-width */
+    height: 24px; 
+}
+
+div#jumpto_box span {
+    float:right;
+}
+
+div#jumpto_box input#jumpto_box {
+    height: 16px;
+    font-size: 9pt;
+    border: 1px solid #888;
+    position: relative;
+    left: 16px;
+    z-index: 1;
+}
+
+div#jumpto_box input#jumpto_box_clear {
+    border: none;
+    height: 16px;
+    position: relative;
+    top: 4px;
+    right: 2px;
+    z-index: 3;
+}
+
+div#filter_selections {
+    width: 474px; /* Width of .packageList + packageList border-width - padding */
+    padding: 2px;
+    overflow: hidden;
+}
+
+div#filter_navigation_link {
+    display:inline;
+    float:left;
+    height: 16px;
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-right: 3px;
+    margin-top: 3px;
+    background-color: #ccccee;
+    border: 1px solid #ddddff;
+    line-height: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+div#filter_navigation_link:hover {
+    background-color: #aaaadd;
+    border: 1px solid #333;
+}
+
+.selected {
+    background-color: #333333;
+    color: #f0f0f0;
 }

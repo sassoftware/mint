@@ -17,8 +17,6 @@ import os
 import random
 import smtplib
 import socket
-import string
-import sys
 import time
 from email import MIMEText
 
@@ -33,9 +31,7 @@ from mint import userlisting
 from mint.mint_error import *
 from mint import usertemplates
 
-from conary import conaryclient
 from conary import repository
-from conary import sqlite3
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
@@ -395,6 +391,24 @@ class UsersTable(database.KeyedTable):
             raise ItemNotFound("UserId: %d does not exist!"% userId)
         return username[0]
 
+    def getAMIBuildsForUser(self, userId):
+        cu = self.db.cursor()
+        cu.execute("""\
+            SELECT bd.value as amiId,
+                   b.projectId,
+                   COALESCE(pr.timePublished,0) != 0 as isPublished,
+                   p.hidden as isPrivate,
+                   pu.level
+            FROM projectusers pu
+              JOIN projects p USING (projectId)
+              JOIN builds b USING (projectId)
+              LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+              JOIN buildData bd ON (bd.buildId = b.buildId)
+            WHERE bd.name = 'amiId'
+              AND b.deleted = 0
+              AND pu.userId = ?""", userId)
+        return cu.fetchall_dict()
+
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
 
@@ -450,15 +464,21 @@ class User(database.TableObject):
 
     def getDataTemplate(self):
         return usertemplates.userPrefsVisibleTemplate
+    
+    def getDefaultedDataAWS(self):
+        return self.server.getUserDataDefaultedAWS(self.username)
+    
+    def getDataTemplateAWS(self):
+        return usertemplates.userPrefsAWSTemplate
 
-    def getDataDict(self):
+    def getDataDict(self, template = None):
         dataDict = self.server.getUserDataDict(self.username)
-        template = self.getDataTemplate()
+        if not template:
+            template = self.getDataTemplate()
         for name in template:
             if name not in dataDict:
                 dataDict[name] = template[name][1]
         return dataDict
-        return self.server.getUserDataTemplate()
 
 
 class ProjectUsersTable(database.DatabaseTable):
@@ -501,7 +521,28 @@ class ProjectUsersTable(database.DatabaseTable):
         else:
             raise ItemNotFound()
 
-    def new(self, projectId, userId, level):
+    def getEC2AccountNumbersForProjectUsers(self, projectId):
+        writers = []
+        readers = []
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT CASE WHEN MIN(pu.level) <= 1 THEN 1 ELSE 0 END AS isWriter,
+                ud.value AS awsAccountNumber
+            FROM projectUsers AS pu
+                JOIN userData AS ud
+                    ON ud.name = 'awsAccountNumber'
+                       AND pu.userId = ud.userId
+                       AND length(ud.value) > 0
+            WHERE pu.projectId = ?
+            GROUP BY ud.value""", projectId)
+        for res in cu.fetchall():
+            if res[0]:
+                writers.append(res[1])
+            else:
+                readers.append(res[1])
+        return writers, readers
+
+    def new(self, projectId, userId, level, commit=True):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
 
@@ -513,7 +554,8 @@ class ProjectUsersTable(database.DatabaseTable):
 
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
                    userId, level)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
@@ -533,12 +575,13 @@ class ProjectUsersTable(database.DatabaseTable):
             return False
         return self.onlyOwner(projectId, userId)
 
-    def delete(self, projectId, userId):
+    def delete(self, projectId, userId, commit=True):
         if self.lastOwner(projectId, userId):
             raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
 
 class Authorization(object):

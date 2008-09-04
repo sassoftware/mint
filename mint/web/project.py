@@ -7,20 +7,15 @@ import email
 import os
 import re
 import sys
-import tempfile
 import time
-from mod_python import apache
-
 from mint.web import basictroves
 from mint import communitytypes
-from mint import database
 from mint import mailinglists
 from mint import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
 from mint import userlevels
-from mint import users
 from mint.mint_error import *
 
 from mint import buildtemplates
@@ -28,14 +23,15 @@ from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
+from mint.web import productversion
+from mint.web.logerror import logErrorAndEmail
+from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 
-import conary
-from conary.lib import util
 from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
@@ -57,8 +53,8 @@ def getUserDict(members):
         users[level].append((userId, username,))
     return users
 
+class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
 
-class ProjectHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -86,11 +82,43 @@ class ProjectHandler(WebHandler):
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+        self.isReader = (self.userLevel in userlevels.READERS) or self.auth.admin
 
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
             raise HttpNotFound
 
+        self.handler_customizations(context)
+
+        # add the project name to the base path
+        self.basePath += "project/%s" % (cmds[0])
+        self.basePath = normPath(self.basePath)
+
+        self.setupView()
+
+        if not cmds[1]:
+            return self.index
+        try:
+            method = self.__getattribute__(cmds[1])
+        except AttributeError:
+            raise HttpNotFound
+
+        if not callable(method):
+            raise HttpNotFound
+
+        return method
+
+    def handler_customizations(self, context):
+        """ Override this if necessary """
+
+    def _predirect(self, path = "", temporary = False):
+        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
+
+    def help(self, auth):
+        return self._write("help")
+
+class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
+    def handler_customizations(self, context):
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
         self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
@@ -102,25 +130,6 @@ class ProjectHandler(WebHandler):
         else:
             self.latestPublishedRelease = None
             self.latestBuildsWithFiles = []
-
-        # add the project name to the base path
-        self.basePath += "project/%s" % (cmds[0])
-        self.basePath = normPath(self.basePath)
-
-        if not cmds[1]:
-            return self.projectPage
-        try:
-            method = self.__getattribute__(cmds[1])
-        except AttributeError:
-            raise HttpNotFound
-
-        if not callable(method):
-            raise HttpNotFound
-
-        return method
-
-    def _predirect(self, path = "", temporary = False):
-        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
 
     @redirectHttp
     def projectPage(self, auth):
@@ -148,18 +157,11 @@ class ProjectHandler(WebHandler):
             external = True
         else:
             external = False
-            
-        if self.userLevel == userlevels.OWNER and not external:
-            # get the versions associated with a product
-            versions = self.client.getProductVersionListForProduct(
-                                                                self.project.id)
-        else:
-            versions = []
-            
+
         return self._write("projectPage", mirrored = mirrored, 
                            anonymous = anonymous, vmtnId = vmtnId,
-                           versions = versions,
                            external = external)
+    index = projectPage
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -167,8 +169,14 @@ class ProjectHandler(WebHandler):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        projectLabels = self.client.getAllProjectLabels(self.project.id)
-        return self._write("builds", builds = builds, projectLabels = projectLabels)
+        publishedReleases = dict()
+        for build in builds:
+            if build.getPublished() and \
+                    build.pubReleaseId not in publishedReleases:
+                publishedReleases[build.pubReleaseId] = \
+                        self.client.getPublishedRelease(build.pubReleaseId)
+
+        return self._write("builds", builds = builds, publishedReleases = publishedReleases)
 
     @writersOnly
     def groups(self, auth):
@@ -376,34 +384,33 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
-    @writersOnly
+    @productversion.productVersionRequired
     def newBuildsFromProductDefinition(self, auth):
-        return self._write("newBuildsFromProductDefinition",
-            productVersions = self.client.getProductVersionListForProduct(self.project.id))
+        return self._write("newBuildsFromProductDefinition")
 
-    @intFields(productVersionId = -1)
     @strFields(action = "cancel", productStageName = None)
     @boolFields(force = False)
     @dictFields(yesArgs = None)
     @writersOnly
-    def processNewBuildsFromProductDefinition(self, auth, productVersionId, productStageName, action, force, **yesArgs):
+    @productversion.productVersionRequired
+    def processNewBuildsFromProductDefinition(self, auth, productStageName, action, force, **yesArgs):
 
         if action.lower() == 'cancel':
             self._predirect('builds')
 
         try:
-            self.client.newBuildsFromProductDefinition(productVersionId,
+            self.client.newBuildsFromProductDefinition(self.currentVersion,
                     productStageName, force)
         except TroveNotFoundForBuildDefinition, tnffbd:
             return self._write("confirm",
                     message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
                     yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
-                                'productVersionId': productVersionId,
                                 'productStageName': productStageName,
                                 'action': 'submit',
                                 'force': '1'},
                     noLink = "builds")
         except Exception, e:
+            logErrorAndEmail(self.req, self.cfg, *sys.exc_info())
             self._addErrors("Problem encountered when creating build(s): %s" % str(e))
             self._predirect('newBuildsFromProductDefinition')
         else:
@@ -681,7 +688,13 @@ class ProjectHandler(WebHandler):
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
                     n,v,f = parseTroveSpec(anacondaVars[key])
-                    vObj = versions.VersionFromString(v)
+                    if not v:  # skip things that don't have valid versions
+                        anacondaVars[key] = ''
+                        continue
+                    try:
+                        vObj = versions.VersionFromString(v)
+                    except ParseError:
+                        vObj = versions.ThawVersion(v)
                     anacondaVars[key] = '%s/%s' % (vObj.trailingLabel(), vObj.trailingRevision())
 
             amiId = build.getDataValue('amiId', validate = False)
@@ -705,6 +718,70 @@ class ProjectHandler(WebHandler):
                 amiS3Manifest = amiS3Manifest,
                 anacondaVars = anacondaVars)
 
+    @writersOnly
+    @productversion.productVersionRequired
+    def newPackage(self, auth):
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
+        if not self.versions:
+            self._addErrors('You must create a product version before using the package creator')
+            self._predirect('editVersion', temporary=True)
+        return self._write('createPackage', message = '',
+                uploadDirectoryHandle = uploadDirectoryHandle,
+                sessionHandle=None, name=None)
+
+    @writersOnly
+    @strFields(uploadId=None, fieldname=None)
+    @boolFields(debug=False)
+    def upload_iframe(self, auth, uploadId, fieldname, debug):
+        return self._write('uploadPackageFrame', uploadId = uploadId,
+                fieldname = fieldname, project = self.project.hostname,
+                debug=debug)
+
+    @writersOnly
+    @productversion.productVersionRequired
+    @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
+    def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
+        ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
+        return self._write('createPackageInterview', message=None, **ret)
+
+    @writersOnly
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def newUpload(self, auth, name, label, prodVer, namespace):
+        """"""
+        #Start both the upload and the pc sessions
+        uploadDirectoryHandle = self.client.createPackageTmpDir()
+        sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
+        return self._write('createPackage', message = '',
+                uploadDirectoryHandle = uploadDirectoryHandle,
+                sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
+
+    @writersOnly
+    @strFields(name=None, label=None, prodVer=None, namespace=None)
+    def maintainPackageInterview(self, auth, name, label, prodVer, namespace):
+        """"""
+        try:
+            sessionHandle, factories, prevChoices = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+
+        except MintError, e:
+            self._addErrors(str(e))
+            self._predirect('newPackage', temporary=True)
+        return self._write('createPackageInterview',
+                editing = True, sessionHandle = sessionHandle,
+                factories = factories, message = None, prevChoices=prevChoices)
+
+    @writersOnly
+    @strFields(sessionHandle=None, factoryHandle=None)
+    def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+        #It is assumed that the package creator service will validate the input
+        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
+        return self._write('buildPackage', sessionHandle = sessionHandle,
+                message = None)
+
+    @writersOnly
+    def packageCreatorPackages(self, auth):
+        pkgList = self.client.getPackageCreatorPackages(self.project.getId())
+
+        return self._write('packageList', pkgList=pkgList, message=None)
 
     @ownerOnly
     def newRelease(self, auth):
@@ -1105,15 +1182,20 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
-            'desc': self.project.getDesc()
+            'desc': self.project.getDesc(),
+            'isPrivate': self.project.hidden,
+            'namespace': self.project.getNamespace(),
         }
         return self._write("editProject", kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '',
-               commitEmail = '')
+               commitEmail = '', isPrivate = 'off', namespace='')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           commitEmail):
+                           commitEmail, isPrivate, namespace):
+
+        isPrivate = (isPrivate.lower() == 'on') and True or False
+        
         pText = getProjectText()
         if not name:
             self._addErrors("You must supply a %s title"%pText.lower())
@@ -1121,13 +1203,18 @@ class ProjectHandler(WebHandler):
         if not self._getErrors():
             try:
                 self.project.editProject(projecturl, desc, name)
+                self.project.setNamespace(namespace)
                 self.project.setCommitEmail(commitEmail)
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
+            
+        # set the product visibility
+        self.client.setProductVisibility(self.project.id, isPrivate)
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'commitEmail': commitEmail}
+                      'commitEmail': commitEmail, 'isPrivate': isPrivate,
+                      'namespace': namespace}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
@@ -1146,10 +1233,13 @@ class ProjectHandler(WebHandler):
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             pd = self.client.getProductDefinitionForVersion(id)
+            kwargs['namespace'] = pd.getConaryNamespace()
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
             pd = proddef.ProductDefinition()
             helperfuncs.addDefaultStagesToProductDefinition(pd)
+            # XXX: this should be carried forward when images and other values are
+            kwargs['namespace'] = self.project.namespace
 
         return self._write("editVersion",
                 isNew = isNew,
@@ -1160,13 +1250,21 @@ class ProjectHandler(WebHandler):
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @boolFields(updatePlatform = False)
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, name, description, action, baseFlavor,
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, updatePlatform,
             **kwargs):
 
         isNew = (id == -1)
+
+        if not namespace:
+            self._addErrors('Missing namespace')
+        else:
+            err = helperfuncs.validateNamespace(namespace)
+            if err != True:
+                self._addErrors(err)
 
         if not name:
             self._addErrors("Missing major version")
@@ -1177,7 +1275,6 @@ class ProjectHandler(WebHandler):
         if isNew:
             pd = proddef.ProductDefinition()
         else:
-            version = self.client.getProductVersion(id)
             pd = self.client.getProductDefinitionForVersion(id)
 
         pd = helperfuncs.sanitizeProductDefinition(
@@ -1188,8 +1285,20 @@ class ProjectHandler(WebHandler):
                     self.project.shortname,
                     name,
                     description,
-                    self.cfg.namespace,
+                    namespace,
                     pd)
+
+        if (isNew or updatePlatform) and not self._getErrors():
+            label = None
+            if isNew:
+                label = 'conary.rpath.com@rpl:2-devel'
+            ##### DELETE #####
+            # this value was hard coded for the june 23, 2008 release of rBO
+            # this code must be removed when a proper solution is implemented
+            cCfg = self.project.getConaryConfig()
+            cClient = conaryclient.ConaryClient(cCfg)
+            pd.rebase(cClient, label)
+            ##### END DELETE #####
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1221,19 +1330,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 ~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
 ~!xorg-x11.xprint
 """)
-
-        # Process upstream sources
-        usources = collatedDict.get('pdusources',{})
-        # TODO: Include upstream sources, baseFlavor, etc.
-        #       from the UI (which needs to be invented).
-        #       Until then, we'll leave any changes a user
-        #       makes in the repos alone.
-        # XXX: this is also hardcoded to sane defaults for rPL/rLS 1
-        if not pd.getUpstreamSources():
-            pd.addUpstreamSource(troveName="group-rap-linux-service",
-                                 label="rap.rpath.com@rpath:linux-1")
-            pd.addUpstreamSource(troveName="group-os",
-                                 label="conary.rpath.com@rpl:1")
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
@@ -1284,7 +1380,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             if id == -1:
                 try:
                     id = self.client.addProductVersion(self.project.id,
-                            name, description)
+                            namespace, name, description)
                 except ProductVersionInvalid, e:
                     self._addErrors(str(e))
             else:
@@ -1298,18 +1394,20 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 # we got here from the "create a product menu" so output
                 # accordingly.  Note that the value of linked is the name
                 # of the project.
-                self._setInfo("Successfully created %s '%s' version '%s'" % \
-                              (getProjectText().lower(), self.project.name,
+                visibility = self.project.hidden and "private" or "public"
+                self._setInfo("Successfully created %s %s '%s' version '%s'" % \
+                              (visibility, getProjectText().lower(), 
+                               self.project.name,
                                name))
             else:
-                if isNew:
-                    action = "Created"
-                else:
-                    action = "Updated"
+                action = isNew and "Created" or "Updated"
                 self._setInfo("%s %s version '%s'" % \
                               (action, getProjectText().lower(), name))
+            #Set the currentVersion to the just created one
+            self._setCurrentProductVersion(id)
             self._predirect()
         else:
+            kwargs.update(name=name, description=description)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
@@ -1341,6 +1439,35 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             # value since we allow it to be empty
             if not stage.has_key('labelSuffix'):
                 stage['labelSuffix'] = ""
+                
+    def _getValidatedUpstreamSource(self, us):
+        """
+        Return the validated troveName and label for the specified upstream
+        sources dict.  Any keys missing from the dict will be set to '' so 
+        that errors can be properly handled.
+        """
+        
+        # validate the trove name
+        if not us.has_key('troveName'):
+            troveName = ''
+            self._addErrors("Missing trove name for upstream source")
+        else:
+            troveName = us['troveName']
+            
+        # validate the label
+        if not us.has_key('label'):
+            label = ''
+            self._addErrors("Missing label for upstream source")
+        else:
+            try:
+                labelObj = versions.Label(us['label'])
+                label = labelObj.freeze()
+            except Exception ,e:
+                label = us['label']
+                self._addErrors("Invalid label for upstream source: %s" \
+                                % str(e))
+            
+        return troveName, label
 
     def members(self, auth):
         self.projectMemberList = self.project.getMembers()
@@ -1348,10 +1475,12 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
+        hidden = self.project.hidden
         return self._write("members",
                 userHasReq = self.client.userHasRequested(self.project.getId(),
                     auth.userId),
-                reqList = reqList)
+                reqList = reqList,
+                hidden = hidden)
 
     @requiresAuth
     def adopt(self, auth):
@@ -1372,15 +1501,18 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
-            self._setInfo("You are now watching %s" % self.project.getNameForDisplay())
+            self._setInfo("You are now a registered user of %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @requiresAuth
     def unwatch(self, auth):
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
-            self._setInfo("You are no longer watching %s" % self.project.getNameForDisplay())
-        self._predirect("members")
+            self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
+        if self.project.hidden:
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._predirect("members")
 
     @strFields(comments = '', keepReq = None)
     @requiresAuth
@@ -1592,29 +1724,3 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
 
-    def help(self, auth):
-        return self._write("help")
-
-    @intFields(projectId = None)
-    @strFields(operation = None)
-    @requiresAdmin
-    def processProjectAction(self, auth, projectId, operation):
-        pText = getProjectText()
-        project = self.client.getProject(projectId)
-
-        if operation == "project_hide":
-            if not project.hidden:
-                self.client.hideProject(projectId)
-                self._setInfo("%s hidden"%pText.title())
-            else:
-                self._addErrors("%s is already hidden"%pText.title())
-        elif operation == "project_unhide":
-            if project.hidden:
-                self.client.unhideProject(projectId)
-                self._setInfo("%s is now visible"%pText.title())
-            else:
-                self._addErrors("%s is already visible"%pText.title())
-        else:
-            self._addErrors("Please select a valid %s administration option from the menu"%pText.lower())
-
-        return self._predirect()

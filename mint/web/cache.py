@@ -5,7 +5,6 @@
 #
 # An in-memory page cache for non-logged-in users
 
-import sys
 import time
 
 def cache(func):

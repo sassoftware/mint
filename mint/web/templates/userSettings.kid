@@ -89,6 +89,23 @@
                             <th>Confirm Password:</th>
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
+                        
+                        <tr>
+                            <td colspan="2">
+                                <p>
+                                    <strong>Amazon EC2 Settings:</strong>
+                                    <ul>
+                                        <li>
+                                            <a href="http://${SITE}cloudSettings">Edit Settings</a>
+                                        </li>
+                                        <li>
+                                            <a href="http://${SITE}removeCloudSettings">Remove Settings</a>
+                                        </li>
+                                    </ul>
+                                </p>
+                            </td>
+                        </tr>
+                        
                         <tr>
                             <td colspan="2">
                                 <p><strong>Package Signing Keys:</strong>
@@ -98,7 +115,7 @@
                     </table>
                     <h3>Preferences</h3>
                     <table class="mainformhorizontal">
-                        <tr py:for="key, (dType, default, prompt, errmsg) in sorted(user.getDataTemplate().iteritems())" class="${key in defaultedData and 'attention' or None}">
+                        <tr py:for="key, (dType, default, prompt, errmsg, helpText, password) in sorted(user.getDataTemplate().iteritems())" class="${key in defaultedData and 'attention' or None}">
                             <div py:strip="True" py:if="dType == data.RDT_BOOL">
                                 <td colspan="2"><input type="checkbox" class='check' name="${key}" py:attrs="{'checked' : dataDict.get(key, default) and 'checked' or None}"/> ${prompt}</td>
                             </div>
