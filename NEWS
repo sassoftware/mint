@@ -61,6 +61,14 @@ Web Front End Changes
   documentation. (RB-3127)
 * Fixed a bug where the "rBuilder Catalog for EC2" was being blocked by
   the adblock extension on Firefox 3. (RBL-3123)
+* The versions of special troves used to build an Installable
+  ISO is now displayed in the image build's detail page. (RBL-2600)
+* A new page will require the acceptance of the rPath terms of service prior 
+  to initial setup. (RBL-3213)
+* Terms of service and privacy policy links now open in new tabs/windows.
+
+Bug Fixes
+---------------------
 * The default search settings in the web interface was not being set
   properly, causing no radio buttons to be selected in the interface.
   This has been corrected. (RBL-3002)

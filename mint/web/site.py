@@ -235,15 +235,16 @@ class SiteHandler(WebHandler):
                     firstTimer = False
                 else:
                     firstTimer = True
-                client.updateAccessedTime(auth.userId)
 
                 self._session_start(rememberMe)
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
                 user = client.getUser(auth.userId)
-                if user.getDefaultedData():
+                if user.getDefaultedData() or (self.cfg.tosPostLoginLink and firstTimer):
                     self.session['firstPage'] = self.cfg.basePath + "userSettings"
+                else:
+                    client.updateAccessedTime(auth.userId)
                 self.session.save()
 
                 # redirect storm if needed
@@ -393,15 +394,24 @@ class SiteHandler(WebHandler):
         return self._write("userSettings",
                            user = self.user,
                            dataDict = self.user.getDataDict(),
-                           defaultedData = self.user.getDefaultedData())
+                           defaultedData = self.user.getDefaultedData(),
+                           firstTimer=self.session.get('firstTimer', True))
 
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
-               fullName = "", blurb = "")
+               fullName = "", blurb = "", tos = "")
     @requiresHttps
     @requiresAuth
     def editUserSettings(self, auth, email, displayEmail, fullName,
-                         password1, password2, blurb, **kwargs):
+                         password1, password2, blurb, tos, **kwargs):
+        
+        if self.session.get('firstTimer', True):
+            # first time logging in
+            if self.cfg.tosPostLoginLink and not tos:
+                return self._write("error", shortError = "Registration Error",
+                    error = "You must accept the Terms of Service to continue.")
+            self.client.updateAccessedTime(auth.userId)
+        
         if email != auth.email:
             self.user.validateNewEmail(email)
             self.user.setEmail(email)

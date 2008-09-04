@@ -94,13 +94,20 @@ class SetupHandler(WebHandler):
             except:
                 pass
         return newCfg
+    
+    def processTos(self, auth, **kwargs):        
+        return self.setup(auth, (('acceptTos' in kwargs) and True or False))   
 
-    def setup(self, auth):
+    def setup(self, auth, acceptedTos=False):
         if '.' not in self.req.hostname:
             return self._write("setup/error", error = "You must access the rBuilder server as a fully-qualified domain name:"
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
-
+        
         newCfg = self._copyCfg()
+        
+        # enforce acceptance of terms of service
+        if not acceptedTos:
+            return self._write("setup/tos")
 
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.

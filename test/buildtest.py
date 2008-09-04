@@ -979,6 +979,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         permissions in the serialized conaryrc.
         '''
 
+        adminClient = self.getClient('admin')
         developer = self.getClient('developer')
         projectId = data['projectId']
         buildId = data['buildId']
@@ -994,6 +995,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         FQDN = otherProject.getFQDN()
 
         # First check that only foo shows up for developer
+        adminClient.hideProject(otherProjectId) #This removes it from the conaryrc
         buildDict = simplejson.loads(build.serialize())
         self.failIf(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should not be in conaryrc')

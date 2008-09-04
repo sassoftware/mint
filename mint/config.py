@@ -258,6 +258,7 @@ class MintConfig(ConfigFile):
     # Only needed for rBO
     legaleseLink            = (cfgtypes.CfgString, '')
     tosLink                 = (cfgtypes.CfgString, '')
+    tosPostLoginLink        = (cfgtypes.CfgString, '')
     privacyPolicyLink       = (cfgtypes.CfgString, '')
 
     # anaconda-templates fallback label

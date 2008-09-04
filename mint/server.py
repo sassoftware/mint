@@ -476,7 +476,6 @@ class MintServer(object):
     def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
 
         # Get repository + client
-
         projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
         repos = self._getProjectRepo(project, pcfg=projectCfg)

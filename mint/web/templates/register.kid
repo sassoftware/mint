@@ -116,8 +116,8 @@
                     </table>
 
 
-                    <p py:if="cfg.rBuilderOnline or cfg.tosLink"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.tosLink}" title="Terms of Service">Terms of Service</a></em></p>
-                    <p py:if="cfg.rBuilderOnline or cfg.privacyPolicyLink"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.privacyPolicyLink}" title="Privacy Policy">Privacy Policy</a></em></p>
+                    <p py:if="cfg.rBuilderOnline or cfg.tosLink"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.tosLink}" title="Terms of Service" target="_blank">Terms of Service</a></em></p>
+                    <p py:if="cfg.rBuilderOnline or cfg.privacyPolicyLink"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the <a href="${cfg.privacyPolicyLink}" title="Privacy Policy" target="_blank">Privacy Policy</a></em></p>
                     <p><button id="createAccountSubmit" class="img" type="submit">
                         <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                     </button></p>

@@ -124,6 +124,10 @@
                             </div>
                         </tr>
                     </table>
+                    <p py:if="(defaultedData or firstTimer) and cfg.tosPostLoginLink">
+                       <input type="checkbox" class="check" name="tos" id="tos"/> 
+                       <em class="required">I have read and accept the <a href="${cfg.tosPostLoginLink}" title="Terms of Service" target="_blank">Terms of Service</a></em>
+                    </p>
                     <button class="img" id="userSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" /></button>
                 </form>
             </div>
