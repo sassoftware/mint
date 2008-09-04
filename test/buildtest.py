@@ -990,12 +990,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         hostname = "bar"
         otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
                         shortname=hostname, version="1.0",
-                        prodtype="Component", isPrivate=False)
+                        prodtype="Component", isPrivate=True)
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
-        # First check that only foo shows up for developer
-        adminClient.hideProject(otherProjectId) #This removes it from the conaryrc
         buildDict = simplejson.loads(build.serialize())
         self.failIf(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should not be in conaryrc')
