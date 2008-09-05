@@ -693,7 +693,7 @@ class LabelsTable(database.KeyedTable):
                         protocol = "http"
                         newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
 
-                    url = rewriteUrlProtocolPort(url, protocol)
+                    url = rewriteUrlProtocolPort(url, protocol, newPort)
 
                 map = url
             else:

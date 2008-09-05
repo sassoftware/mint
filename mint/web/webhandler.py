@@ -89,7 +89,8 @@ class WebHandler(object):
             location = location[1:]
 
         hostname = self.req.headers_in.get('host', self.req.hostname)
-        if ':' not in hostname and httpPort != 80:
+        if ':' in hostname and httpPort != 80:
+            hostname = hostname.split(':')[0]
             hostname = '%s:%i' % \
                    (hostname, httpPort)
 

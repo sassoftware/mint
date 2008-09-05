@@ -185,7 +185,7 @@ class MintApp(WebHandler):
 
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
-        dots = fullHost.split('.')
+        dots = fullHost.split(':')[0].split('.')
         hostname = dots[0]
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
