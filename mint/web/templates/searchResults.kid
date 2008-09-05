@@ -26,7 +26,7 @@
             <div id="spanleft">
                 <h2>Search Results: ${searchType}</h2>
 
-                <form py:if="searchType == 'Projects' and buildTypes"
+                <form py:if="searchType in ('Projects', 'Products') and buildTypes"
                       method="get" action="search">
                     <table>
                         <tr>
@@ -49,7 +49,7 @@
                             </div>
                         </tr>
                     </table>
-                    <input type="hidden" name="type" value="Projects" />
+                    <input type="hidden" name="type" value="${searchType}" />
                 </form>
 
                 <p py:if="limiters">
