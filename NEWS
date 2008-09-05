@@ -96,6 +96,8 @@ Bug Fixes
 * When creating or editing a product version, users will now be prompted with
   a modal warning if they do not define any builds. (RBL-3301)
 * The "Update Appliance Platform" checkbox is now the proper size. (RBL-3336)
+* Rerunning the rbuilder initial setup no longer resets the internal password,
+  as that caused previously created to become unavailable. (RBL-3344)
 
 Changes in 4.1.1
 ================
