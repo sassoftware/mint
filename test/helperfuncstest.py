@@ -98,7 +98,7 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                     'mint/web/content', 'mint/web/templates', 'scripts',
                     'test/templates', 'test/annotate', 'test/coverage',
                     'test/.coverage', 'test/archive/anaconda', 'bin', 'test',
-                    'tom', 'product')
+                    'tom', 'product', '.modules', 'server_template')
         mint_path = os.getenv('MINT_PATH')
 
         # tweak skipdirs to be fully qualified path
