@@ -176,7 +176,7 @@ class MintConfig(ConfigFile):
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
-    displaySha1             = (cfgtypes.CfgBool, False)
+    displaySha1             = (cfgtypes.CfgBool, True)
     visibleUrlTypes         = (cfgtypes.CfgList(CfgDownloadEnum))
 
     # mimic exactly the conary server cfg items
