@@ -22,7 +22,7 @@ from mint.mint_error import *
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [8]
+CLIENT_VERSIONS = [6, 7, 8]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
