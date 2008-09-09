@@ -44,9 +44,6 @@ import mcp_helper
 from mcp import queue
 from mcp_helper import MCPTestMixin
 
-from testrunner.testhelp import SkipTestException, findPorts
-from testrunner import resources
-
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
 queue.Topic = mcp_helper.DummyQueue
@@ -162,7 +159,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
-        self.securePort = findPorts(num = 1)[0]
+        self.securePort = testsuite.findPorts(num = 1)[0]
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
                                       requireSigs, authCheck = authCheck, entCheck = entCheck, serverIdx = serverIdx)
@@ -395,7 +392,7 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 rephelpCleanup = rephelp._cleanUp
 def _cleanUp():
-    _servers.stopAllServers(clean=not resources.cfg.isIndividual)
+    _servers.stopAllServers(clean=not testsuite.isIndividual())
     rephelpCleanup()
 
 rephelp._cleanUp = _cleanUp
@@ -655,7 +652,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
             label['authType'], label['username'], label['password'], label['entitlement'])
 
     def writeIsoGenCfg(self):
-        raise SkipTestExeption('this test references deleted code')
+        raise testsuite.SkipTestExeption('this test references deleted code')
         cfg = jobserver.IsoGenConfig()
 
         cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
@@ -855,7 +852,7 @@ class FakeRequest(object):
 # Use to instantiate an XML-RPC server
 class StubXMLRPCServerController:
     def __init__(self):
-        self.port = findPorts(num = 1)[0]
+        self.port = testsuite.findPorts(num = 1)[0]
         self.childPid = os.fork()
         if self.childPid > 0:
             rephelp.tryConnect('127.0.0.1', self.port)
