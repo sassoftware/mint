@@ -18,6 +18,7 @@ Bug Fixes
   repository for private products they are not members of. (RBL-3108)
 * The edit external products page now retrieves the correct label
   information in all cases. (RBL-3179)
+* Fixed a bug with UI rendering in the MCP Console Plug-in on IE 6. (RBL-3401)
 
 
 Changes in 4.1.1
