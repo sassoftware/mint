@@ -5,8 +5,6 @@
 #
 import os
 import shutil
-import mysqlharness
-import pgsqlharness
 import pwd
 import rephelp
 import socket
