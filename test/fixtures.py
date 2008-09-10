@@ -881,6 +881,11 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             os.dup2(oldOut, sys.stdout.fileno())
 
     def setUp(self):
+        for dir in sys.path:
+            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
+            if os.path.isdir(thisdir):
+                self.archiveDir = thisdir
+                break
         testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
 
