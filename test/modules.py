@@ -18,7 +18,7 @@ PythonModule('catalog-service', reposName='catalog/catalog-service',
       test='import catalogService'),
 PythonModule('package-creator/package-creator-service', 
              test='import pcreator'),
-PythonModule('mint', modulePath='../..'),
+PythonModule('mint', modulePath='..'),
 PythonModule('conary-test', setup='make', test=''), # cannot test because 
                                               # it creates some recursion
                                               # problems.

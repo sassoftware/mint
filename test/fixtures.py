@@ -15,10 +15,7 @@ import time
 import pwd
 import StringIO
 
-try:
-    from testrunner import testhelp
-except ImportError:
-    import testhelp
+from testrunner import testhelp
 
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
