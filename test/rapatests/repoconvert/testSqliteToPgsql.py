@@ -5,7 +5,7 @@
 import cherrypy
 import tempfile
 import os
-from conary_test import resources
+from testrunner import resources
 
 from conary.repository.netrepos.netserver import ServerConfig
 from conary import dbstore
@@ -24,7 +24,7 @@ import types
 import raa.db.schedule
 from raa import constants, rpath_error
 import testsuite
-import testhelp
+from testrunner import testhelp
 
 from mint import config, projects
 import mint_rephelp
