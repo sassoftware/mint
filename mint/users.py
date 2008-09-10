@@ -169,6 +169,8 @@ class UsersTable(database.KeyedTable):
                         displayEmail, blurb, active):
         if self.cfg.sendNotificationEmails and not active:
             validateEmailDomain(email)
+        if username.lower() == self.cfg.authUser.lower():
+            raise IllegalUsername
         for letter in username:
             if letter not in nameCharacterSet:
                 raise InvalidUsername
