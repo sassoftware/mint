@@ -154,6 +154,7 @@ class AMIInstanceDoesNotExist(MintError):
     "The AMI instance does not exist, it may have already been deleted."
 class TroveNotSet(MintError):
     "This build is not associated with a group."
+class IllegalUsername(MintError): "The username selected cannot be used."
 class UserAlreadyAdmin(MintError): "User is already an administrator."
 class UserAlreadyExists(MintError): "User already exists"
 class UserInduction(MintError):
