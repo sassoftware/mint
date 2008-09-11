@@ -32,8 +32,8 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                   <p><a class="option" href="generateImages">Generate Appliance Images</a></p>
               </div>
               <div id="build_fail" style="display:none">
-                  <p>The manifest for your appliance could not be created. You can package more files, select additional packages, or edit your appliance contents.</p>
-                  <p><a href="newPackage">Package more files</a></p>
+                  <p>The manifest for your appliance could not be created. Select from the following links to continue.</p>
+                  <p><a href="newPackage">Package another archive</a></p>
                   <p><a href="selectPackages">Select additional packages</a></p>
                   <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               </div>
