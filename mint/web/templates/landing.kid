@@ -34,7 +34,7 @@ if 'message' not in locals():
               <h2>Create Appliance</h2>
 
               <div class="inlineButtonList">
-                <p>This dialog will guide you through the steps necessary to deploy your software in an appliance form-factor.</p>
+                <p>This dialog will guide you through the steps necessary to package your software as an appliance.</p>
                 <p py:if="groups">Click the "Revise Appliance" button to make changes to your existing appliance, or click "Start Over" to start the appliance creation process from the beginning.</p>
                 <p py:if="not groups">Click the "Create Appliance" button to begin.</p>
                 <ul>

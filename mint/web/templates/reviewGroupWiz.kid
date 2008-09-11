@@ -25,7 +25,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
               <p py:if="message" class="message" py:content="message"/>
               <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
               <h2>Review Appliance Contents</h2>
-              <p>The packages you have created and/or selected appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
+              <p>The packages that will be built into your appliance appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
               <h3>Added Packages</h3>
               <div py:if="explicitTroves">
               <ul class="unnestedList">
@@ -34,13 +34,13 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 </li>
               </ul>
               <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
-              <p><a href="newPackage">Package more files</a></p>
+              <p><a href="newPackage">Package another archive</a></p>
               <p><a href="selectPackages">Select additional packages</a></p>
               <p><a href="editApplianceGroup">Edit appliance contents</a></p>
               </div>
               <div py:if="not explicitTroves">
                 No packages added
-              <p><a href="newPackage">Package more files</a></p>
+              <p><a href="newPackage">Package another archive</a></p>
               <p><a href="selectPackages">Select additional packages</a></p>
               </div>
             </div>
