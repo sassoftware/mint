@@ -528,6 +528,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def setUp(self):
         self.mintServers = _servers
+
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
         if not os.path.exists(self.reposDir):

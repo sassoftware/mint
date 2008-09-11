@@ -383,20 +383,21 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         page = func(auth=auth, **fields)
         self.assertEquals("A big long string", page)
 
-    def testEditVersionRebaseUpdate(self):
+    def testRebaseProductVersion(self):
         self.called = False
         def fakeRebase(pd, cclient, label):
-            self.assertEquals(label, None)
+            self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
             self.called = True
         self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
-        methodName = 'processEditVersion'
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
+        methodName = 'processRebaseProductVersion'
 
         def getProductDefinition(self, *args, **kwargs):
             return proddef.ProductDefinition()
 
-        cmd = 'testproject/processEditVersion'
-        fields = {'id': 1, 'namespace': 'foo', 'name': '1', 'description': '',
-                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel', 'updatePlatform': '1'}
+        cmd = 'testproject/processRebaseProductVersion'
+        fields = {'id': 1, 'platformLabel': 'conary.rpath.com@rpl:2-devel',
+                'action': 'Update Appliance Platform'}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductDefinitionForVersion', getProductDefinition, cmd)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
@@ -406,13 +407,13 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             pass
         self.assertEquals(self.called, True)
 
-
     def testEditVersionHardcodedValues(self):
         self.called = False
         def fakeRebase(pd, cclient, label):
             self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
             self.called = True
         self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
 
         def fail(self, *args, **kwargs):
             self.fail('this codepath should not have been taken')
@@ -420,7 +421,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         methodName = 'processEditVersion'
         cmd = 'testproject/processEditVersion'
         fields = {'id': -1, 'namespace': 'foo', 'name': '1', 'description': '',
-                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel'}
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel', 'platformLabel': 'conary.rpath.com@rpl:2-devel'}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductVersion', fail, cmd)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
@@ -538,19 +539,15 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
             self.called = True
         self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
 
         def fakeNewProject(*args, **kwargs):
             return self.newProject(client)
 
-        def fakeSetProductDefinitionForVersion(*args, **kwargs):
-            pass
-
         methodName = 'newProject'
         cmd = '/createProject'
-        fields = {'title': 'Test Project', 'hostname': 'test', 'domainname': 'test', 'blurb': '', 'appliance': True, 'namespace': 'rpl', 'shortname': 'test', 'version': '1', 'prodtype': 'Appliance'}
+        fields = {'title': 'Test Project', 'hostname': 'test', 'domainname': 'test', 'blurb': '', 'appliance': True, 'namespace': 'rpl', 'shortname': 'test', 'version': '1', 'prodtype': 'Appliance', 'platformLabel': 'conary.rpath.com@rpl:2-devel'}
         siteHandler, auth = self._setupSiteHandlerMockClientMethod('1newProject', fakeNewProject, cmd)
-        siteHandler.client.setProductDefinitionForVersion = \
-                fakeSetProductDefinitionForVersion
         context = {'auth': auth, 'cmd': cmd, 'client': siteHandler.client, 'fields': fields}
         func = siteHandler.handle(context)
         try:
