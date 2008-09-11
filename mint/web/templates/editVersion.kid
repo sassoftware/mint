@@ -277,9 +277,9 @@
                     class="mainformhorizontal">
                      <tr>
                         <th>
-                            <!--! version only required if creating new one -->
-                            <div py:if="not isNew">Major Version:</div>
-                            <em py:if="isNew and kwargs.has_key('linked')" class="required">Major Version:</em>
+                            <em py:strip="not isNew" class="required">
+                                Major Version:
+                            </em>
                         </th>
                         <td py:if="isNew">
                             <input type="text" autocomplete="off" name="name"
@@ -294,6 +294,27 @@
                             </p>
                         </td>
                         <td py:if="not isNew">${kwargs['name']}<input type="hidden" name="name" value="${kwargs['name']}" /></td>
+                    </tr>
+                    <tr py:if="availablePlatforms">
+                        <th><em class="required" py:strip="not isNew">Appliance Platform:</em></th>
+                        <td py:if="isNew">
+                            <select name="platformLabel">
+                                <option py:for="platformLabel, platformDesc in availablePlatforms" py:attrs="{'selected': (kwargs['platformLabel'] == platformLabel) and 'selected' or None}" value="${platformLabel}" py:content="platformDesc" />
+                            </select>
+                            <p class="help">Select a platform on which to base your appliance.</p>
+                        </td>
+                        <td py:if="not isNew">
+                            ${platformName} <a py:if="not kwargs.has_key('linked')" class="option" href="rebaseProductVersion?id=${id}">update</a>
+                            <p py:if="customPlatform">
+                                This product version is based upon a custom
+                                appliance platform.
+                                <span py:if="not acceptablePlatform">
+                                    ${cfg.productName} may have trouble building
+                                    images and/or packages using this unknown
+                                    appliance platform.
+                                </span>
+                            </p>
+                        </td>
                     </tr>
                     <tr>
                         <th>Major Version Description:</th>
@@ -357,19 +378,6 @@
                             </p>
                             <p>
                                 <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder:Image_Types" target="_blank">Read more about each image type</a>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr py:if="not isNew and not 'linked' in kwargs">
-                        <th>Update Appliance Platform:</th>
-                        <td>
-                            <input type="checkbox" name="updatePlatform" value="1" id="updatePlatformCheckbox" class="check field"/>
-                            <label for="updatePlatformCheckbox">Check this box to update to the latest appliance platform.</label>
-                            <p class="help">
-                            The appliance platform is locked to a specific version and will not change unless you update it.
-                            By checking this checkbox, the latest version of the appliance platform currently available will be
-                            used in all subsequent builds of the ${project.getNameForDisplay()} version
-                            ${formatProductVersion(versions, currentVersion)} appliance.
                             </p>
                         </td>
                     </tr>

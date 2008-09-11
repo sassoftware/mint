@@ -31,6 +31,7 @@ from mint import jobstatus
 from mint import maintenance
 from mint import mirror
 from mint import news
+from mint import persistentcache
 from mint import pkgindex
 from mint import profile
 from mint import projects
@@ -283,6 +284,17 @@ def getTables(db, cfg):
     d['databases'] = projects.Databases(db)
 
     return d
+
+class PlatformNameCache(persistentcache.PersistentCache):
+
+    def __init__(self, cacheFile, conarycfg):
+        persistentcache.PersistentCache.__init__(self, cacheFile)
+        self._cclient = conaryclient.ConaryClient(conarycfg)
+
+    def _refresh(self, key):
+        platDef = proddef.PlatformDefinition()
+        platDef.loadFromRepository(self._cclient, key)
+        return platDef.getPlatformName()
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -4660,9 +4672,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, ((str, unicode),))
-    def setProductDefinitionForVersion(self, versionId,
-            productDefinitionXMLString):
+    @typeCheck(int, ((str, unicode),), str)
+    def setProductDefinitionForVersion(self, versionId, productDefinitionXMLString,
+            rebaseToPlatformLabel):
         # XXX: Need exception handling here
         pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
         version = projects.ProductVersions(self, versionId)
@@ -4675,6 +4687,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectCfg['contact'] = self.auth.fullName or ''
         repos = self._getProjectRepo(project, pcfg=projectCfg)
         cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+        if rebaseToPlatformLabel:
+            pd.rebase(cclient, rebaseToPlatformLabel)
         pd.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
         return True
@@ -5673,10 +5687,37 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
         return res
 
+    def getAvailablePlatforms(self):
+        """
+        Returns a list of available platforms and their names (descriptions).
+        Any platform definitions that cannot be fetched will be skipped (and
+        an error message will be logged).
+        @rtype: C{list} of C{tuple}s. Each tuple is a pair; first element is
+           the platform label, the second element is the platform name.
+        """
+        availablePlatforms = []
+        for platformLabel in self.cfg.availablePlatforms:
+            try:
+                availablePlatforms.append((platformLabel,
+                    self.platformNameCache.get(platformLabel)))
+            except Exception, e:
+                print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (platformLabel, str(e))
+                sys.stderr.flush()
+        return availablePlatforms
+
+    def isPlatformAcceptable(self, platformLabel):
+        return (platformLabel in set(self.cfg.acceptablePlatforms + self.cfg.availablePlatforms))
+
+    def isPlatformAvailable(self, platformLabel):
+        return (platformLabel in self.cfg.availablePlatforms)
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
+        self.platformNameCache = PlatformNameCache(
+                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
+                helperfuncs.getBasicConaryConfiguration(self.cfg))
 
         global callLog
         if self.cfg.xmlrpcLogFile:

@@ -837,11 +837,13 @@ class MintClient:
         pdXMLString = self.server.getProductDefinitionForVersion(versionId)
         return proddef.ProductDefinition(fromStream=pdXMLString)
 
-    def setProductDefinitionForVersion(self, versionId, productDefinition):
+    def setProductDefinitionForVersion(self, versionId, productDefinition,
+            rebaseToPlatformLabel=None):
         sio = StringIO.StringIO()
         productDefinition.serialize(sio)
-        return self.server.setProductDefinitionForVersion(versionId,
-                sio.getvalue())
+        if not rebaseToPlatformLabel: rebaseToPlatformLabel = ''
+        return self.server.setProductDefinitionForVersion(versionId, sio.getvalue(),
+                rebaseToPlatformLabel)
 
     def editProductVersion(self, versionId, newDesc):
         return self.server.editProductVersion(versionId, newDesc)
@@ -895,6 +897,15 @@ class MintClient:
         for label in pkgs:
             ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
         return ret
+
+    def getAvailablePlatforms(self):
+        return self.server.getAvailablePlatforms()
+
+    def isPlatformAcceptable(self, platformLabel):
+        return self.server.isPlatformAcceptable(platformLabel)
+
+    def isPlatformAvailable(self, platformLabel):
+        return self.server.isPlatformAvailable(platformLabel)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

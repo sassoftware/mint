@@ -496,12 +496,21 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            platformLabel = availablePlatforms[0][0]
+        except IndexError:
+            platformLabel = ''
+
         return self._write("newProject", errors=[], 
+           availablePlatforms = availablePlatforms,
+           customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
                    'appliance': 'unknown', 
                    'prodtype' : 'Appliance', 
                    'namespace': self.cfg.namespace,
-                   'isPrivate': False})
+                   'isPrivate': False,
+                   'platformLabel': platformLabel})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -528,12 +537,13 @@ class SiteHandler(WebHandler):
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace='',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'off')
+               prodtype = '', version = '', commitEmail='', isPrivate = 'off',
+               platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, 
                       blurb, optlists, appliance, shortname, namespace, 
-                      prodtype, version, commitEmail, isPrivate):
+                      prodtype, version, commitEmail, isPrivate, platformLabel):
                     
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
@@ -587,16 +597,7 @@ class SiteHandler(WebHandler):
                 pd = helperfuncs.sanitizeProductDefinition(title,
                         blurb, hostname, domainname, shortname, version,
                         '', namespace)
-                ##### DELETE #####
-                # this value was hard coded for the june 23, 2008 release of rBO
-                # this code must be removed when a proper solution is
-                # implemented
-                project = self.client.getProject(projectId)
-                cCfg = project.getConaryConfig()
-                cClient = conaryclient.ConaryClient(cCfg)
-                pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
-                ##### END DELETE #####
-                self.client.setProductDefinitionForVersion(versionId, pd)
+                self.client.setProductDefinitionForVersion(versionId, pd, platformLabel)
 
             except projects.DuplicateProductVersion, e: 
                 self._addErrors(str(e))
@@ -608,6 +609,7 @@ class SiteHandler(WebHandler):
             # version.  Status will be updated after that.
             self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
+            availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
                       'hostname': hostname, 
                       'domainname': domainname, 
@@ -620,8 +622,10 @@ class SiteHandler(WebHandler):
                       'prodtype' : prodtype, 
                       'namespace' : namespace,
                       'version' : version,
-                      'isPrivate' : isPrivate}
-            return self._write("newProject", kwargs=kwargs)
+                      'isPrivate' : isPrivate,
+                      'platformLabel': platformLabel}
+            return self._write("newProject", availablePlatforms=availablePlatforms,
+                    kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
     def addMemberById(self, auth, userId, projectId, level):

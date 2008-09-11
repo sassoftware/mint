@@ -39,6 +39,7 @@ python_files =			\
 	mirror.py		\
 	news.py			\
 	packagecreator.py	\
+	persistentcache.py	\
 	pkgindex.py		\
 	pkgindexer.py		\
 	profile.py		\

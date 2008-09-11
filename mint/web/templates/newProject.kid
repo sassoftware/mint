@@ -107,7 +107,17 @@
                              </p>
                         </td>
                     </tr>
-
+                    <tr py:if="availablePlatforms">
+                        <th>
+                            <em class="required">Select Platform:</em>
+                        </th>
+                        <td>
+                            <select name="platformLabel">
+                                <option py:for="platformLabel, platformDesc in availablePlatforms" py:attrs="{'selected': (kwargs['platformLabel'] == platformLabel) and 'selected' or None}" value="${platformLabel}" py:content="platformDesc" />
+                            </select>
+                            <p class="help">Select a platform on which to base your appliance or component.</p>
+                        </td>
+                    </tr>
                     <tr>
                         <th>${projectText().title()} is Private:</th>
                         <td>

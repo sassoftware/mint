@@ -267,6 +267,10 @@ class MintConfig(ConfigFile):
     # package creator related settings
     packageCreatorURL       = None
 
+    # available platforms
+    availablePlatforms      = cfgtypes.CfgList(cfgtypes.CfgString)
+    acceptablePlatforms     = cfgtypes.CfgList(cfgtypes.CfgString)
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

@@ -1230,9 +1230,36 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         if self.project.external:
             raise ProductDefinitionVersionExternalNotSup();
         
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            # Assume that the first available platform is the default
+            kwargs['platformLabel'] = availablePlatforms[0][0]
+        except IndexError:
+            # Failing that, we don't have a platform label
+            kwargs['platformLabel'] = ''
+
+        platformName = None
+        customPlatform = ()
+        acceptablePlatform = True
+
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             pd = self.client.getProductDefinitionForVersion(id)
+            platformSourceTrove = pd.getPlatformSourceTrove()
+            if platformSourceTrove:
+                n,v,f = parseTroveSpec(platformSourceTrove)
+                vObj = versions.VersionFromString(v)
+                kwargs['platformLabel'] = str(vObj.trailingLabel())
+                for lbl, name in availablePlatforms:
+                    if lbl == kwargs['platformLabel']:
+                        platformName = name
+                        break
+                if not platformName:
+                    platformName = 'Custom appliance platform on %s' % kwargs['platformLabel']
+                    customPlatform = (kwargs['platformLabel'], platformName)
+                    acceptablePlatform = \
+                            self.client.isPlatformAcceptable(kwargs['platformLabel'])
+
             kwargs['namespace'] = pd.getConaryNamespace()
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
@@ -1247,15 +1274,17 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                 buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                 productDefinition = pd,
+                availablePlatforms = availablePlatforms,
+                acceptablePlatform = acceptablePlatform,
+                platformName = platformName,
+                customPlatform = customPlatform,
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
-    @boolFields(updatePlatform = False)
+    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel', platformLabel = '')
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, updatePlatform,
-            **kwargs):
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, platformLabel, **kwargs):
 
         isNew = (id == -1)
 
@@ -1288,17 +1317,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     namespace,
                     pd)
 
-        if (isNew or updatePlatform) and not self._getErrors():
-            label = None
-            if isNew:
-                label = 'conary.rpath.com@rpl:2-devel'
-            ##### DELETE #####
-            # this value was hard coded for the june 23, 2008 release of rBO
-            # this code must be removed when a proper solution is implemented
-            cCfg = self.project.getConaryConfig()
-            cClient = conaryclient.ConaryClient(cCfg)
-            pd.rebase(cClient, label)
-            ##### END DELETE #####
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1352,7 +1370,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             buildSettings = bTmpl.getDefaultDict()
             buildSettings.update(proposedBuildSettings)
 
-
             # only add this error once
             if not buildName and not warnedNoNameAlready:
                 self._addErrors("Missing name for build definition(s)")
@@ -1377,7 +1394,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             self._addErrors(str(ve))
 
         if not self._getErrors():
-            if id == -1:
+            if isNew:
                 try:
                     id = self.client.addProductVersion(self.project.id,
                             namespace, name, description)
@@ -1388,7 +1405,10 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
 
         if not self._getErrors():
             assert(id != -1)
-            self.client.setProductDefinitionForVersion(id, pd)
+            if isNew:
+                self.client.setProductDefinitionForVersion(id, pd, platformLabel)
+            else:
+                self.client.setProductDefinitionForVersion(id, pd)
 
             if kwargs.has_key('linked'):
                 # we got here from the "create a product menu" so output
@@ -1414,7 +1434,64 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                productDefinition = pd, kwargs = kwargs)
-            
+
+
+    @intFields(id = -1)
+    @requiresAuth
+    @ownerOnly
+    def rebaseProductVersion(self, auth, id):
+        productVersion = self.client.getProductVersion(id)
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            # Assume that the first available platform is the default
+            platformLabel = availablePlatforms[0][0]
+        except IndexError:
+            # Failing that, we don't have a platform label
+            platformLabel = ''
+
+        platformName = None
+        customPlatform = ()
+        acceptablePlatform = True
+        pd = self.client.getProductDefinitionForVersion(id)
+
+        platformSourceTrove = pd.getPlatformSourceTrove()
+        if platformSourceTrove:
+            n,v,f = parseTroveSpec(platformSourceTrove)
+            vObj = versions.VersionFromString(v)
+            platformLabel = str(vObj.trailingLabel())
+            for lbl, name in availablePlatforms:
+                if lbl == platformLabel:
+                    platformName = name
+                    break
+            if not platformName:
+                platformName = 'Custom appliance platform on %s' % platformLabel
+                customPlatform = (platformLabel, platformName)
+                acceptablePlatform = \
+                        self.client.isPlatformAcceptable(platformLabel)
+
+        return self._write("rebaseProductVersion",
+                id = id,
+                productName = self.project.name,
+                versionName = productVersion.get('name',''),
+                currentPlatformLabel = platformLabel,
+                customPlatform = customPlatform,
+                availablePlatforms = availablePlatforms)
+
+    @intFields(id = -1)
+    @strFields(platformLabel = '', action = 'Cancel')
+    @requiresAuth
+    @ownerOnly
+    def processRebaseProductVersion(self, auth, id, platformLabel, action):
+        if action == 'Cancel':
+            self._predirect()
+
+        pd = self.client.getProductDefinitionForVersion(id)
+        if self.client.setProductDefinitionForVersion(id, pd, platformLabel):
+            self._setInfo("Product version updated")
+        else:
+            self._addError("Problem updating product version")
+        self._predirect()
+
     def _productVersionAvaliableBuildTypes(self):
         """
         Get a list of the available build types for build defs
