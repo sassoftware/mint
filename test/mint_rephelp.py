@@ -545,12 +545,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
         self.db = self.mintServer.db
 
-        for dir in sys.path:
-            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
-            if os.path.isdir(thisdir):
-                self.archiveDir = thisdir
-                break
-
         # reset some caches
         hooks.repNameCache = {}
         hooks.domainNameCache = {}

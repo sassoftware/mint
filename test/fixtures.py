@@ -16,6 +16,7 @@ import pwd
 import StringIO
 
 from testrunner import testhelp
+from testrunner import resources
 
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
@@ -94,7 +95,7 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
-        cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
+        cfg.newsRssFeed = 'file://' + resources.mintArchivePath + '/news.xml'
         cfg.ec2AccountId = '012345678901'
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
@@ -658,9 +659,9 @@ class FixtureCache(object):
         testCfg.configLine("ec2LaunchUsers 000000002222")
         testCfg.configLine("ec2LaunchGroups group1")
         testCfg.configLine("ec2LaunchGroups group2")
-        util.copyfile(os.path.join(os.path.dirname(__file__), 'archive', 'ec2.key'),
+        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.key'),
                       os.path.join(testCfg.dataPath, 'config'))
-        util.copyfile(os.path.join(os.path.dirname(__file__), 'archive', 'ec2.pem'),
+        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.pem'),
                       os.path.join(testCfg.dataPath, 'config'))
 
     def __del__(self):
