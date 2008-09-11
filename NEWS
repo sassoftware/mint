@@ -66,6 +66,10 @@ Web Front End Changes
 * A new page will require the acceptance of the rPath terms of service prior 
   to initial setup. (RBL-3213)
 * Terms of service and privacy policy links now open in new tabs/windows.
+* Platform selection is now shown upon creating a new product (and its
+  initial version) or creating a new version. Additionally, rebasing and/or
+  changing a platform has been relocated to its own page, linked off of 
+  the edit product version page. (RBL-2985)
 
 Bug Fixes
 ---------------------
