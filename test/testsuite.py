@@ -24,7 +24,10 @@ def setup():
     from testrunner.decorators import context, tests
     from testrunner.testhelp import SkipTestException
     from testrunner.testhelp import TestCase
+    from testrunner import resources
     from mint_init import enforceBuiltin
+    conaryTestPath = os.environ['CONARY_TEST_PATH']
+    resources.archivePath = conaryTestPath + '/archive'
 
 def main(argv=None, individual=True):
     if argv is None:

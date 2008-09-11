@@ -59,7 +59,7 @@ def initialize():
     from testrunner import resources
 
     resources.testPath = testPath = testhelp.getTestPath()
-    resources.mintArchivePath = archivePath = testPath + '/' + "archive"
+    resources.mintArchivePath = archivePath = testPath + '/' + "mint_archive"
 
     # Set conary's archivePath as well
     conaryTestPath = os.environ['CONARY_TEST_PATH']
