@@ -11,6 +11,10 @@ import os.path
 
 EXCLUDED_PATHS = ['test', 'scripts']
 
+def isIndividual():
+    from testrunner import resources
+    return resources.cfg.isIndividual
+
 def setup():
     import mint_init
     # after having set up the necessary sys.path, load the modules
