@@ -76,7 +76,6 @@ def setupConfig(cfg):
 
 class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
     def __init__(self, *args, **kwargs):
-        resources.archivePath = testhelp.getTestPath() + "/" + 'archive'
         if testhelp._conaryDir is None:
             testhelp._conaryDir = os.getenv('CONARY_PATH')
         raatest.rAATest.__init__(self, *args, **kwargs)
