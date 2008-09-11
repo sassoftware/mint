@@ -584,3 +584,19 @@ def formatProductVersion(versions, currentVersion):
         ret = "%s" % ret[1]
     return ret
 
+def getBasicConaryConfiguration(mintCfg):
+    """ Return a basic conary client configuration. """
+
+    import os
+    from conary import conarycfg
+    from mint import config
+
+    ccfg = conarycfg.ConaryConfiguration()
+    conarycfgFile = os.path.join(mintCfg.dataPath, 'config', 'conaryrc')
+    if os.path.exists(conarycfgFile):
+        ccfg.read(conarycfgFile)
+    ccfg.dbPath = ':memory:'
+    ccfg.root   = ':memory:'
+    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy)
+    return ccfg
+
