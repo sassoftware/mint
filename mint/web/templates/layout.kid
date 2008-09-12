@@ -27,6 +27,14 @@ onload = "javascript:;"
                 var BaseUrl = '${cfg.basePath}';
                 var x86_64 = ${int(cfg.bootableX8664)};
                 var staticPath = "${cfg.staticPath}";
+
+                /* fade out info messages after 5s */
+                jQuery(document).ready(function() {
+                    jQuery('#info')
+                        .animate({'opacity': 1}, 5000)
+                        .fadeOut('slow');
+                });
+
             ]]>
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
