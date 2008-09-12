@@ -242,7 +242,6 @@ class MintApp(WebHandler):
             self.groupProject = None
 
         # Handle messages stashed in the session
-        self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', '')
         self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
         self.searchTerms = ''
@@ -282,7 +281,6 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
-            'inlineMime':       self.inlineMime,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,

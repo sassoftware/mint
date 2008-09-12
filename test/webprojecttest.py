@@ -78,7 +78,6 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.basePath = self.mintCfg.basePath
         projectHandler.searchType = None
         projectHandler.searchTerms = ''
-        projectHandler.inlineMime = None
         projectHandler.infoMsg = None
         projectHandler.errorMsgList = []
         projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
@@ -110,7 +109,6 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.basePath = self.mintCfg.basePath
         siteHandler.searchType = None
         siteHandler.searchTerms = ''
-        siteHandler.inlineMime = None
         siteHandler.infoMsg = None
         siteHandler.errorMsgList = []
         siteHandler.session = session()

@@ -96,19 +96,6 @@ onload = "javascript:;"
                 if 'errors' in locals():
                     errorMsgList = errors
             ?>
-            <div py:if="inlineMime">
-                <?python
-                    mime, mimeArgs = inlineMime
-                ?>
-                <frame src="${mime}?${':'.join([x[0] + '=' + x[1] for x in mimeArgs])}" name="inlineMime" id="inlineMime">
-                    <script type="text/javascript">
-                        <![CDATA[
-                            addLoadEvent(function() {
-                              window.location.replace(document.URL);});
-                        ]]>
-                    </script>
-                </frame>
-            </div>
             <div py:if="infoMsg" id="info" class="status" py:content="infoMsg" />
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
                 <p py:for="e in errorMsgList" py:content="e" />

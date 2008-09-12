@@ -212,12 +212,6 @@ class WebHandler(object):
     # NOTE: This requires a *real* persistent session to work properly.
     # Currently, rBO only doles out a real session if a user is logged in.
 
-    def _setInlineMime(self, src, **kwargs):
-        if (isinstance(self.session, SqlSession)):
-            inlineMime = (src, [x for x in kwargs.iteritems()])
-            self.session['inlineMime'] = inlineMime
-            self.session.save()
-
     def _setInfo(self, message):
         if (isinstance(self.session, SqlSession)):
             self.session['infoMsg'] = message
@@ -236,7 +230,7 @@ class WebHandler(object):
 
     def _clearAllMessages(self):
         if (isinstance(self.session, SqlSession)):
-            for key in ('infoMsg', 'errorMsgList', 'inlineMime'):
+            for key in ('infoMsg', 'errorMsgList'):
                 if self.session.has_key(key):
                     del self.session[key]
             self.session.save()
