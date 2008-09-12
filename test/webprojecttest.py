@@ -10,6 +10,7 @@ testsuite.setup()
 import os
 import re
 import shutil
+import types
 import copy
 
 import mint_rephelp
@@ -52,6 +53,12 @@ class session(dict):
 
 class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
     def _setupProjectHandler(self):
+
+        def _addErrors(self, msg):
+            if 'errorMsgList' not in self.session:
+                self.session['errorMsgList'] = []
+            self.session['errorMsgList'].append(msg)
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
@@ -78,10 +85,18 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
         projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
         projectHandler.latestRssNews = {}
+        projectHandler._addErrors = types.MethodType(_addErrors,
+            projectHandler, projectHandler.__class__)
 
         return projectHandler
 
     def _setupSiteHandler(self):
+
+        def _addErrors(self, msg):
+            if 'errorMsgList' not in self.session:
+                self.session['errorMsgList'] = []
+            self.session['errorMsgList'].append(msg)
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         siteHandler = site.SiteHandler()
         siteHandler.client = client
@@ -100,6 +115,8 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.errorMsgList = []
         siteHandler.session = session()
         siteHandler.latestRssNews = {}
+        siteHandler._addErrors = types.MethodType(_addErrors,
+            siteHandler, siteHandler.__class__)
 
         return siteHandler,  siteHandler.auth
 

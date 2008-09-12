@@ -1403,8 +1403,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             else:
                 self.client.editProductVersion(id, description)
 
-        if not self._getErrors():
-            assert(id != -1)
+        if id != -1 and not self._getErrors():
             if isNew:
                 self.client.setProductDefinitionForVersion(id, pd, platformLabel)
             else:
