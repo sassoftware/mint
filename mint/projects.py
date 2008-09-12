@@ -796,8 +796,6 @@ class RepositoryDatabase:
             r = None
 
         if r:
-            print >> sys.stderr, "using alternate database:", r[0], r[1]
-            sys.stderr.flush()
             return r[0], r[1]
         else:
             name = self.translate(name)
