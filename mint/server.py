@@ -3143,11 +3143,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         sortedList = sorted(buildTypes) 
 
         # make image-less the first one for UI display
-        if (sortedList.index(buildtypes.IMAGELESS)):
-            sortedList.remove(buildtypes.IMAGELESS)
-            sortedList.reverse()
-            sortedList.append(buildtypes.IMAGELESS)
-            sortedList.reverse()
+        try:
+            sortedList.insert(0,
+                    sortedList.pop(sortedList.index(buildtypes.IMAGELESS)))
+        except ValueError:
+            pass # do nothing if buildtypes.IMAGELESS isn't in the list
 
         return sortedList
 
