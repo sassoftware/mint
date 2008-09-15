@@ -193,21 +193,7 @@ class MintApp(WebHandler):
         if hostname not in server.reservedHosts \
             and hostname != self.cfg.hostName \
             and self.cfg.configured:
-            try:
-                # Use an authorized client here so private projects work (RBL-3148)
-                authClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
-                project = authClient.getProjectByHostname(hostname)
-            except ItemNotFound:
-                # project does not exist, redirect to front page
-                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
-                raise HttpNotFound
-            else:
-                # coerce "external" projects to the externalSiteHost, or
-                # internal projects to projectSiteHost.
-                if project.external: # "external" projects are endorsed by us, so use siteHost
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
-                else:
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
 
