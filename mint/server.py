@@ -1411,7 +1411,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # published builds will be made public
             for publishedAMIId in published:
                 ec2Wrap.resetLaunchPermissions(publishedAMIId)
-                ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+                ec2Wrap.addPublicLaunchPermission(publishedAMIId)
 
             # only project developers and owners can see unpublished builds
             for unpublishedAMIId in unpublished:
