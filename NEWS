@@ -26,6 +26,9 @@ Internal Changes
   team member's permissions has been corrected (RBL-3146).
 * A bug that caused the wrong versions of anaconda templates to be specified to
   the build system resulting in failed builds has been fixed.  (RBL-2763)
+* Requests to http://<producthostname>.<rbuilderdomainname>/ now properly
+  redirect to the product homepage even when the product is marked as
+  private (RBL-3148).
 
 Web Front End Changes
 ---------------------

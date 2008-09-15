@@ -194,7 +194,9 @@ class MintApp(WebHandler):
             and hostname != self.cfg.hostName \
             and self.cfg.configured:
             try:
-                project = self.client.getProjectByHostname(hostname)
+                # Use an authorized client here so private projects work (RBL-3148)
+                authClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+                project = authClient.getProjectByHostname(hostname)
             except ItemNotFound:
                 # project does not exist, redirect to front page
                 self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
