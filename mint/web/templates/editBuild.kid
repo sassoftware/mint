@@ -54,48 +54,63 @@ allowNone = ['anaconda-custom', 'media-template']
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${projectsPane()}
-                ${builderPane()}
-            </div>
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${projectsPane()}
+                    ${builderPane()}
+                </div>
 
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-                <h2>${buildId and "Edit" or "Create"} Image</h2>
+                <div class="page-title">${buildId and "Edit" or "Create"} Image</div>
 
                 <form method="post" action="saveBuild" id="mainForm">
 
-                    <div class="formgroupTitle">Image Information</div>
+                    <h2>Image Information</h2>
                     <div class="formgroup">
-                        <label for="relname">Name</label>
-                        <input id="relname" name="name" type="text" value="${name}" /><div class="clearleft">&nbsp;</div>
-
-                        <label for="reldesc">Image Notes (optional)</label>
-                        <textarea id="reldesc" name="desc" type="text" py:content="desc" /><div class="clearleft">&nbsp;</div>
-
+                        <table class="formgrouptable">
+                        <tr>
+                            <td class="form-label">Name: </td>
+                            <td width="100%"><input id="relname" name="name" type="text" value="${name}" /></td>
+                        </tr>
+                        <tr>
+                            <td class="form-label">Image&nbsp; Notes:<br/><span class="gray">(optional)</span></td>
+                            <td><textarea id="reldesc" name="desc" type="text" py:content="desc" /></td>
+                        </tr>
+                        </table>
                     </div>
 
-                    <div class="formgroupTitle">Image Type</div>
+                    <h2>Image Type</h2>
                     <div class="formgroup">
+                        <table class="formgrouptable">
                         <div py:strip="True" py:for="key in visibleTypes">
-                            <input class="reversed" id="buildtype_${key}"
-                                name="buildtype" value="${key}" 
-                                onclick="javascript:onBuildTypeChange('formgroup_${key}');"
-                                type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
-                            <label class="reversed" for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}
-                                <span py:if="buildTypeExtra.has_key(key)" class="clearleft" style="font-size: smaller;"><br />${buildTypeExtra[key]}</span></label>
-                            <div class="clearleft">&nbsp;</div>
+                            <tr>
+                              <td>
+                                <input id="buildtype_${key}" type="radio" name="buildtype" value="${key}" 
+                                    onclick="javascript:onBuildTypeChange('formgroup_${key}');"
+                                    py:attrs="{'checked': (key == buildType) and 'checked' or None}" /></td>
+                              <td class="form-label-right">
+                                <label for="buildtype_${key}" id="buildtype_${key}_label">${typeNames[key]}
+                                    <div class="label-note" py:if="buildTypeExtra.has_key(key)">
+                                    ${buildTypeExtra[key]}</div></label></td>
+                            </tr>
                         </div>
+                        </table>
                     </div>
 
-                    <div class="formgroupTitle" style="cursor: pointer;" onclick="javascript:toggle_display('advanced_settings');">
-                        <img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />Advanced Options
+                    <div class="expandableFormGroupTitle" onclick="javascript:toggle_display('advanced_settings');">
+                        <img id="advanced_settings_expander" class="noborder" 
+                            src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />Advanced Options
                     </div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">
-                            <div class="formsubgroupcontainer" id="formgroup_${key}" py:attrs="{'style' : key != buildType and 'display : none;' or None}">
+                          <div id="formgroup_${key}" py:attrs="{'style' : key != buildType and 'display : none;' or None}">
                             <div class="formsubgroupTitle">${heading}</div>
                             <div class="formsubgroup">
+                                <table class="formgrouptable">
                                 <div py:strip="True" py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
                                     <?python
                                         if name in dataDict:
@@ -104,44 +119,55 @@ allowNone = ['anaconda-custom', 'media-template']
                                             dataValue = dataRow[1]
                                     ?>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
-                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None,
-                                                                           'disabled' : key != buildType and 'disabled' or None}" 
-                                            type="checkbox" name="${name}" value="1" id="${name}"/>
-                                        <label class="reversed" for="${name}">${dataRow[2]}</label>
+                                      <tr>
+                                        <td class="checkbox">
+                                            <input type="checkbox" py:attrs="{'checked': 'checked' and dataValue or None,
+                                                'disabled' : key != buildType and 'disabled' or None}" 
+                                                name="${name}" value="1" id="${name}"/></td>
+                                        <td class="form-label-right"><label for="${name}">${dataRow[2]}</label></td>
+                                      </tr>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
-                                        <label for="${name}">${dataRow[2]}</label>
+                                      <tr>
+                                        <td colspan="2">
+                                        <span class="form-label-text">${dataRow[2]}:</span><br />
                                         <input type="text" name="${name}" id="${name}" value="${dataValue}"
-                                            py:attrs="{'disabled' : key != buildType and 'disabled' or None}"/>
+                                            py:attrs="{'disabled' : key != buildType and 'disabled' or None}"/></td>
+                                      </tr>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
-                                        <label for="${name}">${dataRow[2]}</label>
+                                      <tr>
+                                        <td colspan="2">
+                                        ${dataRow[2]}:
                                         <select name="${name}" id="${name}" py:attrs="{'disabled' : key != buildType and 'disabled' or None}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())"
                                                 py:content="prompt" value="${val}"
                                                 py:attrs="{'selected' : val == dataValue and 'selected' or None}"/>
-                                        </select>
+                                        </select></td>
+                                      </tr>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
-                                        <label for="${name}_${key}">${dataRow[2]}</label>
+                                      <tr>
+                                        <td colspan="2">
+                                        <span class="form-label-text">Package for <span class="dark-blue">${dataRow[2]}</span> in this build:</span>
                                         <div id="${name}_${key}">
-                                            <span py:if="not buildId or not dataValue">Defaults to latest on branch</span>
+                                            <span py:if="not buildId or not dataValue">Use latest on branch</span>
                                             <span py:if="buildId and dataValue">${shortTroveSpec(dataValue)}</span>
-                                            (<a onclick="new TrovePicker(${project.id},
+                                            &nbsp;( <a class="dark-blue" style="cursor:pointer;" onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
-                                                '${name}', '${name}_${key}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
+                                                '${name}', '${name}_${key}', '${cfg.staticPath}', ${int(name in allowNone)});">change )</a>
                                             <input py:if="buildId and dataValue" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataValue}" />
-                                        </div>
+                                        </div></td>
+                                      </tr>
                                     </div>
-                                    <div class="clearleft">&nbsp;</div>
                                 </div>
+                                </table>
                             </div>
                             </div>
                         </div>
                     </div>
-                    <br/>
 
-                    <div class="formgroupTitle">Image Contents<span id="baton"></span></div>
+                    <h2>Image Contents<span id="baton"></span></h2>
                     <div class="formgroup">
                         <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
                         <div py:if="buildId" style="margin: 4px;">
@@ -176,6 +202,10 @@ allowNone = ['anaconda-custom', 'media-template']
                     </p>
                     <input type="hidden" name="buildId" value="${buildId and buildId or 0}" />
                 </form>
+            </div><br class="clear"/>
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

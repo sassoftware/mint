@@ -56,6 +56,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertEquals(page.body,
                 '<fault code="400">Cloud credentials are not set in rBuilder</fault>')
 
+    def testEnumerateNoVwsImages(self):
+        # we don't need special remote credentials to see rBuilder images
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        raise testsuite.SkipTestException('We need a real cloud or a way to mock')
+        page = self.fetch('/catalog/clouds/vws/cloudid/images?_method=GET')
+        self.assertEquals(page.headers['content-type'], 'application/xml')
+        self.assertEquals(page.body, "<?xml version='1.0' encoding='UTF-8'?>\n<images/>\n")
+
 
 if __name__ == "__main__":
     testsuite.main()

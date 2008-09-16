@@ -89,7 +89,8 @@ class WebHandler(object):
             location = location[1:]
 
         hostname = self.req.headers_in.get('host', self.req.hostname)
-        if ':' not in hostname and httpPort != 80:
+        if ':' in hostname and httpPort != 80:
+            hostname = hostname.split(':')[0]
             hostname = '%s:%i' % \
                    (hostname, httpPort)
 
@@ -211,31 +212,25 @@ class WebHandler(object):
     # NOTE: This requires a *real* persistent session to work properly.
     # Currently, rBO only doles out a real session if a user is logged in.
 
-    def _setInlineMime(self, src, **kwargs):
-        inlineMime = (src, [x for x in kwargs.iteritems()])
-        self.session['inlineMime'] = inlineMime
-        if (isinstance(self.session, SqlSession)):
-            self.session.save()
-
     def _setInfo(self, message):
-        self.session['infoMsg'] = message
-        self.infoMsg = message
         if (isinstance(self.session, SqlSession)):
+            self.session['infoMsg'] = message
+            self.infoMsg = message
             self.session.save()
 
     def _getErrors(self):
         return self.session.setdefault('errorMsgList', [])
 
     def _addErrors(self, message):
-        errorMsgList = self._getErrors()
-        errorMsgList.append(message)
-        self.session['errorMsgList'] = errorMsgList
         if (isinstance(self.session, SqlSession)):
+            errorMsgList = self._getErrors()
+            errorMsgList.append(message)
+            self.session['errorMsgList'] = errorMsgList
             self.session.save()
 
     def _clearAllMessages(self):
         if (isinstance(self.session, SqlSession)):
-            for key in ('infoMsg', 'errorMsgList', 'inlineMime'):
+            for key in ('infoMsg', 'errorMsgList'):
                 if self.session.has_key(key):
                     del self.session[key]
             self.session.save()

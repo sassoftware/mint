@@ -5,8 +5,6 @@
 #
 import os
 import shutil
-import mysqlharness
-import pgsqlharness
 import pwd
 import rephelp
 import socket
@@ -45,6 +43,9 @@ from conary.lib import util
 import mcp_helper
 from mcp import queue
 from mcp_helper import MCPTestMixin
+
+from testrunner.testhelp import SkipTestException, findPorts
+from testrunner import resources
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -161,7 +162,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
-        self.securePort = testsuite.findPorts(num = 1)[0]
+        self.securePort = findPorts(num = 1)[0]
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
                                       serverDir, reposDir, conaryPath, repMap,
                                       requireSigs, authCheck = authCheck, entCheck = entCheck, serverIdx = serverIdx)
@@ -370,6 +371,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.reposLog = False
 
         cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
+        cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
 
         f = open(cfg.conaryRcFile, 'w')
         f.close()
@@ -377,6 +379,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
 
 class MintServerCache(rephelp.ServerCache):
+    serverType = 'mint'
+
     def getServerClass(self, envname, useSSL):
         name = "mint." + MINT_DOMAIN
         server = None
@@ -391,7 +395,7 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 rephelpCleanup = rephelp._cleanUp
 def _cleanUp():
-    _servers.stopAllServers(clean=not testsuite.isIndividual())
+    _servers.stopAllServers(clean=not resources.cfg.isIndividual)
     rephelpCleanup()
 
 rephelp._cleanUp = _cleanUp
@@ -409,11 +413,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         return _reposDir
 
     def openMintRepository(self, serverIdx = 0, requireSigs = False, 
-                           serverName = None):
+                           serverName = None, serverCache=None):
+        if serverCache is None:
+            serverCache = self.mintServers
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
-                requireSigs, serverName, serverCache=self.mintServers)
+                requireSigs, serverName, serverCache=serverCache)
 
-        if serverIdx == 0:
+        if serverIdx == 0 and serverCache is self.mintServers:
             self.port = self.mintServers.getServer(serverIdx).port
             self.mintCfg = self.mintServers.getServer(serverIdx).mintCfg
             if self.mintCfg.SSL:
@@ -522,25 +528,22 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def setUp(self):
         self.mintServers = _servers
+
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
+        if not os.path.exists(self.reposDir):
+            util.mkdirChain(self.reposDir)
         self.imagePath = os.path.join(self.tmpDir, "images")
         if not os.path.exists(self.imagePath):
             os.mkdir(self.imagePath)
         self.openMintRepository()
 
-        util.mkdirChain(os.path.join(self.reposDir, "tmp"))
+        util.mkdirChain(os.path.join(self.reposDir + '-mint', "tmp"))
 
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.mintServer.mcpClient = self.mcpClient
 
         self.db = self.mintServer.db
-
-        for dir in sys.path:
-            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
-            if os.path.isdir(thisdir):
-                self.archiveDir = thisdir
-                break
 
         # reset some caches
         hooks.repNameCache = {}
@@ -647,7 +650,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
             label['authType'], label['username'], label['password'], label['entitlement'])
 
     def writeIsoGenCfg(self):
-        raise testsuite.SkipTestExeption('this test references deleted code')
+        raise SkipTestExeption('this test references deleted code')
         cfg = jobserver.IsoGenConfig()
 
         cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
@@ -847,7 +850,7 @@ class FakeRequest(object):
 # Use to instantiate an XML-RPC server
 class StubXMLRPCServerController:
     def __init__(self):
-        self.port = testsuite.findPorts(num = 1)[0]
+        self.port = findPorts(num = 1)[0]
         self.childPid = os.fork()
         if self.childPid > 0:
             rephelp.tryConnect('127.0.0.1', self.port)

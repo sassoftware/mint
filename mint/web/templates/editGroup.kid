@@ -22,73 +22,80 @@ from mint.grouptrove import KNOWN_COMPONENTS
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-            </div>
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                
+                <div id="right" class="side">
+                    ${resourcePane()}
+                </div>
 
-            <div id="middle">
-            <p py:if="message" class="message" py:content="message"/>
-            <h1>Edit Group</h1>
-            <form method="post" action="editGroup2?id=${curGroupTrove.id}">
-                <table class="groupTroveItems">
-                    <tr class="editGroupHeader">
-                        <td colspan="4">
-                            <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
-                        </td>
-                    </tr>
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                    <div class="page-title">Edit Group</div>
+                    <p py:if="message" class="message" py:content="message"/>
+                  
+                    <h2>Group Details</h2>
+                    <form method="post" action="editGroup2?id=${curGroupTrove.id}">
+                    <table class="groupTroveItems">
                     <tr id="editGTDropdown">
                         <td colspan="4">
-                            <table>
-                                <tr>
-                                    <td>Version</td>
-                                    <td colspan="3"><input type="text" value="${curGroupTrove.upstreamVersion}" name="version" style="width: 100%;" /></td>
-                                </tr>
-                                <tr>
-                                    <td>Description</td>
-                                    <td colspan="3"><textarea style="width: 100%;" rows="4" name="description" py:content="curGroupTrove.description"/></td>
-                                </tr>
-                                <tr style="margin-bottom: 6px;">
-                                    <td colspan="4">
-                                        <div style="float:right">
-                                            <a onclick="javascript:toggle_display('componentGTDropdown');" href="#">Manage Components
-                                                <img  id="componentGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr id="componentGTDropdown" style="display:none;">
-                                    <td colspan="2">
-                                        <table style="padding: 0.75em; background: #eeeeee;">
-                                            <tr>
-                                                <td colspan="2">
-                                                    Remove the following components
-                                                </td>
-                                            </tr>
-                                            <?python
-                                                removedComponents = curGroupTrove.listRemovedComponents()
-                                            ?>
-
-                                            <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
-                                                <td>
-                                                    <input type="checkbox" class="check" name="components" value="${component}" id="component_${component}"
-                                                        py:attrs="{'checked': component in removedComponents and 'checked' or None}"
-                                                        py:content="component" />
-                                                </td>
-                                                <td><label for="component_${component}">${desc}</label></td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
+                            <table class="mainformhorizontal">
+                            <tr>
+                                <td class="form-label">Name:</td>
+                                <td class="form-label" width="100%">${curGroupTrove.recipeName}</td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">Version:</td>
+                                <td><input type="text" value="${curGroupTrove.upstreamVersion}" name="version" /></td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">Description:</td>
+                                <td><textarea rows="4" name="description" py:content="curGroupTrove.description"/></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                <div>
+                                    <a onclick="javascript:toggle_display('componentGTDropdown');" href="#">Manage Components
+                                        <img  id="componentGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />
+                                    </a>
+                                </div>
+                                </td>
+                            </tr>
+                            <tr id="componentGTDropdown" style="display:none;">
+                                <td colspan="2">
+                                    <table class="table-image-components">
+                                    <tr>
+                                        <td colspan="2">
+                                            Remove the following components:<br/>
+                                        </td>
+                                    </tr>
+                                    <?python
+                                        removedComponents = curGroupTrove.listRemovedComponents()
+                                    ?>
+    
+                                    <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
+                                        <td>
+                                            <input type="checkbox" class="check" name="components" value="${component}" id="component_${component}"
+                                                py:attrs="{'checked': component in removedComponents and 'checked' or None}"
+                                                py:content="component" />
+                                        </td>
+                                        <td class="label-offset"><label for="component_${component}">${desc}</label></td>
+                                    </tr>
+                                    </table>
+                                </td>
+                            </tr>
                             </table>
                         </td>
                     </tr>
-                    <tr class="formgroupTitle" style="font-size: smaller;">
+                    <tr class="table-header-row">
                         <td>Trove</td>
                         <td>Version</td>
                         <td>Lock Version</td>
                         <td>Delete</td>
                     </tr>
-
+    
                     <tr py:for="t in curGroupTrove.listTroves()">
                         <td>${t['trvName']}</td>
                         <td py:if="t['versionLock']">
@@ -101,36 +108,42 @@ from mint.grouptrove import KNOWN_COMPONENTS
                                 Latest
                             </a>
                         </td>
-
+    
                         <td><input type="checkbox" name="${t['groupTroveItemId']}_versionLock" py:attrs="{'checked': t['versionLock'] and 'checked' or None}"/></td>
                         <td><a href="deleteGroupTrove?id=${curGroupTrove.getId()};troveId=${t['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                     </tr>
-                </table>
-                <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
-
-                <input name="action" type="submit" value="Save and Cook" style="font-weight: bold;" />
-                <input name="action" type="submit" value="Save Changes Only" />
-                <input name="action" type="submit" value="Delete This Group" />
-            </form>
-
-            <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
-            <p>You have a group. Now add packages to it from any
-            ${cfg.productName} ${projectText().lower()}. To add a package, search or browse for
-            the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
-            link.</p>
-
-            <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
-            <p>"Cooking" the group assembles your chosen packages, resolves any
-            library dependencies, and creates a binary representation of the group
-            that is committed into your ${projectText().lower()}'s repository.</p>
-
-            <h3 style="color:#ff7001;">Step 3: Create An Image</h3>
-            <p>Once your group has cooked successfully, create a
-            <a href="builds"><b>New Image</b></a> by selecting the name of
-            the group you just cooked. Select a version, architecture, and a
-            handful of other options, and you will have an installable
-            CD/DVD image in minutes!
-            </p>
+                    </table>
+                    <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
+    
+                    <input name="action" type="submit" value="Save and Cook" style="font-weight: bold;" />
+                    <input name="action" type="submit" value="Save Changes Only" />
+                    <input name="action" type="submit" value="Delete This Group" />
+                </form>
+                    <p></p>
+                    <h2>Step 1: Add Packages To Your Group</h2>
+                    <p>You have a group. Now add packages to it from any
+                    ${cfg.productName} ${projectText().lower()}. To add a package, search or browse for
+                    the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
+                    link.</p>
+        
+                    <h2>Step 2: Cook Your Group</h2>
+                    <p>"Cooking" the group assembles your chosen packages, resolves any
+                    library dependencies, and creates a binary representation of the group
+                    that is committed into your ${projectText().lower()}'s repository.</p>
+        
+                    <h2>Step 3: Create An Image</h2>
+                    <p>Once your group has cooked successfully, create a
+                    <a href="builds"><b>New Image</b></a> by selecting the name of
+                    the group you just cooked. Select a version, architecture, and a
+                    handful of other options, and you will have an installable
+                    CD/DVD image in minutes!
+                    </p>
+                
+                    
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

@@ -17,7 +17,7 @@ from pcreator import factorydata
 import factory_test.testSetup
 factory_test.testSetup.setup()
 
-import conary_test.resources
+import testrunner.resources
 
 from factory_test.factorydatatest import basicXmlDef
 
@@ -34,7 +34,6 @@ import pcreatortests.packagecreatoruitest
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -44,11 +43,18 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
                 server=self.getProjectServerHostname())
         self.assertEquals(page.code, 302, "This call should redirect since there are no versions setup")
         client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
-        client.addProductVersion(projectId, self.mintCfg.namespace, "version2", "Fluff description")
+
+        #Without the current version set, it should redirect
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        self.assertEquals(page.code, 302, "This call should redirect since there is no current version set")
+
+        #set the current version
+        page = self.fetch('/project/testproject/setProductVersion?versionId=1&redirect_to=/foo',
+                server=self.getProjectServerHostname())
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
         assert 'version1' in page.body
-        assert 'version2' in page.body
         assert 'value="Upload"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
@@ -57,9 +63,18 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         #Make sure it actually did what we asked
         #Get the tempPath
         tmppath = os.path.join(self.mintCfg.dataPath, 'tmp', 'rb-pc-upload-%s' % sessionHandle)
+
+        #set the current version to the other
+        client.addProductVersion(projectId, self.mintCfg.namespace+'tag', "version2", "Fluff description")
+        page = self.fetch('/project/testproject/setProductVersion?versionId=2&redirect_to=/foo',
+                server=self.getProjectServerHostname())
+        page = self.fetch('/project/testproject/newPackage',
+                server=self.getProjectServerHostname())
+        assert 'version2' in page.body
+        assert self.mintCfg.namespace+'tag' in page.body
+
         assert os.path.isdir(tmppath)
 
-    @testsuite.context('more_cowbell')
     def testPackageCreatorIframe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -102,7 +117,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     def _setupInterviewEnvironment(self, mockMethod):
         fields = {
             'uploadDirectoryHandle': 'foobarbaz',
-            'versionId': '1',
         }
         cmd = 'testproject/getPackageFactories'
 
@@ -149,7 +163,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         # This method only tests that the page was rendered as expected with
         # the proper UI elements
         self.factorystream = open(
-                 os.path.join(conary_test.resources.factoryRecipePath,
+                 os.path.join(testrunner.resources.factoryRecipePath,
                               'factory-stub', 'data-definition.xml'))
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):
@@ -369,12 +383,37 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         page = func(auth=auth, **fields)
         self.assertEquals("A big long string", page)
 
+    def testRebaseProductVersion(self):
+        self.called = False
+        def fakeRebase(pd, cclient, label):
+            self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
+            self.called = True
+        self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
+        methodName = 'processRebaseProductVersion'
+
+        def getProductDefinition(self, *args, **kwargs):
+            return proddef.ProductDefinition()
+
+        cmd = 'testproject/processRebaseProductVersion'
+        fields = {'id': 1, 'platformLabel': 'conary.rpath.com@rpl:2-devel',
+                'action': 'Update Appliance Platform'}
+        projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductDefinitionForVersion', getProductDefinition, cmd)
+        context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
+        func = projectHandler.handle(context)
+        try:
+            page = func(auth = auth, **fields)
+        except mint.web.webhandler.HttpMoved:
+            pass
+        self.assertEquals(self.called, True)
+
     def testEditVersionHardcodedValues(self):
         self.called = False
         def fakeRebase(pd, cclient, label):
             self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
             self.called = True
         self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
 
         def fail(self, *args, **kwargs):
             self.fail('this codepath should not have been taken')
@@ -382,7 +421,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         methodName = 'processEditVersion'
         cmd = 'testproject/processEditVersion'
         fields = {'id': -1, 'namespace': 'foo', 'name': '1', 'description': '',
-                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel'}
+                'sessionHandle': 'foobarbaz', 'pdstages-1-name': 'devel', 'pdstages-1-labelSuffix': '-devel', 'platformLabel': 'conary.rpath.com@rpl:2-devel'}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getProductVersion', fail, cmd)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
@@ -391,11 +430,12 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         except mint.web.webhandler.HttpMoved:
             pass
 
+        self.assertEquals(projectHandler._getCurrentProductVersion(), 2)  #This should be set to the new version
         client = projectHandler.client
         projectId = projectHandler.projectId
         self.assertEquals(self.called, True)
-        self.assertEquals(client.getProductVersionListForProduct(projectId),
-                [[1, 1, 'foo', '1', '']])
+        #The _setupProjectHandlerMockClientMethod created product version is versionId 1
+        self.failUnless([2, 1, 'foo', '1', ''] in  client.getProductVersionListForProduct(projectId))
 
     def testEditVersionMissingValues(self):
         methodName = 'processEditVersion'
@@ -443,30 +483,31 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        projectHandler._setCurrentProductVersion(-1)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
 
-        h3eadings, uploadLines = self._extractPackageListLines(page)
+        headings, uploadLines = self._extractPackageListLines(page)
 
         self.assertEquals(len(uploadLines), 2)
-        self.assertEquals(len(h3eadings), 1)
-        self.assertEquals(h3eadings[0], '<h3>Product Version vs1 (ns1)</h3>')
+        self.assertEquals(len(headings), 1)
+        self.failUnless('Version vs1 (ns1)' in headings[0])
 
     def _extractPackageListLines(self, page):
         #Extract all lines containing "newUpload"
         strio = StringIO.StringIO(page)
         uploadLines = []
-        h3eadings = []
+        headings = []
         while True:
             line = strio.readline()
             if not line: break
             line = line.strip()
             if 'newUpload' in line:
                 uploadLines.append(line)
-            if '<h3>' in line:
-                h3eadings.append(line)
-        return h3eadings, uploadLines
+            if 'class="package-version-header"' in line:
+                headings.append(line)
+        return headings, uploadLines
 
     def testListPackagesMeaty(self):
         fields = {}
@@ -474,11 +515,12 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
+        projectHandler._setCurrentProductVersion(-1) #unset the current session so we see all of them
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
 
-        h3eadings, uploadLines = self._extractPackageListLines(page)
+        headings, uploadLines = self._extractPackageListLines(page)
 
         self.assertEquals(len(uploadLines), 4)
         assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
@@ -486,10 +528,10 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns1"' in uploadLines[2]
         assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns2:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns2"' in uploadLines[3]
 
-        self.assertEquals( len(h3eadings), 3)
-        assert 'Product Version vs1 (ns1)' in h3eadings[0]
-        assert 'Product Version vs2 (ns1)' in h3eadings[1]
-        assert 'Product Version vs2 (ns2)' in h3eadings[2]
+        self.assertEquals( len(headings), 3)
+        assert 'Version vs1 (ns1)' in headings[0]
+        assert 'Version vs2 (ns1)' in headings[1]
+        assert 'Version vs2 (ns2)' in headings[2]
 
     def testCreateProject(self):
         self.called = False
@@ -497,19 +539,15 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
             self.assertEquals(label, 'conary.rpath.com@rpl:2-devel')
             self.called = True
         self.mock(proddef.ProductDefinition, 'rebase', fakeRebase)
+        self.mock(proddef.ProductDefinition, 'saveToRepository', lambda *x: None)
 
         def fakeNewProject(*args, **kwargs):
             return self.newProject(client)
 
-        def fakeSetProductDefinitionForVersion(*args, **kwargs):
-            pass
-
         methodName = 'newProject'
         cmd = '/createProject'
-        fields = {'title': 'Test Project', 'hostname': 'test', 'domainname': 'test', 'blurb': '', 'appliance': True, 'namespace': 'rpl', 'shortname': 'test', 'version': '1', 'prodtype': 'Appliance'}
+        fields = {'title': 'Test Project', 'hostname': 'test', 'domainname': 'test', 'blurb': '', 'appliance': True, 'namespace': 'rpl', 'shortname': 'test', 'version': '1', 'prodtype': 'Appliance', 'platformLabel': 'conary.rpath.com@rpl:2-devel'}
         siteHandler, auth = self._setupSiteHandlerMockClientMethod('1newProject', fakeNewProject, cmd)
-        siteHandler.client.setProductDefinitionForVersion = \
-                fakeSetProductDefinitionForVersion
         context = {'auth': auth, 'cmd': cmd, 'client': siteHandler.client, 'fields': fields}
         func = siteHandler.handle(context)
         try:

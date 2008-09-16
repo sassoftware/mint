@@ -18,6 +18,7 @@ start() {
     /sbin/service stompserver start
     /sbin/service mcp start
     /sbin/service jobmaster start
+    /sbin/service httpd reload
 }
 
 stop() {

@@ -4,10 +4,8 @@
 #
 import copy
 import inspect
-import testhelp
+from testrunner import testhelp
 import tempfile
-import mysqlharness
-import pgsqlharness
 import random
 import string
 import subprocess
@@ -16,6 +14,10 @@ import sys
 import time
 import pwd
 import StringIO
+
+from testrunner import testhelp
+from testrunner import resources
+
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
 
@@ -32,6 +34,7 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 from conary.dbstore import sqlerrors
+import sqlharness
 
 import mcp_helper
 from mcp import queue
@@ -92,7 +95,7 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
-        cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
+        cfg.newsRssFeed = 'file://' + resources.mintArchivePath + '/news.xml'
         cfg.ec2AccountId = '012345678901'
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
@@ -644,11 +647,26 @@ class FixtureCache(object):
                       'buildId6' : buildId6,
                       }
 
+    def getAMIConfig(self, testCfg):
+        # AMI testing
+        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+        testCfg.ec2AccountId   = '000000000000'
+        testCfg.ec2S3Bucket    = 'extracrispychicken'
+        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath, 'config', 'ec2.pem')
+        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath, 'config', 'ec2.key')
+        testCfg.configLine("ec2LaunchUsers 000000001111")
+        testCfg.configLine("ec2LaunchUsers 000000002222")
+        testCfg.configLine("ec2LaunchGroups group1")
+        testCfg.configLine("ec2LaunchGroups group2")
+        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.key'),
+                      os.path.join(testCfg.dataPath, 'config'))
+        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.pem'),
+                      os.path.join(testCfg.dataPath, 'config'))
 
     def __del__(self):
         for f in self._fixtures.values():
             util.rmtree(f[0].dataPath)
-
 
 class SqliteFixtureCache(FixtureCache):
 
@@ -678,23 +696,7 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
-        # AMI testing
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
-        testCfg.ec2AccountId   = '000000000000'
-        testCfg.ec2S3Bucket    = 'extracrispychicken'
-        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.pem')
-        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.key')
-        testCfg.configLine("ec2LaunchUsers 000000001111")
-        testCfg.configLine("ec2LaunchUsers 000000002222")
-        testCfg.configLine("ec2LaunchGroups group1")
-        testCfg.configLine("ec2LaunchGroups group2")
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
+        self.getAMIConfig(testCfg)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
@@ -708,79 +710,53 @@ class SqliteFixtureCache(FixtureCache):
         except AttributeError:
             pass
 
-
-class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
-    keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
-    db = None
-
+class SQLServerFixtureCache(FixtureCache):
+    harness = None
     def __init__(self):
-        mysqlharness.MySqlHarness.__init__(self)
-        self.start()
-
+        self.harness = sqlharness.getHarness(self.driver)
     def _randomName(self):
         return "".join(random.sample(string.lowercase, 5))
+    def _getConnectStringForDb(self, dbName = "%s"):
+        return os.path.join(self.harness.conn, dbName)
 
-    def _getConnectStringForDb(self, dbName = None):
-        if dbName:
-            return "root@localhost.localdomain:%d/%s" % (self.port, dbName)
-        else:
-            return "root@localhost.localdomain:%d/%%s" % self.port
 
-    def _connect(self):
-        if not self.db:
-            self.db = dbstore.connect(self._getConnectStringForDb('mysql'), 'mysql')
-
-    def _newDb(self, name):
-        self._connect()
-        cu = self.db.cursor()
-        try:
-            cu.execute("DROP DATABASE %s" % name)
-        except:
-            pass
-        cu.execute("CREATE DATABASE %s" % name)
-        self.db.commit()
-
-    def _dropDb(self, name):
-        self._connect()
-        cu = self.db.cursor()
-        cu.execute("DROP DATABASE %s" % name)
-        self.db.commit()
+class MySqlFixtureCache(SQLServerFixtureCache):
+    keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
+    driver = "mysql"
 
     def _dupDb(self, srcDb, destDb):
-        self._newDb(destDb)
-        output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.dir, srcDb]
-        input = ["mysql", "-u", "root", "-S", "%s/socket" % self.dir, destDb]
+        self.harness.getDB(destDb)
+        output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.harness.path, srcDb]
+        input = ["mysql", "-u", "root", "-S", "%s/socket" % self.harness.path, destDb]
         dump = subprocess.Popen(output, stdout = subprocess.PIPE)
         load = subprocess.Popen(input, stdin = dump.stdout)
         load.communicate()
-
+        
     def newMintCfg(self, name):
-        cfg = FixtureCache.newMintCfg(self, name)
+        cfg = super(self.__class__,self).newMintCfg(name)
         dbName = "mf%s" % name
         self.keepDbs.append(dbName.lower())
-        self._newDb(dbName)
+        db = self.harness.getDB(dbName)
         cfg.dbDriver = cfg.reposDBDriver = "mysql"
         cfg.dbPath = self._getConnectStringForDb(dbName)
         cfg.reposDBPath = self._getConnectStringForDb()
         from mint import schema
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        schema.loadSchema(db, cfg)
-        db.close()
+        schema.loadSchema(db.connect(), cfg)
+        db.stop()
         return cfg
 
     def loadFixture(self, name):
-        ret = FixtureCache.loadFixture(self, name)
-
+        ret = super(self.__class__, self).loadFixture(name)
         # save repos tables off for later
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("SHOW DATABASES")
-        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-            if '_' in table and not table.startswith('cr'):
-                newName = "cr%s%s" % (name, table)
-                self._dupDb(table, newName)
-                self._dropDb(table)
-                self.keepDbs.append(newName.lower())
+        for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            if '_' in dbname and not dbname.startswith('cr'):
+                newName = ("cr%s%s" % (name, dbname)).lower()
+                self._dupDb(dbname, newName)
+                self.harness.dropDB(dbname)
+                self.keepDbs.append(newName)
         return ret
 
     def load(self, name):
@@ -796,41 +772,26 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg = copy.deepcopy(cfg)
         testCfg.dataPath = testDataPath
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s'))
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
+                                              os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
-        # AMI testing
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
-        testCfg.ec2AccountId   = '000000000000'
-        testCfg.ec2S3Bucket    = 'extracrispychicken'
-        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.pem')
-        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.key')
-        testCfg.configLine("ec2LaunchUsers 000000001111")
-        testCfg.configLine("ec2LaunchUsers 000000002222")
-        testCfg.configLine("ec2LaunchGroups group1")
-        testCfg.configLine("ec2LaunchGroups group2")
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
+        self.getAMIConfig(testCfg)
 
         # restore the mint db into a unique copy
-        fixtureMintDbName = "mf%s" % name
-        fixtureCopyMintDbName = "cmf_%s%s" % (name, randomDbName)
+        fixtureMintDbName = ("mf%s" % name).lower()
+        fixtureCopyMintDbName = ("cmf_%s%s" % (name, randomDbName)).lower()
         self._dupDb(fixtureMintDbName, fixtureCopyMintDbName)
         testCfg.dbPath = self._getConnectStringForDb(fixtureCopyMintDbName)
 
         # restore the repos dbs
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("SHOW DATABASES LIKE 'cr%s%%'" % name.lower())
-        for table in [x[0] for x in cu.fetchall()]:
-            fixtureCopyReposDbName = table[2+len(name):]
-            self._dupDb(table, fixtureCopyReposDbName)
+        for dbname in [x[0] for x in cu.fetchall()]:
+            fixtureCopyReposDbName = dbname[2+len(name):]
+            self._dupDb(dbname, fixtureCopyReposDbName)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
@@ -839,75 +800,27 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         return testCfg, data
 
     def delRepos(self):
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("SHOW DATABASES")
-        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-           if '_' in table and not table.startswith('cr'):
-               self._dropDb(table)
+        for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+           if '_' in dbname and not dbname.startswith('cr'):
+               self.harness.dropDB(dbname)
 
     def __del__(self):
-        self.stop()
+        self.harness.stop()
         for f in self._fixtures.values():
             util.rmtree(f[0].dataPath)
 
-class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
+class PostgreSqlFixtureCache(SQLServerFixtureCache):
     keepDbs = ['postgres', 'testdb', 'template1', 'template0']
-    db = None
-
-    def __init__(self):
-        pgsqlharness.PgSqlHarness.__init__(self)
-        self.start()
-        os.system('createlang -U %s -p %s plpgsql template1' % (self.user, self.port))
-
-    def _randomName(self):
-        return "".join(random.sample(string.lowercase, 5))
-
-    def _getConnectStringForDb(self, dbName = None):
-        if dbName:
-            return "%s@localhost.localdomain:%d/%s" % (self.user, self.port, dbName.lower())
-        else:
-            return "%s@localhost.localdomain:%d/%%s" % (self.user, self.port)
-
-    def _connect(self):
-        if not self.db:
-            self.db = dbstore.connect(self._getConnectStringForDb('postgres'), 'postgresql')
-
-    def _newDb(self, name):
-        self._connect()
-        cu = self.db.cursor()
-        try:
-            self._dropDb(name)
-        except:
-            pass
-        cu.execute("CREATE DATABASE %s" % name)
-        from mint import schema
-        schema.loadSchema(self.db)
-
-    def _dropDb(self, name):
-        cu = self.db.cursor()
-        for x in range(20):
-            cu.execute("SELECT COUNT(*) FROM pg_database WHERE datname=?", name)
-            # If this database exists, get the pids of all open connections to
-            # it and kill them.
-            if (cu.fetchone()[0]):
-                try:
-                    cu.execute("SELECT procpid FROM pg_stat_activity WHERE datname=?",
-                                name)
-                    for x in cu.fetchall():
-                        os.system('pg_ctl kill TERM %s 2>/dev/null' % x[0])
-                    cu.execute("DROP DATABASE %s" % name)
-                except:
-                    # Unable to drop database, wait and try again
-                    time.sleep(0.1)
-            else:
-                break
+    driver = "postgresql"
 
     def _dupDb(self, srcDb, destDb):
-        self._newDb(destDb)
-        output = ["pg_dump", "-U", self.user, '-c', '-O', 
-                  '-p', str(self.port), '-d', srcDb]
-        input = ["psql", '-p', str(self.port), "-U", self.user, destDb.lower()]
+        self.harness.getDB(destDb)
+        output = ["pg_dump", "-U", self.harness.user, '-c', '-O', 
+                  '-p', str(self.harness.port), '-d', srcDb]
+        input = ["psql", '-p', str(self.harness.port), "-U", self.harness.user, destDb.lower()]
         dump = subprocess.Popen(output, stdout = subprocess.PIPE)
         fd = open('/dev/null', 'w')
         load = subprocess.Popen(input, stdin = dump.stdout, stdout=fd, 
@@ -916,34 +829,27 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         fd.close()
 
     def newMintCfg(self, name):
-        cfg = FixtureCache.newMintCfg(self, name)
+        cfg = super(self.__class__, self).newMintCfg(name)
         cfg.reposDBDriver = 'postgresql'
         cfg.dbDriver = 'sqlite'
         cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
         cfg.reposDBPath = self._getConnectStringForDb()
-
+        db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+        from mint import schema
+        schema.loadSchema(db, cfg)
         return cfg
 
     def loadFixture(self, name):
-        ret = FixtureCache.loadFixture(self, name)
-
+        ret = super(self.__class__, self).loadFixture(name)
         # save repos tables off for later
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("SELECT datname FROM pg_database")
-        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-            if '_' in table and not table.startswith('cr'):
-                newName = "cr%s%s" % (name, table)
-                self._dupDb(table, newName)
-                #db2 = dbstore.connect(self._getConnectStringForDb(table), 'postgresql')
-                self._dropDb(table)
-                #db2.loadSchema()
-                #cu2 = db2.cursor()
-                #for t in db2.tempTables:
-                 #   cu.execute("DROP TABLE %s" % (t,))
-                #for t in db2.tables:
-                 #   cu.execute("DROP TABLE %s CASCADE" % (t,))
-                #db2.close()
+        for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            if '_' in dbname and not dbname.startswith('cr'):
+                newName = "cr%s%s" % (name, dbname)
+                self._dupDb(dbname, newName)
+                self.harness.dropDB(dbname)
                 self.keepDbs.append(newName.lower())
         return ret
 
@@ -961,57 +867,38 @@ class PostgreSqlFixtureCache(FixtureCache, pgsqlharness.PgSqlHarness):
         testCfg.dataPath = testDataPath
         testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
+                                              os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
-        # AMI testing
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
-        testCfg.ec2AccountId   = '000000000000'
-        testCfg.ec2S3Bucket    = 'extracrispychicken'
-        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.pem')
-        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
-                'config', 'ec2.key')
-        testCfg.configLine("ec2LaunchUsers 000000001111")
-        testCfg.configLine("ec2LaunchUsers 000000002222")
-        testCfg.configLine("ec2LaunchGroups group1")
-        testCfg.configLine("ec2LaunchGroups group2")
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.key'), os.path.join(testCfg.dataPath, 'config'))
-        util.copyfile(os.path.join(os.path.dirname(__file__),
-            'archive', 'ec2.pem'), os.path.join(testCfg.dataPath, 'config'))
+        self.getAMIConfig(testCfg)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
         f.close()
 
         # restore the repos dbs
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("""SELECT datname FROM pg_database 
                       WHERE datname LIKE 'cr%s%%'""" % name.lower())
-        for table in [x[0] for x in cu.fetchall()]:
-            fixtureCopyReposDbName = table[2+len(name):]
-            self._dupDb(table, fixtureCopyReposDbName)
-
-        f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
-        testCfg.display(out=f)
-        f.close()
+        for dbname in [x[0] for x in cu.fetchall()]:
+            fixtureCopyReposDbName = dbname[2+len(name):]
+            self._dupDb(dbname, fixtureCopyReposDbName)
 
         return testCfg, data
 
     def delRepos(self):
-        self._connect()
-        cu = self.db.cursor()
+        db = self.harness.getRootDB()
+        cu = db.cursor()
         cu.execute("SELECT datname FROM pg_database")
-        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-           if '_' in table and not table.startswith('cr'):
-               self._dropDb(table)
+        for dbname in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+           if '_' in dbname and not dbname.startswith('cr'):
+               self.harness.dropDB(dbname)
 
     def __del__(self):
-        self.stop()
+        self.harness.stop()
         for f in self._fixtures.values():
             util.rmtree(f[0].dataPath)
 
@@ -1035,10 +922,11 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
            fixture data (may be empty).
         """
 
+        # reset the cached db connection
         self.cfg, fixtureData = fixtureCache.load(name)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        server.dbConnection = db # reset the cached db connection
-
+        # this is so fugly it makes me wanna cry --gafton
+        server.dbConnection = db
         return db, fixtureData
 
     def getAdminClient(self):
@@ -1144,6 +1032,9 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
+        if server.dbConnection:
+            server.dbConnection.close()
+        server.dbConnection = None
         testhelp.TestCase.tearDown(self)
         MCPTestMixin.tearDown(self)
         try:

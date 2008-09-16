@@ -238,7 +238,7 @@ def setupPCBackendCall(func):
 
 class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
     @setupPCBackendCall
-    def uploadData(self, sessionHandle, name, filePath, mimeType):
+    def uploadData(self, sessionHandle, name, filePath, mimeType, arches = []):
         try:
             currentFiles = self.server._server._getSessionValue(sessionHandle, 'currentFiles')
         except errors.InvalidSessionHandle:
@@ -247,13 +247,14 @@ class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
         fileType = len(currentFiles) and FILETYPE_UPLOADED or FILETYPE_PRIMARY
 
         name = self.server._server._osIndependentBasename(name)
-        currentFiles[name] = (filePath, fileType, mimeType)
+        archSet = set()
+        for flv in [deps.parseFlavor(x) for x in arches]:
+            for archClass in [x.name for x in flv.iterDepsByClass( \
+                    deps.dependencyClasses[deps.DEP_CLASS_IS])]:
+                archSet.add(archClass)
+
+        currentFiles[name] = (filePath, fileType, mimeType, list(archSet))
         self.server._server._storeSessionValue(sessionHandle, 'currentFiles', currentFiles)
-        if fileType == FILETYPE_PRIMARY:
-            self.server._server._storeSessionValue(sessionHandle, 'filePath', filePath)
-            self.server._server._writeMetaFile(sessionHandle, name, mimeType)
-
-
 
 def getPackageCreatorClient(mintCfg, authToken):
     auth = {'user': authToken[0], 'passwd': authToken[1]}

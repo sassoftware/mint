@@ -22,7 +22,7 @@ from mint.mint_error import *
 from rpath_common.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
-CLIENT_VERSIONS = [8]
+CLIENT_VERSIONS = [6, 7, 8]
 VERSION_STRING = "RBUILDER_CLIENT:%d" % CLIENT_VERSIONS[-1]
 
 class MintClient:
@@ -133,7 +133,7 @@ class MintClient:
         @param userId: database id of the requested user
         @rtype: list of L{mint.projects.Project}
         """
-        return [(projects.Project(self.server, x[0]), x[1]) for x in self.server.getProjectIdsByMember(userId)]
+        return [(projects.Project(self.server, x[0]['projectId'], initialData=x[0]), x[1], x[2]) for x in self.server.getProjectDataByMember(userId)]
 
     def getUser(self, userId):
         """
@@ -430,6 +430,26 @@ class MintClient:
         '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
         return self.server.getPackageCreatorPackages(projectId)
 
+    def startApplianceCreatorSession(self, projectId, versionId,
+            rebuild):
+        """See L{mint.server.startApplianceCreatorSession}"""
+        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild)
+
+    def makeApplianceTrove(self, sessionHandle):
+        return self.server.makeApplianceTrove(sessionHandle)
+
+    def addApplianceTrove(self, sessionHandle, troveSpec):
+        return self.server.addApplianceTrove(sessionHandle, troveSpec)
+
+    def addApplianceTroves(self, sessionHandle, troveList):
+        return self.server.addApplianceTroves(sessionHandle, troveList)
+
+    def setApplianceTroves(self, sessionHandle, troveList):
+        return self.server.setApplianceTroves(sessionHandle, troveList)
+
+    def listApplianceTroves(self, projectId, sessionHandle):
+        return self.server.listApplianceTroves(projectId, sessionHandle)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId
@@ -529,42 +549,10 @@ class MintClient:
         """
         Start a new image generation job.
         @param buildId: the build id which describes the image to be created.
-        @return: an object representing the new job
-        @rtype: L{mint.jobs.Job}
+        @return: the unique identifier of the job
+        @rtype: C{str}
         """
         return self.server.startImageJob(buildId)
-
-    def getJob(self, jobId):
-        """
-        Retrieve a L{jobs.Job} object by job id.
-        @param jobId: the database id of the requested job.
-        @type jobId: int
-        @returns: an object representing the requested job.
-        @rtype: L{jobs.Job}
-        """
-        raise NotImplementedError
-        return jobs.Job(self.server, jobId)
-
-    def listActiveJobs(self, filter):
-        """List the jobs in the job queue.
-        @param filter: If True it will only show running or waiting jobs.
-          If False it will show all jobs for past 24 hours.
-        @return: list of jobIds"""
-        return self.server.listActiveJobs(filter)
-
-    def startNextJob(self, archTypes, jobTypes, jobServerVersion):
-        jobId = self.server.startNextJob(archTypes, jobTypes, jobServerVersion)
-        if jobId:
-            return self.getJob(jobId)
-        return None
-
-    def getJobs(self):
-        """
-        Iterates through all jobs.
-        @returns: list jobs found
-        @rtype: list of L{jobs.Job}s
-        """
-        return [self.getJob(x) for x in self.server.getJobIds()]
 
     def addDownloadHit(self, urlId, ip):
         return self.server.addDownloadHit(urlId, ip)
@@ -755,29 +743,6 @@ class MintClient:
     def delRemappedRepository(self, fromName):
         return self.server.delRemappedRepository(fromName)
 
-    def getUseItIcons(self):
-        return self.server.getUseItIcons()
-
-    def deleteUseItIcon(self, itemId):
-        return self.server.deleteUseItIcon(itemId)
-
-    def addUseItIcon(self, itemId, name, link):
-        return self.server.addUseItIcon(itemId, name, link)
-
-    def getCurrentSpotlight(self):
-        return self.server.getCurrentSpotlight()
-
-    def getSpotlightAll(self):
-        return self.server.getSpotlightAll()
-
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                         endDate):
-         return self.server.addSpotlightItem(title, text, link, logo,
-                                             showArchive, startDate, endDate)
-
-    def deleteSpotlightItem(self, itemId):
-        return self.server.deleteSpotlightItem(itemId)
-
     def addFrontPageSelection(self, name, link, rank):
         return self.server.addFrontPageSelection(name, link, rank)
 
@@ -872,11 +837,13 @@ class MintClient:
         pdXMLString = self.server.getProductDefinitionForVersion(versionId)
         return proddef.ProductDefinition(fromStream=pdXMLString)
 
-    def setProductDefinitionForVersion(self, versionId, productDefinition):
+    def setProductDefinitionForVersion(self, versionId, productDefinition,
+            rebaseToPlatformLabel=None):
         sio = StringIO.StringIO()
         productDefinition.serialize(sio)
-        return self.server.setProductDefinitionForVersion(versionId,
-                sio.getvalue())
+        if not rebaseToPlatformLabel: rebaseToPlatformLabel = ''
+        return self.server.setProductDefinitionForVersion(versionId, sio.getvalue(),
+                rebaseToPlatformLabel)
 
     def editProductVersion(self, versionId, newDesc):
         return self.server.editProductVersion(versionId, newDesc)
@@ -918,6 +885,28 @@ class MintClient:
     def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
         return self.server.removeAllEC2LaunchPermissions(userId,
                                                       awsAccountNumber)
+
+    def getAllVwsBuilds(self):
+        return self.server.getAllVwsBuilds()
+
+    def getAvailablePackages(self, sessionHandle):
+        from conary import versions as conaryver
+        from conary.deps import deps as conarydeps
+        pkgs = self.server.getAvailablePackages(sessionHandle)
+        ret = []
+        for label in pkgs:
+            ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
+        return ret
+
+    def getAvailablePlatforms(self):
+        return self.server.getAvailablePlatforms()
+
+    def isPlatformAcceptable(self, platformLabel):
+        return self.server.isPlatformAcceptable(platformLabel)
+
+    def isPlatformAvailable(self, platformLabel):
+        return self.server.isPlatformAvailable(platformLabel)
+
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

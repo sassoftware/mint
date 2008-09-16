@@ -11,9 +11,20 @@
         <title>${formatTitle('Password Reset')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Your password has been reset.</h2>
-            <p>An email with a new password has been sent to <strong>${email}</strong>.</p>
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Password Reset</div>
+          
+                <p>An email with a new password has been sent to <strong>${email}</strong>.</p>
+            </div>
+        
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

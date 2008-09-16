@@ -142,6 +142,15 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.setCommitEmail("commit@email.com")
         project.refresh()
         self.failUnlessEqual(project.commitEmail, "commit@email.com")
+        
+    @fixtures.fixture("Full")
+    def testEditProjectNamespace(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        project.setNamespace("spacemonkey")
+        project.refresh()
+
+        assert(project.getNamespace() == "spacemonkey")
 
     @fixtures.fixture("Full")
     def testGetProjects(self, db, data):
@@ -245,8 +254,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testProdTypeAppliance(self, db, data):
-        if not self.cfg.rBuilderOnline:
-            raise testsuite.SkipTestException("test skipped...needs group template creation mocked out to work")
 
         client = self.getClient("owner")
         projectId = client.newProject("Quux", 'footoo', 'localhost', 
@@ -364,7 +371,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient.getProject(data['projectId'])
 
         self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
-        self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
+
+        # This no longer raises ItemNotFound because normal users can browse
+        # private products they are a member of.
+        watcherClient.getProject(data['projectId'])
+
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
                           "foo.%s" % MINT_PROJECT_DOMAIN)
         self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
@@ -406,11 +417,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
                           data['projectId'], data['owner'])
         self.assertRaises(ItemNotFound, nobodyClient.server.onlyOwner,
                           data['projectId'], data['owner'])
-        self.assertRaises(ItemNotFound,
-                          watcherClient.server.delMember, data['projectId'],
-                          data['user'], False)
 
-        ownerClient.server.getUserLevel(data['user'], data['projectId'])
+        # This no longer raises ItemNotFound, a user can be deleted from a
+        # private product they are a member of.
+        watcherClient.server.delMember(data['projectId'], data['user'], False)
+
+        self.assertRaises(ItemNotFound, ownerClient.server.getUserLevel, data['user'], 
+                          data['projectId'])
 
         adminClient.unhideProject(data['projectId'])
 

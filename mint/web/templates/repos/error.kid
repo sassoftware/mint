@@ -13,12 +13,26 @@
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()}
+                    ${projectResourcesMenu()}
             </div>
-            <div id="middle">
-                <h2>Error</h2>
-                <pre class="error">${error}</pre>
-                <p>Please go back and try again.</p>
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                </div>
+    
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">Error</div>
+                    <pre class="error">${error}</pre>
+                    <p>Please go back and try again.</p>
+                </div>
+                <br class="clear" />
+                <img src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

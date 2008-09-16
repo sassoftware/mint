@@ -17,7 +17,7 @@ from mint.config import MintConfig
 import fixtures
 from conary.lib import util
 
-from conary_test import resources
+from testrunner import resources
 
 import mock
 import sys

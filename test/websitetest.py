@@ -25,7 +25,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_HOST, FQDN
 from conary import versions
 from conary.lib import util
 
-from conary_test import resources
+from testrunner import resources
 
 from mint_rephelp import FakeRequest
 

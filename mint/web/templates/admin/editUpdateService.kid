@@ -15,13 +15,14 @@
         <title py:if="not isNew">${formatTitle('Edit Update Service')}</title>
     </head>
     <body>
+    <div class="admin-page">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
-        <div id="spanright">
+        <div id="admin-spanright">
             <form action="${cfg.basePath}admin/processEditUpdateService" method="post">
                 <div py:strip="True" py:if="isNew">
-                <h2>Add Update Service</h2>
+                <div class="page-title-no-project">Add Update Service</div>
                 <p>Fill in the form below to set up an rPath Appliance
                    Platform Update Service.</p>
                 <p>Note: the target Update Service must be online and
@@ -70,12 +71,15 @@
                         <p class="help">The above username and password must match an administrator's account on the target Update Service.</p></td>
                     </tr>
                 </table>
+                <br />
                 <p>
                     <input id="submitButton" type="submit" name="action" value="Submit" />
                     <input type="submit" name="action" value="Cancel" />
                 </p>
+                <br />
                 <input type="hidden" name="id" value="${id}" />
             </form>
         </div>
+    </div>
     </body>
 </html>

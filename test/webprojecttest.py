@@ -10,6 +10,7 @@ testsuite.setup()
 import os
 import re
 import shutil
+import types
 import copy
 
 import mint_rephelp
@@ -46,8 +47,18 @@ class rogueReq(object):
         self.headers_out = {}
         self.uri = ''
 
+class session(dict):
+    def save(self):
+        pass
+
 class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
     def _setupProjectHandler(self):
+
+        def _addErrors(self, msg):
+            if 'errorMsgList' not in self.session:
+                self.session['errorMsgList'] = []
+            self.session['errorMsgList'].append(msg)
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
@@ -56,7 +67,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
         projectHandler.client = client
-        projectHandler.session = {}
+        projectHandler.session = session()
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
         projectHandler.auth = users.Authorization(\
@@ -67,13 +78,27 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.basePath = self.mintCfg.basePath
         projectHandler.searchType = None
         projectHandler.searchTerms = ''
-        projectHandler.inlineMime = None
         projectHandler.infoMsg = None
         projectHandler.errorMsgList = []
+        projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
+        projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
+        projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
+        projectHandler.latestRssNews = {}
+        projectHandler.toUrl = self.mintCfg.basePath
+        projectHandler.groupTrove = None
+        projectHandler.membershipReqsList = None
+        projectHandler._addErrors = types.MethodType(_addErrors,
+            projectHandler, projectHandler.__class__)
 
         return projectHandler
 
     def _setupSiteHandler(self):
+
+        def _addErrors(self, msg):
+            if 'errorMsgList' not in self.session:
+                self.session['errorMsgList'] = []
+            self.session['errorMsgList'].append(msg)
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         siteHandler = site.SiteHandler()
         siteHandler.client = client
@@ -87,10 +112,13 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.basePath = self.mintCfg.basePath
         siteHandler.searchType = None
         siteHandler.searchTerms = ''
-        siteHandler.inlineMime = None
         siteHandler.infoMsg = None
         siteHandler.errorMsgList = []
-        siteHandler.session = {}
+        siteHandler.session = session()
+        siteHandler.latestRssNews = {}
+        siteHandler.membershipReqsList = None
+        siteHandler._addErrors = types.MethodType(_addErrors,
+            siteHandler, siteHandler.__class__)
 
         return siteHandler,  siteHandler.auth
 
@@ -465,7 +493,59 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'This is a fledgling %s'%pText in page.body
+        assert 'fledgling' in page.body
+
+    def testProjectPageVersionSelectorAnonymous(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'Version: none available' in page.body
+
+
+        versionId = client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'Version: none available' not in page.body
+        assert 'Version:' in page.body
+        assert 'Not Selected' in page.body # We can't currently select versions as anonymous
+        assert 'id="versionSelectorForm"' not in page.body
+
+    def _projectPageVersionSelector(self, level):
+        client, ownerId = self.quickMintUser('testowner', 'testpass')
+        userclient, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.addMemberById(ownerId, userlevels.OWNER)
+        project.addMemberById(userId, level)
+        self.webLogin('testuser', 'testpass')
+
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'Version: none available' in page.body
+
+        versionId = client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
+        self.fetch('/project/testproject/setProductVersion?versionId=%d&redirect_to=/foo' % versionId,
+                server=self.getProjectServerHostname())
+        page = self.fetchWithRedirect('/project/testproject',
+                                      server=self.getProjectServerHostname())
+        assert 'Version: none available' not in page.body
+        assert 'Version:' in page.body
+        assert 'Not Selected' not in page.body
+        assert 'id="versionSelectorForm"' in page.body
+        assert '<option selected="selected" value="%d">' % versionId in page.body
+
+    def testProjectPageVersionSelectorDeveloper(self):
+        self._projectPageVersionSelector(userlevels.DEVELOPER)
+
+    def testProjectPageVersionSelectorOwner(self):
+        self._projectPageVersionSelector(userlevels.OWNER)
+
+    def testProjectPageVersionSelectorUser(self):
+        self._projectPageVersionSelector(userlevels.USER)
 
     def testProjectPageManageNotOwner(self):
         pText = helperfuncs.getProjectText().lower()
@@ -530,7 +610,7 @@ class WebProjectTest(WebProjectBaseTest):
         projectHandler = project.ProjectHandler()
         projectHandler.project = client.getProject(projectId)
         projectHandler.userLevel = userlevels.OWNER
-        projectHandler.session = {}
+        projectHandler.session = session()
         projectHandler.client = client
         projectHandler.cfg = self.mintCfg
         projectHandler.req = rogueReq()
@@ -583,7 +663,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
         self.ph = project.ProjectHandler()
-        self.ph.session = {}
+        self.ph.session = session()
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved

@@ -24,6 +24,7 @@ python_files =			\
 	data.py			\
 	database.py		\
 	ec2.py			\
+	fileupload.py		\
 	flavors.py		\
 	grouptrove.py		\
 	helperfuncs.py		\
@@ -38,6 +39,7 @@ python_files =			\
 	mirror.py		\
 	news.py			\
 	packagecreator.py	\
+	persistentcache.py	\
 	pkgindex.py		\
 	pkgindexer.py		\
 	profile.py		\
@@ -54,10 +56,8 @@ python_files =			\
 	session.py		\
 	sessiondb.py		\
 	shimclient.py		\
-	spotlight.py		\
 	stats.py		\
 	urltypes.py		\
-	useit.py		\
 	userlevels.py		\
 	userlisting.py		\
 	users.py		\

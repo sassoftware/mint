@@ -75,28 +75,21 @@ class SiteHandler(WebHandler):
         popularProjects = self.client.getPopularProjects()
         topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
-        spotlightData = self.client.getCurrentSpotlight()
         publishedReleases = self.client.getPublishedReleaseList()
-        data = self.client.getUseItIcons()
-        if data:
-            if len(data) < 4:
-                table1Data = data
-                table2Data = False
-            elif len(data) == 4:
-                table1Data = data[:2]
-                table2Data = data[2:]
-            else:
-                table1Data = data[:3]
-                table2Data = data[3:]
+
+        #insert marketing block
+        frontPageBlockFile = self.cfg.frontPageBlock
+        if os.path.exists(frontPageBlockFile) and os.access(frontPageBlockFile, os.R_OK):
+            f = open(frontPageBlockFile, "r")
+            frontPageBlock = f.read()
         else:
-            table1Data = False
-            table2Data = False
+            frontPageBlock = ""
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
             popularProjects=popularProjects, selectionData = selectionData,
-            topProjects = topProjects, spotlightData = spotlightData,
-            publishedReleases = publishedReleases, table1Data = table1Data,
-            table2Data = table2Data)
+            topProjects = topProjects,
+            publishedReleases = publishedReleases,
+            frontPageBlock = frontPageBlock)
 
     @strFields(user = '', password = '')
     def pwCheck(self, auth, user, password):
@@ -104,32 +97,6 @@ class SiteHandler(WebHandler):
         if not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off':
             ret = str(bool(self.client.pwCheck(user, password))).lower()
         return """<auth valid="%s" />\n""" % ret
-
-    @intFields(pageId=1)
-    def applianceSpotlight(self, pageId, *args, **kwargs):
-        spotlightData = self.client.getSpotlightAll()
-        if spotlightData:
-            data=[x for x in spotlightData if time.time() > x['endDate']]
-            pageCount = len(data)/self.cfg.bannersPerPage
-            if len(data)%self.cfg.bannersPerPage:
-                pageCount += 1
-            if pageId < pageCount:
-                showNext = True
-            else:
-                showNext = False
-            if pageId != 1:
-                showPrev = True
-            else:
-                showPrev = False
-            data = data[(pageId-1)*self.cfg.bannersPerPage:(pageId-1)*\
-                   self.cfg.bannersPerPage + self.cfg.bannersPerPage]
-        else:
-            data = False
-            showNext = False
-            showPrev = False
-            pageCount = 0
-        return self._write("applianceSpotlight", data=data, pageCount=pageCount,
-                           showNext=showNext, showPrev=showPrev, pageId=pageId)
 
     @redirectHttps
     def register(self, auth):
@@ -268,15 +235,16 @@ class SiteHandler(WebHandler):
                     firstTimer = False
                 else:
                     firstTimer = True
-                client.updateAccessedTime(auth.userId)
 
                 self._session_start(rememberMe)
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
                 user = client.getUser(auth.userId)
-                if user.getDefaultedData():
+                if user.getDefaultedData() or (self.cfg.tosPostLoginLink and firstTimer):
                     self.session['firstPage'] = self.cfg.basePath + "userSettings"
+                else:
+                    client.updateAccessedTime(auth.userId)
                 self.session.save()
 
                 # redirect storm if needed
@@ -426,15 +394,24 @@ class SiteHandler(WebHandler):
         return self._write("userSettings",
                            user = self.user,
                            dataDict = self.user.getDataDict(),
-                           defaultedData = self.user.getDefaultedData())
+                           defaultedData = self.user.getDefaultedData(),
+                           firstTimer=self.session.get('firstTimer', True))
 
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
-               fullName = "", blurb = "")
+               fullName = "", blurb = "", tos = "")
     @requiresHttps
     @requiresAuth
     def editUserSettings(self, auth, email, displayEmail, fullName,
-                         password1, password2, blurb, **kwargs):
+                         password1, password2, blurb, tos, **kwargs):
+        
+        if self.session.get('firstTimer', True):
+            # first time logging in
+            if self.cfg.tosPostLoginLink and not tos:
+                return self._write("error", shortError = "Registration Error",
+                    error = "You must accept the Terms of Service to continue.")
+            self.client.updateAccessedTime(auth.userId)
+        
         if email != auth.email:
             self.user.validateNewEmail(email)
             self.user.setEmail(email)
@@ -501,7 +478,7 @@ class SiteHandler(WebHandler):
             ), key=lambda y: y[0])
 
         added = []
-        for project, level in self.projectList:
+        for project, level, memberReqs in self.projectList:
             if project.getHostname() in projects and level in userlevels.WRITERS:
                 try:
                     project.addUserKey(auth.username, keydata)
@@ -519,12 +496,21 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            platformLabel = availablePlatforms[0][0]
+        except IndexError:
+            platformLabel = ''
+
         return self._write("newProject", errors=[], 
+           availablePlatforms = availablePlatforms,
+           customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
                    'appliance': 'unknown', 
                    'prodtype' : 'Appliance', 
                    'namespace': self.cfg.namespace,
-                   'isPrivate': False})
+                   'isPrivate': False,
+                   'platformLabel': platformLabel})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -551,12 +537,13 @@ class SiteHandler(WebHandler):
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace='',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'off')
+               prodtype = '', version = '', commitEmail='', isPrivate = 'off',
+               platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, 
                       blurb, optlists, appliance, shortname, namespace, 
-                      prodtype, version, commitEmail, isPrivate):
+                      prodtype, version, commitEmail, isPrivate, platformLabel):
                     
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
@@ -610,16 +597,7 @@ class SiteHandler(WebHandler):
                 pd = helperfuncs.sanitizeProductDefinition(title,
                         blurb, hostname, domainname, shortname, version,
                         '', namespace)
-                ##### DELETE #####
-                # this value was hard coded for the june 23, 2008 release of rBO
-                # this code must be removed when a proper solution is
-                # implemented
-                project = self.client.getProject(projectId)
-                cCfg = project.getConaryConfig()
-                cClient = conaryclient.ConaryClient(cCfg)
-                pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
-                ##### END DELETE #####
-                self.client.setProductDefinitionForVersion(versionId, pd)
+                self.client.setProductDefinitionForVersion(versionId, pd, platformLabel)
 
             except projects.DuplicateProductVersion, e: 
                 self._addErrors(str(e))
@@ -631,6 +609,7 @@ class SiteHandler(WebHandler):
             # version.  Status will be updated after that.
             self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
         else:
+            availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
                       'hostname': hostname, 
                       'domainname': domainname, 
@@ -643,8 +622,10 @@ class SiteHandler(WebHandler):
                       'prodtype' : prodtype, 
                       'namespace' : namespace,
                       'version' : version,
-                      'isPrivate' : isPrivate}
-            return self._write("newProject", kwargs=kwargs)
+                      'isPrivate' : isPrivate,
+                      'platformLabel': platformLabel}
+            return self._write("newProject", availablePlatforms=availablePlatforms,
+                    kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
     def addMemberById(self, auth, userId, projectId, level):

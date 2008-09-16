@@ -10,16 +10,26 @@
         <title>${formatTitle('Email Confirmation Required')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Email Confirmation Required:</h2>
-            <p class="errormessage">You have been redirected to this page because you have not yet confirmed your email address</p>
-
-            <p>You will be required to do so before continuing.</p>
-            <p>If you would like to use a different email address, please enter it below</p>
-            <form method="post" action="editUserSettings">
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Email Confirmation Required</div>
+                
+                <p class="errormessage">You have been redirected to this page because you have not yet confirmed your email address</p>
+                <p>You will be required to do so before continuing.</p>
+                <p>If you would like to use a different email address, please enter it below</p>
+                <form method="post" action="editUserSettings">
                     <input type="text" name="email" value="${auth.email}"/>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button></p>
-            </form>
+                </form>
+           </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
-</html>
+</html>    
+

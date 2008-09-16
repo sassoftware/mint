@@ -31,6 +31,7 @@ from mint import jobstatus
 from mint import maintenance
 from mint import mirror
 from mint import news
+from mint import persistentcache
 from mint import pkgindex
 from mint import profile
 from mint import projects
@@ -45,10 +46,8 @@ from mint import templates
 from mint import userlevels
 from mint import users
 from mint import usertemplates
-from mint import spotlight
 from mint import selections
 from mint import urltypes
-from mint import useit
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
@@ -244,7 +243,6 @@ def getTables(db, cfg):
     d = {}
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
-    d['jobs'] = jobs.JobsTable(db)
     d['buildFiles'] = jobs.BuildFilesTable(db)
     d['filesUrls'] = jobs.FilesUrlsTable(db)
     d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
@@ -271,8 +269,6 @@ def getTables(db, cfg):
     d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
     d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
-    d['useit'] = useit.UseItTable(db, cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['topProjects'] = selections.TopProjectsTable(db)
     d['popularProjects'] = selections.PopularProjectsTable(db)
@@ -288,6 +284,17 @@ def getTables(db, cfg):
     d['databases'] = projects.Databases(db)
 
     return d
+
+class PlatformNameCache(persistentcache.PersistentCache):
+
+    def __init__(self, cacheFile, conarycfg):
+        persistentcache.PersistentCache.__init__(self, cacheFile)
+        self._cclient = conaryclient.ConaryClient(conarycfg)
+
+    def _refresh(self, key):
+        platDef = proddef.PlatformDefinition()
+        platDef.loadFromRepository(self._cclient, key)
+        return platDef.getPlatformName()
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -397,17 +404,52 @@ class MintServer(object):
         res = cu.fetchone()
         return res and res[0] or fqdn
 
-    def _getProjectRepo(self, project):
+    def _getProjectConaryConfig(self, project, internal=True):
+        """
+        Creates a conary configuration object, suitable for internal or external
+        rBuilder use.
+        @param project: Project to create a Conary configuration for.
+        @type project: C{mint.project.Project} object
+        @param internal: True if configuration object is to be used by a
+           NetClient/ShimNetClient internal to rBuilder; False otherwise.
+        @type internal: C{bool}
+        """
+        ccfg = project.getConaryConfig()
+        conarycfgFile = self.cfg.conaryRcFile
+        if not internal:
+            ccfg.conaryProxy = {} #Clear the internal proxies, as they're "localhost"
+            conarycfgFile += '-v1'
+
+        # This step reads all of the repository maps for cross talk, and, if
+        # external, sets up the cfg object to use the rBuilder conary proxy
+        if os.path.exists(conarycfgFile):
+            ccfg.read(conarycfgFile)
+
+        #Set up the user config lines
+        for otherProjectData, level, memberReqs in \
+          self.getProjectDataByMember(self.auth.userId):
+            if level in userlevels.WRITERS:
+                otherProject = projects.Project(self,
+                        otherProjectData['projectId'],
+                        initialData=otherProjectData)
+                ccfg.user.addServerGlob(otherProject.getFQDN(),
+                    self.authToken[0], self.authToken[1])
+
+        return ccfg
+
+    def _getProjectRepo(self, project, useshim=True, pcfg = None):
+        '''
+        A helper function to get a NetworkRepositoryClient for doing repository operations.  If you need a client just call _getProjectConaryConfig and instantiate your own client.
+
+        This method returns a shim for local projects.
+        '''
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
+        if pcfg is None:
+            pcfg = self._getProjectConaryConfig(project)
         # use a shimclient for mint-handled repositories; netclient if not
-        if project.external and not self.isLocalMirror(project.id):
-            cfg = project.getConaryConfig()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-            if os.path.exists(conarycfgFile):
-                cfg.read(conarycfgFile)
-
-            repo = conaryclient.ConaryClient(cfg).getRepos()
+        if not useshim or (project.external and not self.isLocalMirror(project.id)):
+            repo = conaryclient.ConaryClient(pcfg).getRepos()
         else:
             if self.cfg.SSL:
                 protocol = "https"
@@ -415,14 +457,6 @@ class MintServer(object):
             else:
                 protocol = "http"
                 port = 80
-
-            authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol,
-                                                   self.cfg.authUser,
-                                                   self.cfg.authPass,
-                                                   self.cfg.projectSiteHost,
-                                                   project.getHostname())
-            authLabel = project.getLabel()
-            authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
             fqdn = self._translateProjectFQDN(project.getFQDN())
             reposPath = os.path.join(self.cfg.reposPath, fqdn)
@@ -437,49 +471,27 @@ class MintServer(object):
             cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(fqdn, db = self.db)
             cfg.tmpDir = tmpPath
             cfg.serverName = fqdn
-            cfg.contentsDir = reposPath + '/contents/'
+            cfg.contentsDir = " ".join(x % fqdn for x in
+                    self.cfg.reposContentsDir.split(" "))
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
-            cfg = conarycfg.ConaryConfiguration()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-            if os.path.exists(conarycfgFile):
-                cfg.read(conarycfgFile)
-            cfg.repositoryMap.update(authRepo)
-            cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
-                                   self.cfg.authUser, self.cfg.authPass)
-
-            cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
+            pcfg = helperfuncs.configureClientProxies(pcfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
 
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
-                cfg.repositoryMap, cfg.user,
-                conaryProxies=conarycfg.getProxyFromConfig(cfg))
+                pcfg.repositoryMap, pcfg.user,
+                conaryProxies=conarycfg.getProxyFromConfig(pcfg))
         return repo
 
     def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
 
         # Get repository + client
-        # XXX: Make this use a shimclient for rBuilder-managed
-        #      repositories so we can run web-based functional tests
-        #      against a single-threaded Apache server.
-        #      Until the shimclient can commit, we cannot do that
-        #      (see CNY-2545)
-
-        if not cclient:
-            projectCfg = project.getConaryConfig()
-            projectCfg['buildLabel'] = buildLabel
-            client = conaryclient.ConaryClient(projectCfg)
-        else:
-            client = cclient
-
-        repos = client.getRepos()
-
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        client = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         # ensure that the changelog message ends with a newline
         if not changeLogMessage.endswith('\n'):
@@ -509,8 +521,9 @@ class MintServer(object):
             del client
 
     def _getProductDefinition(self, project, version):
-        projectCfg = project.getConaryConfig()
-        cclient = conaryclient.ConaryClient(projectCfg)
+        projectCfg = self._getProjectConaryConfig(project)
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         pd = proddef.ProductDefinition()
         pd.setProductShortname(project.shortname)
@@ -528,17 +541,34 @@ class MintServer(object):
         project = projects.Project(self, version.projectId)
         return self._getProductDefinition(project, version)
 
+    def _fillInEmptyEC2Creds(self, authToken):
+        """
+        Convenience method that fills in the rBuilder's default
+        credentials for EC2 if the authToken is an empty tuple.
+        Otherwise it passes back what it was passed in.
+        """
+        assert(isinstance(authToken, (list, tuple)))
+        if len(authToken) == 0:
+            return (self.cfg.ec2AccountId,
+                    self.cfg.ec2PublicKey,
+                    self.cfg.ec2PrivateKey)
+        return authToken
+
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
+        # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
+        # Allow anyone to see public projects
         if not self.projects.isHidden(projectId):
             return
+        # Project is hidden, so user must be a member to see it.
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.WRITERS):
+            self.auth.userId) in userlevels.LEVELS):
                 return
+        # All the above checks must have failed, raise exception.
         raise ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
@@ -679,10 +709,10 @@ class MintServer(object):
 
         label = versions.Label(buildLabel)
 
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg.buildLabel = buildLabel
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        client = conaryclient.ConaryClient(projectCfg, repos=repos)
 
         trvLeaves = repos.getTroveLeavesByLabel(\
                 {groupName: {label: None} }).get(groupName, [])
@@ -937,6 +967,12 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
+    def getProjectDataByMember(self, userId):
+        filter = (self.auth.userId != userId) and (not self.auth.admin)
+        return self.projects.getProjectDataByMember(userId, filter)
+
+    @typeCheck(int)
+    @private
     def getMembersByProjectId(self, id):
         self._filterProjectAccess(id)
         return self.projectUsers.getMembersByProjectId(id)
@@ -1163,33 +1199,35 @@ class MintServer(object):
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            self.projectUsers.delete(projectId, userId, commit=False)
             if awsFound:
                 self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
                                                 amiIds)
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
-
             label = versions.Label(project.getLabel())
-            if not project.external:
-                helperfuncs.deleteUserFromRepository(repos, 
-                                user['username'], label)
-                try:
-                    # TODO: This will go away when using role-based permissions
-                    # instead of one-role-per-user. Without this, admin users'
-                    # roles would not be deleted due to CNY-2775
-                    repos.deleteRole(label, user['username'])
-                except RoleNotFound:
-                    # Conary deleted the (unprivileged) role for us
-                    pass
+
+            if notify:
+                self._notifyUser('Removed', user, project)
+
+            self.projectUsers.delete(projectId, userId, commit=False)
+
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
 
-        if notify:
-            self._notifyUser('Removed', user, project)
+        if not project.external:
+            helperfuncs.deleteUserFromRepository(repos, 
+                            user['username'], label)
+            try:
+                # TODO: This will go away when using role-based permissions
+                # instead of one-role-per-user. Without this, admin users'
+                # roles would not be deleted due to CNY-2775
+                repos.deleteRole(label, user['username'])
+            except RoleNotFound:
+                # Conary deleted the (unprivileged) role for us
+                pass
 
         return True
 
@@ -1296,6 +1334,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
 
         return self.projects.update(projectId, commitEmail = commitEmail)
+    
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def setProjectNamespace(self, projectId, namespace):
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+
+        self._validateNamespace(namespace)
+
+        return self.projects.update(projectId, namespace = namespace)
 
     @typeCheck(int)
     @requiresAdmin
@@ -1362,7 +1411,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # published builds will be made public
             for publishedAMIId in published:
                 ec2Wrap.resetLaunchPermissions(publishedAMIId)
-                ec2Wrap.addPublicLaunchPermissions(publishedAMIId)
+                ec2Wrap.addPublicLaunchPermission(publishedAMIId)
 
             # only project developers and owners can see unpublished builds
             for unpublishedAMIId in unpublished:
@@ -1996,50 +2045,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
 
-    @typeCheck()
-    @private
-    def getUseItIcons(self):
-        return self.useit.getIcons()
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteUseItIcon(self, itemId):
-        return self.useit.deleteIcon(itemId)
-
-    @typeCheck(int, str, str)
-    @private
-    @requiresAdmin
-    def addUseItIcon(self, itemId, name, link):
-        if name and link:
-            return self.useit.addIcon(itemId, name, link)
-        else:
-            return False
-
-    @typeCheck(str, str, str, str, int, str, str)
-    @requiresAdmin
-    @private
-    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
-                         endDate):
-         return self.spotlight.addItem(title, text, link, logo,
-                                               showArchive, startDate, endDate)
-
-    @typeCheck()
-    @private
-    def getSpotlightAll(self):
-        return self.spotlight.getAll()
-
-    @typeCheck()
-    @private
-    def getCurrentSpotlight(self):
-        return self.spotlight.getCurrent()
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteSpotlightItem(self, itemId):
-        return self.spotlight.deleteItem(itemId)
-
     @typeCheck(str, str, int)
     @private
     @requiresAdmin
@@ -2264,20 +2269,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName,
-                                      timeCreated = time.time(),
-                                      buildCount = 0,
-                                      createdBy = self.auth.userId)
+                                  name = productName,
+                                  timeCreated = time.time(),
+                                  buildCount = 0,
+                                  createdBy = self.auth.userId)
+        self.buildData.setDataValue(buildId, 'jsversion',
+            jsversion, data.RDT_STRING)
 
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
         return buildId
 
     @typeCheck(int, ((str, unicode),), bool)
@@ -2290,6 +2290,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         level group for the image, otherwise use the top level group defined
         in the
         product defintion.
+
+        @return: buildIds
+        @rtype: list of ints
         """
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
@@ -2352,6 +2355,41 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.startImageJob(buildId)
         return buildIds
 
+    @typeCheck(int)
+    def getBuildBaseFileName(self, buildId):
+        self._filterBuildAccess(buildId)
+        build = builds.Build(self, buildId)
+        project = self.getProject(build.projectId)
+        found, baseFileName = \
+                self.buildData.getDataValue(buildId, 'baseFileName')
+        if not found:
+            baseFileName = ''
+        baseFileName = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
+                for x in baseFileName])
+        arch = build.getArch()
+        ver = versions.ThawVersion(build.troveVersion)
+        baseFileName = baseFileName or \
+                "%(name)s-%(version)s-%(arch)s" % {
+                'name': project['hostname'],
+                'version': ver.trailingRevision().version,
+                'arch': arch}
+        return baseFileName
+
+    def _getBuildPageUrl(self, buildId, hostname = None):
+        # hostname arg is an optimization for getAllVwsBuilds
+        if not hostname:
+            projectId = self.getBuild(buildId)['projectId']
+            project = self.getProject(projectId)
+            hostname = project.get('hostname')
+        url = util.joinPaths(self.cfg.projectSiteHost, self.cfg.basePath,
+                'project', hostname, 'build')
+        return "http://%s?id=%d" % (url, buildId)
+
+    @typeCheck(int)
+    def getBuildPageUrl(self, buildId):
+        # break this function to avoid excessive filter checks for local calls
+        self._filterBuildAccess(buildId)
+        return self._getBuildPageUrl(buildId)
 
     @typeCheck(int, str, str, str, str, str, dict)
     @requiresAuth
@@ -2363,19 +2401,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             'anacondaCustomTrove' : 'anaconda-custom',
                             'anacondaTemplatesTrove' : 'anaconda-templates'}
         self._filterProjectAccess(projectId)
+        jsversion = self._getJSVersion()
+
         buildId = self.builds.new(projectId = projectId,
                                       name = productName,
                                       timeCreated = time.time(),
                                       buildCount = 0,
                                       createdBy = self.auth.userId)
-        mc = self._getMcpClient()
-
-        try:
-            self.buildData.setDataValue(buildId, 'jsversion',
-                str(mc.getJSVersion()),
-                data.RDT_STRING)
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+        self.buildData.setDataValue(buildId, 'jsversion', jsversion,
+            data.RDT_STRING)
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
@@ -2426,9 +2460,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         '''
 
         project = projects.Project(self, projectId)
-        projectCfg = project.getConaryConfig()
-        client = conaryclient.ConaryClient(projectCfg)
-        repos = client.getRepos()
+        # For some reason this can't happen through the the ShimClient
+        # (CNY-2545 related?)
+        repos = self._getProjectRepo(project, False)
 
         # Get the major architecture from filterFlavor
         filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
@@ -2599,15 +2633,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
             specialTroveFlavor = deps.ThawFlavor(specialTroveFlavor)
 
         # Get a Conary client
-        cfg = project.getConaryConfig()
+        cfg = self._getProjectConaryConfig(project)
         cfg.installLabelPath = searchPath
         cfg.initializeFlavors()
         cfg.dbPath = cfg.root = ":memory:"
         cfg.proxy = self.cfg.proxy
-        cclient = conaryclient.ConaryClient(cfg)
+        # These special troves may be found anywhere depending on the version
+        # of specialTroveVersion, so don't use a shim client
+        repos = self._getProjectRepo(project, useshim=False, pcfg=cfg)
 
         try:
-            matches = cclient.getRepos().findTrove(searchPath,
+            matches = repos.findTrove(searchPath,
                     (specialTroveName, specialTroveVersion, specialTroveFlavor),
                     cfg.flavor)
             if matches:
@@ -2640,26 +2676,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         project = projects.Project(self, buildDict['projectId'])
 
-        cc = project.getConaryConfig()
+        # We should use internal=False here because the configuration we
+        # generate here is used by the jobslave, not internally by rBuilder.
+        cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
-
-        # Ignore conaryProxy set by getConaryConfig; it's bound
-        # to be localhost, as getConaryConfig() generates
-        # config objects intended to be used by NetClient /
-        # ConaryClient objects internal to rBuilder (i.e. not the
-        # jobslaves)
-        cc.conaryProxy = None
-
-        # Add authentication for each project to which the builder has access.
-        # This should allow them to run builds that include troves from
-        # hidden projects.
-        for otherProjectId, level in \
-          self.getProjectIdsByMember(self.auth.userId):
-            if level in userlevels.WRITERS:
-                otherProject = projects.Project(self, otherProjectId)
-                cc.user.addServerGlob(otherProject.getFQDN(),
-                    self.cfg.authUser, self.cfg.authPass)
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
@@ -2667,10 +2688,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
-
-        if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
-                (self.cfg.siteHost, self.cfg.basePath)
 
         r = {}
         r['protocolVersion'] = builds.PROTOCOL_VERSION
@@ -3126,11 +3143,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         sortedList = sorted(buildTypes) 
 
         # make image-less the first one for UI display
-        if (sortedList.index(buildtypes.IMAGELESS)):
-            sortedList.remove(buildtypes.IMAGELESS)
-            sortedList.reverse()
-            sortedList.append(buildtypes.IMAGELESS)
-            sortedList.reverse()
+        try:
+            sortedList.insert(0,
+                    sortedList.pop(sortedList.index(buildtypes.IMAGELESS)))
+        except ValueError:
+            pass # do nothing if buildtypes.IMAGELESS isn't in the list
 
         return sortedList
 
@@ -3149,12 +3166,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildDict['buildType']
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             data = self.serializeBuild(buildId)
             try:
+                mc = self._getMcpClient()
                 return mc.submitJob(data)
             except mcp_error.NotEntitledError:
                 raise NotEntitledError()
+            except mcp_error.NetworkError:
+                raise BuildSystemDown
 
     @typeCheck(int, str)
     @private
@@ -3166,275 +3185,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
-        mc = self._getMcpClient()
-        data = self.serializeGroupTrove(groupTroveId, arch)
         try:
+            mc = self._getMcpClient()
+            data = self.serializeGroupTrove(groupTroveId, arch)
             return mc.submitJob(data)
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
         except mcp_error.NotEntitledError:
-            raise NotEntitledError()
-
-    @typeCheck()
-    @requiresAuth
-    @private
-    def getJobIds(self):
-        raise NotImplementedError
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs ORDER BY timeSubmitted")
-
-        return [x[0] for x in cu.fetchall()]
-
-    @typeCheck(bool)
-    @requiresAuth
-    def listActiveJobs(self, filter):
-        """List the jobs in the job queue.
-        @param filter: If True it will only show running or waiting jobs.
-          If False it will show all jobs for past 24 hours plus waiting jobs.
-        @return: list of jobIds"""
-        raise NotImplementedError
-        cu = self.db.cursor()
-
-        if filter:
-            cu.execute("""SELECT jobId FROM Jobs
-                              WHERE status IN (?, ?) ORDER BY timeSubmitted""",
-                       jobstatus.WAITING, jobstatus.RUNNING)
-        else:
-            cu.execute("""SELECT jobId FROM Jobs WHERE timeSubmitted > ?
-                              OR status IN (?, ?) ORDER BY timeSubmitted""",
-                       time.time() - 86400, jobstatus.WAITING,
-                       jobstatus.RUNNING)
-
-        ret = []
-        for x in cu.fetchall():
-            job = self.jobs.get(x[0])
-            hostname = self.getJobDataValue(x[0], 'hostname')
-            if hostname[0]:
-                job['hostname'] = hostname[1]
-            else:
-                job['hostname'] = "None"
-            ret.append(job)
-        return ret
-
-    @typeCheck((list, str), (dict, (list, int)), str)
-    @requiresAuth
-    @private
-    def startNextJob(self, archTypes, jobTypes, jobserverVersion):
-        """Select a job to execute from the list of pending jobs
-        @param archTypes: list of frozen flavors. only specify arch flags.
-        @param jobTypes: dict. keys are the kinds of jobs.
-          values are lists of valid types for that job.
-        @param jobserverVersion: string. version of the job server.
-        @return: jobId of job to execute, or 0 for no job.
-        """
-
-        raise NotImplementedError
-
-        from mint import cooktypes
-
-        # what to return if we no job has been started
-        jobId = 0
-
-        # scrub archTypes and jobTypes.
-        maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = "Repositories are currently offline.")
-        for arch in archTypes:
-            if arch not in ("1#x86", "1#x86_64"):
-                raise ParameterError("Not a legal architecture")
-
-        buildTypes = []
-        try:
-            buildTypes = jobTypes['buildTypes']
-        except KeyError:
-            # This is to handle deprecated jobservers who insist on sending
-            # imageTypes
-            buildTypes = jobTypes.get('imageTypes', [])
-
-        cookTypes = jobTypes.get('cookTypes', [])
-
-        if sum([(x not in buildtypes.TYPES) \
-                for x in buildTypes]):
-            raise ParameterError("Not a legal Build Type")
-
-        if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
-            raise ParameterError("Not a legal Cook Type")
-
-        if jobserverVersion not in jsversion.getVersions(self.cfg):
-            raise ParameterError("Not a legal job server version: %s (wants: %s)" % \
-                (jobserverVersion, str(jsversion.getVersions(self.cfg))))
-        # client asked for nothing, client gets nothing.
-        if not (buildTypes or cookTypes) or (not archTypes):
-            return 0
-
-        # the pid would suffice, except that fails to be good enough
-        # if multiple web servers use one database backend.
-        ownerId = (os.getpid() << 47) + random.randint(0, (2 << 47) - 1)
-
-        # lock the jobs using ownerId
-        try:
-            cu = self.db.transaction()
-            cu.execute("""UPDATE Jobs SET owner=?
-                              WHERE owner IS NULL AND status=?""",
-                       ownerId, jobstatus.WAITING)
-            self.db.commit()
-        except:
-            # do nothing if we fail to lock any rows; we'll be back...
-            self.db.rollback()
-            return 0
-
-        # we are now in a locked situation; wrap in try/finally
-        # to ensure that no matter what happens, we unlock any rows 
-        # we may have locked
-        try:
-            try:
-                cu = self.db.transaction()
-                archTypeQuery = archTypes and "(%s)" % \
-                                ', '.join(['?' for x in archTypes]) or ''
-
-                buildTypeQuery = buildTypes and "(%s)" % \
-                                ', '.join(['?' for x in buildTypes]) or ''
-
-                # at least one of buildTypes or cookTypes will be defined,
-                # or this code would have already bailed out.
-                if not buildTypes:
-                    #client wants only cooks
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               WHERE status=?
-                                   AND Jobs.buildId IS NULL
-                                   AND owner=?
-                               ORDER BY timeSubmitted"""
-                    cu.execute(query, jobstatus.WAITING, ownerId)
-                elif not cookTypes:
-                    # client wants only image jobs
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN JobData
-                                   ON Jobs.jobId=JobData.jobId
-                                       AND JobData.name='arch'
-                               LEFT JOIN BuildsView AS Builds
-                                   ON Builds.buildId=Jobs.buildId
-                               LEFT JOIN BuildData
-                                   ON BuildData.buildId=Jobs.buildId
-                                       AND BuildData.name='jsversion'
-                               WHERE status=?
-                                   AND Jobs.groupTroveId IS NULL
-                                   AND owner=?
-                                   AND BuildData.value=?
-                                   AND JobData.value IN %s
-                                   AND Builds.buildType IN %s
-                               ORDER BY timeSubmitted
-                               LIMIT 1""" % (archTypeQuery, buildTypeQuery)
-                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                               *(archTypes + buildTypes))
-                else:
-                    # client wants both cook and image jobs
-                    query = """SELECT Jobs.jobId FROM Jobs
-                               LEFT JOIN BuildsView AS Builds
-                                   ON Builds.buildId=Jobs.buildId
-                               LEFT JOIN BuildData
-                                   ON BuildData.buildId=Jobs.buildId
-                                       AND BuildData.name='jsversion'
-                               WHERE status=? AND owner=?
-                                   AND ((BuildData.value=? AND
-                                       Builds.buildType IN %s) OR
-                                        (groupTroveId IS NOT NULL))
-                               ORDER BY timeSubmitted
-                               """ % (buildTypeQuery)
-                    cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                               *(buildTypes))
-
-                res = cu.fetchall()
-                for r in res:
-                    arch = deps.ThawFlavor(self.jobData.getDataValue(r[0], "arch")[1])
-                    for x in archTypes:
-                        if arch.satisfies(deps.ThawFlavor(x)):
-                            jobId = r[0]
-                            break # match first usable job we find
-                    if jobId:
-                        break
-
-                if jobId:
-                    cu.execute("""UPDATE Jobs
-                                  SET status=?, statusMessage=?, timeStarted=?
-                                  WHERE jobId=?""",
-                               jobstatus.RUNNING, 'Starting', time.time(),
-                               jobId)
-                    if self.req:
-                        self.jobData.setDataValue(jobId, "hostname", self.remoteIp, data.RDT_STRING)
-                    cu.execute("SELECT jobId FROM Jobs WHERE status=?",
-                               jobstatus.WAITING)
-                    # this is done inside the job lock. there is a small chance of race
-                    # condition, but the consequence would be that jobs might not
-                    # reflect the correct number on admin page. if this proves to be
-                    # too costly, move it outside the lock
-                    for ordJobId in [x[0] for x in cu.fetchall()]:
-                        cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
-                                   self.getJobWaitMessage(ordJobId), ordJobId)
-
-                self.db.commit()
-            except:
-                self.db.rollback()
-
-        finally:
-            # This absolutely must happen, so retry at most 10 times,
-            # waiting one second between tries. Exceptions other than
-            # DatabaseLocked are passed up to the caller.
-            tries = 0
-            while tries < 10:
-                try:
-                    cu = self.db.transaction()
-                    cu.execute("""UPDATE Jobs SET owner=NULL
-                                      WHERE owner=?""", ownerId)
-                    self.db.commit()
-                    break
-                except:
-                    # rollback and try again
-                    self.db.rollback()
-                    tries += 1
-                    time.sleep(1)
-
-        return jobId
-
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getJobIdForBuild(self, buildId):
-        raise NotImplementedError
-        self._filterBuildAccess(buildId)
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?", buildId)
-        r = cu.fetchone()
-        if r:
-            return r[0]
-        else:
-            return 0
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getJobIdForCook(self, groupTroveId):
-        raise NotImplementedError
-        projectId = self.groupTroves.getProjectId(groupTroveId)
-        self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
-
-        cu = self.db.cursor()
-
-        cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?", groupTroveId)
-        r = cu.fetchone()
-        if r:
-            return r[0]
-        else:
-            return 0
-
-    @typeCheck(int, int, str)
-    @private
-    def setJobStatus(self, jobId, newStatus, statusMessage):
-        raise NotImplementedError
-        self._filterJobAccess(jobId)
-        self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
-        return True
+            raise NotEntitledError
 
     @typeCheck(int, str, list, (list, str, int))
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3647,6 +3405,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         results = cu.fetchall_dict()
 
+        # joinPaths will render any occurance of // into / and therefore
+        # normalize the URL. on systems where pathsep is not / this may
+        # be inappropriate
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        downloadUrlTemplate = "http://%s?fileId=%%d" % (url)
+
         buildFilesList = []
         lastFileId = -1
         lastDict   = {}
@@ -3661,7 +3426,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                              'idx': x['idx'],
                              'size': x['size'] or 0,
                              'sha1': x['sha1'] or '',
-                             'fileUrls': [] }
+                             'fileUrls': [] ,
+                             'downloadUrl': downloadUrlTemplate % lastFileId}
 
             lastDict['fileUrls'].append((x['urlId'], x['urlType'], x['url']))
             if x['urlType'] == urltypes.LOCAL and not lastDict['size']:
@@ -3669,7 +3435,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     lastDict['size'] = os.stat(x['url'])[stat.ST_SIZE]
                 except (OSError, IOError):
                     lastDict['size'] = 0
-            
+
             # convert size to a string for XML-RPC's sake (RBL-2789)
             lastDict['size'] = str(lastDict['size'])
 
@@ -3724,9 +3490,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         version = None
         flavor = None
 
-        cfg = project.getConaryConfig()
-        nc = conaryclient.ConaryClient(cfg).getRepos()
-        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {trove: None})
+        nc = self._getProjectRepo(project, useshim=False)
+        versionList = nc.getTroveVersionList(project.getFQDN(), {trove: None})
 
         # group trove by major architecture
         return dictByArch(versionList, trove)
@@ -3736,7 +3501,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
 
         troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
         if troveName in troves:
@@ -3750,7 +3515,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
 
         project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
         versionDict = dict((x.freeze(), [y for y in troves[x]]) for x in troves)
@@ -3783,7 +3548,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
 
-        nc = self._getProjectRepo(project)
+        nc = self._getProjectRepo(project, False)
         label = versions.Label(project.getLabel())
         troves = nc.troveNamesOnServer(label.getHost())
 
@@ -3807,10 +3572,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                   self.cfg.externalDomainName, buildId, count)
 
         if buildType != buildtypes.IMAGELESS:
-            mc = self._getMcpClient()
             try:
+                mc = self._getMcpClient()
                 status, message = mc.jobStatus(uuid)
-            except mcp_error.UnknownJob:
+            except (mcp_error.UnknownJob, mcp_error.NetworkError):
                 status, message = \
                     jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
         else:
@@ -3830,11 +3595,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # FIXME: re-enable filtering based on UUID
         #self._filterJobAccess(jobId)
 
-        mc = self._getMcpClient()
-
         try:
+            mc = self._getMcpClient()
             status, message = mc.jobStatus(uuid)
-        except mcp_error.UnknownJob:
+        except (mcp_error.UnknownJob, mcp_error.NetworkError):
             status, message = \
                 jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
 
@@ -3984,6 +3748,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @requiresAuth
     def serializeGroupTrove(self, groupTroveId, arch):
+
+        # get the jobslave version; this could fail early
+        jsversion = self._getJSVersion()
+
         # performed at the mint server level to have access to
         # groupTrove, project and groupTroveItems objects
         projectId = self.groupTroves.getProjectId(groupTroveId)
@@ -3992,16 +3760,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)
         project = projects.Project(self, groupTrove.projectId)
 
-        cc = project.getConaryConfig()
+        # We should use internal=False here because the configuration we
+        # generate here is used by the jobslave, not internally by rBuilder.
+        cc = self._getProjectConaryConfig(project, internal=False)
         cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
         cc.readEntitlementDirectory()
-
-        # Ignore conaryProxy set by getConaryConfig; it's bound
-        # to be localhost, as getConaryConfig() generates
-        # config objects intended to be used by NetClient /
-        # ConaryClient objects internal to rBuilder (i.e. not the
-        # jobslaves)
-        cc.conaryProxy = None
 
         cfgBuffer = StringIO.StringIO()
         cc.display(cfgBuffer)
@@ -4009,12 +3772,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
-
-        if self.cfg.createConaryRcFile:
-            cfgData += "\nincludeConfigFile http://%s%s/conaryrc\n" % \
-                (self.cfg.siteHost, self.cfg.basePath)
-
-        mc = self._getMcpClient()
 
         r = {}
         r['protocolVersion'] = grouptrove.PROTOCOL_VERSION
@@ -4025,12 +3782,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['autoResolve'] = groupTrove.autoResolve
 
-        try:
-            jsversion = mc.getJSVersion()
-        except mcp_error.NotEntitledError:
-            raise NotEntitledError()
+
         r['data'] = {'arch' : arch,
-                     'jsversion': str(jsversion)}
+                     'jsversion': jsversion}
 
         r['description'] = groupTrove.description
 
@@ -4564,6 +4318,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for projectId in [x[0] for x in cu.fetchall()]:
             if self._checkProjectAccess(projectId, userlevels.LEVELS):
                 p = projects.Project(self, projectId)
+                #This has to be a shimclient for the test suite to work
                 repo = self._getProjectRepo(p)
                 repos.append((p, repo))
 
@@ -4645,6 +4400,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
         return self.mcpClient
+
+    def _getJSVersion(self):
+        try:
+            mc = self._getMcpClient()
+            return str(mc.getJSVersion())
+        except mcp_error.NotEntitledError:
+            raise NotEntitledError
+        except mcp_error.NetworkError:
+            raise BuildSystemDown
 
     def __del__(self):
         if self.mcpClient:
@@ -4730,7 +4494,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
         """
         Get the status of a launched AMI instance
-        @param authToken: the EC2 authentication credentials
+        @param authToken: the EC2 authentication credentials.
+            If passed an empty tuple, it will use the default values
+            as set up in rBuilder's configuration.
         @type  authToken: C{tuple}
         @param launchedAMIId: the ID of a launched AMI
         @type  launchedAMIId: C{int}
@@ -4738,6 +4504,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{tuple}
         @raises: C{EC2Exception}
         """
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
@@ -4747,7 +4514,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def launchAMIInstance(self, authToken, blessedAMIId):
         """
         Launch the specified AMI instance
-        @param authToken: the EC2 authentication credentials
+        @param authToken: the EC2 authentication credentials.
+            If passed an empty tuple, it will use the default values
+            as set up in rBuilder's configuration.
         @type  authToken: C{tuple}
         @param blessedAMIId: the ID of the blessed AMI to launch
         @type  blessedAMIId: C{int}
@@ -4782,6 +4551,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             userData = None
 
         # attempt to boot it up
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
@@ -4811,6 +4581,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{list}
         @raises: C{EC2Exception}
         """
+        authToken = self._fillInEmptyEC2Creds(authToken)
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
@@ -4901,9 +4672,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, ((str, unicode),))
-    def setProductDefinitionForVersion(self, versionId,
-            productDefinitionXMLString):
+    @typeCheck(int, ((str, unicode),), str)
+    def setProductDefinitionForVersion(self, versionId, productDefinitionXMLString,
+            rebaseToPlatformLabel):
         # XXX: Need exception handling here
         pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
         version = projects.ProductVersions(self, versionId)
@@ -4911,10 +4682,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # TODO put back overrides
 
-        projectCfg = project.getConaryConfig()
+        projectCfg = self._getProjectConaryConfig(project)
         projectCfg['name'] = self.auth.username
         projectCfg['contact'] = self.auth.fullName or ''
-        cclient = conaryclient.ConaryClient(projectCfg)
+        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+        if rebaseToPlatformLabel:
+            pd.rebase(cclient, rebaseToPlatformLabel)
         pd.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
         return True
@@ -4927,7 +4701,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @typeCheck(int)
-    @requiresAuth
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
 
@@ -4992,7 +4765,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
-        cfg = project.getConaryConfig()
+        # We should use internal=False here because the configuration we
+        # generate here is used by the package creator service, not rBuilder.
+        cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = self.auth.fullName or ''
         #package creator service should get the searchpath from the product definition
@@ -5028,11 +4803,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             the package creator service, or if the L{uploadDirectoryHandle} does not
             contain a valid manifest file as generated by the upload CGI script.
         '''
-        from mint.web import whizzyupload
+        from mint.fileupload import fileuploader
         from conary import versions as conaryVer
 
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
-        fileuploader = whizzyupload.fileuploader(path, 'uploadfile')
+        fileuploader = fileuploader(path, 'uploadfile')
         try:
             info = fileuploader.parseManifest()
         except IOError, e:
@@ -5047,11 +4822,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if not sessionHandle:
             #Get the version object
-            version = projects.ProductVersions(self, versionId)
+            version = self.getProductVersion(versionId)
             #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version.namespace,
-                version=version.name), mincfg)
+                shortname=project.shortname, namespace=version['namespace'],
+                version=version['name']), mincfg)
         else:
             sesH = sessionHandle
 
@@ -5069,8 +4844,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @param projectId: Project ID of the project for which to request the list
             @type projectId: int
 
-            @rtype: list
-            @return: The list of packages
+            @rtype: dict(dict(dict(data)))
+            @return: The available packages: outer dict uses the version string
+            as the key, inner uses the namespace, third uses the trove name as
+            keys.  Data is a dict containing the c{productDefinition} dict and
+            the C{develStageLabel}.
         """
         # Get the conary repository client
         project = projects.Project(self, projectId)
@@ -5153,8 +4931,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @param build: Build the package after it's been saved?
         @type build: boolean
 
-        @return: True
-        @rtype: boolean
+        @return: a troveSpec pointing to the created source trove
+        @rtype: str
         """
         from conary import versions as conaryVer
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
@@ -5175,7 +4953,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             except packagecreator.errors.PackageCreatorError, err:
                 raise PackageCreatorError( \
                         "Error attempting to build package: %s", str(err))
-        return True
+        return srcHandle
 
     @typeCheck(((str,unicode),))
     @requiresAuth
@@ -5243,14 +5021,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raise PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
         invalid.
         """
-        from mint.web import whizzyupload
+        from mint.fileupload import fileuploader
         fieldname = str(fieldname)
         ## Connect up to the tmpdir
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
 
         if os.path.isdir(path):
             #Look for the status and metadata files
-            return whizzyupload.fileuploader(path, fieldname).pollStatus()
+            return fileuploader(path, fieldname).pollStatus()
         else:
             raise PermissionDenied("You are not allowed to check status on this file")
 
@@ -5272,16 +5050,125 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: True if the uploadDirectoryHandle is a valid session, False otherwise.
         @rtype: boolean
         """
-        from mint.web import whizzyupload
+        from mint.fileupload import fileuploader
         str_fieldnames = [str(x) for x in fieldnames]
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
         if os.path.isdir(path):
             for fieldname in str_fieldnames:
-                whizzyupload.fileuploader(path, fieldname).cancelUpload()
+                fileuploader(path, fieldname).cancelUpload()
             return True
         else:
             return False
 
+    @requiresAuth
+    def startApplianceCreatorSession(self, projectId, versionId, rebuild):
+        project = projects.Project(self, projectId)
+        version = self.getProductVersion(versionId)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        mincfg = self._getMinCfg(project)
+        try:
+            sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=version['namespace'],
+                version=version['name']), mincfg, rebuild)
+        except packagecreator.errors.NoFlavorsToCook, err:
+            raise NoImagesDefined( \
+                    "Error starting the appliance creator service session: %s",
+                    str(err))
+        except packagecreator.errors.ApplianceFactoryNotFound, err:
+            raise OldProductDefinition( \
+                    "Error starting the appliance creator service session: %s",
+                    str(err))
+
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error starting the appliance creator service session: %s", str(err))
+        return sesH
+
+    @requiresAuth
+    def makeApplianceTrove(self, sessionHandle):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # If we ever allow jumping past the editApplianceGroup page, this will
+        # have to filter out the :source troves added through package creator
+        return pc.makeApplianceTrove(sessionHandle)
+
+    @requiresAuth
+    def addApplianceTrove(self, sessionHandle, troveSpec):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # hard code the explicit flag to True for this codepath
+        return pc.addTrove(sessionHandle, troveSpec, True)
+
+    @requiresAuth
+    def addApplianceTroves(self, sessionHandle, troveList):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # abstract out the implicit troves
+        troveDict = pc.listTroves(sessionHandle)
+        explicit = set(troveDict.get('explicitTroves', []))
+        explicit.update(set(troveList))
+        return pc.setTroves(sessionHandle, list(explicit),
+                troveDict.get('implicitTroves', []))
+
+    @requiresAuth
+    def setApplianceTroves(self, sessionHandle, troveList):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        # abstract out the implicit troves
+        troveDict = pc.listTroves(sessionHandle)
+        return pc.setTroves(sessionHandle, troveList,
+                troveDict.get('implicitTroves', []))
+
+    @requiresAuth
+    def listApplianceTroves(self, projectId, sessionHandle):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        project = projects.Project(self, projectId)
+        repos = self._getProjectRepo(project, useshim=True)
+        pkgs = []
+        # we only care about explicit troves here
+        for x in pc.listTroves(sessionHandle).get('explicitTroves', []):
+            if ':source' in x:
+                src = (x.replace(":source", '') + '-1').encode('utf-8') #Have to assume the build count
+                ts = conaryclient.cmdline.parseTroveSpec(src)
+                try:
+                    # Later on we can use this to get a specific version, now
+                    # we just care that it doesn't raise a TroveNotFound
+                    # exception
+                    repos.findTrove(None, ts)
+                except TroveNotFound, e:
+                    #Don't add it to our final list, no binary got built
+                    pass
+                else:
+                    pkgs.append(ts[0])
+            else:
+                pkgs.append(x)
+        return pkgs
+
+
+    def _cacheAvailablePackages(self, sesH, pkgs):
+        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
+        import pickle
+        f = open(filen, 'wb')
+        pickle.dump(pkgs, f)
+        f.close()
+
+    def _loadAvailablePackages(self, sesH):
+        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
+        if os.path.exists(filen):
+            import pickle
+            f = open(filen, 'rb')
+            loaded = pickle.load(f)
+            return loaded
+        else:
+            return None
+
+    @requiresAuth
+    def getAvailablePackages(self, sessionHandle):
+        pkgs = self._loadAvailablePackages(sessionHandle)
+        if pkgs is None:
+            pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+            # Call the method that doesn't thaw the versions or flavors since
+            # we'd just have to thaw them again
+            pkgs =  pc.getAvailablePackagesFrozen(sessionHandle)
+            self._cacheAvailablePackages(sessionHandle, pkgs)
+        return pkgs
+ 
     @typeCheck(int)
     @requiresAuth
     def getEC2CredentialsForUser(self, userId):
@@ -5432,7 +5319,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.builds.getAllAMIBuilds(self.auth.userId,
                 not self.auth.admin)
-
 
     @typeCheck(int)
     @requiresAuth
@@ -5624,7 +5510,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         affectedAMIIds = []
 
         # This returns all AMI ids that the user could interact with.
-        amiIds = self.getAMIBuildsForUser(userId)
+        amiIds = self.users.getAMIBuildsForUser(userId)
 
         for amiIdData in amiIds:
             if amiIdData['isPrivate']:
@@ -5744,11 +5630,94 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Save only those where it's the productId we want.
         return [ami[0] for ami in amiIds if ami[1] == productId]
 
+    @requiresAuth
+    def getAllVwsBuilds(self):
+        """
+        Returns a list of all of the Workspaces compatible images that this
+        rBuilder manages. Workspaces images are merely raw filesystem images
+        with a xen domU flavor. If the requesting user is an admin, the
+        user will be able to see all Workspaces images created for all
+        projects regardless of their visibility. Otherwise, the user
+        will only see Workspaces images for projects that they are able to
+        see (i.e. Workspaces images created in hidden projects of which the
+        user is not a developer or owner will remain hidden).
+        @returns A dictionary of dictionaries, keyed by buildId,
+          with the following members:
+          - productName: the name of the product containing this build
+          - projectId: the id of the project (product) containing this build
+          - productDescription: the description of the product containing
+              this build
+          - buildId: the id of the build that created the Workspaces image
+          - buildName: the name of the build
+          - buildDescription: the description of the build, if given
+          - createdBy: the rBuilder user name of the person who
+              initiated the build (if known), otherwise returns
+              'Unknown' if we don't know (in the case of builds
+              created before RBL-3076 was fixed)
+          - awsAccountNumber: unused. always 'Unknown'
+          - role: the role of the user who created the build with
+              respoect to the containing product as a meatstring, e.g.
+              'Product User', 'Product Owner', 'Product Developer',
+              or '' (in the case where a user is not affiliated with
+              the product, or the relationship is unknown)
+          - isPrivate: 1 if the containing project is private (hidden),
+              0 otherwise
+          - isPublished: 1 if the build is published, 0 if not
+        @rtype: C{dict} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if user is not logged in
+        """
+        # the downloadUrl is now provided by the getFiles method of a build
+        # object, but we really need to minimize the db hits in the loop below
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        urlTemplate = "http://%s?id=%%d" % url
+
+        res = self.builds.getAllVwsBuilds(self.auth.userId,
+                not self.auth.admin)
+
+        for buildData in res.itervalues():
+            # we want to drop the hostname. it was collected by the builds
+            # module call for speed reasons
+            hostname = buildData.pop('hostname')
+            buildId = buildData['buildId']
+            buildData['buildPageUrl'] = \
+                    self._getBuildPageUrl(buildId, hostname = hostname)
+            buildData['downloadUrl'] = urlTemplate % \
+                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+        return res
+
+    def getAvailablePlatforms(self):
+        """
+        Returns a list of available platforms and their names (descriptions).
+        Any platform definitions that cannot be fetched will be skipped (and
+        an error message will be logged).
+        @rtype: C{list} of C{tuple}s. Each tuple is a pair; first element is
+           the platform label, the second element is the platform name.
+        """
+        availablePlatforms = []
+        for platformLabel in self.cfg.availablePlatforms:
+            try:
+                availablePlatforms.append((platformLabel,
+                    self.platformNameCache.get(platformLabel)))
+            except Exception, e:
+                print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (platformLabel, str(e))
+                sys.stderr.flush()
+        return availablePlatforms
+
+    def isPlatformAcceptable(self, platformLabel):
+        return (platformLabel in set(self.cfg.acceptablePlatforms + self.cfg.availablePlatforms))
+
+    def isPlatformAvailable(self, platformLabel):
+        return (platformLabel in self.cfg.availablePlatforms)
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
+        self.platformNameCache = PlatformNameCache(
+                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
+                helperfuncs.getBasicConaryConfiguration(self.cfg))
 
         global callLog
         if self.cfg.xmlrpcLogFile:

@@ -173,11 +173,10 @@ class MintConfig(ConfigFile):
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
-    spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
-    displaySha1             = (cfgtypes.CfgBool, False)
+    displaySha1             = (cfgtypes.CfgBool, True)
     visibleUrlTypes         = (cfgtypes.CfgList(CfgDownloadEnum))
 
     # mimic exactly the conary server cfg items
@@ -242,6 +241,10 @@ class MintConfig(ConfigFile):
     bulletinPath            = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'config', 'bulletin.txt')
 
+    #marketing block file
+    frontPageBlock          = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'config', 'frontPageBlock.html')
+
     # colo workarounds
     injectUserAuth          = (cfgtypes.CfgBool, True,
                                 'Inject user authentication into proxy '
@@ -255,6 +258,7 @@ class MintConfig(ConfigFile):
     # Only needed for rBO
     legaleseLink            = (cfgtypes.CfgString, '')
     tosLink                 = (cfgtypes.CfgString, '')
+    tosPostLoginLink        = (cfgtypes.CfgString, '')
     privacyPolicyLink       = (cfgtypes.CfgString, '')
 
     # anaconda-templates fallback label
@@ -262,6 +266,10 @@ class MintConfig(ConfigFile):
 
     # package creator related settings
     packageCreatorURL       = None
+
+    # available platforms
+    availablePlatforms      = cfgtypes.CfgList(cfgtypes.CfgString)
+    acceptablePlatforms     = cfgtypes.CfgList(cfgtypes.CfgString)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

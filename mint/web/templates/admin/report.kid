@@ -10,21 +10,25 @@
         <title>${formatTitle('View Reports')}</title>
     </head>
     <body>
-        <div id="left" class="side">
-            ${adminResourcesMenu()}
-        </div>
-        <div id="spanright">
-          <form action="${cfg.basePath}admin/viewReport" method="post">
-            <h2>Select a report</h2>
-            <p>
-              <select name="reportName">
-                <option py:for="report in availableReports" value="${report[0]}" py:content="report[1]"/>
-              </select>
-            </p>
-            <p>
-              <button type="submit">View Report</button>
-            </p>
-          </form>
+        <div class="admin-page">
+            <div id="left" class="side">
+                ${adminResourcesMenu()}
+            </div>
+            <div id="admin-spanright">
+              <form action="${cfg.basePath}admin/viewReport" method="post">
+                <div class="page-title-no-project">Select a Report</div>
+                <p>
+                  <select name="reportName">
+                    <option py:for="report in availableReports" value="${report[0]}" py:content="report[1]"/>
+                  </select>
+                </p>
+                 <br />
+                <p>
+                  <button type="submit">View Report</button>
+                </p>
+                 <br />
+              </form>
+            </div>
         </div>
     </body>
 </html>

@@ -61,12 +61,22 @@ from mint.helperfuncs import truncateForDisplay
         <title>${formatTitle('Files: %s'% troveName)}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Files in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
-            <p class="help">Shadowed files that have been modified on the current branch are displayed in <span class="modified">blue</span>.</p>
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Files in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></div>
 
-            ${fileList(fileIters)}
-            <hr/>
+                <p class="help">Shadowed files that have been modified on the current branch are displayed in <span class="modified">blue</span>.</p>
+
+                ${fileList(fileIters)}
+            </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>
+        

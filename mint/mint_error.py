@@ -58,6 +58,8 @@ class BuildPublished(MintError):
     "The referenced build is already part of a published release."
 class BuildEmpty(MintError):
     "The referenced build has no files and cannot be published."
+class BuildSystemDown(MintError):
+    "There was a problem contacting the build system."
 class ConfigurationMissing(MintError):
     "The rBuilder configuration is missing."
     # this init must be in here because this gets thrown from config.py
@@ -126,6 +128,7 @@ class NotEntitledError(MintError):
 class ParameterError(MintError):
     "A required parameter had an incorrect data type."
 class PermissionDenied(MintError): "Permission Denied"
+class PlatformDefinitionNotFound(MintError): "The platform definition was not found."
 class PublicToPrivateConversionError(MintError):
     "Converting public products to private products is not supported."
 class ProductDefinitionVersionNotFound(MintError):
@@ -152,6 +155,7 @@ class AMIInstanceDoesNotExist(MintError):
     "The AMI instance does not exist, it may have already been deleted."
 class TroveNotSet(MintError):
     "This build is not associated with a group."
+class IllegalUsername(MintError): "The username selected cannot be used."
 class UserAlreadyAdmin(MintError): "User is already an administrator."
 class UserAlreadyExists(MintError): "User already exists"
 class UserInduction(MintError):
@@ -160,6 +164,10 @@ class UserInduction(MintError):
 class UpdateServiceNotFound(MintError):
     "The Update Service was not found."
 class PackageCreatorError(MintError):
+    "Package Creator Error:"
+class NoImagesDefined(MintError):
+    "Package Creator Error:"
+class OldProductDefinition(MintError):
     "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing

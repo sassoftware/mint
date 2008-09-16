@@ -83,7 +83,7 @@ typeNames = {
     XEN_OVA:            "Citrix XenServer (TM) Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
-    AMI:                "Amazon Machine Image",
+    AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
     IMAGELESS:          "Online Update"
@@ -154,7 +154,7 @@ typeNamesMarketing = {
     XEN_OVA:            "Citrix XenServer (TM) Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
-    AMI:                "Amazon Machine Image",
+    AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
     IMAGELESS:          "Online Update",
@@ -189,6 +189,11 @@ buildTypeIcons = {
         icon="get-xen-express.gif",
         href="http://www.citrix.com/xenserver/getexpress",
         text="Citrix XenServer Express Edition: Download Now",
+        ),
+    VIRTUAL_PC_IMAGE: dict(
+        icon="get-hyper-v.png",
+        href="http://www.microsoft.com/Hyper-V",
+        text="Learn more about Microsoft Hyper-V",
         ),
 }
 

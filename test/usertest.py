@@ -293,6 +293,13 @@ class UsersTest(fixtures.FixturedUnitTest):
             "bad username", "password", "Ronald Frobnitz",
             "ronald@frobnitz.com", "ronald at frobnitz dot com", "")
 
+    @fixtures.fixture('Empty')
+    def testIllegalUsername(self, db, data):
+        client = self.getClient('admin')
+
+        self.assertRaises(IllegalUsername, client.registerNewUser,
+            self.cfg.authUser.title(), "password", "Ronald Frobnitz",
+            "ronald@frobnitz.com", "ronald at frobnitz dot com", "")
 
 if __name__ == "__main__":
     testsuite.main()

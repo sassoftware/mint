@@ -23,6 +23,9 @@ from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
+from mint.web import productversion
+from mint.web.logerror import logErrorAndEmail
+from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
@@ -50,8 +53,8 @@ def getUserDict(members):
         users[level].append((userId, username,))
     return users
 
+class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
 
-class ProjectHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -85,6 +88,37 @@ class ProjectHandler(WebHandler):
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
             raise HttpNotFound
 
+        self.handler_customizations(context)
+
+        # add the project name to the base path
+        self.basePath += "project/%s" % (cmds[0])
+        self.basePath = normPath(self.basePath)
+
+        self.setupView()
+
+        if not cmds[1]:
+            return self.index
+        try:
+            method = self.__getattribute__(cmds[1])
+        except AttributeError:
+            raise HttpNotFound
+
+        if not callable(method):
+            raise HttpNotFound
+
+        return method
+
+    def handler_customizations(self, context):
+        """ Override this if necessary """
+
+    def _predirect(self, path = "", temporary = False):
+        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
+
+    def help(self, auth):
+        return self._write("help")
+
+class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
+    def handler_customizations(self, context):
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
         self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
@@ -96,25 +130,6 @@ class ProjectHandler(WebHandler):
         else:
             self.latestPublishedRelease = None
             self.latestBuildsWithFiles = []
-
-        # add the project name to the base path
-        self.basePath += "project/%s" % (cmds[0])
-        self.basePath = normPath(self.basePath)
-
-        if not cmds[1]:
-            return self.projectPage
-        try:
-            method = self.__getattribute__(cmds[1])
-        except AttributeError:
-            raise HttpNotFound
-
-        if not callable(method):
-            raise HttpNotFound
-
-        return method
-
-    def _predirect(self, path = "", temporary = False):
-        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
 
     @redirectHttp
     def projectPage(self, auth):
@@ -142,18 +157,11 @@ class ProjectHandler(WebHandler):
             external = True
         else:
             external = False
-            
-        if self.userLevel == userlevels.OWNER and not external:
-            # get the versions associated with a product
-            versions = self.client.getProductVersionListForProduct(
-                                                                self.project.id)
-        else:
-            versions = []
-            
+
         return self._write("projectPage", mirrored = mirrored, 
                            anonymous = anonymous, vmtnId = vmtnId,
-                           versions = versions,
                            external = external)
+    index = projectPage
 
     def releases(self, auth):
         return self._write("pubreleases")
@@ -161,8 +169,14 @@ class ProjectHandler(WebHandler):
     @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        projectLabels = self.client.getAllProjectLabels(self.project.id)
-        return self._write("builds", builds = builds, projectLabels = projectLabels)
+        publishedReleases = dict()
+        for build in builds:
+            if build.getPublished() and \
+                    build.pubReleaseId not in publishedReleases:
+                publishedReleases[build.pubReleaseId] = \
+                        self.client.getPublishedRelease(build.pubReleaseId)
+
+        return self._write("builds", builds = builds, publishedReleases = publishedReleases)
 
     @writersOnly
     def groups(self, auth):
@@ -370,34 +384,33 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
-    @writersOnly
+    @productversion.productVersionRequired
     def newBuildsFromProductDefinition(self, auth):
-        return self._write("newBuildsFromProductDefinition",
-            productVersions = self.client.getProductVersionListForProduct(self.project.id))
+        return self._write("newBuildsFromProductDefinition")
 
-    @intFields(productVersionId = -1)
     @strFields(action = "cancel", productStageName = None)
     @boolFields(force = False)
     @dictFields(yesArgs = None)
     @writersOnly
-    def processNewBuildsFromProductDefinition(self, auth, productVersionId, productStageName, action, force, **yesArgs):
+    @productversion.productVersionRequired
+    def processNewBuildsFromProductDefinition(self, auth, productStageName, action, force, **yesArgs):
 
         if action.lower() == 'cancel':
             self._predirect('builds')
 
         try:
-            self.client.newBuildsFromProductDefinition(productVersionId,
+            self.client.newBuildsFromProductDefinition(self.currentVersion,
                     productStageName, force)
         except TroveNotFoundForBuildDefinition, tnffbd:
             return self._write("confirm",
                     message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
                     yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
-                                'productVersionId': productVersionId,
                                 'productStageName': productStageName,
                                 'action': 'submit',
                                 'force': '1'},
                     noLink = "builds")
         except Exception, e:
+            logErrorAndEmail(self.req, self.cfg, *sys.exc_info())
             self._addErrors("Problem encountered when creating build(s): %s" % str(e))
             self._predirect('newBuildsFromProductDefinition')
         else:
@@ -669,6 +682,21 @@ class ProjectHandler(WebHandler):
             files = build.getFiles()
 
             fileIds = list(set([x['fileId'] for x in files]))
+
+            anacondaVars = {'anaconda-custom':'', 'anaconda-templates':'', 'media-template':''}
+            for key in anacondaVars:
+                anacondaVars[key] = build.getDataValue(key, validate = False)
+                if anacondaVars[key]:
+                    n,v,f = parseTroveSpec(anacondaVars[key])
+                    if not v:  # skip things that don't have valid versions
+                        anacondaVars[key] = ''
+                        continue
+                    try:
+                        vObj = versions.VersionFromString(v)
+                    except ParseError:
+                        vObj = versions.ThawVersion(v)
+                    anacondaVars[key] = '%s/%s' % (vObj.trailingLabel(), vObj.trailingRevision())
+
             amiId = build.getDataValue('amiId', validate = False)
             amiS3Manifest = build.getDataValue('amiS3Manifest', validate=False)
         except builds.TroveNotSet:
@@ -687,45 +715,34 @@ class ProjectHandler(WebHandler):
                 buildInProgress = buildInProgress,
                 extraFlags = extraFlags,
                 amiId = amiId,
-                amiS3Manifest = amiS3Manifest)
+                amiS3Manifest = amiS3Manifest,
+                anacondaVars = anacondaVars)
 
     @writersOnly
+    @productversion.productVersionRequired
     def newPackage(self, auth):
         uploadDirectoryHandle = self.client.createPackageTmpDir()
-        versions = self.project.getProductVersionList()
-        if not versions:
+        if not self.versions:
             self._addErrors('You must create a product version before using the package creator')
             self._predirect('editVersion', temporary=True)
         return self._write('createPackage', message = '',
                 uploadDirectoryHandle = uploadDirectoryHandle,
-                versions = versions, versionId = -1, name=None)
+                sessionHandle=None, name=None)
 
     @writersOnly
     @strFields(uploadId=None, fieldname=None)
-    def upload_iframe(self, auth, uploadId, fieldname):
+    @boolFields(debug=False)
+    def upload_iframe(self, auth, uploadId, fieldname, debug):
         return self._write('uploadPackageFrame', uploadId = uploadId,
-                fieldname = fieldname, project = self.project.hostname)
+                fieldname = fieldname, project = self.project.hostname,
+                debug=debug)
 
     @writersOnly
+    @productversion.productVersionRequired
     @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
-    @intFields(versionId=-1)
-    def getPackageFactories(self, auth, uploadDirectoryHandle, versionId, upload_url, sessionHandle):
-        if sessionHandle:
-            editing = True
-        else:
-            editing = False
-        try:
-            #Start the session first
-            sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
-        except MintError, e:
-            self._addErrors(str(e))
-            self._predirect('newPackage', temporary=True)
-        if not factories:
-            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
-            self._predirect('newPackage', temporary=True)
-        return self._write('createPackageInterview',
-                editing = editing, sessionHandle = sessionHandle,
-                factories = factories, message = None, prevChoices = prevChoices)
+    def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
+        ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
+        return self._write('createPackageInterview', message=None, **ret)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
@@ -733,11 +750,10 @@ class ProjectHandler(WebHandler):
         """"""
         #Start both the upload and the pc sessions
         uploadDirectoryHandle = self.client.createPackageTmpDir()
-        versions = []
         sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
         return self._write('createPackage', message = '',
                 uploadDirectoryHandle = uploadDirectoryHandle,
-                versions = [], versionId = -1, sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
+                sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
 
     @writersOnly
     @strFields(name=None, label=None, prodVer=None, namespace=None)
@@ -760,18 +776,6 @@ class ProjectHandler(WebHandler):
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return self._write('buildPackage', sessionHandle = sessionHandle,
                 message = None)
-
-    @writersOnly
-    @strFields(sessionHandle=None)
-    def getPackageBuildLogs(self, auth, sessionHandle):
-        try:
-            logs = self.client.getPackageBuildLogs(sessionHandle)
-        except MintError, e:
-            self._addErrors("Build logs are not available for this build: %s" % str(e))
-            self._predirect('index', temporary=True)
-
-        self.req.content_type = 'text/plain'
-        return logs
 
     @writersOnly
     def packageCreatorPackages(self, auth):
@@ -1179,15 +1183,16 @@ class ProjectHandler(WebHandler):
             'commitEmail': self.project.commitEmail,
             'name': self.project.getName(),
             'desc': self.project.getDesc(),
-            'isPrivate': self.project.hidden
+            'isPrivate': self.project.hidden,
+            'namespace': self.project.getNamespace(),
         }
         return self._write("editProject", kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '',
-               commitEmail = '', isPrivate = 'off')
+               commitEmail = '', isPrivate = 'off', namespace='')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name,
-                           commitEmail, isPrivate):
+                           commitEmail, isPrivate, namespace):
 
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
@@ -1198,6 +1203,7 @@ class ProjectHandler(WebHandler):
         if not self._getErrors():
             try:
                 self.project.editProject(projecturl, desc, name)
+                self.project.setNamespace(namespace)
                 self.project.setCommitEmail(commitEmail)
             except DuplicateItem:
                 self._addErrors("%s title conflicts with another %s"%(pText.title(), pText.lower()))
@@ -1207,7 +1213,8 @@ class ProjectHandler(WebHandler):
 
         if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
-                      'commitEmail': commitEmail, 'isPrivate': isPrivate}
+                      'commitEmail': commitEmail, 'isPrivate': isPrivate,
+                      'namespace': namespace}
             return self._write("editProject", kwargs = kwargs)
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
@@ -1223,9 +1230,36 @@ class ProjectHandler(WebHandler):
         if self.project.external:
             raise ProductDefinitionVersionExternalNotSup();
         
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            # Assume that the first available platform is the default
+            kwargs['platformLabel'] = availablePlatforms[0][0]
+        except IndexError:
+            # Failing that, we don't have a platform label
+            kwargs['platformLabel'] = ''
+
+        platformName = None
+        customPlatform = ()
+        acceptablePlatform = True
+
         if not isNew:
             kwargs.update(self.client.getProductVersion(id))
             pd = self.client.getProductDefinitionForVersion(id)
+            platformSourceTrove = pd.getPlatformSourceTrove()
+            if platformSourceTrove:
+                n,v,f = parseTroveSpec(platformSourceTrove)
+                vObj = versions.VersionFromString(v)
+                kwargs['platformLabel'] = str(vObj.trailingLabel())
+                for lbl, name in availablePlatforms:
+                    if lbl == kwargs['platformLabel']:
+                        platformName = name
+                        break
+                if not platformName:
+                    platformName = 'Custom appliance platform on %s' % kwargs['platformLabel']
+                    customPlatform = (kwargs['platformLabel'], platformName)
+                    acceptablePlatform = \
+                            self.client.isPlatformAcceptable(kwargs['platformLabel'])
+
             kwargs['namespace'] = pd.getConaryNamespace()
         else:
             valueToIdMap = buildtemplates.getValueToTemplateIdMap();
@@ -1240,14 +1274,17 @@ class ProjectHandler(WebHandler):
                 visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                 buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                 productDefinition = pd,
+                availablePlatforms = availablePlatforms,
+                acceptablePlatform = acceptablePlatform,
+                platformName = platformName,
+                customPlatform = customPlatform,
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel')
+    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel', platformLabel = '')
     @requiresAuth
     @ownerOnly
-    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor,
-            **kwargs):
+    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, platformLabel, **kwargs):
 
         isNew = (id == -1)
 
@@ -1280,14 +1317,6 @@ class ProjectHandler(WebHandler):
                     namespace,
                     pd)
 
-        if isNew and not self._getErrors():
-            ##### DELETE #####
-            # this value was hard coded for the june 23, 2008 release of rBO
-            # this code must be removed when a proper solution is implemented
-            cCfg = self.project.getConaryConfig()
-            cClient = conaryclient.ConaryClient(cCfg)
-            pd.rebase(cClient, 'conary.rpath.com@rpl:2-devel')
-            ##### END DELETE #####
 
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
@@ -1341,7 +1370,6 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             buildSettings = bTmpl.getDefaultDict()
             buildSettings.update(proposedBuildSettings)
 
-
             # only add this error once
             if not buildName and not warnedNoNameAlready:
                 self._addErrors("Missing name for build definition(s)")
@@ -1366,7 +1394,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             self._addErrors(str(ve))
 
         if not self._getErrors():
-            if id == -1:
+            if isNew:
                 try:
                     id = self.client.addProductVersion(self.project.id,
                             namespace, name, description)
@@ -1375,9 +1403,11 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             else:
                 self.client.editProductVersion(id, description)
 
-        if not self._getErrors():
-            assert(id != -1)
-            self.client.setProductDefinitionForVersion(id, pd)
+        if id != -1 and not self._getErrors():
+            if isNew:
+                self.client.setProductDefinitionForVersion(id, pd, platformLabel)
+            else:
+                self.client.setProductDefinitionForVersion(id, pd)
 
             if kwargs.has_key('linked'):
                 # we got here from the "create a product menu" so output
@@ -1392,6 +1422,8 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 action = isNew and "Created" or "Updated"
                 self._setInfo("%s %s version '%s'" % \
                               (action, getProjectText().lower(), name))
+            #Set the currentVersion to the just created one
+            self._setCurrentProductVersion(id)
             self._predirect()
         else:
             kwargs.update(name=name, description=description)
@@ -1401,7 +1433,64 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                productDefinition = pd, kwargs = kwargs)
-            
+
+
+    @intFields(id = -1)
+    @requiresAuth
+    @ownerOnly
+    def rebaseProductVersion(self, auth, id):
+        productVersion = self.client.getProductVersion(id)
+        availablePlatforms = self.client.getAvailablePlatforms()
+        try:
+            # Assume that the first available platform is the default
+            platformLabel = availablePlatforms[0][0]
+        except IndexError:
+            # Failing that, we don't have a platform label
+            platformLabel = ''
+
+        platformName = None
+        customPlatform = ()
+        acceptablePlatform = True
+        pd = self.client.getProductDefinitionForVersion(id)
+
+        platformSourceTrove = pd.getPlatformSourceTrove()
+        if platformSourceTrove:
+            n,v,f = parseTroveSpec(platformSourceTrove)
+            vObj = versions.VersionFromString(v)
+            platformLabel = str(vObj.trailingLabel())
+            for lbl, name in availablePlatforms:
+                if lbl == platformLabel:
+                    platformName = name
+                    break
+            if not platformName:
+                platformName = 'Custom appliance platform on %s' % platformLabel
+                customPlatform = (platformLabel, platformName)
+                acceptablePlatform = \
+                        self.client.isPlatformAcceptable(platformLabel)
+
+        return self._write("rebaseProductVersion",
+                id = id,
+                productName = self.project.name,
+                versionName = productVersion.get('name',''),
+                currentPlatformLabel = platformLabel,
+                customPlatform = customPlatform,
+                availablePlatforms = availablePlatforms)
+
+    @intFields(id = -1)
+    @strFields(platformLabel = '', action = 'Cancel')
+    @requiresAuth
+    @ownerOnly
+    def processRebaseProductVersion(self, auth, id, platformLabel, action):
+        if action == 'Cancel':
+            self._predirect()
+
+        pd = self.client.getProductDefinitionForVersion(id)
+        if self.client.setProductDefinitionForVersion(id, pd, platformLabel):
+            self._setInfo("Product version updated")
+        else:
+            self._addError("Problem updating product version")
+        self._predirect()
+
     def _productVersionAvaliableBuildTypes(self):
         """
         Get a list of the available build types for build defs
@@ -1496,7 +1585,10 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
             self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
-        self._predirect("members")
+        if self.project.hidden:
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._predirect("members")
 
     @strFields(comments = '', keepReq = None)
     @requiresAuth
@@ -1707,7 +1799,4 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             desc = ""
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
-
-    def help(self, auth):
-        return self._write("help")
 

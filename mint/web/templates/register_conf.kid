@@ -16,15 +16,23 @@
     </div>
 
     <body>
-        <div id="layout">
-            <div id="right" class="side">
-                ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 2)}
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div id="left" class="side">
+                 ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 2)}
             </div>
-            <div id="spanleft">
-                <h2>Thank you for registering</h2>
+            
+            <div id="centerright">
+                <div class="page-title-no-project">Thank you for registering</div>
                 <p>An email confirming your request has been sent to the email address you provided.</p>
                 <p>Please follow the directions in your confirmation email to complete the registration process.</p>
-            </div>
+                
+            </div><br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

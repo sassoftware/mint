@@ -147,18 +147,20 @@ class BuildsTable(database.KeyedTable):
         else:
             return None
 
+    @staticmethod
+    def _filterBuildVisibility(rs, okHiddenProjectIds, limitToUserId):
+        # admins see all
+        if not limitToUserId:
+            return True
+        else:
+            # restrict hidden projects unless you're a member
+            if (not rs['isPrivate'] or (rs['isPrivate'] and (rs['projectId'] in okHiddenProjectIds))) and \
+               (rs['isPublished'] or ((not rs['isPublished']) and (rs['role'] in ('Product Developer', 'Product Owner')))):
+                return True
+        return False
+
     def getAllAMIBuilds(self, requestingUserId, limitToUserId=False):
 
-        def _filterAMIBuildVisibility(rs, okHiddenProjectIds):
-            # admins see all
-            if not limitToUserId:
-                return True
-            else:
-                # restrict hidden projects unless you're a member
-                if (not rs['isPrivate'] or (rs['isPrivate'] and (rs['projectId'] in okHiddenProjectIds))) and \
-                   (rs['isPublished'] or ((not rs['isPublished']) and (rs['role'] in ('Product Developer', 'Product Owner')))):
-                    return True
-            return False
 
         cu = self.db.cursor()
 
@@ -202,7 +204,8 @@ class BuildsTable(database.KeyedTable):
              WHERE bd.name = 'amiId' AND b.deleted = 0""",
              requestingUserId)
         return dict([(rs.pop('amiId'),rs) for rs in cu.fetchall_dict() \
-                if _filterAMIBuildVisibility(rs, okHiddenProjectIds)])
+                if self._filterBuildVisibility(rs, okHiddenProjectIds,
+                    limitToUserId)])
 
     def getAMIBuildsForProject(self, projectId):
         published = []
@@ -218,8 +221,56 @@ class BuildsTable(database.KeyedTable):
             if res[0]:
                 published.append(res[1])
             else:
-                unpublihsed.append(res[1])
+                unpublished.append(res[1])
         return published, unpublished
+
+    def getAllVwsBuilds(self, requestingUserId, limitToUserId=False):
+
+        cu = self.db.cursor()
+
+        # Get the list of hidden projects to accept if we need to filter
+        okHiddenProjectIds = []
+        if limitToUserId:
+            cu.execute("""
+                 SELECT pu.projectId
+                 FROM   projectUsers pu JOIN projects p USING (projectId)
+                 WHERE  p.hidden = 1 AND pu.userId = ?
+                 """, requestingUserId)
+            okHiddenProjectIds = [result[0] for result in cu.fetchall()]
+
+        cu.execute("""
+             SELECT p.projectId,
+                    p.hostname,
+                    b.buildId,
+                    bdf.sha1,
+                    p.name AS productName,
+                    p.description AS productDescription,
+                    b.name AS buildName,
+                    COALESCE(b.description,'') AS buildDescription,
+                    COALESCE(pr.timePublished,0) != 0 AS isPublished,
+                    p.hidden AS isPrivate,
+                    COALESCE(u.username, 'Unknown') AS createdBy,
+                    CASE
+                        WHEN pu.level = 0 THEN 'Product Owner'
+                        WHEN pu.level = 1 THEN 'Product Developer'
+                        WHEN pu.level = 2 THEN 'Product User'
+                        ELSE ''
+                    END AS role
+             FROM projects p
+                 JOIN builds b USING (projectId)
+                 LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
+                 JOIN buildData bd ON (bd.buildId = b.buildId)
+                 JOIN buildFiles bdf ON (bdf.buildId = b.buildId)
+                 LEFT OUTER JOIN users u ON (b.createdBy = u.userId)
+                 LEFT OUTER JOIN projectUsers pu
+                    ON (b.projectId = pu.projectId AND pu.userId = ?)
+             WHERE b.buildType = ?
+                 AND bd.name = 'XEN_DOMU'
+                 AND b.deleted = 0""",
+             requestingUserId, buildtypes.RAW_FS_IMAGE)
+        return dict([(rs.pop('sha1'), rs) for rs in cu.fetchall_dict() \
+                if self._filterBuildVisibility(rs, okHiddenProjectIds,
+                    limitToUserId) and rs.get('sha1')])
 
 def getExtraFlags(buildFlavor):
     """Return a list of human-readable strings describing various
@@ -453,3 +504,17 @@ class Build(database.TableObject):
             return override
         else:
             return buildtypes.buildTypeIcons.get(self.getBuildType(), None)
+
+    def getBaseFileName(self):
+        """
+        Return the baseFileName of a build. This was either set by the user
+        from advanced options or is <hostname>-<upstream version>-<arch>
+        Note this is not the full build filename: the extension is not supplied.
+        """
+        return self.server.getBuildBaseFileName(self.buildId)
+
+    def getBuildPageUrl(self):
+        """
+        Return the URL to the build's rBuilder page.
+        """
+        return self.server.getBuildPageUrl(self.buildId)

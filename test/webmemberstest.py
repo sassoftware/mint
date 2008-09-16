@@ -167,7 +167,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('user1', 'user1')
 
         page = self.fetchWithRedirect('/')
-        self.assertContent('/', 'Requests Pending')
+        self.assertContent('/', 'Pending requests:')
 
     def testRejectJoinReq(self):
         client, userId = self.quickMintUser('user1', 'user1')

@@ -15,7 +15,7 @@ import simplejson
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
-from mint import buildtypes, buildtemplates
+from mint import buildtypes, buildtemplates, projects
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
@@ -55,12 +55,13 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         build.setFiles([["file1", "File Title 1"],
                           ["file2", "File Title 2"]])
-        assert(build.getFiles() ==\
+        self.assertEquals(build.getFiles(),
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
-                'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5},
+                'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5,
+                'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
-                 'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6}]
-        )
+                 'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6,
+                 'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=6'}])
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
 
@@ -680,8 +681,10 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         build.refresh()
         self.failUnlessEqual(build.getFiles(),
-            [{'sha1': 'abcd', 'idx': 0, 'title': 'bar', 
-              'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')], 'fileId': 5, 'size': 10}]
+            [{'sha1': 'abcd', 'idx': 0, 'title': 'bar',
+              'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')],
+              'fileId': 5, 'size': 10,
+              'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'}]
         )
 
         # make sure the outputTokengets removed from the build data
@@ -976,6 +979,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         permissions in the serialized conaryrc.
         '''
 
+        adminClient = self.getClient('admin')
         developer = self.getClient('developer')
         projectId = data['projectId']
         buildId = data['buildId']
@@ -985,11 +989,11 @@ class BuildTest(fixtures.FixturedUnitTest):
         nobody = self.getClient('nobody')
         hostname = "bar"
         otherProjectId = nobody.newProject('bar', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
+                        shortname=hostname, version="1.0",
+                        prodtype="Component", isPrivate=True)
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
-        # First check that only foo shows up for developer
         buildDict = simplejson.loads(build.serialize())
         self.failIf(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should not be in conaryrc')
@@ -1026,7 +1030,36 @@ class BuildTest(fixtures.FixturedUnitTest):
                 self.assertTrue('DVD' not in mName)
             elif bf['title'] =="DVD iso file":
                 self.assertTrue('CD' not in mName)
-                
+
+    @fixtures.fixture('Full')
+    @testsuite.tests('RBL-3209')
+    def testGetBaseFileName(self, db, data):
+        client = self.getClient(data.get('owner'))
+        buildId = data.get('buildId')
+        build = client.getBuild(buildId)
+        self.assertEquals(build.getBaseFileName(), 'foo-1.1-x86_64')
+        cu = db.cursor()
+
+        # now set this value to something else
+        cu.execute("INSERT INTO BuildData VALUES(?,?,?,?)",
+               buildId, 'baseFileName', 'foo-bar', RDT_STRING)
+        db.commit()
+        self.assertEquals(build.getBaseFileName(), 'foo-bar')
+
+    @fixtures.fixture('Full')
+    @testsuite.tests('RBL-3209')
+    def testGetBuildPageUrl(self, db, data):
+        client = self.getClient(data.get('owner'))
+        buildId = data.get('buildId')
+        build = client.getBuild(buildId)
+        self.assertEquals(build.getBuildPageUrl(),
+                'http://test.rpath.local2/project/foo/build?id=1')
+        cu = db.cursor()
+        cu.execute("UPDATE Projects SET hostname='bar' WHERE projectId=?",
+                data.get('projectId'))
+        db.commit()
+        self.assertEquals(build.getBuildPageUrl(),
+                'http://test.rpath.local2/project/bar/build?id=1')
 
 class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
@@ -1375,6 +1408,53 @@ class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
                           templBuildDefs[1]['vmwareEsxImage'])
 
 class BuildTestConaryRepository(MintRepositoryHelper):
+    def testBuildTrovesResolution(self):
+        raise testsuite.SkipTestException("This test is breaking when surrounded by other openRepository(1) calls")
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        self.openRepository(1, serverCache=self.servers)
+        repos1 = self.getRepositoryClient(serverIdx=1)
+
+        #create an external project that points to the original project
+        self.openRepository(2, serverName="localhost1", serverCache=self.servers)
+        repos2 = self.getRepositoryClient(serverIdx=2)
+        extProjectId = client.newExternalProject("External Project 2",
+            "external2", MINT_PROJECT_DOMAIN, "localhost1@foo:bar",
+            repos2.c.map[0][1], True)
+
+        self.upstreamMap = dict(repos1.c.map)
+        def projectConfig(s):
+            cfg = conarycfg.ConaryConfiguration(False)
+            # This is a hack since all our configured repositories require
+            # repository maps.  Inject the "non-mirrored" repository map
+            cfg.repositoryMap.update(self.upstreamMap)
+            return cfg
+
+        self.mock(projects.Project, 'getConaryConfig', projectConfig)
+
+        #Create a project
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        self.addComponent("anaconda-templates:runtime", "/localhost1@foo:bar/1.0", "is: x86", repos=repos2)
+        a = self.addCollection("anaconda-templates", "/localhost1@foo:bar/1.0", [(":runtime", "/localhost1@foo:bar/1.0")], defaultFlavor="is: x86", repos=repos2)
+
+        self.addComponent("anaconda-templates:runtime", "/localhost1@foo:bar/1.1", "is: x86", repos=repos1)
+        b = self.addCollection("anaconda-templates", "/localhost1@foo:bar/1.1", [(":runtime", "/localhost1@foo:bar/1.1")], defaultFlavor="is: x86", repos=repos1)
+
+        #make sure they got set up properly
+        self.assertEquals('1.1-1-1', str(repos1.findTrove(b.getVersion().trailingLabel(), (b.getName(), None, b.getFlavor()))[0][1].trailingRevision()))
+        self.assertRaises(TroveNotFound, repos1.findTrove, a.getVersion().trailingLabel(),
+            (a.getName(), a.getVersion(), a.getFlavor()))
+        self.assertEquals('1.0-1-1', str(repos2.findTrove(a.getVersion().trailingLabel(), (a.getName(), None, a.getFlavor()))[0][1].trailingRevision()))
+        self.assertRaises(TroveNotFound, repos2.findTrove, b.getVersion().trailingLabel(),
+            (b.getName(), b.getVersion(), b.getFlavor()))
+
+        x = project.resolveExtraTrove("anaconda-templates",
+                "/testproject.%s@rpl:devel/0.0:1.0-1-1" % MINT_PROJECT_DOMAIN, "1#x86",
+                a.getVersion().freeze(), a.getFlavor().freeze())
+        self.failUnlessEqual(x, "anaconda-templates=/localhost1@foo:bar/1.0-1-1[is: x86]")
+
     def testBuildTroves(self):
         client, userid = self.quickMintUser("test", "testpass")
 

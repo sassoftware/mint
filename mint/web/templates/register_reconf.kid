@@ -11,13 +11,25 @@
         <title>${formatTitle('Confirmation Required')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Thank you for updating your email address</h2>
-            <p>An email confirming your request has been sent to <b>${email}</b>.</p>
-            <p>Please follow the directions in your confirmation email to complete the update process.</p>
-            <p>You are now logged out, and you must confirm the new email account before continuing.</p>
-            <p>If you have made a mistake, you can log back in and you will have enough limited access to
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Updated Email Address</div>
+                <p>An email confirming your request has been sent to <b>${email}</b>.</p>
+                
+                <p>Please follow the directions in your confirmation email to complete the update process.<br/>
+                You are now logged out, and you must confirm the new email account before continuing.<br/>
+                If you have made a mistake, you can log back in and you will have enough limited access to
                change your email address again.</p>
+
+            </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
-</html>
+</html>    
+

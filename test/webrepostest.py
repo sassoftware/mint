@@ -15,7 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from repostest import testRecipe
 from conary import versions
 from conary.conaryclient import ConaryClient
-from conary_test import resources
+from testrunner import resources
 
 testDirRecipe = """
 class TestCase(PackageRecipe):
@@ -112,6 +112,28 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # logged-in user should see the browser
         page = self.webLogin('testuser', 'testpass')
+        page = page.assertContent('/repos/test/browse', code = [200],
+                content = 'troveInfo?t=test',
+                server = self.getProjectServerHostname())
+        
+    @testsuite.tests('RBL-3108')
+    def testAdminBrowsePrivateProject(self):
+        """
+        Make sure admins can browser private products they don't belong to
+        """
+        adminClient, _ = self.quickMintAdmin("adminuser", "testpass")
+
+        client, _ = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'test')
+
+        adminClient.hideProject(projectId)
+        self.makeSourceTrove("testcase", testRecipe)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime" ])
+
+        # admin user should see the browser
+        page = self.webLogin('adminuser', 'testpass')
         page = page.assertContent('/repos/test/browse', code = [200],
                 content = 'troveInfo?t=test',
                 server = self.getProjectServerHostname())

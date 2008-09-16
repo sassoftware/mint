@@ -22,9 +22,18 @@ Internal Changes
   appropriately. (RBL-3062)
 * Publishing and Unpublishing AMI images now sets EC2 launch permissions 
   appropriately. (RBL-3064)
+* A bug that prevented non-admins from adding or modifying a product
+  team member's permissions has been corrected (RBL-3146).
+* A bug that caused the wrong versions of anaconda templates to be specified to
+  the build system resulting in failed builds has been fixed.  (RBL-2763)
+* Requests to http://<producthostname>.<rbuilderdomainname>/ now properly
+  redirect to the product homepage even when the product is marked as
+  private (RBL-3148).
 
 Web Front End Changes
 ---------------------
+* Product Version is now set as a view on the Product, affecting all pages that
+  interact with the product version (RBL-3163)
 * Fixed a bug where the cook group page mistakenly referenced the "Images" 
   link instead of the "Manage Images" link. (RBL-3014)
 * There is now a link on the account settings page to edit a user's EC2
@@ -53,7 +62,51 @@ Web Front End Changes
   on the "Edit Amazon Web Services Settings" page. (RBL-3126)
 * The "rBuilder Catalog for EC2" page now contains a link to the EC2
   documentation. (RB-3127)
+* Fixed a bug where the "rBuilder Catalog for EC2" was being blocked by
+  the adblock extension on Firefox 3. (RBL-3123)
+* The versions of special troves used to build an Installable
+  ISO is now displayed in the image build's detail page. (RBL-2600)
+* A new page will require the acceptance of the rPath terms of service prior 
+  to initial setup. (RBL-3213)
+* Terms of service and privacy policy links now open in new tabs/windows.
+* Platform selection is now shown upon creating a new product (and its
+  initial version) or creating a new version. Additionally, rebasing and/or
+  changing a platform has been relocated to its own page, linked off of 
+  the edit product version page. (RBL-2985)
+* The product and membership requests have been consolidated into dropdown
+  menus in the right-hand sidebar. (RBL-3306)
 
+Bug Fixes
+---------------------
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
+* Fixed a bug preventing admin users from being able to browse the
+  repository for private products they are not members of. (RBL-3108)
+* The edit external products page now retrieves the correct label
+  information in all cases. (RBL-3179)
+* The help text for Group Builder and package creator has been moved to the top
+  of the page. (RBL-3083, RBL-3182)
+* A tool for guiding users through the process of creating an appliance, named
+  Appliance Creator, has been added (RDST-407)
+* The Edit Version page now allows you to rebase your platform definition.
+  (RBL-2383)
+* The Appliance Creator Wizard has been modified to allow the addition of
+  arbitrary packages to your appliance definition. (RDST-533)
+* Fixed a bug where the Edit Version page referred to "Image Sets" when dealing
+  with an "Image Set". (RBL-3281)
+* The namespace field has been removed from the edit and create product
+  version pages.  The product versions namespace is obtained through the
+  product now. (RBL-3296)
+* Moved the choice of appliance or component when creating a new product to the
+  top of the page under title. (RBL-3298)
+* Changed the "No images defined." message on the create/edit product version
+  pages to use a bold font. (RBL-3319)
+* When creating or editing a product version, users will now be prompted with
+  a modal warning if they do not define any builds. (RBL-3301)
+* The "Update Appliance Platform" checkbox is now the proper size. (RBL-3336)
+* Rerunning the rbuilder initial setup no longer resets the internal password,
+  as that caused previously created repositories to become unavailable. (RBL-3344)
 
 Changes in 4.1.1
 ================
@@ -75,6 +128,8 @@ Bug Fixes
   will no longer be pinned by default in generated images. (RBL-3000)
 * domU-flavored images based on rPath Linux 2 now have the correct root
   device label. (RBL-3036)
+* Log files written by scripts such as outbound mirrors are now properly
+  created after they are rotated. (RBL-3042)
 
 
 Changes in 4.1.0

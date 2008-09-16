@@ -20,6 +20,7 @@ from mint import userlevels
 from mint.mint_error import *
 
 from conary import dbstore
+from conary.deps import deps
 from conary.lib import util
 from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration
@@ -52,6 +53,9 @@ class Project(database.TableObject):
 
     def getDomainname(self):
         return self.domainname
+    
+    def getNamespace(self):
+        return self.namespace
 
     def getProjectUrl(self):
         return self.projecturl
@@ -121,6 +125,9 @@ class Project(database.TableObject):
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
 
+    def setNamespace(self, namespace):
+        return self.server.setProjectNamespace(self.id, namespace)
+
     def setCommitEmail(self, commitEmail):
         return self.server.setProjectCommitEmail(self.id, commitEmail)
 
@@ -132,6 +139,8 @@ class Project(database.TableObject):
         return self.server.getLabelsForProject(self.id, False, '', '')[0]
 
     def getConaryConfig(self, overrideAuth = False, newUser = '', newPass = ''):
+        '''Creates a ConaryConfiguration object suitable for repository access
+        from the same server as MintServer'''
 
         labelPath, repoMap, userMap, entMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
 
@@ -139,7 +148,8 @@ class Project(database.TableObject):
         #cfg.root = ":memory:"
         #cfg.dbPath = ":memory:"
 
-        cfg.initializeFlavors()
+        #cfg.initializeFlavors()
+        cfg.buildFlavor = deps.parseFlavor('')
 
         installLabelPath = " ".join(x for x in labelPath.keys())
         cfg.configLine("installLabelPath %s" % installLabelPath)
@@ -358,17 +368,42 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
         # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
                         ON Projects.projectId=ProjectUsers.projectId
-                    WHERE ProjectUsers.userId=? AND
-                    NOT (hidden=1 AND level not in %s)""" % \
-            str(tuple(userlevels.WRITERS))
+                    WHERE ProjectUsers.userId=?"""
         if filter:
             stmt += " AND hidden=0"
         cu.execute(stmt, userId)
 
         return [tuple(x) for x in cu.fetchall()]
+
+    def getProjectDataByMember(self, userId, filter = False):
+        cu = self.db.cursor()
+        # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
+        stmt = """SELECT Projects.*, ProjectUsers.level,
+                     EXISTS(SELECT 1 FROM MembershipRequests
+                            WHERE projectId=Projects.projectid) AS hasRequests
+                  FROM ProjectUsers
+                  JOIN Projects ON Projects.projectId=ProjectUsers.projectId
+                  WHERE ProjectUsers.userId=?"""
+        if filter:
+            stmt += " AND hidden=0"
+        cu.execute(stmt, userId)
+        ret = []
+        for x in cu.fetchall_dict():
+            level = x.pop('level')
+            hasRequests = x.pop('hasRequests')
+            ret.append((x, level, hasRequests))
+        return ret
 
     def getNewProjects(self, limit, showFledgling):
         cu = self.db.cursor()
@@ -658,7 +693,7 @@ class LabelsTable(database.KeyedTable):
                         protocol = "http"
                         newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
 
-                    url = rewriteUrlProtocolPort(url, protocol)
+                    url = rewriteUrlProtocolPort(url, protocol, newPort)
 
                 map = url
             else:
@@ -761,8 +796,6 @@ class RepositoryDatabase:
             r = None
 
         if r:
-            print >> sys.stderr, "using alternate database:", r[0], r[1]
-            sys.stderr.flush()
             return r[0], r[1]
         else:
             name = self.translate(name)

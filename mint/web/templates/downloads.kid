@@ -17,8 +17,21 @@
                 ${releasesMenu(projectPublishedReleases, isOwner)}
                 ${commitsMenu(projectCommits)}
             </div>
-            <div id="spanright">
-                <img src="downloadChartImg?span=$span" /> 
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                    <div class="page-title">
+                    Download Statistics</div>
+                    
+                    <img src="downloadChartImg?span=$span" /> 
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

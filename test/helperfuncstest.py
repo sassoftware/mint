@@ -8,6 +8,7 @@ import unittest
 testsuite.setup()
 
 import kid
+import logging
 import os
 import sys
 import tempfile
@@ -15,6 +16,7 @@ import tempfile
 import mint_rephelp
 from mint import config
 from mint import copyutils
+from mint import scriptlibrary
 from mint import templates
 from mint import flavors
 from mint.helperfuncs import *
@@ -93,9 +95,10 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
     def testMakefiles(self):
         missing = False
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
-                    'mint/web/content', 'scripts', 'test/templates',
-                    'test/annotate', 'test/coverage', 'test/.coverage',
-                    'test/archive/anaconda', 'bin', 'test', 'tom', 'product')
+                    'mint/web/content', 'mint/web/templates', 'scripts',
+                    'test/templates', 'test/annotate', 'test/coverage',
+                    'test/.coverage', 'test/archive/anaconda', 'bin', 'test',
+                    'tom', 'product')
         mint_path = os.getenv('MINT_PATH')
 
         # tweak skipdirs to be fully qualified path
@@ -277,7 +280,7 @@ Much like Powdermilk Biscuits[tm]."""
     @testsuite.context("unfriendly")
     def testJavascript(self):
         # whizzyupload.js was validated with jslint
-        whiteList = ['json.js', 'whizzyupload.js', 'swf_deeplink_history.js']
+        whiteList = ['json.js', 'whizzyupload.js', 'swf_deeplink_history.js', 'history.js', 'iClouds.js', 'AC_OETags.js']
         scriptPath = os.path.join(os.path.split(os.path.split(\
             os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
                                    'javascript')
@@ -357,8 +360,6 @@ Much like Powdermilk Biscuits[tm]."""
             assert(name in x)
 
     def testScriptLogger(self):
-        from mint import scriptlibrary
-        import logging
         fd, fn = tempfile.mkstemp()
 
         try:
@@ -377,6 +378,73 @@ Much like Powdermilk Biscuits[tm]."""
                 assert(x in logContents)
         finally:
             os.unlink(fn)
+
+    def testUnwritableScriptLog(self):
+        '''
+        Check that the script logger deals with an unwritable log by
+        not opening the file logger.
+
+        @tests: RBL-3042
+        '''
+
+        def mockSetup(path):
+            scriptlibrary._scriptLogger.setup = True
+            self.failUnlessEqual(path, None)
+            class MockLogger(object):
+                def warning(xself, msg, *args):
+                    pass
+            return MockLogger()
+
+        _setup = scriptlibrary.setupScriptLogger
+        try:
+            scriptlibrary.setupScriptLogger = mockSetup
+
+            fd, fn = tempfile.mkstemp()
+            os.chmod(fn, 0)
+            os.close(fd)
+            script = scriptlibrary.GenericScript()
+            script.logPath = fn
+            script.resetLogging()
+        finally:
+            scriptlibrary.setupScriptLogger = _setup
+
+    def testMissingScriptLogFile(self):
+        '''
+        Check that a writable log directory but no log file still
+        results in a log being opened.
+
+        @tests: RBL-3042
+        '''
+
+        logdir = tempfile.mkdtemp()
+        logfile = os.path.join(logdir, "foo.log")
+
+        calls = [0]
+        def mockSetup(path):
+            scriptlibrary._scriptLogger.setup = True
+            if not calls[0]:
+                # First call is implicit and has no logfile
+                self.failUnlessEqual(path, None)
+            else:
+                # Second call is by us
+                self.failUnlessEqual(path, logfile)
+            calls[0] += 1
+            return True
+
+        _setup = scriptlibrary.setupScriptLogger
+        try:
+            scriptlibrary.setupScriptLogger = mockSetup
+            script = scriptlibrary.GenericScript()
+            script.logPath = logfile
+            script.resetLogging()
+            self.failUnless(os.path.exists(logfile),
+                "log file was not opened")
+            # check that mockSetup got called twice
+            self.failUnlessEqual(calls, [2],
+                "script log was not re-opened")
+        finally:
+            scriptlibrary.setupScriptLogger = _setup
+            util.rmtree(logdir)
 
     def testShortTroveSpec(self):
         from mint.web.templatesupport import shortTroveSpec

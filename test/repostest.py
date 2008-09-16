@@ -180,8 +180,8 @@ class RepositoryTest(MintRepositoryHelper):
             ignoreDeps = True)
 
         # compare two contents directories:
-        d1 = [x[1:] for x in os.walk(self.reposDir + "/contents1/")]
-        d2 = [x[1:] for x in os.walk(self.reposDir + "/contents2/")]
+        d1 = [x[1:] for x in os.walk(self.reposDir + "-mint/contents1/")]
+        d2 = [x[1:] for x in os.walk(self.reposDir + "-mint/contents2/")]
         assert(d1 and d2 and d1 == d2)
 
         cfg = project.getConaryConfig()

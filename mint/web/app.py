@@ -10,6 +10,7 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
+from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels
@@ -19,6 +20,7 @@ from mint.web import cache, fields
 from mint.web.admin import AdminHandler
 from mint.web.cache import pageCache, reqHash
 from mint.web.project import ProjectHandler
+from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.setup import SetupHandler
@@ -74,6 +76,7 @@ class MintApp(WebHandler):
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
+        self.apcHandler = APCHandler()
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
@@ -113,14 +116,17 @@ class MintApp(WebHandler):
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
 
         self.auth = self.client.checkAuth()
+        self.membershipReqsList = None
         if self.auth.authorized:
             if not maintenance.getMaintenanceMode(self.cfg) or self.auth.admin:
                 self.user = self.client.getUser(self.auth.userId)
                 self.projectList = self.client.getProjectsByMember(self.auth.userId)
                 self.projectDict = {}
-                for project, level in self.projectList:
+                for project, level, memberReqs in self.projectList:
                     l = self.projectDict.setdefault(level, [])
-                    l.append(project)
+                    l.append((project, memberReqs))
+                self.membershipReqsList = [x[0] for x in self.projectList
+                        if x[2] > 0 and x[1] == userlevels.OWNER]
             else:
                 if pathInfo not in  ('/maintenance/', '/logout/'):
                     raise MaintenanceMode
@@ -182,7 +188,7 @@ class MintApp(WebHandler):
 
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
-        dots = fullHost.split('.')
+        dots = fullHost.split(':')[0].split('.')
         hostname = dots[0]
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
@@ -190,19 +196,7 @@ class MintApp(WebHandler):
         if hostname not in server.reservedHosts \
             and hostname != self.cfg.hostName \
             and self.cfg.configured:
-            try:
-                project = self.client.getProjectByHostname(hostname)
-            except ItemNotFound:
-                # project does not exist, redirect to front page
-                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
-                raise HttpNotFound
-            else:
-                # coerce "external" projects to the externalSiteHost, or
-                # internal projects to projectSiteHost.
-                if project.external: # "external" projects are endorsed by us, so use siteHost
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
-                else:
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
 
@@ -212,6 +206,7 @@ class MintApp(WebHandler):
 
         # mapping of url regexps to handlers
         urls = (
+            (r'^/apc/',         self.apcHandler),
             (r'^/project/',     self.projectHandler),
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
@@ -238,11 +233,21 @@ class MintApp(WebHandler):
             self.groupProject = None
 
         # Handle messages stashed in the session
-        self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', '')
         self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
+
+        # get the news for the frontpage (only in non-maint mode)
+        self.latestRssNews = dict()
+        if not maintenance.getMaintenanceMode(self.cfg):
+            newNews = self.client.getNews()
+            if len(newNews) > 0:
+                self.latestRssNews = newNews[0]
+                if 'pubDate' in self.latestRssNews:
+                    self.latestRssNews['age'] = \
+                            timeDelta(self.latestRssNews['pubDate'],
+                                    capitalized=False)
 
         # a set of information to be passed into the next handler
         context = {
@@ -253,6 +258,7 @@ class MintApp(WebHandler):
             'fields':           self.fields,
             'projectList':      self.projectList,
             'projectDict':      self.projectDict,
+            'membershipReqsList': self.membershipReqsList,
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
@@ -267,11 +273,11 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
-            'inlineMime':       self.inlineMime,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
-            'remoteIp':         self.remoteIp
+            'remoteIp':         self.remoteIp,
+            'latestRssNews':    self.latestRssNews
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:
