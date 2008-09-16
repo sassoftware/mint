@@ -77,7 +77,7 @@ from mint.web.templatesupport import projectText
                     <div class="pageSection" py:if="isWriter">
                         <h2>Add ${projectText().title()} Contents</h2>
                         <ul class="pageSectionList">
-                            <li>Create a <a href="${basePath}newBuild">New Image</a></li>
+                            <li>Create a <a href="${basePath}newBuild">New Image</a><span py:if="versions and currentVersion"> or a <a href="${basePath}newBuildsFromProductDefinition">New Image Set based on ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</a></span></li>
                             <li py:if="isOwner">Create a <a href="${basePath}newRelease">New Release</a></li>
                             <li>Create a <a href="${basePath}newPackage">New Package</a></li>
                         </ul>
