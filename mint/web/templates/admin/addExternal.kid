@@ -20,12 +20,13 @@
         <title>${formatTitle((editing and 'Edit' or 'Add') + ' External %s'%projectText().title())}</title>
     </head>
     <body>
+    <div class="admin-page">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
-        <div id="spanright">
+        <div id="admin-spanright">
           <form action="${cfg.basePath}admin/processAddExternal" method="post">
-            <h2>${editing and 'Edit ' or 'Add '} External ${projectText().title()}</h2>
+            <div class="page-title-no-project">${editing and 'Edit ' or 'Add '} External ${projectText().title()}</div>
             <p py:if="not editing" class="help">External ${projectText().lower()}s appear just like the
             ${projectText().lower()}s you host on ${cfg.productName} with one exception:
             the repository is <em>not</em> stored on
@@ -43,13 +44,15 @@
             the appropriate information for the external ${projectText().lower()} you
             wish to add.</p>
 
-            <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
-              <tr>
-                <th><em class="required">${projectText().title()} Name:</em></th>
-                <td>
+            <table class="mainformhorizontal">
+            <tr>
+                <td class="form-label"><em class="required">${projectText().title()} Name:</em></td>
+                <td py:if="editing" class="form-label">
+                    ${kwargs['hostname']}<input type="${editing and 'hidden' or 'text'}" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
+                </td>
+                <td py:if="not editing">
                     <input type="${editing and 'hidden' or 'text'}" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
-                    <div py:if="editing">${kwargs['hostname']}</div>
-                    <p py:if="not editing" class="help">Enter a local name for this
+                    <p class="help">Enter a local name for this
                     ${projectText().lower()}. The local name will be used as the hostname
                     for this ${projectText().lower()}'s site and repository
                     (http://&lt;${projectText().lower()}-name&gt;.${cfg.projectDomainName}/). It
@@ -57,12 +60,12 @@
                     numbers, and be less than or equal to 16 characters
                     long.  For example, <strong>mylinux</strong></p>
 
-                    <p py:if="not editing" class="help">(To reduce confusion, we recommend
+                    <p class="help">(To reduce confusion, we recommend
                     that you enter the external ${projectText().lower()}'s name.)</p>
                 </td>
-              </tr>
-              <tr>
-                  <th><em class="required">${projectText().title()} Title:</em></th>
+            </tr>
+            <tr>
+                  <td class="form-label"><em class="required">${projectText().title()} Title:</em></td>
                   <td>
                     <input type="text" autocomplete="off" name="name" value="${kwargs['name']}"/>
                     <p class="help">Enter a local title for this
@@ -73,17 +76,17 @@
                    <p class="help">(To reduce confusion, we recommend
                    that you enter the external ${projectText().lower()}'s title.)</p>
                   </td>
-              </tr>
-              <tr>
-                <th><em class="required">${projectText().title()} Label:</em></th>
+            </tr>
+            <tr>
+                <td class="form-label"><em class="required">${projectText().title()} Label:</em></td>
                 <td>
                   <input type="text" autocomplete="off" name="label" value="${kwargs['label']}" />
                   <p class="help">Enter this ${projectText().lower()}'s label.  For
                   example, <strong>conary.example.com@rpl:1</strong></p>
                 </td>
-              </tr>
-              <tr>
-                <th>Repository URL:</th>
+            </tr>
+            <tr>
+                <td class="form-label">Repository URL:</td>
                 <td>
                   <input type="text" autocomplete="off" name="url" value="${kwargs['url']}"/>
                   <p class="help">Enter the URL for this ${projectText().lower()}'s
@@ -94,92 +97,91 @@
                   repository URL will be
                   <strong>http://conary.example.com/conary/</strong>)</p>
                 </td>
-              </tr>
+            </tr>
             </table>
 
 
             <h2>Authentication</h2>
             <table class="mainformhorizontal" id="authSettings">
-                <tr>
-                    <td colspan="2"><input id="authTypeNone" type="radio" class="check" name="authType" value="none"
-                        py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/>
-                        <label for="authTypeNone">Anonymous access only</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2"><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
-                    </td>
-                </tr>
-                <tr>
-                    <th style="padding-left: 3em; width: 25%;">Username:</th>
-                    <td><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" value="${kwargs['externalUser']}" /></td>
-                </tr>
-                <tr>
-                    <th style="padding-left: 3em; width: 25%;">Password:</th>
-                    <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" value="${kwargs['externalPass']}" /></td>
-                </tr>
-                <tr>
-                    <td colspan="2"><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
-                        py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" />
-                        <label for="authTypeEnt">Use an entitlement</label>
-                    </td>
-                </tr>
-                <tr>
-                    <th style="padding-left: 3em; width: 25%;">Entitlement Key:</th>
-                    <td>
-                        <textarea rows="5" cols="50" name="externalEntKey"  py:content="kwargs['externalEntKey']" />
-                    </td>
-                </tr>
+            <tr>
+                <td colspan="2"><input id="authTypeNone" type="radio" class="check" name="authType" value="none"
+                    py:attrs="{'checked': (kwargs['authType'] == 'none') and 'checked' or None}"/>
+                    <label for="authTypeNone">Anonymous access only</label>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
+                </td>
+            </tr>
+            <tr>
+                <td class="form-label" style="text-align: right;">Username:</td>
+                <td width="100%"><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" value="${kwargs['externalUser']}" /></td>
+            </tr>
+            <tr>
+                <td class="form-label" style="text-align: right;">Password:</td>
+                <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" value="${kwargs['externalPass']}" /></td>
+            </tr>
+            <tr>
+                <td colspan="2"><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement"
+                    py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" />
+                    <label for="authTypeEnt">Use an entitlement</label>
+                </td>
+            </tr>
+            <tr>
+                <td class="form-label" style="text-align: right;">Entitlement Key:</td>
+                <td>
+                    <textarea rows="5" cols="50" name="externalEntKey"  py:content="kwargs['externalEntKey']" />
+                </td>
+            </tr>
             </table>
 
 
             <h2>Mirror Settings</h2>
-            <p>
-                <div>
-                    <input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
-                           py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" />
-                    <label for="useMirror_none">
-                        Cache contents of this repository locally as needed.
-                        (Choose this option if you have a mirror preload disk supplied by rPath.)
-                    </label>
-                </div>
-                <div>
-                    <input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
-                            py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" />
-                    <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication)</label>
-                </div>
-            </p>
             <table class="mainformhorizontal" id="mirrorSettings">
-                <tr>
-                   <th><em><label for="allLabels">Mirror All Labels on Repository:</label></em></th>
-                   <td>
-                       <input class="radio" type="checkbox" name="allLabels" value="1"
-                            py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" id="allLabels" />
-                       <p class="help"><label for="allLabels">Check this box to mirror all of the labels
-                            available in the source repository.</label></p>
-                   </td>
-                </tr>
-                <tr>
-                   <th><em>Additional labels to mirror:</em></th>
-                   <td>
-                       <input type="text" autocomplete="off" name="additionalLabelsToMirror" value="${kwargs['additionalLabelsToMirror']}" />
-                       <p class="help">This should be a space-separated list of additional repository labels to mirror.</p>
-                   </td>
-                </tr>
+            <tr>
+                <td><input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
+                       py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" /></td>
+                <td><label for="useMirror_none">
+                    Cache contents of this repository locally as needed. (Choose this option if you have a mirror preload disk 
+                    supplied by rPath.)</label>
+                </td>
+            </tr>
+            <tr>
+                <td><input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
+                        py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" /></td>
+                <td>
+                <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication)</label></td>
+            </tr>
+            <tr>
+               <td><input class="radio" type="checkbox" name="allLabels" value="1"
+                        py:attrs="{'checked': kwargs['allLabels'] and 'checked' or None}" id="allLabels" /></td>
+               <td>
+                   <label for="allLabels">Mirror All Labels on Repository</label>
+                   <p class="help"><label for="allLabels">Check this box to mirror all of the labels
+                        available in the source repository.</label></p>
+               </td>
+            </tr>
+            </table>
+            <table class="mainformhorizontal" id="moreMirrorSettings">
+            <tr>
+               <td class="form-label"><em>Additional labels to mirror:</em></td>
+               <td width="100%">
+                   <input type="text" autocomplete="off" name="additionalLabelsToMirror" value="${kwargs['additionalLabelsToMirror']}" />
+                   <p class="help">This should be a space-separated list of additional repository labels to mirror.</p>
+               </td>
+            </tr>
             </table>
 
             <h2>Backup Settings</h2>
-            <p>
-                <div>
-                    <label>
-                        <input type="checkbox" id="backupExternal" name="backupExternal" value="1"
-                            py:attrs="{'checked': kwargs['backupExternal'] and 'checked' or None}" />
-                        Backup inbound mirror contents. (This will make backups
-                        substantially larger.)
-                    </label>
-                </div>
-            </p>
-
+            <table class="mainformhorizontal" id="mirrorSettings">
+            <tr>
+                <td><input type="checkbox" id="backupExternal" name="backupExternal" value="1"
+                        py:attrs="{'checked': kwargs['backupExternal'] and 'checked' or None}" /></td>
+                <td><label>Backup inbound mirror contents. (This will make backups substantially larger.)</label></td>
+            </tr>
+            </table>
+            <br />
+            <p class="p-button">
             <button py:if="not editing" class="img" type="submit">
                 <img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" />
             </button>
@@ -187,7 +189,10 @@
                 <img src="${cfg.staticPath}/apps/mint/images/save_changes_button.png" alt="Save Changes" />
             </button>
             <input type="hidden" name="projectId" value="${projectId}" />
+            </p>
+            <br />
         </form>
         </div>
+    </div>
     </body>
 </html>

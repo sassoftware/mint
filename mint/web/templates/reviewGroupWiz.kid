@@ -14,36 +14,49 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
     </head>
 
     <body>
-        <div id="layout">
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
             <div id="left" class="side">
                 ${wizard_navigation()}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
-            <div id="middle">
-              <p py:if="message" class="message" py:content="message"/>
-              <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              <h2>Review Appliance Contents</h2>
-              <p>The packages that will be built into your appliance appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
-              <h3>Added Packages</h3>
-              <div py:if="explicitTroves">
-              <ul class="unnestedList">
-                <li py:for="trove in explicitTroves">
-                  ${trove}
-                </li>
-              </ul>
-              <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
-              <p><a href="newPackage">Package another archive</a></p>
-              <p><a href="selectPackages">Select additional packages</a></p>
-              <p><a href="editApplianceGroup">Edit appliance contents</a></p>
-              </div>
-              <div py:if="not explicitTroves">
-                No packages added
-              <p><a href="newPackage">Package another archive</a></p>
-              <p><a href="selectPackages">Select additional packages</a></p>
-              </div>
+            
+            <div id="fullpage-middle">
+                
+                <div class="edit-version">
+                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>    
+                <div class="page-title">Appliance Creator</div>    
+                
+                <p py:if="message" class="message" py:content="message"/>
+             
+                <h2>Review Appliance Contents</h2>
+                <p>The packages that will be built into your appliance appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
+                <div class="page-subtitle">Added Packages</div>
+                <div py:if="explicitTroves">
+                    <ul class="package-checklist">
+                        <li py:for="trove in explicitTroves">${trove}</li>
+                    </ul>
+                    <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
+                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="selectPackages">Select additional packages</a></p>
+                    <p><a href="editApplianceGroup">Edit appliance contents</a></p>
+                </div>
+                
+                <div py:if="not explicitTroves">
+                    No packages added
+                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="selectPackages">Select additional packages</a></p>
+                </div>
             </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

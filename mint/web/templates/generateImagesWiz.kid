@@ -15,15 +15,24 @@ from mint import buildtypes
         <title>${formatTitle('%s Image'%projectText().title())}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
             <div id="left" class="side">
                 ${wizard_navigation()}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
-            <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
+            
+            <div id="fullpage-middle">
+                
+                <div class="edit-version">
+                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>    
+                <div class="page-title">Appliance Creator</div>
+                
                 <h2>Generate Appliance Images</h2>
                 <p>The following appliance image(s) are now being generated.  Refresh this page for updated status. When an image displays the "Finished" status, it is ready to be deployed.</p>
 
@@ -36,6 +45,10 @@ from mint import buildtypes
                 <p><a href="${basePath}">Return to ${project.getNameForDisplay()} home</a></p>
                 <p><a href="${basePath}builds">View all images</a></p>
             </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

@@ -14,17 +14,18 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-        <div id="left" class="side">
-            ${adminResourcesMenu()}
-        </div>
-        <div id="spanright">
-            <h2>Create an Account</h2>
-            <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="${cfg.basePath}admin/processNewUser">
-
-                <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+        <div class="admin-page">
+            <div id="left" class="side">
+                ${adminResourcesMenu()}
+            </div>
+            <div id="admin-spanright">
+                <div class="page-title-no-project">Create an Account</div>
+                <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
+                <form method="post" action="${cfg.basePath}admin/processNewUser">
+    
+                    <table class="mainformhorizontal">
                     <tr>
-                        <th><em class="required">Username:</em></th>
+                        <td class="form-label"><em class="required">Username:</em></td>
                         <td>
                             <input type="text" autocomplete="off" name="newUsername" maxlength="16" value="${kwargs['username']}"/>
                              <p class="help">please limit to 16 characters</p>
@@ -32,11 +33,11 @@
                     </tr>
 
                     <tr>
-                        <th>Full Name:</th>
+                        <td class="form-label">Full Name:</td>
                         <td><input type="text" autocomplete="off" name="fullName" value="${kwargs['fullName']}" /></td>
                     </tr>
                     <tr>
-                        <th><em class="required">Email Address:</em></th>
+                        <td class="form-label"><em class="required">Email Address:</em></td>
                         <td>
                             <input type="text" autocomplete="off" name="email" value="${kwargs['email']}"/>
 
@@ -44,7 +45,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Contact Information:</th>
+                        <td class="form-label">Contact Information:</td>
                         <td>
                             <textarea rows="3" type="text" name="displayEmail">${kwargs['displayEmail']}</textarea>
 
@@ -52,7 +53,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>About:</th>
+                        <td class="form-label">About:</td>
                         <td>
                             <textarea rows="6" name="blurb">${kwargs['blurb']}</textarea><br/>
 
@@ -64,7 +65,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th><em class="required">New Password:</em></th>
+                        <td class="form-label"><em class="required">New Password:</em></td>
                         <td>
                             <input type="password" autocomplete="off" name="password" value="" />
                             <p class="help">must be at least 6 characters</p>
@@ -72,12 +73,15 @@
                         </td>
                     </tr>
                     <tr>
-                        <th><em class="required">Confirm Password:</em></th>
+                        <td class="form-label"><em class="required">Confirm Password:</em></td>
                         <td><input type="password" autocomplete="off" name="password2" value="" /></td>
                     </tr>
-                </table>
-                <p><button type="submit">Create New User</button></p>
-            </form>
+                    </table>
+                    <br />
+                    <p class="p-button"><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create New User" /></button></p>
+                    <br />
+                </form>
+            </div>
         </div>
     </body>
 </html>

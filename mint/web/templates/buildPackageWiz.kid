@@ -14,30 +14,42 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
     </head>
 
     <body>
-        <div id="layout">
+         <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
             <div id="left" class="side">
                 ${wizard_navigation()}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
-            <div id="middle">
-              <p py:if="message" class="message" py:content="message"/>
-              <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              ${buildPackage(sessionHandle, type="Package", helpText="Your archive is now being packaged. Depending on its size, this process may take some time.")}
+            <div id="fullpage-middle">
+                
+                <div class="edit-version">
+                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>    
+                <div class="page-title">Appliance Creator</div>    
+                <p py:if="message" class="message" py:content="message"/>
+              
+                ${buildPackage(sessionHandle, type="Package", helpText="Your archive is now being packaged. Depending on its size, this process may take some time.")}
                 <!-- The following are displayed based on whether the build was
                      successful or not -->
-              <div id="build_success" style="display:none">
-                  <p>Your archive has been successfully packaged. You can now either package another archive, or continue the appliance creation process.</p>
-                  <p><a href="selectPackages">Continue</a></p>
-                  <p><a href="newPackage">Package another archive</a></p>
-              </div>
-              <div id="build_fail" style="display:none">
-                  <p>Your archive could not be packaged. Select from the following links to continue.</p>
-                  <p><a href="javascript: history.go(-1);">Review package details</a></p>
-                  <p><a href="newPackage">Package another archive</a></p>
-              </div>
+                <div id="build_success" style="display:none">
+                    <p>Your archive has been successfully packaged. You can now either package another archive, or continue the appliance creation process.</p>
+                    <p><a href="selectPackages">Continue</a></p>
+                    <p><a href="newPackage">Package another archive</a></p>
+                </div>
+                <div id="build_fail" style="display:none">
+                    <p>Your archive could not be packaged. Select from the following links to continue.</p>
+                    <p><a href="javascript: history.go(-1);">Review package details</a></p>
+                    <p><a href="newPackage">Package another archive</a></p>
+                </div>
             </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

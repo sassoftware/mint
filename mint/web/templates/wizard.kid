@@ -9,18 +9,17 @@
 # the derived template are local here as well
 ?>
 
-<div py:def="wizard_navigation()" id="appliance_creator" class="palette">
+<div py:def="wizard_navigation()" id="appliance_creator" class="wizard-nav-palette">
     <?python
     from mint.helperfuncs import truncateForDisplay, formatProductVersion
     ?>
-    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
-    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
-    <div class="boxHeader">Appliance Creator</div>
-    <ul>
-        <li>Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}</li>
-        <li py:for="step in sorted([x for x in wizard_steps.keys() if x not in wizard_maint_steps])" py:attrs="{'class': (wizard_position == step) and 'selectedItem' or None}">
-            <span py:replace="wizard_steps[step][0]"/>
-        </li>
-    </ul>
+    <img class="left" src="${cfg.staticPath}apps/mint/images/wiz_header_blue_left.png" alt="" />
+    <img class="right" src="${cfg.staticPath}apps/mint/images/wiz_header_blue_right.png" alt="" />
+    <div class="boxHeader"><span class="bracket">[</span> Appliance Creator Wizard <span class="bracket">]</span></div>
+        <ul class="wiz-navigation">
+            <li py:for="step in sorted([x for x in wizard_steps.keys() if x not in wizard_maint_steps])" py:attrs="{'class': (wizard_position == step) and 'selectedItem' or (wizard_position > step) and 'completedItem' or None}">
+                <span py:replace="wizard_steps[step][0]"/>
+            </li>
+        </ul>
 </div>
 </html>

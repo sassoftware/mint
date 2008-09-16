@@ -15,38 +15,58 @@
 
     <body>
         <div id="layout">
-            <h2>Update Appliance Platform for ${productName} Version ${versionName}</h2>
 
-            <form id="processRebaseProductVersion" method="post" action="processRebaseProductVersion">
-                <table border="0" cellspacing="0" cellpadding="0"
-                    class="mainformhorizontal">
-                    <tr>
-                        <th>Appliance Platform:</th>
-                        <td>
-                            <select name="platformLabel">
-                                <option py:for="platformLabel, platformDesc in availablePlatforms" py:attrs="{'selected': (currentPlatformLabel == platformLabel) and 'selected' or None}" value="${platformLabel}" py:content="platformDesc" />
-                                <option py:if="customPlatform" py:attrs="{'selected': (currentPlatformLabel == customPlatform[0]) and 'selected' or None}" value="${customPlatform[0]}" py:content="customPlatform[1]" />
-                            </select>
-                            <p class="help">
-                                The appliance platform is locked to a specific version
-                                and will not change unless you update it. By clicking
-                                <u>Update Appliance Platform</u> the latest version of
-                                the appliance platform currently available will be
-                                used in all subsequent builds of the
-                                ${productName} version
-                                ${formatProductVersion(versions, currentVersion)}
-                                appliance. Additionally, you may change
-                                the appliance platform on which this version is based.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                <p>
-                    <input type="submit" id="submitButton" name="action" value="Update Appliance Platform" />
-                    <input type="submit" id="submitButton" name="action" value="Cancel" />
-                    <input type="hidden" name="id" value="${id}" />
-                </p>
-            </form>
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+            </div>
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
+                </div>
+                <div id="middle">
+
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <h2>Update Appliance Platform for ${productName} Version ${versionName}</h2>
+
+                    <form id="processRebaseProductVersion" method="post" action="processRebaseProductVersion">
+                        <table class="mainformhorizontal">
+                            <tr>
+                                <td class="form-label">
+                                    Appliance Platform:
+                                </td>
+                                <td>
+                                    <select name="platformLabel">
+                                        <option py:for="platformLabel, platformDesc in availablePlatforms" py:attrs="{'selected': (currentPlatformLabel == platformLabel) and 'selected' or None}" value="${platformLabel}" py:content="platformDesc" />
+                                        <option py:if="customPlatform" py:attrs="{'selected': (currentPlatformLabel == customPlatform[0]) and 'selected' or None}" value="${customPlatform[0]}" py:content="customPlatform[1]" />
+                                    </select>
+                                    <p class="help">
+                                        The appliance platform is locked to a specific version
+                                        and will not change unless you update it. By clicking
+                                        <u>Update Appliance Platform</u> the latest version of
+                                        the appliance platform currently available will be
+                                        used in all subsequent builds of the
+                                        ${productName} version
+                                        ${formatProductVersion(versions, currentVersion)}
+                                        appliance. Additionally, you may change
+                                        the appliance platform on which this version is based.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                        <p>
+                            <input type="submit" id="submitButton" name="action" value="Update Appliance Platform" />
+                            <input type="submit" id="submitButton" name="action" value="Cancel" />
+                            <input type="hidden" name="id" value="${id}" />
+                        </p>
+                    </form>
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
+            </div>
         </div>
     </body>
 </html>

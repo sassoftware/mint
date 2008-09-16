@@ -16,8 +16,8 @@
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
-        <div class="boxHeader">Administration Menu</div>
-        <ul>
+        <div class="boxHeader"><span class="bracket">[</span> Administration Menu <span class="bracket">]</span></div>
+        <ul class="navigation">
             <li py:attrs="{'class': (lastchunk in ('', 'admin')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/">Administration Home</a></li>
             <li py:attrs="{'class': (lastchunk in ('newUser', 'processNewUser')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/newUser">Create User Account</a></li>
             <li py:attrs="{'class': (lastchunk in ('external', 'addExternal', 'processAddExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Externally-Managed ${projectText().title()}s</a></li>

@@ -116,6 +116,7 @@ class MintApp(WebHandler):
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
 
         self.auth = self.client.checkAuth()
+        self.membershipReqsList = None
         if self.auth.authorized:
             if not maintenance.getMaintenanceMode(self.cfg) or self.auth.admin:
                 self.user = self.client.getUser(self.auth.userId)
@@ -124,6 +125,8 @@ class MintApp(WebHandler):
                 for project, level, memberReqs in self.projectList:
                     l = self.projectDict.setdefault(level, [])
                     l.append((project, memberReqs))
+                self.membershipReqsList = [x[0] for x in self.projectList
+                        if x[2] > 0 and x[1] == userlevels.OWNER]
             else:
                 if pathInfo not in  ('/maintenance/', '/logout/'):
                     raise MaintenanceMode
@@ -255,6 +258,7 @@ class MintApp(WebHandler):
             'fields':           self.fields,
             'projectList':      self.projectList,
             'projectDict':      self.projectDict,
+            'membershipReqsList': self.membershipReqsList,
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,

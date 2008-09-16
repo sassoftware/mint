@@ -26,35 +26,35 @@
       xmlns:py="http://purl.org/kid/ns#">
 
     <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
-      <li py:if="versions">Version:
-        <span py:if="not readOnly and auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}
-            <a id="currentVersionLink" href="#" title="Click to change">change</a></span>
+      <div py:if="versions" class="edit-version">
+        Version: <span py:if="not readOnly and auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}
+            <a id="currentVersionLink" class="version_button" href="#" title="Click to change version"><img src="${cfg.staticPath}/apps/mint/images/version_button.gif" alt="" /></a></span>
         <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
-      </li>
-      <div py:if="not readOnly and auth.authorized" py:strip="True">
-        <li id="changeVersionWidget">
-        <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
-            <?python
-            attrs = {'name': "versionId", 'id': 'productVersionSelectorDropdown'}
-            ?>
-            ${versionSelection(attrs, versions, True, currentVersion)}
-            <input id="product_version_redirect" type="hidden" name="redirect_to" value=""/>
-        </form>
-        <script type="text/javascript" >
-            jQuery('#currentVersionLink').click(function() {
-                jQuery('#changeVersionWidget').slideToggle('fast')
-            });
-            jQuery('#productVersionSelectorDropdown').change(function() {
-                jQuery('#versionSelectorForm').submit();
-            });
-            jQuery(document.body).ready(function() {
-                jQuery('#product_version_redirect').val(document.location);
-                jQuery('#changeVersionWidget').hide();
-            });
-        </script>
-        </li>
+        <div py:if="not readOnly and auth.authorized" py:strip="True">
+            <div id="changeVersionWidget">
+            <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
+                <?python
+                attrs = {'name': "versionId", 'id': 'productVersionSelectorDropdown'}
+                ?>
+                ${versionSelection(attrs, versions, True, currentVersion)}
+                <input id="product_version_redirect" type="hidden" name="redirect_to" value=""/>
+            </form>
+            <script type="text/javascript" >
+                jQuery('#currentVersionLink').click(function() {
+                    jQuery('#changeVersionWidget').slideToggle('fast')
+                });
+                jQuery('#productVersionSelectorDropdown').change(function() {
+                    jQuery('#versionSelectorForm').submit();
+                });
+                jQuery(document.body).ready(function() {
+                    jQuery('#product_version_redirect').val(document.location);
+                    jQuery('#changeVersionWidget').hide();
+                });
+            </script>
+            </div>
+        </div>
       </div>
-      <li py:if="not versions">Version: none available</li>
+      <div py:if="not versions" class="edit-version">Version: none available</div>
     </div>
 
     <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
@@ -65,12 +65,10 @@
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
-        <div class="boxHeader">${projectText().title()} Resources</div>
-        <ul>
-            ${productVersionMenu(readOnlyVersion)}
+        <div class="boxHeader"><span class="bracket">[</span> ${projectText().title()} Resources <span class="bracket">]</span></div>
+        <ul class="navigation">
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">${projectText().title()} Home</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('newPackage', 'getPackageFactories', 'savePackage')) and 'selectedItem' or None}"><a href="${projectUrl}newPackage">Create Package</a></li>
-            <li py:if="isWriter"><a href="${cfg.basePath}apc/${project.shortname}/">Manage Appliance</a></li>
             <li py:if="isWriter" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Manage Images</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">${isOwner and 'Manage' or 'View'} Releases</a></li>
             <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">${isOwner and 'Manage' or 'View'} ${projectText().title()} Membership</a></li>
@@ -106,29 +104,25 @@
             <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
             <div class="boxHeader">
-                Recent Releases
-                <a href="${projectUrl}rss">
-                    <img class="noborder" alt="RSS"
-                         style="margin-right:10px; vertical-align: middle;"
-                         src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
-                </a>
+                <a class="boxRightIcon" href="${projectUrl}rss"><img class="noborder" alt="RSS" src="${cfg.staticPath}apps/mint/images/rss-inline.gif" /></a>
+                <span class="bracket">[</span> Recent Releases <span class="bracket">]</span>
             </div>
             <div id="release_items" style="display: $display">
-              <dl py:if="releases">
+              <ul py:if="releases" class="releases">
                 <?python projectName = project.getName() ?>
-                <div py:strip="True" py:for="release in releases[:5]">
-                    <dt><a href="${projectUrl}release?id=${release.id}" title="${release.name} version ${release.version}">${truncateForDisplay(release.name, maxWords=5, maxWordLen=15)}</a></dt>
-                    <dd>Version ${release.version}</dd>
+                <div py:for="release in releases[:5]" py:strip="True">
+                    <li><a href="${projectUrl}release?id=${release.id}" title="${release.name} version ${release.version}">${truncateForDisplay(release.name, maxWords=5, maxWordLen=15)}</a>
+                    <div class="version">Version ${release.version}</div></li>
                 </div>
-              </dl>
-              <div py:if="not releases">
-                 <dl><dt>No Releases</dt></dl>
+                <div py:if="not releases" py:strip="True">
+                    <li>No Releases</li>
+                </div>
+              </ul>
+              <div class="releaseNew" py:if="isOwner">
+                  <a href="${projectUrl}newRelease">( Create a New Release )</a>
               </div>
-              <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                  <a href="${projectUrl}newRelease"><strong>Create a new release</strong></a>
-              </div>
-              <div class="release" py:if="not isOwner and len(releases) > 5" style="text-align: right; padding-right:8px;">
-                  <a href="${projectUrl}releases"><strong>More...</strong></a>
+              <div class="releaseMore" py:if="not isOwner and len(releases) > 5">
+                  <a href="${projectUrl}releases">( More... )</a>
               </div>
             </div>
         </div>
@@ -139,73 +133,84 @@
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
-        <div class="boxHeader">Recent Commits</div>
+        <div class="boxHeader"><span class="bracket">[</span> Recent Commits <span class="bracket">]</span></div>
         <div id="commit_items" style="display: $display">
-          <dl>
+          <ul class="commits">
             <div py:strip="True" py:for="commit in commits">
-                <dt><a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${truncateForDisplay(commit[0], maxWordLen=24)}</a></dt>
-                <dd>${commit[1]} (${timeDelta(commit[3])})</dd>
+                <li><a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${truncateForDisplay(commit[0], maxWordLen=24)}</a>
+                <div class="commitTime">${commit[1]} (${timeDelta(commit[3])})</div></li>
             </div>
-         </dl>
+         </ul>
         </div>
       </div>
     </div>
 
 
     <div py:def="projectsPane()" id="projectsPane" >
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
-        <div class="boxHeader">
-            <div class="boxHeaderText">
-                <span>${auth.username}</span>
-                <a class="signout" href="http://${cfg.siteHost}${cfg.basePath}logout">
-                    Sign Out
-                </a>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
+        <div class="userBoxHeader">
+            <div class="userBoxHeaderText">
+                <a class="signout" href="http://${cfg.siteHost}${cfg.basePath}logout">( Sign Out )</a>
+                <span class="userBoxBracket">[</span> ${auth.username} <span class="userBoxBracket">]</span>
             </div>
         </div>
         <div class="boxBody" py:if="not projectList">
-            <h3>Get Started</h3>
-
-            <p py:if="isRBO()">Participate in the ${cfg.productName} community by:</p>
-
-            <ul>
-                <li>
-                    <a href="http://${SITE}newProject">
-                        <strong>${isRBO() and 'Creating' or 'Create'} a new ${projectText().lower()}</strong>
-                    </a>
-                </li>
-
-                <li py:if="isRBO()">Joining an existing ${projectText().lower()}</li>
-            </ul>
-
-            <p  py:if="isRBO()">To join an existing ${projectText().lower()}, use the "Browse ${projectText().lower()}s" link or "Search" text box at the top of the page to find a ${projectText().lower()} of interest. Then, submit your request to ${projectText().lower()} owners: click a ${projectText().lower()} name, click "View ${projectText().title()} Membership" on the ${projectText().lower()} panel at the left, and click "Request to join this ${projectText().lower()}."</p>
-            <div id="cloudCatalog"><a target="_blank" href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2&trade;</strong></a></div>
-            <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
-            
+            <div class="projectsPaneActionTop">
+                <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
+            </div>
+            <div class="projectsPaneAction">
+                <a target="_blank" href="http://${SITE}cloudCatalog">rBuilder Catalog for EC2&trade;</a>
+            </div>
+            <div id="userSettings" class="projectsPaneAction">
+                <a href="http://${SITE}userSettings">Edit my account</a>
+            </div>
+	        <div id="administer" py:if="auth.admin" class="projectsPaneAction">
+                <a href="http://${SITE}admin/">Site administration</a>
+            </div>
+            <p class="rboJoin" >To join an existing ${projectText().lower()}, browse or search above to find the ${projectText().lower()} of interest. Open ${projectText().lower()} page, select "View ${projectText().title()} Membership" and click "Request to join this ${projectText().lower()}."</p>
+            <div class="projectsPaneBottom">
+            </div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
-            <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
-                                          (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
-                                          (userlevels.USER, '%ss I Use'%projectText().title())]"
-                 py:strip="True">
-                <div py:strip="True" py:if="level in projectDict">
-                    <h4>${title}</h4>
-                    <ul>
-                        <li py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name)">
-                            <a href="${project.getUrl()}">
-                                ${project.getNameForDisplay()}</a>
-                                <span py:if="not level and memberReqs">
-                                    <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
-                                </span>
-                        </li>
-                    </ul>
-                </div>
+            <div id="switchProject" class="projectsPaneSelector">
+                <?python currentProjectId = not self.project and -1 or self.project.id ?>
+                <label for="switchProjectSelector">Select project:</label>
+                <select id="switchProjectSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
+                    <option value="--" py:attrs="{'selected': currentProjectId == -1 and 'selected' or None}">--</option>
+                    <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
+                                                  (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
+                                                  (userlevels.USER, '%ss I Use'%projectText().title())]"
+                         py:strip="True">
+                         <div py:strip="True" py:if="level in projectDict">
+                             <optgroup label="${title}" />
+                             <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl()}" py:content="project.getNameForDisplay()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
+                         </div>
+                    </div>
+                </select>
             </div>
-            <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new ${projectText().lower()}</strong></a></div>
-            <div id="cloudCatalog"><a target="_blank" href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2&trade;</strong></a></div>
-            <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-            <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
+            <div py:if="membershipReqsList" id="membershipReqs" class="projectsPaneSelector">
+                <label for="membershipReqsSelector">Pending requests:</label>
+                <select id="membershipReqsSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
+                    <option value="--">--</option>
+                    <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl()}members">${project.getNameForDisplay()}</option>
+                </select>
+            </div>
+            <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
+                <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
+            </div>
+            <div id="cloudCatalog" class="projectsPaneAction">
+                <a target="_blank" href="http://${SITE}cloudCatalog">rBuilder Catalog for EC2&trade;</a>
+            </div>
+            <div id="userSettings" class="projectsPaneAction">
+                <a href="http://${SITE}userSettings">Edit my account</a>
+            </div>
+            <div id="administer" py:if="auth.admin" class="projectsPaneAction">
+                <a href="http://${SITE}admin/">Site administration</a>
+            </div>
+            <div class="projectsPaneBottom">
+                &nbsp;
+            </div>
         </div>
     </div>
 
@@ -234,7 +239,7 @@
 
     <div py:strip="True" py:def="getBuildIcon(build)">
         <?python icon = build.getBrandingIcon() ?>
-        <a py:if="icon" title="${icon['text']}" href="${icon['href']}" target="_blank">
+        <a py:if="icon" title="${icon['text']}" href="${icon['href']}">
             <img class="buildTypeIcon" src="${cfg.staticPath}apps/mint/images/${icon['icon']}" alt="${icon['text']}" />
         </a>
     </div>
@@ -274,11 +279,15 @@
     </div>
 
     <div py:def="downloadsMenu(builds, display='block')" py:omit="True">
-      <div py:if="builds" class="downloadPalette" id="release">
-        <div class="boxHeader">Download NOW</div>
-        <div style="display: $display;">
-            <ul style="list-style-type: none;">
-                <div py:for="build in builds">
+      <div py:if="builds" class="boxPalette" id="release">
+        <img class="left" src="${cfg.staticPath}apps/mint/images/block_topleft.gif" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/block_topright.gif" alt="" />
+        <div class="pageBoxHeader">Download NOW</div>
+        <div class="pageBoxLinks">
+           <a href="${project.getUrl()}latestRelease">( Additional Options... )</a> <a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types?version=${constants.mintVersion}" target="_blank">( Which one do I want? )</a>
+
+            <ul class="downloadList">
+                <div py:for="build in builds" py:strip="True">
                     <?python
                         buildFiles = [x for x in build.getFiles() if x['title'] not in ('diskboot.img', 'boot.iso')]
                     ?>
@@ -293,12 +302,9 @@
                     </li>
                 </div>
             </ul>
-
-            <span style="float: right;"><a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types?version=${constants.mintVersion}" target="_blank"><b>Which one do I want?</b></a></span>
-            <span><a href="${project.getUrl()}latestRelease"><b>Additional Options...</b></a></span>
         </div>
+       <img class="left" src="${cfg.staticPath}apps/mint/images/block_bottom.gif" alt="" />
       </div>
     </div>
-
 
 </html>

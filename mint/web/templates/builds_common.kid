@@ -45,7 +45,7 @@ from mint.helperfuncs import truncateForDisplay, formatProductVersion
         </table>
     </div>
 
-    <div py:strip="True" py:def="buildsTable(builds, publishedReleases=None, allowDelete=True)">
+    <div class="pageSection" py:def="buildsTable(builds, publishedReleases=None, allowDelete=True)">
         <?python publishedReleases = publishedReleases or dict() ?>
         <form py:if="allowDelete" method="post" action="deleteBuilds">
             ${_buildsTable(builds, publishedReleases, basePath, allowDelete)}

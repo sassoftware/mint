@@ -24,24 +24,45 @@ if 'message' not in locals():
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-            </div>
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                </div>
 
-            <div id="middle">
-              <p py:if="message" class="message" py:content="message"/>
-              <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-              <h2>Create Appliance</h2>
-
-              <div class="inlineButtonList">
-                <p>This dialog will guide you through the steps necessary to package your software as an appliance.</p>
-                <p py:if="groups">Click the "Revise Appliance" button to make changes to your existing appliance, or click "Start Over" to start the appliance creation process from the beginning.</p>
-                <p py:if="not groups">Click the "Create Appliance" button to begin.</p>
-                <ul>
-                  <li py:if="groups"><a class="option" href="startApplianceCreator">Revise Appliance</a></li>
-                  <li><a href="startApplianceCreator?maintain=0" class="option"><span py:if="groups" py:strip="True">Start Over</span><span py:if="not groups" py:strip="True">Create Appliance</span></a></li>
-                </ul>
-              </div>
+                <div id="middle">
+                    <div class="edit-version">
+                        Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                        
+                    <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                    <div class="page-title">Manage Appliance</div>
+                    
+                    <p py:if="message" class="message" py:content="message"/>
+                    
+                    <div class="pageSection">
+                        <h2>Appliance Creator</h2>
+                        <div class="inlineButtonList">
+                            <p>This dialog will guide you through the steps necessary to package your software as an appliance.</p>
+                            <p py:if="groups">Click the "Revise Appliance" button to make changes to your existing appliance, or click "Start Over" to start the appliance creation process from the beginning.</p>
+                            <p py:if="not groups">Click the "Create Appliance" button to begin.</p>
+                            <p py:if="groups">
+                                <a href="startApplianceCreator">
+                                    <img src="${cfg.staticPath}/apps/mint/images/revise_appliance_button.png" alt="" /></a>
+                                <a href="startApplianceCreator?maintain=0">
+                                    <img src="${cfg.staticPath}/apps/mint/images/start_over_button.png" alt="" /></a>
+                            </p>
+                            <p py:if="not groups">
+                                <a href="startApplianceCreator?maintain=0">
+                                    <img src="${cfg.staticPath}/apps/mint/images/create_appliance_button.png" alt="" /></a>
+                            </p>
+                        </div>
+                    </div>
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

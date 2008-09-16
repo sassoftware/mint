@@ -542,7 +542,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         page = self.assertContent('/admin/reports', code = [200],
-            content = 'Select a report')
+            content = 'Select a Report')
 
         # make sure we get a real pdf
         page = page.postForm(1, self.post, {'reportName': 'site_summary'})

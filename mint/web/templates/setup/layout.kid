@@ -30,23 +30,36 @@ onload = "javascript:;"
                 <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
                 <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
                 <div id="corpLogo">
-                    <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" width="80" height="98" alt="rPath Logo" />
+                    <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" alt="rPath Logo" />
                 </div>
                 <div id="prodLogo">
-                    <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                    <img py:if="cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo-rbo.png" alt="rBuilder Online Logo" />
+                    <img py:if="not cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo.png" alt="rBuilder Logo" />
                 </div>
                 <div id="topRight">
                 </div>
             </div>
-            <div class="layout" py:replace="item[:]" />
-
-            <div id="footer">
+            <div id="page">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
+                <div id="layout" py:replace="item[:]" />
                 <div>
+                    <div id="footer">
+                        <span id="topOfPage"><a href="#top">Top of Page</a></span>
+                        <div class="footerLinks">
+                            &nbsp;
+                        </div>
+                        <div id="bottomText">
+                            <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
+                            <span id="tagline">
+                                <b>rPath.</b>
+                                The Software Appliance Company.</span>
+                        </div>
+                    </div><br class="clear" />
+                    <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
+                    <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.png" alt="" />
                 </div>
-                <div id="bottomText" style="border: none;">
-                    <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
-                    <span id="tagline">rPath. The Software Appliance Company.</span>
-                </div>
+                <br />
             </div>
         </div>
     </body>

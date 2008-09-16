@@ -17,7 +17,7 @@ def pluralTroves(c):
 from mint.helperfuncs import truncateForDisplay
 ?>
 
-    <span py:def="adder(package, component='')" style="float: right;"
+    <span py:def="adder(package, component='')" class="right"
         py:if="groupTrove and not package.endswith(':source') and package != groupTrove.recipeName">
         <?python
             if component:
@@ -37,47 +37,55 @@ from mint.helperfuncs import truncateForDisplay
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-                ${builderPane()}
-            </div>
+            
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
+                </div>
 
-            <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
-                <h2>Repository Browser</h2>
-
-                <span py:for="l in string.uppercase" py:strip="True">
-                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralTroves(totals[l])}">${l}</a> |</span>
-                </span>
-                <?python
-                    total = 0
-                    for x in string.digits:
-                        total += totals[x]
-                ?>
-                <span>
-                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralTroves(total)}">0-9</a>
-                </span>
-
-                <?python
-                    if char in string.digits:
-                        char = "a digit"
-                    else:
-                        char = "'%c'" % char
-                ?>
-
-                <table border="0" cellspacing="0" cellpadding="0" class="results">
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">Repository Browser</div>
+    
+                    <div class="alpha-links">
+                        <span py:for="l in string.uppercase" py:strip="True">
+                          <span py:if="totals[l]">
+                            <a class="pageSectionLink" href="browse?char=${l}" title="${totals[l]} ${pluralTroves(totals[l])}">${l}</a> </span>
+                        </span>
+                        <?python
+                            total = 0
+                            for x in string.digits:
+                                total += totals[x]
+                        ?>
+                        <span>
+                            <a class="pageSectionLink" py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralTroves(total)}">0-9</a>
+                        </span>
+                    </div>
+                    
+                    <?python
+                        if char in string.digits:
+                            char = "a digit"
+                        else:
+                            char = "'%c'" % char
+                    ?>
+    
+                    <table class="results">
                     <tr>
-
                         <th colspan="3">Package Name</th>
                     </tr>
-
                     <tr py:for="i, package in enumerate(packages)">
-                        <td>
-                            ${adder(package)}
-                            <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a>
-                        </td>
+                        <td class="browse-package">
+                        ${adder(package)}
+                        <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a></td>
                     </tr>
-                </table>
+                    </table>
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

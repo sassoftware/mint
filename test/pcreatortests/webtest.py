@@ -488,26 +488,26 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
 
-        h3eadings, uploadLines = self._extractPackageListLines(page)
+        headings, uploadLines = self._extractPackageListLines(page)
 
         self.assertEquals(len(uploadLines), 2)
-        self.assertEquals(len(h3eadings), 1)
-        self.assertEquals(h3eadings[0], '<h3>Product Version vs1 (ns1)</h3>')
+        self.assertEquals(len(headings), 1)
+        self.failUnless('Version vs1 (ns1)' in headings[0])
 
     def _extractPackageListLines(self, page):
         #Extract all lines containing "newUpload"
         strio = StringIO.StringIO(page)
         uploadLines = []
-        h3eadings = []
+        headings = []
         while True:
             line = strio.readline()
             if not line: break
             line = line.strip()
             if 'newUpload' in line:
                 uploadLines.append(line)
-            if '<h3>' in line:
-                h3eadings.append(line)
-        return h3eadings, uploadLines
+            if 'class="package-version-header"' in line:
+                headings.append(line)
+        return headings, uploadLines
 
     def testListPackagesMeaty(self):
         fields = {}
@@ -520,7 +520,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
 
-        h3eadings, uploadLines = self._extractPackageListLines(page)
+        headings, uploadLines = self._extractPackageListLines(page)
 
         self.assertEquals(len(uploadLines), 4)
         assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
@@ -528,10 +528,10 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns1"' in uploadLines[2]
         assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns2:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns2"' in uploadLines[3]
 
-        self.assertEquals( len(h3eadings), 3)
-        assert 'Product Version vs1 (ns1)' in h3eadings[0]
-        assert 'Product Version vs2 (ns1)' in h3eadings[1]
-        assert 'Product Version vs2 (ns2)' in h3eadings[2]
+        self.assertEquals( len(headings), 3)
+        assert 'Version vs1 (ns1)' in headings[0]
+        assert 'Version vs2 (ns1)' in headings[1]
+        assert 'Version vs2 (ns2)' in headings[2]
 
     def testCreateProject(self):
         self.called = False

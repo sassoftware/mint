@@ -18,15 +18,25 @@ message = locals().get('message', None)
             <div id="left" class="side">
                 ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-            </div>
+            <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                </div>
 
-            <div id="middle">
-            <p py:if="message" class="message" py:content="message"/>
-            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-            <h2>Package Creator - Confirm Package Details</h2>
-            ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
+                <div id="middle">
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <div class="page-title">Package Creator</div>
+                
+                <p py:if="message" class="message" py:content="message"/>
+                
+                ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
+                </div>
+                <br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

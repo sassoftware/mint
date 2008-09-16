@@ -62,7 +62,7 @@ lang = None;
 
         ]]>
         </script>
-        <h3>Package Files</h3>
+        <h2>Package Files</h2>
         <p py:content="helpText">Select your binary (not source) archive (rpm, tar archive) from your computer.</p>
         <div id="getPackageFactories_outerdiv">
         <div py:def="fileupload_iframe(src, fieldname)" py:strip="True">
@@ -72,9 +72,9 @@ lang = None;
         <form name="getPackageFactories" method="post" action="getPackageFactories" enctype="multipart/form-data" id="getPackageFactories">
             <input type="hidden" name="uploadDirectoryHandle" value="${uploadDirectoryHandle}"/>
             <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
-            <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+            <table class="mainformhorizontal">
               <tr>
-              <th>Archive</th>
+              <td class="form-label">Archive:</td>
               <td>
                   ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % uploadDirectoryHandle, 'uploadfile')}
                   <div class="help">Specify a binary archive in RPM or tar format.</div>
@@ -87,7 +87,7 @@ lang = None;
               </td>
               </tr> Not going to support urls right now -->
             </table>
-            <p><input type="submit" id="submitButton_getPackageFactories" value="Upload" onclick="javascript: signal(this.form, 'onsubmit'); return false;"/></p>
+            <p class="p-button"><input type="submit" id="submitButton_getPackageFactories" value="Upload" onclick="javascript: signal(this.form, 'onsubmit'); return false;"/></p>
         </form>
         </div><!-- #getPackageFactories_outerdiv -->
         <div style="display:none">
@@ -113,7 +113,7 @@ lang = None;
     </div>
 
     <div py:def="drawLabel(fieldId, field)" py:strip="True">
-      <label for="${fieldId}" id="${fieldId}_label" py:attrs="{'class': field.required and 'required' or None}">${field.descriptions[lang]}</label>
+      <label for="${fieldId}" id="${fieldId}_label" py:attrs="{'class': field.required and 'required' or None}">${field.descriptions[lang]}:</label>
     </div>
 
     <div py:def="drawDescription(fieldId, field)" py:strip="True">
@@ -128,59 +128,74 @@ lang = None;
     </div>
 
     <div py:def="drawTextField(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
-      ${drawLabel(fieldId, field)}
-      <?python
-        value, reference = effectiveValue(field, prefilled, prevChoices)
-      ?>
-      <div class="expandableformgroupItems">
-        <div py:if="not expandme(value)" py:strip="True">
-          <input type="text" id="${fieldId}" name="${field.name}"
-              value="${value}"/>
-          <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
-            &nbsp;
-          </div>
-        </div>
-        <div py:if="expandme(value)" py:strip="True">
-          <textarea id="${fieldId}" name="${field.name}" rows="5">${value}</textarea>
-        </div>
-        ${drawDescription(fieldId, field)}
-        ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
-      </div>
+        <table class="singlerowhorizontal">
+        <tr>
+            <td>${drawLabel(fieldId, field)}</td>
+            <?python
+                value, reference = effectiveValue(field, prefilled, prevChoices)
+            ?>
+            <td class="expandableformgroupItems">
+            <div py:if="not expandme(value)" py:strip="True">
+                <input type="text" id="${fieldId}" name="${field.name}" value="${value}"/>
+                <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
+                    <img src="${cfg.staticPath}/apps/mint/images/spacer.gif" width="18" height="18" border="0" />
+                </div>
+            </div>
+            <div py:if="expandme(value)" py:strip="True">
+                <textarea id="${fieldId}" name="${field.name}" rows="5">${value}</textarea>
+            </div>
+            ${drawDescription(fieldId, field)}
+            ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
+            </td>
+        </tr>
+        </table>
     </div>
 
     <div py:def="drawSelectField(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
-      ${drawLabel(fieldId, field)}
-      <div class="expandableformgroupItems">
-        <select name="${field.name}" id="${fieldId}" py:attrs="{'multiple': field.multiple and 'multiple' or None}">
-          <option py:for="val in sorted(possibles)" id="${fieldId}_${val}" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled, prevChoices) and 'selected' or None}" py:content="val"/>
-        </select>
-        ${drawDescription(fieldId, field)}
-        ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
-      </div>
+        <table class="singlerowhorizontal">
+        <tr>
+            <td>${drawLabel(fieldId, field)}</td>
+            <td class="expandableformgroupItems">
+            <select name="${field.name}" id="${fieldId}" py:attrs="{'multiple': field.multiple and 'multiple' or None}">
+                <option py:for="val in sorted(possibles)" id="${fieldId}_${val}" value="${val}" py:attrs="{'selected': isSelected(field, val, prefilled, prevChoices) and 'selected' or None}" py:content="val"/>
+            </select>
+            ${drawDescription(fieldId, field)}
+            ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
+            </td>
+        </tr>
+        </table>
     </div>
 
     <div py:def="drawCheckBoxes(fieldId, field, possibles, prefilled, prevChoices)" py:strip="True">
-      ${drawLabel(fieldId, field)}
-         <div class="expandableformgroupItems">
-         <div py:for="val in sorted(possibles)">
-           <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" py:attrs="{'type': field.multiple and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
-           <label class="check_label" for="${fieldId}_${val}">${val}</label>
-         </div> <!--possibles-->
-         ${drawDescription(fieldId, field)}
-         ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
-         </div> <!--expandableformgroupItems-->
+        <table class="singlerowhorizontal">
+        <tr>
+            <td>${drawLabel(fieldId, field)}</td>
+            <td class="expandableformgroupItems">
+                <div py:for="val in sorted(possibles)">
+                <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" py:attrs="{'type': field.multiple and 'checkbox' or 'radio', 'checked': isSelected(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
+                <label class="check_label" for="${fieldId}_${val}">${val}</label>
+                </div> <!--possibles-->
+                ${drawDescription(fieldId, field)}
+                ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
+            </td>
+        </tr>
+        </table>
     </div>
 
     <div py:def="drawBooleanField(fieldId, field, prefilled, prevChoices)" py:strip="True">
-      ${drawLabel(fieldId, field)}
-        <div class="expandableformgroupItems">
-        <div py:for="val in ['True', 'False']">
-          <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" type="radio" py:attrs="{'checked': isChecked(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
-          <label class="check_label" for="${fieldId}_${val}">${val}</label>
-        </div> <!--for-->
-        ${drawDescription(fieldId, field)}
-        ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
-        </div> <!--expandableformgroupItems-->
+        <table class="singlerowhorizontal">
+        <tr>
+            <td>${drawLabel(fieldId, field)}</td>
+            <td class="expandableformgroupItems">
+                <div py:for="val in ['True', 'False']">
+                <input id="${fieldId}_${val}" name="${field.name}" class="check fieldgroup_check" type="radio" py:attrs="{'checked': isChecked(field, val, prefilled, prevChoices) and 'checked' or None}" value="${val}"/>
+                <label class="check_label" for="${fieldId}_${val}">${val}</label>
+                </div> <!--for-->
+                ${drawDescription(fieldId, field)}
+                ${drawHiddenReference(fieldId, field, prefilled, prevChoices)}
+            </td>
+        </tr>
+        </table>
     </div>
 
 
@@ -244,18 +259,17 @@ lang = None;
         addLoadEvent(changeFactory);
         ]]>
         </script>
-        <h3>Confirm Package Details</h3>
+        <h2>Confirm Package Details</h2>
         <p>All information that could be obtained from the archive you uploaded
            appears below. Please review (making any necessary changes or
            additions) and click the "Create Package" button.</p>
 
         <form name="savePackage" method="post" action="savePackage" id="savePackage">
             <input type="hidden" name="sessionHandle" value="${sessionHandle}"/>
-            <div class="expandableformgroupTitle">Package Details</div>
-            <div class="expandableformgroup">
-              <div>
-                <label for="factoryHandle" class="required">Archive Type</label>
-                <div class="expandableformgroupItems">
+            <table class="singlerowhorizontal">
+            <tr>
+                <td style="height:24px;"><label for="factoryHandle" class="required">Archive Type:</label></td>
+                <td class="expandableformgroupItems">
                     <select py:if="len(factories) > 1" name="factoryHandle" id="factoryHandle" onchange="javascript:changeFactory()">
                       <option py:for="(factoryHandle, factoryDef, values) in factories" value="${factoryHandle}">${str(factoryDef.getDisplayName())}</option>
                     </select>
@@ -266,17 +280,17 @@ lang = None;
                     <p py:if="1 > len(factories)" py:strip="True">
                         Shouldn't get here, should show an error instead.
                     </p>
-                  <div class="expandableformgroupSeparator">&nbsp;</div>
-                </div>
-              </div>
-              <!-- The factory interview -->
+                </td>
+            </tr>
+            </table>
+            
+            <!-- The factory interview -->
+            <div id="chosen_factory" />
 
-              <div id="chosen_factory" />
-
-              <!-- End factory interview -->
-            </div>
-            <p py:if="editing"><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
-            <p py:if="not editing"><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>
+            <p py:if="editing" class="p-button"><button id="submitButton_savePackage" class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/save_package_button.png" alt="Submit" /></button></p>
+            <p py:if="not editing" class="p-button"><button id="submitButton_savePackage" class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/create_package_button.png" alt="Submit" /></button></p>
+            <!--<p py:if="editing"><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
+            <p py:if="not editing"><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>-->
         </form>
 
         <div style="display: none" id="factory_dumping_ground">
@@ -351,12 +365,11 @@ function makeRequest()
     req.send(false, [polldata.sessionHandle])
 }
 
-addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
 addLoadEvent(makeRequest);
             ]]>
         </script>
 
-        <h3>Build ${type.title()}</h3>
+        <h2>Build ${type.title()}</h2>
         <p id="building" py:content="helpText"/>
 
         <!-- the poller -->

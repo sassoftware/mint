@@ -13,22 +13,36 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
         <title>${formatTitle('Package Archive: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
             <div id="left" class="side">
                 ${wizard_navigation()}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
-            <div id="middle">
-            <p py:if="message" class="message" py:content="message"/>
-            <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-            <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
-            ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive containing files you would like to add to your appliance, you can upload it and have its contents packaged for you. Otherwise, click the "No archive to package" link.')}
-            <div>
-              <a href="selectPackages">No archive to package</a>
+            
+            <div id="fullpage-middle">
+                
+                <div class="edit-version">
+                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <div class="page-title">Appliance Creator</div>
+                
+                <p py:if="message" class="message" py:content="message"/>
+                <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
+                ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive containing files you would like to add to your appliance, you can upload it and have its contents packaged for you. Otherwise, click the "No archive to package" link.')}
+                <div>
+                    <a href="selectPackages">No archive to package</a>
+                </div>
             </div>
-        </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

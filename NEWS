@@ -73,6 +73,8 @@ Web Front End Changes
   initial version) or creating a new version. Additionally, rebasing and/or
   changing a platform has been relocated to its own page, linked off of 
   the edit product version page. (RBL-2985)
+* The product and membership requests have been consolidated into dropdown
+  menus in the right-hand sidebar. (RBL-3306)
 
 Bug Fixes
 ---------------------

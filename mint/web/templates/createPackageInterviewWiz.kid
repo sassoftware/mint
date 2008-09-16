@@ -17,18 +17,32 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
     </head>
 
     <body>
-      <div id="layout">
-        <div id="left" class="side">
-            ${wizard_navigation()}
-        </div>
-        <div id="right" class="side">
-            ${resourcePane()}
-        </div>
-        <div id="middle">
-        <p py:if="message" class="message" py:content="message"/>
-        <h1>${project.getNameForDisplay(maxWordLen = 50)} - Version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</h1>
-        ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
-        </div>
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+        
+            <div id="left" class="side">
+                ${wizard_navigation()}
+            </div>
+            <div id="right" class="side">
+                ${resourcePane()}
+            </div>
+        
+            <div id="fullpage-middle">
+                
+                <div class="edit-version">
+                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <div class="page-title">Appliance Creator</div>
+                
+                <p py:if="message" class="message" py:content="message"/>
+                ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
+            </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
       </div>
     </body>
 </html>

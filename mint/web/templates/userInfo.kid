@@ -26,75 +26,84 @@
     </head>
 
     <body>
-        <div id="layout">
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
             <div id="right" class="side">
                 ${resourcePane()}
-		${builderPane()}
-                <div class="palette" py:if="ownsProjects and user.id != auth.userId">
-                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
-                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
+		        ${builderPane()}
+                <div class="right-palette" py:if="ownsProjects and user.id != auth.userId">
+                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
+                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
 
-                    <div class="boxHeader">Add to ${projectText().title()}</div>
-                    <form method="post" action="addMemberById">
-                        <p>
+                    <div class="rightBoxHeader">
+                        Add to ${projectText().title()}
+                    </div>
+                    <div class="rightBoxBody">
+                        <form method="post" action="addMemberById">
                             <label>Select a project:</label><br/>
-                            <select name="projectId">
+                            <select name="projectId" id="select-add-user">
                                 <option py:for="project, level, memberReqs in sorted(projectList, key = lambda x: x[0].getName())"
                                         py:if="level == userlevels.OWNER"
                                         value="${project.getId()}"
                                         py:content="project.getName()"/>
                             </select>
-                        </p>
-                        <p>
+                            <p>
                             <label>Level:</label><br/>
                             <select name="level">
                                 <option py:for="level, levelName in sorted(userlevels.names.items(), reverse = True)"
                                         py:content="levelName"
                                         value="${level}"
                                         />
-                            </select>
-                        </p>
-                        <input type="hidden" name="userId" value="${user.getId()}" />
-                        <p><button type="submit">Add ${user.username}</button></p>
-                    </form>
+                            </select></p>
+                            <input type="hidden" name="userId" value="${user.getId()}" />
+                            <p><button type="submit" class="img"><img src="${cfg.staticPath}/apps/mint/images/add_user.png" alt="Add User" /></button></p>
+                            
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div id="spanleft">
+           <div id="leftcenter">
                 <?python
                     if user.fullName:
                         displayUserString = "%s (%s)" % (user.fullName, user.username)
                     else:
                         displayUserString = "%s" % user.username
                 ?>
-                <h2>About ${displayUserString}</h2>
+                <h1 class="search">About ${displayUserString}</h1>
                 <p py:for="line in user.getBlurb().splitlines()">
                     ${truncateForDisplay(line, 1000000, 70)}
                 </p>
                 <div py:if="not user.getBlurb()">User has not entered any about text.</div>
 
-                <h3>Contact Information</h3>
-                <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                    ${truncateForDisplay(line, 1000000, 70)}
-                </p>
-                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
+                <div class="pageSection">
+                    <h2>Contact Information</h2>
+                    <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                        ${truncateForDisplay(line, 1000000, 70)}
+                    </p>
+                    <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
+                </div>
 
-                <h3>${projectText().title()}s</h3>
-                <ul py:if="userProjects">
-                    <li py:for="project, level, memberReq in userProjects">
-                        <a
-                            href="${project.getUrl()}">${project.getNameForDisplay()}</a>
-                        (${userlevels. names[level]})
-                    </li>
-                </ul>
-                <p py:if="not userProjects">This user is not a member of any ${projectText().lower()}s.</p>
-                <div py:if="auth.admin" py:strip="True">
-                    <h3>User Status</h3>
+                <div class="pageSection">
+                    <h2>${projectText().title()}s</h2>
+                    <ul py:if="userProjects">
+                        <li py:for="project, level, memberReq in userProjects">
+                            <a
+                                href="${project.getUrl()}">${project.getNameForDisplay()}</a>
+                            (${userlevels. names[level]})
+                        </li>
+                    </ul>
+                    <p py:if="not userProjects">This user is not a member of any ${projectText().lower()}s.</p>
+                </div>
+                
+                <div class="pageSection" py:if="auth.admin">
+                    <h2>User Status</h2>
 
                     <p>Account was created ${timeDelta(user.timeCreated, capitalized=False)}<span py:if="user.timeAccessed"> and was last accessed ${timeDelta(user.timeAccessed, capitalized=False)}</span>.</p>
                     <p py:if="user.active != 1">This user's account has not been confirmed yet.</p>
                     <p py:if="userIsAdmin">This user is a site administrator.</p>
                     <div py:if="auth.admin and (user.getId() != auth.userId)" py:strip="True">
-                    <h3>Administrative Options</h3>
+                    <h2>Administrative Options</h2>
                     <p><form action="${cfg.basePath}processUserAction" method="post">
                         <label for="userAdminOptions">Choose an action:&nbsp;</label>
                         <select id="userAdminOptions" name="operation">
@@ -112,7 +121,10 @@
                 </div>
 
 
-            </div>
+            </div><br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"></div>
         </div>
     </body>
 </html>

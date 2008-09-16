@@ -24,25 +24,30 @@ from mint.helperfuncs import truncateForDisplay, formatProductVersion
                 ${releasesMenu(projectPublishedReleases, isOwner)}
                 ${commitsMenu(projectCommits)}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-                ${builderPane()}
-            </div>
-            <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
-
-                <h2>Images</h2>
-                <div py:if="isWriter">
-                    You may:
-                    <ul>
-                        <li py:if="not project.external"><a href="newBuildsFromProductDefinition">Create a set of images for version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</a></li>
-                        <li><a href="newBuild">Create a single image</a></li>
-                    </ul>
+             <div id="innerpage">
+                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
                 </div>
-                <div py:if="builds" py:strip="True">
-                ${buildsTable(builds, publishedReleases = publishedReleases)}
-                </div>
-                <p py:if="not builds">This ${projectText().lower()} contains no images.</p>
+                
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">Images</div>
+                    
+                    <div py:if="isWriter">
+                        <ul class="pageSectionList">
+                            <li py:if="not project.external"><a href="newBuildsFromProductDefinition">Create a set of images for version ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</a></li>
+                            <li><a href="newBuild">Create a single image</a></li>
+                        </ul>
+                    </div>
+                    ${buildsTable(builds, publishedReleases = publishedReleases)}
+                    <div class="pageSection" py:if="not builds">This ${projectText().lower()} contains no images.</div>
+                </div><br class="clear" />
+                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

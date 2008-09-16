@@ -62,11 +62,21 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
 
     <head/>
     <body>
-        <div id="layout">
-            <h2>License and Crypto for ${troveName}</h2>
-            <p class="help">Although rPath believes the information provided related to the licenses and cryptography is accurate, such information may be out of date and anyone using this software should rely only on its own review of this information.</p>
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">License and Crypto for ${troveName}</div>
 
-            ${troveList(troves)}
+                <p class="help">Although rPath believes the information provided related to the licenses and cryptography is accurate, such information may be out of date and anyone using this software should rely only on its own review of this information.</p>
+
+                ${troveList(troves)}
+            </div>
+            <br class="clear"/>
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

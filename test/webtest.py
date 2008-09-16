@@ -316,7 +316,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertCode("/confirm?id=%s" % conf, code = 200)
 
-        self.failIf("Your account has now been confirmed." not in page.body,
+        self.failIf("your account has now been confirmed" not in page.body.lower(),
                     "Confirmation Failed")
         page = self.assertCode("/confirm?id=%s" % conf, code = 200)
         self.failIf("Your account has already been confirmed." not in page.body,
@@ -584,7 +584,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/foo/members/', 
                 ok_codes = [200])
-        page = page.postForm(2, self.post, {'username' : 'testuser',
+        page = page.postForm(1, self.post, {'username' : 'testuser',
                                             'level' : 0})
 
 
@@ -1064,7 +1064,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/editGroup2?id=1&version=1.0.0&action=Save%20and%20Cook')
 
         # this line would trigger a group cook if a job server were running
-        page.postForm(2, self.post, {'arch' : "1#x86", 'id' : '1'})
+        page.postForm(1, self.post, {'arch' : "1#x86", 'id' : '1'})
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1189,8 +1189,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Unconfirmed user was unable to log out.')
 
         page = self.fetchWithRedirect('/confirm?id=%s' % (40*"0"))
-        self.failIf("Your account has now been confirmed." not in page.body,
-                    'Unconfirmed user was unable to confirm.')
+        self.failIf("your account has now been confirmed" not in
+                page.body.lower(), 'Unconfirmed user was unable to confirm.')
 
     def testSessionStability(self):
         newSid = '1234567890ABCDEF1234567890ABCDEF'.lower()

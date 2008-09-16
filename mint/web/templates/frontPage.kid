@@ -24,72 +24,84 @@ from mint.web.templatesupport import projectText
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
-        <div id="right" class="side">
-            ${resourcePane()}
+        <div class="fullpage">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+        
+            <div id="right" class="side">
+                ${resourcePane()}
+            </div>
+            <!--
+            Marketing block start
+            -->
+            ${XML(frontPageBlock)}
+            <!--
+            Marketing block end
+            -->
+            <br class="clear" />
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"></div>
         </div>
-        <!--
-        Marketing block start
-        -->
-        ${XML(frontPageBlock)}
-        <!--
-        Marketing block end
-        -->
-
-        <div py:if="selectionData or topProjects or popularProjects" id="topten">
-            <div class="cssbox">
-            <div class="cssbox_head"><h2>&nbsp;</h2></div>
-            <div class="cssbox_body">
-                <table style="width: 100%;">
+        
+        <div class="fullpage_blue">
+            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_topleft.png" alt="" />
+            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_topright.png" alt="" />
+        
+            <div py:if="selectionData or topProjects or popularProjects" id="topten">
+                <div class="cssbox_body">
+                    <table class="topten_table" style="width: 100%;">
                     <tr>
-                        <th py:if="selectionData" class="topten_header">Recommended Appliances</th>
-                        <th class="topten_header">Most Popular</th>
-                        <th class="topten_header">Top ${projectText().title()}s</th>
-                        <th py:if="not selectionData" class="topten_header">Recent Releases</th>
+                        <th py:if="selectionData" class="topten_header_recommended">Recommended Appliances</th>
+                        <th class="topten_header_popular">Most Popular</th>
+                        <th class="topten_header_top">Top ${projectText().title()}s</th>
+                        <th py:if="not selectionData" class="topten_header_recent">Recent Releases</th>
                     </tr>
                     <tr>
                         <td py:if="selectionData">
-                            <ol>
-                                <li py:for="project in selectionData">
-                                    <a href="${project['link']}">${project['name']}</a>
-                                </li>
-                            </ol>
+                        <ul type="none">
+                            <li py:for="project in selectionData">
+                            <a href="${project['link']}">${project['name']}</a> </li>
+                        </ul>
                         </td>
+                        
                         <td>
-                            <ol>
-                                <li py:for="project in popularProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
-                                        ${truncateForDisplay(project['name'], maxWordLen=30)}
-                                    </a>
-                                </li>
-                            </ol>
+                        <ul type="none">
+                            <li py:for="project in popularProjects">
+                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                                ${truncateForDisplay(project['name'], maxWordLen=30)}
+                            </a></li>
+                        </ul>
                         </td>
+                        
                         <td>
-                            <ol>
-                                <li py:for="project in topProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
-                                        ${truncateForDisplay(project['name'], maxWordLen=30)}
-                                    </a>
-                                </li>
-                            </ol>
+                        <ul type="none">
+                            <li py:for="project in topProjects">
+                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                                ${truncateForDisplay(project['name'], maxWordLen=30)}
+                            </a></li>
+                        </ul>
                         </td>
+                        
                         <td py:if="not selectionData">
-                            <p py:if="not publishedReleases">No releases have been published yet.</p>
-                            <ol py:if="publishedReleases">
-
-                                <li py:for="releaseInfo in publishedReleases">
-                                    <?python
-                                        projectName, hostname, release = releaseInfo
-                                        releaseName = release.name
-                                        shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
-                                    ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a>
-                                 </li>
-                             </ol>
+                        <p py:if="not publishedReleases">No releases have been published yet.</p>
+                        <ul type="none" py:if="publishedReleases">
+                            <li py:for="releaseInfo in publishedReleases">
+                            <?python
+                                projectName, hostname, release = releaseInfo
+                                releaseName = release.name
+                                shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
+                            ?>
+                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a></li>
+                         </ul>
                          </td>
                     </tr>
-                </table>
-            </div>
-        </div>
+                    </table>
+                </div>
+            </div><br class="clear" />
+            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_bottomleft.png" alt="" />
+            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_bottomright.png" alt="" />
+            <div class="bottom"></div>
         </div>
     </body>
 </html>
