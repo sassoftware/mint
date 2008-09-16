@@ -674,6 +674,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         if auth.authorized:
             buildInProgress = \
                 (build.getStatus()['status'] <= jobstatus.RUNNING)
+            showLaunchButton = bool(self.user.getDataDict().get('awsAccountNumber'))
+        else:
+            showLaunchButton = False
+
         try:
             trove, version, flavor = build.getTrove()
             versionString = "%s/%s" % \
@@ -716,7 +720,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 extraFlags = extraFlags,
                 amiId = amiId,
                 amiS3Manifest = amiS3Manifest,
-                anacondaVars = anacondaVars)
+                anacondaVars = anacondaVars,
+                showLaunchButton = showLaunchButton)
 
     @writersOnly
     @productversion.productVersionRequired
