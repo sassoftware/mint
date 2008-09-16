@@ -126,7 +126,8 @@ allowNone = ['anaconda-custom', 'media-template']
                                         <label for="${name}_${key}">${dataRow[2]}</label>
                                         <div id="${name}_${key}">
                                             <span py:if="not buildId or not dataValue">Defaults to latest on branch</span>
-                                            <span py:if="buildId and dataValue">${shortTroveSpec(dataValue)}</span>
+                                            <span py:if="buildId and dataValue and dataValue != 'NONE'">${shortTroveSpec(dataValue)}</span>
+                                            <span py:if="buildId and dataValue and dataValue == 'NONE'">No ${dataRow[2]} will be used for this build.</span>
                                             (<a onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
                                                 '${name}', '${name}_${key}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
