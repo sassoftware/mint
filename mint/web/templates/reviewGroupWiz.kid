@@ -35,9 +35,9 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <p py:if="message" class="message" py:content="message"/>
              
                 <h2>Review Appliance Contents</h2>
-                <p>The packages that will be built into your appliance appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
-                <div class="page-subtitle">Added Packages</div>
                 <div py:if="explicitTroves">
+                    <p>The packages that will be built into your appliance appear below. If you are satisfied, click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
+                    <div class="page-subtitle">Added Packages</div>
                     <ul class="package-checklist">
                         <li py:for="trove in explicitTroves">${trove}</li>
                     </ul>
@@ -48,7 +48,8 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 </div>
                 
                 <div py:if="not explicitTroves">
-                    No packages added
+                    <p>No custom packages have been added to your appliance. Click the "Build Appliance" button to continue; otherwise, use the links to make the desired changes.</p>
+                    <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
                     <p><a href="newPackage">Package another archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                 </div>

@@ -34,9 +34,11 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <p py:if="message" class="message" py:content="message"/>
               
                 <h2>Edit Appliance Contents</h2>
-                <p>The packages that will be built into your appliance appear below. Make any desired changes to the list of packages, and click the "Update Contents" button to continue; otherwise, use the links to make the desired changes.</p>
                 <div py:if="packageList" py:strip="True">
+                    <p>The packages that will be built into your appliance appear below. Make any desired changes to the list of packages, and click the "Update Contents" button to continue; otherwise, use the links to make the desired changes.</p>
+                </div>
                 <form name="packagecreatortroves" action="processEditApplianceGroup" method="post">
+                    <div py:if="packageList" py:strip="True">
                     <ul class="package-checklist">
                         <li py:for="troveName in sorted(packageList, key=lambda x: x.upper())">
                         <?python
@@ -46,17 +48,15 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                         </li>
                     </ul>
                     <input value="Confirm Contents" type="submit"/>
+                    </div>
+                    <div py:if="not packageList" py:strip="True">
+                        <!-- handle the no troves case -->
+                        <p>No packages have been added to your appliance</p>
+                        <input value="Continue" type="submit"/>
+                    </div>
                     <p><a href="newPackage">Package another archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                 </form>
-                </div>
-                
-                <div py:if="not packageList" py:strip="True">
-                    <!-- handle the no troves case -->
-                    <p><img src="${cfg.staticPath}/apps/mint/images/errors.gif" alt="" /><strong>No content selected for your appliance</strong></p>
-                    <p><a href="newPackage">Package another archive</a></p>
-                    <p><a href="selectPackages">Select additional packages</a></p>
-                </div>
             </div>
             <br class="clear"/>
             <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
