@@ -409,6 +409,12 @@ class MintClient:
         """See L{mint.server.startPackageCreatorSession}"""
         return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
 
+    def getPackageCreatorRecipe(self, sesH):
+        return self.server.getPackageCreatorRecipe(sesH)
+
+    def savePackageCreatorRecipe(self, sesH, recipeData):
+        self.server.savePackageCreatorRecipe(sesH, recipeData)
+
     def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
         "See getPackageFactories, this method is used when you merely want to edit the interview data"
         sesH, factories, data = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)

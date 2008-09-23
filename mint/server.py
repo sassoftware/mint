@@ -4896,6 +4896,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sesH, pc
 
     @requiresAuth
+    @typeCheck(((str, unicode),))
+    def getPackageCreatorRecipe(self, sesH):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        return pc.getRecipe(sesH)
+
+    @requiresAuth
+    @typeCheck(((str, unicode),), str)
+    def savePackageCreatorRecipe(self, sesH, recipeData):
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc.saveRecipe(sesH, recipeData)
+        return False
+
+    @requiresAuth
     def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
         """
             Get the list of factories, but instead of using an uploaded file,

@@ -1,7 +1,12 @@
 Changes in @NEW@
 ===============
+API Changes
+---------------------
+* getPackageCreatorRecipe and savePackageCreatorRecipe have been added to the
+  conary client. (RBL-3483)
+
 Internal Changes
-----------------
+---------------------
 * A new api method, newBuildWithOptions, has been added. (RBL-2959)
 * Fixed a bug where a missing GROUP BY argument in an SQL statement was
   causing a traceback in MySQL. (RBL-2995)

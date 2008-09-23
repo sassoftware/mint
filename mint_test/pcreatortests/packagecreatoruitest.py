@@ -706,6 +706,24 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
                 os.kill(pid, signal.SIGKILL)
             self.mintCfg.packageCreatorURL = packageCreatorURL
 
+class RecipeManipulationTest(fixtures.FixturedUnitTest):
+    @fixtures.fixture('Full')
+    def testRecipeManipulation(self, data, db):
+        client = self.getClient('owner')
+        sesH = client.createPackageTmpDir()
+        recipe = client.getPackageCreatorRecipe(sesH)
+        self.failUnless('asserts no copyright claim on this interface' \
+                in recipe)
+        refRecipe = 'completely busted'
+        client.savePackageCreatorRecipe(sesH, refRecipe)
+        newRecipe = client.getPackageCreatorRecipe(sesH)
+        self.assertEquals(newRecipe, refRecipe)
+
+        # now prove that submitting an empty recipe restores the defaults
+        client.savePackageCreatorRecipe(sesH, '')
+        newRecipe = client.getPackageCreatorRecipe(sesH)
+        self.assertEquals(newRecipe, recipe)
+
 
 if __name__ == '__main__':
     testsuite.main()
