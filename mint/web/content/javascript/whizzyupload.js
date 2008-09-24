@@ -81,6 +81,8 @@ var FileUploadForm = function(upload_id, formkey, statusuri, canceluri)
     this.upload_polling_rate = 1.5;
     this.numfiles = 0;
 
+    this.currentIframe = null;
+
     bindMethods(this);
 };
 
@@ -277,6 +279,7 @@ FileUploadForm.prototype =
                 {
                     this.numfiles++;
                     //setup the poller for element_id
+                    this.currentIframe = iframes[k];
                     this.uploadStatus(element_id);
                     //grab the form and submit it
                     logDebug("doNextUpload submitting " + element_id + "'s form");
@@ -290,6 +293,15 @@ FileUploadForm.prototype =
 
     uploadStatusCallFinished: function(key, req)
     {
+        var failRE = new RegExp('^[45]');
+        var h1Iframe = getElementsByTagAndClassName('title', null, getIframeDocument(this.currentIframe));
+        if (h1Iframe.length > 0 && failRE.test(h1Iframe[0].text)) {
+            var errorMsg = "Upload failed!\n\nReceived '" + h1Iframe[0].text + "' from backend. Check your CGI configuration.";
+            logError(errorMsg);
+            alert(errorMsg);
+            this.cancelUpload();
+        }
+
         if (! this.cancelled){
             if (req.starttime !== null)
             {
