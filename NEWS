@@ -1,3 +1,12 @@
+Changes in @new@:
+================
+
+Bug Fixes
+---------------------
+* A bug in purging the stompserver message queue when a large number of files
+  are present has been fixed (RBL-3472).
+
+
 Changes in 4.1.2:
 ================
 
