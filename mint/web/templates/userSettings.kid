@@ -82,7 +82,7 @@
             </tr>
             </table>
            
-            <div class="pageSection" py:if="isOwner">
+            <div class="pageSection">
             <h2>Change Password</h2>
             <table class="mainformhorizontal">
             <tr>
