@@ -1,8 +1,7 @@
 # Copyright (c) 2005-2007 rPath, Inc
 # All rights reserved
 
-import cherrypy
-import turbogears
+from gettext import gettext as _
 
 import os
 import re
@@ -11,9 +10,10 @@ import time
 from mint import loadmirror
 from mint import config
 
+import raa.authorization
+import raa.web
 from raa.db import schedule
 from raa.modules.raawebplugin import rAAWebPlugin
-from raa.localhostonly import localhostOnly
 from raa.db.database import DatabaseTable, writeOp, readOp
 
 class LoadMirrorTable(DatabaseTable):
@@ -61,10 +61,10 @@ class LoadMirror(rAAWebPlugin):
     tableClass = LoadMirrorTable
     preloadLogPath = '/var/log/rbuilder/load-mirror.log'
 
-    @turbogears.expose(html="rPath.loadmirror.index")
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(html="rPath.loadmirror.index")
+    @raa.web.require(raa.authorization.NotAnonymous())
     def index(self):
-        sids = cherrypy.root.execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId)
+        sids = raa.web.getWebRoot().execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId)
         if not sids:
             schedId = self._setCommand("mount")
             schedId = schedId['schedId']
@@ -82,8 +82,8 @@ class LoadMirror(rAAWebPlugin):
 
         return dict(schedId=schedId)
 
-    @turbogears.expose(allow_json=True)
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(allow_json=True)
+    @raa.web.require(raa.authorization.NotAnonymous())
     def callGetPreloads(self, schedId):
         _, done = self.table.getCommand(schedId)
         errors = self.table.getError(schedId)
@@ -95,8 +95,8 @@ class LoadMirror(rAAWebPlugin):
             done = False
         return dict(done = done, projects = projects, preloadErrors = preloadErrors, errors = errors)
 
-    @turbogears.expose(allow_json=True)
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(allow_json=True)
+    @raa.web.require(raa.authorization.NotAnonymous())
     def callStartPreload(self):
         self._setCommand("preload")
         return dict()
@@ -107,15 +107,15 @@ class LoadMirror(rAAWebPlugin):
         f.close()
         return data
 
-    @turbogears.expose(allow_json=True)
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(allow_json=True)
+    @raa.web.require(raa.authorization.NotAnonymous())
     def callGetLog(self):
         return dict(log = self._getLog())
 
-    @turbogears.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def downloadLog(self):
-        cherrypy.response.headerMap['Content-Type'] = 'text/plain'
+        raa.web.setResponseHeaderValue('Context-Type', 'text/plain')
         return self._getLog()
 
     def _getProjects(self):
@@ -139,12 +139,12 @@ class LoadMirror(rAAWebPlugin):
 
         return projects, errors
 
-    @cherrypy.expose()
-    @localhostOnly()
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.LocalhostOnly())
     def getCommand(self, schedId):
         return self.table.getCommand(schedId)
 
-    @cherrypy.expose()
-    @localhostOnly()
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.LocalhostOnly())
     def setError(self, schedId, command, done = False, error = ''):
         return self.table.setCommand(schedId, command, done, error)

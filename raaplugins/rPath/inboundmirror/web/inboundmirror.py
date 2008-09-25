@@ -1,10 +1,12 @@
 # Copyright (c) 2005-2007 rPath, Inc
 # All rights reserved
 
+from gettext import gettext as _
+
 from raa.modules.raawebplugin import rAAWebPlugin
 import raa
+import raa.web
 from raa.lib import repeatschedules
-import cherrypy
 import random
 from datetime import datetime
 import time
@@ -52,11 +54,11 @@ class InboundMirror(rAAWebPlugin):
 
     def initPlugin(self):
         # Initialize inbound mirroring to fire every hour
-        if not len(cherrypy.root.schedule.getRowsByColumns(dict(taskId=self.taskId))):
+        if not len(raa.web.getWebRoot().schedule.getRowsByColumns(dict(taskId=self.taskId))):
             sched = schedule.ScheduleInterval(time.time(), None, 1, 
                 schedule.ScheduleInterval.INTERVAL_HOURS)
             schedId = self.schedule(sched, commit=False)
-            cherrypy.root.schedule.db.commit()
+            raa.web.getWebRoot().schedule.db.commit()
 
     @raa.expose(allow_json=True)
     def prefsSave(
@@ -90,7 +92,7 @@ class InboundMirror(rAAWebPlugin):
         # Add a new schedule that contains the given parameters.
         if not status:
             # Well, we're not checking at all, so just return.
-            cherrypy.root.schedule.db.commit()
+            raa.web.getWebRoot().schedule.db.commit()
             return None
 
         # Get hour and random minute.
@@ -128,7 +130,7 @@ class InboundMirror(rAAWebPlugin):
 
         # Schedule this.
         schedId = self.schedule(sched, commit=False)
-        cherrypy.root.schedule.db.commit()
+        raa.web.getWebRoot().schedule.db.commit()
 
         return sched
 
@@ -139,7 +141,7 @@ class InboundMirror(rAAWebPlugin):
 
     @raa.expose(allow_json=True)
     def checkMirrorStatus(self):
-        if cherrypy.root.execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
+        if raa.web.getWebRoot().execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
             return dict(mirroring=True)
         else:
             return dict(mirroring=False)

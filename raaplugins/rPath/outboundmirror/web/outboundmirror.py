@@ -1,6 +1,8 @@
 # Copyright (c) 2005-2007 rPath, Inc
 # All rights reserved
 
+from gettext import gettext as _
+
 from raa.modules.raawebplugin import rAAWebPlugin
 import raa
 from raa.lib import repeatschedules
@@ -10,6 +12,7 @@ from datetime import datetime
 import time
 from raa.db import database, schedule
 import math
+import raa.web
 
 class OutboundMirror(rAAWebPlugin):
     '''
@@ -17,7 +20,7 @@ class OutboundMirror(rAAWebPlugin):
     '''
     displayName = _("Schedule Outbound Mirroring")
 
-    @raa.expose(template="rPath.outboundmirror.index")
+    @raa.web.expose(template="rPath.outboundmirror.index")
     def index(self):
         scheds = repeatschedules.getCurrentRepeatingSchedules(self.taskId)
         if len(scheds) == 1:
@@ -50,7 +53,7 @@ class OutboundMirror(rAAWebPlugin):
 
         return dict(enabled=enabled, checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours)
 
-    @raa.expose(allow_json=True)
+    @raa.web.expose(allow_json=True)
     def prefsSave(
         self, checkFreq, timeHour, timeDay, timeDayMonth, hours, status = 'disabled'):
 
@@ -82,7 +85,7 @@ class OutboundMirror(rAAWebPlugin):
         # Add a new schedule that contains the given parameters.
         if not status:
             # Well, we're not checking at all, so just return.
-            cherrypy.root.schedule.db.commit()
+            raa.web.getWebRoot().schedule.db.commit()
             return None
 
         # Get hour and random minute.
@@ -120,18 +123,18 @@ class OutboundMirror(rAAWebPlugin):
 
         # Schedule this.
         schedId = self.schedule(sched, commit=False)
-        cherrypy.root.schedule.db.commit()
+        raa.web.getWebRoot().schedule.db.commit()
 
         return sched
 
-    @raa.expose(allow_json=True)
+    @raa.web.expose(allow_json=True)
     def mirrorNow(self):
         schedId = self.schedule(schedule.ScheduleOnce())
         return dict(schedId=schedId)
 
-    @raa.expose(allow_json=True)
+    @raa.web.expose(allow_json=True)
     def checkMirrorStatus(self):
-        if cherrypy.root.execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
+        if raa.web.getWebRoot().execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
             return dict(mirroring=True)
         else:
             return dict(mirroring=False)
