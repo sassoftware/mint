@@ -77,7 +77,7 @@ lang = None;
               <td class="form-label">Archive:</td>
               <td>
                   ${fileupload_iframe("upload_iframe?uploadId=%s;fieldname=uploadfile" % uploadDirectoryHandle, 'uploadfile')}
-                  <div class="help">Specify a binary archive in RPM or tar format.</div>
+                  <div class="help">Specify a binary archive in RPM, deb or tar format.</div>
               </td>
               </tr>
               <!--<tr>
