@@ -64,7 +64,7 @@ class MCPConsole(rAAWebPlugin):
             c = None
         return c
 
-    @raa.web.expose(html="rPath.mcpconsole.templates.jobs")
+    @raa.web.expose(template="rPath.mcpconsole.templates.jobs")
     @raa.web.require(raa.authorization.NotAnonymous())
     @marshallMessages
     def index(self):
@@ -98,7 +98,7 @@ class MCPConsole(rAAWebPlugin):
                 mcpClient.disconnect()
         return {'disabled' : True}
 
-    @raa.web.expose(html="rPath.mcpconsole.templates.nodes")
+    @raa.web.expose(template="rPath.mcpconsole.templates.nodes")
     @raa.web.require(raa.authorization.NotAnonymous())
     @marshallMessages
     def nodes(self):
