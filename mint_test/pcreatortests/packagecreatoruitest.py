@@ -14,6 +14,7 @@ import testsuite
 testsuite.setup()
 
 import os, signal
+import simplejson
 import SimpleHTTPServer
 
 import StringIO
@@ -711,18 +712,29 @@ class RecipeManipulationTest(fixtures.FixturedUnitTest):
     def testRecipeManipulation(self, data, db):
         client = self.getClient('owner')
         sesH = client.createPackageTmpDir()
-        recipe = client.getPackageCreatorRecipe(sesH)
-        self.failUnless('asserts no copyright claim on this interface' \
-                in recipe)
-        refRecipe = 'completely busted'
-        client.savePackageCreatorRecipe(sesH, refRecipe)
-        newRecipe = client.getPackageCreatorRecipe(sesH)
-        self.assertEquals(newRecipe, refRecipe)
+        dataPath = os.path.join(self.cfg.dataPath, 'tmp', 'owner', sesH)
+        conary.lib.util.mkdirChain(dataPath)
+        modePath = os.path.join(dataPath, 'mode')
+        for mode in ('package-creator', 'appliance-creator'):
+            f = open(modePath, 'w')
+            f.write(simplejson.dumps(mode))
+            f.close()
+            isDefault, recipe = client.getPackageCreatorRecipe(sesH)
+            self.failUnless('asserts no copyright claim on this interface' \
+                    in recipe)
+            self.assertEquals(isDefault, True)
 
-        # now prove that submitting an empty recipe restores the defaults
-        client.savePackageCreatorRecipe(sesH, '')
-        newRecipe = client.getPackageCreatorRecipe(sesH)
-        self.assertEquals(newRecipe, recipe)
+            refRecipe = 'completely busted'
+            client.savePackageCreatorRecipe(sesH, refRecipe)
+            isDefault, newRecipe = client.getPackageCreatorRecipe(sesH)
+            self.assertEquals(newRecipe, refRecipe)
+            self.assertEquals(isDefault, False)
+
+            # now prove that submitting an empty recipe restores the defaults
+            client.savePackageCreatorRecipe(sesH, '')
+            isDefault, newRecipe = client.getPackageCreatorRecipe(sesH)
+            self.assertEquals(newRecipe, recipe)
+            self.assertEquals(isDefault, True)
 
 
 if __name__ == '__main__':

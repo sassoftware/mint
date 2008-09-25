@@ -410,9 +410,18 @@ class MintClient:
         return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
 
     def getPackageCreatorRecipe(self, sesH):
+        """
+        This method returns a tuple of (isDefault, recipeData)
+
+        isDefault is True if the recipe was not modified by the user
+        """
         return self.server.getPackageCreatorRecipe(sesH)
 
     def savePackageCreatorRecipe(self, sesH, recipeData):
+        """
+        Save an override recipe. storing a blank string returns the recipe
+        to its default state.
+        """
         self.server.savePackageCreatorRecipe(sesH, recipeData)
 
     def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):

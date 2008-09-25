@@ -4898,12 +4898,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @typeCheck(((str, unicode),))
     def getPackageCreatorRecipe(self, sesH):
+        """
+        Return a tuple of (isDefault, recipeData)
+
+        isDefault is True if the user has not modified the recipe
+        """
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         return pc.getRecipe(sesH)
 
     @requiresAuth
     @typeCheck(((str, unicode),), str)
     def savePackageCreatorRecipe(self, sesH, recipeData):
+        """
+        Store a package creator recipe. using an empty string for recipeData
+        will return recipe to default.
+        """
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
         pc.saveRecipe(sesH, recipeData)
         return False
