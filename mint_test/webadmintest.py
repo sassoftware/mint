@@ -52,7 +52,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rap"')
+                                  'NAME="hostname" VALUE="rap"')
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rap',
@@ -61,7 +61,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'url' : ''})
 
         page = self.assertNotContent("/admin/addExternal",
-                                     'name="hostname" value="rap"')
+                                     'NAME="hostname" VALUE="rap"')
 
         page = self.assertContent("/admin/external", "rPath Appliance Platform")
         project = client.getProjectByHostname("rap")
@@ -82,7 +82,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rap"')
+                                  'NAME="hostname" VALUE="rap"')
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rap',
@@ -96,7 +96,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content does not appear on page
         page = self.assertNotContent("/admin/addExternal",
-                                     'name="hostname" value="rap"')
+                                     'NAME="hostname" VALUE="rap"')
 
         # and make sure that the appropriate database entries are created
         assert(client.getInboundMirrors() == [[1, 1,
@@ -127,7 +127,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # Create without backup
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rap"')
+                                  'NAME="hostname" VALUE="rap"')
         page.postForm(1, self.post, details)
 
         project = client.getProjectByHostname("rap")
@@ -276,7 +276,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content appears on page
         page = self.assertContent("/admin/addExternal",
-                                  'name="hostname" value="rap"')
+                                  'NAME="hostname" VALUE="rap"')
 
         # check errors
         page = self.fetch("/admin/addExternal")
@@ -299,7 +299,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # ensure "first time" content does not appear on page
         page = self.assertNotContent("/admin/addExternal",
-                                     'name="hostname" value="rpath"')
+                                     'NAME="hostname" VALUE="rpath"')
 
         # and make sure that the appropriate database entries are created
         self.assertEquals(client.getLabelsForProject(1),
@@ -328,9 +328,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         p = client.getProjectByHostname('rpath')
         page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
 
-        self.failUnless('value="https://conary.rpath.com/conary/"' in page.body)
-        self.failUnless('name="externalUser" value="mirror"' in page.body)
-        self.failUnless('name="externalPass" value="mirrorpass"' in page.body)
+        self.failUnless('VALUE="https://conary.rpath.com/conary/"' in page.body)
+        self.failUnless('NAME="externalUser" VALUE="mirror"' in page.body)
+        self.failUnless('NAME="externalPass" VALUE="mirrorpass"' in page.body)
 
         # check editing of additionalLabelsToMirror
         page = self.fetch("/admin/editExternal?projectId=%d" % p.id)
@@ -469,7 +469,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         page = self.assertContent("/users", code = [200],
-            content = '<a href="/userInfo?id=%d"' % userId)
+            content = '<A HREF="/userInfo?id=%d"' % userId)
 
     def testNoAdminPowers(self):
         self.assertCode("/admin/", code = 403)

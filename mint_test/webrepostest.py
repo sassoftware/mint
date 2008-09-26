@@ -168,7 +168,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # test that trove info page renders without error
         page = self.assertContent('/repos/testproject/troveInfo?t=test:runtime',
-                                  content = 'title="test:runtime"',
+                                  content = 'TITLE="test:runtime"',
                                   server = self.getProjectServerHostname())
 
     def testTroveInfoPageFlavors(self):
@@ -454,7 +454,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('--Nobody--' not in page.body, 'Error PGP Admin Page.')
         # User List
         page = page.fetch('/repos/testproject/userlist')
-        self.failIf('<b>testuser</b>' not in page.body, 'Incorrect user list')
+        self.failIf('<B>testuser</B>' not in page.body, 'Incorrect user list')
         # addPermForm
         page = page.fetch('/repos/testproject/addPermForm')
         self.failIf('testuser' not in page.body, 'Error in addPermForm')

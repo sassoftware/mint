@@ -55,7 +55,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         page = self.fetch('/project/testproject/newPackage',
                 server=self.getProjectServerHostname())
         assert 'version1' in page.body
-        assert 'value="Upload"' in page.body
+        assert 'VALUE="Upload"' in page.body
         match = re.search('upload_iframe\?uploadId=([^;]+);', page.body)
         assert match, "Did not find an id in the page body"
         sessionHandle = match.groups()[0]
@@ -82,10 +82,10 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.webLogin('testuser', 'testpass')
         page = self.fetch('/project/testproject/upload_iframe?uploadId=foobarbaz;fieldname=upldfile',
                 server=self.getProjectServerHostname())
-        assert 'action="/cgi-bin/fileupload.cgi?uploadId=foobarbaz;fieldname=upldfile"' in page.body
-        assert not 'input type="submit"' in page.body.lower(), "Did you forget to remove the submit button?"
-        assert 'input type="file" name="uploadfile"' in page.body, 'The file field name is fixed'
-        assert 'name="project" value="testproject"' in page.body, 'Make sure the project name is in the form'
+        assert 'ACTION="/cgi-bin/fileupload.cgi?uploadId=foobarbaz;fieldname=upldfile"' in page.body
+        assert not 'INPUT TYPE="submit"' in page.body.lower(), "Did you forget to remove the submit button?"
+        assert 'INPUT TYPE="file" NAME="uploadfile"' in page.body, 'The file field name is fixed'
+        assert 'NAME="project" VALUE="testproject"' in page.body, 'Make sure the project name is in the form'
 
     def extractElement(self, page, elemType, attributeName, attributeValue):
         match = re.search("<%(elemType)s[^>]*%(attributeName)s=['|\"]%(attributeValue)s['|\"][^>]*>" % dict(elemType=elemType, attributeName=attributeName, attributeValue=attributeValue), page)

@@ -139,7 +139,7 @@ class WebProjectTest(WebProjectBaseTest):
         # Logged in
         page = self.assertContent('/project/testproject/builds',
                                   code=[200],
-                                  content='href="newBuild"',
+                                  content='HREF="newBuild"',
                                   server=self.getProjectServerHostname())
 
     def testBuildsList(self):
@@ -184,7 +184,7 @@ class WebProjectTest(WebProjectBaseTest):
         # Logged in
         page = self.assertContent('/project/testproject/newGroup',
                                   code=[200],
-                                  content='action="createGroup"',
+                                  content='ACTION="createGroup"',
                                   server=self.getProjectServerHostname())
 
     def testGroupList(self):
@@ -275,7 +275,7 @@ class WebProjectTest(WebProjectBaseTest):
         page = self.fetch('/project/testproject/deleteGroup?id=%d' % \
                               groupTrove.id,
                           server=self.getProjectServerHostname())
-        assert 'action="deleteGroup"' in page.body
+        assert 'ACTION="deleteGroup"' in page.body
         groupTrove.refresh()
         page = self.fetch('/project/testproject/deleteGroup?id=%d' \
                               '&confirmed=1' % \
@@ -387,7 +387,7 @@ class WebProjectTest(WebProjectBaseTest):
         self.webLogin('testuser', 'testpass')
         page = self.fetchWithRedirect('/project/testproject/newBuild',
                                       server=self.getProjectServerHostname())
-        assert 'action="saveBuild"' in page.body
+        assert 'ACTION="saveBuild"' in page.body
 
     def testNewBuildUnknownArch(self):
         raise testsuite.SkipTestException("startImageJob returns None")
@@ -430,7 +430,7 @@ class WebProjectTest(WebProjectBaseTest):
         page = self.fetch('/project/testproject/editBuild?' \
                               'buildId=%d&action=Edit%%20Image' % build.id,
                           server=self.getProjectServerHostname())
-        assert 'action="saveBuild"' in page.body
+        assert 'ACTION="saveBuild"' in page.body
 
     def testRecreateBuild(self):
         raise testsuite.SkipTestException("startImageJob returns None")
@@ -467,8 +467,8 @@ class WebProjectTest(WebProjectBaseTest):
         page = self.fetchWithRedirect('/project/testproject/deleteBuild?id=%d' \
                                           % build.id,
                                       server=self.getProjectServerHostname())
-        assert 'action="deleteBuild"' in page.body
-        assert 'type="hidden" name="confirmed"' in page.body
+        assert 'ACTION="deleteBuild"' in page.body
+        assert 'TYPE="hidden" NAME="confirmed"' in page.body
         page = self.fetchWithRedirect('/project/testproject/deleteBuild?id=%d' \
                                           '&confirmed=1' % build.id,
                                       server=self.getProjectServerHostname())
@@ -511,7 +511,7 @@ class WebProjectTest(WebProjectBaseTest):
         assert 'Version: none available' not in page.body
         assert 'Version:' in page.body
         assert 'Not Selected' in page.body # We can't currently select versions as anonymous
-        assert 'id="versionSelectorForm"' not in page.body
+        assert 'ID="versionSelectorForm"' not in page.body
 
     def _projectPageVersionSelector(self, level):
         client, ownerId = self.quickMintUser('testowner', 'testpass')
@@ -535,8 +535,8 @@ class WebProjectTest(WebProjectBaseTest):
         assert 'Version: none available' not in page.body
         assert 'Version:' in page.body
         assert 'Not Selected' not in page.body
-        assert 'id="versionSelectorForm"' in page.body
-        assert '<option selected="selected" value="%d">' % versionId in page.body
+        assert 'ID="versionSelectorForm"' in page.body
+        assert '<OPTION SELECTED VALUE="%d">' % versionId in page.body
 
     def testProjectPageVersionSelectorDeveloper(self):
         self._projectPageVersionSelector(userlevels.DEVELOPER)

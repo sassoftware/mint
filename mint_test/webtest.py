@@ -1875,7 +1875,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testBulletin(self):
         bulletinContent = """rBuilder Online will be down for maintenance"""
-        XMLbulletinContent = """<div>rBuilder Online will be down for maintenance, see <a href="http://blogs.conary.com/">Conary Blogs</a> for announcements</div>"""
+        XMLbulletinContent = """<DIV>rBuilder Online will be down for maintenance, see <A HREF="http://blogs.conary.com/">Conary Blogs</A> for announcements</DIV>"""
 
         # gotta be logged in, otherwise frontPage caching will kill us
         self.quickMintUser('foouser','foopass')
@@ -1960,7 +1960,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testFrontPageBlock(self):
-        HTMLcontent = """<div>The MARKETING block of code</div>"""
+        HTMLcontent = """<DIV>The MARKETING block of code</DIV>"""
 
         # gotta be logged in, otherwise frontPage caching will kill us
         self.quickMintUser('foouser','foopass')

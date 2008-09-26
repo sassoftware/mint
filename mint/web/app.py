@@ -51,18 +51,9 @@ class MintApp(WebHandler):
         self.req = req
         self.cfg = cfg
 
-        # always send xhtml-strict
-        self.output = 'xhtml-strict'
-
-        # Send the proper content type for those browser who know to ask
-        # for XHTML. Otherwise, serve XHTML as text/html with the proper
-        # charset encoding as per the W3C guidelines
-        # (c.f. http://www.w3.org/TR/xhtml1/guidelines.html)
-        if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
-            self.content_type = 'application/xhtml+xml'
-        else:
-            self.content_type = 'text/html; charset=utf-8'
-
+        # always send html-strict; xhtml FTL
+        self.output = 'html-strict'
+        self.content_type = 'text/html; charset=utf-8'
         self.req.content_type = self.content_type
 
         try:

@@ -80,6 +80,10 @@ Web Front End Changes
   the edit product version page. (RBL-2985)
 * The product and membership requests have been consolidated into dropdown
   menus in the right-hand sidebar. (RBL-3306)
+* Pages are rendered as HTML 4.01 Strict to work around issues with
+  Javascript libraries that use innerHTML with application/xhtml+xml.
+  This fixes issues that involve using the jQuery UI.Dialog control
+  with WebKit-based browsers (RBL-3489, RBL-3507)
 
 Bug Fixes
 ---------------------
