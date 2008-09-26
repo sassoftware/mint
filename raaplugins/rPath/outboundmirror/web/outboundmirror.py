@@ -51,7 +51,11 @@ class OutboundMirror(rAAWebPlugin):
             timeDayMonth = "1"
             hours = "1"
 
-        return dict(enabled=enabled, checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours)
+        scheduleData = dict(checkFreq=checkFreq, timeHour=timeHour,
+                        timeDay=timeDay, timeDayMonth=timeDayMonth,
+                        hours=hours)
+
+        return dict(enabled=enabled, schedule=scheduleData, hours=hours)
 
     @raa.web.expose(allow_json=True)
     def prefsSave(

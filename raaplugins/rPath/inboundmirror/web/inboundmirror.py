@@ -50,7 +50,11 @@ class InboundMirror(rAAWebPlugin):
             timeDayMonth = "1"
             hours = "1"
 
-        return dict(enabled=enabled, checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours)
+        scheduleData = dict(checkFreq=checkFreq, timeHour=timeHour,
+                        timeDay=timeDay, timeDayMonth=timeDayMonth,
+                        hours=hours)
+
+        return dict(enabled=enabled, schedule=scheduleData, hours=hours)
 
     def initPlugin(self):
         # Initialize inbound mirroring to fire every hour

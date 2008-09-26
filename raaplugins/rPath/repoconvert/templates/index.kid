@@ -11,7 +11,7 @@
 <head>
     <title>PostgreSQL Conversion - Index</title>
     <?python
-  from raa.widgets.callbackdisplay import CallbackDisplayWidget
+  from raa.templates.callbackdisplaywidget import CallbackDisplayWidget
     ?>
 </head>
 
@@ -53,41 +53,61 @@
     }
 
     </script>
+    <div class="plugin-page">
+    <div class="page-content">
+
     <!--Status box -->
-    ${CallbackDisplayWidget(schedId=schedId, optype="Migrating to PostgreSQL...", statusmsg=statusmsg, status=status).display()}
+    ${CallbackDisplayWidget(schedId=schedId, optype="Migrating to PostgreSQL...", statusmsg=statusmsg, status=status)}
+
     <div py:if="running" id="conv_instructions"/>
+
     <div py:if="not running and not converted" id="conv_instructions">
-        <h3>Convert to PostgreSQL</h3>
-        <h5>Clicking the "Convert" button below will convert your rBuilder
-        Appliance to use PostgreSQL as its repository backend database.
-        PostgreSQL provides better performance, improved concurrency, and
-        higher reliability than the previous database backend.  rPath
-        recommends that this conversion occur as soon as it may be
-        scheduled.  The conversion process will take an hour or less for each
-        project hosted on the rBuilder (internal, or external with mirrors). 
-        This process is reversible if an error occurs, but rPath suggests
-        that backups be taken before executing the conversion.</h5>
+        <div class="page-section">
+            Convert to PostgreSQL
+        </div>
+        <div class="page-section-content">
+            Clicking the "Convert" button below will convert your rBuilder
+            Appliance to use PostgreSQL as its repository backend database.
+            PostgreSQL provides better performance, improved concurrency, and
+            higher reliability than the previous database backend.  rPath
+            recommends that this conversion occur as soon as it may be
+            scheduled.  The conversion process will take an hour or less for each
+            project hosted on the rBuilder (internal, or external with mirrors). 
+            This process is reversible if an error occurs, but rPath suggests
+            that backups be taken before executing the conversion.
+            <p></p>
+            After clicking the Convert button below, a progress indicator
+            will appear.  An OK button will appear after the conversion is
+            complete.  Check your appliance for completeness and
+            functionality, and then click the "Finalize Conversion"
+            button to remove the old databases to free up space.
 
-        <h5>After clicking the Convert button below, a progress indicator
-        will appear.  An OK button will appear after the conversion is
-        complete.  Check your appliance for completeness and
-        functionality, and then click the "Finalize Conversion"
-        button to remove the old databases to free up space.</h5>
-
-        <input id="convertbutton" class="button" type="submit" value="Convert" onclick="javascript:convertNow(this);" />
+            <div class="button-line">
+            <a class="rnd_button internal float-left" id="convertbutton" onclick="javascript:convertNow();">Convert</a>
+            </div>
+        </div>
     </div>
+
     <div py:if="not running and converted and not finalized" id="conv_instructions">
-    <!--<div py:if="not running" id="conv_instructions">-->
-        <h3>PostgreSQL Conversion Completed</h3>
-        <h5>Your system has been successfully converted to use PostgreSQL as
-        the database backend.  Click "Finalize Conversion" below to make this
-        change permanent, and remove the old databases.  Once you have
-        finalized, you may not revert this change.</h5>
+        <div class="page-section">
+            PostgreSQL Conversion Completed
+        </div>
+        <div class="page-section-content">
+            Your system has been successfully converted to use PostgreSQL as
+            the database backend.  Click "Finalize Conversion" below to make this
+            change permanent, and remove the old databases.  Once you have
+            finalized, you may not revert this change.
+            <p></p>
+            If you need to revert this change, do not finalize at this time.
+            Instead please contact rPath Support for instructions.
 
-        <h5>If you need to revert this change, do not finalize at this time.
-        Instead please contact rPath Support for instructions.</h5>
+            <div class="button-line">
+            <a class="rnd_button internal float-left" id="finalizebutton" onclick="javascript:finalizeNow();">Finalize</a>
+            </div>
+        </div>
+    </div>
 
-        <input id="finalizebutton" class="button" type="submit" value="Finalize" onclick="javascript:finalizeNow(this);" />
+    </div>
     </div>
 </body>
 </html>

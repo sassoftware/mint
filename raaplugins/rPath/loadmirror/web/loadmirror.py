@@ -61,7 +61,7 @@ class LoadMirror(rAAWebPlugin):
     tableClass = LoadMirrorTable
     preloadLogPath = '/var/log/rbuilder/load-mirror.log'
 
-    @raa.web.expose(html="rPath.loadmirror.index")
+    @raa.web.expose(template="rPath.loadmirror.index")
     @raa.web.require(raa.authorization.NotAnonymous())
     def index(self):
         sids = raa.web.getWebRoot().execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId)
@@ -116,6 +116,10 @@ class LoadMirror(rAAWebPlugin):
     @raa.web.require(raa.authorization.NotAnonymous())
     def downloadLog(self):
         raa.web.setResponseHeaderValue('Context-Type', 'text/plain')
+        raa.web.setResponseHeaderValue('Content-Disposition',
+                                       'attachment; filename=%s' % \
+                                       os.path.split(self.preloadLogPath)[1])
+
         return self._getLog()
 
     def _getProjects(self):
@@ -139,12 +143,12 @@ class LoadMirror(rAAWebPlugin):
 
         return projects, errors
 
-    @raa.web.expose()
+    @raa.web.expose(allow_xmlrpc=True)
     @raa.web.require(raa.authorization.LocalhostOnly())
     def getCommand(self, schedId):
         return self.table.getCommand(schedId)
 
-    @raa.web.expose()
+    @raa.web.expose(allow_xmlrpc=True)
     @raa.web.require(raa.authorization.LocalhostOnly())
     def setError(self, schedId, command, done = False, error = ''):
         return self.table.setCommand(schedId, command, done, error)

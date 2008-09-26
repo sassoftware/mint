@@ -3,37 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
     py:extends="raa.templates.master">
     <?python 
-        from rPath.inboundmirror.repeatschedule import MirrorScheduleWidget
+        from raa.templates.repeatschedulewidget import RepeatScheduleWidget
+        import raa.web
     ?>
     <!--
-         Copyright (c) 2005-2007 rPath, Inc.
+         Copyright (c) 2005-2008 rPath, Inc.
          All rights reserved
     -->
     <head>
         <title>Schedule Inbound Mirroring</title>
         <script type="text/javascript">
-            function enableMirror() {
-                showElement("update");
-            }
-
-            function disableMirror() {
-                hideElement("update");
-            }
-
-            function init() {
-                if ('${enabled}' == 'True') {
-                    getElement('enable').checked = true;
-                    enableMirror();
-                }
-                else {
-                    getElement('disable').checked = true;
-                    disableMirror();
-                }
-                hideElement('inProgress');
-                checkMirror();
-
-            }
-
             var timer;
 
             function checkMirror() {
@@ -61,50 +40,51 @@
                 d = d.addCallbacks(function () {setTimeout(checkMirror, 6000);},
                                    callbackErrorGeneric);
             }
-            addLoadEvent(init);
 
+            addLoadEvent(updateDisplay);
         </script>
     </head>
 
-    <body id="middle">
-        <h3>Schedule Inbound Mirroring</h3>
-        <h5>Use this page to schedule syncing of local mirrors with their external
-            repositories. To disable automated syncing, select "Disabled" below
-            and click "Save." Local mirrors can be synced at any time by clicking "Mirror Now."</h5>
-        <h5>NOTE: Mirrors are updated between the hour selected 
-            and the following hour. The precise time a mirroring operation 
-            will occur will be shown in a message dialog when the schedule
-            is saved.</h5>
-        <p style="margin-bottom: 0px;">Inbound mirroring is:</p>
-        <form method="post" action="javascript:void(0);" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'prefsSave');">
-        <input type="radio" id="enable" name="status" value="enabled" onclick="enableMirror();"/>Enabled
-        <input type="radio" id="disable" name="status" value="disabled" onclick="disableMirror();"/>Disabled
-        <br/>
-        <div id="update" style="padding-bottom: 0px;">
-        <table style="border: 1px solid  #DDDDDD; margin-top: 10px; margin-bottom: 10px;">
-            <tbody>
-                <tr>
-                    <td>Mirrors will update:</td>  
-                    <td>${MirrorScheduleWidget().display(dict(checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours))}</td>
-                </tr>
-            </tbody>
-        </table>
+    <body>
+        <div class="plugin-page">
+
+        <div class="page-section">
+        Inbound Mirroring Schedule
         </div>
-             <button type="submit" class="img"><img src="${tg.url('/static/images/save_button.png')}" alt="save" /></button>
+        <form name="page_form" action="javascript:void(0)" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'savePrefs');">
+        <div class="page-section-content">
+        Use this page to schedule syncing of local mirrors with their external repositories. To disable automated syncing, select "No" below and click "Save."
+        <p></p>
+        NOTE: Mirrors are updated between the hour selected and the following hour. The precise time a mirroring operation will occur will be shown in a message dialog when the schedule is saved.
+        <p></p>
+          ${RepeatScheduleWidget(schedule, enabled, toggleText='Enable inbound mirroring schedule?', toggleName='enabled', divClass='form-line')}
+        <a class="rnd_button float-left" id="Save" href="javascript:button_submit(document.page_form)">Save</a>
+        </div>
         </form>
-        <div style="border-top: 1px solid gray; clear: right; padding-top: 10px;"/>
-        <div id="updateNow"> 
-        <span style="float: left; font-style: italic; width: 60%">To update your local mirrors immediately, click "Mirror Now."</span>
-        <button class="img" onclick="startMirrorNow();"><img src="${tg.url('/inboundmirror/static/images/mirror_now.png')}"/></button>
+
+
+        <div class="page-section">
+        Mirror Now
         </div>
+        <div class="page-section-content">
+        Click "Mirror Now" to start an inbound mirror immediately.
+        <div id="updateNow"> 
+            <div class="button-line">
+                <a class="rnd_button internal float-left" id="mirrorNowButton" onclick="javascript:startMirrorNow();">Mirror Now</a>
+            </div>
+        </div>
+        </div>
+
         <div style="padding-top: 5px; font-style: italic;" id="inProgress">
             <span style="float: left;">Local mirrors are currently being updated...</span>
-            <img style="float: right;" src="${tg.url('/static/images/circle-ball-dark-antialiased.gif')}" />
+            <img style="float: right;" src="${raa.web.makeUrl('/static/images/circle-ball-dark-antialiased.gif')}" />
             <br style="clear: right;" />
             <p>If you wish to monitor the status of the mirror operation,
-               <a href="${tg.url('/logs/Logs')}">click here</a> and select
+               <a href="${raa.web.makeUrl('/logs/Logs')}">click here</a> and select
                "Inbound Mirroring" from the list of logs.
             </p>
+        </div>
+
         </div>
     </body>
 </html>
