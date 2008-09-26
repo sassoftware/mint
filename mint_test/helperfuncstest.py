@@ -94,10 +94,13 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
     @testsuite.context("quick", "unfriendly")
     def testMakefiles(self):
         missing = False
-        skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
-                    'mint/web/content', 'mint/web/templates', 'scripts',
-                    'test/templates', 'test/annotate', 'test/coverage',
-                    'test/.coverage', 'test/archive/anaconda', 'bin', 'test',
+        skipDirs = ('.hg', 'mint_test/archive/arch',
+                    'mint_test/archive/use',
+                    'mint/web/content', 'mint/web/templates',
+                    'scripts', 'mint_test/templates',
+                    'mint_test/annotate', 'mint_test/coverage',
+                    'mint_test/.coverage', 'mint_test/archive/anaconda',
+                    'bin', 'mint_test',
                     'tom', 'product')
         mint_path = os.getenv('MINT_PATH')
 
