@@ -208,10 +208,22 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
             if ':' in nvf[0]:
                 return False
             return True
+
+        import kid
+        from os.path import join
         sesH = self._getApplianceSessionHandle()
         pkgs = self.client.getAvailablePackages(sesH)
         pkgs = collapsePkgList(pkgs, filtercomponents)
-        return dict(packageList = pkgs)
+        path = join(self.cfg.templatePath, "packageListWiz.kid")
+        template = kid.load_template(path)
+
+        t = template.Template(packageList=pkgs)
+        t.assume_encoding = 'latin1'
+        self.req.content_type = "text/html"
+        ret = t.serialize(encoding = "utf-8", output = "html-strict")
+
+        # lop off the doctype declaration since kid can't do it in 0.9.1
+        return ret[ret.find('>')+1:]
 
     @writersOnly
     @output_handler('selectPackagesShellWiz')

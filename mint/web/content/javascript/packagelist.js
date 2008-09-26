@@ -3,39 +3,11 @@
  All rights reserved
 */
 
-function parseXHRresponseIE(xhr) {
-    xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-    xmlDoc.async=false;
-    xmlDoc.validateOnParse = false;
-    if (!xmlDoc.loadXML(xhr.responseText))
-    {
-      //TODO: Need to log an error
-    }
-    return xmlDoc;
-}
-
-function parseResponseAndAppendTo(xhr, wanted_element, append_to) {
-    var xmlDoc = null;
-    try { //Internet Explorer
-        loaded = jQuery(xhr.responseText);
-        //In IE, it appears to load it discarding the body tags, so no selection is needed
-        loaded.appendTo(append_to);
-    }
-    catch(e) {
-      try { //Firefox, Mozilla, Opera, etc.
-        parser=new DOMParser();
-        xmlDoc=parser.parseFromString(xhr.responseText, "text/xml");
-        jQuery('#' + wanted_element, xmlDoc).appendTo(append_to);
-      }
-      catch(e) {throw e;}
-    }
-}
-
 function finished_load_packageList(xhr, textStatus) {
     //We don't use the "success" callback because the data is too big to put on the stack
     // See http://dev.jquery.com/ticket/3250
     if (textStatus == 'success') {
-        xmlDoc = parseResponseAndAppendTo(xhr, 'packageList', '#packageList_troveList');
+        jQuery("#packageList_troveList")[0].innerHTML = xhr.responseText;
         // Set up the links to the anchors
         add_anchor_links();
         // Set the odd/even classes

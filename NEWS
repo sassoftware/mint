@@ -84,6 +84,7 @@ Web Front End Changes
   Javascript libraries that use innerHTML with application/xhtml+xml.
   This fixes issues that involve using the jQuery UI.Dialog control
   with WebKit-based browsers (RBL-3489, RBL-3507)
+* "Select Additional Packages" now works in more browsers (RBL-3508)
 
 Bug Fixes
 ---------------------

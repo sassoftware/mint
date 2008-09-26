@@ -5165,7 +5165,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _cacheAvailablePackages(self, sesH, pkgs):
         filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
-        import pickle
+        import cPickle as pickle
         f = open(filen, 'wb')
         pickle.dump(pkgs, f)
         f.close()
@@ -5173,7 +5173,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _loadAvailablePackages(self, sesH):
         filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
         if os.path.exists(filen):
-            import pickle
+            import cPickle as pickle
             f = open(filen, 'rb')
             loaded = pickle.load(f)
             return loaded
