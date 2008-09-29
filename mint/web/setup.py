@@ -232,7 +232,10 @@ class SetupHandler(WebHandler):
         if kwargs.get('requireSigs'):
             newCfg.requireSigs = True
 
-        newCfg.authPass = helperfuncs.genPassword(32)
+        if self.cfg.configured and self.cfg.authPass:
+            newCfg.authPass = self.cfg.authPass
+        else:
+            newCfg.authPass = helperfuncs.genPassword(32)
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 

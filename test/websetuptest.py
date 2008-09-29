@@ -181,6 +181,26 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         self.assertTrue(len(newCfg.authPass) == 32)
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        oldPass = newCfg.authPass
+
+        # rerun process setup again.
+        fields = { 'hostName': 'foo',
+                   'siteDomainName': 'rpath.local',
+                   'corpSite': 'http://foo.bar.baz',
+                   'defaultBranch': 'foo:bam',
+                   'namespace': 'changed',
+                   'allowNamespaceChange': False }
+
+        context = {'auth': auth, 'cmd': 'processSetup', 'client': client, 'fields': fields}
+        self.sh.cfg.configured = True
+        func = self.sh.handle(context)
+        ret = func(auth = auth, **fields)
+        newCfg = config.MintConfig()
+        newCfg.read(generatedConfigFilePath)
+        # make sure that our update took
+        assert(newCfg.namespace == 'changed')
+        # but don't update the password!
+        assert(newCfg.authPass == oldPass)
 
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Empty")
