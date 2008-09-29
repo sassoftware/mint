@@ -572,6 +572,8 @@ form#searchForm div#browseText a {
 
 #select-add-user {
     width: 187px;
+}
+
 button {
     width: auto;
     overflow: visible;
