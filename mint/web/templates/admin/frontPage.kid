@@ -39,6 +39,7 @@
                         desired user/${projectText().lower()} by searching or browsing, then 
                         navigate to the main page for the user/${projectText().lower()}.</p>
             </div>
+            <div class="bottom"/>
         </div>
     </body>
 </html>

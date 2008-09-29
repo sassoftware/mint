@@ -61,7 +61,11 @@ table.pager {
 }
 
 .results tr.item-row {
-	border-bottom: 1px solid #e4e4e4;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: #e4e4e4;
+    overflow: visible;
+    position: relative;
 }
 
 .results tr.item-top-row {
@@ -125,4 +129,9 @@ table.pager {
 
 .admin-results a:hover {
     text-decoration: underline;
+}
+
+form {
+    margin: 0px;
+    padding: 0px;
 }

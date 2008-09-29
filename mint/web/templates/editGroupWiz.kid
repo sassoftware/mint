@@ -49,6 +49,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                     </ul>
                     <input value="Confirm Contents" type="submit"/>
                     </div>
+                
                     <div py:if="not packageList" py:strip="True">
                         <!-- handle the no troves case -->
                         <p>No packages have been added to your appliance</p>

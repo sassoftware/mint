@@ -67,7 +67,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
                                 <td colspan="2">
                                     <table class="table-image-components">
                                     <tr>
-                                        <td colspan="2">
+                                        <td colspan="3">
                                             Remove the following components:<br/>
                                         </td>
                                     </tr>
@@ -77,11 +77,11 @@ from mint.grouptrove import KNOWN_COMPONENTS
     
                                     <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
                                         <td>
-                                            <input type="checkbox" class="check" name="components" value="${component}" id="component_${component}"
-                                                py:attrs="{'checked': component in removedComponents and 'checked' or None}"
-                                                py:content="component" />
-                                        </td>
-                                        <td class="label-offset"><label for="component_${component}">${desc}</label></td>
+                                            <input type="checkbox" class="check" name="components" value="${component}" 
+                                                id="component_${component}" 
+                                                py:attrs="{'checked': component in removedComponents and 'checked' or None}" /></td>
+                                        <td class="label-offset">${component}</td>
+                                        <td class="label-offset-wide"><label for="component_${component}">${desc}</label></td>
                                     </tr>
                                     </table>
                                 </td>
@@ -115,9 +115,9 @@ from mint.grouptrove import KNOWN_COMPONENTS
                     </table>
                     <p class="help">Hover your mouse over the trove version to see the fully-expanded Conary version.</p>
     
-                    <input name="action" type="submit" value="Save and Cook" style="font-weight: bold;" />
-                    <input name="action" type="submit" value="Save Changes Only" />
-                    <input name="action" type="submit" value="Delete This Group" />
+                    <input class="button" name="action" type="submit" value="Save and Cook" style="font-weight: bold;" />
+                    <input class="button" name="action" type="submit" value="Save Changes Only" />
+                    <input class="button" name="action" type="submit" value="Delete This Group" />
                 </form>
                     <p></p>
                     <h2>Step 1: Add Packages To Your Group</h2>

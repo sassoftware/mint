@@ -64,6 +64,7 @@
                 <p style="clear: right;"><a href="${cfg.basePath}admin/editOutbound">Add an Outbound Mirror</a></p>
                 <br />
             </div>
+            <div class="bottom"/>
         </div>
     </body>
 </html>

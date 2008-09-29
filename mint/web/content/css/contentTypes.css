@@ -1,4 +1,5 @@
 
+
 /* SIDE COLUMN CONTENT STYLES */
 #browse h3 {
 	background: #3D5192;
@@ -276,12 +277,16 @@ a.option {
     text-transform:uppercase; 
     font-weight:bold;
     text-decoration:none;
+    position: relative;
+    overflow: visible;
 }
 a.option:hover {
 	background-color:#fff; 
     background-image:none;
 	text-decoration:none;
     border:1px #e65a1d solid; 
+    position: relative;
+    overflow: visible;
 }
 
 .mailingListButtons ul li {
@@ -312,7 +317,7 @@ div.packageList_navigation
     height: 406px;
     width: 20px;
     font-size: 12px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     border-style: solid;
     border-width: 1px;
     border-color: #bbb;
@@ -435,6 +440,12 @@ div#filter_navigation_link:hover {
 }
 
 .table-image-components td.label-offset {
+    padding-left: 4px;
+    padding-top: 4px;
+    white-space: nowrap;
+}
+
+.table-image-components td.label-offset-wide {
     padding-left: 4px;
     padding-top: 4px;
     width: 100%;

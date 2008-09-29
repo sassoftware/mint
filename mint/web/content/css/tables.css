@@ -12,7 +12,7 @@ table.pretty-fullwidth {
 }
 
 table.pretty-fullwidth tr td {
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 

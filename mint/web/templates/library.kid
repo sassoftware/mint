@@ -122,7 +122,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             ( ${offset + 1}-${min(offset+limit, count)} showing )
         </span>
         <span class="results-paging" py:if="count != 0">
-            <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0"><img src="${cfg.staticPath}/apps/mint/images/search_prev.gif" alt="Previous" title="Previous Page" class="page-previous" /></a>
+            <a class="no-decoration" href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0"><img src="${cfg.staticPath}/apps/mint/images/search_prev.gif" alt="Previous" title="Previous Page" class="page-previous" /></a>
             <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/search_prev_disabled.gif" alt="Previous" title="No previous results" class="page-previous"/> Page ${limit and offset/limit+1 or 1} of ${limit and (count+limit-1)/limit or 1} <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count"><img src="${cfg.staticPath}/apps/mint/images/search_next.gif" alt="Next" title="Next Page" class="page-next" /></a>
             <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/search_next_disabled.gif" alt="No next page" title="No subsequent results" class="page-next" />
         </span>

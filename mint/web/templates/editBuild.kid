@@ -88,7 +88,7 @@ allowNone = ['anaconda-custom', 'media-template']
                         <table class="formgrouptable">
                         <div py:strip="True" py:for="key in visibleTypes">
                             <tr>
-                              <td>
+                              <td class="radio">
                                 <input id="buildtype_${key}" type="radio" name="buildtype" value="${key}" 
                                     onclick="javascript:onBuildTypeChange('formgroup_${key}');"
                                     py:attrs="{'checked': (key == buildType) and 'checked' or None}" /></td>

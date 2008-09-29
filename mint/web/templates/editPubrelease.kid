@@ -43,164 +43,165 @@ from mint.web.templatesupport import projectText
 
                 <form py:if="availableBuilds or currentBuilds" method="post" action="saveRelease" id="mainForm">
 
-                    <div class="formgroupTitle">Release Information</div>
+                    <h2>Release Information</h2>
                     <div class="formgroup">
-			            <div style="height: 1%;">
-                            <label for="relname"><em class="required">Name</em></label>
-                            <input id="relname" name="name" type="text" value="${name}" onkeyup="buttonStatus();"/>
-                            <label for="namehelp">&nbsp;</label>
-                            <span id="namehelp" style="width: 50%;" class="help">Enter a name for this release.</span>
-			            </div>
-                        <div style="line-height: 20px;" class="clearleft">&nbsp;</div>
-			            <div style="height: 1%;">
-                            <label for="relver"><em class="required">Version</em></label>
-                            <input id="relver" name="version" type="text" value="${version}" onkeyup="buttonStatus();"/>
-                            <label for="verhelp">&nbsp;</label>
-                            <span id="verhelp" class="help">Enter a version for this release. (Example: 1.1.1)</span>
-                            <div class="clearleft">&nbsp;</div>
-			            </div>
-
-			            <div style="height: 1%;">
-                            <label for="reldesc">Description (optional)</label>
-                            <textarea id="reldesc" name="desc" type="text" py:content="desc" />
-                            <label for="deschelp">&nbsp;</label>
+			            <table class="formgrouptable">
+                        <tr>
+                            <td class="form-label"><em class="required">Name:</em></td>
+                            <td width="100%"><input id="relname" name="name" type="text" value="${name}" onkeyup="buttonStatus();"/><br/>
+                            <span id="namehelp" class="help">Enter a name for this release.</span></td>
+                        </tr>
+                        <tr>
+                            <td class="form-label"><em class="required">Version:</em></td>
+                            <td><input id="relver" name="version" type="text" value="${version}" onkeyup="buttonStatus();"/><br/>
+                            <span id="verhelp" class="help">Enter a version for this release. (Example: 1.1.1)</span></td>
+                        </tr>
+                        <tr>
+                            <td class="form-label"><em class="required">Description:</em>&nbsp;</td>
+                            <td><textarea id="reldesc" name="desc" type="text" py:content="desc" /><br/>
+                            <span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span></td>
+                        </tr>
+                        </table>
                             <span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span>
-			            </div>
-                        <div style="line-height: 0;" class="clearleft">&nbsp;</div>
                     </div>
 
 
                     <div strip="True" py:if="currentBuilds">
-                        <div class="formgroupTitle">Current Release Contents</div>
+                        <h2>Current Release Contents</h2>
                         <div class="formgroup">
                             <p class="help" style="margin-left:20px; margin-right:10px; margin-top:-5px; margin-bottom: 5px;">
                             The following images are currently included in this release. Un-check an image to remove it.</p>
                             <?python from mint import buildtypes ?>
                             <?python rowStyle = 0 ?>
-                            <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
-                                <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;">
-                                <a style="text-decoration: none; font-weight: bold; margin-left: 20px;" 
-                                    href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder"            
-                                    id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                                <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">
-                                    ${build.getArch()} ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
-                                </div>
-                                <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">
-                                    ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
-                                </div></a></label> 
-                                <input type="checkbox" checked="True" class="relCheck" name="buildIds" value="${build.getId()}" 
-                                    onclick="buttonStatus();"/>
-                                <div class="clearleft" style="line-height: 0">&nbsp;</div>
-                                
+                            
+                            <table class="image-table">
+                            <div py:for="build in currentBuilds" py:strip="True">
+                            
+                            <tr py:attrs="{'class': rowStyle and 'odd' or 'even'}" >
+                                <td>
+                                    <a href="javascript:toggle_display('div_${build.getId()}');">
+                                        <img class="noborder" id="div_${build.getId()}_expander" 
+                                        src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a></td>
+                                <td width="100%">
+                                    <a class="image-list" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;
+                                    <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">
+                                        ${build.getArch()} ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
+                                    </div>
+                                    <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="smallSpecs" id="${build.getId()}_short">
+                                        ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
+                                    </div></a></td>
+                                <td class="rel-checkbox">
+                                    <input class="relcheck" type="checkbox" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/></td>
+                            </tr>
+                            <tr py:attrs="{'class': rowStyle and 'odd' or 'even'}" >
+                                <td></td>
+                                <td colspan="2">
                                 <div id="div_${build.getId()}" style="display: none;">
-			                        <div style="height: 1%">
-                                        <label class="troveSpecs">Group</label>
-                                        <div class="troveData">${build.getTroveName()}</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-			                        </div>
-    			                    <div style="height: 1%">
-                                        <label class="troveSpecs">Version</label>
-                                        <div class="troveData">${build.getTroveVersion()}</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-    			                    </div>
-    			                    <div style="height: 1%">
-                                        <label class="troveSpecs">Flavor</label>
-                                        <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-    			                    </div>
-    			                    <div style="height: 1%">
-                                        <label class="troveSpecs">Architecture</label>
-                                        <div py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
-                                        <div py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-    			                    </div>
-    			                    <div style="height: 1%">
-                                        <label class="troveSpecs">Release Type</label>
-                                        <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-    			                    </div>
-			                        <div style="height: 1%">
-                                        <label class="troveSpecs">Image Notes</label>
-                                        <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
-                                        <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                        <br/>
-			                        </div>
+                                    <table class="formgrouptable">
+                                    <tr>
+                                        <td class="form-label"><b>Group:</b></td>
+                                        <td width="100%">${build.getTroveName()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label"><b>Version:</b></td>
+                                        <td>${build.getTroveVersion()}</td>
+                                    </tr>
+    			                    <tr>
+                                        <td class="form-label"><b>Flavor:</b></td>
+                                        <td>${str(build.getTroveFlavor()).replace(',', ', ')}</td>
+                                    </tr>
+        			                <tr>
+                                        <td class="form-label"><b>Architecture:</b></td>
+                                        <td>
+                                           <div  py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
+                                           <div  py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div></td>
+                                    </tr>
+        			                <tr>
+                                        <td class="form-label"><b>Release Type:</b></td>
+                                        <td>${buildtypes.typeNames[build.getBuildType()]}</td>
+                                    </tr>
+        			                <tr>
+                                        <td class="form-label"><b>Image Notes:</b></td>
+                                        <td>${build.getDesc() and build.getDesc() or 'None'}</td>
+                                    </tr>
+        			                </table><br/>
                                 </div>
+                                </td>
+                            </tr>
                             <?python rowStyle ^= 1 ?>
                             </div>
+                            </table>
                         </div>
                     </div>
 
                     <div py:if="availableBuilds" py:strip="True">
-                    <div class="formgroupTitle">${releaseId and 'Available Images' or 'Release Contents'}
-                        <span id="baton"></span>
-                    </div>
+                    <h2>${releaseId and 'Available Images' or 'Release Contents'} <span id="baton"></span></h2>
+                    
                     <div class="formgroup">
                         <p class="help" style="margin-right: 10px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">
-                            ${releaseId and 'The following images are currently not included with this release. Check a release to add it.' or 'Select images to be included with this release.'}</p>
+                    ${releaseId and 'The following images are currently not included with this release. Check a release to add it.' or 'Select images to be included with this release.'}</p>
+
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
-                        <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in availableBuilds">
-                            <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;">
-                            <a style="text-decoration: none; font-weight: bold; margin-left: 20px;" 
-                                href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" 
-                                id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
+                        
+                        <table class="image-table">
+                        <div py:for="build in availableBuilds" py:strip="True">
+                        
+                        <tr py:attrs="{'class': rowStyle and 'odd' or 'even'}">
+                            <td>
+                                <a href="javascript:toggle_display('div_${build.getId()}');">
+                                    <img class="noborder" id="div_${build.getId()}_expander" 
+                                    src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a></td>
+                            <td width="100%">
+                                <a class="image-list" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;
                                 <div py:if="build.getBuildType() != buildtypes.IMAGELESS" id="${build.getId()}_short" class="smallSpecs">
                                     ${build.getArch()} ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
                                 </div>
                                 <div py:if="build.getBuildType() == buildtypes.IMAGELESS" id="${build.getId()}_short" class="smallSpecs">
                                     ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
-                                </div>
-                            </a></label>
-                            <input type="checkbox" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
-                            <div class="clearleft" style="line-height: 0">&nbsp;</div>
-                        
+                                </div></a></td>
+                            <td class="rel-checkbox">
+                                <input class="relcheck" type="checkbox" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/></td>
+                        </tr>
+                        <tr py:attrs="{'class': rowStyle and 'odd' or 'even'}">
+                            <td></td>
+                            <td colspan="2">
                             <div id="div_${build.getId()}" style="display: none;">
-			                    <div style="height: 1%">
-                                <label class="troveSpecs">Group</label>
-                                <div class="troveData"> ${build.getTroveName()}</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-			                <div style="height: 1%">
-                                <label class="troveSpecs">Version</label>
-                                <div class="troveData"> ${build.getTroveVersion()}</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-			                <div style="height: 1%">
-                                <label class="troveSpecs">Flavor</label>
-                                <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-			                <div style="height: 1%">
-                                <label class="troveSpecs">Architecture</label>
-                                <div  py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
-                                <div  py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-			                <div style="height: 1%">
-                                <label class="troveSpecs">Release Type</label>
-                                <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-			                <div style="height: 1%">
-                                <label class="troveSpecs">Image Notes</label>
-                                <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
-                                <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
-                                <br/>
-			                </div>
-                        </div> 
+                             
+                                <table class="formgrouptable">
+                                <tr>
+                                    <td class="form-label"><b>Group:</b></td>
+                                    <td width="100%">${build.getTroveName()}</td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label"><b>Version:</b></td>
+                                    <td>${build.getTroveVersion()}</td>
+                                </tr>
+			                    <tr>
+                                    <td class="form-label"><b>Flavor:</b></td>
+                                    <td>${str(build.getTroveFlavor()).replace(',', ', ')}</td>
+                                </tr>
+    			                <tr>
+                                    <td class="form-label"><b>Architecture:</b></td>
+                                    <td>
+                                       <div  py:if="build.getBuildType() != buildtypes.IMAGELESS" class="troveData">${build.getArch()}</div>
+                                       <div  py:if="build.getBuildType() == buildtypes.IMAGELESS" class="troveData">N/A</div></td>
+                                </tr>
+    			                <tr>
+                                    <td class="form-label"><b>Release Type:</b></td>
+                                    <td>${buildtypes.typeNames[build.getBuildType()]}</td>
+                                </tr>
+    			                <tr>
+                                    <td class="form-label"><b>Image Notes:</b></td>
+                                    <td>${build.getDesc() and build.getDesc() or 'None'}</td>
+                                </tr>
+    			                </table><br/>
+                            </div> 
+                            </td>
+                        </tr>
                         <?python rowStyle ^= 1 ?>
                     </div>
+                        </table>
                 </div>
             </div>
 

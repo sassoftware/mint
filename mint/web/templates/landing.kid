@@ -48,7 +48,7 @@ if 'message' not in locals():
                             <p py:if="groups">Click the "Revise Appliance" button to make changes to your existing appliance, or click "Start Over" to start the appliance creation process from the beginning.</p>
                             <p py:if="not groups">Click the "Create Appliance" button to begin.</p>
                             <p py:if="groups">
-                                <a href="startApplianceCreator">
+                                <a class="no-decoration" href="startApplianceCreator">
                                     <img src="${cfg.staticPath}/apps/mint/images/revise_appliance_button.png" alt="" /></a>
                                 <a href="startApplianceCreator?maintain=0">
                                     <img src="${cfg.staticPath}/apps/mint/images/start_over_button.png" alt="" /></a>

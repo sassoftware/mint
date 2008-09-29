@@ -80,6 +80,7 @@
                 <input type="hidden" name="id" value="${id}" />
             </form>
         </div>
+        <div class="bottom"/>
     </div>
     </body>
 </html>

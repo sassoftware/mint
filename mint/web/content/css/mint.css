@@ -1,15 +1,16 @@
 /* BASIC STYLES */
 html {
-    background: #5d82b7;
+    background: url(../images/body_bg.png) repeat;
 }
 
 body {
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
     color: #000;
     margin: 0px;
     padding: 0px;
-    background: #5d82b7;
+    background-image: url(../images/body_bg.png);
+    background-repeat: repeat;
     height: 100%;
 }
 
@@ -20,7 +21,7 @@ body {
 
 h1 {
     font-size: 14px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: bold;
     color: #e65a1d;
     padding-top: 16px;
@@ -29,7 +30,7 @@ h1 {
 
 h1.primary {
     font-size: 21px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: bold;
     color: #e65a1d;
     padding-top: 16px;
@@ -38,7 +39,7 @@ h1.primary {
 
 h1.search {
     font-size: 21px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: bold;
     color: #e65a1d;
     padding-top: 16px;
@@ -47,7 +48,7 @@ h1.search {
 
 h2 {
     font-size: 20px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: normal;
     color: #000;
     margin: 13px 0px 10px 0px;
@@ -57,12 +58,12 @@ h2 {
 
 div#admin-spanright h2 {
     font-size: 20px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: normal;
     color: #000;
     margin: 13px 0px 10px 0px;
-        border-bottom: 1px solid #a1b6d6;
-        width: 100%;
+    border-bottom: 1px solid #a1b6d6;
+    width: 100%;
 }
 
 h3 {
@@ -96,15 +97,16 @@ div.bottom {
     padding: 0px;
     margin: 0px;
     clear: both;
+    height: 0px;
 }
 
 input, textarea, select {
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
 iframe input {
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
@@ -151,7 +153,7 @@ label a:hover {
 
 .pageBoxHeader {
     font-size: 15px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: bold;
     color: #293d82;
     padding: 7px 10px 0px 10px;
@@ -159,7 +161,7 @@ label a:hover {
 
 .pageBoxLinks {
     font-size: 11px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: normal;
     padding: 6px 10px 10px 10px;
     color: #293d82;
@@ -351,6 +353,9 @@ td, th {
 th {
     white-space:nowrap;
 }
+.nowrap {
+    white-space:nowrap;
+}
 
 /* serious errors */
 p.errormessage {
@@ -424,8 +429,12 @@ div.fullpage {
     padding: 0px;
 }
 
+div.spacer {
+    height: 10px;
+}
+
 div.fullpage_blue {
-    margin: 10px 10px 0px 10px;
+    margin: 0px 10px 0px 10px;
     background-color: #f1f4f9;
     padding: 0px;
 }
@@ -563,12 +572,21 @@ form#searchForm div#browseText a {
 
 #select-add-user {
     width: 187px;
+button {
+    width: auto;
+    overflow: visible;
+}
+
+.button {
+    width: auto;
+    overflow: visible;
+    padding: 0px 4px;
 }
 
 button.img {
-    border: none;
+    border: 0px;
     background: none;
-    padding: 0;
+    padding: 0px;
     cursor: pointer;
 }
 
@@ -589,7 +607,7 @@ div#footer {
     color: #000;
     width: 915px;
     padding: 6px 20px 0px 20px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
     float: left;
     clear: right;
@@ -661,6 +679,7 @@ div#topten ul li {
      margin-left: 0px;
      padding-left: 18px;
      padding-top: 0px;
+     list-style-type: none;
      background: url(../images/icon_bullet.png) top left no-repeat;
 }
 
@@ -730,7 +749,7 @@ img.right {
     padding-bottom: 41px;
     background: url(../images/box_body_r.png) no-repeat bottom left;
     width: 215px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
@@ -740,7 +759,7 @@ img.right {
     padding-bottom: 41px;
     background: url(../images/wiz_box_body_r.png) no-repeat bottom left;
     width: 215px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
@@ -788,7 +807,7 @@ div.right-palette {
     margin: 10px 0 0 0;
     background: url(../images/box_body_user.png) no-repeat bottom left;
     margin-bottom: 10px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
@@ -881,7 +900,7 @@ ul.wiz-navigation li.completedItem {
     border-top: 1px solid #91a3c0;
     line-height: 15px;
     width: 166px;
-    background: url(../images/wiz_nav_completed_bg.png) no-repeat;
+    background: url(../images/wiz_nav_completed_bg.gif) no-repeat;
 }
 
 ul.wiz-navigation li.selectedItem {
@@ -974,6 +993,7 @@ ul.releases {
     padding: 0px 10px 0px 10px;
     margin-bottom: 28px;
     color: #f1f4f9;
+    margin-left: 0px;
 }
 
 ul.releases li:first-child {
@@ -1013,12 +1033,22 @@ ul.commits {
     padding: 0px 10px 0px 10px;
     margin-bottom: 20px;
     color: #f1f4f9;
+    margin-left: 0px;
 }
 
 ul.commits li:first-child {
     border-top: 0px solid #91a3c0;
 }
 
+ul {
+    margin-left: 0px;
+    padding-left: 20px;
+}
+
+#versionSelectorForm {
+    margin: 0px;
+    padding: 0px;
+}
 
 ul.commits li {
     color: #fff;
@@ -1086,7 +1116,7 @@ div#projectsPane {
     margin: 10px 0 0 0;
     background: url(../images/box_body_user.png) no-repeat bottom left;
     margin-bottom: 10px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-size: 11px;
 }
 
@@ -1154,7 +1184,7 @@ div#projectsPane h4 {
     padding: 2px 6px 2px 10px;
     margin-bottom: 0;
     font-size: 11px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight: bold;
 }
 
@@ -1191,6 +1221,21 @@ div#projectsPane ul li a:hover {
     margin: 0px 0px 0px 0px;
     padding: 8px 10px 10px 10px;
     height: 36px;
+}
+
+#switchProjectSelector optgroup {
+    font-family: verdana, sans-serif;
+    font-size: 11px;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 14px;
+    padding: 1px 4px 1px 4px;
+}
+
+#switchProjectSelector option {
+    line-height: 14px;
+    padding: 1px 4px 1px 4px;
+    border: 0px;
 }
 
 .projectsPaneItemTop {
@@ -1302,7 +1347,7 @@ tr.editGroupHeader,
     cursor: pointer;
     color: #000;
     font-size: 20px;
-    font-family: verdana;
+    font-family: verdana, sans-serif;
     font-weight:  normal;
     margin: 13px 0px 10px 0px;
     border-bottom: 1px solid #ddd;
@@ -1363,6 +1408,19 @@ tr.editGroupHeader,
     margin: 0px;
     padding: 4px 0px 0px 0px;
     width: 22px;
+}
+
+td.rel-checkbox {
+    margin: 0px;
+    padding: 4px 4px 0px 0px;
+    text-align: right;
+    width: 35px;
+}
+
+.formgrouptable td.radio {
+    margin: 0px;
+    padding: 4px 0px 0px 0px;
+    width: 30px;
 }
 
 .formgrouptable td.checkbox input {
@@ -1440,16 +1498,15 @@ table.fsEditorTable thead {
 
 .smallSpecs,
 table.buildstable td.buildInfo {
-    font-size: smaller;
     font-weight: normal;
     font-style: normal;
-    padding-bottom: 0.5em;
+    padding-bottom: 4px;
     padding-left: 10px;
     padding-right: 10px;
 }
 
 .smallSpecs {
-    padding-left: 20px;
+    padding-left: 10px;
 }
 
 /* Safari doesn't handle disabled buttons properly...*/
@@ -1518,11 +1575,8 @@ div.troveData {
     margin-right: 10px;
 }
 
-input.relCheck {
-    width: auto;
-    float: right;
-    margin-top: 10px;
-    margin-right: 20px;
+input.relcheck {
+ width: 22px;
 }
 
 /* mailing-list specific styles */
@@ -1666,12 +1720,14 @@ img#nameSpinner, img#archSpinner {
     border-top: 6px solid #5c82b7;
     border-bottom: 5px solid #5c82b7;
     background: #ffffde url(../images/icon_accept.gif) no-repeat 10px 10px;
+    *background-position: 10px 14px;
 }
 
 #errors {
      border-top: 6px solid #5c82b7;
      border-bottom: 5px solid #5c82b7;
      background: #ffffde url(../images/errors.gif) no-repeat 10px 10px;
+     *background-position: 10px 14px;
 }
 
 #errors p {
@@ -2060,4 +2116,22 @@ ul.nobullet {
 
 .amiLaunchLink {
     float: right;
+}
+
+.no-decoration,
+.no-decoration:hover {
+    text-decoration: none;
+}
+
+a.image-list {
+    text-decoration: none; 
+    font-weight: bold; 
+}
+
+.image-table td {
+    padding: 4px 2px;
+}
+
+.image-table {
+    border-collapse: collapse;
 }

@@ -177,13 +177,13 @@
                 <?python currentProjectId = not self.project and -1 or self.project.id ?>
                 <label for="switchProjectSelector">Select project:</label>
                 <select id="switchProjectSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
-                    <option value="--" py:attrs="{'selected': currentProjectId == -1 and 'selected' or None}">--</option>
+                    <option value="--" py:attrs="{'selected': currentProjectId == -1 and 'selected' or None}">&nbsp;&nbsp;--</option>
                     <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),
                                                   (userlevels.DEVELOPER, '%ss I Work On'%projectText().title()),
                                                   (userlevels.USER, '%ss I Use'%projectText().title())]"
                          py:strip="True">
                          <div py:strip="True" py:if="level in projectDict">
-                             <optgroup label="${title}" />
+                             <optgroup label="--- ${title} ---" />
                              <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl()}" py:content="project.getNameForDisplay()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
                          </div>
                     </div>

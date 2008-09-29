@@ -36,6 +36,7 @@
                 <p class="p-button"><a href="addExternal"><b>Add a New External ${projectText().title()}</b></a></p>
                 <br />
             </div>
+            <div class="bottom"/>
         </div>
     </body>
 </html>

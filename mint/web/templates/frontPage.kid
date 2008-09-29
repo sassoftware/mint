@@ -43,7 +43,7 @@ from mint.web.templatesupport import projectText
             <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
             <div class="bottom"></div>
         </div>
-        
+        <div class="spacer"></div>
         <div class="fullpage_blue">
             <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_topleft.png" alt="" />
             <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_blue_topright.png" alt="" />

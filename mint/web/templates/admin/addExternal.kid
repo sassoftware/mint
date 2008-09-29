@@ -175,7 +175,7 @@
             <h2>Backup Settings</h2>
             <table class="mainformhorizontal" id="mirrorSettings">
             <tr>
-                <td><input type="checkbox" id="backupExternal" name="backupExternal" value="1"
+                <td width="22"><input type="checkbox" id="backupExternal" name="backupExternal" value="1"
                         py:attrs="{'checked': kwargs['backupExternal'] and 'checked' or None}" /></td>
                 <td><label>Backup inbound mirror contents. (This will make backups substantially larger.)</label></td>
             </tr>
@@ -193,6 +193,7 @@
             <br />
         </form>
         </div>
+        <div class="bottom"/>
     </div>
     </body>
 </html>

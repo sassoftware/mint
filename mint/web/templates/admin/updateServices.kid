@@ -40,8 +40,9 @@
                     <button py:if="updateServices" type="submit" name="operation" value="remove_updateservice">Remove Selected</button>
                     </p>
                 </form>
-                <p><b><a href="${cfg.basePath}admin/editUpdateService">Add an Update Service</a></b></p>
+                <p><a href="${cfg.basePath}admin/editUpdateService">Add an Update Service</a></p>
             </div>
+            <div class="bottom"/>
         </div>
     </body>
 </html>

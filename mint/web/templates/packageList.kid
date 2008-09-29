@@ -68,9 +68,9 @@
                                     namespace = data['productDefinition']['namespace']
                                     ?>
                                     <tr>
-                                        <td class="package-detail" width="100%">${troveName.replace(':source','')}</td>
-                                        <td class="package-detail"><a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Archive</a></td>
-                                        <td class="package-detail"><a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">Update Details</a></td>
+                                        <td class="package-detail" width="90%">${troveName.replace(':source','')}</td>
+                                        <td class="package-detail"><a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Archive&nbsp;</a></td>
+                                        <td class="package-detail"><a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Details&nbsp;</a></td>
                                     </tr>
                                     </div>
                                 </div>
