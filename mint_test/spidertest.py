@@ -137,6 +137,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         if 'cloudCatalog' in link:
             # cloudCatalog is delivered by catalog-client
             return False
+        if 'cloudConfig' in link:
+            # cloudConfig is delivered by catalog-client
+            return False
 
         #print "inspecting", link
         if page is None:

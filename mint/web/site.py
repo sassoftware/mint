@@ -1112,6 +1112,12 @@ class SiteHandler(WebHandler):
                 'cloudCatalog' or 'cloudCatalogNoCredentials'
         return self._write(template)
 
+    def cloudConfig(self, auth):
+        userCredentials = self.client.getEC2CredentialsForUser(self.auth.userId)
+        template = userCredentials.get('awsAccountNumber', None) and \
+                'cloudConfig' or 'cloudCatalogNoCredentials'
+        return self._write(template)
+
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
