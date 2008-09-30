@@ -14,7 +14,6 @@ from mint.web.templatesupport import projectText
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
         <script type="text/javascript">
             <![CDATA[
-                addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
                 addLoadEvent(function() {getCookStatus('${jobId}')});
             ]]>
         </script>

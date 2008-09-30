@@ -19,9 +19,6 @@ from mint import constants
         <script type="text/javascript">
             <div py:if="isWriter" py:strip="True">
                 <![CDATA[
-                    addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
-                ]]>
-                <![CDATA[
                     addLoadEvent(function() {getBuildStatus(${build.id}, ${int(len(files))})});
                 ]]>
             </div>
