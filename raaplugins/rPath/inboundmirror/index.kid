@@ -16,8 +16,9 @@
             var timer;
 
             function checkMirror() {
-                var d = loadJSONDoc('checkMirrorStatus');
-                d = d.addCallbacks(updateDisplay, callbackErrorGeneric);
+                var p = new Post('checkMirrorStatus');
+                var d = p.doAction();
+                d = d.addCallbacks(updateDisplay);
             }
 
             function updateDisplay(req) {
@@ -41,7 +42,7 @@
                                    callbackErrorGeneric);
             }
 
-            addLoadEvent(updateDisplay);
+            addLoadEvent(checkMirror);
         </script>
     </head>
 
@@ -51,7 +52,7 @@
         <div class="page-section">
         Inbound Mirroring Schedule
         </div>
-        <form name="page_form" action="javascript:void(0)" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'savePrefs');">
+        <form name="page_form" action="javascript:void(0)" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'prefsSave');">
         <div class="page-section-content">
         Use this page to schedule syncing of local mirrors with their external repositories. To disable automated syncing, select "No" below and click "Save."
         <p></p>
@@ -66,9 +67,9 @@
         <div class="page-section">
         Mirror Now
         </div>
-        <div class="page-section-content">
-        Click "Mirror Now" to start an inbound mirror immediately.
         <div id="updateNow"> 
+            <div class="page-section-content">
+            Click "Mirror Now" to start an inbound mirror immediately.
             <div class="button-line">
                 <a class="rnd_button internal float-left" id="mirrorNowButton" onclick="javascript:startMirrorNow();">Mirror Now</a>
             </div>
@@ -76,6 +77,7 @@
         </div>
 
         <div style="padding-top: 5px; font-style: italic;" id="inProgress">
+            <div class="page-section-content">
             <span style="float: left;">Local mirrors are currently being updated...</span>
             <img style="float: right;" src="${raa.web.makeUrl('/static/images/circle-ball-dark-antialiased.gif')}" />
             <br style="clear: right;" />
@@ -83,6 +85,7 @@
                <a href="${raa.web.makeUrl('/logs/Logs')}">click here</a> and select
                "Inbound Mirroring" from the list of logs.
             </p>
+            </div>
         </div>
 
         </div>
