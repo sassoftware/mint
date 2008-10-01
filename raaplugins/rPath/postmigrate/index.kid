@@ -35,11 +35,11 @@
                     <div class="page-subsection-instr">
                         Is this system being upgraded from a previous version?
                     </div>
-                    <form action="index" method="GET" id="index_form">
+                    <form action="index" method="GET" name="index_form">
                         <input type="hidden" name="restore" value="True"/>
                         <a class="rnd_button float-left" id="yes_button" href="javascript:button_submit(document.index_form)">Yes</a>
                     </form>
-                    <form id="no_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+                    <form name="no_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
                         <a class="rnd_button float-left" id="no_button" href="javascript:button_submit(document.no_form)">No</a>
                     </form>
                 </div>
@@ -48,7 +48,7 @@
                     <div class="page-subsection-instr">
                         In order to proceed, please attach the disk containing your stored data now.
                     </div>
-                    <form id="scan_form" action="index" method="GET">
+                    <form name="scan_form" action="index" method="GET">
                         <input type="hidden" name="restore" value="True"/>
                         <a class="rnd_button float-left" id="scan" href="javascript:button_submit(document.scan_form)">Scan System</a>
                     </form>
@@ -74,7 +74,7 @@
                         </table>
                         </div>
                     </div>
-                    <form id="skip_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+                    <form name="skip_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
                         <a class="rnd_button float-left" id="skip" href="javascript:button_submit(document.skip_form)">Skip</a>
                     </form>
                 </div>
@@ -87,7 +87,7 @@
             </div>
             <div class="page-section-content">
             This rBuilder appliance has been successfully migrated.
-            <form id="skip_plugin_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+            <form name="skip_plugin_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
                 <a class="rnd_button float-left" id="skip_plugin_button" href="javascript:button_submit(document.skip_plugin_form)">Done</a>
             </form>
             </div>
