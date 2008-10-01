@@ -15,6 +15,7 @@
 ^mint/web/content/javascript/iClouds.js
 ^mint/web/templates/catalogLayout.kid
 ^mint/web/templates/cloudCatalog.kid
+^mint/web/templates/admin/cloudConfig.kid
 
 ^doc/rbuilder.1$
 
