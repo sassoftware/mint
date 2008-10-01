@@ -17,8 +17,8 @@
 
     <body>
         <div class="fullpage">
-            <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
-            <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
             
             <div id="left" class="side">
                  ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 2)}
@@ -30,8 +30,8 @@
                 <p>Please follow the directions in your confirmation email to complete the registration process.</p>
                 
             </div><br class="clear"/>
-            <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
-            <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
             <div class="bottom"/>
         </div>
     </body>

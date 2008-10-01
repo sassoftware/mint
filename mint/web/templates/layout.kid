@@ -62,7 +62,7 @@ onload = "javascript:;"
             <div id="top">
                 <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
                 <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
-                <div py:if="False" id="corpLogo">
+                <div id="corpLogo">
                     <a href="http://${SITE}">
                         <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" alt="rPath Logo" />
                     </a>
@@ -112,8 +112,8 @@ onload = "javascript:;"
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
             <div id="page">
-                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
-                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
                 <div id="layout" py:replace="item[:]" />
                 ${layoutFooter()}<br />
             </div>

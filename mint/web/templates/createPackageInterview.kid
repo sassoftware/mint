@@ -19,8 +19,8 @@ message = locals().get('message', None)
                 ${projectResourcesMenu(readOnlyVersion=True)}
             </div>
             <div id="innerpage">
-                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
-                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
                 <div id="right" class="side">
                     ${resourcePane()}
                 </div>
@@ -34,8 +34,8 @@ message = locals().get('message', None)
                 ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
                 </div>
                 <br class="clear" />
-                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
-                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
                 <div class="bottom"></div>
             </div>
         </div>

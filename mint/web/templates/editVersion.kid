@@ -245,8 +245,8 @@
                 ${projectResourcesMenu()}
             </div>
             <div id="innerpage">
-                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
-                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
                 <div id="right" class="side">
                     ${resourcePane()}
                     ${builderPane()}
@@ -399,8 +399,8 @@
                     <input type="hidden" name="namespace" value="${kwargs['namespace']}" />
                     </form>
                 </div><br class="clear" />
-                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
-                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
                 <div class="bottom"></div>
         </div>
         <div id="modalEditVersionWarning" title="Warning" style="display: none;">

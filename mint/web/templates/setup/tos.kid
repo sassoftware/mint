@@ -17,8 +17,8 @@ from mint.web.templatesupport import projectText
     </head>
     <body>
         <div class="fullpage">
-            <img src="/conary-static//apps/mint/images/innerpage_topleft.png" alt="" id="pagetopleft" />
-            <img src="/conary-static//apps/mint/images/innerpage_topright.png" alt="" id="pagetopright" />
+            <img src="/conary-static//apps/mint/images/innerpage_topleft.png" alt="" class="pagetopleft" />
+            <img src="/conary-static//apps/mint/images/innerpage_topright.png" alt="" class="pagetopright" />
 
         <h1>rBuilder Terms of Service</h1>
 
@@ -65,8 +65,8 @@ from mint.web.templatesupport import projectText
         </form>
 
         <br class="clear" />
-        <img src="/conary-static//apps/mint/images/innerpage_bottomleft.png" alt="" id="pagebottomleft" />
-        <img src="/conary-static//apps/mint/images/innerpage_bottomright.png" alt="" id="pagebottomright" />
+        <img src="/conary-static//apps/mint/images/innerpage_bottomleft.png" alt="" class="pagebottomleft" />
+        <img src="/conary-static//apps/mint/images/innerpage_bottomright.png" alt="" class="pagebottomright" />
         <div class="bottom"> </div>
 
     </div>

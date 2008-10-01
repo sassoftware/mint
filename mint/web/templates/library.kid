@@ -255,8 +255,8 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             </div>
          
         </div><br class="clear" />
-        <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
-        <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.png" alt="" />
+        <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
+        <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.png" alt="" />
     </div>
 
 </html>

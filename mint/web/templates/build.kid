@@ -19,9 +19,6 @@ from mint import constants
         <script type="text/javascript">
             <div py:if="isWriter" py:strip="True">
                 <![CDATA[
-                    addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
-                ]]>
-                <![CDATA[
                     addLoadEvent(function() {getBuildStatus(${build.id}, ${int(len(files))})});
                 ]]>
             </div>
@@ -36,8 +33,8 @@ from mint import constants
             </div>
             
             <div id="innerpage">
-                <img id="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
-                <img id="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
                 <div id="right" class="side">
                     ${resourcePane()}
                     ${builderPane()}
@@ -195,7 +192,7 @@ from mint import constants
                         <table class="troveinfo">
                         <tr py:if="amiId and not buildInProgress">
                             <th>AMI ID</th>
-                            <td><span class="amiLaunchLink" py:if="showLaunchButton">&nbsp;<a class="option" href="http://${SITE}cloudCatalog#/event/launch/imageid/${amiId}">Launch this image on Amazon EC2</a></span>${amiId}</td>
+                            <td><span class="amiLaunchLink" py:if="showLaunchButton">&nbsp;<a class="option" href="http://${SITE}cloudCatalog#/event/showLaunchUI/imageId=${amiId}">Launch this image on Amazon EC2</a></span>${amiId}</td>
                         </tr>
                         <tr py:if="amiS3Manifest and not buildInProgress">
                             <th>AMI Bundle Manifest</th>
@@ -242,8 +239,8 @@ from mint import constants
                       </div>
                 </div>
                 <br class="clear" />
-                <img id="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
-                <img id="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
                 <div class="bottom"></div>
             </div>
         </div>

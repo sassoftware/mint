@@ -284,7 +284,7 @@ div#main {
 }
 
 div#middle {
-    width: 472px;
+    width: 470px;
     margin-left: 10px;
     margin-right: 227px;
     margin-top: 0;
@@ -427,6 +427,9 @@ div.fullpage {
     margin: 10px 10px 0px 10px;
     background-color: #fff;
     padding: 0px;
+    position: relative;
+    zoom: 1;
+    width: 935px;
 }
 
 div.spacer {
@@ -460,32 +463,20 @@ div#innerpage {
 }
 
 div#top img#topgradleft,
-img#pagetopleft,
-img#pagebottomleft
+img.pagetopleft,
+img.pagebottomleft
 {
     float: left;
 }
 
 div#top img#topgradright,
-img#pagetopright,
-img#pagebottomright {
+img.pagetopright,
+img.pagebottomright {
     float: right;
 }
 
-img#pagebottomright,
-img#pagebottomleft
-{
-    float: left;
-}
-
-div#top img#topgradright,
-img#pagetopright,
-img#pagebottomright {
-    float: right;
-}
-
-img#pagebottomright,
-img#pagebottomleft
+img.pagebottomright,
+img.pagebottomleft
 {
     vertical-align: bottom;
 }
@@ -572,6 +563,8 @@ form#searchForm div#browseText a {
 
 #select-add-user {
     width: 187px;
+}
+
 button {
     width: auto;
     overflow: visible;
@@ -968,6 +961,10 @@ div.signinActions {
 }
 
 /* Releases pane */
+#release {
+    width: 468px;
+}
+
 .releaseMore,
 .releaseNew {
     margin-bottom: -30px;

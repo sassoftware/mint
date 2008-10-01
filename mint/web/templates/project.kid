@@ -175,7 +175,7 @@
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div id="switchProject" class="projectsPaneSelector">
                 <?python currentProjectId = not self.project and -1 or self.project.id ?>
-                <label for="switchProjectSelector">Select project:</label>
+                <label for="switchProjectSelector">Select a ${projectText().lower()}:</label>
                 <select id="switchProjectSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
                     <option value="--" py:attrs="{'selected': currentProjectId == -1 and 'selected' or None}">&nbsp;&nbsp;--</option>
                     <div py:for="level, title in [(userlevels.OWNER, '%ss I Own'%projectText().title()),

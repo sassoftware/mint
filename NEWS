@@ -85,6 +85,7 @@ Web Front End Changes
   This fixes issues that involve using the jQuery UI.Dialog control
   with WebKit-based browsers (RBL-3489, RBL-3507)
 * "Select Additional Packages" now works in more browsers (RBL-3508)
+* There is now a link in the admin page for configuring clouds. (RBL-3430)
 
 Bug Fixes
 ---------------------
