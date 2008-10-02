@@ -5,8 +5,9 @@ Bug Fixes
 ---------------------
 * A bug in purging the stompserver message queue when a large number of files
   are present has been fixed (RBL-3472).
-* Rerunning the rbuilder initial setup no longer resets the internal password,
-  as that caused previously created repositories to become unavailable. (RBL-3344)
+* Rerunning the rbuilder initial setup no longer resets the internal
+  password, as that caused previously created repositories to become
+  unavailable. (RBL-3344)
 
 Changes in 4.1.2:
 ================

@@ -239,6 +239,8 @@ def conaryHandler(req, cfg, pathInfo):
         # If we still don't have a database; just create a new
         # connection.
         if not reposDb:
+            # XXX: fixme - this db connection is being thrown away in
+            # most alternate cases --gafton
             try:
                 reposDb = dbstore.connect(reposDBPath, reposDBDriver)
             except sqlerrors.DatabaseError, e:
@@ -269,6 +271,9 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
+            # if we operate in poolmode, we need to "refresh" this repository
+            if hasattr(repo.db, 'poolmode') and repo.db.poolmode:
+                repo.reopen()
     else:
         # it's completely external
         # use the Internal Conary Proxy if it's configured
