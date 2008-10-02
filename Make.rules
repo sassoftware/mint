@@ -67,12 +67,16 @@ endif
 	rm -rf $(DESTDIR)$(LIBDIR)/raa
 
 raaplugins-install:
-	mkdir -p $(DESTDIR)$(STATICDEST)
+	# mkdir -p $(DESTDIR)$(STATICDEST)
 ifdef python_files
-	cp $(python_files) $(DESTDIR)$(STATICDEST)/
+	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
+	cp $(python_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+	# cp $(python_files) $(DESTDIR)$(STATICDEST)/
 endif
 ifdef kid_files
-	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
+	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
+	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+	# cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
 endif
 
 pyfiles-install:
