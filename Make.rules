@@ -47,6 +47,22 @@ kid-build:
 	kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
 	rm .kiderror
 
+raaplugins-link:
+ifdef SUBDIRS
+	mkdir -p $(DESTDIR)$(LIBDIR)/raa/rPath
+	for dir in $(SUBDIRS); do \
+		ln -s $(LIBDIR)/python$(PYVERSION)/site-packages/rPath/$$dir \
+		      $(LIBDIR)/raa/rPath/$$dir; \
+	done
+endif
+
+raaplugins-unlink:
+ifdef SUBDIRS
+	for dir in $(SUBDIRS); do \
+		rm -f $(LIBDIR)/raa/rPath/$$dir; \
+	done
+endif
+	rm -rf $(DESTDIR)$(LIBDIR)/raa
 
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
