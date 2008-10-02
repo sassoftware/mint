@@ -51,9 +51,7 @@ raaplugins-link:
 ifdef SUBDIRS
 	mkdir -p $(DESTDIR)$(LIBDIR)/raa/rPath
 	for dir in $(SUBDIRS); do \
-		echo ln -s $(DESTDIR)$(LIBDIR)/python$(PYVERSION)/site-packages/rPath/$$dir \
-		      $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
-		ln -s $(DESTDIR)$(LIBDIR)/python$(PYVERSION)/site-packages/rPath/$$dir \
+		ln -s ../../python$(PYVERSION)/site-packages/rPath/$$dir \
 		      $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
 	done
 endif
