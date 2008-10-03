@@ -4914,7 +4914,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         will return recipe to default.
         """
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
-        pc.saveRecipe(sesH, recipeData)
+
+        # Strip off CRLFs and replace them with LFs
+        sanitizedRecipeData = recipeData.replace('\r\n', '\n')
+        pc.saveRecipe(sesH, sanitizedRecipeData)
+
         return False
 
     @requiresAuth
