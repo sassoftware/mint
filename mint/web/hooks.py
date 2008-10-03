@@ -551,6 +551,8 @@ def handler(req):
     coveragehook.install()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
+    if req.get_options().get('pgpool', False):
+        os.environ['POSTGRESQL_POOL'] = '1'
 
     # only reload the configuration file if it's changed
     # since our last read
