@@ -26,7 +26,7 @@ class OutboundMirror(rAAWebPlugin):
         scheds = repeatschedules.getCurrentRepeatingSchedules(self.taskId)
         if len(scheds) == 1:
             enabled = True
-            ret['schedule'] = repeatschedules.getWidgetValuesFromSchedule(schedules.values()[0])
+            ret['schedule'] = repeatschedules.getWidgetValuesFromSchedule(scheds.values()[0])
         else:
             enabled = False
             ret['schedule'] = dict(checkFreq = "Weekly", timeHour=23, timeDay=0, timeDayMonth=1)
