@@ -1996,11 +1996,21 @@ p#upload_progress_percent_complete {
 div#progress_indicator_bar {
     height: 20px;
     width: 1%;
-    background-color: green;
+    background-color: orange;
     z-index: -1;
     left: 0px;
     top: 0px;
     position: absolute;
+}
+
+div#upload_progress_wait {
+    text-align: center;
+}
+
+div.bd form
+{
+    margin-top: 20px;
+    text-align: center;
 }
 
 .package-version-header {
