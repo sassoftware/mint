@@ -37,7 +37,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <div py:if="packageList" py:strip="True">
                     <p>The packages that will be built into your appliance appear below. Make any desired changes to the list of packages, and click the "Update Contents" button to continue; otherwise, use the links to make the desired changes.</p>
                 </div>
-                <form name="packagecreatortroves" action="processEditApplianceGroup" method="post">
+                <form id="packagecreatortroves" name="packagecreatortroves" action="processEditApplianceGroup" method="post">
                     <div py:if="packageList" py:strip="True">
                     <ul class="package-checklist">
                         <li py:for="troveName in sorted(packageList, key=lambda x: x.upper())">
@@ -47,13 +47,18 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                         <input type="checkbox" name="troves" id="trove_${pkgname}" value="${pkgname}" checked="checked"/> <label for="trove_${pkgname}">${pkgname}</label>
                         </li>
                     </ul>
-                    <input value="Confirm Contents" type="submit"/>
+
+                    ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'packagecreatortroves', 'packagecreatortrovessubmit' )}
+
+                    <!-- XXX: this needs to be a graphical button -->
+                    <input type="button" id="packagecreatortrovessubmit" value="Confirm Contents" />
                     </div>
                 
                     <div py:if="not packageList" py:strip="True">
                         <!-- handle the no troves case -->
                         <p>No packages have been added to your appliance</p>
-                        <input value="Continue" type="submit"/>
+                        <!-- XXX: this needs to be a graphical button -->
+                        <input type="button" id="packagecreatortrovessubmit" value="Continue" />
                     </div>
                     <p><a href="newPackage">Package another archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>

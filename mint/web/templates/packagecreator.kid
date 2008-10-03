@@ -199,7 +199,7 @@ lang = None;
     </div>
 
 
-    <div py:strip="True" py:def="createPackageInterview(editing, sessionHandle, factories, prevChoices)">
+    <div py:strip="True" py:def="createPackageInterview(editing, sessionHandle, factories, prevChoices, recipeContents, useOverrideRecipe)">
         <script type="text/javascript">
         <![CDATA[
         function changeFactory(){
@@ -257,6 +257,7 @@ lang = None;
         }
 
         addLoadEvent(changeFactory);
+
         ]]>
         </script>
         <h2>Confirm Package Details</h2>
@@ -287,10 +288,13 @@ lang = None;
             <!-- The factory interview -->
             <div id="chosen_factory" />
 
-            <p py:if="editing" class="p-button"><button id="submitButton_savePackage" class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/save_package_button.png" alt="Submit" /></button></p>
-            <p py:if="not editing" class="p-button"><button id="submitButton_savePackage" class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/create_package_button.png" alt="Submit" /></button></p>
+            ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'submitButton_savePackage', 'savePackage')}
+
+            <p py:if="editing" class="p-button"><button id="submitButton_savePackage" class="img"><img src="${cfg.staticPath}apps/mint/images/save_package_button.png" alt="Submit" /></button></p>
+            <p py:if="not editing" class="p-button"><button id="submitButton_savePackage" class="img"><img src="${cfg.staticPath}apps/mint/images/create_package_button.png" alt="Submit" /></button></p>
             <!--<p py:if="editing"><input type="submit" id="submitButton_savePackage" value="Save Package" /></p>
             <p py:if="not editing"><input type="submit" id="submitButton_savePackage" value="Create Package" /></p>-->
+
         </form>
 
         <div style="display: none" id="factory_dumping_ground">
@@ -359,10 +363,10 @@ function processResponse(res)
 
 function makeRequest()
 {
-    var req = new JsonRpcRequest('jsonrpc/', 'getPackageBuildStatus')
+    var req = new JsonRpcRequest('jsonrpc/', 'getPackageBuildStatus');
     req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processResponse)
-    req.send(false, [polldata.sessionHandle])
+    req.setCallback(processResponse);
+    req.send(false, [polldata.sessionHandle]);
 }
 
 addLoadEvent(makeRequest);
@@ -375,6 +379,79 @@ addLoadEvent(makeRequest);
         <!-- the poller -->
         ${statusArea("%s Build" % type.title())}
         <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">View build log</a></p>
+    </div>
+
+    <div py:def="recipeEditor(recipeType='appliance', recipeContents='', useOverrideRecipe=False, submitFormId='', submitButtonId='')" py:strip="True">
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-ittabs.js?v=${cacheFakeoutVersion}" />
+        <script type="text/javascript">
+            <![CDATA[
+
+            var wasUsingOverrideRecipe = false;
+
+            function doSubmit() {
+                var form = document.getElementById('${submitFormId}');
+                form.submit();
+            }
+
+            function handleYes() {
+                // Confirmed to remove customizations
+                doSubmit();
+            }
+
+            function handleNo() {
+                // Do nothing
+            }
+
+            function confirm() {
+                var useOverrideRecipe = jQuery('#useOverrideRecipeCheckbox')[0].checked;
+                if (wasUsingOverrideRecipe && !useOverrideRecipe) {
+                    modalYesNo(handleYes, handleNo);
+                } else {
+                    // creating private, just do it
+                    doSubmit();
+                }
+            }
+
+            jQuery(document).ready(function() {
+                wasUsingOverrideRecipe = jQuery('#useOverrideRecipeCheckbox')[0].checked;
+                if ('${submitButtonId}' != '' && '${submitFormId}' != '') {
+                    jQuery('#${submitButtonId}').click(function () {confirm();});
+                }
+                jQuery('#recipeContents').EnableTabs();
+                jQuery('#useOverrideRecipeCheckbox').click(function() {
+                    if (this.checked) {
+                        jQuery('#recipeContentsEditor').show();
+                        jQuery('#recipeContents').removeAttr('disabled');
+                        jQuery('#recipe_editor').show();
+                    }
+                    else {
+                        jQuery('#recipeContentsEditor').hide();
+                        jQuery('#recipeContents').attr('disabled', 'disabled');
+                    }
+                });
+                jQuery('.expandableFormGroupTitle').click(function () {
+                    toggle_display('recipe_editor');
+                });
+            });
+            ]]>
+        </script>
+        <div id="modalYesNo" title="Confirmation" style="display: none;">
+            You have chosen to abandon the customized recipe for this
+            ${recipeType}. Are you sure that you want to do this?
+        </div>
+        <p>
+            <input id="useOverrideRecipeCheckbox" type="checkbox" name="useOverrideRecipe" value="1"
+            py:attrs="{'checked': useOverrideRecipe and 'checked' or None}" />
+            <label for="useOverrideRecipeCheckbox">Use a customized recipe for this ${recipeType}</label>
+        </p>
+        <div class="expandableFormGroupTitle">
+            <img id="recipe_editor_expander" class="noborder" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />Custom Recipe
+        </div>
+        <div id="recipe_editor" py:attrs="{'style': (not useOverrideRecipe) and 'display:none;' or None}">
+            <p><textarea id="recipeContents" name="recipeContents" wrap="off"
+                py:attrs="{'disabled': (not useOverrideRecipe) and 'disabled' or None}"><![CDATA[${recipeContents}]]></textarea>
+            </p>
+        </div>
     </div>
 
 </html>

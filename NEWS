@@ -86,6 +86,8 @@ Web Front End Changes
   with WebKit-based browsers (RBL-3489, RBL-3507)
 * "Select Additional Packages" now works in more browsers (RBL-3508)
 * There is now a link in the admin page for configuring clouds. (RBL-3430)
+* Recipes in Appliance Creator and Pacakge Creator may now be
+  customized via the Web UI (RBL-3424, RBL-3425)
 
 Bug Fixes
 ---------------------

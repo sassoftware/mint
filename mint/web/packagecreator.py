@@ -11,12 +11,15 @@ class PackageCreatorMixin(object):
     """Must be mixed with a ProjectHandler based class"""
 
     def _getPackageFactories(self, uploadDirectoryHandle, versionId, sessionHandle, upload_url):
+        isDefault = False
+        recipeContents = ''
         if sessionHandle:
             editing = True
         else:
             editing = False
         try:
             sessionHandle, factories, prevChoices = self.client.getPackageFactories(self.project.getId(), uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+            isDefault, recipeContents = self.client.getPackageCreatorRecipe(sessionHandle)
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
@@ -24,7 +27,8 @@ class PackageCreatorMixin(object):
             self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
             self._predirect('newPackage', temporary=True)
 
-        return {'editing': editing, 'sessionHandle': sessionHandle, 'factories': factories, 'prevChoices': prevChoices}
+        return {'editing': editing, 'sessionHandle': sessionHandle, 'factories': factories, 'prevChoices': prevChoices,
+                'recipeContents': recipeContents, 'useOverrideRecipe': not isDefault}
 
     @writersOnly
     @strFields(sessionHandle=None)

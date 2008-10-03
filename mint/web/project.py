@@ -766,18 +766,25 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         """"""
         try:
             sessionHandle, factories, prevChoices = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
+            isDefault, recipeContents = self.client.getPackageCreatorRecipe(sessionHandle)
 
         except MintError, e:
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
         return self._write('createPackageInterview',
                 editing = True, sessionHandle = sessionHandle,
-                factories = factories, message = None, prevChoices=prevChoices)
+                factories = factories, message = None, prevChoices=prevChoices,
+                recipeContents = recipeContents,
+                useOverrideRecipe = not isDefault)
 
     @writersOnly
-    @strFields(sessionHandle=None, factoryHandle=None)
-    def savePackage(self, auth, sessionHandle, factoryHandle, **kwargs):
+    @strFields(sessionHandle=None, factoryHandle=None, recipeContents='')
+    @boolFields(useOverrideRecipe=False)
+    def savePackage(self, auth, sessionHandle, factoryHandle, recipeContents, useOverrideRecipe, **kwargs):
         #It is assumed that the package creator service will validate the input
+        if not useOverrideRecipe:
+            recipeContents = ''
+        self.client.savePackageCreatorRecipe(sessionHandle, recipeContents)
         self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         return self._write('buildPackage', sessionHandle = sessionHandle,
                 message = None)

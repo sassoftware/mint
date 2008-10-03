@@ -188,11 +188,15 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         return ret
 
     @writersOnly
-    @strFields(sessionHandle=None, factoryHandle=None)
+    @strFields(sessionHandle=None, factoryHandle=None, recipeContents='')
+    @boolFields(useOverrideRecipe=False)
     @output_handler('buildPackageWiz')
     @wizard_position(WIZ_PACKCREAT)
-    def savePackage(self, sessionHandle, factoryHandle, **kwargs):
+    def savePackage(self, sessionHandle, factoryHandle, recipeContents, useOverrideRecipe, **kwargs):
         name = kwargs['name']
+        if not useOverrideRecipe:
+            recipeContents = ''
+        self.client.savePackageCreatorRecipe(sessionHandle, recipeContents)
         pkg = self.client.savePackage(sessionHandle, factoryHandle, kwargs)
         if pkg:
             # This needs to be more sophisticated, for now we just try to add
@@ -244,13 +248,23 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         version = self.client.getProductVersion(self.currentVersion)
         sesH = self._getApplianceSessionHandle()
         pkgs = self.client.listApplianceTroves(self.project.getId(), sesH)
-        return dict(message=None, packageList = pkgs)
+        isDefault, recipeContents = self.client.getPackageCreatorRecipe(sesH)
+
+        return dict(message=None, packageList = pkgs,
+                recipeContents = recipeContents,
+                useOverrideRecipe = not isDefault)
 
     @writersOnly
     @output_handler(redirect="reviewApplianceGroup")
     @listFields(str, troves=[])
-    def processEditApplianceGroup(self, troves):
-        self.client.setApplianceTroves(self._getApplianceSessionHandle(), troves)
+    @strFields(recipeContents='')
+    @boolFields(useOverrideRecipe=False)
+    def processEditApplianceGroup(self, troves, recipeContents, useOverrideRecipe):
+        sesH = self._getApplianceSessionHandle()
+        self.client.setApplianceTroves(sesH, troves)
+        if not useOverrideRecipe:
+            recipeContents = ''
+        self.client.savePackageCreatorRecipe(sesH, recipeContents)
 
     @writersOnly
     @output_handler('reviewGroupWiz')

@@ -2132,3 +2132,11 @@ a.image-list {
 .image-table {
     border-collapse: collapse;
 }
+
+#recipeContents {
+    width: 450px;
+    height: 400px;
+    min-height: 400px;
+    font-family: monospace;
+}
+
