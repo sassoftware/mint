@@ -1,5 +1,5 @@
 [global]
-plugins.disable = ['/configure/ConaryConf', '/services/Services', '/flipflop/FlipFlop']
+plugins.disable = ['/configure/ConaryConf', '/services/Services', '/flipflop/Update']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 
