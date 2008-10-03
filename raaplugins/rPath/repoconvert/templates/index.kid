@@ -22,34 +22,44 @@
         status = locals().get('status', '')
     ?>
     <script type="text/javascript">
-    var messageBox = new MessageBox();
+
+    function doIt() {
+        swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
+        startCallbackDisplay("convert", "Converting to PostgreSQL...", ['confirm'], [true]);
+    }
 
     function convertNow(link)
     {
-        messageBox.doDisplayOverlay();
-        messageBox.doDisplay(
-            "This process may take up to an hour per project, during which time your rBuilder Appliance will not be available.  Please make sure you have a recent backup before continuing.  Do you really want to convert this appliance?",
-            [['Convert Now', function () {
-                    initCallbackDisplay();
-                    startCallbackDisplay('convert', 'Converting to PostgreSQL...', ['confirm'], [true]);
-                    messageBox.doClose();
-                    swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
-                }],
-                ["Cancel", messageBox, "doClose"]]);
+        var messageBox = new ModalMessageBox(["This process may take up to an hour per project, during which time your rBuilder Appliance will not be available.  Please make sure you have a recent backup before continuing.  Do you really want to convert this appliance?"],
+                        "Convert",
+                        [['Convert Now', this, function () {this.doIt();}],
+                        ["Cancel"]]);
+        messageBox.show();
+    }
+
+    function finalizeIt() {
+        swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
+        var post = new Post('finalize', ['confirm'], [true])
+        post.doIt = function ()
+        {
+            var d = this.doAction();
+            reloadPage = function (req)
+            {
+                callLater(2, reloadNoHistory);
+                return req;
+            }
+            d.addCallback(reloadPage);
+            return d;
+        }
     }
 
     function finalizeNow(link)
     {
-        messageBox.doDisplayOverlay();
-        messageBox.doDisplay(
-            "Would you like to finalize this repository conversion?  This cannot be undone.",
-            [['Finalize Now', function () {
-                    /* Do the work here */
-                    postRequest('finalize', ['confirm'], [true], createCallbackRedirect(basepath), callbackErrorGeneric);
-                    messageBox.doClose();
-                    swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
-                }],
-                ["Cancel", messageBox, "doClose"]]);
+        var messageBox = new ModalMessageBox(["Would you like to finalize this repository conversion?  This cannot be undone."],
+                        "Finalize",
+                        [['Finalize Now', this, function () {this.finalizeIt();}],
+                         ["Cancel"]]);
+        messageBox.show();
     }
 
     </script>
@@ -59,9 +69,9 @@
     <!--Status box -->
     ${CallbackDisplayWidget(schedId=schedId, optype="Migrating to PostgreSQL...", statusmsg=statusmsg, status=status)}
 
-    <div py:if="running" id="conv_instructions"/>
+    <div py:if="running" name="conv_instructions" id="conv_instructions"/>
 
-    <div py:if="not running and not converted" id="conv_instructions">
+    <div py:if="not running and not converted" name="conv_instructions" id="conv_instructions">
         <div class="page-section">
             Convert to PostgreSQL
         </div>
