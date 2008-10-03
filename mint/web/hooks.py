@@ -272,13 +272,12 @@ def conaryHandler(req, cfg, pathInfo):
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
             # if we operate in poolmode, we need to "refresh" this repository
-            # of course this is a giant hack.
             if hasattr(repo, 'db'):
                 repoDb = repo.db
             else:
                 repoDb = repo.callFactory.repos.db
             if hasattr(repoDb, 'poolmode') and repoDb.poolmode:
-                repo.reopen()
+                repoDb.reopen()
     else:
         # it's completely external
         # use the Internal Conary Proxy if it's configured
