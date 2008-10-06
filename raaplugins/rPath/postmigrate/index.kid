@@ -10,11 +10,12 @@
         <title py:if="not complete">Prepare rBuilder for Migration</title>
         <title py:if="complete">rBuilder Migration was Successful</title>
         <?python
-            from raa.widgets.callbackdisplay import CallbackDisplayWidget
+            from raa.templates.callbackdisplaywidget import CallbackDisplayWidget
         ?>
     </head>
 
-    <body id="middle">
+    <body>
+        <div class="plugin-page">
         <div py:strip="True" py:if="not complete">
             <script type="text/javascript">
                 function doRestore(link, filename)
@@ -26,70 +27,72 @@
                     startCallbackDisplay('doRestore', 'Performing restoration...', ['filename'], [filename]);
                 }
             </script>
-            <h2>rBuilder Migration</h2>
-            <div py:strip="True" py:if="prompt">
-                <h4>
-                    <p>
-                        Is this system being upgraded from a previous version?
-                    </p>
-                    <form action="index" method="GET">
-                        <input type="hidden" name="restore" value="True"/>
-                        <input class="button" type="submit" value="Yes"/>
-                    </form>
-                    <form action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
-                        <input class="button" type="submit" value="No"/>
-                    </form>
-
-                </h4>
+            <div class="page-section">
+            rBuilder Migration
             </div>
-            <div py:strip="True" py:if="not prompt">
-                <div py:strip="True" py:if="not diskPresent">
-                    <h4>
-                        <p>
-                            In order to proceed, please attach the disk containing your stored data now.
-                        </p>
-                        <form action="index" method="GET">
-                            <input type="hidden" name="restore" value="True"/>
-                            <input class="button" type="submit" value="Scan System"/>
-                        </form>
-                    </h4>
-                </div>
-                <div py:strip="True" py:if="diskPresent">
-                    <div py:strip="True" py:if="not backups">
-                        <h4>
-                            <p>
-                                Backup device was found, but no valid backups were present.
-                            </p>
-                        </h4>
+            <div class="page-section-content">
+                <div py:strip="True" py:if="prompt">
+                    <div class="page-subsection-instr">
+                        Is this system being upgraded from a previous version?
                     </div>
-                    <div py:strip="True" py:if="backups">
-                        <h4>
-                            <p id="guide_text">
-                                You are now ready to proceed. Click "Restore Now" to restore your data and complete this migration.
-                            </p>
-                        </h4>
-                        ${CallbackDisplayWidget().display()}
+                    <form action="index" method="GET" name="index_form">
+                        <input type="hidden" name="restore" value="True"/>
+                        <a class="rnd_button float-left" id="yes_button" href="javascript:button_submit(document.index_form)">Yes</a>
+                    </form>
+                    <form name="no_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+                        <a class="rnd_button float-left" id="no_button" href="javascript:button_submit(document.no_form)">No</a>
+                    </form>
+                </div>
+                <div py:strip="True" py:if="not prompt">
+                    <div py:strip="True" py:if="not diskPresent">
+                    <div class="page-subsection-instr">
+                        In order to proceed, please attach the disk containing your stored data now.
+                    </div>
+                    <form name="scan_form" action="index" method="GET">
+                        <input type="hidden" name="restore" value="True"/>
+                        <a class="rnd_button float-left" id="scan" href="javascript:button_submit(document.scan_form)">Scan System</a>
+                    </form>
+                    </div>
+                    <div py:strip="True" py:if="diskPresent">
+                        <div py:strip="True" py:if="not backups">
+                        <div class="page-subsection-instr">
+                            Backup device was found, but no valid backups were present.
+                        </div>
+                        </div>
+                        <div py:strip="True" py:if="backups">
+                        <div class="page-subsection-instr">
+                                    You are now ready to proceed. Click "Restore Now" to restore your data and complete this migration.
+                        </div>
+                        ${CallbackDisplayWidget()}
                         <table>
                             <tr py:for="id, filename in enumerate(backups)" py:attrs="{'class': id % 2 and 'odd' or 'even'}">
                                 <td>${filename}</td>
-                                <td><input class="button" type="submit" value="Restore Now" onclick="javascript:doRestore(this, '${filename}');" /></td>
+                                <td>
+                                    <a class="rnd_button float-left" id="restore_button" href="javascript:doRestore(this, '${filename}');">Resotre Now</a>
+                                </td>
                             </tr>
                         </table>
+                        </div>
                     </div>
+                    <form name="skip_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+                        <a class="rnd_button float-left" id="skip" href="javascript:button_submit(document.skip_form)">Skip</a>
+                    </form>
                 </div>
-                <form action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
-                    <input class="button" type="submit" value="Skip"/>
-                </form>
             </div>
         </div>
+
         <div py:strip="True" py:if="complete">
-            <h2>Congratulations.</h2>
-            <h4>
-                <p>This rBuilder appliance has been successfully migrated.</p>
-            </h4>
-            <form action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
-                <input class="button" type="submit" value="Done"/>
+            <div class="page-section">
+            Congratulations.
+            </div>
+            <div class="page-section-content">
+            This rBuilder appliance has been successfully migrated.
+            <form name="skip_plugin_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'skipPlugin');">
+                <a class="rnd_button float-left" id="skip_plugin_button" href="javascript:button_submit(document.skip_plugin_form)">Done</a>
             </form>
+            </div>
+        </div>
+
         </div>
     </body>
 </html>

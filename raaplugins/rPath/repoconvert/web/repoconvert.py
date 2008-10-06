@@ -3,15 +3,17 @@
 # All rights reserved
 #
 
+from gettext import gettext as _
+
 import raa
 import time
-import cherrypy
 import logging
 from raa import rpath_error
 from raa import constants
 from raa.db import schedule, data
 from raa.lib import repeatschedules
 from raa.modules.raawebplugin import rAAWebPlugin, disablePlugin
+import raa.web
 from mint import config
 
 log = logging.getLogger('rPath.repoconvert')
@@ -45,13 +47,13 @@ class SqliteToPgsql(rAAWebPlugin):
             ret['finalized'] = False
 
         #Figure out if a job is currently running
-        listTasks = cherrypy.root.execution.getUnfinishedSchedules(
+        listTasks = raa.web.getWebRoot().execution.getUnfinishedSchedules(
             schedule.typesValid,
             constants.TASKS_UNFINISHED, taskId = self.taskId)
         listTasks.reverse()
         running = False
         for (execId, schedId) in listTasks:
-            status = cherrypy.root.getStatus(schedId)
+            status = raa.web.getWebRoot().getStatus(schedId)
             statusCode = status['status']
             statusmsg = status['statusmsg']
             if statusCode == constants.TASK_RUNNING:
@@ -92,6 +94,7 @@ class SqliteToPgsql(rAAWebPlugin):
         if repoCfg.reposDBDriver == 'postgresql' and (val==0 or val):
                 #val is 0 if this is a fresh install, True if we've
                 #already finalized
-            self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)
+            # self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)
+            self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
         else:
             self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
