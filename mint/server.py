@@ -703,7 +703,8 @@ class MintServer(object):
 
         return (mirrorUser, mirrorPassword)
 
-    def _createGroupTemplate(self, project, buildLabel, version, groupName=None):
+    def _createGroupTemplate(self, project, buildLabel, version,
+                             groupName=None, groupApplianceLabel=None):
         if groupName is None:
             groupName = helperfuncs.getDefaultImageGroupName(project.shortname)
 
@@ -721,9 +722,11 @@ class MintServer(object):
 
         from mint.templates import groupTemplate
         recipeStream = StringIO.StringIO()
+        if not groupApplianceLabel:
+            groupApplianceLabel = self.cfg.groupApplianceLabel
         recipeStream.write(templates.write(groupTemplate,
                     cfg = self.cfg,
-                    groupApplianceLabel=self.cfg.groupApplianceLabel,
+                    groupApplianceLabel=groupApplianceLabel,
                     groupName=groupName,
                     recipeClassName=util.convertPackageNameToClassName(groupName),
                     version=version))
@@ -778,12 +781,13 @@ class MintServer(object):
             raise ProductVersionInvalid
         return None
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool)
+    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool,
+               str)
     @requiresCfgAdmin('adminNewProjects')
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc, 
                    appliance, shortname, namespace, prodtype, version, 
-                   commitEmail, isPrivate):
+                   commitEmail, isPrivate, platformLabel):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
@@ -870,7 +874,8 @@ class MintServer(object):
 
         if applianceValue:
             try:
-                self._createGroupTemplate(project, label, version)
+                self._createGroupTemplate(project, label, version, 
+                                          groupApplianceLabel=platformLabel)
             except GroupTroveTemplateExists:
                 pass # really, this is OK -- and even if it weren't,
                      # there's nothing you can do about it, anyway

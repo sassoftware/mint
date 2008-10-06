@@ -45,7 +45,8 @@ class MintClient:
 
     def newProject(self, name, hostname, domainname, projecturl = "", desc = "",
                    appliance = "unknown", shortname="", namespace="", 
-                   prodtype="",  version="", commitEmail="", isPrivate=False):
+                   prodtype="",  version="", commitEmail="", isPrivate=False,
+                   projectLabel=""):
         """
         Create a new project.
         @param name: name of new project
@@ -62,11 +63,14 @@ class MintClient:
         @param version:  the initial product version.
         @param commitEmail: email address to which commit messages are sent.
         @param isPrivate: whether or not this should be a private product
+        @param platformLabel: label of the platform to which this product
+               is going to be derived from.
         @return: primary key of newly created project.
         """
         return self.server.newProject(name, hostname, domainname, projecturl, 
                                       desc, appliance, shortname, namespace, 
-                                      prodtype, version, commitEmail, isPrivate)
+                                      prodtype, version, commitEmail, isPrivate,
+                                      projectLabel)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
