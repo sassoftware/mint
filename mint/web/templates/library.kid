@@ -201,8 +201,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
         </div>
     </div>
 
-    <div py:def="stepContent">
-    1</div>
+    <div py:def="stepContent"></div>
 
     <div py:def="stepsWidget(steps, curStep = 0)" class="wizard-nav-palette" id="stepWidget">
         <img class="left" src="${cfg.staticPath}apps/mint/images/wiz_header_blue_left.png" alt="" />
