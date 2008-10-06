@@ -2731,6 +2731,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 amiData[k] = self.cfg[k]
                 if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
                     raise EC2NotConfigured
+            if project.hidden:
+                # overwrite ec2LaunchUsers if any of the users have
+                # ec2 accounts, otherwise default to whatever the default
+                # is...
+                # FIXME should we be erroring out instead?
+                writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(project.id)
+                if writers + readers:
+                    amiData['ec2LaunchUsers'] = writers + readers
+                    amiData['ec2LaunchGroups'] = []
 
             amiData['ec2CertificateKey'] = \
                     _readX509File(self.cfg.ec2CertificateKeyFile)
