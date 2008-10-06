@@ -34,7 +34,7 @@ Internal Changes
 * Requests to http://<producthostname>.<rbuilderdomainname>/ now properly
   redirect to the product homepage even when the product is marked as
   private (RBL-3148).
-* Private products now product private EC2 Images. (RBL-3477)
+* Private products now produce private EC2 Images. (RBL-3477)
 
 Web Front End Changes
 ---------------------
