@@ -271,11 +271,10 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             repo = repositories[repHash]
             shimRepo = shim_repositories[repHash]
-            # if this is an instance of a NetworkServerRepository and we are runniing in
-            # pool mode we need to prepare the repo for work. The shimclient case is
-            # handled fine by netserver's callWrapper
-            if hasattr(repo, 'db') and hasattr(repo.db, 'poolmode') and repo.db.poolmode:
-                repo.reopen()
+            # we depend on shimRepo being a shimclient.NetworkRepositoryServer instance,
+            # which can let us detect when we are working in pool mode
+            if hasattr(shimRepo.db, 'poolmode') and shimRepo.db.poolmode:
+                shimRepo.reopen()
     else:
         # it's completely external
         # use the Internal Conary Proxy if it's configured
