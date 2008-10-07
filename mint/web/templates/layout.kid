@@ -112,8 +112,8 @@ onload = "javascript:;"
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
             <div id="page">
-                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
-                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.gif" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.gif" alt="" />
                 <div id="layout" py:replace="item[:]" />
                 ${layoutFooter()}<br />
             </div>

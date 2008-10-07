@@ -76,27 +76,24 @@
                 </p>
                 <div py:if="not user.getBlurb()">User has not entered any about text.</div>
 
-                <div class="pageSection">
-                    <h2>Contact Information</h2>
-                    <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                        ${truncateForDisplay(line, 1000000, 70)}
-                    </p>
-                    <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
-                </div>
-
-                <div class="pageSection">
-                    <h2>${projectText().title()}s</h2>
-                    <ul py:if="userProjects">
-                        <li py:for="project, level, memberReq in userProjects">
-                            <a
-                                href="${project.getUrl()}">${project.getNameForDisplay()}</a>
-                            (${userlevels. names[level]})
-                        </li>
-                    </ul>
-                    <p py:if="not userProjects">This user is not a member of any ${projectText().lower()}s.</p>
-                </div>
+                <h2>Contact Information</h2>
+                <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                    ${truncateForDisplay(line, 1000000, 70)}
+                </p>
+                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
                 
-                <div class="pageSection" py:if="auth.admin">
+                <h2>${projectText().title()}s</h2>
+                <ul py:if="userProjects">
+                    <li py:for="project, level, memberReq in userProjects">
+                        <a
+                            href="${project.getUrl()}">${project.getNameForDisplay()}</a>
+                        (${userlevels. names[level]})
+                    </li>
+                </ul>
+                <p py:if="not userProjects">This user is not a member of any ${projectText().lower()}s.</p>
+                
+                
+                <div py:if="auth.admin" py:strip="True">
                     <h2>User Status</h2>
 
                     <p>Account was created ${timeDelta(user.timeCreated, capitalized=False)}<span py:if="user.timeAccessed"> and was last accessed ${timeDelta(user.timeAccessed, capitalized=False)}</span>.</p>

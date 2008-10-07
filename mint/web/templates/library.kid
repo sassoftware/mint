@@ -58,7 +58,8 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
                 Current Group: <a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}" title="${groupTrove.recipeName}"> ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 30)}</a>
             <table>
             <tr>
-                <td colspan="2">Trove</td>
+                <td><img alt="Lock Version" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
+                <td>Trove</td>
                 <td>${projectText().title()}</td>
                 <td></td>
             </tr>
@@ -253,8 +254,8 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             </div>
          
         </div><br class="clear" />
-        <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
-        <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.png" alt="" />
+        <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.gif" alt="" />
+        <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.gif" alt="" />
     </div>
 
 </html>
