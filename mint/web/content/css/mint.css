@@ -298,15 +298,11 @@ div#fullpage-middle {
     padding-bottom: 10px;
 }
 
-.edit-version {
+div#productVersion {
     float: right;
     margin-top: 24px;
     padding-left: 10px;
 }
-
-.edit-version img {
-   vertical-align: middle
-} 
 
 div#spanleft {
     width: 700px;

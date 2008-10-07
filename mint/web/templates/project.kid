@@ -25,36 +25,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 
-    <div py:def="productVersionMenu(readOnly=False)" id="productVersion" py:strip="True">
-      <div py:if="versions" class="edit-version">
-        Version: <span py:if="not readOnly and auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=15)}
-            <a id="currentVersionLink" class="version_button" href="#" title="Click to change version"><img src="${cfg.staticPath}/apps/mint/images/version_button.gif" alt="" /></a></span>
-        <span py:if="readOnly or not auth.authorized" py:strip="True">${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
-        <div py:if="not readOnly and auth.authorized" py:strip="True">
-            <div id="changeVersionWidget">
-            <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
-                <?python
-                attrs = {'name': "versionId", 'id': 'productVersionSelectorDropdown'}
-                ?>
-                ${versionSelection(attrs, versions, True, currentVersion)}
-                <input id="product_version_redirect" type="hidden" name="redirect_to" value=""/>
-            </form>
-            <script type="text/javascript" >
-                jQuery('#currentVersionLink').click(function() {
-                    jQuery('#changeVersionWidget').slideToggle('fast')
-                });
-                jQuery('#productVersionSelectorDropdown').change(function() {
-                    jQuery('#versionSelectorForm').submit();
-                });
-                jQuery(document.body).ready(function() {
-                    jQuery('#product_version_redirect').val(document.location);
-                    jQuery('#changeVersionWidget').hide();
-                });
-            </script>
-            </div>
+    <div py:def="productVersionMenu(readOnly=False)" py:strip="True">
+        <div py:if="auth.authorized and self.isWriter" id="productVersion">
+            <span py:if="readOnly and versions" py:strip="True">Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</span>
+            <span py:if="not readOnly and versions" py:strip="True">${versionSelection(versions, True, currentVersion)}</span>
+            <span py:if="not versions" py:strip="True">No versions available</span>
         </div>
-      </div>
-      <div py:if="not versions" class="edit-version">Version: none available</div>
     </div>
 
     <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
@@ -81,18 +57,30 @@
         </ul>
     </div>
 
-    <div py:def="versionSelection(attributes, versions, unselected=False, currentVersion=None)" py:strip="True">
+    <div py:def="versionSelection(versions, unselected=False, currentVersion=None)" py:strip="True">
         <?python
-    v = set([x[2] for x in versions])
-    showNamespace = len(v) > 1
+            v = set([x[2] for x in versions])
+            showNamespace = len(v) > 1
         ?>
-        <select py:attrs="attributes">
-            <option py:if="unselected" value="-1" py:attrs="{'selected': (unselected and not currentVersion) and 'selected' or None}">--</option>
-            <option py:for="ver in versions" value="${ver[0]}" py:attrs="{'selected': (ver[0] == currentVersion) and 'selected' or None}">
-                <div py:strip="True" py:if="showNamespace">${ver[3]} (${ver[2]})</div>
-                <div py:strip="True" py:if="not showNamespace">${ver[3]}</div>
-            </option>
-        </select>
+        <form id="versionSelectorForm" action="${basePath}setProductVersion" method="POST">
+            <label for="productVersionSelectorDropdown">Version:</label>
+            <select name="versionId" id="productVersionSelectorDropdown">
+                <option py:if="unselected" value="-1" py:attrs="{'selected': (unselected and not currentVersion) and 'selected' or None}">Not Selected</option>
+                <option py:for="ver in versions" value="${ver[0]}" py:attrs="{'selected': (ver[0] == currentVersion) and 'selected' or None}">
+                    <div py:strip="True" py:if="showNamespace">${ver[3]} (${ver[2]})</div>
+                    <div py:strip="True" py:if="not showNamespace">${ver[3]}</div>
+                </option>
+            </select>
+            <input id="product_version_redirect" type="hidden" name="redirect_to" value=""/>
+        </form>
+        <script type="text/javascript">
+            jQuery('#productVersionSelectorDropdown').change(function() {
+                jQuery('#versionSelectorForm').submit();
+            });
+            jQuery(document.body).ready(function() {
+                jQuery('#product_version_redirect').val(document.location);
+            });
+        </script>
     </div>
 
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
