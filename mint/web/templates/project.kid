@@ -147,9 +147,6 @@
             <div class="projectsPaneActionTop">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
             </div>
-            <div class="projectsPaneAction">
-                <a target="_blank" href="http://${SITE}cloudCatalog">rBuilder Catalog for EC2&trade;</a>
-            </div>
             <div id="userSettings" class="projectsPaneAction">
                 <a href="http://${SITE}userSettings">Edit my account</a>
             </div>
