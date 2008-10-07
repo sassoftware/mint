@@ -402,9 +402,14 @@ class RepositoryTest(MintRepositoryHelper):
         cu.execute("SELECT name, version, serverName, branchName, isSource FROM PackageIndex")
         x = [(x[0], x[1], x[2], x[3], x[4]) for x in cu.fetchall()]
 
-        self.failUnless(('testcase', '/localhost1@rpl:tag1/1.0.0-1-1', 'localhost1', 'rpl:tag1', 0) in x)
-        self.failUnless(('testcase', '/localhost1@rpl:tag2/1.0.1-1-1', 'localhost1', 'rpl:tag2', 0) in x)
-        self.failUnless(('testcase:source', '/localhost1@rpl:tag2/1.0.1-1', 'localhost1', 'rpl:tag2', 1) in x)
+        try:
+            self.failUnless(('testcase', '/localhost1@rpl:tag1/1.0.0-1-1', 'localhost1', 'rpl:tag1', 0) in x)
+            self.failUnless(('testcase', '/localhost1@rpl:tag2/1.0.1-1-1', 'localhost1', 'rpl:tag2', 0) in x)
+            self.failUnless(('testcase:source', '/localhost1@rpl:tag2/1.0.1-1', 'localhost1', 'rpl:tag2', 1) in x)
+        except:
+            # display the error...
+            print x
+            raise
 
     def testUPI(self):
         def _fakeCommit(pkg, projectId, timestamp, userId):
