@@ -373,6 +373,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase:source'])
 
     def testUPIExternal(self):
+        raise testsuite.SkipTestException
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         self.openRepository(1)
