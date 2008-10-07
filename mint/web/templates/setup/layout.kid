@@ -51,9 +51,6 @@ onload = "javascript:;"
                         </div>
                         <div id="bottomText">
                             <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
-                            <span id="tagline">
-                                <b>rPath.</b>
-                                The Software Appliance Company.</span>
                         </div>
                     </div><br class="clear" />
                     <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
