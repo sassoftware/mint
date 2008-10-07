@@ -184,9 +184,6 @@
             <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
             </div>
-            <div id="cloudCatalog" class="projectsPaneAction">
-                <a target="_blank" href="http://${SITE}cloudCatalog">rBuilder Catalog for EC2&trade;</a>
-            </div>
             <div id="userSettings" class="projectsPaneAction">
                 <a href="http://${SITE}userSettings">Edit my account</a>
             </div>
