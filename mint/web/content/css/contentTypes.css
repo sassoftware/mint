@@ -179,11 +179,11 @@ strong.keyword {
     margin:8px 0px 8px 0px;
 	border-bottom:1px #ccc solid; 
     border-top:1px #ccc solid;
+    width: 466px;
 }
 .troveinfo th {
 	font-weight:normal; 
     color:#999;
-	border-top:1px #e6e6e6 solid;
 	padding:6px 12px 6px 0px;
 	width: 1%;
 }
@@ -304,7 +304,7 @@ a.option:hover {
 
 div.packageList
 {
-    width: 472px;
+    width: 470px;
     height: 408px;
     border-width: 1px;
     border-color: #666;
@@ -328,7 +328,7 @@ div.packageList_navigation
 div.packageList_contents
 {
     height: 408px !important;
-    width: 450px !important;
+    width: 448px !important;
     width: 446px; /* Hack for IE6's buggy width calculator */
     overflow: auto;
 }
@@ -377,7 +377,7 @@ h3.packageList_section_header {
 }
 
 div#jumpto_box {
-    width: 477px; /* Width of .packageList + border-width */
+    width: 472px; /* Width of .packageList + border-width */
     height: 24px; 
 }
 
@@ -404,7 +404,7 @@ div#jumpto_box input#jumpto_box_clear {
 }
 
 div#filter_selections {
-    width: 474px; /* Width of .packageList + packageList border-width - padding */
+    width: 472px; /* Width of .packageList + packageList border-width - padding */
     padding: 2px;
     overflow: hidden;
 }

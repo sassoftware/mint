@@ -22,12 +22,11 @@
                 <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
                 <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
 
-                <div id="middle">
+                <div id="middle-wide">
                     <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-                    <div class="page-title">
-                    Download Statistics</div>
+                    <div class="page-title">Download Statistics</div><br/>
                     
-                    <img src="downloadChartImg?span=$span" /> 
+                    <img width="600" src="downloadChartImg?span=$span" /> 
                 </div><br class="clear" />
                 <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
                 <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />

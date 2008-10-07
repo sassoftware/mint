@@ -17,11 +17,13 @@ from pcreator import factorydata
 import factory_test.testSetup
 factory_test.testSetup.setup()
 
+from conary.lib import util
 import testrunner.resources
 
 from factory_test.factorydatatest import basicXmlDef
 
 import re, os, StringIO
+import simplejson
 
 import mint.mint_error
 import mint.web.webhandler
@@ -125,6 +127,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
 
         func = projectHandler.handle(context)
+        self._setModeForSession('package-creator')
         return func, context
 
     def testErrorRetrievingFactoriesInterviewTemplate(self):
@@ -281,6 +284,14 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.failUnless(self.prefilled['description'] in page)
 
 
+    def _setModeForSession(self, modeName, sessionUser='testuser', sessionHandle='foobarbaz'):
+        dataPath = os.path.join(self.mintCfg.dataPath, 'tmp', sessionUser, sessionHandle)
+        util.mkdirChain(dataPath)
+        modePath = os.path.join(dataPath, 'mode')
+        f = open(modePath, 'w')
+        f.write(simplejson.dumps(modeName))
+        f.close()
+
     def _setupMaintainInterviewEnvironment(self, mockMethod):
         fields = {
             'name': 'grnotify',
@@ -295,6 +306,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
 
         func = projectHandler.handle(context)
+        self._setModeForSession('package-creator')
         return func, context
 
     def testMaintainPackageInterview(self):

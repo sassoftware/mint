@@ -71,7 +71,7 @@ allowNone = ['anaconda-custom', 'media-template']
 
                     <h2>Image Information</h2>
                     <div class="formgroup">
-                        <table class="formgrouptable">
+                        <table class="mainformhorizontal">
                         <tr>
                             <td class="form-label">Name: </td>
                             <td width="100%"><input id="relname" name="name" type="text" value="${name}" /></td>
@@ -168,7 +168,7 @@ allowNone = ['anaconda-custom', 'media-template']
                         </div>
                     </div>
 
-                    <h2>Image Contents<span id="baton"></span></h2>
+                    <h2>Image Contents</h2>
                     <div class="formgroup">
                         <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
                         <div py:if="buildId" style="margin: 4px;">

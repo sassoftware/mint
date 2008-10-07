@@ -136,7 +136,7 @@ class swapSize(IntegerOption):
 
 class vmMemory(IntegerOption):
     default = 256
-    prompt = 'How much memory should be used when running this image?'
+    prompt = 'How many MB of RAM should be allocated when this virtual machine is started?'
     errordesc = "vmware memory"
 
 class vmSnapshots(BooleanOption):

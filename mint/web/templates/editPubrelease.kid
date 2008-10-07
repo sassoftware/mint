@@ -62,7 +62,6 @@ from mint.web.templatesupport import projectText
                             <span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span></td>
                         </tr>
                         </table>
-                            <span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span>
                     </div>
 
 

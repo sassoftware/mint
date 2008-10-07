@@ -970,6 +970,20 @@ class BuildTest(fixtures.FixturedUnitTest):
             set(['ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId', 'ec2S3Bucket',
                  'ec2Certificate', 'ec2CertificateKey',
                  'ec2LaunchUsers', 'ec2LaunchGroups']))
+        assert(amiData['ec2LaunchUsers'] == [u'000000001111', u'000000002222'])
+
+
+        client.hideProject(data['projectId'])
+
+        client.setEC2CredentialsForUser(data['user'],
+                    '3234', 'accessKey', 'secretKey',
+                    force=True)
+        build = client.getBuild(build.id)
+
+        serialized = build.serialize()
+
+        buildDict = simplejson.loads(serialized)
+        assert(buildDict['amiData']['ec2LaunchUsers'] == ['3234'])
 
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2120')

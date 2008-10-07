@@ -38,7 +38,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
                   
                     <h2>Group Details</h2>
                     <form method="post" action="editGroup2?id=${curGroupTrove.id}">
-                    <table class="groupTroveItems">
+                    <table>
                     <tr id="editGTDropdown">
                         <td colspan="4">
                             <table class="mainformhorizontal">

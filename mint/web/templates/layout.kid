@@ -88,7 +88,7 @@ onload = "javascript:;"
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
                             <input class="searchField" name="search" id="searchLabel" type="text" value="$searchTerms" /><br/>
                             <div id="browseText">
-                                <strong>BROWSE</strong> all...&nbsp;&nbsp; <a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=${projectText().title()}s"><strong>${projectText().capitalize()}s</strong></a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users"><strong>Users</strong></a></span>
+                                <strong>BROWSE</strong> ... &nbsp;&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=${projectText().title()}s"><strong>${projectText().capitalize()}s</strong></a><span py:strip="True" py:if="auth.admin">,&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users"><strong>Users</strong></a>,</span><span py:strip="True" py:if="auth.authorized">&nbsp;or&nbsp;<a target="_blank" href="http://${SITE}cloudCatalog"><strong>rBuilder Catalog for EC2&trade;</strong></a></span>
                             </div>
                         </div>
                     </form>
@@ -112,8 +112,8 @@ onload = "javascript:;"
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
             <div id="page">
-                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
-                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.gif" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.gif" alt="" />
                 <div id="layout" py:replace="item[:]" />
                 ${layoutFooter()}<br />
             </div>

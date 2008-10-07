@@ -28,8 +28,7 @@ from mint import buildtypes
             
             <div id="fullpage-middle">
                 
-                <div class="edit-version">
-                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
+                ${productVersionMenu(readOnly=True)}
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>    
                 <div class="page-title">Appliance Creator</div>
                 

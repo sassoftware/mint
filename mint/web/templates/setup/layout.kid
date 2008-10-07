@@ -40,8 +40,8 @@ onload = "javascript:;"
                 </div>
             </div>
             <div id="page">
-                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.png" alt="" />
-                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.png" alt="" />
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/page_topleft.gif" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/page_topright.gif" alt="" />
                 <div id="layout" py:replace="item[:]" />
                 <div>
                     <div id="footer">
@@ -51,13 +51,10 @@ onload = "javascript:;"
                         </div>
                         <div id="bottomText">
                             <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
-                            <span id="tagline">
-                                <b>rPath.</b>
-                                The Software Appliance Company.</span>
                         </div>
                     </div><br class="clear" />
-                    <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.png" alt="" />
-                    <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.png" alt="" />
+                    <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/page_bottomleft.gif" alt="" />
+                    <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/page_bottomright.gif" alt="" />
                 </div>
                 <br />
             </div>

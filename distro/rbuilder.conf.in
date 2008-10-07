@@ -60,7 +60,7 @@ useInternalConaryProxy  True
 # Available platforms (these are officially supported)
 # XXX these need to be changed to a "product" platform (rLS) before v5 goes out
 availablePlatforms      conary.rpath.com@rpl:2
-availablePlatforms      ubuntu.rpath.org@rpath:ubuntu-hardy
+availablePlatforms      ubuntu.rpath.com@rpath:ubuntu-hardy
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
 # XXX these need to be changed to a "product" platform (rLS) before v5 goes out

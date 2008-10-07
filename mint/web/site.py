@@ -544,7 +544,6 @@ class SiteHandler(WebHandler):
     def createProject(self, auth, title, hostname, domainname, projecturl, 
                       blurb, optlists, appliance, shortname, namespace, 
                       prodtype, version, commitEmail, isPrivate, platformLabel):
-                    
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
         shortname = shortname.lower()
@@ -572,7 +571,8 @@ class SiteHandler(WebHandler):
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
                     domainname, projecturl, blurb, appliance, shortname, 
-                    namespace, prodtype, version, commitEmail, isPrivate)
+                    namespace, prodtype, version, commitEmail, isPrivate,
+                    platformLabel)
                 
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not self._getErrors():

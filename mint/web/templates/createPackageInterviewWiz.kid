@@ -30,14 +30,12 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
         
             <div id="fullpage-middle">
                 
-                <div class="edit-version">
-                    Version: ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)}</div>
-                
+                ${productVersionMenu(readOnly=True)}
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <div class="page-title">Appliance Creator</div>
                 
                 <p py:if="message" class="message" py:content="message"/>
-                ${createPackageInterview(editing, sessionHandle, factories, prevChoices)}
+                ${createPackageInterview(editing, sessionHandle, factories, prevChoices, recipeContents, useOverrideRecipe)}
             </div>
             <br class="clear"/>
             <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />

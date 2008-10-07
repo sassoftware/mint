@@ -502,18 +502,15 @@ class WebProjectTest(WebProjectBaseTest):
 
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'Version: none available' in page.body
-
+        self.failIf('Version:' in page.body)
 
         versionId = client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
         page = self.fetchWithRedirect('/project/testproject',
                                       server=self.getProjectServerHostname())
-        assert 'Version: none available' not in page.body
-        assert 'Version:' in page.body
-        assert 'Not Selected' in page.body # We can't currently select versions as anonymous
-        assert 'ID="versionSelectorForm"' not in page.body
+        self.failIf('Version:' in page.body)
+        self.failIf('No versions available' in page.body)
 
-    def _projectPageVersionSelector(self, level):
+    def _projectPageVersionSelector(self, level, shouldSee=True):
         client, ownerId = self.quickMintUser('testowner', 'testpass')
         userclient, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -523,20 +520,24 @@ class WebProjectTest(WebProjectBaseTest):
         project.addMemberById(userId, level)
         self.webLogin('testuser', 'testpass')
 
-        page = self.fetchWithRedirect('/project/testproject',
-                                      server=self.getProjectServerHostname())
-        assert 'Version: none available' in page.body
+        if shouldSee:
+            page = self.fetchWithRedirect('/project/testproject',
+                                          server=self.getProjectServerHostname())
+            assert 'No versions available' in page.body
 
-        versionId = client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
-        self.fetch('/project/testproject/setProductVersion?versionId=%d&redirect_to=/foo' % versionId,
-                server=self.getProjectServerHostname())
-        page = self.fetchWithRedirect('/project/testproject',
-                                      server=self.getProjectServerHostname())
-        assert 'Version: none available' not in page.body
-        assert 'Version:' in page.body
-        assert 'Not Selected' not in page.body
-        assert 'ID="versionSelectorForm"' in page.body
-        assert '<OPTION SELECTED VALUE="%d">' % versionId in page.body
+            versionId = client.addProductVersion(projectId, self.mintCfg.namespace, "version1", "Fluff description")
+            self.fetch('/project/testproject/setProductVersion?versionId=%d&redirect_to=/foo' % versionId,
+                    server=self.getProjectServerHostname())
+            page = self.fetchWithRedirect('/project/testproject',
+                                          server=self.getProjectServerHostname())
+            assert 'ID="versionSelectorForm"' in page.body
+            assert '<OPTION SELECTED VALUE="%d">' % versionId in page.body
+        else:
+            page = self.fetchWithRedirect('/project/testproject',
+                                          server=self.getProjectServerHostname())
+            self.failIf('Version:' in page.body)
+            self.failIf('No versions available' in page.body)
+
 
     def testProjectPageVersionSelectorDeveloper(self):
         self._projectPageVersionSelector(userlevels.DEVELOPER)
@@ -545,7 +546,7 @@ class WebProjectTest(WebProjectBaseTest):
         self._projectPageVersionSelector(userlevels.OWNER)
 
     def testProjectPageVersionSelectorUser(self):
-        self._projectPageVersionSelector(userlevels.USER)
+        self._projectPageVersionSelector(userlevels.USER, shouldSee=False)
 
     def testProjectPageManageNotOwner(self):
         pText = helperfuncs.getProjectText().lower()
