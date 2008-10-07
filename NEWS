@@ -34,7 +34,7 @@ Internal Changes
 * Requests to http://<producthostname>.<rbuilderdomainname>/ now properly
   redirect to the product homepage even when the product is marked as
   private (RBL-3148).
-* Private products now product private EC2 Images. (RBL-3477)
+* Private products now produce private EC2 Images. (RBL-3477)
 
 Web Front End Changes
 ---------------------
@@ -89,6 +89,10 @@ Web Front End Changes
 * There is now a link in the admin page for configuring clouds. (RBL-3430)
 * Recipes in Appliance Creator and Pacakge Creator may now be
   customized via the Web UI (RBL-3424, RBL-3425)
+* The group recipe created when initially creating an appliance product
+  will now attempt to load group-appliance from the label the platform
+  is on, and only fall back to the groupApplianceLabel if no platform is
+  selected. (RBL-3541)
 
 Bug Fixes
 ---------------------

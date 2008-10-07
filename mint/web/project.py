@@ -403,7 +403,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     productStageName, force)
         except TroveNotFoundForBuildDefinition, tnffbd:
             return self._write("confirm",
-                    message = "Some builds will not be built because of the following errors: %s" % ', '.join(tnffbd.errlist),
+                    message = "Some builds will not be built because of the following errors: %s. Continue?" % ', '.join(tnffbd.errlist),
                     yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
                                 'productStageName': productStageName,
                                 'action': 'submit',
