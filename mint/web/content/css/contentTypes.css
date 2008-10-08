@@ -339,6 +339,7 @@ div#loading_wait.packageList_contents {
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 4px;
+    overflow: visible;
 }
 
 div.packageList_submit {
