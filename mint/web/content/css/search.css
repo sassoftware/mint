@@ -67,6 +67,7 @@ table.pager {
     border-bottom-color: #e4e4e4;
     overflow: visible;
     position: relative;
+    zoom: 1;
 }
 
 .results tr.item-top-row {

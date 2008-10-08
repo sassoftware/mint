@@ -389,7 +389,7 @@ div#jumpto_box input#jumpto_box {
     height: 16px;
     font-size: 9pt;
     border: 1px solid #888;
-    position: relative;
+    _height: 1%;
     left: 16px;
     z-index: 1;
 }
@@ -397,7 +397,7 @@ div#jumpto_box input#jumpto_box {
 div#jumpto_box input#jumpto_box_clear {
     border: none;
     height: 16px;
-    position: relative;
+    _height: 1%;
     top: 4px;
     right: 2px;
     z-index: 3;
