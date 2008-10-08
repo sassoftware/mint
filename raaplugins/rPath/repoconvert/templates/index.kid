@@ -11,7 +11,7 @@
 <head>
     <title>PostgreSQL Conversion - Index</title>
     <?python
-  from raa.widgets.callbackdisplay import CallbackDisplayWidget
+  from raa.templates.callbackdisplaywidget import CallbackDisplayWidget
     ?>
 </head>
 
@@ -22,72 +22,102 @@
         status = locals().get('status', '')
     ?>
     <script type="text/javascript">
-    var messageBox = new MessageBox();
+
+    function doIt() {
+        swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
+        startCallbackDisplay("convert", "Converting to PostgreSQL...", ['confirm'], [true]);
+    }
 
     function convertNow(link)
     {
-        messageBox.doDisplayOverlay();
-        messageBox.doDisplay(
-            "This process may take up to an hour per project, during which time your rBuilder Appliance will not be available.  Please make sure you have a recent backup before continuing.  Do you really want to convert this appliance?",
-            [['Convert Now', function () {
-                    initCallbackDisplay();
-                    startCallbackDisplay('convert', 'Converting to PostgreSQL...', ['confirm'], [true]);
-                    messageBox.doClose();
-                    swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
-                }],
-                ["Cancel", messageBox, "doClose"]]);
+        var messageBox = new ModalMessageBox(["This process may take up to an hour per project, during which time your rBuilder Appliance will not be available.  Please make sure you have a recent backup before continuing.  Do you really want to convert this appliance?"],
+                        "Convert",
+                        [['Convert Now', this, function () {this.doIt();}],
+                        ["Cancel"]]);
+        messageBox.show();
+    }
+
+    function finalizeIt() {
+        swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
+        var post = new Post('finalize', ['confirm'], [true])
+        post.doIt = function ()
+        {
+            var d = this.doAction();
+            reloadPage = function (req)
+            {
+                callLater(2, reloadNoHistory);
+                return req;
+            }
+            d.addCallback(reloadPage);
+            return d;
+        }
     }
 
     function finalizeNow(link)
     {
-        messageBox.doDisplayOverlay();
-        messageBox.doDisplay(
-            "Would you like to finalize this repository conversion?  This cannot be undone.",
-            [['Finalize Now', function () {
-                    /* Do the work here */
-                    postRequest('finalize', ['confirm'], [true], createCallbackRedirect(basepath), callbackErrorGeneric);
-                    messageBox.doClose();
-                    swapDOM($('conv_instructions'), DIV({"id": 'conv_instructions'}));
-                }],
-                ["Cancel", messageBox, "doClose"]]);
+        var messageBox = new ModalMessageBox(["Would you like to finalize this repository conversion?  This cannot be undone."],
+                        "Finalize",
+                        [['Finalize Now', this, function () {this.finalizeIt();}],
+                         ["Cancel"]]);
+        messageBox.show();
     }
 
     </script>
+    <div class="plugin-page">
+    <div class="page-content">
+
     <!--Status box -->
-    ${CallbackDisplayWidget(schedId=schedId, optype="Migrating to PostgreSQL...", statusmsg=statusmsg, status=status).display()}
-    <div py:if="running" id="conv_instructions"/>
-    <div py:if="not running and not converted" id="conv_instructions">
-        <h3>Convert to PostgreSQL</h3>
-        <h5>Clicking the "Convert" button below will convert your rBuilder
-        Appliance to use PostgreSQL as its repository backend database.
-        PostgreSQL provides better performance, improved concurrency, and
-        higher reliability than the previous database backend.  rPath
-        recommends that this conversion occur as soon as it may be
-        scheduled.  The conversion process will take an hour or less for each
-        project hosted on the rBuilder (internal, or external with mirrors). 
-        This process is reversible if an error occurs, but rPath suggests
-        that backups be taken before executing the conversion.</h5>
+    ${CallbackDisplayWidget(schedId=schedId, optype="Migrating to PostgreSQL...", statusmsg=statusmsg, status=status)}
 
-        <h5>After clicking the Convert button below, a progress indicator
-        will appear.  An OK button will appear after the conversion is
-        complete.  Check your appliance for completeness and
-        functionality, and then click the "Finalize Conversion"
-        button to remove the old databases to free up space.</h5>
+    <div py:if="running" name="conv_instructions" id="conv_instructions"/>
 
-        <input id="convertbutton" class="button" type="submit" value="Convert" onclick="javascript:convertNow(this);" />
+    <div py:if="not running and not converted" name="conv_instructions" id="conv_instructions">
+        <div class="page-section">
+            Convert to PostgreSQL
+        </div>
+        <div class="page-section-content">
+            Clicking the "Convert" button below will convert your rBuilder
+            Appliance to use PostgreSQL as its repository backend database.
+            PostgreSQL provides better performance, improved concurrency, and
+            higher reliability than the previous database backend.  rPath
+            recommends that this conversion occur as soon as it may be
+            scheduled.  The conversion process will take an hour or less for each
+            project hosted on the rBuilder (internal, or external with mirrors). 
+            This process is reversible if an error occurs, but rPath suggests
+            that backups be taken before executing the conversion.
+            <p></p>
+            After clicking the Convert button below, a progress indicator
+            will appear.  An OK button will appear after the conversion is
+            complete.  Check your appliance for completeness and
+            functionality, and then click the "Finalize Conversion"
+            button to remove the old databases to free up space.
+
+            <div class="button-line">
+            <a class="rnd_button internal float-left" id="convertbutton" onclick="javascript:convertNow();">Convert</a>
+            </div>
+        </div>
     </div>
+
     <div py:if="not running and converted and not finalized" id="conv_instructions">
-    <!--<div py:if="not running" id="conv_instructions">-->
-        <h3>PostgreSQL Conversion Completed</h3>
-        <h5>Your system has been successfully converted to use PostgreSQL as
-        the database backend.  Click "Finalize Conversion" below to make this
-        change permanent, and remove the old databases.  Once you have
-        finalized, you may not revert this change.</h5>
+        <div class="page-section">
+            PostgreSQL Conversion Completed
+        </div>
+        <div class="page-section-content">
+            Your system has been successfully converted to use PostgreSQL as
+            the database backend.  Click "Finalize Conversion" below to make this
+            change permanent, and remove the old databases.  Once you have
+            finalized, you may not revert this change.
+            <p></p>
+            If you need to revert this change, do not finalize at this time.
+            Instead please contact rPath Support for instructions.
 
-        <h5>If you need to revert this change, do not finalize at this time.
-        Instead please contact rPath Support for instructions.</h5>
+            <div class="button-line">
+            <a class="rnd_button internal float-left" id="finalizebutton" onclick="javascript:finalizeNow();">Finalize</a>
+            </div>
+        </div>
+    </div>
 
-        <input id="finalizebutton" class="button" type="submit" value="Finalize" onclick="javascript:finalizeNow(this);" />
+    </div>
     </div>
 </body>
 </html>

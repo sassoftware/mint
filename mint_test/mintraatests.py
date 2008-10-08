@@ -1,6 +1,7 @@
 import cherrypy
 import os
 import raatest
+import raa.web
 
 from conary import dbstore
 from conary.server import schema
@@ -10,7 +11,7 @@ class webPluginTest(raatest.webTest):
         self, module = None, init = True, preInit = None, preConst = None):
 
         def func(rt):
-            cherrypy.root.servicecfg.pluginDirs = [os.getenv('RAA_PLUGINS_PATH')]
+            raa.web.getWebRoot().servicecfg.pluginDirs = [os.getenv('RAA_PLUGINS_PATH')]
             if preInit:
                 preInit(rt)
 
