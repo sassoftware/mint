@@ -47,17 +47,17 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                         </li>
                     </ul>
 
-                    ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'packagecreatortroves', 'packagecreatortrovessubmit' )}
+                    ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'packagecreatortroves')}
 
                     <!-- XXX: this needs to be a graphical button -->
-                    <input type="button" id="packagecreatortrovessubmit" value="Confirm Contents" />
+                    <input type="submit" id="packagecreatortrovessubmit" value="Confirm Contents" />
                     </div>
                 
                     <div py:if="not packageList" py:strip="True">
                         <!-- handle the no troves case -->
                         <p>No packages have been added to your appliance</p>
                         <!-- XXX: this needs to be a graphical button -->
-                        <input type="button" id="packagecreatortrovessubmit" value="Continue" />
+                        <input type="submit" id="packagecreatortrovessubmit" value="Continue" />
                     </div>
                     <p><a href="newPackage">Package another archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>

@@ -288,7 +288,7 @@ lang = None;
             <!-- The factory interview -->
             <div id="chosen_factory" />
 
-            ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'savePackage', 'submitButton_savePackage')}
+            ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'savePackage')}
 
             <p py:if="editing" class="p-button"><button id="submitButton_savePackage" class="img"><img src="${cfg.staticPath}apps/mint/images/save_package_button.png" alt="Submit" /></button></p>
             <p py:if="not editing" class="p-button"><button id="submitButton_savePackage" class="img"><img src="${cfg.staticPath}apps/mint/images/create_package_button.png" alt="Submit" /></button></p>
@@ -381,41 +381,37 @@ addLoadEvent(makeRequest);
         <p id="build_log"><a href="getPackageBuildLogs?sessionHandle=${sessionHandle}" target="_NEW">View build log</a></p>
     </div>
 
-    <div py:def="recipeEditor(recipeType='appliance', recipeContents='', useOverrideRecipe=False, submitFormId='', submitButtonId='')" py:strip="True">
+    <div py:def="recipeEditor(recipeType='appliance', recipeContents='', useOverrideRecipe=False, submitFormId='')" py:strip="True">
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-ittabs.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript">
             <![CDATA[
 
             var wasUsingOverrideRecipe = false;
-
-            function doSubmit() {
-                var form = document.getElementById('${submitFormId}');
-                form.submit();
-            }
+            var userConfirmed = false;
+            var ourForm = jQuery('#${submitFormId}').get(0);
 
             function handleYes() {
                 // Confirmed to remove customizations
-                doSubmit();
+                userConfirmed = true;
+                ourForm.submit();
             }
 
             function handleNo() {
                 // Do nothing
-            }
-
-            function confirm() {
-                var useOverrideRecipe = jQuery('#useOverrideRecipeCheckbox')[0].checked;
-                if (wasUsingOverrideRecipe && !useOverrideRecipe) {
-                    modalYesNo(handleYes, handleNo);
-                } else {
-                    // creating private, just do it
-                    doSubmit();
-                }
+                return;
             }
 
             jQuery(document).ready(function() {
                 wasUsingOverrideRecipe = jQuery('#useOverrideRecipeCheckbox')[0].checked;
-                if ('${submitButtonId}' != '' && '${submitFormId}' != '') {
-                    jQuery('#${submitButtonId}').click(function () {confirm();});
+                if ('${submitFormId}' != '') {
+                    jQuery('#${submitFormId}').submit(function () {
+                        var useOverrideRecipe = jQuery('#useOverrideRecipeCheckbox')[0].checked;
+                        if (wasUsingOverrideRecipe && !useOverrideRecipe && !userConfirmed) {
+                            modalYesNo(handleYes, handleNo);
+                            return false;
+                        }
+                        return true;
+                    });
                 }
                 jQuery('#recipeContents').EnableTabs();
                 jQuery('#useOverrideRecipeCheckbox').click(function() {
