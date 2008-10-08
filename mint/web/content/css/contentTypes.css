@@ -304,7 +304,7 @@ a.option:hover {
 
 div.packageList
 {
-    width: 470px;
+    width: 464px;
     height: 408px;
     border-width: 1px;
     border-color: #666;
@@ -328,14 +328,14 @@ div.packageList_navigation
 div.packageList_contents
 {
     height: 408px !important;
-    width: 448px !important;
-    width: 446px; /* Hack for IE6's buggy width calculator */
+    width: 442px !important;
+    width: 438px; /* Hack for IE6's buggy width calculator */
     overflow: auto;
 }
 
 div#loading_wait.packageList_contents {
-    width: 446px !important;
-    width: 442px; /* hack for IE6's buggy width calculator */
+    width: 438px !important;
+    width: 430px; /* hack for IE6's buggy width calculator */
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 4px;
@@ -378,7 +378,7 @@ h3.packageList_section_header {
 }
 
 div#jumpto_box {
-    width: 472px; /* Width of .packageList + border-width */
+    width: 466px; /* Width of .packageList + border-width */
     height: 24px; 
 }
 
@@ -390,7 +390,7 @@ div#jumpto_box input#jumpto_box {
     height: 16px;
     font-size: 9pt;
     border: 1px solid #888;
-    _height: 1%;
+    position: relative;
     left: 16px;
     z-index: 1;
 }
@@ -398,7 +398,7 @@ div#jumpto_box input#jumpto_box {
 div#jumpto_box input#jumpto_box_clear {
     border: none;
     height: 16px;
-    _height: 1%;
+    position: relative;
     top: 4px;
     right: 2px;
     z-index: 3;
