@@ -2152,3 +2152,6 @@ a.image-list {
     font-family: monospace;
 }
 
+div#frontPageBlockContainer {
+    padding: 10px;
+}

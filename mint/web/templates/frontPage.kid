@@ -31,13 +31,14 @@ from mint.web.templatesupport import projectText
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
-            <!--
-            Marketing block start
-            -->
-            ${XML(frontPageBlock)}
-            <!--
-            Marketing block end
-            -->
+            <div id="frontPageBlockContainer">
+                <div py:if="frontPageBlock">
+                    <!-- Marketing block start -->
+                    ${XML(frontPageBlock)}
+                    <!-- Marketing block end -->
+                </div>
+                <img py:if="not frontPageBlock" src="${cfg.staticPath}/apps/mint/images/default-splash.jpg" />
+            </div>
             <br class="clear" />
             <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
             <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
