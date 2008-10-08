@@ -94,7 +94,6 @@ class SqliteToPgsql(rAAWebPlugin):
         if repoCfg.reposDBDriver == 'postgresql' and (val==0 or val):
                 #val is 0 if this is a fresh install, True if we've
                 #already finalized
-            # self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)
-            self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
+            self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)
         else:
             self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
