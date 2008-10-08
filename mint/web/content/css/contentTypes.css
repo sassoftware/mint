@@ -404,7 +404,7 @@ div#jumpto_box input#jumpto_box_clear {
 }
 
 div#filter_selections {
-    width: 472px; /* Width of .packageList + packageList border-width - padding */
+    width: 462px; /* Width of .packageList + packageList border-width - padding */
     padding: 2px;
     overflow: hidden;
 }
