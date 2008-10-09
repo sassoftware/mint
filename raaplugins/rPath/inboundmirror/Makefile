@@ -6,7 +6,7 @@
 
 SUBDIRS = web srv
 
-python_files = __init__.py repeatschedule.py
+python_files = __init__.py
 
 kid_files = index.kid
 
