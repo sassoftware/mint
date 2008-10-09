@@ -261,7 +261,10 @@ def getPackageCreatorClient(mintCfg, authToken):
     if mintCfg.packageCreatorURL:
         return pcreator.client.PackageCreatorClient( \
                 mintCfg.packageCreatorURL, auth)
-    cfg = pcreator.config.PackageCreatorServiceConfiguration()
-    cfg.storagePath = os.path.join(mintCfg.dataPath, 'tmp')
-    cfg.tmpFileStorage = cfg.storagePath
-    return ShimClient(cfg, auth)
+    else:
+        cfg = pcreator.config.PackageCreatorServiceConfiguration()
+        cfg.storagePath = os.path.join(mintCfg.dataPath, 'tmp')
+        cfg.tmpFileStorage = cfg.storagePath
+        if mintCfg.packageCreatorConfiguration:
+            cfg.read(mintCfg.packageCreatorConfiguration)
+        return ShimClient(cfg, auth)

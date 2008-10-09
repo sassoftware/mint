@@ -265,7 +265,8 @@ class MintConfig(ConfigFile):
     anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
 
     # package creator related settings
-    packageCreatorURL       = None
+    packageCreatorConfiguration = cfgtypes.CfgPath
+    packageCreatorURL           = cfgtypes.CfgString
 
     # available platforms
     availablePlatforms      = cfgtypes.CfgList(cfgtypes.CfgString)
