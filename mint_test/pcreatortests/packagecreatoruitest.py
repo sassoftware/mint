@@ -731,7 +731,7 @@ class RecipeManipulationTest(fixtures.FixturedUnitTest):
                     in recipe)
             self.assertEquals(isDefault, True)
 
-            refRecipe = 'completely busted'
+            refRecipe = 'completely busted\n'
             client.savePackageCreatorRecipe(sesH, refRecipe)
             isDefault, newRecipe = client.getPackageCreatorRecipe(sesH)
             self.assertEquals(newRecipe, refRecipe)
