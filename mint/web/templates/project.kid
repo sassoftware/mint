@@ -169,7 +169,7 @@
                          py:strip="True">
                          <div py:strip="True" py:if="level in projectDict">
                              <optgroup label="--- ${title} ---" />
-                             <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl()}" py:content="project.getNameForDisplay()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
+                             <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl()}" py:content="project.getName()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
                          </div>
                     </div>
                 </select>
@@ -178,7 +178,7 @@
                 <label for="membershipReqsSelector">Pending requests:</label>
                 <select id="membershipReqsSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
                     <option value="--">--</option>
-                    <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl()}members">${project.getNameForDisplay()}</option>
+                    <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl()}members">${project.getName()}</option>
                 </select>
             </div>
             <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
