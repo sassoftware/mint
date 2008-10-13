@@ -3,6 +3,7 @@
 #
 # All rights reserved
 #
+import kid
 import re
 import sys
 
@@ -52,7 +53,14 @@ class MintApp(WebHandler):
         self.cfg = cfg
 
         # always send html-strict; xhtml FTL
-        self.output = 'html-strict'
+        # The default behavior of kid changed between 0.9.1 and 0.9.6
+        # in 0.9.1 html-strict produced upper case tags and HTML-strict did not
+        # exist. in 0.9.6 HTML-strict produces upper case tags and html-strict
+        # produces lower case tags. we want upper case tags.
+        if 'HTML-strict' in kid.output_methods:
+            self.output = 'HTML-strict'
+        else:
+            self.output = 'html-strict'
         self.content_type = 'text/html; charset=utf-8'
         self.req.content_type = self.content_type
 
