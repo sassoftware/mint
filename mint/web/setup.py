@@ -256,7 +256,7 @@ class SetupHandler(WebHandler):
             adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
                 rmakePassword)
     
-            self._writeRmakeClientConfig(self.cfg.authUser, self.cfg.authPass)
+            self._writeRmakeClientConfig(self.cfg.authUser, newCfg.authPass)
             self._writeRmakeConfig(rmakeUser, rmakePassword, 
                 "https://%s" % newCfg.siteHost, 
                 "rmake-internal.%s" % newCfg.projectDomainName,
