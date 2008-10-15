@@ -241,7 +241,7 @@ class SetupHandler(WebHandler):
 
             projectId = adminClient.newProject(name="rmake-internal",
                 hostname="rmake-internal",
-                domainname=newCfg.projectDomainName,
+                domainname=str(newCfg.projectDomainName),
                 projecturl="",
                 desc="",
                 appliance="no",
