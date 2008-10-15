@@ -247,6 +247,18 @@ class MintClient:
         """
         return self.server.searchUsers(terms, limit, offset)
 
+    def addProjectRepositoryUser(self, projectId, username, password):
+        """
+        Add a user to a project's conary repository.
+        @param projectId: project Id.
+        @type projectId: C{int}
+        @param username: Username to add.
+        @type username: C{string}
+        @param password: Password for username.
+        @type password: C{string}
+        """
+        return self.server.addProjectRepositoryUser(projectId, username, password)
+
     def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0, byPopularity = True, filterNoDownloads = False):
         """
         Collect the results as requested by the search terms

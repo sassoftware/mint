@@ -15,7 +15,7 @@ import time
 from mint import helperfuncs
 from mint import shimclient
 from mint import config
-from mint.config import RBUILDER_GENERATED_CONFIG
+from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG, RBUILDER_RMAKECLIENT_CONFIG
 from mint.config import keysForGeneratedConfig
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
@@ -232,7 +232,50 @@ class SetupHandler(WebHandler):
         self._generateConfig(newCfg)
         os.system("sudo killall -USR1 httpd")
 
+        if not self.cfg.configured:
+            # Create a product (as the amdin user) for use by the internal rmake.
+            adminClient = shimclient.ShimMintClient(self.cfg, 
+                [kwargs['new_username'], kwargs['new_password']])
+
+            projectId = adminClient.newProject(name="rmake-internal",
+                hostname="rmake-internal",
+                domainname=self.cfg.projectDomainName.split(':')[0],
+                projecturl="",
+                desc="",
+                appliance="no",
+                shortname="rmake-internal",
+                namespace="rpath",
+                prodtype="Component",
+                version="1",
+                commitEmail="",
+                isPrivate=False,
+                projectLabel="")
+
+            rmakeUser = "rmake-internal-user"
+            rmakePassword = helperfuncs.genPassword(32)
+            adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
+                rmakePassword)
+    
+            self._writeRmakeClientConfig(self.cfg.authUser, self.cfg.authPass)
+            self._writeRmakeConfig(rmakeUser, rmakePassword, 
+                "http://%s" % newCfg.siteHost, 
+                "rmake-internal.%s" % newCfg.projectDomainName,
+                "http://%s/repos/rmake-internal" % newCfg.siteHost)
+
         return self._write("setup/saved")
+
+    def _writeRmakeClientConfig(self, user, password):
+        f = file(RBUILDER_RMAKECLIENT_CONFIG, 'w')
+        f.write('%s %s %s\n' % ('rmakeUser', user, password))
+        f.close()
+
+    def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
+        f = file(RBUILDER_RMAKE_CONFIG, 'w')
+        f.write('%s %s %s\n' % ('reposUser', user, password))
+        f.write('%s %s\n' % ('reposName', reposName))
+        f.write('%s %s\n' % ('reposUrl', reposUrl))
+        f.write('%s %s\n' % ('rBuilderUrl', rBuilderUrl))
+        f.close()
 
     def restart(self, auth):
 

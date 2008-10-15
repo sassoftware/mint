@@ -606,6 +606,23 @@ class ProjectsTable(database.KeyedTable):
         if username:
             repos.auth.setMirror(username, True)
 
+    def addProjectRepositoryUser(self, username, password, hostName, 
+                                 domainName, reposPath, contentsDir):
+        name = "%s.%s" % (hostName, domainName)
+        dbPath = os.path.join(reposPath, name)
+
+        cfg = netserver.ServerConfig()
+        cfg.serverName = name
+        cfg.tmpDir = os.path.join(dbPath, 'tmp')
+        cfg.repositoryMap = {}
+        cfg.contentsDir = " ".join(x % name for x in contentsDir.split(" "))
+        cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
+
+        repos = netserver.NetworkRepositoryServer(cfg, '')
+        helperfuncs.addUserToRepository(repos, username, password, username)
+
+        return username
+
     def hide(self, projectId):
         # Anonymous user is added/removed in server
         cu = self.db.cursor()
