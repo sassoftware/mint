@@ -8,6 +8,7 @@ from copy import deepcopy
 from mint import helperfuncs
 import kid
 import os
+import os.path
 import random
 random = random.SystemRandom()
 import time
@@ -22,6 +23,7 @@ from mint.web.decorators import postOnly
 from mint.web.fields import intFields
 
 from conary.repository.netrepos import netauth
+from conary.lib.util import mkdirChain
 
 # be careful with 'Server Setup', code below and the associated kid template
 # refer to this key directly. be sure to find all instances if you change it.
@@ -267,6 +269,7 @@ class SetupHandler(WebHandler):
     def _writeRmakeClientConfig(self, user, password):
         path = self.req.get_options().get('rmakeClientConfigFilePath',
             RBUILDER_RMAKECLIENT_CONFIG)
+        mkdirChain(os.path.dirname(path))
         f = file(path, 'w')
         f.write('%s %s %s\n' % ('rmakeUser', user, password))
         f.close()
@@ -274,6 +277,7 @@ class SetupHandler(WebHandler):
     def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
         path = self.req.get_options().get('rmakeConfigFilePath',
             RBUILDER_RMAKE_CONFIG)
+        mkdirChain(os.path.dirname(path))
         f = file(path, 'w')
         f.write('%s %s %s\n' % ('reposUser', user, password))
         f.write('%s %s\n' % ('reposName', reposName))
