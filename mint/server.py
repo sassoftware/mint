@@ -884,6 +884,14 @@ class MintServer(object):
             self._generateConaryRcFile()
         return projectId
 
+    @typeCheck(int, str, str)
+    @private
+    def addProjectRepositoryUser(self, projectId, username, password):
+        project = projects.Project(self, projectId)
+        return self.projects.addProjectRepositoryUser(username, 
+            password, project.getHostname(), project.getDomainname(),
+            self.cfg.reposPath, self.cfg.reposContentsDir)
+
     @typeCheck(str, str, str, str, str, bool)
     @requiresAdmin
     @private
