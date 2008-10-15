@@ -265,12 +265,16 @@ class SetupHandler(WebHandler):
         return self._write("setup/saved")
 
     def _writeRmakeClientConfig(self, user, password):
-        f = file(RBUILDER_RMAKECLIENT_CONFIG, 'w')
+        path = self.req.get_options().get('rmakeClientConfigFilePath',
+            RBUILDER_RMAKECLIENT_CONFIG)
+        f = file(path, 'w')
         f.write('%s %s %s\n' % ('rmakeUser', user, password))
         f.close()
 
     def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
-        f = file(RBUILDER_RMAKE_CONFIG, 'w')
+        path = self.req.get_options().get('rmakeConfigFilePath',
+            RBUILDER_RMAKE_CONFIG)
+        f = file(path, 'w')
         f.write('%s %s %s\n' % ('reposUser', user, password))
         f.write('%s %s\n' % ('reposName', reposName))
         f.write('%s %s\n' % ('reposUrl', reposUrl))
