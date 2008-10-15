@@ -15,9 +15,8 @@ from conary.lib import cfgtypes
 
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
-RBUILDER_RMAKE_CONFIG = "/srv/rbuilder/config/rmake.conf"
-RBUILDER_RMAKENODE_CONFIG = "/srv/rbuilder/config/rmakenode.conf"
-RBUILDER_RMAKECLIENT_CONFIG = "/srv/rbuilder/config/rmake-client.conf"
+RBUILDER_RMAKE_CONFIG = "/srv/rbuilder/config/rmake-server/rbuilder.conf"
+RBUILDER_RMAKECLIENT_CONFIG = "/srv/rbuilder/config/rmake-client/rbuilder.conf"
 
 # These are keys that are generated for the "generated" configuration file
 # Note: this is *only* used for the product, as rBO doesn't get configured

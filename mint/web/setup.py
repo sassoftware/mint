@@ -239,7 +239,7 @@ class SetupHandler(WebHandler):
 
             projectId = adminClient.newProject(name="rmake-internal",
                 hostname="rmake-internal",
-                domainname=self.cfg.projectDomainName.split(':')[0],
+                domainname=newCfg.projectDomainName,
                 projecturl="",
                 desc="",
                 appliance="no",
@@ -258,9 +258,9 @@ class SetupHandler(WebHandler):
     
             self._writeRmakeClientConfig(self.cfg.authUser, self.cfg.authPass)
             self._writeRmakeConfig(rmakeUser, rmakePassword, 
-                "http://%s" % newCfg.siteHost, 
+                "https://%s" % newCfg.siteHost, 
                 "rmake-internal.%s" % newCfg.projectDomainName,
-                "http://%s/repos/rmake-internal" % newCfg.siteHost)
+                "https://%s/repos/rmake-internal" % newCfg.siteHost)
 
         return self._write("setup/saved")
 
