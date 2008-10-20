@@ -128,7 +128,7 @@ else:
         <tr py:if="[x for x in trove.iterTroveList(strongRefs=True)] and not trove.name().startswith('group-')">
             <th>Components:</th>
             <td>
-            <div  py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${quote(component[0])};v=${component[1].freeze()}">${component[0]}</a></div></td>
+            <div  py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${quote(component[0])};v=${quote(component[1].freeze())}">${component[0]}</a></div></td>
         </tr>
         <tr py:for="trove in troves">
             <th>Flavor:</th>
