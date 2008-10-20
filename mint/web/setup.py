@@ -235,7 +235,7 @@ class SetupHandler(WebHandler):
         os.system("sudo killall -USR1 httpd")
 
         if not self.cfg.configured:
-            # Create a product (as the amdin user) for use by the internal rmake.
+            # Create a product (as the admin user) for use by the internal rmake.
             adminClient = shimclient.ShimMintClient(self.cfg, 
                 [kwargs['new_username'], kwargs['new_password']])
 
@@ -263,6 +263,8 @@ class SetupHandler(WebHandler):
                 "https://%s" % newCfg.siteHost, 
                 "rmake-internal.%s" % newCfg.projectDomainName,
                 "https://%s/repos/rmake-internal" % newCfg.siteHost)
+
+            os.system("sudo service rmake restart")                
 
         return self._write("setup/saved")
 
