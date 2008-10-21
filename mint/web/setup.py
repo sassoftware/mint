@@ -16,7 +16,7 @@ import time
 from mint import helperfuncs
 from mint import shimclient
 from mint import config
-from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG, RBUILDER_RMAKECLIENT_CONFIG
+from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG
 from mint.config import keysForGeneratedConfig
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
