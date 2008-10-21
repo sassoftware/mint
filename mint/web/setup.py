@@ -258,7 +258,6 @@ class SetupHandler(WebHandler):
             adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
                 rmakePassword)
     
-            self._writeRmakeClientConfig(self.cfg.authUser, newCfg.authPass)
             self._writeRmakeConfig(rmakeUser, rmakePassword, 
                 "https://%s" % newCfg.siteHost, 
                 "rmake-internal.%s" % newCfg.projectDomainName,
@@ -268,20 +267,12 @@ class SetupHandler(WebHandler):
 
         return self._write("setup/saved")
 
-    def _writeRmakeClientConfig(self, user, password):
-        path = self.req.get_options().get('rmakeClientConfigFilePath',
-            RBUILDER_RMAKECLIENT_CONFIG)
-        mkdirChain(os.path.dirname(path))
-        f = file(path, 'w')
-        f.write('%s %s %s\n' % ('rmakeUser', user, password))
-        f.close()
-
     def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
         path = self.req.get_options().get('rmakeConfigFilePath',
             RBUILDER_RMAKE_CONFIG)
         mkdirChain(os.path.dirname(path))
         f = file(path, 'w')
-        f.write('%s %s %s\n' % ('reposUser', user, password))
+        f.write('%s %s %s %s\n' % ('reposUser', reposName, user, password))
         f.write('%s %s\n' % ('reposName', reposName))
         f.write('%s %s\n' % ('reposUrl', reposUrl))
         f.write('%s %s\n' % ('rBuilderUrl', rBuilderUrl))

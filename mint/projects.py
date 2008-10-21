@@ -619,7 +619,9 @@ class ProjectsTable(database.KeyedTable):
         cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
 
         repos = netserver.NetworkRepositoryServer(cfg, '')
-        helperfuncs.addUserToRepository(repos, username, password, username)
+        addUserToRepository(repos, username, password, username)
+        repos.auth.addAcl(username, None, None, write=True, remove=False)
+        repos.auth.setAdmin(username, True)
 
         return username
 
