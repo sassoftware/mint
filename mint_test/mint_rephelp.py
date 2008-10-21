@@ -377,6 +377,12 @@ class MintApacheServer(rephelp.ApacheServer):
         f.close()
         self.mintCfg = cfg
 
+    def getMintServerDir(self):
+        return os.path.join(os.path.dirname(sys.modules['mint_rephelp'].__file__), 'server')
+
+    def getHttpdConfTemplate(self):
+        return os.path.join(self.getMintServerDir(), 'httpd.conf.in')
+
 
 class MintServerCache(rephelp.ServerCache):
     serverType = 'mint'
