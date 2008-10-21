@@ -2,16 +2,19 @@
 # Copyright (C) 2008 rPath, Inc.
 # All rights reserved
 #
-
 import time
 
 from raa import rpath_error
 from raa.lib import command
 from raa.modules import raasrvplugin
 from raaplugins.services.srv import services
+
+from rmake import plugins
+from rmake.build import buildcfg
 from rmake.cmdline import helper
-from rmake.db import database
+
 from rmake_node import nodecfg
+
 from rPath import rmakemanagement
 
 class BuildLog:
@@ -21,15 +24,10 @@ class BuildLog:
     def write(self, line):
         self.log += line
 
-class DatabaseProxy:
-    def __init__(self, db):
-        self.db = db
-
-    def __getattr__(self, name):
-        if name == 'client':
-            return self
-        else:
-            return getattr(self.db, name)
+class DummyMain:
+    # We need this class for loading the rMake plugins properly
+    def _registerCommand(self, *args, **kwargs):
+        pass
 
 class rMakeManagement(services.Services):
     """
@@ -39,22 +37,33 @@ class rMakeManagement(services.Services):
     def __init__(self, *args, **kwargs):
         raasrvplugin.rAASrvPlugin.__init__(self, *args, **kwargs)
         self.config = self.server.getConfigData()
-        db = database.Database(
-                           path=self.config['rmake.db'],
-                           contentsPath=self.config['rmake.contents'])
-        self.rmakedb = DatabaseProxy(db)
-        self.rmakehelper = helper.rMakeHelper(buildConfig=True, 
-                                              configureClient=False)
-        
+        self.rmakeHelper = self._getrMakeHelper()
+
+    def _getrMakeHelper(self):
+        pluginManager = self._getPluginManager()
+        buildConfig = buildcfg.BuildConfiguration(readConfigFiles=True)
+        return helper.rMakeHelper(buildConfig=buildConfig, configureClient=True)
+
+    def _getPluginManager(self):
+        if not hasattr(sys, 'argv'):
+            sys.argv = []
+        cfg = buildcfg.BuildConfiguration(True, ignoreErrors = True)
+        if not cfg.usePlugins:
+            return plugins.PluginManager([])
+        pluginmgr = plugins.getPluginManager([], buildcfg.BuildConfiguration)
+        pluginmgr.loadPlugins()
+        pluginmgr.callClientHook('client_preInit', DummyMain(), [])
+        return pluginmgr
+
     def getBuilds(self, schedId, execId, limit):
         """
         Return a list of builds, up to the configured limit.
         """
         ret = []
-        builds = self.rmakedb.listJobs(jobLimit=limit)
+        builds = self.rmakeHelper.client.listJobs(jobLimit=limit)
 
         for build in builds:
-            job = self.rmakedb.getJob(build)
+            job = self.rmakeHelper.getJob(build)
             
             # The first trove in the build is the only one we will display.
             for trove in job.troves:
@@ -69,8 +78,8 @@ class rMakeManagement(services.Services):
         Return the log for a given build.
         """
         build_log = BuildLog()
-        self.rmakehelper.displayJobInfo(jobId=buildId,
-                                        proxy=self.rmakedb,
+        self.rmakeHelper.displayJobInfo(jobId=buildId,
+                                        proxy=self.rmakeHelper,
                                         out=build_log)
 
         return build_log.log
