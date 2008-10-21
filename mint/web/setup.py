@@ -239,13 +239,14 @@ class SetupHandler(WebHandler):
             adminClient = shimclient.ShimMintClient(self.cfg, 
                 [kwargs['new_username'], kwargs['new_password']])
 
-            projectId = adminClient.newProject(name="rmake-internal",
-                hostname="rmake-internal",
+            shortName = 'rmake-repository'
+            projectId = adminClient.newProject(name="rMake Repository",
+                hostname=shortName,
                 domainname=str(newCfg.projectDomainName),
                 projecturl="",
-                desc="",
+                desc="This product's repository is used by the rMake server running on this rBuilder for building packages and groups with Package Creator and Appliance Creator.",
                 appliance="no",
-                shortname="rmake-internal",
+                shortname=shortName,
                 namespace="rpath",
                 prodtype="Component",
                 version="1",
@@ -253,15 +254,15 @@ class SetupHandler(WebHandler):
                 isPrivate=False,
                 projectLabel="")
 
-            rmakeUser = "rmake-internal-user"
+            rmakeUser = "%s-user" % shortName
             rmakePassword = helperfuncs.genPassword(32)
             adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
                 rmakePassword)
     
             self._writeRmakeConfig(rmakeUser, rmakePassword, 
                 "https://%s" % newCfg.siteHost, 
-                "rmake-internal.%s" % newCfg.projectDomainName,
-                "https://%s/repos/rmake-internal" % newCfg.siteHost)
+                "%s.%s" % (shortName, newCfg.projectDomainName),
+                "https://%s/repos/%s" % (newCfg.siteHost, shortName))
 
             os.system("sudo service rmake restart")                
 
