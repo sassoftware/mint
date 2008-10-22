@@ -146,11 +146,9 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'allowNamespaceChange': False }
 
         generatedConfigFilePath = os.path.join(self.cfg.dataPath, 'rbuilder-generated.conf')
-        rmakeClientConfigFilePath = os.path.join(self.cfg.dataPath, 'rmake-client.conf')
         rmakeConfigFilePath = os.path.join(self.cfg.dataPath, 'rmake.conf')
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
         self.sh.req.options = {'generatedConfigFile':generatedConfigFilePath,
-            'rmakeClientConfigFilePath':rmakeClientConfigFilePath,
             'rmakeConfigFilePath':rmakeConfigFilePath}
         self.sh.cfg = copy.deepcopy(self.cfg)
         self.sh.cfg.configured = False
@@ -186,6 +184,27 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         for x in newCfg.authPass:
             self.assertTrue(x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
         oldPass = newCfg.authPass
+
+        # check that the rmake-repository project got created
+        rmakeProj = client.getProjectByHostname('rmake-repository')
+        self.assertTrue(rmakeProj.getHostname() == 'rmake-repository')
+        # check that the rmake config file got created
+        rmakeConfigFile = open(rmakeConfigFilePath, 'r')
+        lines = rmakeConfigFile.read().split('\n')
+        for line in lines:
+            if line.lower().startswith('reposuser'):
+                c, r, u, p = line.split(' ')
+                self.assertEqual(r, 'rmake-repository.rpath.local')
+                self.assertEqual(u, 'rmake-repository-user')
+            elif line.lower().startswith('reposname'):
+                c, n = line.split(' ')
+                self.assertEqual(n, 'rmake-repository.rpath.local')
+            elif line.lower().startswith('reposurl'):
+                c, u = line.split(' ')
+                self.assertEqual(u, 'https://foo.rpath.local/repos/rmake-repository')
+            elif line.lower().startswith('rbuilderurl'):
+                c, u = line.split(' ')
+                self.assertEqual(u, 'https://foo.rpath.local')
 
         # rerun process setup again.
         fields = { 'hostName': 'foo',
