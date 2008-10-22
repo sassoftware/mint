@@ -264,7 +264,8 @@ class SetupHandler(WebHandler):
                 "%s.%s" % (shortName, newCfg.projectDomainName),
                 "https://%s/repos/%s" % (newCfg.siteHost, shortName))
 
-            os.system("sudo service rmake restart")                
+            os.system("sudo /sbin/service rmake restart")                
+            os.system("sudo /sbin/service rmake-node restart")                
 
         return self._write("setup/saved")
 
