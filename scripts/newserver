@@ -77,7 +77,7 @@ def loadModules(mintDir, destDir):
     loadmodules.loadModules(modules.modules, destDir, shouldClone=True)
 
 def loadDatabase(targetDir):
-    os.system('PYTHONPATH=%s/pythonpath ./rbuilder-database --migrate -c %s/config/rbuilder.conf' % (targetDir, targetDir))
+    os.system('PYTHONPATH=%s/pythonpath %s/rbuilder-database --migrate -c %s/config/rbuilder.conf' % (targetDir, os.path.dirname(__file__), targetDir))
 
 def linkCatalogClient(targetDir):
     for file, newFile, dir in (('cloudConfig', 'cloudConfig', 'admin/'), 
