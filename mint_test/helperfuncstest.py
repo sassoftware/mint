@@ -100,7 +100,7 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                     'scripts', 'mint_test/templates',
                     'mint_test/annotate', 'mint_test/coverage',
                     'mint_test/.coverage', 'mint_test/archive/anaconda',
-                    'bin', 'mint_test',
+                    'bin', 'mint_test', 'server_template',
                     'tom', 'product')
         mint_path = os.getenv('MINT_PATH')
 

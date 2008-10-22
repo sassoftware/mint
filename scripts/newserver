@@ -1,0 +1,106 @@
+#!/usr/bin/python
+import os
+import sys
+from conary.lib import util
+
+def require(package, label):
+    rc = os.system('conary q %s' % package)
+    if rc:
+        raise RuntimeError('%s not installed - install %s=%s' % (package, package, label))
+
+def checksanity():
+    require('yui', 'contrib.rpath.org@rpl:1')
+    require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
+    require('flex-sdk', 'private.rb.rpath.com@rpl:1')
+
+
+def main(argv):
+    checksanity()
+    targetDir = argv[1]
+    destDir = '' + targetDir
+    mintDir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    modulePath = targetDir + '/supporting_modules'
+    pythonPath = targetDir + '/pythonpath'
+    oldRootLen = len(mintDir + '/server_template')
+    if not os.path.exists(destDir):
+        os.makedirs(destDir)
+    for root, dirs, fileNames in os.walk(mintDir + '/server_template'):
+        newRoot = destDir + root[oldRootLen:]
+        for dir in dirs:
+            oldPath = root + '/' + dir
+            newPath = newRoot + '/' + dir
+            if os.path.exists(newPath):
+                continue
+                #util.rmtree(newPath)
+            if os.path.islink(oldPath):
+                link = os.readlink(oldPath)
+                os.symlink(link, newPath)
+            elif not os.path.exists(newPath):
+                os.mkdir(newPath)
+        for name in fileNames:
+            oldPath = root + '/' + name
+            newPath = newRoot + '/' + name
+            if os.path.exists(newPath):
+                os.remove(newPath)
+            if os.path.islink(oldPath):
+                link = os.readlink(oldPath)
+                os.symlink(link, newPath)
+                continue
+            cmd = ('sed -e "s,@SERVER_PATH@,%(serverPath)s,g"'
+                      ' -e "s,@PORT@,%(port)s,g"'
+                      ' -e "s,@SSLPORT@,%(sslPort)s,g"'
+                      ' -e "s,@TARRPC_PORT@,%(tarPort)s,g"'
+                      ' -e "s,@PYTHONPATH@,%(pythonPath)s,g"'
+                      ' -e "s,@CONARY_PATH@,%(conaryDir)s,g"'
+                      ' -e "s,@MINT_PATH@,%(mintDir)s,g"'
+                      ' %(oldPath)s > %(newPath)s' \
+                          % { 'serverPath' : targetDir,
+                              'port'       : 8000,
+                              'sslPort'    : 8001,
+                              'tarPort'    : 8002,
+                              'pythonPath' : targetDir + '/pythonpath',
+                              'conaryDir'  : modulePath + '/conary',
+                              'mintDir'    : modulePath + '/mint',
+                              'newPath'    : newPath,
+                              'oldPath'    : oldPath})
+            os.system(cmd)
+            os.chmod(newPath, os.stat(oldPath).st_mode)
+    sys.path.insert(0, mintDir)
+    sys.path.insert(0, '/home/dbc/rpl/hg/testutils')
+    loadModules(mintDir, destDir)
+    loadDatabase(targetDir)
+    linkCatalogClient(targetDir)
+
+def loadModules(mintDir, destDir):
+    from mint_test import modules
+    from testrunner import loadmodules
+    loadmodules.loadModules(modules.modules, destDir, shouldClone=True)
+
+def loadDatabase(targetDir):
+    os.system('PYTHONPATH=%s/pythonpath ./rbuilder-database --migrate -c %s/config/rbuilder.conf' % (targetDir, targetDir))
+
+def linkCatalogClient(targetDir):
+    for file, newFile, dir in (('cloudConfig', 'cloudConfig', 'admin/'), 
+                      ('iCloudsLayout', 'catalogLayout', ''),
+                      ('iClouds', 'cloudCatalog', '')):
+        targetPath = '/pythonpath/mint/web/templates/%s%s.kid' % (dir, newFile)
+        origPath = '/supporting_modules/catalog-client/iclouds-build/bin/assets/templates/%s.kid' % file
+        if os.path.lexists(targetDir + targetPath):
+            os.remove(targetDir + targetPath)
+        os.symlink(targetDir + origPath, targetDir + targetPath)
+    for file in ('iClouds', 'history', 'AC_OETags'):
+        targetPath = '/static/apps/mint/javascript/%s.js' % file
+        origPath = '/supporting_modules/catalog-client/iclouds-build/bin/assets/javascript/%s.js' % file
+        if os.path.lexists(targetDir + targetPath):
+            os.remove(targetDir + targetPath)
+        os.symlink(targetDir + origPath, targetDir + targetPath)
+    for file in ('history',):
+        targetPath = '/static/apps/mint/css/%s.css' % file
+        origPath = '/supporting_modules/catalog-client/iclouds-build/bin/assets/css/%s.css' % file
+        if os.path.lexists(targetDir + targetPath):
+            os.remove(targetDir + targetPath)
+        os.symlink(targetDir + origPath, targetDir + targetPath)
+
+
+if __name__ == '__main__':
+    main(sys.argv)

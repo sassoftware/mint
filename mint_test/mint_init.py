@@ -18,6 +18,7 @@ def setup_paths():
     proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../rpath-product-definition'))
     coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
     catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath('../../catalog-service'))
+    restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath('../../restlib'))
 
     #Package creator
     packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath('../../package-creator-service'))
@@ -32,9 +33,11 @@ def setup_paths():
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
         raaPath, raaTestPath, raaPluginsPath, proddefPath, coveragePath,
-        packageCreatorPath, conaryFactoryTestPath, catalogServicePath )] \
+        packageCreatorPath, conaryFactoryTestPath, catalogServicePath,
+        restlibPath)] \
                 + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
+        RESTLIB_PATH=restlibPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,

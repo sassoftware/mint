@@ -230,7 +230,11 @@ class SetupHandler(WebHandler):
         else:
             newCfg.authPass = helperfuncs.genPassword(32)
         self._generateConfig(newCfg)
-        os.system("sudo killall -USR1 httpd")
+        if os.environ.get('RBUILDER_NOSUDO', False):
+            sudo = ''
+        else:
+            sudo = 'sudo '
+        os.system("%skillall -USR1 httpd" % sudo)
 
         return self._write("setup/saved")
 
@@ -239,8 +243,12 @@ class SetupHandler(WebHandler):
         newCfg = self._copyCfg()
         newCfg.configured = True
         self._generateConfig(newCfg)
-        os.system("sudo killall -USR1 httpd")
-        os.system("sudo /sbin/service multi-jobserver restart")
+        if os.environ.get('RBUILDER_NOSUDO', False):
+            sudo = ''
+        else:
+            sudo = 'sudo '
+        os.system("%skillall -USR1 httpd" % sudo)
+        os.system("%s/sbin/service multi-jobserver restart" % sudo)
         time.sleep(5)
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 

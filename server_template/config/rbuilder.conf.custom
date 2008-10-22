@@ -1,0 +1,4 @@
+externalDomainName        localdomain:@PORT@
+projectDomainName         localdomain:@PORT@
+secureHost                localhost:@SSLPORT@
+siteDomainName            localdomain:@PORT@
