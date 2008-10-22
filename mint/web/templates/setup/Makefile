@@ -8,7 +8,7 @@ kid_files =			\
 	layout.kid		\
 	saved.kid		\
 	setup.kid		\
-        tos.kid                 \
+	tos.kid		\
 	error.kid
 
 python_files = __init__.py

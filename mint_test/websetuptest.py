@@ -146,8 +146,12 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
                    'allowNamespaceChange': False }
 
         generatedConfigFilePath = os.path.join(self.cfg.dataPath, 'rbuilder-generated.conf')
+        rmakeClientConfigFilePath = os.path.join(self.cfg.dataPath, 'rmake-client.conf')
+        rmakeConfigFilePath = os.path.join(self.cfg.dataPath, 'rmake.conf')
         self.sh.req = FakeRequest('foo.rpath.local', 'POST', '/processSetup')
-        self.sh.req.options = { 'generatedConfigFile': generatedConfigFilePath }
+        self.sh.req.options = {'generatedConfigFile':generatedConfigFilePath,
+            'rmakeClientConfigFilePath':rmakeClientConfigFilePath,
+            'rmakeConfigFilePath':rmakeConfigFilePath}
         self.sh.cfg = copy.deepcopy(self.cfg)
         self.sh.cfg.configured = False
         client = self.getClient('admin')

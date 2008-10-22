@@ -1,13 +1,15 @@
 # Copyright (c) 2007 rPath, Inc
 # All rights reserved
 
-import cherrypy
+from gettext import gettext as _
+
 import logging
 import sys
-import turbogears
 import traceback
 
 import raa
+import raa.web
+import raa.authorization
 
 from conary.lib.cfgtypes import CfgEnvironmentError
 
@@ -62,8 +64,8 @@ class MCPConsole(rAAWebPlugin):
             c = None
         return c
 
-    @raa.expose(html="rPath.mcpconsole.templates.jobs")
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(template="rPath.mcpconsole.templates.jobs")
+    @raa.web.require(raa.authorization.NotAnonymous())
     @marshallMessages
     def index(self):
         mcpClient = self.getMcpClient()
@@ -96,8 +98,8 @@ class MCPConsole(rAAWebPlugin):
                 mcpClient.disconnect()
         return {'disabled' : True}
 
-    @raa.expose(html="rPath.mcpconsole.templates.nodes")
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose(template="rPath.mcpconsole.templates.nodes")
+    @raa.web.require(raa.authorization.NotAnonymous())
     @marshallMessages
     def nodes(self):
         mcpClient = self.getMcpClient()
@@ -110,8 +112,8 @@ class MCPConsole(rAAWebPlugin):
         return {'disabled' : True}
 
     # rpc interface for javascript
-    @raa.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def getJobStatus(self):
         mcpClient = None
         while not mcpClient:
@@ -125,8 +127,8 @@ class MCPConsole(rAAWebPlugin):
                     mcpClient.disconnect()
 
     # rpc interface for javascript
-    @raa.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def getNodeStatus(self):
         while not mcpClient:
             mcpClient = self.getMcpClient()
@@ -138,8 +140,8 @@ class MCPConsole(rAAWebPlugin):
                 finally:
                     mcpClient.disconnect()
 
-    @raa.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def killJob(self, jobId):
         mcpClient = self.getMcpClient()
         if mcpClient:
@@ -154,10 +156,10 @@ class MCPConsole(rAAWebPlugin):
                 mcpClient.disconnect()
         else:
             self.errors.append("Could not connect to MCP")
-        raise cherrypy.HTTPRedirect('index', 302)
+        raa.web.raiseHttpRedirect('index', 302)
 
-    @raa.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def stopSlave(self, slaveId):
         mcpClient = self.getMcpClient()
         if mcpClient:
@@ -172,10 +174,10 @@ class MCPConsole(rAAWebPlugin):
                 mcpClient.disconnect()
         else:
             self.errors.append("Could not connect to MCP")
-        raise cherrypy.HTTPRedirect('nodes', 302)
+        raa.web.raiseHttpRedirect('nodes', 302)
 
-    @raa.expose()
-    @turbogears.identity.require(turbogears.identity.not_anonymous())
+    @raa.web.expose()
+    @raa.web.require(raa.authorization.NotAnonymous())
     def setSlaveLimit(self, masterId, limit):
         if limit.isdigit():
             limit = max(0, int(limit))
@@ -195,5 +197,5 @@ class MCPConsole(rAAWebPlugin):
                 self.errors.append("Could not connect to MCP")
         else:
             self.errors.append("Limit must be an integer")
-        raise cherrypy.HTTPRedirect('nodes', 302)
+        raa.web.raiseHttpRedirect('nodes', 302)
 

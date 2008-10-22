@@ -679,7 +679,7 @@ class MintServer(object):
                 # Hack to allow testsuite, which passes 'hostname:port'
                 # and isn't using HTTPS
                 protocol = 'http'
-            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
+            url = "%s://%s:%s@%s/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
             sp = xmlrpclib.ServerProxy(url, transport=transport)
 
@@ -883,6 +883,14 @@ class MintServer(object):
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
         return projectId
+
+    @typeCheck(int, str, str)
+    @private
+    def addProjectRepositoryUser(self, projectId, username, password):
+        project = projects.Project(self, projectId)
+        return self.projects.addProjectRepositoryUser(username, 
+            password, project.getHostname(), project.getDomainname(),
+            self.cfg.reposPath, self.cfg.reposContentsDir)
 
     @typeCheck(str, str, str, str, str, bool)
     @requiresAdmin
