@@ -13,32 +13,55 @@ from mint import shimclient
 from mint.session import SqlSession
 
 from catalogService import handler_apache
+from catalogService.rest import auth
 
-def getAuthFromSession(req, cfg):
-    # the pysid cookie contains the session reference that we can use to
-    # look up the proper credentials
-    anonToken = ('anonymous', 'anonymous')
-    try:
-        if cfg.cookieSecretKey:
-            cookies = Cookie.get_cookies(req, Cookie.SignedCookie,
-                    secret = cfg.cookieSecretKey)
-        else:
-            cookies = Cookie.get_cookies(req, Cookie.Cookie)
-    except:
-        cookies = {}
-    if 'pysid' not in cookies:
-        return anonToken
 
-    sid = cookies['pysid'].value
+class SessionAuthenticationCallback(auth.AuthenticationCallback):
+    def __init__(self, storageConfig, mintConfig):
+        self.mintConfig = mintConfig
+        auth.AuthenticationCallback.__init__(self, storageConfig)
 
-    sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+    def getMintConfig(self):
+        return self.mintConfig
 
-    session = SqlSession(req, sessionClient,
-        sid = sid,
-        secret = cfg.cookieSecretKey,
-        timeout = 86400,
-        lock = False)
-    return session.get('authToken', anonToken)
+    def getAuth(self, request):
+        # the pysid cookie contains the session reference that we can use to
+        # look up the proper credentials
+        # we need the underlying request object since restlib doesn't
+        # have support for cookies yet.
+        req = request._req
+        cfg = self.mintConfig
+        anonToken = ('anonymous', 'anonymous')
+        try:
+            if cfg.cookieSecretKey:
+                cookies = Cookie.get_cookies(req, Cookie.SignedCookie,
+                                             secret = cfg.cookieSecretKey)
+            else:
+                cookies = Cookie.get_cookies(req, Cookie.Cookie)
+        except:
+            cookies = {}
+        if 'pysid' not in cookies:
+            return anonToken
+
+        sid = cookies['pysid'].value
+
+        sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+
+        session = SqlSession(req, sessionClient,
+            sid = sid,
+            secret = cfg.cookieSecretKey,
+            timeout = 86400,
+            lock = False)
+        return session.get('authToken', anonToken)
+
+
+class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
+    def __init__(self, *args, **kw):
+        self.mintConfig = kw.pop('mintConfig')
+        handler_apache.ApacheRESTHandler.__init__(self, *args, **kw)
+
+    def addAuthCallback(self):
+        self.handler.addCallback(SessionAuthenticationCallback(self.storageConfig, self.mintConfig))
 
 def catalogHandler(req, cfg, pathInfo = None):
     coveragehook.install()
@@ -47,20 +70,6 @@ def catalogHandler(req, cfg, pathInfo = None):
     # the leading portion of the URI in an rBuilder context. catalog-service
     # string substitutes, so leading and trailing slashes aren't needed.
     topLevel = os.path.join(cfg.basePath, 'catalog')
-    if topLevel.startswith('/'):
-        topLevel = topLevel[1:]
-
-    client_address = req.connection.remote_addr
-    server = type('Server', (object,), {'server_port': req.server.port})
-    aReq = handler_apache.ApacheRequest(req)
-    auth = tuple(getAuthFromSession(req, cfg)[:2])
-    aReq.setUser(auth[0])
-    aReq.setPassword(auth[1])
-
     storagePath = os.path.join(cfg.dataPath, 'catalog')
-    hdlr = handler_apache.ApacheHandler(topLevel, storagePath,
-            aReq, client_address, server)
-    hdlr.mintCfg = cfg
-
-    ret = hdlr.handleApacheRequest()
-    return ret
+    handler = RbuilderCatalogRESTHandler(topLevel, storagePath, mintConfig=cfg)
+    return handler.handle(req)
