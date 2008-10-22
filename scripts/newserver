@@ -40,7 +40,7 @@ def main(argv):
         for name in fileNames:
             oldPath = root + '/' + name
             newPath = newRoot + '/' + name
-            if os.path.exists(newPath):
+            if os.path.lexists(newPath):
                 os.remove(newPath)
             if os.path.islink(oldPath):
                 link = os.readlink(oldPath)
