@@ -268,8 +268,13 @@ class SetupHandler(WebHandler):
                 "%s.%s" % (shortName, newCfg.projectDomainName),
                 "https://%s/repos/%s" % (newCfg.siteHost, shortName))
 
-            os.system("sudo /sbin/service rmake restart")                
-            os.system("sudo /sbin/service rmake-node restart")                
+            if os.environ.get('RBUILDER_NOSUDO', False):
+                sudo = ''
+            else:
+                sudo = 'sudo '
+
+            os.system("%s/sbin/service rmake restart" % sudo)                
+            os.system("%s/sbin/service rmake-node restart" % sudo)                
 
         return self._write("setup/saved")
 
