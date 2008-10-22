@@ -66,7 +66,7 @@ def main(argv):
             os.system(cmd)
             os.chmod(newPath, os.stat(oldPath).st_mode)
     sys.path.insert(0, mintDir)
-    sys.path.insert(0, '/home/dbc/rpl/hg/testutils')
+    sys.path.insert(0, os.environ['TESTUTILS_PATH'])
     loadModules(mintDir, destDir)
     loadDatabase(targetDir)
     linkCatalogClient(targetDir)
