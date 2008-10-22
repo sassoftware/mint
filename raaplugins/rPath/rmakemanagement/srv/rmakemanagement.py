@@ -37,16 +37,16 @@ class rMakeManagement(services.Services):
     def __init__(self, *args, **kwargs):
         raasrvplugin.rAASrvPlugin.__init__(self, *args, **kwargs)
         self.config = self.server.getConfigData()
-        self.rmakeHelper = self._getrMakeHelper()
 
     def _getrMakeHelper(self):
+        self.config = self.server.getConfigData()
         pluginManager = self._getPluginManager()
         buildConfig = buildcfg.BuildConfiguration(readConfigFiles=True)
+        buildConfig['rmakeUser'] = (self.config['rmake.rmakeUser'], 
+            self.config['rmake.rmakePassword'])
         return helper.rMakeHelper(buildConfig=buildConfig, configureClient=True)
 
     def _getPluginManager(self):
-        if not hasattr(sys, 'argv'):
-            sys.argv = []
         cfg = buildcfg.BuildConfiguration(True, ignoreErrors = True)
         if not cfg.usePlugins:
             return plugins.PluginManager([])
@@ -59,6 +59,7 @@ class rMakeManagement(services.Services):
         """
         Return a list of builds, up to the configured limit.
         """
+        self.rmakeHelper = self._getrMakeHelper()
         ret = []
         builds = self.rmakeHelper.client.listJobs(jobLimit=limit)
 
@@ -77,6 +78,7 @@ class rMakeManagement(services.Services):
         """
         Return the log for a given build.
         """
+        self.rmakeHelper = self._getrMakeHelper()
         build_log = BuildLog()
         self.rmakeHelper.displayJobInfo(jobId=buildId,
                                         proxy=self.rmakeHelper,

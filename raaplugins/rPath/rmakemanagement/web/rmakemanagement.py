@@ -2,13 +2,18 @@
 # Copyright (c) 2008 rPath, Inc
 # All rights reserved
 #
-
+import logging
+import sha
 from gettext import gettext as _
 
 from raa import authorization
+from raa import crypto
 from raa import web
+from raa.db.data import RDT_STRING
 from raa.modules import raawebplugin
 from rPath import rmakemanagement
+
+log = logging.getLogger('raaplugins.rmakemanagement')
 
 class rMakeManagement(raawebplugin.rAAWebPlugin):
     """
@@ -23,25 +28,54 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
     displayName = _("rMake Management")
     tooltip = _("Manage and configure rMake server and nodes")
     services_plugin = '/services/Services'
+    wizardSerial = 1
 
 
     @web.expose(allow_xmlrpc=True, template="rPath.rmakemanagement.index")
     def index(self):
-        builds = self._getBuilds()
         status = self._getServiceStatus(rmakemanagement.rMakeServiceName)
         # Get the hostname of this system since we're going against the local
         # rmake
         netinfo = self.plugins['/configure/Network'].index()
         self.host = netinfo.get('host_hostName', _('Local rMake server'))
-        nodes = self._getNodes()
 
+        rmakeUser = self.getPropertyValue('rmakeUser')
+        rmakePassword = self.getPropertyValue('rmakePassword')
+
+        builds = []
+        nodes = []
+        if rmakeUser:
+            builds = self._getBuilds()
+            nodes = self._getNodes()
         
         return dict(server=self.host,
                     status=status,
+                    rmakeUser=rmakeUser,
                     builds=builds,
                     nodes=nodes
                     )
 
+
+    @web.expose(allow_xmlrpc=True, allow_json=True)
+    def saverMakeUserPass(self, username, password):
+        if username and type(username) != type(str):
+            username = str(username)
+        if password and type(password) != type(str):
+            password = str(password)
+
+        self.setPropertyValue('rmakeUser', username, RDT_STRING)
+        self.setPropertyValue('rmakePassword', password, RDT_STRING)
+
+        self.wizardDone()
+
+        return dict(message=_("rMake username and password saved."))
+
+    @web.expose(allow_xmlrpc=True, allow_json=True)
+    def deleterMakeUserPass(self):
+        self.deletePropertyValue('rmakeUser')
+        self.deletePropertyValue('rmakePassword')
+
+        return dict(message=_("rMake username and password deleted."))
 
     def _getBuilds(self):
         """
@@ -112,6 +146,11 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         config['rmake.node_config_file'] = \
             web.getConfigValue('rmake.node_config_file', 
                                path=rmakemanagement.pluginpath)
+        config['rmake.rmakeUser'] = \
+            self.getPropertyValue('rmakeUser', '')
+
+        config['rmake.rmakePassword'] = \
+            self.getPropertyValue('rmakePassword', '')
 
         return config
 

@@ -2,7 +2,7 @@
 
 <?python
 import raa.templates.master
-from raa.web import makeUrl, getConfigValue
+from raa.web import makeUrl, getConfigValue, inWizardMode
 from rPath import rmakemanagement
 from rPath.rmakemanagement import pageList
 ?>
@@ -88,6 +88,22 @@ from rPath.rmakemanagement import pageList
         var d = p.doAction();
         d = d.addCallback(reloadNoHistory);
     }
+
+    function postSave() {
+        var url = 'saverMakeUserPass';
+        var username = $('username').value;
+        var password = $('password').value;
+        var p =  new Post(url, ['username', 'password'], [username, password]);
+        var d = p.doAction();
+        d = d.addCallback(reloadNoHistory);
+    }
+
+    function postDelete() {
+        var url = 'deleterMakeUserPass';
+        var p =  new Post(url, [], []);
+        var d = p.doAction();
+        d = d.addCallback(reloadNoHistory);
+    }
     </script>
 </head>
 
@@ -113,6 +129,7 @@ from rPath.rmakemanagement import pageList
             <div py:replace="display_instructions(instructions, raaInWizard)"> </div>
 
             <!--SERVER MANAGEMENT SECTION-->
+            <div py:if="not inWizardMode()">
             <div class="page-section">
             rMake Server Management
             </div>
@@ -150,8 +167,10 @@ from rPath.rmakemanagement import pageList
                     </form>
                 </table>
             </div>
+            </div>
 
             <!--NODE SECTION-->
+            <div py:if="rmakeUser">
             <div py:if="len(nodes) > 0" class="page-section">
             rMake Node Management
             </div>
@@ -220,8 +239,10 @@ from rPath.rmakemanagement import pageList
                     </form>
                 </table>
             </div>
+            </div>
 
             <div></div>
+            <div py:if="rmakeUser">
             <!--BUILD SECTION-->
             <div class="page-section">
             Builds
@@ -252,6 +273,38 @@ from rPath.rmakemanagement import pageList
                         </tr>
                     </div>
                 </table>
+            </div>
+            </div>
+
+            <div></div>
+            <!-- rMake User Configuration Section-->
+            <div class="page-section">
+            rMake User
+            </div>
+            <div class="page-section-content">
+                <form name="page_form" action="javascript:void(0);" method="POST" onsubmit="javascript:postFormWizardRedirectOnSuccess(this, 'saverMakeUserPass');">
+                <div class="form-line-top">
+                rMake Management requires a valid rBuilder username and password
+                to manage the rMake server.
+                </div>
+                <div py:if="rmakeUser" class="form-line-top">
+                An rmake user has already been saved.  Set the username and 
+                password again to modify the credentials, or press the 
+                Delete button to clear out the current credentials.
+                </div>
+                <div class="form-line">
+                    <div class="host-label-div">Username:</div>
+                    <input type="text" id="username" name="username" value="${rmakeUser}"/> 
+                </div>
+                <div class="form-line">
+                    <div class="host-label-div">Password:</div>
+                    <input type="password" id="password" name="password" value=""/> 
+                </div>
+                <div id="notHiddenInput" style="display: none;"></div>
+                <a py:if="inWizardMode()" class="rnd_button float-right" href="javascript:button_submit(document.page_form)">Save</a>
+                <a py:if="not inWizardMode()" class="rnd_button float-right" href="javascript:postSave();">Save</a>
+                <a py:if="rmakeUser" class="rnd_button float-right" href="javascript:postDelete();">Delete</a>
+                </form>
             </div>
 
         </div>
