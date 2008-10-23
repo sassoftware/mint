@@ -1,6 +1,3 @@
 #!/bin/sh
-RBUILDER_SERVER_PATH=@SERVER_PATH@
 echo "Please ensure sendmail is running."
-export RBUILDER_NOSUDO=1
-killall httpd; sleep 1;
-/usr/sbin/httpd -d $RBUILDER_SERVER_PATH/httpd -f conf/httpd.conf
+@SERVER_PATH@/bin/rbuilder-watch @SERVER_PATH@
