@@ -33,7 +33,7 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
     # Format large traceback to file
     (fd, tb_path) = tempfile.mkstemp('.txt', 'mint-error-')
-    large = os.fdopen(fd, 'w')
+    large = os.fdopen(fd, 'w+')
     print >>large, 'Unhandled exception from mint web interface on %s:' \
         % realHostName
     print >>large, 'Time of occurrence: %s' % timeStamp
