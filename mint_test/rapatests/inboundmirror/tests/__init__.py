@@ -2,9 +2,9 @@
 # Copyright (C) 2006-2007 rPath, Inc.
 # All rights reserved.
 #
+import raa.web
 import cherrypy
 import raatest
-import raa.web
 
 from rPath.inboundmirror.srv.inboundmirror import InboundMirror
 

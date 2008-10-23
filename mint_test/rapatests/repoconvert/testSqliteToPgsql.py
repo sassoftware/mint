@@ -2,6 +2,7 @@
 # Copyright (C) 2006 rPath, Inc.
 # All rights reserved.
 #
+import raa.web
 import cherrypy
 import tempfile
 import os
@@ -23,7 +24,6 @@ import time
 import types
 import raa.db.schedule
 from raa import constants, rpath_error
-import raa.web
 import testsuite
 from testrunner import testhelp
 
