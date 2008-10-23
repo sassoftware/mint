@@ -102,7 +102,7 @@ from mint.web.templatesupport import projectText
                     <p class="help" py:if="project.external and (not mirrored) and (not anonymous) and auth.admin">
                         To preload this external ${projectText().lower()} as a local mirror, please have the preload drive containing
                         the contents for <b>${project.getLabel().split("@")[0]}</b>, connected to the rBuilder server, and click
-                        <a href="https://${cfg.hostName}.${cfg.siteDomainName}:8003/rAA/loadmirror/LoadMirror/">Load Mirror</a>.
+                        <a href="https://${cfg.hostName}.${cfg.siteDomainName}:8003/loadmirror/LoadMirror/">Load Mirror</a>.
                     </p>
                     </div>
     

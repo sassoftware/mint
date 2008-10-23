@@ -8,6 +8,7 @@ from copy import deepcopy
 from mint import helperfuncs
 import kid
 import os
+import os.path
 import random
 random = random.SystemRandom()
 import time
@@ -15,13 +16,14 @@ import time
 from mint import helperfuncs
 from mint import shimclient
 from mint import config
-from mint.config import RBUILDER_GENERATED_CONFIG
+from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG
 from mint.config import keysForGeneratedConfig
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
 from mint.web.fields import intFields
 
 from conary.repository.netrepos import netauth
+from conary.lib.util import mkdirChain
 
 # be careful with 'Server Setup', code below and the associated kid template
 # refer to this key directly. be sure to find all instances if you change it.
@@ -236,7 +238,56 @@ class SetupHandler(WebHandler):
             sudo = 'sudo '
         os.system("%skillall -USR1 httpd" % sudo)
 
+        if not self.cfg.configured:
+            # Create a product (as the admin user) for use by the internal rmake.
+            adminClient = shimclient.ShimMintClient(newCfg, 
+                [kwargs['new_username'], kwargs['new_password']])
+
+            shortName = 'rmake-repository'
+            projectId = adminClient.newProject(name="rMake Repository",
+                hostname=shortName,
+                domainname=str(newCfg.projectDomainName),
+                projecturl="",
+                desc="This product's repository is used by the rMake server running on this rBuilder for building packages and groups with Package Creator and Appliance Creator.",
+                appliance="no",
+                shortname=shortName,
+                namespace="rpath",
+                prodtype="Component",
+                version="1",
+                commitEmail="",
+                isPrivate=False,
+                projectLabel="")
+
+            rmakeUser = "%s-user" % shortName
+            rmakePassword = helperfuncs.genPassword(32)
+            adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
+                rmakePassword)
+    
+            self._writeRmakeConfig(rmakeUser, rmakePassword, 
+                "https://%s" % newCfg.siteHost, 
+                "%s.%s" % (shortName, newCfg.projectDomainName),
+                "https://%s/repos/%s" % (newCfg.siteHost, shortName))
+
+            if os.environ.get('RBUILDER_NOSUDO', False):
+                sudo = ''
+            else:
+                sudo = 'sudo '
+
+            os.system("%s/sbin/service rmake restart" % sudo)                
+            os.system("%s/sbin/service rmake-node restart" % sudo)                
+
         return self._write("setup/saved")
+
+    def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
+        path = self.req.get_options().get('rmakeConfigFilePath',
+            RBUILDER_RMAKE_CONFIG)
+        mkdirChain(os.path.dirname(path))
+        f = file(path, 'w')
+        f.write('%s %s %s %s\n' % ('reposUser', reposName, user, password))
+        f.write('%s %s\n' % ('reposName', reposName))
+        f.write('%s %s\n' % ('reposUrl', reposUrl))
+        f.write('%s %s\n' % ('rBuilderUrl', rBuilderUrl))
+        f.close()
 
     def restart(self, auth):
 

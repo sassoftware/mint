@@ -23,6 +23,7 @@ import time
 import types
 import raa.db.schedule
 from raa import constants, rpath_error
+import raa.web
 import testsuite
 from testrunner import testhelp
 
@@ -84,7 +85,7 @@ class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
 
     def setUp(self):
         raaFramework = webPluginTest()
-        self.pseudoroot = cherrypy.root.repoconvert.SqliteToPgsql
+        self.pseudoroot = raa.web.getWebRoot().repoconvert.SqliteToPgsql
         raatest.rAATest.setUp(self)
         mint_rephelp.MintRepositoryHelper.setUp(self)
 
@@ -191,10 +192,10 @@ class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
         #Add two schedules, and start them
         sched = raa.db.schedule.ScheduleOnce()
         schedId1 = self.pseudoroot.schedule(sched)
-        execId = cherrypy.root.execution.addExecution(schedId1, time.time(), status=constants.TASK_SCHEDULED)
+        execId = raa.web.getWebRoot().execution.addExecution(schedId1, time.time(), status=constants.TASK_SCHEDULED)
         sched = raa.db.schedule.ScheduleOnce()
         schedId2 = self.pseudoroot.schedule(sched)
-        execId = cherrypy.root.execution.addExecution(schedId2, time.time(), status=constants.TASK_RUNNING)
+        execId = raa.web.getWebRoot().execution.addExecution(schedId2, time.time(), status=constants.TASK_RUNNING)
 
         cfg = self.pseudoroot._getConfig()
         self.assertEquals(cfg['running'], True)
@@ -241,7 +242,7 @@ class SqliteToPgsqlTest(raatest.rAATest, mint_rephelp.MintRepositoryHelper):
         self.requestWithIdent("/repoconvert/SqliteToPgsql/")
         assert "<title>postgresql conversion - index</title>" in cherrypy.response.body[0].lower()
 
-        assert "<h3>convert to postgresql</h3>" in cherrypy.response.body[0].lower()
+        assert "convert to postgresql" in cherrypy.response.body[0].lower()
 
     def _setupConvertScript(self, exitCode=0):
         fd, self.srvPlugin.convertScript = tempfile.mkstemp('.sh', 'testdbconversion-', dir=self.topdir)
@@ -278,7 +279,7 @@ exit %d
         self._setupConvertScript()
         sched = raa.db.schedule.ScheduleOnce()
         schedId = self.pseudoroot.schedule(sched)
-        execId = cherrypy.root.execution.addExecution(schedId, time.time(), status=constants.TASK_RUNNING)
+        execId = raa.web.getWebRoot().execution.addExecution(schedId, time.time(), status=constants.TASK_RUNNING)
         oldreportMessage = self.srvPlugin.reportMessage
         self.srvPlugin.reportMessage = runCommandStub()
         oldStartPgsql = repoconvert._startPostgresql

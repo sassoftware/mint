@@ -5,14 +5,6 @@
 
 /* BASIC STYLES */
 
-body {
-    font-family: sans-serif;
-    font-size: 10pt;
-    color: #333;
-    margin-top: 0px;
-    padding-top: 0px;
-}
-
 div.jobMaster,
 div.mcpJobs {
     margin: 0 0 30px 0;
