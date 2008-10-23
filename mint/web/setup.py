@@ -240,7 +240,7 @@ class SetupHandler(WebHandler):
 
         if not self.cfg.configured:
             # Create a product (as the admin user) for use by the internal rmake.
-            adminClient = shimclient.ShimMintClient(self.cfg, 
+            adminClient = shimclient.ShimMintClient(newCfg, 
                 [kwargs['new_username'], kwargs['new_password']])
 
             shortName = 'rmake-repository'
