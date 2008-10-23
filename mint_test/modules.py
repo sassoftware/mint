@@ -16,13 +16,12 @@ PythonModule('rpath-product-definition',
       setup='make'),
 PythonModule('catalog-service', reposName='catalog/catalog-service',
       test='import catalogService'),
-# disable until it works to avoid deps for others
-#PythonModule('catalog-client', setup='make', reposName='catalog/catalog-client',
-#             test=''),
+PythonModule('catalog-client', setup='make', reposName='catalog/catalog-client',
+             test=''),
 PythonModule('package-creator/package-creator-service', 
              test='import pcreator'),
 PythonModule('mint'),
-PythonModule('conary-test', setup='make', test=''), # cannot test because 
+PythonModule('conary-test', setup='make', test=''), # cannot test because
                                               # it creates some recursion
                                               # problems.
 PythonModule('raa-test', test='import raa', reposName='raa-test'),
