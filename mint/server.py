@@ -885,6 +885,7 @@ class MintServer(object):
         return projectId
 
     @typeCheck(int, str, str)
+    @requiresAdmin
     @private
     def addProjectRepositoryUser(self, projectId, username, password):
         project = projects.Project(self, projectId)
