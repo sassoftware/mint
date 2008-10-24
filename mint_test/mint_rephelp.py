@@ -40,9 +40,9 @@ from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import util
 
-import mcp_helper
+from mcp_test import mcp_helper
 from mcp import queue
-from mcp_helper import MCPTestMixin
+from mcp_test.mcp_helper import MCPTestMixin
 
 from testrunner.testhelp import SkipTestException, findPorts
 from testrunner import resources

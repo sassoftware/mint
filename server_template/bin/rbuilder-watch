@@ -1,0 +1,73 @@
+#!/usr/bin/python
+import fcntl, os, sys, termios, time, select, socket
+import epdb
+
+def set_raw_mode():
+    fd = sys.stdin.fileno()
+    oldTerm = termios.tcgetattr(fd)
+    newattr = termios.tcgetattr(fd)
+    newattr[3] = newattr[3] & ~termios.ICANON & ~termios.ECHO
+    termios.tcsetattr(fd, termios.TCSANOW, newattr)
+    oldFlags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, oldFlags | os.O_NONBLOCK)
+    return oldTerm, oldFlags
+
+def restore_terminal(oldTerm, oldFlags):
+    fd = sys.stdin.fileno()
+    if oldTerm:
+        termios.tcsetattr(fd, termios.TCSAFLUSH, oldTerm)
+    if oldFlags:
+        fcntl.fcntl(fd, fcntl.F_SETFL, oldFlags)
+
+def restart_httpd(path):
+    os.system('killall httpd &> /dev/null')
+    print 'waiting for httpd to die before restarting...',
+    sys.stdout.flush()
+    time.sleep(1)
+    rc = os.system('/usr/sbin/httpd -d %s/httpd -f conf/httpd.conf' % path)
+    if rc:
+        print 'starting httpd failed'
+        sys.exit(1)
+    else:
+        print 'Done.'
+
+def watch_httpd(path):
+    print 'Waiting for epdb serve() or type a command.  Ctrl-C to exit'
+    command = []
+    try:
+        while True:
+            try:
+                epdb.connect()
+            except socket.error:
+                pass
+            except KeyboardInterrupt:
+                print 'No longer connected.  Type a command'
+            readable = select.select([sys.stdin], [], [], 1)[0]
+            while readable:
+                char = sys.stdin.read(1)
+                process_command(path, char)
+                readable = select.select([sys.stdin], [], [], .1)[0]
+    except KeyboardInterrupt:
+        os.system('killall httpd')
+        print 'stopped.'
+
+def process_command(path, char):
+    if char == 'r':
+        restart_httpd(path)
+    if char == 'q':
+        print 'quitting'
+        raise KeyboardInterrupt
+
+def main(argv):
+    print "Please ensure sendmail is running."
+    os.environ['RBUILDER_NOSUDO'] = '1'
+    path = sys.argv[1]
+    restart_httpd(path)
+    try:
+        results = set_raw_mode()
+        watch_httpd(path)
+    finally:
+        restore_terminal(*results)
+
+if __name__ == '__main__':
+    main(sys.argv)

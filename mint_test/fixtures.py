@@ -36,9 +36,9 @@ from conary.lib import util
 from conary.dbstore import sqlerrors
 import sqlharness
 
-import mcp_helper
+from mcp_test import mcp_helper
 from mcp import queue
-from mcp_helper import MCPTestMixin
+from mcp_test.mcp_helper import MCPTestMixin
 
 from rpath_common.proddef import api1 as proddef
 

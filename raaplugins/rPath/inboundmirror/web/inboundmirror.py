@@ -1,10 +1,12 @@
 # Copyright (c) 2005-2007 rPath, Inc
 # All rights reserved
 
+from gettext import gettext as _
+
 from raa.modules.raawebplugin import rAAWebPlugin
 import raa
+import raa.web
 from raa.lib import repeatschedules
-import cherrypy
 import random
 from datetime import datetime
 import time
@@ -17,53 +19,33 @@ class InboundMirror(rAAWebPlugin):
     '''
     displayName = _("Schedule Inbound Mirroring")
 
-    @raa.expose(template="rPath.inboundmirror.index")
+    @raa.web.expose(template="rPath.inboundmirror.index")
     def index(self):
+        ret = {}
         scheds = repeatschedules.getCurrentRepeatingSchedules(self.taskId)
         if len(scheds) == 1:
-            sched = scheds.values()[0]
-            checkFreq = {
-                    schedule.ScheduleWeekly.type: "Weekly",
-                    schedule.ScheduleInterval.type: "Daily",
-                    schedule.ScheduleMonthlyAbsolute.type: "Monthly",
-                }[sched.type]
-            if sched.unit == schedule.ScheduleInterval.INTERVAL_HOURS:
-                checkFreq = 'Hourly'
-                hours = sched.interval / 3600
-            else:
-                hours = '1'
-            timetuple = datetime.fromtimestamp(sched.start)
-            timeHour = timetuple.hour
-            if schedule.ScheduleWeekly.type == sched.type:
-                timeDay = int(math.log(sched.daysOfTheWeek, 2))
-            else:
-                timeDay = timetuple.weekday()
-            timeDayMonth = sched.interval
             enabled = True
+            ret['schedule'] = repeatschedules.getWidgetValuesFromSchedule(scheds.values()[0])
         else:
             enabled = False
-            checkFreq = "Hourly"
-            timeHour = "1"
-            timeDay = "1"
-            timeDayMonth = "1"
-            hours = "1"
+            ret['schedule'] = dict(checkFreq = "Weekly", timeHour=23, timeDay=0, timeDayMonth=1)
 
-        return dict(enabled=enabled, checkFreq=checkFreq, timeHour=timeHour, timeDay=timeDay, timeDayMonth=timeDayMonth, hours=hours)
+        ret.update(enabled=enabled)
+        return ret
 
     def initPlugin(self):
         # Initialize inbound mirroring to fire every hour
-        if not len(cherrypy.root.schedule.getRowsByColumns(dict(taskId=self.taskId))):
+        if not len(raa.web.getWebRoot().schedule.getRowsByColumns(dict(taskId=self.taskId))):
             sched = schedule.ScheduleInterval(time.time(), None, 1, 
                 schedule.ScheduleInterval.INTERVAL_HOURS)
             schedId = self.schedule(sched, commit=False)
-            cherrypy.root.schedule.db.commit()
+            raa.web.getWebRoot().schedule.db.commit()
 
-    @raa.expose(allow_json=True)
-    def prefsSave(
-        self, checkFreq, timeHour, timeDay, timeDayMonth, hours, status = 'disabled'):
-
+    @raa.web.expose(allow_json=True)
+    def prefsSave(self, enabled, checkFreq, timeHour, timeDay, timeDayMonth):
+        enabled = True and (enabled == 1 or enabled == '1')
         sched = self.savePrefs(
-            checkFreq, timeHour, timeDay, timeDayMonth, hours, status == 'enabled')
+            enabled, checkFreq, timeHour, timeDay, timeDayMonth)
 
         if not sched:
             message = "Inbound mirroring is not regularly scheduled."
@@ -71,8 +53,8 @@ class InboundMirror(rAAWebPlugin):
             message = "Inbound mirroring has been regularly scheduled to occur " + str(sched)
         return dict(message=message)
 
-    def savePrefs(self, checkFreq, timeHour, timeDay, timeDayMonth, hours, status):
-        assert checkFreq.lower() in ("daily", "weekly", "monthly", 'hourly'), \
+    def savePrefs(self, enabled, checkFreq, timeHour, timeDay, timeDayMonth):
+        assert checkFreq.lower() in ("daily", "weekly", "monthly"), \
             "Unrecognized frequency value: '%s'." % (checkFreq)
         checkFreq = checkFreq.lower()
         assert int(timeHour) in range(0, 24), "Invalid hour: '%s'." % (timeHour)
@@ -88,9 +70,9 @@ class InboundMirror(rAAWebPlugin):
                 self.unschedule(schedId)
 
         # Add a new schedule that contains the given parameters.
-        if not status:
+        if not enabled:
             # Well, we're not checking at all, so just return.
-            cherrypy.root.schedule.db.commit()
+            raa.web.getWebRoot().schedule.db.commit()
             return None
 
         # Get hour and random minute.
@@ -100,23 +82,16 @@ class InboundMirror(rAAWebPlugin):
         # Get the frequency and create the schedule.
         starttuple = datetime.now().timetuple()
         startlist = reduce(lambda x, y: x + [y], starttuple, [])
-        if checkFreq != 'hourly':
-            startlist[3] = hour
+        startlist[3] = hour
         startlist[4] = minute
         start = time.mktime(startlist)
 
         # If the start time is before now, then set it to the next day.
         if start < time.time():
-            if checkFreq == 'hourly':
-                startlist[3] += 1
-            else:
-                startlist[2] += 1
+            startlist[2] += 1
             start = time.mktime(startlist)
 
-        if "hourly" == checkFreq:
-            sched = schedule.ScheduleInterval(
-                start, None, int(hours), schedule.ScheduleInterval.INTERVAL_HOURS)
-        elif "daily" == checkFreq:
+        if "daily" == checkFreq:
             sched = schedule.ScheduleInterval(
                 start, None, 1, schedule.ScheduleInterval.INTERVAL_DAYS)
         elif "weekly" == checkFreq:
@@ -128,18 +103,18 @@ class InboundMirror(rAAWebPlugin):
 
         # Schedule this.
         schedId = self.schedule(sched, commit=False)
-        cherrypy.root.schedule.db.commit()
+        raa.web.getWebRoot().schedule.db.commit()
 
         return sched
 
-    @raa.expose(allow_json=True)
+    @raa.web.expose(allow_json=True)
     def mirrorNow(self):
         schedId = self.schedule(schedule.ScheduleOnce())
         return dict(schedId=schedId)
 
-    @raa.expose(allow_json=True)
+    @raa.web.expose(allow_json=True)
     def checkMirrorStatus(self):
-        if cherrypy.root.execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
+        if raa.web.getWebRoot().execution.getUnfinishedSchedules(types=schedule.typesValid, taskId=self.taskId):
             return dict(mirroring=True)
         else:
             return dict(mirroring=False)
