@@ -256,7 +256,7 @@ from rPath.rmakemanagement import pageList
                         <td>Completed Time</td>
                         <td class="button-column">View build log</td>
                     </tr>
-                    <div py:strip="True" py:for="build in builds">
+                    <div py:if="builds" py:strip="True" py:for="build in builds">
                         <tr> 
                             <td><span class="emphasis">${build[0]}</span></td>
                             <td>${build[1]}</td>
@@ -274,6 +274,17 @@ from rPath.rmakemanagement import pageList
                                     <textarea readonly="True" class="console" id="viewer-${build[0]}"></textarea>
                                 </div>
                             </td>
+                        </tr>
+                    </div>
+                    <div py:if="not builds" py:strip="True">
+                        <tr>
+                        <td>No Builds</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                         </tr>
                     </div>
                 </table>
