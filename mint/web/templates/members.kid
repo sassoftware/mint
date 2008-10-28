@@ -160,6 +160,7 @@
                         <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
                             <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a></td>
+                        <td py:if="isOwner and project.hidden"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From ${projectText().title()}</a></td>
                     </tr>
                     <tr>
                         <td py:if="not users[userlevels.USER]">Nobody has registered as a user of this ${projectText().lower()}</td>
