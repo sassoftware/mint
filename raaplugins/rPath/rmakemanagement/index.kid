@@ -252,14 +252,18 @@ from rPath.rmakemanagement import pageList
                     <tr class="headers">
                         <td>Build Id</td>
                         <td>Trove Name</td>
+                        <td>Status</td>
                         <td>Completed Time</td>
                         <td class="button-column">View build log</td>
                     </tr>
-                    <div py:strip="True" py:for="build in builds">
+                    <div py:if="builds" py:strip="True" py:for="build in builds">
                         <tr> 
                             <td><span class="emphasis">${build[0]}</span></td>
                             <td>${build[1]}</td>
-                            <td>${build[2]}</td>
+                            <td py:if="not build[3]">${build[2]}</td>
+                            <td py:if="build[3]">Built</td>
+                            <td py:if="build[3]">${build[4]}</td>
+                            <td py:if="not build[3]"></td>
                             <td class="button-column">
                             <img src="${makeUrl('/static/images/icon_expand.gif')}" onclick="javascript:toggleBuildLog(this, expand, collapse, '${build[0]}')" style="cursor: pointer; vertical-align: text-top; padding-right: 4px;" onMouseOver="this.src = this.src.match('expand') ? expand_h : collapse_h" onMouseOut="this.src = this.src.match('expand') ? expand : collapse"/>
                             </td>
@@ -270,6 +274,17 @@ from rPath.rmakemanagement import pageList
                                     <textarea readonly="True" class="console" id="viewer-${build[0]}"></textarea>
                                 </div>
                             </td>
+                        </tr>
+                    </div>
+                    <div py:if="not builds" py:strip="True">
+                        <tr>
+                        <td>No Builds</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                         </tr>
                     </div>
                 </table>
