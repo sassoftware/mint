@@ -1107,7 +1107,10 @@ class SiteHandler(WebHandler):
         return ''
 
     def cloudCatalog(self, auth):
-        return self._write('cloudCatalog')
+        userCredentials = self.client.getEC2CredentialsForUser(self.auth.userId)
+        template = userCredentials.get('awsAccountNumber', None) and \
+                'cloudCatalog' or 'cloudCatalogNoCredentials'
+        return self._write(template)
 
 
 def helpDocument(page):
