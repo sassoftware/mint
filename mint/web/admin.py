@@ -385,7 +385,10 @@ class AdminHandler(WebHandler):
                            spotlightData=self.client.getSpotlightAll())
         
     def cloudConfig(self, auth):
-        return self._write('admin/cloudConfig')
+        userCredentials = self.client.getEC2CredentialsForUser(self.auth.userId)
+        template = userCredentials.get('awsAccountNumber', None) and \
+                'admin/cloudConfig' or 'cloudCatalogNoCredentials'
+        return self._write(template)
 
     def _makeMirrorOrderingLinks(self, name, count, order, index, id):
         """Helper function to make the up/down links for mirror ordering"""
