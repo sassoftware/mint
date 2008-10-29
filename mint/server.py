@@ -679,7 +679,7 @@ class MintServer(object):
                 # Hack to allow testsuite, which passes 'hostname:port'
                 # and isn't using HTTPS
                 protocol = 'http'
-            url = "%s://%s:%s@%s/xmlrpc/" % \
+            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
             sp = xmlrpclib.ServerProxy(url, transport=transport)
 
