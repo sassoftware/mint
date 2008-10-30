@@ -58,6 +58,8 @@ chown apache:apache /srv/rbuilder/data/db
 # Migrate the mint config
 /usr/share/rbuilder/scripts/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
+# raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
+usermod -a -G apache raa-web
 
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]

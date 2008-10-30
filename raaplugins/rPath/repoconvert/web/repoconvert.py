@@ -29,16 +29,16 @@ class SqliteToPgsql(rAAWebPlugin):
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Convert your repository to use Postgres")
 
-    def _readConfig(self, repoconfig):
-        cfg = config.MintConfig()
-        cfg.read(repoconfig)
-        return cfg
+    def _readReposDBConfig(self, repoconfig):
+        mc = config.MintConfig()
+        mc.read(repoconfig)
+        return mc.reposDBDriver
 
     def _getConfig(self):
         ret = dict()
 
-        repoCfg = self._readConfig(config.RBUILDER_CONFIG)
-        ret['converted'] = (repoCfg.reposDBDriver == 'postgresql')
+        reposDBDriver = self._readReposDBConfig(config.RBUILDER_CONFIG)
+        ret['converted'] = (reposDBDriver == 'postgresql')
         ret['finalized'] = self.getPropertyValue('FINALIZED', False)
         if ret['finalized'] and not ret['converted']:
             self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
@@ -89,9 +89,9 @@ class SqliteToPgsql(rAAWebPlugin):
             return dict(error=_('Finalize step not confirmed'))
 
     def initPlugin(self):
-        repoCfg = self._readConfig(config.RBUILDER_CONFIG)
-        val = self.getPropertyValue('FINALIZED')
-        if repoCfg.reposDBDriver == 'postgresql' and (val==0 or val):
+        reposDBDriver = self._readReposDBConfig(config.RBUILDER_CONFIG)
+        val = self.getPropertyValue('FINALIZED', 0)
+        if reposDBDriver == 'postgresql' and (val==0 or val):
                 #val is 0 if this is a fresh install, True if we've
                 #already finalized
             self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)
