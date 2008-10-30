@@ -92,7 +92,7 @@ def main(argv):
     sys.path.insert(0, os.environ['TESTUTILS_PATH'])
     loadModules(mintDir, destDir)
     loadDatabase(targetDir)
-    linkCatalogClient(targetDir)
+    #linkCatalogClient(targetDir)
 
 def loadModules(mintDir, destDir):
     from mint_test import modules
