@@ -12,8 +12,8 @@ def require(package, label):
 
 def checksanity():
     require('yui', 'contrib.rpath.org@rpl:1')
-    require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
-    require('flex-sdk', 'private.rb.rpath.com@rpl:1')
+    #require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
+    #require('flex-sdk', 'private.rb.rpath.com@rpl:1')
 
 def get_options(argv):
     import optparse
