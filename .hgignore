@@ -1,3 +1,4 @@
+^tags$
 ^state$
 ^state.journal$
 ~$
@@ -28,10 +29,9 @@
 ^.*project$
 ^.*pydevproject$
 
-^\.times
-^test/(raa-tests/)?\.(times|coverage)$
-^test/archive/macrosc$
-^test/logfile\.test\.*
+^mint_test/(raa-tests/)?\.(times|coverage)$
+^mint_test/archive/macrosc$
+^mint_test/logfile\.test\.*
 
 ^scripts/raw2vmdk$
 
