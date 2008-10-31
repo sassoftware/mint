@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from os.path import dirname
 import os
 import socket
 import sys
@@ -10,10 +11,11 @@ def require(package, label):
         raise RuntimeError('%s not installed - install %s=%s' % (package, package, label))
 
 
-def checksanity():
+def checksanity(buildFlex=False):
     require('yui', 'contrib.rpath.org@rpl:1')
-    #require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
-    #require('flex-sdk', 'private.rb.rpath.com@rpl:1')
+    if buildFlex:
+        require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
+        require('flex-sdk', 'private.rb.rpath.com@rpl:1')
 
 def get_options(argv):
     import optparse
@@ -22,17 +24,26 @@ def get_options(argv):
     op.add_option("--host",
                   dest = "host", default = None,
                   help = "use a different host.domain")
+    hgDir = dirname(dirname(dirname(os.path.realpath(__file__))))
+    op.add_option("--hgdir",
+              dest = "hgdir", default = hgDir,
+              help = "specify common hg directory (with checkouts as subdirs)")
+    op.add_option("--build-flex",
+              action="store_true", default=False,
+              dest = "buildFlex",
+              help = "Whether to build the flex components")
     return op.parse_args()
 
 
-
 def main(argv):
-    checksanity()
     options, args = get_options(argv)
     if args[0][0] != '/':
         targetDir = os.path.join(os.getcwd(), args[0])
     else:
         targetDir = args[0]
+    checksanity(buildFlex=options.buildFlex)
+    hgDir = options.hgdir
+
     if 'mint' in targetDir:
         print >>sys.stderr, "newserver doesn't work inside of a mint checkout.  Please remove 'mint' from the dirname.   Send all complaints to '/dev/fixityourself'"
 
@@ -96,14 +107,20 @@ def main(argv):
             os.chmod(newPath, os.stat(oldPath).st_mode)
     sys.path.insert(0, mintDir)
     sys.path.insert(0, os.environ['TESTUTILS_PATH'])
-    loadModules(mintDir, destDir)
+    loadModules(mintDir, destDir, hgDir, buildFlex=options.buildFlex)
     loadDatabase(targetDir)
-    #linkCatalogClient(targetDir)
+    if options.buildFlex:
+       linkCatalogClient(targetDir)
 
-def loadModules(mintDir, destDir):
+def loadModules(mintDir, destDir, hgDir, buildFlex=False):
     from mint_test import modules
     from testrunner import loadmodules
-    loadmodules.loadModules(modules.modules, destDir, shouldClone=True)
+    if buildFlex:
+        allModules = modules.modules + modules.flexModules
+    else:
+        allModules = modules.modules
+    loadmodules.loadModules(allModules, destDir, shouldClone=True,
+                            searchPath = [hgDir])
 
 def loadDatabase(targetDir):
     scriptsDir = os.path.dirname(__file__)
