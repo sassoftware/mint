@@ -20,7 +20,7 @@ PythonModule('catalog-service', reposName='catalog/catalog-service',
 #             test=''),
 PythonModule('package-creator/package-creator-service', 
              test='import pcreator'),
-PythonModule('mint'),
+PythonModule('mint', setup='make'),
 PythonModule('conary-test', setup='make', test=''), # cannot test because
                                               # it creates some recursion
                                               # problems.
@@ -28,7 +28,7 @@ PythonModule('raa-test', test='import raa', reposName='raa-test'),
 PythonModule('dnspython', test='import dns', shouldClone=False),
 PythonModule('python-pgsql', test='import pgsql', shouldClone=False),
 PythonModule('conary-factory-test', test='import factory_test'), 
-PythonModule('mcp-test', modulePath='mcp/test', test='import mcp_test.mcp_helper'),
+#PythonModule('mcp-test', modulePath='mcp/test', test='import mcp_test.mcp_helper'),
 PythonModule('mint-test', modulePath='mint/mint_test', test=''),
 PythonModule('restlib')
 ]

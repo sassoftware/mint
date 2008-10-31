@@ -29,7 +29,13 @@ def get_options(argv):
 def main(argv):
     checksanity()
     options, args = get_options(argv)
-    targetDir = args[0]
+    if args[0][0] != '/':
+        targetDir = os.path.join(os.getcwd(), args[0])
+    else:
+        targetDir = args[0]
+    if 'mint' in targetDir:
+        print >>sys.stderr, "newserver doesn't work inside of a mint checkout.  Please remove 'mint' from the dirname.   Send all complaints to '/dev/fixityourself'"
+
     hostname = options.host
     if not hostname:
         hostname = socket.gethostbyaddr('127.0.0.1')[0]
@@ -100,7 +106,9 @@ def loadModules(mintDir, destDir):
     loadmodules.loadModules(modules.modules, destDir, shouldClone=True)
 
 def loadDatabase(targetDir):
-    os.system('PYTHONPATH=%s/pythonpath %s/rbuilder-database --migrate -c %s/config/rbuilder.conf' % (targetDir, os.path.dirname(__file__), targetDir))
+    scriptsDir = os.path.dirname(__file__)
+    cmd = 'cd %s; cp rbuilder-database rbuilder_database.py; PYTHONPATH=%s/pythonpath python -c "import rbuilder_database;  rbuilder_database.RBuilderDatabase(aLockPath=\'%s/repos/run\').run();" --migrate -c %s/config/rbuilder.conf' % (scriptsDir, targetDir, targetDir, targetDir)
+    os.system(cmd)
 
 def linkCatalogClient(targetDir):
     for file, newFile, dir in (('cloudConfig', 'cloudConfig', 'admin/'), 
