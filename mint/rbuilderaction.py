@@ -6,13 +6,13 @@
 #
 
 import os, sys
-import traceback
 import xmlrpclib
 
 from conary import versions
 from conary.lib import options
 from conary.lib import coveragehook
 
+from mint.logerror import logErrorAndEmail
 from mint.mint_error import UnknownException
 
 def usage():
@@ -101,8 +101,17 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
 
                 try:
                     rBuilderServer.registerCommit(hostname, user, t, vStr)
-                except Exception, e:
-                    traceback.print_exc(file = sys.stderr)
+                except:
+                    # TODO: get a mint config object so we can email
+                    # the maintainer.
+                    e_type, e_value, e_tb = sys.exc_info()
+                    print >> sys.stderr, 'Error in rBuilder commit action:'
+                    logErrorAndEmail(None, e_type, e_value, e_tb,
+                        'commit action', {
+                            'hostname': hostname,
+                            'user': user,
+                            'trove': '%s=%s[%s]' % (t, vStr, f),
+                          })
                     os._exit(1)
             os._exit(0)
         else:

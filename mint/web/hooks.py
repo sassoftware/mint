@@ -21,10 +21,10 @@ from mint import profile
 from mint import mint_error
 from mint import maintenance
 from mint.helperfuncs import extractBasePath
+from mint.logerror import logWebErrorAndEmail
 from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
-from mint.web.logerror import logErrorAndEmail
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
 from mint.web.webhandler import normPath, HttpError
@@ -509,7 +509,7 @@ def handler(req):
                     # Generate a nice traceback and email it to
                     # interested parties
                     exception, e, bt = sys.exc_info()
-                    logErrorAndEmail(req, cfg, exception, e, bt)
+                    logWebErrorAndEmail(req, cfg, exception, e, bt)
                     del exception, e, bt
 
                     # Send an error page to the user and set the status
