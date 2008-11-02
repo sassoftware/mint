@@ -18,8 +18,13 @@ from mint.mint_error import *
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
-from kid.pull import XML
 from conary import conarycfg, versions
+
+import kid.parser
+if hasattr(kid.parser, 'XML'):
+    from kid.parser import XML
+else:
+    from kid.pull import XML
 
 import simplejson
 

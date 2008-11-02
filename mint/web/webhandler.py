@@ -5,7 +5,12 @@
 #
 import base64
 import kid
-from kid.pull import START, TEXT, END
+import kid.parser
+if hasattr(kid.parser, 'START'):
+    from kid.parser import START, TEXT, END
+else:
+    from kid.pull import START, TEXT, END
+
 
 import os
 import time
