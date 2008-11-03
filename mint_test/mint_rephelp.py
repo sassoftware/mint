@@ -189,6 +189,7 @@ class MintApacheServer(rephelp.ApacheServer):
                     " -e 's|@CONARYPATH@|%s|g'"
                     " -e 's|@PCREATORPATH@|%s|g'"
                     " -e 's|@CATALOGSERVICEPATH@|%s|g'"
+                    " -e 's|@RESTLIBPATH@|%s|g'"
                     " < %s/httpd.conf.in > %s/httpd.conf" % \
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
@@ -197,6 +198,7 @@ class MintApacheServer(rephelp.ApacheServer):
                        os.environ['CONARY_PATH'], 
                        os.environ['PACKAGE_CREATOR_SERVICE_PATH'],
                        os.environ['CATALOG_SERVICE_PATH'],
+                       os.environ['RESTLIB_PATH'],
                        self.serverRoot, self.serverRoot))
             os.system(cmd)
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
