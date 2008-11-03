@@ -31,6 +31,7 @@ python_files =			\
 	jobs.py			\
 	jobstatus.py		\
 	loadmirror.py		\
+	logerror.py		\
 	mailinglists.py		\
 	maintenance.py		\
 	migrate.py		\
