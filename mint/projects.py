@@ -160,9 +160,9 @@ class Project(database.TableObject):
         for host, entitlement in entMap:
             cfg.entitlement.addEntitlement(host, entitlement[1])
 
-        useInternalConaryProxy, httpProxies = self.server.getProxies()
-        cfg = helperfuncs.configureClientProxies(cfg, useInternalConaryProxy,
-                httpProxies)
+        internalConaryProxies, httpProxies = self.server.getProxies()
+        cfg = helperfuncs.configureClientProxies(cfg, internalConaryProxies,
+                httpProxies, internalConaryProxies)
         return cfg
 
     def addLabel(self, label, url, authType='none', username='', password='', entitlement=''):

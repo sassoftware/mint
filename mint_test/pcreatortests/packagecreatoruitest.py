@@ -386,7 +386,7 @@ content-type=text/plain
 
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def testGetPackageCreatorPackages(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
@@ -587,7 +587,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
         prodDefDict = dict(hostname = 'localhost', shortname = 'myprod',
                  namespace = 'mycompany', version = '1.0')
 
-        self.openRepository(1)
+        self.startMintServer(1)
         client = conaryclient.ConaryClient(self.cfg)
 
         # OK, we need to save the product definition first
@@ -681,7 +681,8 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             self.cfg.baseClassDir = oldBaseClassDir
 
     def testUploadFileXMLRPC(self):
-        repos = self.openRepository(1)
+        self.startMintServer()
+        repos = self.openRepository()
         pDefDict = self._saveProdDef()
         self._createFactories(['factory-archive'])
 

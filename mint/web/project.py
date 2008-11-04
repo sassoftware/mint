@@ -182,7 +182,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     def groups(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedBuilds = [x for x in builds if x.getPublished()]
-        groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
+        groupTrovesInProject = self.client.listGroupTrovesByProject(
+                                                            self.project.id)
 
         return self._write("groups", publishedBuilds = publishedBuilds,
             groupTrovesInProject = groupTrovesInProject)
@@ -195,7 +196,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             cfg.read(conarycfgFile)
 
         cfg.dbPath = cfg.root = ":memory:"
-        cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
+        internalProxies, proxies = self.client.getProxies()
+        cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, proxies, internalProxies)
         repos = conaryclient.ConaryClient(cfg).getRepos()
 
         labels = basictroves.labelDict

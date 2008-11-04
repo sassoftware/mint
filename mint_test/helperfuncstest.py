@@ -589,6 +589,7 @@ Much like Powdermilk Biscuits[tm]."""
         project = client.getProject(projectId)
         label = versions.Label(project.getLabel()) 
 
+        self.startMintServer()
         repos = self.openRepository()
 
         # add a user via label

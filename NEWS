@@ -93,6 +93,8 @@ Web Front End Changes
   will now attempt to load group-appliance from the label the platform
   is on, and only fall back to the groupApplianceLabel if no platform is
   selected. (RBL-3541)
+* SLE is available as a platform definition to those who have access to it.
+  (RBL-3256)
 
 Bug Fixes
 ---------------------

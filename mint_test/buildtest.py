@@ -1423,14 +1423,14 @@ class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
 
 class BuildTestConaryRepository(MintRepositoryHelper):
     def testBuildTrovesResolution(self):
-        raise testsuite.SkipTestException("This test is breaking when surrounded by other openRepository(1) calls")
+        raise testsuite.SkipTestException("This test is breaking when surrounded by other startMintServer(1) calls")
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
-        self.openRepository(1, serverCache=self.servers)
+        self.startMintServer(1, serverCache=self.servers)
         repos1 = self.getRepositoryClient(serverIdx=1)
 
         #create an external project that points to the original project
-        self.openRepository(2, serverName="localhost1", serverCache=self.servers)
+        self.startMintServer(2, serverName="localhost1", serverCache=self.servers)
         repos2 = self.getRepositoryClient(serverIdx=2)
         extProjectId = client.newExternalProject("External Project 2",
             "external2", MINT_PROJECT_DOMAIN, "localhost1@foo:bar",

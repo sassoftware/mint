@@ -147,7 +147,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the source repository
-        sourceRepos = self.openRepository(1, serverName = "localhost.other.host")
+        sourceRepos = self.startMintServer(1, serverName = "localhost.other.host")
         sourcePort = self.servers.getServer(1).port
         map = dict(self.cfg.repositoryMap)
         self.createMirrorUser(sourceRepos)
@@ -192,7 +192,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the source repository
-        sourceRepos = self.openRepository(1, serverName = "localhost.other.host")
+        sourceRepos = self.startMintServer(1, serverName = "localhost.other.host")
         sourcePort = self.servers.getServer(1).port
         map = dict(self.cfg.repositoryMap)
         self.createMirrorUser(sourceRepos)
@@ -236,7 +236,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the target repository
-        targetRepos = self.openRepository(1,
+        targetRepos = self.startMintServer(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
         self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
@@ -281,11 +281,11 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the target repositories
-        targetRepos1 = self.openRepository(1,
+        targetRepos1 = self.startMintServer(1,
                                           serverName = "localhost.rpath.local2")
         targetPort1 = self.servers.getServer(1).port
 
-        targetRepos2 = self.openRepository(2,
+        targetRepos2 = self.startMintServer(2,
                                           serverName = "localhost.rpath.local2")
         targetPort2 = self.servers.getServer(2).port
 
@@ -339,7 +339,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the target repository
-        targetRepos = self.openRepository(1,
+        targetRepos = self.startMintServer(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
         self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
@@ -380,7 +380,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the target repository
-        targetRepos = self.openRepository(1,
+        targetRepos = self.startMintServer(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
         self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:devel")
@@ -460,9 +460,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         # set up the target repositories
-        targetRepos1 = self.openRepository(1,
+        targetRepos1 = self.startMintServer(1,
                                           serverName = "localhost.rpath.local2")
-        targetRepos2 = self.openRepository(2,
+        targetRepos2 = self.startMintServer(2,
                                           serverName = "localhost.rpath.local2")
         targetPort1 = self.servers.getServer(1).port
         targetPort2 = self.servers.getServer(2).port

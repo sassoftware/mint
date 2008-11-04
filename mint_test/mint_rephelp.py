@@ -13,6 +13,7 @@ import re
 import testsuite
 import time
 import urlparse
+from testutils import sqlharness
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # make webunit not so picky about input tags closed
@@ -22,6 +23,7 @@ SimpleDOM.EMPTY_HTML_TAGS.remove('img')
 from webunit import webunittest
 
 from mint.web import hooks
+from mint import client
 from mint import config
 from mint import cooktypes, buildtypes
 from mint import server
@@ -29,6 +31,7 @@ from mint import shimclient
 from mint import buildtypes
 from mint import data
 from mint import urltypes
+from mint import mint_error
 
 #from mint.distro import jobserver
 from mint.flavors import stockFlavors
@@ -155,12 +158,13 @@ mintCfg = None
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
             conaryPath, repMap, useCache = False, requireSigs = False,
-            authCheck = None, entCheck = None, readOnlyRepository = False, serverIdx = 0, **kwargs):
+            authCheck = None, entCheck = None, useProxy = True, readOnlyRepository = False, serverIdx = 0, **kwargs):
         self.mintPath = os.environ.get("MINT_PATH", "")
         self.useCache = useCache
         self.name = name
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
+        self.useProxy = useProxy
 
         self.securePort = findPorts(num = 1)[0]
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
@@ -175,6 +179,7 @@ class MintApacheServer(rephelp.ApacheServer):
             self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
         elif mintDb == "mysql":
             self.mintDb = MySqlMintDatabase(reposDB.path)
+
 
     def createConfig(self):
         rephelp.ApacheServer.createConfig(self)
@@ -271,7 +276,10 @@ class MintApacheServer(rephelp.ApacheServer):
         return os.environ.get("MINT_TEST_PATH", "") + '/'
 
     def getMap(self):
-        return { self.name: 'http://localhost:%d/conary/' %self.port }
+        # by default, there's no repository associated w/ a mint database.
+        # we could make this return the entire map for all projects
+        # in this rbuilder...but I'm not sure that's worth it.
+        return {}
 
     def getIpAddresses(self):
         # get my local IP addresses
@@ -332,6 +340,13 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
         cfg.localAddrs = self.getIpAddresses()
+        cfg.availablePlatforms = ['localhost@rpl:plat']
+        if self.useProxy:
+            cfg.useInternalConaryProxy = True
+            cfg.proxyContentsDir = self.reposDir + '/proxy'
+            cfg.proxyChangesetCacheDir = self.reposDir + '/proxycs'
+            cfg.proxyTmpDir = self.reposDir + '/proxytmp'
+
 
 #        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
         cfg.configured = True
@@ -420,26 +435,56 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
         return _reposDir
 
-    def openMintRepository(self, serverIdx = 0, requireSigs = False, 
-                           serverName = None, serverCache=None):
-        if serverCache is None:
-            serverCache = self.mintServers
-        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, 
-                requireSigs, serverName, serverCache=serverCache)
+    def openMintDatabase(self):
+        return dbstore.connect(self.mintCfg.dbPath,
+                               driver=self.mintCfg.dbDriver)
 
-        if serverIdx == 0 and serverCache is self.mintServers:
-            self.port = self.mintServers.getServer(serverIdx).port
-            self.mintCfg = self.mintServers.getServer(serverIdx).mintCfg
-            if self.mintCfg.SSL:
-                self.securePort = self.mintServers.getServer(serverIdx).securePort
-            else:
-                self.securePort = 0
+    def startMintServer(self, serverIdx = 0, useProxy=False):
+        serverCache = self.mintServers
+        server = serverCache.getCachedServer(serverIdx)
+        SQLserver = sqlharness.start(self.topDir)
+        reposDir = self._getReposDir() + '-mint'
+        if not server:
+            server = serverCache.startServer(reposDir, self.conaryDir,
+                                          SQLserver,
+                                          serverIdx, requireSigs=False, 
+                                          serverName=None,
+                                          readOnlyRepository=False,
+                                          useSSL = False,
+                                          sslCert = None,
+                                          sslKey = None,
+                                          authTimeout = None,
+                                          forceSSL = False,
+                                          closed = False,
+                                          commitAction = None,
+                                          deadlockRetry = None)
 
-        return ret
 
+        else:
+            server.setNeedsReset()
+          if serverIdx == 0 and serverCache is self.mintServers:
+            self.port = server.port
+            self.mintCfg = server.mintCfg
+              if self.mintCfg.SSL:
+                self.securePort = server.securePort
+              else:
+                  self.securePort = 0
+        self.db = self.openMintDatabase()
+        try:
+            cli, userId = self.quickMintAdmin('intuser', 'intpass')
+        except mint_error.UserAlreadyExists, e:
+            pass
+  
+        if useProxy:
+            self.cfg.configKey('conaryProxy',
+                               'http http://localhost:%s' % server.port)
+        cli = client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        auth = cli.checkAuth()
+        assert(auth.authorized)
+        return cli
 
-    def openRepository(self, *args, **kw):
-        return self.openMintRepository(*args, **kw)
+    def openConaryRepository(self, *args, **kw):
+        return self.openRepository(*args, **kw)
 
     def reset(self):
         self.mintServers.resetAllServersIfNeeded()
@@ -461,12 +506,15 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         password, and returns a connection to mint as that new user, and the
         user ID.:"""
         client = self.openMintClient(('mintauth', 'mintpass'))
-        userId = client.registerNewUser(username, password, "Test User",
-            email, "test at example.com", "", active=True)
-
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        self.db.commit()
+        try:
+            userId = client.registerNewUser(username, password, "Test User",
+                email, "test at example.com", "", active=True)
+        except mint_error.UserAlreadyExists:
+            userId = client.getUserIdByName(username)
+        else:
+            cu = self.db.cursor()
+            cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+            self.db.commit()
 
         client = self.openMintClient((username, password))
         client.server._server.mcpClient = self.mcpClient
@@ -544,7 +592,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         self.imagePath = os.path.join(self.tmpDir, "images")
         if not os.path.exists(self.imagePath):
             os.mkdir(self.imagePath)
-        self.openMintRepository()
+        self.startMintServer()
 
         util.mkdirChain(os.path.join(self.reposDir + '-mint', "tmp"))
 
@@ -642,7 +690,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def moveToServer(self, project, serverIdx = 1):
         """Call this to set up a project's Labels table to access a different
            serverIdx instead of 0. Useful for multi-repos tests."""
-        self.openMintRepository(serverIdx)
+        self.startMintServer(serverIdx)
 
         defaultLabel = project.getLabelIdMap().keys()[0]
         labelId = project.getLabelIdMap()[defaultLabel]
@@ -708,7 +756,7 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
         server = self.getServerHostname()
         # spawn a server if needed, then point our code at it...
         if self.mintServers.servers[0] is None:
-            self.openMintRepository()
+            self.startMintServer()
         return server, self.mintServers.servers[0].port
 
     def getServerHostname(self):

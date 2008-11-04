@@ -938,6 +938,8 @@ class MintClient:
     def isPlatformAvailable(self, platformLabel):
         return self.server.isPlatformAvailable(platformLabel)
 
+    def getProxies(self):
+        return self.server.getProxies()
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

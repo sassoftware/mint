@@ -287,14 +287,34 @@ def getTables(db, cfg):
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
-    def __init__(self, cacheFile, conarycfg):
+    def __init__(self, cacheFile, conarycfg, server):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._cclient = conaryclient.ConaryClient(conarycfg)
+        self._server = server
 
-    def _refresh(self, key):
-        platDef = proddef.PlatformDefinition()
-        platDef.loadFromRepository(self._cclient, key)
-        return platDef.getPlatformName()
+    def _refresh(self, labelStr):
+        try:
+            hostname = versions.Label(labelStr).getHost()
+            # we require that the first section of the label be unique
+            # across all repositories we access.
+            hostname = hostname.split('.')[0]
+            try:
+                projectId = self._server.getProjectIdByHostname(hostname)
+                cfg = self._server._getProjectConaryConfig(
+                                        projects.Project(self._server, projectId))
+                client = conaryclient.ConaryClient(cfg)
+            except ItemNotFound:
+                client = self._cclient
+            platDef = proddef.PlatformDefinition()
+            platDef.loadFromRepository(client, labelStr)
+            return platDef.getPlatformName()
+        except Exception, e:
+            # Swallowing this exception allows us to have a negative
+            # cache entries.  Of course this comes at the cost
+            # of swallowing exceptions...
+            print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (labelStr, str(e))
+            sys.stderr.flush()
+            return None
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -653,6 +673,7 @@ class MintServer(object):
         useInternalConaryProxy = self.cfg.useInternalConaryProxy
         if useInternalConaryProxy:
             httpProxies = {}
+            useInternalConaryProxy = self.cfg.getInternalProxies()
         else:
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
@@ -2114,6 +2135,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def addLabel(self, projectId, label, url, authType, username, password, entitlement):
         self._filterProjectAccess(projectId)
+        # this is overly agressive but should ensure that adding an
+        # entitlement enables access to the correct platform
+        self.platformNameCache.clear()
         return self.labels.addLabel(projectId, label, url, authType, username, password, entitlement)
 
     @typeCheck(int)
@@ -2133,7 +2157,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             password, entitlement)
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
-
+        # this is overly agressive but should ensure that adding an
+        # entitlement enables access to the correct platform
+        self.platformNameCache.clear()
         return True
 
     @typeCheck(int, int)
@@ -2191,11 +2217,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             
             # add conaryProxy if we have it enabled
             if self.cfg.useInternalConaryProxy:
-                for proto in ['http', 'https']:
-                    stringMap = { 'proto': proto,
-                                  'host': self.cfg.hostName,
-                                  'domain': self.cfg.siteDomainName }
-                    f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+                proxies = self.cfg.getInternalProxies()
+                for proto, url in proxies.iteritems():
+                    f.write('conaryProxy %s %s\n' % (proto, url))
 
             self.cfg.displayKey('proxy', out=f)
             f.close()
@@ -5746,12 +5770,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         availablePlatforms = []
         for platformLabel in self.cfg.availablePlatforms:
-            try:
-                availablePlatforms.append((platformLabel,
-                    self.platformNameCache.get(platformLabel)))
-            except Exception, e:
-                print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (platformLabel, str(e))
-                sys.stderr.flush()
+            platformName = self.platformNameCache.get(platformLabel)
+            if platformName:
+                availablePlatforms.append((platformLabel, platformName))
         return availablePlatforms
 
     def isPlatformAcceptable(self, platformLabel):
@@ -5766,7 +5787,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.mcpClient = None
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
-                helperfuncs.getBasicConaryConfiguration(self.cfg))
+                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
 
         global callLog
         if self.cfg.xmlrpcLogFile:

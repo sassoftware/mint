@@ -597,6 +597,6 @@ def getBasicConaryConfiguration(mintCfg):
         ccfg.read(conarycfgFile)
     ccfg.dbPath = ':memory:'
     ccfg.root   = ':memory:'
-    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy)
+    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy, mintCfg.getInternalProxies())
     return ccfg
 

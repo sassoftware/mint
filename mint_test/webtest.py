@@ -1517,6 +1517,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         groupTrove = self.createTestGroupTrove(client, projectId)
 
+        self.startMintServer()
         repos = self.openRepository()
 
         self.addQuickTestComponent('foo:data',
@@ -1614,6 +1615,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self. quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
+        self.startMintServer()
         repos = self.openRepository()
 
         self.addComponent('foo:source',
@@ -1981,6 +1983,78 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # Check it is on page
         page = self.fetch('/')
         self.assertContent('/', content=HTMLcontent)
+
+    def addExternalRepository(self, client, userpass=('test', 'foo'),
+                              serverIdx=0):
+        # make sure mint has started
+        # and that we're using that mint repos as a proxy.
+        repos = self.startMintServer(useProxy=True)
+        repos = self.openConaryRepository(serverIdx)
+        hostname = 'localhost'
+        if serverIdx:
+            hostname += str(serverIdx)
+        repos.deleteUserByName('%s@rpl:1' % hostname, 'anonymous')
+        if not userpass:
+            userpass = ('', '')
+        extLabel = hostname + '@rpl:linux'
+        projectId = client.newExternalProject(hostname, hostname, '',
+                                            extLabel,
+                                            self.cfg.repositoryMap[hostname],
+                                            mirror=False)
+
+        project = client.getProject(projectId)
+        labelIdMap = client.getLabelsForProject(projectId)[0]
+        label, labelId = labelIdMap.items()[0]
+        authType = 'userpass'
+        project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
+                          authType, userpass[0], userpass[1], '')
+        return repos, hostname
+
+    def editExternalRepository(self, client, hostname, 
+                              userpass=('test', 'foo')):
+        import epdb
+        epdb.st()
+        project = client.getProjectByHostname(hostname)
+        labelIdMap = client.getLabelsForProject(project.projectId)[0]
+        label, labelId = labelIdMap.items()[0]
+        extLabel = hostname + '@rpl:linux'
+        authType = 'userpass'
+        project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
+                          authType, userpass[0], userpass[1], '')
+
+    def addPlatform(self, label, name='Platform for %(label)s'):
+        from rpath_common.proddef import api1 as proddef
+        from StringIO import StringIO
+        pd = proddef.PlatformDefinition()
+        pd.setPlatformName(name % dict(label=label))
+        stream = StringIO('w+')
+        pd.serialize(stream)
+        stream.seek(0)
+        self.addComponent('platform-definition:source=%s' % label, 
+                            [('platform-definition.xml', stream.read())])
+
+    def testGetAvailablePlatforms(self):
+        client = self.startMintServer(useProxy=True)
+        self.addPlatform('localhost@rpl:plat')
+        self.mintCfg.availablePlatforms.append('localhost@rpl:plat')
+
+        # before we add the external product, we don't have access to
+        # this product - there's no repomap.
+        platforms = client.getAvailablePlatforms()
+        assert(not platforms)
+
+        # when we add localhost as an external repository, we
+        # can now access the platform
+        repos, hostname = self.addExternalRepository(client)
+        platforms = client.getAvailablePlatforms()
+        assert(platforms == [['localhost@rpl:plat', 
+                              'Platform for localhost@rpl:plat']])
+
+        # put the wrong password in, and now we can no longer access the
+        # repository.
+        self.editExternalRepository(client, hostname, userpass=('test', 'bar') )
+        platforms = client.getAvailablePlatforms()
+        assert(not platforms)
 
 
 if __name__ == "__main__":
