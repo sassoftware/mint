@@ -90,7 +90,7 @@ from mint.web.templatesupport import projectText
                                         ${buildtypes.typeNamesShort[build.getBuildType()]} ${build.getDefaultName()}
                                     </div></a></td>
                                 <td class="rel-checkbox">
-                                    <input class="relcheck" type="checkbox" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/></td>
+                                    <input class="relcheck" checked="checked" type="checkbox" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/></td>
                             </tr>
                             <tr py:attrs="{'class': rowStyle and 'odd' or 'even'}" >
                                 <td></td>
