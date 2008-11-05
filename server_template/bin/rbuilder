@@ -1,3 +1,2 @@
 #!/bin/sh
-echo "Please ensure sendmail is running."
 @SERVER_PATH@/bin/rbuilder-watch @SERVER_PATH@
