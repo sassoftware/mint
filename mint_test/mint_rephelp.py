@@ -462,13 +462,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
         else:
             server.setNeedsReset()
-          if serverIdx == 0 and serverCache is self.mintServers:
+        if serverIdx == 0 and serverCache is self.mintServers:
             self.port = server.port
             self.mintCfg = server.mintCfg
-              if self.mintCfg.SSL:
+            if self.mintCfg.SSL:
                 self.securePort = server.securePort
-              else:
-                  self.securePort = 0
+            else:
+                self.securePort = 0
         self.db = self.openMintDatabase()
         try:
             cli, userId = self.quickMintAdmin('intuser', 'intpass')
