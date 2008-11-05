@@ -11,6 +11,7 @@
 function modalYesNo(yesFunc, noFunc) {
     jQuery("#modalYesNo").dialog({ 
         modal: true,
+        bgiframe: true,
         draggable: false,
         width: 450,
         height: 200,
@@ -34,6 +35,7 @@ function modalYesNo(yesFunc, noFunc) {
 function modalEditVersionWarning(yesFunc, noFunc) {
     jQuery("#modalEditVersionWarning").dialog({
         modal: true,
+        bgiframe: true,
         draggable: false,
         width: 450,
         height: 250,
