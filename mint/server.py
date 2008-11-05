@@ -16,6 +16,7 @@ import sys
 import time
 import tempfile
 import urllib
+import weakref
 import StringIO
 
 from mint import buildtypes
@@ -290,7 +291,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, conarycfg, server):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._cclient = conaryclient.ConaryClient(conarycfg)
-        self._server = server
+        self._server = weakref.ref(server)
 
     def _refresh(self, labelStr):
         try:
@@ -299,8 +300,8 @@ class PlatformNameCache(persistentcache.PersistentCache):
             # across all repositories we access.
             hostname = hostname.split('.')[0]
             try:
-                projectId = self._server.getProjectIdByHostname(hostname)
-                cfg = self._server._getProjectConaryConfig(
+                projectId = self._server().getProjectIdByHostname(hostname)
+                cfg = self._server()._getProjectConaryConfig(
                                         projects.Project(self._server, projectId))
                 client = conaryclient.ConaryClient(cfg)
             except ItemNotFound:

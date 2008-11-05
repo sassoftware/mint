@@ -2012,8 +2012,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def editExternalRepository(self, client, hostname, 
                               userpass=('test', 'foo')):
-        import epdb
-        epdb.st()
         project = client.getProjectByHostname(hostname)
         labelIdMap = client.getLabelsForProject(project.projectId)[0]
         label, labelId = labelIdMap.items()[0]
