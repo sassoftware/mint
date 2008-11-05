@@ -23,11 +23,11 @@ function modalYesNo(yesFunc, noFunc) {
         buttons: { 
 	        "Yes": function() {
 	        	yesFunc();
-	        	jQuery(this).dialog("close");
+	        	jQuery(this).dialog("destroy");
 	        },
 	        "No": function() { 
 	            noFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
 	        }
         }
     }).show();
@@ -48,11 +48,11 @@ function modalEditVersionWarning(yesFunc, noFunc) {
         buttons: {
             "Add Image Later": function() {
                 yesFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
             },
             "Add Image Now": function() { 
                 noFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
             }
         }
     }).show();
