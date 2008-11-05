@@ -376,7 +376,7 @@
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
                             <p>
-                            <a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add a new image</a></p>
+                            <a class="pdbuilddef-adder" href="#"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add a new image</a></p>
                             <p>
                             <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder:Image_Types" target="_blank">Read more about each image type</a></p>
                         </td>
