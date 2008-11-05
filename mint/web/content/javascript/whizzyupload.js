@@ -109,6 +109,7 @@ FileUploadForm.prototype =
         if (this.progressDialog !== null)
             this.progressDialog = jQuery("#upload_progress").dialog({
                 modal: true,
+                bgiframe: true,
                 width: 475,
                 height: 160,
                 overlay: {
