@@ -14,6 +14,7 @@ import sys
 import tempfile
 import time
 import traceback
+import urllib
 
 from mint import config
 from mint import users
