@@ -302,7 +302,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
             try:
                 projectId = self._server().getProjectIdByHostname(hostname)
                 cfg = self._server()._getProjectConaryConfig(
-                                        projects.Project(self._server, projectId))
+                                    projects.Project(self._server(), projectId))
                 client = conaryclient.ConaryClient(cfg)
             except ItemNotFound:
                 client = self._cclient

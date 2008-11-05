@@ -272,7 +272,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # fetch from both URLs, one with and one without the trailing slash
         # both should redirect
         self.assertCode('/conary', code = 301)
-        self.assertCode('/conary/', code = 302)
+        self.assertCode('/conary/', code = 301)
 
     def testReferencesAndDescendants(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")

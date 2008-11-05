@@ -31,13 +31,26 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "Expected redirect to %s, got %s" % \
                         (expectedRedirect, redirectUrl))
 
+
+    @staticmethod
+    def normalizeXML(data):
+        """lxml will produce the header with single quotes for its attributes,
+        while xmllint uses double quotes. This function normalizes the data"""
+        return data.replace(
+            "<?xml version='1.0' encoding='UTF-8'?>",
+            '<?xml version="1.0" encoding="UTF-8"?>').strip()
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(self.normalizeXML(first),
+                             self.normalizeXML(second))
+
     def testGetImagesNoCred(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [400])
         self.assertEquals(page.headers['content-type'], 'application/xml')
-        self.assertEquals(page.body,
+        self.assertXMLEquals(page.body,
                 '<?xml version="1.0" encoding="UTF-8"?>\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>')
 
     def testGetImagesNoSession(self):
