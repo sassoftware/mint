@@ -13,6 +13,7 @@ function modalYesNo(yesFunc, noFunc) {
         modal: true,
         bgiframe: true,
         draggable: false,
+        resizable: false,
         width: 450,
         height: 200,
         overlay: { 
@@ -37,6 +38,7 @@ function modalEditVersionWarning(yesFunc, noFunc) {
         modal: true,
         bgiframe: true,
         draggable: false,
+        resizable: false,
         width: 450,
         height: 250,
         overlay: { 
