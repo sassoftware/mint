@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = postgresql
+SUBDIRS = postgresql stubs
 
 extra_dist = schema.in.py
 
@@ -17,18 +17,9 @@ all: default-all $(generated_files)
 
 install: default-install
 	# rBuilder config
-	mkdir -p $(DESTDIR)/srv/rbuilder/config/config.d
-	mkdir -p $(DESTDIR)/srv/rbuilder/config/pcreator.d
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
-	install -D -m0660 stubs/rbuilder-generated.conf \
-		$(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
-	install -D -m0640 stubs/rbuilder-custom.conf \
-		$(DESTDIR)/srv/rbuilder/config/stubs/rbuilder-custom.conf
-	install -D -m0644 stubs/pcreator.conf $(DESTDIR)/srv/rbuilder/config/pcreator.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
-	touch $(DESTDIR)/srv/rbuilder/config/config.d/.keep.rbuilder
-	touch $(DESTDIR)/srv/rbuilder/config/pcreator.d/.keep.rbuilder
 	# rBuilder misc
 	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
 	# rAPA bits

@@ -81,4 +81,4 @@ includeConfigFile rbuilder-custom.conf
 includeConfigFile config.d/*.conf
 
 # Package creator configuration stub
-packageCreatorConfiguraton pcreator.conf
+packageCreatorConfiguraton /srv/rbuilder/config/pcreator.conf
