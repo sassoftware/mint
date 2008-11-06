@@ -65,15 +65,25 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                 continuedLine = ''
 
         fileList = set()
+        wildCards = set()
         for line in newData:
             if line.startswith('python_files') or \
                     line.startswith('kid_files') or \
                     line.startswith('static_files') or \
                     line.startswith('extra_dist'):
-                fileList |= set(''.join(x.strip().split('\\')) for x in \
+                files = [''.join(x.strip().split('\\')) for x in \
                              ' '.join((line.split('=')[1] \
                                        ).split('\t')).split(' ') \
-                             if x.strip() != '')
+                             if x.strip() != '']
+                while '$(wildcard' in files:
+                    index = files.index('$(wildcard')
+                    wildCards.add(files[index + 1][:-1])
+                    del files[index:index+2]
+                fileList.update(files)
+
+        for wildCard in wildCards:
+            matches = util.braceGlob(os.path.join(directory, wildCard))
+            fileList.update(os.path.basename(x) for x in matches)
 
         actualList = set(x for x in os.listdir(directory) \
                            if ((x.endswith('.py') or x.endswith('.kid')) \
