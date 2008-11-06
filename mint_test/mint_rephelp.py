@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import os
+import sha
 import shutil
 import pwd
 import rephelp
@@ -23,9 +24,11 @@ SimpleDOM.EMPTY_HTML_TAGS.remove('img')
 from webunit import webunittest
 
 from mint.web import hooks
+from mint import builds
 from mint import client
 from mint import config
 from mint import cooktypes, buildtypes
+from mint import jobs
 from mint import server
 from mint import shimclient
 from mint import buildtypes
@@ -575,6 +578,37 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         self.setupProject(client, hostname, domainname)
 
         return projectId
+
+    def addBuild(self, client, projectId, imageType, userId, imageFiles=None,
+                 name='Build', description='Build Description',
+                 buildData=None):
+        db = self.openMintDatabase()
+        buildTable = builds.BuildsTable(db)
+        buildFilesTable = jobs.BuildFilesTable(db)
+        dataTable = data.BuildDataTable(db)
+        buildId = buildTable.new(projectId=projectId, 
+                                 buildType=imageType, name=name,
+                                 description=description, createdBy=userId)
+        if imageFiles is None:
+            sha1 = sha.new()
+            sha1.update(str(buildId))
+            sha1 = sha1.hexdigest()
+
+            imageFiles = [('imageFile %s' % buildId, 'Image Title %s' % buildId,
+                          1024 * buildId, sha1)]
+        client.server._server._setBuildFilenames(buildId, imageFiles)
+        if buildData:
+            for key, value in buildData.items():
+                if isinstance(value, str):
+                    dataType = data.RDT_STRING
+                elif isinstance(value, int):
+                    dataType = data.RDT_INT
+                elif isinstance(value, bool):
+                    dataType = data.RDT_BOOL
+                else:
+                    raise NotImplementedError
+                dataTable.setDataValue(buildId, key, value, dataType)
+
 
     def createTestGroupTrove(self, client, projectId,
                              name = 'group-test', upstreamVer = '1.0.0',

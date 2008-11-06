@@ -2054,6 +2054,50 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         platforms = client.getAvailablePlatforms()
         assert(not platforms)
 
+    def testGetAllImagesByType(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        adminClient, userId2 = self.quickMintAdmin('foo2', 'foo2')
+        otherClient, userId3 = self.quickMintUser('foo3', 'foo3')
+        projectId = self.newProject(client)
+        projectId2 = self.newProject(otherClient, 'testproject2', 'tp2')
+
+        # check permissions - users can see their own, admin can see all.
+        self.addBuild(client, projectId, buildtypes.XEN_OVA, userId=userId)
+        self.addBuild(client, projectId2, buildtypes.XEN_OVA, userId=userId3)
+        images = client.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 1)
+        images = otherClient.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 1)
+        images = adminClient.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 2)
+
+        images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.VMWARE_ESX_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
+        assert(len(images) == 1)
+
+        images = client.getAllBuildsByType('AMI')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.AMI,
+                      userId=userId)
+        self.addBuild(client, projectId, buildtypes.AMI,
+                      userId=userId, buildData={'amiId' : '324'})
+        images = client.getAllBuildsByType('AMI')
+        assert(len(images) == 1)
+
+        # Check VWS - 
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.RAW_FS_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.RAW_FS_IMAGE,
+                      userId=userId, buildData={'XEN_DOMU' : True})
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 1)
 
 if __name__ == "__main__":
     testsuite.main()

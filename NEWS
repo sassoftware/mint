@@ -4,6 +4,7 @@ API Changes
 ---------------------
 * getPackageCreatorRecipe and savePackageCreatorRecipe have been added to the
   conary client. (RBL-3483)
+* added getAllBuildsByType call (RBL-3711)
 
 Internal Changes
 ---------------------
