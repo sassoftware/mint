@@ -790,10 +790,22 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 message = None)
 
     @writersOnly
+    @productversion.productVersionRequired
     def packageCreatorPackages(self, auth):
-        pkgList = self.client.getPackageCreatorPackages(self.project.getId())
+        pkgList = {}
+        version = None
+        namespace = None
+        allPackageCreatorPackagesList = self.client.getPackageCreatorPackages(self.project.getId())
+        try:
+            ver = self.client.getProductVersion(self.currentVersion)
+            version = ver['name']
+            namespace = ver['namespace']
+            pkgList = dict([x for x in allPackageCreatorPackagesList[ver['name']][ver['namespace']].items() if not x[0].startswith('group-')])
+        except KeyError:
+            pass # no packages for our namespace / version combo
 
-        return self._write('packageList', pkgList=pkgList, message=None)
+        return self._write('packageList', pkgList=pkgList, version=version,
+                namespace=namespace, message=None)
 
     @ownerOnly
     def newRelease(self, auth):
