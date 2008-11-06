@@ -9,7 +9,7 @@ from mint.web.fields import strFields, intFields, listFields, boolFields, dictFi
 def productVersionRequired(func):
     def prodVerReqWrap(s, *args, **kwargs):
         if s.currentVersion is None:
-            s._addErrors("You must have a version selected before you can visit this page.  Select one from the left menu before trying again.")
+            s._addErrors("You must have a version selected before you can visit this page.")
             s._predirect('', temporary=True)
         return func(s, *args, **kwargs)
     prodVerReqWrap.__wrapped_func__ = func
