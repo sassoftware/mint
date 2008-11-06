@@ -418,7 +418,6 @@ def deleteUserFromRepository(repos, username, label=None, deleteRole=True):
                 # Conary deleted the role for us (probably)
                 pass
     else:
-        repos = _getShimServer(repos)
         repos.auth.deleteUserByName(username)
         if deleteRole:
             try:

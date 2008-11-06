@@ -625,13 +625,11 @@ class ProjectsTable(database.KeyedTable):
 
         return username
 
-    def hide(self, projectId):
+    @database.dbWriter
+    def hide(self, cu, projectId):
         # Anonymous user is added/removed in server
-        cu = self.db.cursor()
-
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
         cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
-        self.db.commit()
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in server
@@ -750,10 +748,9 @@ class LabelsTable(database.KeyedTable):
             return dict(label=p[0], url=p[1], authType=p[2],
                 username=username, password=password, entitlement=entitlement)
 
-    def addLabel(self, projectId, label, url=None, authType='none',
+    @database.dbWriter
+    def addLabel(self, cu, projectId, label, url=None, authType='none',
             username=None, password=None, entitlement=None):
-        cu = self.db.cursor()
-
         cu.execute("""SELECT count(labelId) FROM Labels WHERE label=? and projectId=?""",
                    label, projectId)
         c = cu.fetchone()[0]
@@ -764,20 +761,17 @@ class LabelsTable(database.KeyedTable):
             username, password, entitlement)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""", projectId, label, url,
                     authType, username, password, entitlement)
-        self.db.commit()
         return cu._cursor.lastrowid
 
-    def editLabel(self, labelId, label, url, authType='none',
+    @database.dbWriter
+    def editLabel(self, cu, labelId, label, url, authType='none',
             username=None, password=None, entitlement=None):
-        cu = self.db.cursor()
         cu.execute("""UPDATE Labels SET label=?, url=?, authType=?,
             username=?, password=?, entitlement=? WHERE labelId=?""",
             label, url, authType, username, password, entitlement, labelId)
-        self.db.commit()
 
-    def removeLabel(self, projectId, labelId):
-        cu = self.db.cursor()
-
+    @database.dbWriter
+    def removeLabel(self, cu, projectId, labelId):
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
 
