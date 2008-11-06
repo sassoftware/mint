@@ -118,12 +118,8 @@ callLog = None
 
 def deriveBaseFunc(func):
     r = func
-    done = 0
-    while not done:
-        try:
-            r = r.__wrapped_func__
-        except AttributeError:
-            done = 1
+    while hasattr(r, '__wrapped_func__'):
+        r = r.__wrapped_func__
     return r
 
 def requiresAdmin(func):
@@ -458,7 +454,7 @@ class MintServer(object):
 
         return ccfg
 
-    def _getProjectRepo(self, project, useshim=True, pcfg = None):
+    def _getProjectRepo(self, project, useshim=True, useServer=False, pcfg = None):
         '''
         A helper function to get a NetworkRepositoryClient for doing repository operations.  If you need a client just call _getProjectConaryConfig and instantiate your own client.
 
@@ -497,6 +493,9 @@ class MintServer(object):
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             server = shimclient.NetworkRepositoryServer(cfg, '')
+            if useServer:
+                # Get a server object instead of a shim client
+                return server
 
             pcfg = helperfuncs.configureClientProxies(pcfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
 
@@ -850,49 +849,57 @@ class MintServer(object):
         if validLabel.match(label) == None:
             raise projects.InvalidLabel(label)
 
-        # XXX this set of operations should be atomic if possible
-        projectId = self.projects.new(name = projectName,
-                                      creatorId = self.auth.userId,
-                                      description = desc,
-                                      hostname = hostname,
-                                      domainname = domainname,
-                                      namespace = namespace,
-                                      isAppliance = applianceValue,
-                                      projecturl = projecturl,
-                                      timeModified = time.time(),
-                                      timeCreated = time.time(),
-                                      shortname = shortname,
-                                      prodtype = prodtype, 
-                                      version = version)
-        self.projectUsers.new(userId = self.auth.userId,
-                              projectId = projectId,
-                              level = userlevels.OWNER)
+        # All database operations must abort cleanly, especially when
+        # creating the repository fails. Otherwise, we'll end up with
+        # a completely broken project that may not even delete cleanly.
+        #
+        # No database operation inside this block may commit the
+        # transaction.
+        self.db.transaction()
+        try:
+            projectId = self.projects.new(name=projectName,
+                creatorId=self.auth.userId, description=desc, hostname=hostname,
+                domainname=domainname, namespace=namespace,
+                isAppliance=applianceValue, projecturl=projecturl,
+                timeModified=time.time(), timeCreated=time.time(),
+                shortname=shortname, prodtype=prodtype, version=version,
+                commit=False)
+            project = projects.Project(self, projectId)
 
-        # add to RepNameMap if projectDomainName != domainname
-        projectDomainName = self.cfg.projectDomainName.split(':')[0]
-        if (domainname != projectDomainName):
-            self._addRemappedRepository('%s.%s' % \
-                                        (hostname, projectDomainName), fqdn)
+            self.projectUsers.new(userId=self.auth.userId, projectId=projectId,
+                level=userlevels.OWNER, commit=False)
 
-        project = projects.Project(self, projectId)
+            # add to RepNameMap if projectDomainName != domainname
+            projectDomainName = self.cfg.projectDomainName.split(':')[0]
+            if domainname != projectDomainName:
+                self.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
+                    toName=fqdn, commit=False)
 
-        project.addLabel(label,
-                         "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, 
-                         self.cfg.basePath, hostname), 'userpass', 
-                         self.cfg.authUser, self.cfg.authPass)
+            self.labels.addLabel(projectId, label,
+                "http://%s%srepos/%s/" % (
+                    self.cfg.projectSiteHost, self.cfg.basePath, hostname),
+                'userpass', self.cfg.authUser, self.cfg.authPass, commit=False)
 
-        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                                  hostname, domainname, self.authToken[0],
-                                  self.authToken[1])
-        
-        if self.cfg.hideNewProjects or isPrivate:
-            repos = self._getProjectRepo(project)
-            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
-                project.getLabel())
-            self.projects.hide(projectId)
+            if commitEmail:
+                self.projects.update(projectId, commitEmail=commitEmail, commit=False)
 
-        if commitEmail:
-            project.setCommitEmail(commitEmail)
+            self.projects.createRepos(self.cfg.reposPath,
+                self.cfg.reposContentsDir, hostname, domainname,
+                self.authToken[0], self.authToken[1])
+            
+            # TODO: put an additional try/except around this to delete
+            # the repository if further setup fails.
+            if self.cfg.hideNewProjects or isPrivate:
+                repos = self._getProjectRepo(project)
+                helperfuncs.deleteUserFromRepository(repos, 'anonymous', label)
+                self.projects.hide(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        self.db.commit()
+
+        # Product now exists and is complete -- failures below here
+        # won't result in inconsistencies or information leaks.
 
         if applianceValue:
             try:
@@ -934,33 +941,32 @@ class MintServer(object):
         if not url:
             url = 'http://' + label.split('@')[0] + '/conary/'
 
-        # create the project entry
-        projectId = self.projects.new(name = name,
-                                      creatorId = self.auth.userId,
-                                      description = '',
-                                      hostname = hostname,
-                                      domainname = domainname,
-                                      projecturl = '',
-                                      external = 1,
-                                      timeModified = time.time(),
-                                      timeCreated = time.time())
+        self.db.transaction()
+        try:
+            # create the project entry
+            projectId = self.projects.new(name=name, creatorId=self.auth.userId, description='',
+                hostname=hostname, domainname=domainname, projecturl='', external=1,
+                timeModified=time.time(), timeCreated=time.time(),
+                commit=False)
 
-        # create the projectUsers entry
-        self.projectUsers.new(userId = self.auth.userId,
-                              projectId = projectId,
-                              level = userlevels.OWNER)
+            # create the projectUsers entry
+            self.projectUsers.new(userId = self.auth.userId,
+                                  projectId = projectId,
+                                  level = userlevels.OWNER, commit=False)
 
-        project = projects.Project(self, projectId)
+            # create the labels entry
+            self.labels.addLabel(projectId, label, url, 'none', commit=False)
 
-        # create the labels entry
-        project.addLabel(label, url, 'none')
-
-        # create the target repository if needed
-        if mirrored:
-            parts = versions.Label(label).getHost().split(".")
-            hostname, domainname = parts[0], ".".join(parts[1:])
-            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                hostname, domainname, None, None)
+            # create the target repository if needed
+            if mirrored:
+                parts = versions.Label(label).getHost().split(".")
+                hostname, domainname = parts[0], ".".join(parts[1:])
+                self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
+                    hostname, domainname, None, None)
+        except:
+            self.db.rollback()
+            raise
+        self.db.commit()
 
         self._generateConaryRcFile()
         return projectId
