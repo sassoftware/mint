@@ -86,15 +86,14 @@ class DatabaseTable(object):
         self.db = db
         cu = self.db.cursor()
 
-    def __getattribute__(self, name):
-        if name == 'db':
-            return object.__getattribute__(self, name)()
-        return object.__getattribute__(self, name)
+    def _getDb(self):
+        return self._db()
 
-    def __setattr__(self, name, val):
-        if name == 'db' and not isinstance(val, weakref.ref):
-            return object.__setattr__(self, name, weakref.ref(val))
-        return object.__setattr__(self, name, val)
+    def _setDb(self, db):
+        if not isinstance(db, weakref.ref):
+            db = weakref.ref(db)
+        self._db = db
+    db = property(_getDb, _setDb)
 
 
 class KeyedTable(DatabaseTable):
