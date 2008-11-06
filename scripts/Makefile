@@ -22,6 +22,9 @@ static_files =				\
 	update-top-projects		\
 	set-password		
 
+generated_files =	\
+	rbuilder_database.py
+
 cgi_files =				\
 	fileupload.cgi
 

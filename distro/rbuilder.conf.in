@@ -71,8 +71,14 @@ acceptablePlatforms     conary.rpath.com@rpl:2-devel
 includeConfigFile /etc/conary/config.d/httpProxy
 
 # Generated configuration data created during first time setup of rBuilder
-includeConfigFile /srv/rbuilder/config/rbuilder-generated.conf
+includeConfigFile rbuilder-generated.conf
 
 # Custom "site-local" configuration should go in this file
-includeConfigFile /srv/rbuilder/config/rbuilder-custom.conf
+includeConfigFile rbuilder-custom.conf
 
+# Alternately, additional site-local configuration files may be placed
+# into this directory.
+includeConfigFile config.d/*.conf
+
+# Package creator configuration stub
+packageCreatorConfiguration /srv/rbuilder/config/pcreator.conf
