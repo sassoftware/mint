@@ -103,6 +103,7 @@ jQuery(document).ready(function () {
         jQuery('#pdbuilddef-empty').hide();
         buildsDefined = true;
         currentBdefSerial++;
+        return false;
     });
 
     jQuery('.pdusource-deleter').click(function () {

@@ -25,68 +25,44 @@
                 </div>
 
                 <div id="middle">
+                    ${productVersionMenu()}
                     <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+
                     <div class="page-title">Maintain Packages</div>
                 
                     <p py:if="message" class="message" py:content="message"/>
                     
                     <h2>Available Packages</h2>
 
-                    <?python
-                    if currentVersion is not None:
-                        vlist = [x for x in versions if x[0] == currentVersion][0]
-                    else:
-                        vlist = []
-                    ?>
-                    <div py:if="not pkgList">No packages available, <a href="newPackage">create</a> one. </div>
-                    <div py:if="pkgList" py:strip="True">
-                        <div py:for="version in sorted(currentVersion is None and pkgList.keys() or [vlist[3]])" class="mailingListButtons">
-
-                            <div py:for="namespace in sorted(currentVersion is None and pkgList[version].keys() or [vlist[2]])"
-                                py:strip="True">
-
-                                <table class="package-list">
+                    <div py:if="not pkgList">No packages available for this product version. Please
+                        <a href="newPackage">create a package</a> or select a different version from the list above.</div>
+                    <div py:if="pkgList">
+                        <p>Click the "Update Archive" button to upload and build a new archive.
+                        Click the "Update Details" button to review the package details and build the package.</p>
+                        <table class="package-list">
+                            <thead>
                                 <tr>
                                     <td class="package-version-header" colspan="3">Version ${version} (${namespace})</td>
                                 </tr>
-                                <?python
-                                try:
-                                   troveList = pkgList[version][namespace]
-                                except KeyError:
-                                   troveList = {}
-                                ?>
-                                <tr py:if="not troveList">
-                                    <td colspan="3">No packages available for this Product Version</td>
-                                </tr>
-                                
-                                <div py:for="troveName in sorted(troveList.keys())" py:strip="True">
-                                    <div py:if="not troveName.startswith('group-')" py:strip="True">
+                            </thead>
+                            <tbody>
+                                <tr py:for="troveName, data in sorted(pkgList.items())">
                                     <?python
-                                    data = troveList[troveName]
-                                    label = data['develStageLabel']
-                                    prodVer = data['productDefinition']['version']
-                                    namespace = data['productDefinition']['namespace']
+                                        label = data['develStageLabel']
+                                        prodVer = data['productDefinition']['version']
+                                        namespace = data['productDefinition']['namespace']
                                     ?>
-                                    <tr>
-                                        <td class="package-detail" width="90%">${troveName.replace(':source','')}</td>
-                                        <td class="package-detail"><a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Archive&nbsp;</a></td>
-                                        <td class="package-detail"><a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Details&nbsp;</a></td>
-                                    </tr>
-                                    </div>
-                                </div>
-                                </table>
-                            </div>
-                            <div py:if="troveList">
-                                    <p class="help">Click the "Update Archive" button to upload and build a new archive.<br/>
-                                    Click the "Update Details" button to review the package details and build the package.</p>
-                            </div>
-                        </div>
+                                    <td class="package-detail" width="90%">${troveName.replace(':source','')}</td>
+                                    <td class="package-detail"><a class="option" href="newUpload?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Archive&nbsp;</a></td>
+                                    <td class="package-detail"><a class="option" href="maintainPackageInterview?name=${troveName}&amp;label=${label}&amp;prodVer=${prodVer}&amp;namespace=${namespace}">&nbsp;Update Details&nbsp;</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h2>Other Packages</h2>
+                        <p>The packages listed above are those that were previously created using Package Creator.
+                        For other packages, you will need to use the normal 
+                        <a href="http://wiki.rpath.com/wiki/Conary:Packaging">package maintenance</a> work flow.</p>
                     </div>
-                    <h2>Other Packages</h2>
-                    The packages listed above are those that were previously created using Package Creator.  
-                    For other packages, you will need to use the normal 
-                    <a href="http://wiki.rpath.com/wiki/Conary:Packaging">package maintenance</a> work flow.
-                    
                 </div><!--middle-->
                 <br class="clear" />
                 <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />

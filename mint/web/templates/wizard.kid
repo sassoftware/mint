@@ -20,6 +20,9 @@
             <li py:for="step in sorted([x for x in wizard_steps.keys() if x not in wizard_maint_steps])" py:attrs="{'class': (wizard_position == step) and 'selectedItem' or (wizard_position > step) and 'completedItem' or None}">
                 <span py:replace="wizard_steps[step][0]"/>
             </li>
+            <li class="wiz-exit">
+                <a href="${project.getUrl()}">Exit Appliance Creator</a>
+            </li>
         </ul>
 </div>
 </html>
