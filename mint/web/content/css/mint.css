@@ -1854,7 +1854,7 @@ td.modified a:visited {
 }
 
 td.modified a:hover {
-    color: white;
+    color: #e65a1d;
 }
 
 img.pointer {
