@@ -57,15 +57,18 @@ excludeBuildTypes       AMI
 # Activate Internal Conary Proxy for rBuilder
 useInternalConaryProxy  True
 
+
 # Available platforms (these are officially supported)
-# XXX these need to be changed to a "product" platform (rLS) before v5 goes out
-availablePlatforms      conary.rpath.com@rpl:2
-availablePlatforms      ubuntu.rpath.com@rpath:ubuntu-hardy
+availablePlatforms      rap.rpath.com@rpath:linux-2
+availablePlatforms      sles.rpath.com@rpath:sles-10
+availablePlatforms      centos.rpath.com@rpath:centos-5
+availablePlatforms      rap.rpath.com@rpath:linux-1
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
-# XXX these need to be changed to a "product" platform (rLS) before v5 goes out
-acceptablePlatforms     conary.rpath.com@rpl:2
-acceptablePlatforms     conary.rpath.com@rpl:2-devel
+acceptablePlatforms      rap.rpath.com@rpath:linux-2-devel
+acceptablePlatforms      sles.rpath.com@rpath:sles-10-devel
+acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
+acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy
