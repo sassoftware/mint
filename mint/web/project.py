@@ -1331,7 +1331,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     namespace,
                     pd)
 
-
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
                 coerceValues=True)
@@ -1349,19 +1348,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             pd.addStage(s['name'], s['labelSuffix'])
 
         # TODO add baseflavor from the UI
-        # XXX  Currently we are hardcoding this to rLS/rPL 1 (RBL-2899)
-        #      but only if it wasn't set. This way, users can override
-        #      it by editing the XML by hand.
-        if not pd.getBaseFlavor():
-            pd.setBaseFlavor("""
-~MySQL-python.threadsafe, X, ~!alternatives, ~!bootstrap,
-~builddocs, ~buildtests, desktop, emacs, gcj, ~glibc.tls,
-gnome, gtk, ipv6, kde, ~kernel.debugdata, krb, ldap, nptl,
-~!openssh.smartcard, ~!openssh.static_libcrypto, pam, pcre,
-perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
-~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
-~!xorg-x11.xprint
-""")
+        # hardcoding baseFlavor isn't appropriate in proddef schema
+        # version 2.0 and higher
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
@@ -1399,9 +1387,13 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             # Coerce trove type options back to their class name
             buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
 
+            flavorSetRef, architectureRef = \
+                    builddef.get('flvSetArchRef').split(',')
             pd.addBuildDefinition(name=buildName,
-                baseFlavor=builddef.get('baseFlavor'),
-                imageType=pd.imageType(xmlTagName, buildSettings),
+                flavorSetRef = flavorSetRef,
+                architectureRef = architectureRef,
+                containerTemplateRef = xmlTagName,
+                image = pd.imageType(None, buildSettings),
                 stages = stageNames)
 
         for ve in validationErrors:

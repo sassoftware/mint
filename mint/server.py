@@ -553,6 +553,8 @@ class MintServer(object):
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
+            # XXX could this exception handler be more specific? As written
+            # any error in the proddef module will be masked.
             raise ProductDefinitionVersionNotFound
         return pd
 
@@ -2387,9 +2389,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Create/start each build.
         buildIds = []
         for buildDefinition, nvf in filteredBuilds:
-            buildImageType = buildDefinition.getBuildImageType()
-            buildSettings = buildImageType.fields.copy()
-            buildType = buildImageType.tag
+            buildImage = buildDefinition.getBuildImage()
+            buildSettings = buildImage.fields.copy()
+            buildType = buildImage.containerFormat and \
+                    str(buildImage.containerFormat) or ''
 
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
             projectName = project.getName()
@@ -4782,15 +4785,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # set the build type
             buildTypeDt = buildtemplates.getDataTemplateByXmlName(
-                              build.getBuildImageType().getTag())
+                              build.getBuildImage().containerFormat)
             task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
 
             # get the name of the flavor.  If we don't have a name mapped to
             # it, specify that it is custom
-            flavor = build.getBuildBaseFlavor()
-            if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
-                index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
-                buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
+            flavor = str(build.getBuildBaseFlavor())
+            flavorMap = buildtypes.makeBuildFlavorMap(pd)
+            if flavorMap.has_key(flavor):
+                buildFlavor = flavorMap[flavor]
             else:
                 buildFlavor = "Custom Flavor: %s" % flavor
             task['buildFlavorName'] = buildFlavor
