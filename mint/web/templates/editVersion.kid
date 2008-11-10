@@ -386,6 +386,9 @@
                             <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                         </div>
                     </button>
+                    <a class="no-decoration" href="${project.getUrl()}" title="Cancel">
+                        <img src="${cfg.staticPath}/apps/mint/images/cancel_button.png" />
+                    </a>
                     </p>
                     <input type="hidden" name="id" value="${id}" />
                     <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />
