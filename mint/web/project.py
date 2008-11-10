@@ -1457,6 +1457,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @requiresAuth
     @ownerOnly
     def rebaseProductVersion(self, auth, id):
+
+        return_to = ''
+        if self.req.headers_in.has_key('referer') and \
+                self.project.getUrl() in self.req.headers_in['referer']:
+            return_to = self.req.headers_in['referer'].split('/')[-1]
+
         productVersion = self.client.getProductVersion(id)
         availablePlatforms = self.client.getAvailablePlatforms()
         try:
@@ -1492,22 +1498,23 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 versionName = productVersion.get('name',''),
                 currentPlatformLabel = platformLabel,
                 customPlatform = customPlatform,
-                availablePlatforms = availablePlatforms)
+                availablePlatforms = availablePlatforms,
+                return_to = return_to)
 
     @intFields(id = -1)
-    @strFields(platformLabel = '', action = 'Cancel')
+    @strFields(platformLabel = '', action = 'Cancel', return_to='')
     @requiresAuth
     @ownerOnly
-    def processRebaseProductVersion(self, auth, id, platformLabel, action):
+    def processRebaseProductVersion(self, auth, id, platformLabel, action, return_to):
         if action == 'Cancel':
-            self._predirect()
+            self._predirect(return_to)
 
         pd = self.client.getProductDefinitionForVersion(id)
         if self.client.setProductDefinitionForVersion(id, pd, platformLabel):
             self._setInfo("Product version updated")
         else:
             self._addError("Problem updating product version")
-        self._predirect()
+        self._predirect(return_to)
 
     def _productVersionAvaliableBuildTypes(self):
         """

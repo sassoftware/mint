@@ -60,6 +60,7 @@
                             <input type="submit" id="submitButton" name="action" value="Update Appliance Platform" />
                             <input type="submit" id="submitButton" name="action" value="Cancel" />
                             <input type="hidden" name="id" value="${id}" />
+                            <input type="hidden" name="return_to" value="${return_to}" />
                         </p>
                     </form>
                 </div><br class="clear" />
