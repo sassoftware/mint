@@ -6,3 +6,4 @@
 /etc/sysconfig/pgsql/*
 /etc/postgresql.conf.rbuilder
 /srv/pgsql/8.2-rbuilder/pg_log/*
+/tmp/mint-error-*.txt
