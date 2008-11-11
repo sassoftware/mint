@@ -5048,8 +5048,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         L{createPackageTmpDir}
         @type sessionHandle: string
 
-        @return: a list of three items: whether or not the build is complete, a build status code (as returned by rmake), and a message
-        @rtype: list(bool, int, string)
+        @return: a list of four items: whether or not the build is complete, a
+        build status code (as returned by rmake), a message, and the list of
+        built packages if any.
+        @rtype: list(bool, int, string, list of three-tuples)
         """
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
@@ -5057,7 +5059,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return pc.isBuildFinished(sessionHandle, commit=True)
         except packagecreator.errors.PackageCreatorError, e:
             # TODO: Get a real error status code
-            return [True, -1, str(e)]
+            return [True, -1, str(e), []]
 
     @typeCheck(((str,unicode),))
     @requiresAuth
