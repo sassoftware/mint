@@ -5,6 +5,8 @@ API Changes
 * getPackageCreatorRecipe and savePackageCreatorRecipe have been added to the
   conary client. (RBL-3483)
 * added getAllBuildsByType call (RBL-3711)
+* isBuildFinished() call now returns the also list of built troves
+  along with the rest of the information about the build. (RBL-3586)
 
 Internal Changes
 ---------------------
