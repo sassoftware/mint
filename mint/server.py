@@ -2517,9 +2517,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Find the troves that satisfy the build.
         ret = []
-        matches = repos.findTrove(None, (troveName, troveLabel, None))
+        matches = repos.findTroves(None, [(troveName, troveLabel, None)],
+                allowMissing = True)
         if not matches:
             return []
+        matches = matches[(troveName, troveLabel, None)]
 
         maxVersion = max(x[1] for x in matches)
         for name, version, flavor in matches:

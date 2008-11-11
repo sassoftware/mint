@@ -1198,6 +1198,11 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                 frozen=True),
                              deps.parseFlavor(f)) \
                                      for f in flava_flavs]
+                def findTroves(self, t1, t2, *args, **kwargs):
+                    res = self.findTrove(t1, t2[0], *args, **kwargs)
+                    if not res:
+                        return {}
+                    return {t2[0]: res}
             return Repo()
 
         self.oldGetRepos = conaryclient.ConaryClient.getRepos
@@ -1342,6 +1347,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionNoTrove(self, db, data):
+        # test an empty result from _resolveTrove
         client = self.getClient('owner')
         # Should raise an exception
         self.assertRaises(TroveNotFoundForBuildDefinition,
@@ -1354,7 +1360,6 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                 'Elsewhere', True)
         # Should have created 1 build for Elsewhere stage
         self.assertEquals(1, len(buildIds))
-
 
 
 class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
