@@ -34,7 +34,7 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 from conary.dbstore import sqlerrors
-import sqlharness
+from testutils import sqlharness
 
 from mcp_test import mcp_helper
 from mcp import queue
