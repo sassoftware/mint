@@ -20,7 +20,10 @@ import weakref
 import StringIO
 
 from mint import buildtypes
-from mint import charts
+try:
+    from mint import charts
+except ImportError:
+    charts = None
 from mint import communityids
 from mint import data
 from mint import database
