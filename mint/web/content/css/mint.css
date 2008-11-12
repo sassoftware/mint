@@ -405,8 +405,10 @@ div#top {
     padding-top: 10px;
     padding-bottom: 0px;
     margin: 0px;
+    margin-left: auto;
+    margin-right: auto;
     height: 102px;
-    width: 100%;
+    width: 99%;
     min-width: 955px;
     background: url(../images/topgrad.png) repeat-x;
 }
@@ -424,9 +426,12 @@ div#corpLogo {
 
 div#page {
     margin: 0px;
+    margin-left: auto;
+    margin-right: auto;
     padding: 0px;
     background-color: #cedaea;
     border-top: 1px solid #5d82b7;
+    width: 99%;
 }
 
 div.fullpage {
