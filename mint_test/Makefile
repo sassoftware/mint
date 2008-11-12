@@ -3,7 +3,7 @@
 #
 # All Rights Reserved
 #
-SUBDIRS = server mint_archive
+SUBDIRS = server archive
 
 python_files = \
                _apache.py \

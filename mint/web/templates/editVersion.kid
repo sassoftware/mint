@@ -54,14 +54,14 @@
     </head>
     <body>
                 
-        <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, productDefinition, ordinal='bt', bdef=None)" py:strip="True">
+        <div py:def="buildDefinitionOptions(valueToTemplateIdMap, visibleBuildTypes, ordinal='bt', bdef=None)" py:strip="True">
             <?python
                 from mint import buildtypes
                 from mint import buildtemplates
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                 if bdef:
-                    imageType = bdef.getBuildImage()
-                    buildType = buildtypes.xmlTagNameImageTypeMap.get(imageType.containerFormat)
+                    imageType = bdef.getBuildImageType()
+                    buildType = buildtypes.xmlTagNameImageTypeMap.get(imageType.tag)
                     # Map XML names to optionNameMap
                     buildSettings = dict([(buildtemplates.optionNameMap.get(k,k),v) for k, v in imageType.fields.iteritems()])
                     buildName = bdef.getBuildName()
@@ -71,7 +71,6 @@
                     buildSettings = {}
                     buildName = 'NEWBUILD'
                     buildBaseFlavor = ''
-                buildDefinitionFlavorMap = buildtypes.makeFlavorMap(productDefinition)
             ?>
             <tr id="pdbuilddef-${ordinal}">
                 <td>
@@ -86,10 +85,18 @@
                     <div py:strip="True" py:for="key in visibleBuildTypes">
                         <?python
                             elementClasses = 'arch-%d' % key
-                            elementName = 'pdbuilddef-%s-flvSetArchRef' % (ordinal)
-                            elementId = 'pdbuilddef-buildtype%s-%s-flvSetArchRef' % (key, ordinal)
+                            elementName = 'pdbuilddef-%s-baseFlavor' % (ordinal)
+                            elementId = 'pdbuilddef-buildtype%s-%s-baseFlavor' % (key, ordinal)
 
-                            suppArchTypes = buildtypes.makeFlavorsForBuild(productDefinition, key)
+                            # get the supported arch types for this build type
+                            if buildtypes.buildDefinitionSupportedFlavorsMap.has_key(key):
+                                suppArchTypes = dict()
+                                typesList = buildtypes.buildDefinitionSupportedFlavorsMap[key]
+                                for type in typesList:
+                                    suppArchTypes[type] = buildtypes.buildDefinitionFlavorMap[type]
+                            else:
+                                # not in the map, so allow all
+                                suppArchTypes = buildtypes.buildDefinitionFlavorMap
 
                             elementDisabled = buildType != key and 'disabled' or None
                             elementStyle = buildType != key and 'display: none' or None
@@ -100,9 +107,9 @@
                         ?>
                         <select py:attrs="{'id': elementId, 'name': elementName, 'disabled': elementDisabled}" style="${elementStyle}" class="${elementClasses}">
                             <option py:for="v in sorted(suppArchTypes)"
-                                py:attrs="{'value': buildDefinitionFlavorMap[v],
-                                           'selected': ((buildBaseFlavor or defaultVal) == buildDefinitionFlavorMap[v]) and 'selected' or None}"
-                                py:content="v" />
+                                py:attrs="{'value': buildtypes.buildDefinitionFlavorMap[v],
+                                           'selected': ((buildBaseFlavor or defaultVal) == buildtypes.buildDefinitionFlavorMap[v]) and 'selected' or None}"
+                                py:content="buildtypes.buildDefinitionFlavorNameMap[v]" />
                         </select>
                     </div></td>
                 <td class="row-button"><a class="pdbuilddef-expander"><img src="${cfg.staticPath}/apps/mint/images/icon_edit-n.gif" title="Edit" /></a></td>
@@ -358,7 +365,7 @@
                             </thead>
                             <tbody>
                                 <div py:strip="True" py:for="ordinal, bdef in enumerate(productDefinition.getBuildDefinitions())"
-                                     py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, productDefinition, ordinal, bdef)" />
+                                     py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, ordinal, bdef)" />
                                 <tr id="pdbuilddef-empty" 
                                     py:attrs="{'style':productDefinition.getBuildDefinitions() and 'display: none;' or None}">
                                     <td colspan="5"><strong>No images defined.</strong></td>
@@ -366,7 +373,7 @@
                             </tbody>
                             </table>
                             <table id="pdbuilddef-bt-all" style="display: none">
-                                <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes, productDefinition)" />
+                                <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
                             <p>
                             <a class="pdbuilddef-adder" href="#"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add a new image</a></p>

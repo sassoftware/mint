@@ -142,18 +142,14 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
         self.prodDef.addStage(name = "Development", labelSuffix = "-devel")
         self.prodDef.addStage(name = "QA", labelSuffix = "-qa")
         self.prodDef.addStage(name = "Release", labelSuffix = "")
-
-        self.prodDef.addArchitecture('x86', '32 bit', 'is: x86')
-        self.prodDef.addArchitecture('x86_64', '64 bit', 'is: x86_64')
-
         self.prodDef.addBuildDefinition(name = "'x86 Installable ISO Build",
-            architectureRef = 'x86',
-            image = self.prodDef.imageType('installableIsoImage'),
+            baseFlavor = 'is: x86',
+            imageType = self.prodDef.imageType('installableIsoImage'),
             stages = ['Development', 'QA', 'Release'])
 
         self.prodDef.addBuildDefinition(name = "'x86_64 Installable ISO Build",
-            architectureRef = 'x86_64',
-            image = self.prodDef.imageType('installableIsoImage'),
+            baseFlavor = 'is: x86_64',
+            imageType = self.prodDef.imageType('installableIsoImage'),
             stages = ['Development', 'QA', 'Release'])
 
         project = self.mintClient.getProject(self.projectId)

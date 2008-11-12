@@ -24,7 +24,7 @@ dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 
 generated_files = VERSION INSTALL
 
-.PHONY: doc mint_test $(generated_files)
+.PHONY: doc test $(generated_files)
 
 ## Standard rules
 all: $(generated_files) default-subdirs
