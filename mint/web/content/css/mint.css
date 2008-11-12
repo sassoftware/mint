@@ -440,6 +440,7 @@ div.fullpage {
     padding: 0px;
     width: auto;
     height: 100%;
+    min-height: 338px;
     min-width: 935px;
 }
 
