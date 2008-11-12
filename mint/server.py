@@ -2427,7 +2427,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return baseFileName
 
     def _getBuildPageUrl(self, buildId, hostname = None):
-        # hostname arg is an optimization for getAllVwsBuilds
+        # hostname arg is an optimization for getAllBuildsByType
         if not hostname:
             projectId = self.getBuild(buildId)['projectId']
             project = self.getProject(projectId)
@@ -5375,8 +5375,26 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(str)
     @requiresAuth
     def getAllBuildsByType(self, buildType):
-        return self.builds.getAllBuildsByType(buildType, self.auth.userId,
-                                              not self.auth.admin)
+        res = self.builds.getAllBuildsByType(buildType, self.auth.userId,
+                                             not self.auth.admin)
+
+        # the downloadUrl is now provided by the getFiles method of a build
+        # object, but we really need to minimize the db hits in the loop below
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        urlTemplate = "http://%s?id=%%d" % url
+
+        for buildData in res:
+            # we want to drop the hostname. it was collected by the builds
+            # module call for speed reasons
+            hostname = buildData.pop('hostname')
+            buildId = buildData['buildId']
+            buildData['buildPageUrl'] = \
+                    self._getBuildPageUrl(buildId, hostname = hostname)
+            buildData['downloadUrl'] = urlTemplate % \
+                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+        return res
 
     @requiresAuth
     def getAllAMIBuilds(self):
@@ -5765,28 +5783,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        # the downloadUrl is now provided by the getFiles method of a build
-        # object, but we really need to minimize the db hits in the loop below
-        url = util.joinPaths(self.cfg.projectSiteHost,
-                self.cfg.basePath, 'downloadImage')
-        urlTemplate = "http://%s?id=%%d" % url
+        res = self.getAllBuildsByType('VWS')
 
-        res = self.builds.getAllBuildsByType('VWS', self.auth.userId,
-                                                not self.auth.admin)
-
-        resDict = {}
-        for buildData in res:
-            # we want to drop the hostname. it was collected by the builds
-            # module call for speed reasons
-            hostname = buildData.pop('hostname')
-            buildId = buildData['buildId']
-            buildData['buildPageUrl'] = \
-                    self._getBuildPageUrl(buildId, hostname = hostname)
-            buildData['downloadUrl'] = urlTemplate % \
-                    self.getBuildFilenames(buildId)[0]['fileId']
-            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
-            sha1 = buildData.pop('sha1')
-            resDict[sha1] = buildData
+        resDict = dict((x.pop('sha1'), x) for x in res)
         return resDict
 
     def getAvailablePlatforms(self):

@@ -2066,6 +2066,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.addBuild(client, projectId2, buildtypes.XEN_OVA, userId=userId3)
         images = client.getAllBuildsByType('XEN_OVA')
         assert(len(images) == 1)
+        self.failUnless('buildPageUrl' in images[0], images[0])
+
         images = otherClient.getAllBuildsByType('XEN_OVA')
         assert(len(images) == 1)
         images = adminClient.getAllBuildsByType('XEN_OVA')
