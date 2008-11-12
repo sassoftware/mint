@@ -28,6 +28,7 @@ install: default-install
 	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
+	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
