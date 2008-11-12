@@ -418,7 +418,6 @@ def deleteUserFromRepository(repos, username, label=None, deleteRole=True):
                 # Conary deleted the role for us (probably)
                 pass
     else:
-        repos = _getShimServer(repos)
         repos.auth.deleteUserByName(username)
         if deleteRole:
             try:
@@ -597,6 +596,6 @@ def getBasicConaryConfiguration(mintCfg):
         ccfg.read(conarycfgFile)
     ccfg.dbPath = ':memory:'
     ccfg.root   = ':memory:'
-    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy)
+    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy, mintCfg.getInternalProxies())
     return ccfg
 

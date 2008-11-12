@@ -376,7 +376,7 @@
                                 <tbody py:content="buildDefinitionOptions(buildTemplateValueToIdMap, visibleBuildTypes)" />
                             </table>
                             <p>
-                            <a class="pdbuilddef-adder"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add a new image</a></p>
+                            <a class="pdbuilddef-adder" href="#"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add a new image</a></p>
                             <p>
                             <a id="learnmore" href="http://wiki.rpath.com/wiki/rBuilder:Image_Types" target="_blank">Read more about each image type</a></p>
                         </td>
@@ -393,6 +393,9 @@
                             <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                         </div>
                     </button>
+                    <a class="no-decoration" href="${project.getUrl()}" title="Cancel">
+                        <img src="${cfg.staticPath}/apps/mint/images/cancel_button.png" />
+                    </a>
                     </p>
                     <input type="hidden" name="id" value="${id}" />
                     <input py:if="kwargs.has_key('linked')" type="hidden" name="linked" value="${kwargs['linked']}" />

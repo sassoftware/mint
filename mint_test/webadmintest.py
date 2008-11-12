@@ -202,7 +202,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             {'hostname':        'external',
              'name':            'External Project',
              'label':           'localhost1@rpl:devel',
-             'url':             'http://localhost:%d/conary/' % self.mintServers.getServer(1).port,
+             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
              'authType':        'entitlement',
              'externalEntKey':  entKey,
             }
@@ -234,7 +234,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             {'hostname':        'external',
              'name':            'External Project',
              'label':           'localhost1@rpl:devel',
-             'url':             'http://localhost:%d/conary/' % self.mintServers.getServer(1).port,
+             'url':             'http://localhost:%d/conary/' % self.servers.getServer(1).port,
              'authType':        'entitlement',
              'externalEntKey':  '%s    \n' % entKey,
              'externalEntClass':'  %s' % entClass,

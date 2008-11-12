@@ -51,7 +51,7 @@ class TransientRecipe2(PackageRecipe):
 
 class WebReposTest(mint_rephelp.WebRepositoryHelper):
     def testRepositoryBrowser(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
@@ -81,7 +81,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
     def testBrowseTooltips(self):
         raise testsuite.SkipTestException("Not ready for primetime -- yet")
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
                 MINT_PROJECT_DOMAIN)
@@ -144,7 +144,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.openRepository(1)
         extProjectId = client.newExternalProject("External Project",
             "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
-            'http://localhost:%d/conary/' % self.mintServers.getServer(1).port, False)
+            'http://localhost:%d/conary/' % self.servers.getServer(1).port, False)
 
         self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:devel'))
         page = self.assertCode('/repos/external/browse', code = 200)
@@ -197,7 +197,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                     "Malformed base path for rss feed on repos page")
 
     def testFileListDirectories(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject')
         project = client.getProject(projectId)
@@ -272,7 +272,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # fetch from both URLs, one with and one without the trailing slash
         # both should redirect
         self.assertCode('/conary', code = 301)
-        self.assertCode('/conary/', code = 302)
+        self.assertCode('/conary/', code = 301)
 
     def testReferencesAndDescendants(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
@@ -336,7 +336,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                    'testcase=%s@rpl:shadow' % hostname,
                    fullRecurse=False)
 
-        self.openRepository()
+        self.startMintServer()
         page = self.webLogin('testuser', 'testpass')
         self.assertContent('/repos/testproject/troveInfo?t=testcase', code = [200],
             content = '"%s@rpl:shadow": [["1.1-0.1-1", "troveInfo?t=testcase;v=/%s%%40rpl%%3Adevel' % (hostname, hostname),
@@ -378,7 +378,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.mkbranch('/%s@rpl:devel//shadow/1.1-0.1' % hostname,  "%s@rpl:shadow2" % hostname, "testcase:source", shadow=True)
         self.cookFromRepository('testcase', versions.Label("%s@rpl:shadow2" % hostname))
 
-        self.openRepository()
+        self.startMintServer()
         page = self.fetch('/repos/testproject/troveInfo?t=testcase')
         self.failIf('/%s@rpl:devel//shadow/1.1-0.1' % hostname not in page.body,
                     'First shadow not found.')
@@ -423,7 +423,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                    'testcase=%s@rpl:shadow' % hostname,
                    fullRecurse=False)
 
-        self.openRepository()
+        self.startMintServer()
         page = self.webLogin('testuser', 'testpass')
         page = self.fetch("/repos/testproject/troveInfo?t=testcase")
         self.failUnless("Cloned from:" in page.body,
@@ -445,7 +445,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.addComponent("trove:runtime", v1, f1)
         self.addCollection("trove", v1, [":runtime"], defaultFlavor = f1)
         self.setServer(self.getProjectServerHostname(), self.port)
-        rep = self.openRepository()
+        rep = self.startMintServer()
         # Load getOpenPGPKey page
         page = page.fetch("/repos/testproject/getOpenPGPKey?search=0ED565B9")
         self.failIf('OpenPGP Ke' not in page.body, 'Unable to retrieve PGP key')

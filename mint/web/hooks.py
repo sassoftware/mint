@@ -14,6 +14,7 @@ import sys
 import tempfile
 import time
 import traceback
+import urllib
 
 from mint import config
 from mint import users
@@ -264,10 +265,11 @@ def conaryHandler(req, cfg, pathInfo):
             shimRepo = shim_repositories[repHash]
     else:
         # it's completely external
-        # use the Internal Conary Proxy if it's configured
+        # use the Internal Conary Proxy if it's configured and we're
+        # passing a fully qualified url
 
         global proxy_repository
-        if cfg.useInternalConaryProxy:
+        if cfg.useInternalConaryProxy and urllib.splittype(req.unparsed_uri)[0]:
 
             # Don't proxy stuff that should have been caught in the above if block
             # Conary >= 1.1.26 proxies will add a Via header for all
@@ -291,8 +293,12 @@ def conaryHandler(req, cfg, pathInfo):
                 # set a proxy (if it was configured)
                 proxycfg.proxy = cfg.proxy
 
-                urlBase = "%%(protocol)s://%s.%s:%%(port)d/" % \
-                        (cfg.hostName, cfg.siteDomainName)
+                if ':' in cfg.siteDomainName:
+                    domain = cfg.siteDomainName
+                else:
+                    domain = cfg.siteDomainName + '%(port)d'
+                urlBase = "%%(protocol)s://%s.%s/" % \
+                        (cfg.hostName, domain)
                 repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
                 repo.forceSecure = False
                 proxy_repository = repo

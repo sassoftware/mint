@@ -4,6 +4,9 @@ API Changes
 ---------------------
 * getPackageCreatorRecipe and savePackageCreatorRecipe have been added to the
   conary client. (RBL-3483)
+* added getAllBuildsByType call (RBL-3711)
+* isBuildFinished() call now returns the also list of built troves
+  along with the rest of the information about the build. (RBL-3586)
 
 Internal Changes
 ---------------------
@@ -94,6 +97,8 @@ Web Front End Changes
   is on, and only fall back to the groupApplianceLabel if no platform is
   selected. (RBL-3541)
 * The application now expands to fill the width of the browser. (RBL-3740)
+* SLE is available as a platform definition to those who have access to it.
+  (RBL-3256)
 
 Bug Fixes
 ---------------------
@@ -126,6 +131,8 @@ Bug Fixes
 * The "Update Appliance Platform" checkbox is now the proper size. (RBL-3336)
 * Rerunning the rbuilder initial setup no longer resets the internal password,
   as that caused previously created repositories to become unavailable. (RBL-3344)
+* Failures while creating the product repository no longer result in a
+  broken product being created. (RBL-3613)
 
 Changes in 4.1.1
 ================

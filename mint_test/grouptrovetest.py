@@ -1166,7 +1166,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
     def testGroupTrovePathConflicts(self):
         raise testsuite.SkipTestException("Move to jobslave")
 
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -1238,7 +1238,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
         pId, fPath, fId, fVer = [x for x in trv.iterFileList() if \
                                  x[1] == 'group-test.recipe'][0]
 
-        mainRepos = self.openRepository()
+        mainRepos = self.startMintServer()
         newRecipe = mainRepos.getFileContents([(fId, fVer)])[0].get().read()
 
         self.failIf(newRecipe != recipe,
@@ -1278,7 +1278,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
         pId, fPath, fId, fVer = [x for x in trv.iterFileList() if \
                                  x[1] == 'group-conflict.recipe'][0]
 
-        mainRepos = self.openRepository()
+        mainRepos = self.startMintServer()
         newRecipe = mainRepos.getFileContents([(fId, fVer)])[0].get().read()
 
         self.failIf(recipe + "        r.remove('testcase', '/testproject"

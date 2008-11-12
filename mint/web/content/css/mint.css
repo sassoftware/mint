@@ -930,6 +930,22 @@ ul.wiz-navigation li div {
     font-weight: normal;
 }
 
+ul.wiz-navigation li.wiz-exit {
+    font-weight: normal;
+    padding: 8px 20px 6px 10px;
+    line-height: 15px;
+    width: 166px;
+    background: url(../images/nav_bg.png) no-repeat;
+}
+
+ul.wiz-navigation li.wiz-exit a {
+    text-decoration: none;
+}
+
+ul.wiz-navigation li.wiz-exit a:hover {
+    text-decoration: underline;
+}
+
 .boxBody {
     padding: 10px 10px 0px 10px;
 }
@@ -1866,7 +1882,7 @@ td.modified a:visited {
 }
 
 td.modified a:hover {
-    color: white;
+    color: #e65a1d;
 }
 
 img.pointer {

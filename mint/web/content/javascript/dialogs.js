@@ -11,7 +11,9 @@
 function modalYesNo(yesFunc, noFunc) {
     jQuery("#modalYesNo").dialog({ 
         modal: true,
+        bgiframe: true,
         draggable: false,
+        resizable: false,
         width: 450,
         height: 200,
         overlay: { 
@@ -21,11 +23,11 @@ function modalYesNo(yesFunc, noFunc) {
         buttons: { 
 	        "Yes": function() {
 	        	yesFunc();
-	        	jQuery(this).dialog("close");
+	        	jQuery(this).dialog("destroy");
 	        },
 	        "No": function() { 
 	            noFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
 	        }
         }
     }).show();
@@ -34,7 +36,9 @@ function modalYesNo(yesFunc, noFunc) {
 function modalEditVersionWarning(yesFunc, noFunc) {
     jQuery("#modalEditVersionWarning").dialog({
         modal: true,
+        bgiframe: true,
         draggable: false,
+        resizable: false,
         width: 450,
         height: 250,
         overlay: { 
@@ -44,11 +48,11 @@ function modalEditVersionWarning(yesFunc, noFunc) {
         buttons: {
             "Add Image Later": function() {
                 yesFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
             },
             "Add Image Now": function() { 
                 noFunc();
-                jQuery(this).dialog("close");
+                jQuery(this).dialog("destroy");
             }
         }
     }).show();

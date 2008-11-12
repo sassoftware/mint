@@ -21,6 +21,7 @@ onload = "javascript:;"
 
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-1.2.6.min.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery.ui-1.5.2.all.min.js?v=${cacheFakeoutVersion}" />
+        <!--[if lte IE 6.5]><script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery.bgiframe.min.js?v=${cacheFakeoutVersion}"></script><![endif]-->
         <script type="text/javascript">
             <![CDATA[
                 jQuery.noConflict();

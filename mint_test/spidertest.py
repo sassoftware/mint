@@ -164,6 +164,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
+        self.startMintServer()
         repos = self.openRepository()
 
         # add needed components

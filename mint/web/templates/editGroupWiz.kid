@@ -37,8 +37,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                     <p>The packages that will be built into your appliance appear below. Make any desired changes to the list of packages, and click the "Update Contents" button to continue; otherwise, use the links to make the desired changes.</p>
                 </div>
                 <form id="packagecreatortroves" name="packagecreatortroves" action="processEditApplianceGroup" method="post">
-                    <div py:if="packageList" py:strip="True">
-                    <ul class="package-checklist">
+                    <ul py:if="packageList" class="package-checklist">
                         <li py:for="troveName in sorted(packageList, key=lambda x: x.upper())">
                         <?python
                             pkgname = troveName.replace(':source', '')
@@ -47,18 +46,12 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                         </li>
                     </ul>
 
+                    <p py:if="not packageList">No packages have been added to your appliance.</p>
+
                     ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'packagecreatortroves')}
 
-                    <!-- XXX: this needs to be a graphical button -->
-                    <input type="submit" id="packagecreatortrovessubmit" value="Confirm Contents" />
-                    </div>
-                
-                    <div py:if="not packageList" py:strip="True">
-                        <!-- handle the no troves case -->
-                        <p>No packages have been added to your appliance</p>
-                        <!-- XXX: this needs to be a graphical button -->
-                        <input type="submit" id="packagecreatortrovessubmit" value="Continue" />
-                    </div>
+                    <input py:attrs="{'value': packageList and 'Confirm Contents' or 'Continue'}" type="submit" id="packagecreatortrovessubmit" />
+
                     <p><a href="newPackage">Package another archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                 </form>

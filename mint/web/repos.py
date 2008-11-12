@@ -736,9 +736,9 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
         conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
         if os.path.exists(conarycfgFile):
             cfg.read(conarycfgFile)
-
         cfg = helperfuncs.configureClientProxies(cfg,
-                self.cfg.useInternalConaryProxy, self.cfg.proxy)
+                self.cfg.useInternalConaryProxy, self.cfg.proxy,
+                self.client.getProxies()[0])
 
         if 'repServer' not in self.__dict__:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()

@@ -1,6 +1,9 @@
 #!/usr/bin/python
-import fcntl, os, sys, termios, time, select, socket
+import fcntl, os, sys, termios, time, select, signal, socket
 import epdb
+
+HTTPD_PID = None
+
 
 def set_raw_mode():
     fd = sys.stdin.fileno()
@@ -19,17 +22,55 @@ def restore_terminal(oldTerm, oldFlags):
     if oldFlags:
         fcntl.fcntl(fd, fcntl.F_SETFL, oldFlags)
 
+def find_httpd(path, wait=False):
+    global HTTPD_PID
+    pidPath = '%s/httpd/run/httpd.pid' % path
+    deadline = time.time() + 5
+    while True:
+        if os.path.exists(pidPath):
+            pid = int(open(pidPath).read().strip())
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                HTTPD_PID = None
+            else:
+                HTTPD_PID = pid
+                break
+        else:
+            HTTPD_PID = None
+
+        if not wait:
+            break
+        if time.time() > deadline:
+            raise RuntimeError('pidfile failed to appear')
+        time.sleep(0.25)
+    return HTTPD_PID
+
+def kill_httpd():
+    global HTTPD_PID
+    if HTTPD_PID is None:
+        return
+    os.kill(HTTPD_PID, signal.SIGTERM)
+    while True:
+        try:
+            os.kill(HTTPD_PID, 0)
+        except OSError:
+            # Process is gone
+            break
+        time.sleep(0.25)
+    HTTPD_PID = None
+
 def restart_httpd(path):
-    os.system('killall httpd &> /dev/null')
-    print 'waiting for httpd to die before restarting...',
+    print 'Making sure httpd is shut down...'
+    kill_httpd()
+
     sys.stdout.flush()
-    time.sleep(1)
     rc = os.system('/usr/sbin/httpd -d %s/httpd -f conf/httpd.conf' % path)
     if rc:
         print 'starting httpd failed'
         sys.exit(1)
     else:
-        print 'Done.'
+        print 'Started with PID %d' % find_httpd(path, wait=True)
 
 def watch_httpd(path):
     print 'Waiting for epdb serve() or type a command.  Ctrl-C to exit'
@@ -48,20 +89,21 @@ def watch_httpd(path):
                 process_command(path, char)
                 readable = select.select([sys.stdin], [], [], .1)[0]
     except KeyboardInterrupt:
-        os.system('killall httpd')
+        print 'shutting down'
+        kill_httpd()
         print 'stopped.'
 
 def process_command(path, char):
     if char == 'r':
         restart_httpd(path)
     if char == 'q':
-        print 'quitting'
         raise KeyboardInterrupt
 
 def main(argv):
     print "Please ensure sendmail is running."
     os.environ['RBUILDER_NOSUDO'] = '1'
     path = sys.argv[1]
+    find_httpd(path)
     restart_httpd(path)
     try:
         results = set_raw_mode()

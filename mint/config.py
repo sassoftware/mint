@@ -309,3 +309,8 @@ class MintConfig(ConfigFile):
         if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
         if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')
         if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')
+
+    def getInternalProxies(self):
+        return {'http' : 'http://%s.%s' %(self.hostName,
+                                           self.siteDomainName),
+                'https' : 'https://%s' % (self.secureHost,)}
