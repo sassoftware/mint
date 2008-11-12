@@ -1086,7 +1086,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                 'foo', MINT_PROJECT_DOMAIN, 'foo', 'fooV1',
                 'Version one is not vaporware',
                 'yournamespace')
-        pd.setBaseFlavor("~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap, ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU, ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug, ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl, ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl, ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux, ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware, ~!xen, ~!xfce, ~!xorg-x11.xprint")
+#        pd.setBaseFlavor("~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap, ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU, ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug, ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl, ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl, ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux, ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware, ~!xen, ~!xfce, ~!xorg-x11.xprint")
         pd.setImageGroup('group-dist')
         # getInitialProductDefinition currently adds stages, but
         # this may change in the future; we'll add "Booya" here.
@@ -1101,42 +1101,63 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         pd.addSearchPath('group-postgres',
                     'products.rpath.com@rpath:postgres-8.2')
 
+        pd.addFlavorSet('generic', 'Generic', '!dom0, !domU, !xen, !vmware')
+        pd.addFlavorSet('vmware', 'VMware', '!dom0, !domU, !xen, vmware')
+        pd.addFlavorSet('xen', 'Xen', '!dom0, domU, xen, !vmware')
+        pd.addFlavorSet('superfunk', 'Superfunk', '~superfunk.bootsy')
+
+        pd.addArchitecture('x86', 'x86 (32 bit)', 'is: x86')
+        pd.addArchitecture('x86_64', 'x86 (64 bit)', 'is: x86_64')
+
+        pd.addContainerTemplate(pd.imageType('installableIsoImage'))
+        pd.addContainerTemplate(pd.imageType('vmwareImage'))
+        pd.addContainerTemplate(pd.imageType('xenOvaImage'))
         pd.addBuildDefinition(name='ISO 32',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                              imageType=pd.imageType('installableIsoImage'),
+                              flavorSetRef = 'generic',
+                              architectureRef = 'x86',
+                              containerTemplateRef = 'installableIsoImage',
                               stages=stageNames,
                               imageGroup='group-dist')
 
         pd.addBuildDefinition(name='ISO 64',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
-                              imageType=pd.imageType('installableIsoImage'),
+                              flavorSetRef = 'generic',
+                              architectureRef = 'x86_64',
+                              containerTemplateRef = 'installableIsoImage',
                               stages=stageNames)
         pd.addBuildDefinition(name='VMWare 64',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64],
-                              imageType=pd.imageType('vmwareImage'),
+                              flavorSetRef = 'vmware',
+                              architectureRef = 'x86_64',
+                              containerTemplateRef = 'vmwareImage',
                               stages=stageNames)
         pd.addBuildDefinition(name='XEN 64',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_DOMU_X86_64],
-                              imageType=pd.imageType('xenOvaImage'),
+                              flavorSetRef = 'xen',
+                              architectureRef = 'x86_64',
+                              containerTemplateRef = 'xenOvaImage',
                               stages=stageNames)
         pd.addBuildDefinition(name='ISO 64 II',
-                              baseFlavor='~superfunk.bootsy is: x86_64',
-                              imageType=pd.imageType('installableIsoImage', {'betaNag': True}),
+                              flavorSetRef = 'superfunk',
+                              architectureRef = 'x86_64',
+                              containerTemplateRef = 'installableIsoImage',
+                              image=pd.imageType(None, {'betaNag': True}),
                               stages=['Booya'],
                               imageGroup='group-other')
         pd.addBuildDefinition(name='Cannot be built',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                              imageType=pd.imageType('installableIsoImage'),
+                              flavorSetRef = 'generic',
+                              architectureRef = 'x86',
+                              containerTemplateRef = 'installableIsoImage',
                               stages=['Elsewhere'],
                               imageGroup='group-fgsfds')
         pd.addBuildDefinition(name='...but this can',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                              imageType=pd.imageType('installableIsoImage'),
+                              flavorSetRef = 'generic',
+                              architectureRef = 'x86',
+                              containerTemplateRef = 'installableIsoImage',
                               stages=['Elsewhere'],
                               imageGroup='group-dist')
         pd.addBuildDefinition(name='me custom',
-                              baseFlavor=buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                              imageType=pd.imageType('installableIsoImage',
+                              flavorSetRef = 'generic',
+                              architectureRef = 'x86',
+                              containerTemplateRef = 'installableIsoImage',
+                              image=pd.imageType(None,
                                   {'anacondaCustomTrove':\
                                    '/conary.rpath.com@rpl:devel/0.0:1.0-1-1',
                                    'anacondaTemplatesTrove':\
@@ -1145,7 +1166,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                    '/conary.rpath.com@rpl:devel/0.0:1.0-1-3'}),
                               stages=['Custom'],
                               imageGroup='group-dist')
-        
+
         # mocked out call to save to memory
         pd.saveToRepository()
 
@@ -1272,6 +1293,8 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
             Get a task list by versionId and stage name and validate it
             """
             tl = client.getBuildTaskListForDisplay(versionId, stageName)
+            # the names of the flavors changed. when I found this test
+            # things were being listed as Custom Flavor vs something sensical
             self.assertTrue(tl == goldTaskList)
             return True
 
@@ -1281,29 +1304,25 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         # golden data for development stage task list
         goldTaskListDevel = [
             {'buildName'      : u'ISO 32', 
-             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
-                                buildtypes.BD_GENERIC_X86],
+             'buildFlavorName': 'Generic x86 (32 bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
              'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
             }, 
             {'buildName'      : u'ISO 64', 
-             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
-                                buildtypes.BD_GENERIC_X86_64],
+             'buildFlavorName': 'Generic x86 (64 bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
              'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
              {'buildName'     : u'VMWare 64', 
-             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
-                                buildtypes.BD_VMWARE_X86_64],
+             'buildFlavorName': 'VMware x86 (64 bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.VMWARE_IMAGE],
              'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
              {'buildName'     : u'XEN 64', 
-             'buildFlavorName': buildtypes.buildDefinitionFlavorNameMap[\
-                                buildtypes.BD_DOMU_X86_64],
+             'buildFlavorName': 'Xen x86 (64 bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.XEN_OVA],
              'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
@@ -1313,7 +1332,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         # golden data for booya stage task list
         goldTaskListBooya = [
             {'buildName'      : u'ISO 64 II', 
-             'buildFlavorName': 'Custom Flavor: ~superfunk.bootsy is: x86_64', 
+             'buildFlavorName': 'Superfunk x86 (64 bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
              'imageGroup'     : u'group-other=foo.%s@yournamespace:foo-fooV1-booya' % MINT_PROJECT_DOMAIN
