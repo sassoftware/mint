@@ -581,14 +581,19 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def addBuild(self, client, projectId, imageType, userId, imageFiles=None,
                  name='Build', description='Build Description',
-                 buildData=None):
+                 buildData=None, troveName = 'foo',
+                 troveVersion = '/localhost@test:1/12345.67:0.1-1-1',
+                 troveFlavor = None):
         db = self.openMintDatabase()
         buildTable = builds.BuildsTable(db)
         buildFilesTable = jobs.BuildFilesTable(db)
         dataTable = data.BuildDataTable(db)
         buildId = buildTable.new(projectId=projectId, 
                                  buildType=imageType, name=name,
-                                 description=description, createdBy=userId)
+                                 description=description, createdBy=userId,
+                                 troveName=troveName,
+                                 troveVersion=troveVersion,
+                                 troveFlavor=troveFlavor)
         if imageFiles is None:
             sha1 = sha.new()
             sha1.update(str(buildId))
