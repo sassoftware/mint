@@ -70,8 +70,6 @@ ifdef python_files
 	cp $(python_files) $(DESTDIR)$(STATICDEST)/
 	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
 	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
-
-dist: default-dist
 endif
 ifdef kid_files
 	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
