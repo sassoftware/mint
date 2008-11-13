@@ -353,7 +353,7 @@ content-type=text/plain
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error"], [])
+        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error", []])
 
     @fixtures.fixture('Full')
     def testBuildSourcePackage(self, db, data):
