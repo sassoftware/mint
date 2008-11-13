@@ -133,6 +133,7 @@ Bug Fixes
   as that caused previously created repositories to become unavailable. (RBL-3344)
 * Failures while creating the product repository no longer result in a
   broken product being created. (RBL-3613)
+* The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
 
 Changes in 4.1.1
 ================
