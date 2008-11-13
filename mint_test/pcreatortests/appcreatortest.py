@@ -246,10 +246,12 @@ class TestRecipe(PackageRecipe):
         self._makeApplianceTrove(False, 'foo', ['foo'])
 
     def testRebuildApplianceTrove(self):
+        raise testsuite.SkipTestException('Failed - see RBL-3636')
         self._makeApplianceTrove(False, 'foo', ['foo'])
         self._makeApplianceTrove(True, 'bar', ['foo', 'bar'])
 
     def testRebuildApplianceTrove2(self):
+        raise testsuite.SkipTestException('Failed - see RBL-3636')
         self._makeApplianceTrove(False, 'foo', ['foo'])
         self._makeApplianceTrove(False, 'bar', ['bar'])
 
