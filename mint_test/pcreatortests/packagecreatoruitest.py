@@ -353,7 +353,6 @@ content-type=text/plain
             self.failUnless(commit, 'True should have been passed as the commit parameter')
             raise packagecreator.errors.BuildFailedError('fake build error')
         self.mock(pcreator.backend.BaseBackend, '_isBuildFinished', validateParams)
-<<<<<<< local
         self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error"], [])
 
     @fixtures.fixture('Full')
@@ -419,9 +418,6 @@ content-type=text/plain
         self.assertRaises(mint.mint_error.PackageCreatorError,
                 self.client.buildSourcePackage, projectId, 1, 'foo:source',
                 'testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
-=======
-        self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error", []])
->>>>>>> other
 
     @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
