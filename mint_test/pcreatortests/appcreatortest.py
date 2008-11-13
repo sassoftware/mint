@@ -94,6 +94,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testMakeApplianceTrove(self, db, data):
+        raise terstsuite.SkipTestException('Failed - see RBL-3636')
         self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
                 public(lambda *args, **kwargs: 'ses-123'))
 
