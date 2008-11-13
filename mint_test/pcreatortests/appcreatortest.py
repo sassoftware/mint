@@ -242,7 +242,7 @@ class TestRecipe(PackageRecipe):
         self.assertEquals([x for x in manifest.iterTroves(implicit = True)], [])
 
     def testMakeApplianceTrove(self):
-        raise tertsuite.SkipTestException('Failed - see RBL-3636')
+        raise testsuite.SkipTestException('Failed - see RBL-3636')
         self._makeApplianceTrove(False, 'foo', ['foo'])
 
     def testRebuildApplianceTrove(self):
