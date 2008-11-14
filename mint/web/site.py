@@ -27,12 +27,11 @@ from mint.client import timeDelta
 from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
-from mint.web.cache import cache
 from mint.web.fields import boolFields, dictFields, intFields, listFields, strFields
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpOK, HttpMethodNotAllowed, HttpForbidden
+from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
+    HttpNotFound, HttpOK, HttpMethodNotAllowed, HttpForbidden)
 
 from conary.lib import util
 from conary import versions
@@ -69,7 +68,6 @@ class SiteHandler(WebHandler):
 
         return method
 
-    @cache
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
         popularProjects = self.client.getPopularProjects()
@@ -192,8 +190,7 @@ class SiteHandler(WebHandler):
             c = self.session.make_cookie()
             c.expires = 0
             self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control', 
-                    'no-cache="set-cookie"')
+            setCacheControl(self.req, strict=True)
             self._redirect("http://%s%scontinueLogout" % \
                     (nexthop, self.cfg.basePath))
         else:
@@ -288,8 +285,7 @@ class SiteHandler(WebHandler):
             c = self.session.make_cookie()
             c.expires = 0
             self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control',
-                                     'no-cache="set-cookie"')
+            setCacheControl(self.req, strict=True)
         return self._write('error', shortError = "Login Failed",
                            error = 'You cannot log in because your browser is blocking cookies to this site.')
 

@@ -105,7 +105,7 @@ class WebHandler(object):
         self._redirect(location)
 
     def _redirect(self, location, temporary = False):
-        self.req.err_headers_out['Cache-Control'] = "no-store"
+        setCacheControl(self.req, strict=True)
         if not location.startswith('http'):
             self.req.log_error("ERROR IN REDIRECT: " + location)
         self.req.headers_out['Location'] = location
@@ -192,7 +192,6 @@ class WebHandler(object):
                 self.session.set_timeout(1209600)
 
         self.req.err_headers_out.add('Set-Cookie', str(c))
-        self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
 
         # mark the current domain as visited
         self.session['visited'][self.req.hostname] = True
@@ -330,3 +329,39 @@ def make_i18n_filter(localeDir, locale = 'en'):
             yield (ev, item)
 
     return i18n_filter
+
+
+def setCacheControl(req, strict=False):
+    """
+    Set the Cache-Control header for dynamically generated content.
+
+    These flags are used:
+     * private - Responses are specific to each user agent, so only
+       private caches (like the one built into the user agent, as
+       opposed to a shared proxy cache) may store. We can probably
+       omit this if the user is not logged in as it may save
+       some traffic.
+     * max-age=0 - Content is stale immediately after it is
+       received.
+     * must-revalidate - Always ask the server for another copy
+       once content is stale, which due to the above directive
+       means every time.
+
+    Effectively, these three will allow the cache to store
+    responses, but never use them to respond to a request without
+    first asking the server to fufill the request and then
+    comparing the fresh content from the server to the previous
+    cached value. This way, client conditions like
+    If-Modified-Since can still work since the cache can check
+    them against the now revalidated cached data.
+
+    If C{strict} is C{True}, "no-cache" will be used in place of
+    the "max-age" and "must-revalidate" fields. This should be used
+    for contentless responses such as redirects, or temporary
+    issues like bad logins.
+    """
+    if strict:
+        cacheFlags = 'private, no-cache'
+    else:
+        cacheFlags = 'private, must-revalidate, max-age=0'
+    req.err_headers_out['Cache-control'] = cacheFlags
