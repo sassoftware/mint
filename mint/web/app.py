@@ -6,6 +6,7 @@
 import kid
 import re
 import sys
+import time
 
 from mod_python import apache
 from mod_python import Cookie
@@ -17,15 +18,15 @@ from mint import shimclient
 from mint import userlevels
 from mint.helperfuncs import weak_signature_call, getProjectText
 from mint.mint_error import *
-from mint.web import cache, fields
+from mint.web import fields
 from mint.web.admin import AdminHandler
-from mint.web.cache import pageCache, reqHash
 from mint.web.project import ProjectHandler
 from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.setup import SetupHandler
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound
+from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
+    HttpNotFound)
 from mint import maintenance
 
 stagnantAllowedPages = ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']
@@ -100,12 +101,7 @@ class MintApp(WebHandler):
             # out.
             cookies = {}
 
-        if 'pysid' not in cookies:
-            rh = cache.reqHash(self.req)
-            if rh in cache.pageCache:
-                self.req.write(cache.pageCache[rh])
-                return apache.OK
-        else:
+        if 'pysid' in cookies:
             self._session_start()
 
         # default to anonToken if the current session has no authToken
@@ -138,33 +134,37 @@ class MintApp(WebHandler):
 
         def logTraceback():
             import traceback
-            tb = traceback.format_exc()
-
-            for line in tb.split("\n"):
-                self.req.log_error(line)
-            return tb
+            formatted = traceback.format_exc()
+            self.req.log_error("Handled user error: (not a bug)\n"
+                + formatted.rstrip())
+            return formatted
 
         try:
             output = weak_signature_call(method, **d)
-            if self.auth.authorized:
-                self.session.save()
-            elif 'cacheable' in method.__dict__:
-                pageCache[reqHash(self.req)] = output
         except MintError, e:
             if isinstance(e, MaintenanceMode):
                 raise
             tb = logTraceback()
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = err_name, error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:
             tb = logTraceback()
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
         except fields.BadParameterError, e:
             tb = logTraceback()
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
+        else:
+            if self.auth.authorized:
+                self.session.save()
+            setCacheControl(self.req)
+            self.req.update_mtime(time.time())
+            self.req.set_last_modified()
 
         self.req.set_content_length(len(output))
         self.req.write(output)

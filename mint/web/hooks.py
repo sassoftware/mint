@@ -28,7 +28,7 @@ from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
-from mint.web.webhandler import normPath, HttpError
+from mint.web.webhandler import normPath, setCacheControl, HttpError
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
@@ -504,7 +504,7 @@ def handler(req):
                         # this page offers a way to log in. vice standard error
                         # we must force a redirect to ensure half finished
                         # work flowpaths don't trigger more errors.
-                        req.err_headers_out['Cache-Control'] = "no-store"
+                        setCacheControl(req, strict=True)
                         req.headers_out['Location'] = cfg.basePath + 'maintenance'
                         return apache.HTTP_MOVED_TEMPORARILY
                 except:
