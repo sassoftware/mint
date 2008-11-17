@@ -1293,6 +1293,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             helperfuncs.addDefaultStagesToProductDefinition(pd)
             # XXX: this should be carried forward when images and other values are
             kwargs['namespace'] = self.project.namespace
+        helperfuncs.addDefaultPlatformToProductDefinition(pd)
 
         return self._write("editVersion",
                 isNew = isNew,

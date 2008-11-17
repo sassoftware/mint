@@ -239,6 +239,8 @@ buildDefinitionFlavorMap = {
 }
 
 def makeBuildFlavorMap(prd):
+    baseFlavor = prd.getBaseFlavor() or prd.getPlatformBaseFlavor() or ''
+    baseFlavor = deps.parseFlavor(baseFlavor)
     flavorSets = prd.getFlavorSets()
     architectures = prd.getArchitectures()
     if prd.platform:
@@ -249,7 +251,9 @@ def makeBuildFlavorMap(prd):
         for architecture in architectures:
             flv = deps.parseFlavor(flavorSet.flavor)
             arch = deps.parseFlavor(architecture.flavor)
-            res[str(deps.overrideFlavor(flv, arch))] = \
+            flavor = deps.overrideFlavor(baseFlavor, flv)
+            flavor = deps.overrideFlavor(flavor, arch)
+            res[str(flavor)] = \
                     "%s %s" % (flavorSet.displayName, architecture.displayName)
     return res
 

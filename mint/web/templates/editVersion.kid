@@ -65,7 +65,7 @@
                     # Map XML names to optionNameMap
                     buildSettings = dict([(buildtemplates.optionNameMap.get(k,k),v) for k, v in imageType.fields.iteritems()])
                     buildName = bdef.getBuildName()
-                    buildBaseFlavor = bdef.getBuildBaseFlavor()
+                    buildBaseFlavor = '%s,%s' % (bdef.flavorSetRef, bdef.architectureRef)
                 else:
                     buildType = visibleBuildTypes[0]
                     buildSettings = {}
