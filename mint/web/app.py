@@ -16,7 +16,8 @@ from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels
-from mint.helperfuncs import weak_signature_call, getProjectText
+from mint.helperfuncs import (formatHTTPDate, getProjectText,
+    weak_signature_call)
 from mint.mint_error import *
 from mint.web import fields
 from mint.web.admin import AdminHandler
@@ -163,8 +164,7 @@ class MintApp(WebHandler):
             if self.auth.authorized:
                 self.session.save()
             setCacheControl(self.req)
-            self.req.update_mtime(time.time())
-            self.req.set_last_modified()
+            self.req.headers_out['Last-modified'] = formatHTTPDate()
 
         self.req.set_content_length(len(output))
         self.req.write(output)
