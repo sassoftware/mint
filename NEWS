@@ -99,6 +99,8 @@ Web Front End Changes
 * The application now expands to fill the width of the browser. (RBL-3740)
 * SLE is available as a platform definition to those who have access to it.
   (RBL-3256)
+* Changed the name of the rPath Catalog for EC2 to the rPath Management Console.
+  (RBL-3693)
 
 Bug Fixes
 ---------------------
