@@ -2368,18 +2368,43 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # later
         filteredBuilds = []
         buildErrors = []
+
+        # For some reason this can't happen through the the ShimClient
+        # (CNY-2545 related?)
+        repos = self._getProjectRepo(project, False)
+        groupNames = [ str(x.getBuildImageGroup()) for x in builds ]
+        groupTroves = repos.findTroves(None, 
+                                       [(x, stageLabel, None) for x in 
+                                         groupNames ], allowMissing = True)
+
         for build in builds:
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
             buildGroup = str(build.getBuildImageGroup())
+            groupList = groupTroves.get((buildGroup, stageLabel, None), [])
+
+            flavorSet = build.flavorSetRef and \
+                    (pd.getFlavorSet(build.flavorSetRef, None) \
+                    or pd.getPlatformFlavorSet( \
+                            build.flavorSetRef, None))
+            flavorSet = deps.parseFlavor(flavorSet and flavorSet.flavor or '')
+
+            architecture = build.architectureRef and \
+                    (pd.getArchitecture(build.architectureRef, None) \
+                    or pd.getPlatformArchitecture( \
+                            build.architectureRef, None))
+            architecture = deps.parseFlavor(architecture \
+                    and architecture.flavor or '')
+
+            customFlavor = deps.parseFlavor(build.flavor or '')
 
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(projectId, buildGroup,
-                                      stageLabel, buildFlavor)
+            nvfs = self._resolveTrove(groupList, flavorSet, architecture,
+                    customFlavor)
 
             if nvfs:
-                # Store a build with options for each trove found.
-                for nvf in nvfs:
-                    filteredBuilds.append((build, nvf))
+                # Store a build with options for the best match for each build
+                # results are sorted best to worst
+                filteredBuilds.append((build, nvfs[0]))
             else:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
@@ -2499,55 +2524,38 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
-    def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
+    def _resolveTrove(self, groupList, flavorSet, archFlavor, customFlavor):
         '''
         Return a list of trove tuples matching C{troveName},
-        C{troveLabel}, satisfying C{filterFlavor} and also matching its
-        architecture. The repository backing the project at C{projectId}
-        will be used.
+        C{troveLabel}, satisfying flavor constraints. customFlavor overrides
+        flavorSet and archFlavor. result is sorted according to flavor score.
+        The repository backing the project at C{projectId} will be used.
 
         @return: List of trove tuples matching the query
         @rtype: list
         '''
-
-        project = projects.Project(self, projectId)
-        # For some reason this can't happen through the the ShimClient
-        # (CNY-2545 related?)
-        repos = self._getProjectRepo(project, False)
-
-        # Get the major architecture from filterFlavor
-        filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
-
-        # Find the troves that satisfy the build.
-        ret = []
-        matches = repos.findTroves(None, [(troveName, troveLabel, None)],
-                allowMissing = True)
-        if not matches:
+        if not groupList:
             return []
-        matches = matches[(troveName, troveLabel, None)]
-
-        maxVersion = max(x[1] for x in matches)
-        for name, version, flavor in matches:
-            if version != maxVersion:
-                # Skip older versions that only show up because
-                # they're flavored differently
-                continue
-            if not flavor.stronglySatisfies(filterFlavor):
-                # Skip flavors that don't satisfy our original
-                # condition in the first place
-                continue
-
-            # If filterFlavor has an instruction set, the major
-            # architecture must match that of the group so
-            # an is: x86 filter does not match is: x86 x86_64 groups
-            # even though the flavor is technically satisfied.
-            thisArch = helperfuncs.getArchFromFlavor(flavor)
-            if filterArch and filterArch != thisArch:
-                continue
-
-            ret.append((name, version, flavor))
-
-        return ret
+        # Get the major architecture from filterFlavor
+        arch = deps.overrideFlavor(archFlavor, customFlavor)
+        filterArch = helperfuncs.getArchFromFlavor(arch)
+        flavorSetFlavor = deps.overrideFlavor(flavorSet, customFlavor)
+        completeFlavor = deps.overrideFlavor(flavorSet, arch)
+        # If filterFlavor has an instruction set, the major
+        # architecture must match that of the group so
+        # an 'is: x86' filter does not match 'is: x86 x86_64' groups
+        # even though the flavor is technically satisfied.
+        maxVersion = max(x[1] for x in groupList)
+        groupList = [ x for x in groupList 
+                      if (helperfuncs.getArchFromFlavor(x[2]) == filterArch
+                          and x[1] == maxVersion
+                          and x[2].satisfies(completeFlavor)) ]
+        if not groupList:
+            return []
+        scored = sorted((x[2].score(completeFlavor), x) for x in groupList)
+        maxScore = scored[-1][0]
+        return sorted([ x[1] for x in scored if x[0] == maxScore ], 
+                      key=lambda x: x[2])[-1:]
 
     @typeCheck(int)
     @requiresAuth

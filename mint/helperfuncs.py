@@ -478,6 +478,22 @@ def addDefaultStagesToProductDefinition(productDefinitionObj):
                 stage['labelSuffix'])
     return
 
+def addDefaultPlatformToProductDefinition(productDefinition):
+    """
+    Given a product definition object, add the canned platform defaults
+    to it, if needed. This function does nothing if any architectures,
+    flavorSets, containerTemplates or buildTemplates are defined. This
+    function modifies the original object
+    """
+    from rpath_common.proddef import api1 as proddef
+    if not productDefinition.platform:
+        productDefinition.platform = proddef.PlatformDefinition()
+    if not (productDefinition.platform.getArchitectures() or
+            productDefinition.platform.getFlavorSets() or
+            productDefinition.platform.getContainerTemplates() or
+            productDefinition.platform.getBuildTemplates()):
+        proddef._addPlatformDefaults(productDefinition.platform)
+
 def getDefaultImageGroupName(shortname):
     """
     Given the project's shortname, give the default image group name
@@ -510,6 +526,8 @@ def sanitizeProductDefinition(projectName, projectDescription,
     productDefinition.setImageGroup(getDefaultImageGroupName(shortname))
 
     addDefaultStagesToProductDefinition(productDefinition)
+
+    addDefaultPlatformToProductDefinition(productDefinition)
 
     return productDefinition
 

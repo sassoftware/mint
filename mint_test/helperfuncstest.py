@@ -726,7 +726,33 @@ Much like Powdermilk Biscuits[tm]."""
         cfg.ec2PublicKey = 'awsPublicKey'
         cfg.ec2PrivateKey = 'awsPrivateKey'
         self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
-        
+
+    def testProductDefinition(self):
+        prd = sanitizeProductDefinition('foo', '', 'foo', 'rpath.local',
+                'foo', '1', '', 'foo')
+        self.failUnless(prd.platform.containerTemplates)
+        self.failUnless(prd.platform.architectures)
+        self.failUnless(prd.platform.flavorSets)
+        self.failUnless(prd.platform.buildTemplates)
+        self.failUnless(prd.platform.baseFlavor)
+        self.failIf(prd.baseFlavor)
+
+        from rpath_common.proddef import api1 as proddef
+
+        plt = proddef.PlatformDefinition()
+        plt.addContainerTemplate(prd.imageType('installableIsoImage'))
+        prd.platform = plt
+
+        prd2 = sanitizeProductDefinition('foo', '', 'foo', 'rpath.local',
+                'foo', '1', '', 'foo', productDefinition = prd)
+
+        self.failUnless(prd2.platform.containerTemplates)
+        self.failIf(prd2.platform.architectures)
+        self.failIf(prd2.platform.flavorSets)
+        self.failIf(prd2.platform.buildTemplates)
+        self.failIf(prd2.platform.baseFlavor)
+        self.failIf(prd2.baseFlavor)
+
 
 if __name__ == "__main__":
     testsuite.main()
