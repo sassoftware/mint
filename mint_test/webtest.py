@@ -2099,7 +2099,28 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.addBuild(client, projectId, buildtypes.RAW_FS_IMAGE,
                       userId=userId, buildData={'XEN_DOMU' : True})
         images = client.getAllBuildsByType('VWS')
-        assert(len(images) == 1)
+        self.failUnlessEqual(len(images), 1)
+        image = images[0]
+        expected = {
+            'productDescription': '', 'buildId': 7, 'projectId': 1,
+            'isPublished': 0, 'buildDescription': 'Build Description',
+            'productName': 'Test Project',
+            'isPrivate': 0,
+            'sha1': '902ba3cda1883801594b6e1b452790cc53948fda',
+            'role': 'Product Owner', 'createdBy': 'foouser',
+            'buildName': 'Build', 'baseFileName': 'testproject-0.1-',
+            'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=7',
+            'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=7',
+        }
+        image['downloadUrl'] = self._whiteOutHostPort(image['downloadUrl'])
+        image['buildPageUrl'] = self._whiteOutHostPort(image['buildPageUrl'])
+        self.failUnlessEqual(images[0], expected)
+
+    @classmethod
+    def _whiteOutHostPort(cls, url):
+        arr = url.split('/')
+        arr[2] = 'SOMEHOST'
+        return '/'.join(arr)
 
 if __name__ == "__main__":
     testsuite.main()

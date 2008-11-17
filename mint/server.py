@@ -5382,7 +5382,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # object, but we really need to minimize the db hits in the loop below
         url = util.joinPaths(self.cfg.projectSiteHost,
                 self.cfg.basePath, 'downloadImage')
-        urlTemplate = "http://%s?id=%%d" % url
+        urlTemplate = "http://%s?fileId=%%d" % url
 
         for buildData in res:
             # we want to drop the hostname. it was collected by the builds
