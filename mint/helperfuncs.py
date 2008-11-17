@@ -184,6 +184,9 @@ def getVersionForCacheFakeout():
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
+def formatHTTPDate(t=None):
+    return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(t))
+
 def generateMirrorUserName(rbuilderHostname, updateServiceHostname):
     # Generate a mirrorUser for this rBuilder
     return "-mirroruser-%s-%s" % (rbuilderHostname, updateServiceHostname)
