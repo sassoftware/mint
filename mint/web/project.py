@@ -1371,8 +1371,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         # defined as the full set of stages.
         stageNames = [x.name for x in pd.getStages()]
 
-        # XXX ProductDefinition object needs clearBuildDefinitions()
-        pd.buildDefinition = proddef._BuildDefinition()
+        pd.clearBuildDefinition()
 
         validationErrors = []
         warnedNoNameAlready = False
@@ -1445,14 +1444,33 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self._setCurrentProductVersion(id)
             self._predirect()
         else:
-            kwargs.update(name=name, description=description)
+            availablePlatforms = self.client.getAvailablePlatforms()
+            platformName = ''
+            customPlatform = ()
+            acceptablePlatform = True
+            for lbl, pName in availablePlatforms:
+                if lbl == platformLabel:
+                    platformName = pName
+                    break
+            if not platformName:
+                platformLabel = ""
+                platformName = 'Custom appliance platform on %s' % platformLabel
+                customPlatform = (platformLabel, platformName)
+                acceptablePlatform = \
+                        self.client.isPlatformAcceptable(kwargs['platformLabel'])
+
+            kwargs.update(name = name, description = description,
+                    platformLabel = platformLabel, namespace = namespace)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+               availablePlatforms = availablePlatforms,
+               acceptablePlatform = acceptablePlatform,
+               platformName = platformName,
+               customPlatform = customPlatform,
                productDefinition = pd, kwargs = kwargs)
-
 
     @intFields(id = -1)
     @requiresAuth
