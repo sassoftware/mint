@@ -232,7 +232,7 @@ class BuildsTable(database.KeyedTable):
                  LEFT OUTER JOIN projectUsers pu
                     ON (b.projectId = pu.projectId AND pu.userId = ?)
                  %(extraJoin)s
-             WHERE b.buildType == ? AND b.deleted = 0
+             WHERE b.buildType = ? AND b.deleted = 0
              %(extraWhere)s"""
         query = query % {'extraWhere' : extraWhere,
                          'extraSelect' : extraSelect,
