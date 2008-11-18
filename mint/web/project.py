@@ -1453,11 +1453,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     platformName = pName
                     break
             if not platformName:
-                platformLabel = ""
                 platformName = 'Custom appliance platform on %s' % platformLabel
                 customPlatform = (platformLabel, platformName)
                 acceptablePlatform = \
-                        self.client.isPlatformAcceptable(kwargs['platformLabel'])
+                        self.client.isPlatformAcceptable(platformLabel)
 
             kwargs.update(name = name, description = description,
                     platformLabel = platformLabel, namespace = namespace)
