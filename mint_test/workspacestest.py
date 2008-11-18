@@ -48,7 +48,7 @@ class VwsTest(fixtures.FixturedUnitTest):
                     'buildPageUrl':
                             'http://test.rpath.local2/project/foo/build?id=1',
                     'downloadUrl':
-                            'http://test.rpath.local2/downloadImage?id=1',
+                            'http://test.rpath.local2/downloadImage?fileId=1',
                     'baseFileName': 'foo-1.1-x86_64' }})
 
         client = self.getClient("owner")
