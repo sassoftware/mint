@@ -33,6 +33,7 @@ testRecipe = """
 class TestCase(PackageRecipe):
     name = "testcase"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.Create("/temp/foo")
@@ -42,6 +43,7 @@ testRecipe2 = """
 class TestCase2(PackageRecipe):
     name = "testcase2"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.Create("/temp/foo")
@@ -51,6 +53,7 @@ testGroup = """
 class GroupTest(GroupRecipe):
     name = "group-test"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.add('testcase')
@@ -78,7 +81,7 @@ class RepositoryTest(MintRepositoryHelper):
 
     @testsuite.context("quick", "unfriendly")
     def testBasicRepository(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -107,7 +110,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert([x[:2] for x in project.getCommits()] == [('testcase:source', '1.0-1')])
 
     def testHooksResponse(self):
-        self.openRepository()
+        self.startMintServer()
         cfg = ConaryConfiguration(readConfigFiles = False)
         cfg.installLabelPath = ['notfound.' + MINT_PROJECT_DOMAIN + \
                 '@rpl:devel']
@@ -130,7 +133,7 @@ class RepositoryTest(MintRepositoryHelper):
             self.fail("accessing a non-existent repository did not return "
                       "an error")
     def testCook(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -158,7 +161,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(groupTroves == ['group-test'])
 
     def testCookBadPwResponse(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -169,7 +172,7 @@ class RepositoryTest(MintRepositoryHelper):
             self.makeSourceTrove, "testcase", testRecipe)
 
     def testMultipleContentsDirs(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -209,7 +212,7 @@ class RepositoryTest(MintRepositoryHelper):
         expectedRE = expectedRE.replace("rpath.local2", MINT_PROJECT_DOMAIN)
         expectedRE = expectedRE.replace("rpath\.local2", MINT_PROJECT_DOMAIN)
 
-        repos = self.openRepository()
+        repos = self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -307,7 +310,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase:source'])
 
     def testTroveHelpers(self):
-        self.openRepository()
+        self.startMintServer()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
@@ -378,7 +381,8 @@ class RepositoryTest(MintRepositoryHelper):
         self.openRepository(1)
         extProjectId = client.newExternalProject("External Project",
             "external", MINT_PROJECT_DOMAIN, "localhost1@rpl:devel",
-            'http://localhost:%d/conary/' % self.mintServers.getServer(1).port, False)
+            'http://localhost:%d/conary/' % self.servers.getServer(1).port, 
+            False)
 
         # two versions, different branches
         for x in "tag1", "tag2":
@@ -558,6 +562,7 @@ class TransientRecipe2(PackageRecipe):
         self.writeFile('test.txt', 'this is a test file\n\n')
         self.addfile('test.txt')
         self.commit()
+        self.startMintServer()
         rc = self.openRepository()
         ver = versions.VersionFromString('/testproject.%s@rpl:devel//shadow/1.0-1.1' % MINT_PROJECT_DOMAIN)
         ver2 = versions.VersionFromString('/testproject.%s@rpl:devel//shadow/1.0-1' % MINT_PROJECT_DOMAIN)

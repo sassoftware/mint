@@ -16,10 +16,14 @@ import sys
 import time
 import tempfile
 import urllib
+import weakref
 import StringIO
 
 from mint import buildtypes
-from mint import charts
+try:
+    from mint import charts
+except ImportError:
+    charts = None
 from mint import communityids
 from mint import data
 from mint import database
@@ -117,12 +121,8 @@ callLog = None
 
 def deriveBaseFunc(func):
     r = func
-    done = 0
-    while not done:
-        try:
-            r = r.__wrapped_func__
-        except AttributeError:
-            done = 1
+    while hasattr(r, '__wrapped_func__'):
+        r = r.__wrapped_func__
     return r
 
 def requiresAdmin(func):
@@ -287,14 +287,34 @@ def getTables(db, cfg):
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
-    def __init__(self, cacheFile, conarycfg):
+    def __init__(self, cacheFile, conarycfg, server):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._cclient = conaryclient.ConaryClient(conarycfg)
+        self._server = weakref.ref(server)
 
-    def _refresh(self, key):
-        platDef = proddef.PlatformDefinition()
-        platDef.loadFromRepository(self._cclient, key)
-        return platDef.getPlatformName()
+    def _refresh(self, labelStr):
+        try:
+            hostname = versions.Label(labelStr).getHost()
+            # we require that the first section of the label be unique
+            # across all repositories we access.
+            hostname = hostname.split('.')[0]
+            try:
+                projectId = self._server().getProjectIdByHostname(hostname)
+                cfg = self._server()._getProjectConaryConfig(
+                                    projects.Project(self._server(), projectId))
+                client = conaryclient.ConaryClient(cfg)
+            except ItemNotFound:
+                client = self._cclient
+            platDef = proddef.PlatformDefinition()
+            platDef.loadFromRepository(client, labelStr)
+            return platDef.getPlatformName()
+        except Exception, e:
+            # Swallowing this exception allows us to have a negative
+            # cache entries.  Of course this comes at the cost
+            # of swallowing exceptions...
+            print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (labelStr, str(e))
+            sys.stderr.flush()
+            return None
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -437,7 +457,7 @@ class MintServer(object):
 
         return ccfg
 
-    def _getProjectRepo(self, project, useshim=True, pcfg = None):
+    def _getProjectRepo(self, project, useshim=True, useServer=False, pcfg = None):
         '''
         A helper function to get a NetworkRepositoryClient for doing repository operations.  If you need a client just call _getProjectConaryConfig and instantiate your own client.
 
@@ -476,6 +496,9 @@ class MintServer(object):
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             server = shimclient.NetworkRepositoryServer(cfg, '')
+            if useServer:
+                # Get a server object instead of a shim client
+                return server
 
             pcfg = helperfuncs.configureClientProxies(pcfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
 
@@ -653,6 +676,7 @@ class MintServer(object):
         useInternalConaryProxy = self.cfg.useInternalConaryProxy
         if useInternalConaryProxy:
             httpProxies = {}
+            useInternalConaryProxy = self.cfg.getInternalProxies()
         else:
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
@@ -828,49 +852,57 @@ class MintServer(object):
         if validLabel.match(label) == None:
             raise projects.InvalidLabel(label)
 
-        # XXX this set of operations should be atomic if possible
-        projectId = self.projects.new(name = projectName,
-                                      creatorId = self.auth.userId,
-                                      description = desc,
-                                      hostname = hostname,
-                                      domainname = domainname,
-                                      namespace = namespace,
-                                      isAppliance = applianceValue,
-                                      projecturl = projecturl,
-                                      timeModified = time.time(),
-                                      timeCreated = time.time(),
-                                      shortname = shortname,
-                                      prodtype = prodtype, 
-                                      version = version)
-        self.projectUsers.new(userId = self.auth.userId,
-                              projectId = projectId,
-                              level = userlevels.OWNER)
+        # All database operations must abort cleanly, especially when
+        # creating the repository fails. Otherwise, we'll end up with
+        # a completely broken project that may not even delete cleanly.
+        #
+        # No database operation inside this block may commit the
+        # transaction.
+        self.db.transaction()
+        try:
+            projectId = self.projects.new(name=projectName,
+                creatorId=self.auth.userId, description=desc, hostname=hostname,
+                domainname=domainname, namespace=namespace,
+                isAppliance=applianceValue, projecturl=projecturl,
+                timeModified=time.time(), timeCreated=time.time(),
+                shortname=shortname, prodtype=prodtype, version=version,
+                commit=False)
+            project = projects.Project(self, projectId)
 
-        # add to RepNameMap if projectDomainName != domainname
-        projectDomainName = self.cfg.projectDomainName.split(':')[0]
-        if (domainname != projectDomainName):
-            self._addRemappedRepository('%s.%s' % \
-                                        (hostname, projectDomainName), fqdn)
+            self.projectUsers.new(userId=self.auth.userId, projectId=projectId,
+                level=userlevels.OWNER, commit=False)
 
-        project = projects.Project(self, projectId)
+            # add to RepNameMap if projectDomainName != domainname
+            projectDomainName = self.cfg.projectDomainName.split(':')[0]
+            if domainname != projectDomainName:
+                self.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
+                    toName=fqdn, commit=False)
 
-        project.addLabel(label,
-                         "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, 
-                         self.cfg.basePath, hostname), 'userpass', 
-                         self.cfg.authUser, self.cfg.authPass)
+            self.labels.addLabel(projectId, label,
+                "http://%s%srepos/%s/" % (
+                    self.cfg.projectSiteHost, self.cfg.basePath, hostname),
+                'userpass', self.cfg.authUser, self.cfg.authPass, commit=False)
 
-        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                                  hostname, domainname, self.authToken[0],
-                                  self.authToken[1])
-        
-        if self.cfg.hideNewProjects or isPrivate:
-            repos = self._getProjectRepo(project)
-            helperfuncs.deleteUserFromRepository(repos, 'anonymous',
-                project.getLabel())
-            self.projects.hide(projectId)
+            if commitEmail:
+                self.projects.update(projectId, commitEmail=commitEmail, commit=False)
 
-        if commitEmail:
-            project.setCommitEmail(commitEmail)
+            self.projects.createRepos(self.cfg.reposPath,
+                self.cfg.reposContentsDir, hostname, domainname,
+                self.authToken[0], self.authToken[1])
+            
+            # TODO: put an additional try/except around this to delete
+            # the repository if further setup fails.
+            if self.cfg.hideNewProjects or isPrivate:
+                repos = self._getProjectRepo(project)
+                helperfuncs.deleteUserFromRepository(repos, 'anonymous', label)
+                self.projects.hide(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        self.db.commit()
+
+        # Product now exists and is complete -- failures below here
+        # won't result in inconsistencies or information leaks.
 
         if applianceValue:
             try:
@@ -912,33 +944,32 @@ class MintServer(object):
         if not url:
             url = 'http://' + label.split('@')[0] + '/conary/'
 
-        # create the project entry
-        projectId = self.projects.new(name = name,
-                                      creatorId = self.auth.userId,
-                                      description = '',
-                                      hostname = hostname,
-                                      domainname = domainname,
-                                      projecturl = '',
-                                      external = 1,
-                                      timeModified = time.time(),
-                                      timeCreated = time.time())
+        self.db.transaction()
+        try:
+            # create the project entry
+            projectId = self.projects.new(name=name, creatorId=self.auth.userId, description='',
+                hostname=hostname, domainname=domainname, projecturl='', external=1,
+                timeModified=time.time(), timeCreated=time.time(),
+                commit=False)
 
-        # create the projectUsers entry
-        self.projectUsers.new(userId = self.auth.userId,
-                              projectId = projectId,
-                              level = userlevels.OWNER)
+            # create the projectUsers entry
+            self.projectUsers.new(userId = self.auth.userId,
+                                  projectId = projectId,
+                                  level = userlevels.OWNER, commit=False)
 
-        project = projects.Project(self, projectId)
+            # create the labels entry
+            self.labels.addLabel(projectId, label, url, 'none', commit=False)
 
-        # create the labels entry
-        project.addLabel(label, url, 'none')
-
-        # create the target repository if needed
-        if mirrored:
-            parts = versions.Label(label).getHost().split(".")
-            hostname, domainname = parts[0], ".".join(parts[1:])
-            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                hostname, domainname, None, None)
+            # create the target repository if needed
+            if mirrored:
+                parts = versions.Label(label).getHost().split(".")
+                hostname, domainname = parts[0], ".".join(parts[1:])
+                self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
+                    hostname, domainname, None, None)
+        except:
+            self.db.rollback()
+            raise
+        self.db.commit()
 
         self._generateConaryRcFile()
         return projectId
@@ -2114,6 +2145,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def addLabel(self, projectId, label, url, authType, username, password, entitlement):
         self._filterProjectAccess(projectId)
+        # this is overly agressive but should ensure that adding an
+        # entitlement enables access to the correct platform
+        self.platformNameCache.clear()
         return self.labels.addLabel(projectId, label, url, authType, username, password, entitlement)
 
     @typeCheck(int)
@@ -2133,7 +2167,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             password, entitlement)
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
-
+        # this is overly agressive but should ensure that adding an
+        # entitlement enables access to the correct platform
+        self.platformNameCache.clear()
         return True
 
     @typeCheck(int, int)
@@ -2191,11 +2227,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             
             # add conaryProxy if we have it enabled
             if self.cfg.useInternalConaryProxy:
-                for proto in ['http', 'https']:
-                    stringMap = { 'proto': proto,
-                                  'host': self.cfg.hostName,
-                                  'domain': self.cfg.siteDomainName }
-                    f.write("conaryProxy %(proto)s %(proto)s://%(host)s.%(domain)s\n" % stringMap)
+                proxies = self.cfg.getInternalProxies()
+                for proto, url in proxies.iteritems():
+                    f.write('conaryProxy %s %s\n' % (proto, url))
 
             self.cfg.displayKey('proxy', out=f)
             f.close()
@@ -2391,7 +2425,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return baseFileName
 
     def _getBuildPageUrl(self, buildId, hostname = None):
-        # hostname arg is an optimization for getAllVwsBuilds
+        # hostname arg is an optimization for getAllBuildsByType
         if not hostname:
             projectId = self.getBuild(buildId)['projectId']
             project = self.getProject(projectId)
@@ -2484,9 +2518,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Find the troves that satisfy the build.
         ret = []
-        matches = repos.findTrove(None, (troveName, troveLabel, None))
+        matches = repos.findTroves(None, [(troveName, troveLabel, None)],
+                allowMissing = True)
         if not matches:
             return []
+        matches = matches[(troveName, troveLabel, None)]
 
         maxVersion = max(x[1] for x in matches)
         for name, version, flavor in matches:
@@ -4042,11 +4078,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
-    @private
-    @typeCheck(int, int, str)
-    def getDownloadChart(self, projectId, days, format):
-        chart = charts.DownloadChart(self.db, projectId, span = days)
-        return chart.getImageData(format)
+    
+    if charts:
+        @private
+        @typeCheck(int, int, str)
+        def getDownloadChart(self, projectId, days, format):
+            chart = charts.DownloadChart(self.db, projectId, span = days)
+            return chart.getImageData(format)
 
     # mirrored labels
     @private
@@ -5015,8 +5053,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         L{createPackageTmpDir}
         @type sessionHandle: string
 
-        @return: a list of three items: whether or not the build is complete, a build status code (as returned by rmake), and a message
-        @rtype: list(bool, int, string)
+        @return: a list of four items: whether or not the build is complete, a
+        build status code (as returned by rmake), a message, and the list of
+        built packages if any.
+        @rtype: list(bool, int, string, list of three-tuples)
         """
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
@@ -5024,7 +5064,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return pc.isBuildFinished(sessionHandle, commit=True)
         except packagecreator.errors.PackageCreatorError, e:
             # TODO: Get a real error status code
-            return [True, -1, str(e)]
+            return [True, -1, str(e), []]
 
     @typeCheck(((str,unicode),))
     @requiresAuth
@@ -5365,7 +5405,31 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype C{bool}
         """
         return self.setEC2CredentialsForUser(userId, '', '', '', True)
-        
+
+    @typeCheck(str)
+    @requiresAuth
+    def getAllBuildsByType(self, buildType):
+        res = self.builds.getAllBuildsByType(buildType, self.auth.userId,
+                                             not self.auth.admin)
+
+        # the downloadUrl is now provided by the getFiles method of a build
+        # object, but we really need to minimize the db hits in the loop below
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        urlTemplate = "http://%s?id=%%d" % url
+
+        for buildData in res:
+            # we want to drop the hostname. it was collected by the builds
+            # module call for speed reasons
+            hostname = buildData.pop('hostname')
+            buildId = buildData['buildId']
+            buildData['buildPageUrl'] = \
+                    self._getBuildPageUrl(buildId, hostname = hostname)
+            buildData['downloadUrl'] = urlTemplate % \
+                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+        return res
+
     @requiresAuth
     def getAllAMIBuilds(self):
         """
@@ -5403,8 +5467,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        return self.builds.getAllAMIBuilds(self.auth.userId,
-                not self.auth.admin)
+        res =  self.builds.getAllBuildsByType('AMI', self.auth.userId,
+                                              not self.auth.admin)
+        return dict((x.pop('amiId'), x) for x in res)
 
     @typeCheck(int)
     @requiresAuth
@@ -5752,26 +5817,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{dict} of C{dict} objects (see above)
         @raises: C{PermissionDenied} if user is not logged in
         """
-        # the downloadUrl is now provided by the getFiles method of a build
-        # object, but we really need to minimize the db hits in the loop below
-        url = util.joinPaths(self.cfg.projectSiteHost,
-                self.cfg.basePath, 'downloadImage')
-        urlTemplate = "http://%s?id=%%d" % url
+        res = self.getAllBuildsByType('VWS')
 
-        res = self.builds.getAllVwsBuilds(self.auth.userId,
-                not self.auth.admin)
-
-        for buildData in res.itervalues():
-            # we want to drop the hostname. it was collected by the builds
-            # module call for speed reasons
-            hostname = buildData.pop('hostname')
-            buildId = buildData['buildId']
-            buildData['buildPageUrl'] = \
-                    self._getBuildPageUrl(buildId, hostname = hostname)
-            buildData['downloadUrl'] = urlTemplate % \
-                    self.getBuildFilenames(buildId)[0]['fileId']
-            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
-        return res
+        resDict = dict((x.pop('sha1'), x) for x in res)
+        return resDict
 
     def getAvailablePlatforms(self):
         """
@@ -5783,12 +5832,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         availablePlatforms = []
         for platformLabel in self.cfg.availablePlatforms:
-            try:
-                availablePlatforms.append((platformLabel,
-                    self.platformNameCache.get(platformLabel)))
-            except Exception, e:
-                print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (platformLabel, str(e))
-                sys.stderr.flush()
+            platformName = self.platformNameCache.get(platformLabel)
+            if platformName:
+                availablePlatforms.append((platformLabel, platformName))
         return availablePlatforms
 
     def isPlatformAcceptable(self, platformLabel):
@@ -5803,7 +5849,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.mcpClient = None
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
-                helperfuncs.getBasicConaryConfiguration(self.cfg))
+                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
 
         global callLog
         if self.cfg.xmlrpcLogFile:

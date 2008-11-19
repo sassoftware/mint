@@ -495,7 +495,8 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
-        projectHandler._setCurrentProductVersion(-1)
+        vId = projectHandler.client.addProductVersion(projectHandler.projectId, "ns1", "vs1", "Fluff description")
+        projectHandler._setCurrentProductVersion(vId)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
@@ -527,23 +528,20 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         def getPackageList(s, projectId):
             return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
-        projectHandler._setCurrentProductVersion(-1) #unset the current session so we see all of them
+        vId = projectHandler.client.addProductVersion(projectHandler.projectId, "ns1", "vs1", "Fluff description")
+        projectHandler._setCurrentProductVersion(vId)
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
         page = func(auth=auth, **fields)
 
         headings, uploadLines = self._extractPackageListLines(page)
 
-        self.assertEquals(len(uploadLines), 4)
+        self.assertEquals(len(uploadLines), 2)
         assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
         assert '"newUpload?name=zope:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1"' in uploadLines[1]
-        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns1"' in uploadLines[2]
-        assert '"newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns2:testproject-vs2-devel&amp;prodVer=vs2&amp;namespace=ns2"' in uploadLines[3]
 
-        self.assertEquals( len(headings), 3)
+        self.assertEquals( len(headings), 1)
         assert 'Version vs1 (ns1)' in headings[0]
-        assert 'Version vs2 (ns1)' in headings[1]
-        assert 'Version vs2 (ns2)' in headings[2]
 
     def testCreateProject(self):
         self.called = False

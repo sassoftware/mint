@@ -12,7 +12,7 @@ all: default-all
 
 install: default-install raaplugins-link
 
-clean: default-clean raaplugins-unlink
+clean: default-clean 
 
 
 include ../../Make.rules

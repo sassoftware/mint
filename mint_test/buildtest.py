@@ -1177,6 +1177,11 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                 frozen=True),
                              deps.parseFlavor(f)) \
                                      for f in flava_flavs]
+                def findTroves(self, t1, t2, *args, **kwargs):
+                    res = self.findTrove(t1, t2[0], *args, **kwargs)
+                    if not res:
+                        return {}
+                    return {t2[0]: res}
             return Repo()
 
         self.oldGetRepos = conaryclient.ConaryClient.getRepos
@@ -1323,6 +1328,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionNoTrove(self, db, data):
+        # test an empty result from _resolveTrove
         client = self.getClient('owner')
         # Should raise an exception
         self.assertRaises(TroveNotFoundForBuildDefinition,
@@ -1335,7 +1341,6 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                 'Elsewhere', True)
         # Should have created 1 build for Elsewhere stage
         self.assertEquals(1, len(buildIds))
-
 
 
 class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
@@ -1423,14 +1428,14 @@ class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
 
 class BuildTestConaryRepository(MintRepositoryHelper):
     def testBuildTrovesResolution(self):
-        raise testsuite.SkipTestException("This test is breaking when surrounded by other openRepository(1) calls")
+        raise testsuite.SkipTestException("This test is breaking when surrounded by other startMintServer(1) calls")
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
-        self.openRepository(1, serverCache=self.servers)
+        self.startMintServer(1, serverCache=self.servers)
         repos1 = self.getRepositoryClient(serverIdx=1)
 
         #create an external project that points to the original project
-        self.openRepository(2, serverName="localhost1", serverCache=self.servers)
+        self.startMintServer(2, serverName="localhost1", serverCache=self.servers)
         repos2 = self.getRepositoryClient(serverIdx=2)
         extProjectId = client.newExternalProject("External Project 2",
             "external2", MINT_PROJECT_DOMAIN, "localhost1@foo:bar",

@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = postgresql
+SUBDIRS = postgresql stubs
 
 extra_dist = schema.in.py
 
@@ -19,11 +19,7 @@ install: default-install
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
-	install -D -m0660 rbuilder-generated.conf $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
-	echo '# Custom configuration overrides for rBuilder may be placed here' \
-		> $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
-	chmod 0640 $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
 	# rBuilder misc
 	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
 	# rAPA bits
@@ -32,6 +28,7 @@ install: default-install
 	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
+	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron

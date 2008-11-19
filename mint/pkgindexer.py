@@ -207,7 +207,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 for host, entitlement in entMap:
                     ccfg.entitlement.addEntitlement(host, entitlement[1])
             ccfg = helperfuncs.configureClientProxies(ccfg,
-                    self.cfg.useInternalConaryProxy, self.cfg.proxy)
+                    self.cfg.useInternalConaryProxy, self.cfg.proxy,
+                    self.cfg.getInternalProxies())
             repos = conaryclient.ConaryClient(ccfg).getRepos()
             netclients[hostname] = repos
 

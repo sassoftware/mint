@@ -915,6 +915,9 @@ class MintClient:
     def getAllAMIBuilds(self):
         return self.server.getAllAMIBuilds()
 
+    def getAllBuildsByType(self, buildType):
+        return self.server.getAllBuildsByType(buildType)
+
     def getAMIBuildsForUser(self, userId):
         return self.server.getAMIBuildsForUser(userId)
 
@@ -946,6 +949,8 @@ class MintClient:
     def isPlatformAvailable(self, platformLabel):
         return self.server.isPlatformAvailable(platformLabel)
 
+    def getProxies(self):
+        return self.server.getProxies()
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

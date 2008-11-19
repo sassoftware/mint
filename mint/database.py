@@ -10,6 +10,30 @@ from conary.dbstore import sqlerrors
 
 from mint.mint_error import *
 
+
+# Database operation decorators, for use with TableObject
+# derivatives.
+def dbMethod(writer=True):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            commit = kwargs.pop('commit', writer)
+            cursor = self._cursor(commit)
+            try:
+                ret = func(self, cursor, *args, **kwargs)
+            except:
+                self._rollback(commit)
+                raise
+            self._commit(commit)
+            return ret
+        wrapper.__wrapped_func__ = func
+        wrapper.func_name = func.func_name
+        return wrapper
+    return decorator
+
+dbReader = dbMethod(False)
+dbWriter = dbMethod(True)
+
+
 def concat(db, *items):
     if db.driver == "mysql":
         return "CONCAT(%s)" % ", ".join(items)
@@ -86,15 +110,41 @@ class DatabaseTable(object):
         self.db = db
         cu = self.db.cursor()
 
-    def __getattribute__(self, name):
-        if name == 'db':
-            return object.__getattribute__(self, name)()
-        return object.__getattribute__(self, name)
+    def _getDb(self):
+        return self._db()
 
-    def __setattr__(self, name, val):
-        if name == 'db' and not isinstance(val, weakref.ref):
-            return object.__setattr__(self, name, weakref.ref(val))
-        return object.__setattr__(self, name, val)
+    def _setDb(self, db):
+        if not isinstance(db, weakref.ref):
+            db = weakref.ref(db)
+        self._db = db
+    db = property(_getDb, _setDb)
+
+    def _cursor(self, commit=True):
+        """
+        Get a cursor to the database. If C{commit} is C{True}, begin a
+        transaction first.
+
+        This should always be paired with C{_rollback} and C{_commit},
+        passing the same C{commit} argument as was passed into the
+        calling method (defaulting to C{True}), with the exception of
+        read-only methods which may always call C{_cursor} with
+        C{False}.
+
+        Calls to additional database-aware methods should pass C{False}
+        to those methods' C{commit} parameters regardless of their own
+        C{commit} parameter.
+        """
+        if commit:
+            self.db.transaction()
+        return self.db.cursor()
+
+    def _rollback(self, commit=True):
+        if commit:
+            self.db.rollback()
+
+    def _commit(self, commit=True):
+        if commit:
+            self.db.commit()
 
 
 class KeyedTable(DatabaseTable):
@@ -103,7 +153,8 @@ class KeyedTable(DatabaseTable):
     """
     key = "itemId"
 
-    def get(self, id, fields=None):
+    @dbReader
+    def get(self, cu, id, fields=None):
         """
         Fetches a single row in the database by primary key.
         @param id: database item primary key
@@ -117,7 +168,6 @@ class KeyedTable(DatabaseTable):
         if not fields:
             fields = self.fields
 
-        cu = self.db.cursor()
         stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(fields), self.name, self.key)
         cu.execute(stmt, id)
 
@@ -134,14 +184,13 @@ class KeyedTable(DatabaseTable):
 
         return data
 
-    def getIdByColumn(self, column, value):
+    @dbReader
+    def getIdByColumn(self, cu, column, value):
         """
         Fetches the first primary key found by arbitrary column and value.
         @param column: database column name
         @param value: value to match primary key
         """
-        cu = self.db.cursor()
-
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
         r = cu.fetchone()
@@ -150,7 +199,8 @@ class KeyedTable(DatabaseTable):
         else:
             return r[0]
 
-    def new(self, commit=True, **kwargs):
+    @dbWriter
+    def new(self, cu, **kwargs):
         """
         Adds a row to the database.
         @param kwargs: map of database column names to values.
@@ -164,22 +214,16 @@ class KeyedTable(DatabaseTable):
 
         stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
             (self.name, ",".join(cols), ",".join('?' * len(values)))
-        cu = self.db.cursor()
 
         try:
             cu.execute(*[stmt] + values)
-            if commit:
-                self.db.commit()
         except sqlerrors.ColumnNotUnique:
-            self.db.rollback()
             raise DuplicateItem(self.name)
-        except:
-            self.db.rollback()
-            raise
 
         return cu._cursor.lastrowid
 
-    def update(self, id, commit=True, **kwargs):
+    @dbWriter
+    def update(self, cu, id, **kwargs):
         """
         Updates a row in the database.
         @param id: primary key of row to update.
@@ -195,21 +239,15 @@ class KeyedTable(DatabaseTable):
         params = "=?, ".join(cols) + "=?"
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 
-        cu = self.db.cursor()
         try:
             cu.execute(*[stmt] + values + [id])
-            if commit:
-                self.db.commit()
         except sqlerrors.ColumnNotUnique:
-            self.db.rollback()
             raise DuplicateItem(self.name)
-        except:
-            self.db.rollback()
-            raise
 
         return True
 
-    def delete(self, id, commit=True):
+    @dbWriter
+    def delete(self, cu, id):
         """
         Deletes a row in the database.
         @param id: primary key of row to delete.
@@ -219,18 +257,11 @@ class KeyedTable(DatabaseTable):
         @rtype: bool
         """
         stmt = "DELETE FROM %s WHERE %s=?" % (self.name, self.key)
-        cu = self.db.cursor()
-        try:
-            cu.execute(stmt, id)
-            if commit:
-                self.db.commit()
-        except:
-            self.db.rollback()
-            raise
-
+        cu.execute(stmt, id)
         return True
 
-    def search(self, columns, table, where, order, modified, limit, offset, leftJoins=[]):
+    @dbReader
+    def search(self, cu, columns, table, where, order, modified, limit, offset, leftJoins=[]):
         """
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
         @param columns: list of columns to return
@@ -249,7 +280,6 @@ class KeyedTable(DatabaseTable):
                         The date last modified.
         """
         subs = [ ]
-        cu = self.db.cursor()
         count = 0
 
         if modified:

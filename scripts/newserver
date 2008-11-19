@@ -13,6 +13,7 @@ def require(package, label):
 
 def checksanity(buildFlex=False):
     require('yui', 'contrib.rpath.org@rpl:1')
+    require('stomp', 'contrib.rpath.org@rpl:2')
     if buildFlex:
         require('flexlibs', 'private.rb.rpath.com@rpl:flexlibs-1-devel')
         require('flex-sdk', 'private.rb.rpath.com@rpl:1')
@@ -124,7 +125,7 @@ def loadModules(mintDir, destDir, hgDir, buildFlex=False):
 
 def loadDatabase(targetDir):
     scriptsDir = os.path.dirname(__file__)
-    cmd = 'cd %s; cp rbuilder-database rbuilder_database.py; PYTHONPATH=%s/pythonpath python -c "import rbuilder_database;  rbuilder_database.RBuilderDatabase(aLockPath=\'%s/repos/run\').run();" --migrate -c %s/config/rbuilder.conf' % (scriptsDir, targetDir, targetDir, targetDir)
+    cmd = 'cd %s; cp rbuilder-database rbuilder_database.py; PYTHONPATH=%s/pythonpath python -c "import rbuilder_database;  rbuilder_database.RBuilderDatabase(aLockPath=\'%s/rbuilder/run\').run();" --migrate -c %s/config/rbuilder.conf' % (scriptsDir, targetDir, targetDir, targetDir)
     os.system(cmd)
 
 def linkCatalogClient(targetDir):

@@ -65,7 +65,7 @@ LoadModule cgi_module modules/mod_cgi.so
 
 DocumentRoot "@DOCROOT@"
 
-Alias /conary/ "@DOCROOT@/test.cnr/"
+#Alias /conary/ "@DOCROOT@/test.cnr/"
 
 Alias /conary-static/apps/yui/      "/srv/www/html/yui/"
 Alias /conary-static/apps/MochiKit/ "/srv/www/html/MochiKit/"
@@ -82,7 +82,7 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonOption basePath "/"
-    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@'] + sys.path"
+    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@', '@RESTLIBPATH@'] + sys.path"
     PythonDebug Off
 </Location>
 
@@ -106,13 +106,13 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
 </Location>
 
 
-<Location /conary/>
-    Options FollowSymLinks
-
-    AddHandler python-program .cnr
-    PythonHandler conary.server.apachehooks
-</Location>
-
+#<Location /conary/>
+#    Options FollowSymLinks
+#
+#    AddHandler python-program .cnr
+#    PythonHandler conary.server.apachehooks
+#</Location>
+#
 <Location /images/>
     SetHandler none
     DefaultType application/octet-stream

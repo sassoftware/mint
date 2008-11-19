@@ -170,9 +170,10 @@ class WebProjectTest(WebProjectBaseTest):
                                   server=self.getProjectServerHostname())
 
     def testGroupPerms(self):
+        raise testsuite.SkipTestException('This test depends on accessing conary.rpath.com through the proxy (and thus requires a multi-process mint server as well as conary.rpath.com being accessible)')
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
+                                    MINT_PROJECT_DOMAIN)
 
         # Anonymous
         page = self.assertContent('/project/testproject/newGroup',

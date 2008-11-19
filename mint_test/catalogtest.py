@@ -31,6 +31,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "Expected redirect to %s, got %s" % \
                         (expectedRedirect, redirectUrl))
 
+
+    @staticmethod
+    def normalizeXML(data):
+        """lxml will produce the header with single quotes for its attributes,
+        while xmllint uses double quotes. This function normalizes the data"""
+        return data.replace(
+            "<?xml version='1.0' encoding='UTF-8'?>",
+            '<?xml version="1.0" encoding="UTF-8"?>').strip()
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(self.normalizeXML(first),
+                             self.normalizeXML(second))
+
     def testGetImagesNoCred(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')

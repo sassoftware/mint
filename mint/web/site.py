@@ -657,7 +657,7 @@ class SiteHandler(WebHandler):
                     userProjects.append(x)
             return self._write("userInfo", user = user, userProjects = userProjects, userIsAdmin = userIsAdmin)
         else:
-            raise ItemNotFound('userid')
+            raise mint_error.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
     @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0, byPopularity = 0)
@@ -1066,7 +1066,7 @@ class SiteHandler(WebHandler):
     def tryItNow(self, auth, id):
         try:
             bami = self.client.getBlessedAMI(id)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             raise HttpNotFound
 
         if not bami.isAvailable:

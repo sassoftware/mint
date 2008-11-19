@@ -127,15 +127,26 @@
     width: 100%;
 }
 
+a.pdusource-adder,
+a.pdbuilddef-adder {
+    text-decoration: none;
+}
+
 a:hover.pdusource-adder,
+a:hover.pdbuilddef-adder {
+    color: #e65a1d;
+    text-decoration: underline;
+}
+
 a:hover.pdusource-deleter,
-a:hover.pdbuilddef-adder,
 a:hover.pdbuilddef-expander,
 a:hover.pdbuilddef-deleter {
     color: inherit;
     background-color: inherit;
     cursor: pointer;
 }
+
+a:hover
 
 #pdbuilddef-empty,
 #pdstages-empty {

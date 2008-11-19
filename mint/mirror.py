@@ -122,11 +122,9 @@ class RepNameMapTable(database.DatabaseTable):
 
     fields = ['fromName', 'toName']
 
-    def new(self, fromName, toName):
-        cu = self.db.cursor()
-
+    @database.dbWriter
+    def new(self, cu, fromName, toName):
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
-        self.db.commit()
         return cu._cursor.lastrowid
 
 class UpdateServicesTable(database.KeyedTable):

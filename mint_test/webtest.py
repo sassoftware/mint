@@ -1517,6 +1517,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         groupTrove = self.createTestGroupTrove(client, projectId)
 
+        self.startMintServer()
         repos = self.openRepository()
 
         self.addQuickTestComponent('foo:data',
@@ -1614,6 +1615,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self. quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
+        self.startMintServer()
         repos = self.openRepository()
 
         self.addComponent('foo:source',
@@ -1982,6 +1984,122 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/')
         self.assertContent('/', content=HTMLcontent)
 
+    def addExternalRepository(self, client, userpass=('test', 'foo'),
+                              serverIdx=0):
+        # make sure mint has started
+        # and that we're using that mint repos as a proxy.
+        repos = self.startMintServer(useProxy=True)
+        repos = self.openConaryRepository(serverIdx)
+        hostname = 'localhost'
+        if serverIdx:
+            hostname += str(serverIdx)
+        repos.deleteUserByName('%s@rpl:1' % hostname, 'anonymous')
+        if not userpass:
+            userpass = ('', '')
+        extLabel = hostname + '@rpl:linux'
+        projectId = client.newExternalProject(hostname, hostname, '',
+                                            extLabel,
+                                            self.cfg.repositoryMap[hostname],
+                                            mirror=False)
+
+        project = client.getProject(projectId)
+        labelIdMap = client.getLabelsForProject(projectId)[0]
+        label, labelId = labelIdMap.items()[0]
+        authType = 'userpass'
+        project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
+                          authType, userpass[0], userpass[1], '')
+        return repos, hostname
+
+    def editExternalRepository(self, client, hostname, 
+                              userpass=('test', 'foo')):
+        project = client.getProjectByHostname(hostname)
+        labelIdMap = client.getLabelsForProject(project.projectId)[0]
+        label, labelId = labelIdMap.items()[0]
+        extLabel = hostname + '@rpl:linux'
+        authType = 'userpass'
+        project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
+                          authType, userpass[0], userpass[1], '')
+
+    def addPlatform(self, label, name='Platform for %(label)s'):
+        from rpath_common.proddef import api1 as proddef
+        from StringIO import StringIO
+        pd = proddef.PlatformDefinition()
+        pd.setPlatformName(name % dict(label=label))
+        stream = StringIO('w+')
+        pd.serialize(stream)
+        stream.seek(0)
+        self.addComponent('platform-definition:source=%s' % label, 
+                            [('platform-definition.xml', stream.read())])
+
+    def testGetAvailablePlatforms(self):
+        client = self.startMintServer(useProxy=True)
+        self.addPlatform('localhost@rpl:plat')
+        self.mintCfg.availablePlatforms.append('localhost@rpl:plat')
+
+        # before we add the external product, we don't have access to
+        # this product - there's no repomap.
+        platforms = client.getAvailablePlatforms()
+        assert(not platforms)
+
+        # when we add localhost as an external repository, we
+        # can now access the platform
+        repos, hostname = self.addExternalRepository(client)
+        platforms = client.getAvailablePlatforms()
+        assert(platforms == [['localhost@rpl:plat', 
+                              'Platform for localhost@rpl:plat']])
+
+        # put the wrong password in, and now we can no longer access the
+        # repository.
+        self.editExternalRepository(client, hostname, userpass=('test', 'bar') )
+        platforms = client.getAvailablePlatforms()
+        assert(not platforms)
+
+    def testGetAllImagesByType(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        adminClient, userId2 = self.quickMintAdmin('foo2', 'foo2')
+        otherClient, userId3 = self.quickMintUser('foo3', 'foo3')
+        projectId = self.newProject(client)
+        projectId2 = self.newProject(otherClient, 'testproject2', 'tp2')
+
+        # check permissions - users can see their own, admin can see all.
+        self.addBuild(client, projectId, buildtypes.XEN_OVA, userId=userId)
+        self.addBuild(client, projectId2, buildtypes.XEN_OVA, userId=userId3)
+        images = client.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 1)
+        self.failUnless('buildPageUrl' in images[0], images[0])
+
+        images = otherClient.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 1)
+        images = adminClient.getAllBuildsByType('XEN_OVA')
+        assert(len(images) == 2)
+
+        images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.VMWARE_ESX_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
+        assert(len(images) == 1)
+
+        images = client.getAllBuildsByType('AMI')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.AMI,
+                      userId=userId)
+        self.addBuild(client, projectId, buildtypes.AMI,
+                      userId=userId, buildData={'amiId' : '324'})
+        images = client.getAllBuildsByType('AMI')
+        assert(len(images) == 1)
+
+        # Check VWS - 
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.RAW_FS_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.RAW_FS_IMAGE,
+                      userId=userId, buildData={'XEN_DOMU' : True})
+        images = client.getAllBuildsByType('VWS')
+        assert(len(images) == 1)
 
 if __name__ == "__main__":
     testsuite.main()

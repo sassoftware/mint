@@ -182,7 +182,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     def groups(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedBuilds = [x for x in builds if x.getPublished()]
-        groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
+        groupTrovesInProject = self.client.listGroupTrovesByProject(
+                                                            self.project.id)
 
         return self._write("groups", publishedBuilds = publishedBuilds,
             groupTrovesInProject = groupTrovesInProject)
@@ -195,7 +196,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             cfg.read(conarycfgFile)
 
         cfg.dbPath = cfg.root = ":memory:"
-        cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
+        internalProxies, proxies = self.client.getProxies()
+        cfg = helperfuncs.configureClientProxies(cfg, self.cfg.useInternalConaryProxy, proxies, internalProxies)
         repos = conaryclient.ConaryClient(cfg).getRepos()
 
         labels = basictroves.labelDict
@@ -790,10 +792,22 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 message = None)
 
     @writersOnly
+    @productversion.productVersionRequired
     def packageCreatorPackages(self, auth):
-        pkgList = self.client.getPackageCreatorPackages(self.project.getId())
+        pkgList = {}
+        version = None
+        namespace = None
+        allPackageCreatorPackagesList = self.client.getPackageCreatorPackages(self.project.getId())
+        try:
+            ver = self.client.getProductVersion(self.currentVersion)
+            version = ver['name']
+            namespace = ver['namespace']
+            pkgList = dict([x for x in allPackageCreatorPackagesList[ver['name']][ver['namespace']].items() if not x[0].startswith('group-')])
+        except KeyError:
+            pass # no packages for our namespace / version combo
 
-        return self._write('packageList', pkgList=pkgList, message=None)
+        return self._write('packageList', pkgList=pkgList, version=version,
+                namespace=namespace, message=None)
 
     @writersOnly
     def sourcePackages(self, auth):
@@ -1468,6 +1482,12 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
     @requiresAuth
     @ownerOnly
     def rebaseProductVersion(self, auth, id):
+
+        return_to = ''
+        if self.req.headers_in.has_key('referer') and \
+                self.project.getUrl() in self.req.headers_in['referer']:
+            return_to = self.req.headers_in['referer'].split('/')[-1]
+
         productVersion = self.client.getProductVersion(id)
         availablePlatforms = self.client.getAvailablePlatforms()
         try:
@@ -1503,22 +1523,23 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                 versionName = productVersion.get('name',''),
                 currentPlatformLabel = platformLabel,
                 customPlatform = customPlatform,
-                availablePlatforms = availablePlatforms)
+                availablePlatforms = availablePlatforms,
+                return_to = return_to)
 
     @intFields(id = -1)
-    @strFields(platformLabel = '', action = 'Cancel')
+    @strFields(platformLabel = '', action = 'Cancel', return_to='')
     @requiresAuth
     @ownerOnly
-    def processRebaseProductVersion(self, auth, id, platformLabel, action):
+    def processRebaseProductVersion(self, auth, id, platformLabel, action, return_to):
         if action == 'Cancel':
-            self._predirect()
+            self._predirect(return_to)
 
         pd = self.client.getProductDefinitionForVersion(id)
         if self.client.setProductDefinitionForVersion(id, pd, platformLabel):
             self._setInfo("Product version updated")
         else:
             self._addError("Problem updating product version")
-        self._predirect()
+        self._predirect(return_to)
 
     def _productVersionAvaliableBuildTypes(self):
         """

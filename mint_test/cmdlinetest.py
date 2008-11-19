@@ -168,7 +168,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cmd = users.UserCreateCommand()
 
         project = client.getProject(newProjectId)
-        assert(project.getMembers() == [[1, 'adminuser', 0], [2, 'testuser', 0]])
+        assert(project.getMembers() == [[2, 'adminuser', 0], [3, 'testuser', 0]])
 
     def testBuildUrlCMD(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
