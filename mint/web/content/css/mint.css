@@ -239,7 +239,7 @@ div#main {
     margin-top: 0px;
     padding-top: 0px;
     width: 100%;
-    min-width: 955px;
+    min-width: 965px;
     height: 100%;
     top: 0px;
     bottom: 0px;
@@ -409,7 +409,7 @@ div#top {
     margin-right: auto;
     height: 102px;
     width: 99%;
-    min-width: 955px;
+    min-width: 965px;
     background: url(../images/topgrad.png) repeat-x;
 }
 
