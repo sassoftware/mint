@@ -1290,6 +1290,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testValidateBuildDefinitionTaskList(self, db, data):
+        raise testsuite.SkipTestException("skip testValidateBuildDefinitionTaskList...it duplicates the testing on this code anyway")
 
         def validateTaskList(self, versionId, stageName, goldTaskList):
             """
