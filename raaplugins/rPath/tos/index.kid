@@ -53,12 +53,11 @@ Copyright (c) 2006-2008 rPath, Inc.
         of a Software Partner Agreement with terms acceptable to rPath.
     </p>
 
-
-
     <br/><br/>
-    <form action="javascript:void(0);" method="POST" id="page_form" name="page_form"
+    <div py:if="not raaInWizard" style="text-align: center"><strong>*** These terms of service have already been accepted. ***</strong></div>
+    <form py:if="raaInWizard" action="javascript:void(0);" method="POST" id="page_form" name="page_form"
 	    onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'saveConfig');">
-	<a class="rnd_button float-right" id="OK" href="javascript:button_submit(document.page_form)">Accept</a>
+	    <a class="rnd_button float-right" id="OK" href="javascript:button_submit(document.page_form)">Accept</a>
     </form>
     </div>
 </div>
