@@ -238,6 +238,21 @@ class FixtureCache(object):
         userId = self.createUser(cfg, db, username = "user")
         nobodyId = self.createUser(cfg, db, username = "nobody")
 
+        # set up EC2 site credentials
+        amiData = {
+                'ec2PublicKey' : '123456789ABCDEFGHIJK',
+                'ec2PrivateKey' : '123456789ABCDEFGHIJK123456789ABCDEFGHIJK',
+                'ec2AccountId' : '000000000000',
+                'ec2S3Bucket' : 'extracrispychicken',
+                'ec2LaunchUsers' : ["000000001111", "000000002222"],
+                'ec2LaunchGroups' : ["group1", "group2"],
+                'ec2Certificate': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.pem')).read(),
+                'ec2CertificateKey': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.key')).read()
+                }
+        adminClient = shimclient.ShimMintClient(cfg, ("admin", "adminpass"))
+        adminClient.addTarget('ec2', 'aws', amiData)
         # create the project
         client = shimclient.ShimMintClient(cfg, ("owner", "ownerpass"))
         hostname = shortname = "foo"
@@ -487,6 +502,19 @@ class FixtureCache(object):
         loneUserId = self.createUser(cfg, db,
                 username = 'loneuser', isAdmin = False)
 
+        amiData = {
+                'ec2PublicKey' : '123456789ABCDEFGHIJK',
+                'ec2PrivateKey' : '123456789ABCDEFGHIJK123456789ABCDEFGHIJK',
+                'ec2AccountId' : '000000000000',
+                'ec2S3Bucket' : 'extracrispychicken',
+                'ec2LaunchUsers' : ["000000001111", "000000002222"],
+                'ec2LaunchGroups' : ["group1", "group2"],
+                'ec2CertificateFile': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.pem')).read(),
+                'ec2CertificateKeyFile': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.key')).read()
+                }
+        client.addTarget('ec2', 'aws', amiData)
         hostname = shortname = "testproject"
         projectId = someOtherClient.newProject("Test Project",
                                       hostname,
@@ -647,22 +675,6 @@ class FixtureCache(object):
                       'buildId6' : buildId6,
                       }
 
-    def getAMIConfig(self, testCfg):
-        # AMI testing
-        testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
-        testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
-        testCfg.ec2AccountId   = '000000000000'
-        testCfg.ec2S3Bucket    = 'extracrispychicken'
-        testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath, 'config', 'ec2.pem')
-        testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath, 'config', 'ec2.key')
-        testCfg.configLine("ec2LaunchUsers 000000001111")
-        testCfg.configLine("ec2LaunchUsers 000000002222")
-        testCfg.configLine("ec2LaunchGroups group1")
-        testCfg.configLine("ec2LaunchGroups group2")
-        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.key'),
-                      os.path.join(testCfg.dataPath, 'config'))
-        util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.pem'),
-                      os.path.join(testCfg.dataPath, 'config'))
 
     def __del__(self):
         for f in self._fixtures.values():
@@ -678,6 +690,7 @@ class SqliteFixtureCache(FixtureCache):
         from mint import schema
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         schema.loadSchema(db, cfg)
+
         return cfg
 
     def load(self, name):
@@ -695,8 +708,6 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-
-        self.getAMIConfig(testCfg)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
@@ -776,8 +787,6 @@ class MySqlFixtureCache(SQLServerFixtureCache):
                                               os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-
-        self.getAMIConfig(testCfg)
 
         # restore the mint db into a unique copy
         fixtureMintDbName = ("mf%s" % name).lower()
@@ -871,8 +880,6 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
                                               os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
-
-        self.getAMIConfig(testCfg)
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)

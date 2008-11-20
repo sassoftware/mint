@@ -196,7 +196,14 @@ class MintConfig(ConfigFile):
     language                = 'en'
     localeDir               = '/usr/share/locale/'
 
+    # *** BEGIN DEPRECATED VALUES ***
     # AMI configuration data
+    # the targets.py module now stores these values in the
+    # Targets and TargetData tables
+    # these values are no longer used as of rBuilder 5.0, but must be maintained
+    # until we can guarantee no customers will be inconvenienced by their
+    # removal. schema upgrade (45, 6) copies these config values into
+    # the rBuilder database
     ec2PublicKey            = (cfgtypes.CfgString, '', "The AWS account id")
     ec2PrivateKey           = (cfgtypes.CfgString, '', "The AWS public key")
     ec2AccountId            = (cfgtypes.CfgString, '', "The AWS private key")
@@ -212,6 +219,7 @@ class MintConfig(ConfigFile):
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
     ec2UseNATAddressing     = (cfgtypes.CfgBool, False)
+    # *** END DEPRECATED VALUES ***
 
     VAMUser                 = ''
     VAMPassword             = ''

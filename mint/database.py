@@ -108,6 +108,7 @@ class DatabaseTable(object):
         since MintServer object holds the db and all DatabaseTables objects."""
         assert(self.name and self.fields)
         self.db = db
+        # XXX what purpose does creating an unused cursor serve?
         cu = self.db.cursor()
 
     def _getDb(self):
