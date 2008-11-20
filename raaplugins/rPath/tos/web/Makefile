@@ -6,7 +6,7 @@
 
 SUBDIRS =
 
-python_files = __init__.py eula.py
+python_files = __init__.py tos.py
 
 all: default-all
 
