@@ -278,7 +278,7 @@ from rPath.rmakemanagement import pageList
                     </div>
                     <div py:if="not builds" py:strip="True">
                         <tr>
-                        <td>No Builds</td>
+                        <td>${statusmsg}</td>
                         <td></td>
                         <td></td>
                         <td></td>
