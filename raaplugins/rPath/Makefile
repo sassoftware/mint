@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert rmakemanagement
+SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert rmakemanagement tos
 
 extra_dist = __init__.py
 

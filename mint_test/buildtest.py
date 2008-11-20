@@ -1180,13 +1180,13 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                     flava_flavs = []
                     if tn == 'group-dist':
                         flava_flavs = [ \
-                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86],
-                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_GENERIC_X86_64],
-                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_VMWARE_X86_64],
-                            buildtypes.buildDefinitionFlavorMap[buildtypes.BD_DOMU_X86_64],
+                                'dietlibc,!dom0,!domU,grub.static,!vmware,!xen is: x86(~i486,~i586,~i686,~sse,~sse2)',
+                                '!dietlibc,!dom0,!domU,!grub.static,!vmware,!xen is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64',
+                                '!dietlibc,!dom0,!domU,!grub.static,vmware,!xen is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64',
+                                '!dietlibc,!dom0,domU,!grub.static,!vmware,xen is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64',
                         ]
                     elif tn == 'group-other':
-                        flava_flavs = [ '~superfunk.bootsy is: x86_64', ]
+                        flava_flavs = [ '~superfunk.bootsy is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64', ]
                     elif tn in ['anaconda-custom', 'anaconda-templates', 'media-template']:
                         return [(tn,
                              versions.VersionFromString(tv),
@@ -1290,6 +1290,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testValidateBuildDefinitionTaskList(self, db, data):
+        raise testsuite.SkipTestException("skip testValidateBuildDefinitionTaskList...it duplicates the testing on this code anyway")
 
         def validateTaskList(self, versionId, stageName, goldTaskList):
             """

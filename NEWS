@@ -100,6 +100,7 @@ Web Front End Changes
   (RBL-3256)
 * The rMake server and rMake node logs are available for viewing from the rAPA
   logs plugin. (RBL-3780)
+* The rBuilder Terms of Service is now a rapa plugin. (RBL-3803)
 
 Bug Fixes
 ---------------------
