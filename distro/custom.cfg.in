@@ -5,8 +5,10 @@ product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 services.Services.hidden = True
 
-# Wizard plugins to run in this order. Terms of service should always be first!
-wizard.plugins = ["/tos/TermsOfService", "/changepassword/ChangePassword", "/configure/Notify", "/configure/Network", "/configure/Proxy", "/configure/Entitlements", "/backup/Backup"]
+# Wizard plugins to run in this order. 
+# -- Terms of service should always be first!
+# -- RBA Setup should always be last
+wizard.plugins = ["/tos/TermsOfService", "/changepassword/ChangePassword", "/configure/Notify", "/configure/Network", "/configure/Proxy", "/configure/Entitlements", "/backup/Backup", "/rbasetup/RBASetup"]
 
 [/logs]
 logs.files = {'Appliance Agent: Web Service': '/var/log/raa/web', 'Appliance Agent: Backend Service': '/var/log/raa/raa-service.log', 'Conary': '/var/log/conary', 'Inbound Mirroring': '/var/log/rbuilder/mirror-inbound.log', 'Outbound Mirroring': '/var/log/rbuilder/mirror-outbound.log', 'Jobmaster': '/var/log/rbuilder/jobmaster.log', 'MCP': '/var/log/rbuilder/mcp.log', 'Mirror Preloading': '/var/log/rbuilder/load-mirror.log', 'Package Indexer': '/var/log/rbuilder/package-index.log', 'External Package Indexer': '/var/log/rbuilder/package-index-external.log', 'Apache Access': '/var/log/httpd/access_log', 'Apache Errors': '/var/log/httpd/error_log', 'Conary Migration Log': '/var/log/rbuilder/conary-db-migration.log', 'rMake Server Log': '/var/log/rmake/rmake-server.log', 'rMake Node Log': '/var/log/rmake/rmake-node.log'}
