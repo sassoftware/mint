@@ -329,41 +329,6 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
             server=self.getProjectServerHostname())
         assert 'permission denied' in page.body.lower()
 
-    def testBuildsFromProductDefinitionNoTrove2(self):
-        # a similar test exists in buildtest.py.
-        # the difference in this test is that we force a situation where
-        # no troves exist.
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'testproject',
-                MINT_PROJECT_DOMAIN)
-        versionId = client.addProductVersion(projectId, 'test', '1')
-
-        pd = proddef.ProductDefinition()
-        pd = helperfuncs.sanitizeProductDefinition('Foo',
-                '', 'testproject', MINT_PROJECT_DOMAIN, 'testproject',
-                '1', 'version 1', 'test')
-
-        pd.addContainerTemplate(pd.imageType('installableIsoImage', {}))
-        pd.addBuildDefinition(name = 'Shazam', stages = ['Development'],
-                containerTemplateRef = 'installableIsoImage')
-
-        cClient = self.getConaryClient()
-        pd.saveToRepository(cClient)
-
-        client.setProductDefinitionForVersion(versionId, pd)
-
-        # Should raise an exception
-        self.assertRaises(mint_error.TroveNotFoundForBuildDefinition,
-                          client.newBuildsFromProductDefinition,
-                          versionId,
-                          'Development', False)
-        # Let's FORCE IT. there's no way to get builds tho. there's no troves
-        # to base the builds on
-        buildIds = \
-            client.newBuildsFromProductDefinition(versionId,
-                'Development', True)
-        # Should have created 1 build for Elsewhere stage
-        self.assertEquals(0, len(buildIds))
 
     def testProductVersionEditLinked(self):
         """

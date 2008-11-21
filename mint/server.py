@@ -2371,6 +2371,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         projectId = version.projectId
+        self._filterProjectAccess(projectId)
 
         # Read build definition from product definition.
         pd = self._getProductDefinitionForVersionObj(versionId)
@@ -5271,6 +5272,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return loaded
         else:
             return None
+
+    @requiresAuth
+    def getProductVersionSourcePackages(self, projectId, versionId):
+        project = projects.Project(self, projectId)
+        version = self.getProductVersion(versionId)
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        label = versions.Label(pd.getDefaultLabel())
+        repo = self._getProjectRepo(project)
+        ret = []
+        trvlist = repo.findTroves(label, [(None, None, None)], allowMissing=True)
+        for k,v in trvlist.iteritems():
+            for n, v, f in v:
+                if n.endswith(':source'):
+                    ret.append((n, v.freeze()))
+        return ret
+
+    @typeCheck(int, int, ((str,unicode),), ((str,unicode),))
+    @requiresAuth
+    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
+        project = projects.Project(self, projectId)
+        version = self.getProductVersion(versionId)
+        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        mincfg = self._getMinCfg(project)
+        try:
+            sesH = pc.startPackagingSession(dict(hostname=project.getFQDN(),
+                shortname=project.shortname, namespace=version['namespace'],
+                version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error starting the package creator service session: %s", str(err))
+        try:
+            pc.build(sesH, commit=True)
+        except packagecreator.errors.PackageCreatorError, err:
+            raise PackageCreatorError( \
+                    "Error attempting to build package: %s", str(err))
+        return sesH
 
     @requiresAuth
     def getAvailablePackages(self, sessionHandle):

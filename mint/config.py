@@ -319,6 +319,15 @@ class MintConfig(ConfigFile):
         if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')
 
     def getInternalProxies(self):
-        return {'http' : 'http://%s.%s' %(self.hostName,
-                                           self.siteDomainName),
-                'https' : 'https://%s' % (self.secureHost,)}
+        # use localhost for the proxy due to a bug in proxy handling
+        # (RBL-3822)
+        if self.siteDomainName.startswith('rpath.local'):
+            # FIXME: SICK HACK
+            # if we're running under the test suite, we have to use
+            # a hostname other than "localhost"
+            return {'http' : 'http://%s.%s' %(self.hostName,
+                                              self.siteDomainName),
+                    'https' : 'https://%s' % (self.secureHost,)}
+
+        return {'http': 'http://localhost',
+                'https': 'https://localhost'}

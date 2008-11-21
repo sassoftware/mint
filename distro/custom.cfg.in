@@ -24,3 +24,6 @@ collectiontool.vendorInformationPath = "/usr/share/raa/content/collectiontool.ht
 
 [/updatetroves]
 updatetroves.migrate.hide = False
+
+[/status]
+status.vendorInformationPath = "/usr/share/raa/content/status.html"
