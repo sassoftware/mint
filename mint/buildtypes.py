@@ -5,6 +5,7 @@
 #
 
 import sys
+from conary.deps import deps
 
 validBuildTypes = {
     'BOOTABLE_IMAGE'    : 0,
@@ -236,6 +237,62 @@ buildDefinitionFlavorMap = {
     BD_VMWARE_X86       : '!dom0, !domU, !xen, vmware is: x86',
     BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
+
+def makeBuildFlavorMap(prd):
+    baseFlavor = prd.getBaseFlavor() or prd.getPlatformBaseFlavor() or ''
+    baseFlavor = deps.parseFlavor(baseFlavor)
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures = prd.platform.getArchitectures()
+    res = {}
+    for flavorSet in flavorSets:
+        for architecture in architectures:
+            flv = deps.parseFlavor(flavorSet.flavor)
+            arch = deps.parseFlavor(architecture.flavor)
+            flavor = deps.overrideFlavor(baseFlavor, flv)
+            flavor = deps.overrideFlavor(flavor, arch)
+            res[str(flavor)] = \
+                    "%s %s" % (flavorSet.displayName, architecture.displayName)
+    return res
+
+def makeFlavorMap(prd):
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures = prd.platform.getArchitectures()
+    return dict([("%s %s" % (x.displayName, y.displayName),
+                  "%s,%s" % (x.name, y.name)) \
+            for x in flavorSets for y in architectures])
+
+def makeFlavorsForBuild(prd, key):
+    # compose a flavor map much like above but filter illegal types
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    buildTemplates = prd.getBuildTemplates()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures += prd.platform.getArchitectures()
+        buildTemplates += prd.platform.getBuildTemplates()
+    containerTemplateRef = imageTypeXmlTagNameMap.get(key)
+    if not containerTemplateRef:
+        return makeFlavorMap(prd)
+
+    # for arch and flavorSet, if None is encountered, all available types
+    # are legal
+    arches = set([x.architectureRef for x in buildTemplates \
+            if x.containerTemplateRef == containerTemplateRef])
+    arches = [x for x in architectures if None in arches or x.name in arches]
+
+    flavors = set([x.flavorSetRef for x in buildTemplates \
+            if x.containerTemplateRef == containerTemplateRef])
+    flavors = [x for x in flavorSets if None in flavors or x.name in flavors]
+
+    return dict([("%s %s" % (x.displayName, y.displayName),
+                  "%s,%s" % (x.name, y.name)) \
+            for x in flavors for y in arches])
 
 # generate mapping of flavors to flavor names
 buildDefinitionFlavorToFlavorMapRev = \

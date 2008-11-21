@@ -478,6 +478,22 @@ def addDefaultStagesToProductDefinition(productDefinitionObj):
                 stage['labelSuffix'])
     return
 
+def addDefaultPlatformToProductDefinition(productDefinition):
+    """
+    Given a product definition object, add the canned platform defaults
+    to it, if needed. This function does nothing if any architectures,
+    flavorSets, containerTemplates or buildTemplates are defined. This
+    function modifies the original object
+    """
+    from rpath_common.proddef import api1 as proddef
+    if not productDefinition.platform:
+        productDefinition.platform = proddef.PlatformDefinition()
+    if not (productDefinition.platform.getArchitectures() or
+            productDefinition.platform.getFlavorSets() or
+            productDefinition.platform.getContainerTemplates() or
+            productDefinition.platform.getBuildTemplates()):
+        proddef._addPlatformDefaults(productDefinition.platform)
+
 def getDefaultImageGroupName(shortname):
     """
     Given the project's shortname, give the default image group name
@@ -510,6 +526,8 @@ def sanitizeProductDefinition(projectName, projectDescription,
     productDefinition.setImageGroup(getDefaultImageGroupName(shortname))
 
     addDefaultStagesToProductDefinition(productDefinition)
+
+    addDefaultPlatformToProductDefinition(productDefinition)
 
     return productDefinition
 
@@ -551,22 +569,6 @@ def weak_signature_call(_func, *args, **kwargs):
         keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
             if arg in argnames)
     return _func(*args, **keep_args)
-
-def buildEC2AuthToken(cfg):
-    """
-    Convenience function to build the EC2 auth token from the config data
-    """
-    at = ()
-    if cfg:
-        # make sure all the values are set
-        if not cfg.ec2AccountId or not cfg.ec2PublicKey or not cfg.ec2PrivateKey:
-            raise mint_error.EC2NotConfigured()
-        at = (cfg.ec2AccountId, cfg.ec2PublicKey, cfg.ec2PrivateKey)
-        
-    if not at:
-        raise mint_error.EC2NotConfigured()
-    
-    return at
 
 def formatProductVersion(versions, currentVersion):
     if currentVersion is None:

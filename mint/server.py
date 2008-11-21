@@ -47,6 +47,7 @@ from mint import requests
 from mint import sessiondb
 from mint import stats
 from mint import templates
+from mint import targets
 from mint import userlevels
 from mint import users
 from mint import usertemplates
@@ -278,6 +279,9 @@ def getTables(db, cfg):
     d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
     d['productVersions'] = projects.ProductVersionsTable(db, cfg)
+
+    d['targets'] = targets.TargetsTable(db)
+    d['targetData'] = targets.TargetDataTable(db)
 
     # tables for per-project repository db connections
     d['projectDatabase'] = projects.ProjectDatabase(db)
@@ -556,6 +560,8 @@ class MintServer(object):
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
+            # XXX could this exception handler be more specific? As written
+            # any error in the proddef module will be masked.
             raise ProductDefinitionVersionNotFound
         return pd
 
@@ -571,10 +577,11 @@ class MintServer(object):
         Otherwise it passes back what it was passed in.
         """
         assert(isinstance(authToken, (list, tuple)))
+        amiData = self._getTargetData('ec2', 'aws', supressException = True)
         if len(authToken) == 0:
-            return (self.cfg.ec2AccountId,
-                    self.cfg.ec2PublicKey,
-                    self.cfg.ec2PrivateKey)
+            return (amiData.get('ec2AccountId', ""),
+                    amiData.get('ec2PublicKey', ""),
+                    amiData.get('ec2PrivateKey', ""))
         return authToken
 
     # unfortunately this function can't be a proper decorator because we
@@ -804,6 +811,25 @@ class MintServer(object):
         if not validProductVersion.match(version):
             raise ProductVersionInvalid
         return None
+
+    def _buildEC2AuthToken(self):
+        amiData = self._getTargetData('ec2', 'aws', supressException = True)
+        at = ()
+        if amiData:
+            # make sure all the values are set
+            if not (amiData.get('ec2AccountId') and \
+                    amiData.get('ec2PublicKey') and\
+                    amiData.get('ec2PrivateKey')):
+                raise EC2NotConfigured()
+            at = (amiData.get('ec2AccountId'),
+                    amiData.get('ec2PublicKey'),
+                    amiData.get('ec2PrivateKey'))
+
+        if not at:
+            raise EC2NotConfigured()
+
+        return at
+
 
     @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool,
                str)
@@ -1407,7 +1433,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if published or unpublished:
 
             # Set up EC2 connection
-            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            authToken = self._buildEC2AuthToken()
             ec2Wrap = ec2.EC2Wrapper(authToken)
 
             # all project members, including users, can see published builds
@@ -1450,7 +1476,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if published or unpublished:
 
             # Set up EC2 connection
-            authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+            authToken = self._buildEC2AuthToken()
             ec2Wrap = ec2.EC2Wrapper(authToken)
 
             # published builds will be made public
@@ -2367,18 +2393,43 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # later
         filteredBuilds = []
         buildErrors = []
+
+        # For some reason this can't happen through the the ShimClient
+        # (CNY-2545 related?)
+        repos = self._getProjectRepo(project, False)
+        groupNames = [ str(x.getBuildImageGroup()) for x in builds ]
+        groupTroves = repos.findTroves(None, 
+                                       [(x, stageLabel, None) for x in 
+                                         groupNames ], allowMissing = True)
+
         for build in builds:
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
             buildGroup = str(build.getBuildImageGroup())
+            groupList = groupTroves.get((buildGroup, stageLabel, None), [])
+
+            flavorSet = build.flavorSetRef and \
+                    (pd.getFlavorSet(build.flavorSetRef, None) \
+                    or pd.getPlatformFlavorSet( \
+                            build.flavorSetRef, None))
+            flavorSet = deps.parseFlavor(flavorSet and flavorSet.flavor or '')
+
+            architecture = build.architectureRef and \
+                    (pd.getArchitecture(build.architectureRef, None) \
+                    or pd.getPlatformArchitecture( \
+                            build.architectureRef, None))
+            architecture = deps.parseFlavor(architecture \
+                    and architecture.flavor or '')
+
+            customFlavor = deps.parseFlavor(build.flavor or '')
 
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(projectId, buildGroup,
-                                      stageLabel, buildFlavor)
+            nvfs = self._resolveTrove(groupList, flavorSet, architecture,
+                    customFlavor)
 
             if nvfs:
-                # Store a build with options for each trove found.
-                for nvf in nvfs:
-                    filteredBuilds.append((build, nvf))
+                # Store a build with options for the best match for each build
+                # results are sorted best to worst
+                filteredBuilds.append((build, nvfs[0]))
             else:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
@@ -2391,9 +2442,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Create/start each build.
         buildIds = []
         for buildDefinition, nvf in filteredBuilds:
-            buildImageType = buildDefinition.getBuildImageType()
-            buildSettings = buildImageType.fields.copy()
-            buildType = buildImageType.tag
+            buildImage = buildDefinition.getBuildImage()
+            buildSettings = buildImage.fields.copy()
+            buildType = buildImage.containerFormat and \
+                    str(buildImage.containerFormat) or ''
 
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
             projectName = project.getName()
@@ -2497,55 +2549,38 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
-    def _resolveTrove(self, projectId, troveName, troveLabel, filterFlavor):
+    def _resolveTrove(self, groupList, flavorSet, archFlavor, customFlavor):
         '''
         Return a list of trove tuples matching C{troveName},
-        C{troveLabel}, satisfying C{filterFlavor} and also matching its
-        architecture. The repository backing the project at C{projectId}
-        will be used.
+        C{troveLabel}, satisfying flavor constraints. customFlavor overrides
+        flavorSet and archFlavor. result is sorted according to flavor score.
+        The repository backing the project at C{projectId} will be used.
 
         @return: List of trove tuples matching the query
         @rtype: list
         '''
-
-        project = projects.Project(self, projectId)
-        # For some reason this can't happen through the the ShimClient
-        # (CNY-2545 related?)
-        repos = self._getProjectRepo(project, False)
-
-        # Get the major architecture from filterFlavor
-        filterArch = helperfuncs.getArchFromFlavor(filterFlavor)
-
-        # Find the troves that satisfy the build.
-        ret = []
-        matches = repos.findTroves(None, [(troveName, troveLabel, None)],
-                allowMissing = True)
-        if not matches:
+        if not groupList:
             return []
-        matches = matches[(troveName, troveLabel, None)]
-
-        maxVersion = max(x[1] for x in matches)
-        for name, version, flavor in matches:
-            if version != maxVersion:
-                # Skip older versions that only show up because
-                # they're flavored differently
-                continue
-            if not flavor.stronglySatisfies(filterFlavor):
-                # Skip flavors that don't satisfy our original
-                # condition in the first place
-                continue
-
-            # If filterFlavor has an instruction set, the major
-            # architecture must match that of the group so
-            # an is: x86 filter does not match is: x86 x86_64 groups
-            # even though the flavor is technically satisfied.
-            thisArch = helperfuncs.getArchFromFlavor(flavor)
-            if filterArch and filterArch != thisArch:
-                continue
-
-            ret.append((name, version, flavor))
-
-        return ret
+        # Get the major architecture from filterFlavor
+        arch = deps.overrideFlavor(archFlavor, customFlavor)
+        filterArch = helperfuncs.getArchFromFlavor(arch)
+        flavorSetFlavor = deps.overrideFlavor(flavorSet, customFlavor)
+        completeFlavor = deps.overrideFlavor(flavorSet, arch)
+        # If filterFlavor has an instruction set, the major
+        # architecture must match that of the group so
+        # an 'is: x86' filter does not match 'is: x86 x86_64' groups
+        # even though the flavor is technically satisfied.
+        maxVersion = max(x[1] for x in groupList)
+        groupList = [ x for x in groupList 
+                      if (helperfuncs.getArchFromFlavor(x[2]) == filterArch
+                          and x[1] == maxVersion
+                          and x[2].satisfies(completeFlavor)) ]
+        if not groupList:
+            return []
+        scored = sorted((x[2].score(completeFlavor), x) for x in groupList)
+        maxScore = scored[-1][0]
+        return sorted([ x[1] for x in scored if x[0] == maxScore ], 
+                      key=lambda x: x[2])[-1:]
 
     @typeCheck(int)
     @requiresAuth
@@ -2607,7 +2642,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return the ami id deleted
         @rtype C{str}
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         s3Wrap = ec2.S3Wrapper(authToken)
         return s3Wrap.deleteAMI(amiId)
 
@@ -2765,21 +2800,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             amiData = {}
 
-            def _readX509File(filepath):
-                if os.path.exists(filepath):
-                    f = None
-                    try:
-                        f = open(filepath, 'r')
-                        return f.read()
-                    finally:
-                        if f:
-                            f.close()
-                else:
-                    raise EC2NotConfigured
-
-            for k in ( 'ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
-                       'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups'):
-                amiData[k] = self.cfg[k]
+            try:
+                storedAmiData = self._getTargetData('ec2', 'aws')
+            except TargetMissing, e:
+                raise EC2NotConfigured
+            for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
+                       'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
+                       'ec2Certificate', 'ec2CertificateKey'):
+                amiData[k] = storedAmiData.get(k)
                 if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
                     raise EC2NotConfigured
             if project.hidden:
@@ -2791,11 +2819,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if writers + readers:
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
-
-            amiData['ec2CertificateKey'] = \
-                    _readX509File(self.cfg.ec2CertificateKeyFile)
-            amiData['ec2Certificate'] = \
-                    _readX509File(self.cfg.ec2CertificateFile)
 
             r['amiData'] = amiData
 
@@ -3298,7 +3321,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(bld.projectId)
 
         # Set up EC2 connection
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         try:
@@ -4514,10 +4537,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     @private
     def createBlessedAMI(self, ec2AMIId, shortDescription):
+        amiData = self._getTargetData('ec2', 'aws', supressException = True)
         return self.blessedAMIs.new(ec2AMIId = ec2AMIId,
                 shortDescription = shortDescription,
-                instanceTTL = self.cfg.ec2DefaultInstanceTTL,
-                mayExtendTTLBy = self.cfg.ec2DefaultMayExtendTTLBy)
+                instanceTTL = amiData.get('ec2DefaultInstanceTTL', 600),
+                mayExtendTTLBy = amiData.get('ec2DefaultMayExtendTTLBy', 2700))
 
     @typeCheck(int)
     @private
@@ -4587,6 +4611,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises: C{EC2Exception}
         """
         # get blessed instance
+        amiData = self._getTargetData('ec2', 'aws', supressException = True)
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
         except ItemNotFound:
@@ -4594,13 +4619,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         launchedFromIP = self.remoteIp
         if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
-                self.cfg.ec2MaxInstancesPerIP):
+                amiData.get('ec2MaxInstancesPerIP', 10)):
            raise TooManyAMIInstancesPerIP()
 
         userDataTemplate = bami['userDataTemplate']
 
         # generate the rAA Password
-        if self.cfg.ec2GenerateTourPassword:
+        if amiData.get('ec2GenerateTourPassword', False):
             from mint.users import newPassword
             raaPassword = newPassword(length=8)
         else:
@@ -4617,7 +4642,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ec2Wrapper = ec2.EC2Wrapper(authToken)
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
-                useNATAddressing=self.cfg.ec2UseNATAddressing)
+                useNATAddressing = amiData.get('ec2UseNATAddressing', False))
 
         if not ec2InstanceId:
             raise ec2.FailedToLaunchAMIInstance()
@@ -4790,15 +4815,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # set the build type
             buildTypeDt = buildtemplates.getDataTemplateByXmlName(
-                              build.getBuildImageType().getTag())
+                              build.getBuildImage().containerFormat)
             task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
 
             # get the name of the flavor.  If we don't have a name mapped to
             # it, specify that it is custom
-            flavor = build.getBuildBaseFlavor()
-            if buildtypes.buildDefinitionFlavorToFlavorMapRev.has_key(flavor):
-                index = buildtypes.buildDefinitionFlavorToFlavorMapRev[flavor]
-                buildFlavor = buildtypes.buildDefinitionFlavorNameMap[index]
+            flavor = str(build.getBuildBaseFlavor())
+            flavorMap = buildtypes.makeBuildFlavorMap(pd)
+            if flavorMap.has_key(flavor):
+                buildFlavor = flavorMap[flavor]
             else:
                 buildFlavor = "Custom Flavor: %s" % flavor
             task['buildFlavorName'] = buildFlavor
@@ -5294,7 +5319,81 @@ If you would not like to be %s %s of this project, you may resign from this proj
             pkgs =  pc.getAvailablePackagesFrozen(sessionHandle)
             self._cacheAvailablePackages(sessionHandle, pkgs)
         return pkgs
- 
+
+    @typeCheck(str, str, dict)
+    @requiresAdmin
+    def addTarget(self, targetType, targetName, dataDict):
+        """
+        Add a new deployment target to rBuilder.
+        @param targetType: a string identifying the type of deployment target
+                           eg. 'ec2'
+        @type targetType: C{str}
+        @param targetName: a string representing the name of the deployement
+                           target. eg. 'aws'. together with targetType, these
+                           values uniquely identify a specific deployment target
+                           instance
+        @type targetName: C{str}
+        @param dataDict: a dictionary of target specific data. keys are strings
+                         and values must be json serializable objects.
+        returns: True
+        raises: TargetExists if addTarget is called with targetType, targetName
+                that duplicate an existing target.
+        """
+        targetId = self.targets.addTarget(targetType, targetName)
+        self.targetData.addTargetData(targetId, dataDict)
+        return True
+
+    @typeCheck(str, str)
+    @requiresAdmin
+    def deleteTarget(self, targetType, targetName):
+        """
+        delete a deployment target from rBuilder.
+        @param targetType: a string identifying the type of deployment target
+                           eg. 'ec2'
+        @type targetType: C{str}
+        @param targetName: a string representing the name of the deployement
+                           target. eg. 'aws'. together with targetType, these
+                           values uniquely identify a specific deployment target
+                           instance
+        returns: True
+        raises: TargetMissing if targetType, targetName don't map to an existing
+                target
+        """
+        targetId = self.targets.getTargetId(targetType, targetName)
+        self.targetData.deleteTargetData(targetId)
+        self.targets.deleteTarget(targetId)
+        return True
+
+    @typeCheck(str, str)
+    @requiresAdmin
+    def getTargetData(self, targetType, targetName):
+        """
+        Get dictionary of target specific data
+        @param targetType: a string identifying the type of deployment target
+                           eg. 'ec2'
+        @type targetType: C{str}
+        @param targetName: a string representing the name of the deployement
+                           target. eg. 'aws'. together with targetType, these
+                           values uniquely identify a specific deployment target
+                           instance
+        returns: dict representing target specific data
+        raises: TargetMissing if targetType, targetName don't map to an existing
+                target
+        """
+        # an admin-only interface to retrieve the data associated with a target
+        # XXX it's not clear if this function should be more open, but just
+        # not return all data
+        return self._getTargetData(targetType, targetName)
+
+    def _getTargetData(self, targetType, targetName, supressException = False):
+        default = -1
+        if supressException:
+            default = None
+        targetId = self.targets.getTargetId(targetType, targetName, default)
+        if targetId is None:
+            return {}
+        return self.targetData.getTargetData(targetId)
+
     @typeCheck(int)
     @requiresAuth
     def getEC2CredentialsForUser(self, userId):
@@ -5416,7 +5515,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # object, but we really need to minimize the db hits in the loop below
         url = util.joinPaths(self.cfg.projectSiteHost,
                 self.cfg.basePath, 'downloadImage')
-        urlTemplate = "http://%s?id=%%d" % url
+        urlTemplate = "http://%s?fileId=%%d" % url
 
         for buildData in res:
             # we want to drop the hostname. it was collected by the builds
@@ -5516,7 +5615,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         for amiId in amiIds:
@@ -5539,7 +5638,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         for amiId in amiIds:
@@ -5560,7 +5659,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
         amiIds = self._getAllAMIIdsForPermChange(userId)
 
@@ -5582,7 +5681,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         amiIds = self._getAllAMIIdsForPermChange(userId)
@@ -5609,7 +5708,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
@@ -5636,7 +5735,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
@@ -5692,7 +5791,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type pubReleaseId: C{int}
         @rtype: C{bool} indicating success
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
@@ -5734,7 +5833,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type pubReleaseId: C{int}
         @rtype: C{bool} indicating success
         """
-        authToken = helperfuncs.buildEC2AuthToken(self.cfg)
+        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken)
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)

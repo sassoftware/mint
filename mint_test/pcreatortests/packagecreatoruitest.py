@@ -570,7 +570,7 @@ getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'devel
 
 prodDef1 = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<productDefinition version="0.1" xmlns="http://www.rpath.com/permanent/rpd-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-1.0.xsd">
+<productDefinition version="2.0" xmlns="http://www.rpath.com/permanent/rpd-2.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-2.0.xsd">
    <productName>My Awesome Appliance</productName>
    <productShortname>awesome</productShortname>
    <productDescription>
@@ -611,35 +611,45 @@ troveName="group-postgres"/>
 troveName="group-factories"/>
 troveName="group-postgres"/>
    </factorySources>
+   <architectures>
+      <architecture name="x86" displayName="32 bit" flavor="is: x86"/>
+      <architecture name="x86_64" displayName="64 bit" flavor="is: x86_64"/>
+      <architecture name="biarch" displayName="biarch" flavor="is: x86 x86_64"/>
+   </architectures>
+   <flavorSets>
+      <flavorSet name="xen" displayName="xen" flavor="~xen,~domU"/>
+      <flavorSet name="vmware" displayName="vmware" flavor="~vmware"/>
+   </flavorSets>
+   <containerTemplates>
+      <containerTemplate containerFormat="installableIsoImage"/>
+      <containerTemplate containerFormat="rawFsImage" freespace="1234"/>
+     <containerTemplate containerFormat="rawHdImage" autoResolve="true" baseFileName="proc-foo-moo"/>
+     <containerTemplate containerFormat="vmwareImage" autoResolve="true" baseFileName="foobar"/>
+     <containerTemplate containerFormat="virtualIronImage"/>
+   </containerTemplates>
    <buildDefinition>
-      <build baseFlavor="is: x86" name="x86 installableIso">
-         <installableIsoImage/>
+      <build architectureRef="x86" name="x86 installableIso" containerTemplateRef="installableIsoImage">
          <stage ref="devel"/>
          <stage ref="qa"/>
          <stage ref="release"/>
          <imageGroup>group-os</imageGroup>
       </build>
-      <build baseFlavor="is: x86_64" name="x86_64 installableIso">
-         <installableIsoImage/>
+      <build architectureRef="x86_64" name="x86_64 installableIso" containerTemplateRef="installableIsoImage">
          <stage ref="release"/>
       </build>
-      <build baseFlavor="~xen, ~domU is: x86" name="x86 rawFs">
-         <rawFsImage freespace="1234"/>
+      <build architectureRef="x86" flavorSetRef="xen" name="x86 rawFs" containerTemplateRef="rawFsImage">
       </build>
-      <build baseFlavor="~xen, ~domU is: x86 x86_64" name="x86_64 rawHd">
-         <rawHdImage autoResolve="true" baseFileName="/proc/foo/moo"/>
+      <build architectureRef="biarch" flavorSetRef="xen" name="x86_64 rawHd" containerTemplateRef="rawHdImage">
          <stage ref="devel"/>
          <stage ref="qa"/>
          <stage ref="release"/>
          <imageGroup>group-os</imageGroup>
       </build>
-      <build baseFlavor="~vmware is: x86 x86_64" name="x86_64 vmware">
-         <vmwareImage autoResolve="true" baseFileName="foobar"/>
+      <build architectureRef="biarch" flavorSetRef="vmware" name="x86_64 vmware" containerTemplateRef="vmwareImage">
          <stage ref="release"/>
          <imageGroup>group-bar</imageGroup>
       </build>
-      <build baseFlavor="is: x86 x86_64" name="Virtual Iron Image">
-         <virtualIronImage />
+      <build architectureRef="biarch" name="Virtual Iron Image" containerTemplateRef="virtualIronImage">
          <stage ref="release"/>
          <imageGroup>group-bar</imageGroup>
       </build>

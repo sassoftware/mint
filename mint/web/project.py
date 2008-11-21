@@ -1310,6 +1310,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             helperfuncs.addDefaultStagesToProductDefinition(pd)
             # XXX: this should be carried forward when images and other values are
             kwargs['namespace'] = self.project.namespace
+        helperfuncs.addDefaultPlatformToProductDefinition(pd)
 
         return self._write("editVersion",
                 isNew = isNew,
@@ -1360,7 +1361,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     namespace,
                     pd)
 
-
         # Gather all grouped inputs
         collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
                 coerceValues=True)
@@ -1378,19 +1378,8 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             pd.addStage(s['name'], s['labelSuffix'])
 
         # TODO add baseflavor from the UI
-        # XXX  Currently we are hardcoding this to rLS/rPL 1 (RBL-2899)
-        #      but only if it wasn't set. This way, users can override
-        #      it by editing the XML by hand.
-        if not pd.getBaseFlavor():
-            pd.setBaseFlavor("""
-~MySQL-python.threadsafe, X, ~!alternatives, ~!bootstrap,
-~builddocs, ~buildtests, desktop, emacs, gcj, ~glibc.tls,
-gnome, gtk, ipv6, kde, ~kernel.debugdata, krb, ldap, nptl,
-~!openssh.smartcard, ~!openssh.static_libcrypto, pam, pcre,
-perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
-~!selinux, ~sqlite.threadsafe, ssl, tcl, tcpwrappers, ~!tk,
-~!xorg-x11.xprint
-""")
+        # hardcoding baseFlavor isn't appropriate in proddef schema
+        # version 2.0 and higher
 
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
@@ -1399,8 +1388,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
         # defined as the full set of stages.
         stageNames = [x.name for x in pd.getStages()]
 
-        # XXX ProductDefinition object needs clearBuildDefinitions()
-        pd.buildDefinition = proddef._BuildDefinition()
+        pd.clearBuildDefinition()
 
         validationErrors = []
         warnedNoNameAlready = False
@@ -1428,9 +1416,13 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             # Coerce trove type options back to their class name
             buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
 
+            flavorSetRef, architectureRef = \
+                    builddef.get('flvSetArchRef').split(',')
             pd.addBuildDefinition(name=buildName,
-                baseFlavor=builddef.get('baseFlavor'),
-                imageType=pd.imageType(xmlTagName, buildSettings),
+                flavorSetRef = flavorSetRef,
+                architectureRef = architectureRef,
+                containerTemplateRef = xmlTagName,
+                image = pd.imageType(None, buildSettings),
                 stages = stageNames)
 
         for ve in validationErrors:
@@ -1469,14 +1461,32 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             self._setCurrentProductVersion(id)
             self._predirect()
         else:
-            kwargs.update(name=name, description=description)
+            availablePlatforms = self.client.getAvailablePlatforms()
+            platformName = ''
+            customPlatform = ()
+            acceptablePlatform = True
+            for lbl, pName in availablePlatforms:
+                if lbl == platformLabel:
+                    platformName = pName
+                    break
+            if not platformName:
+                platformName = 'Custom appliance platform on %s' % platformLabel
+                customPlatform = (platformLabel, platformName)
+                acceptablePlatform = \
+                        self.client.isPlatformAcceptable(platformLabel)
+
+            kwargs.update(name = name, description = description,
+                    platformLabel = platformLabel, namespace = namespace)
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
+               availablePlatforms = availablePlatforms,
+               acceptablePlatform = acceptablePlatform,
+               platformName = platformName,
+               customPlatform = customPlatform,
                productDefinition = pd, kwargs = kwargs)
-
 
     @intFields(id = -1)
     @requiresAuth

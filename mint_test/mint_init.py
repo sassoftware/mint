@@ -7,6 +7,8 @@ import __builtin__
 def setup_paths():
     conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary'))
     conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test')))
+    rmakePath       = os.getenv('RMAKE_PATH',       os.path.realpath('../../rmake'))
+    rmakePrivatePath = os.getenv('RMAKE_PRIVATE_PATH',       os.path.realpath('../../rmake-private'))
     mcpPath         = os.getenv('MCP_PATH',         os.path.realpath('../../mcp'))
     mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.realpath(os.path.join(mcpPath, 'test')))
     jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath('../../jobslave'))
@@ -34,7 +36,7 @@ def setup_paths():
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
         raaPath, raaTestPath, raaPluginsPath, proddefPath, coveragePath,
         packageCreatorPath, conaryFactoryTestPath, catalogServicePath,
-        restlibPath)] \
+        restlibPath, rmakePath, rmakePrivatePath)] \
                 + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         RESTLIB_PATH=restlibPath,

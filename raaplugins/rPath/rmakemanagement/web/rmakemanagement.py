@@ -45,14 +45,15 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         builds = []
         nodes = []
         if rmakeUser:
-            builds = self._getBuilds()
+            statusmsg, builds = self._getBuilds()
             nodes = self._getNodes()
         
         return dict(server=self.host,
                     status=status,
                     rmakeUser=rmakeUser,
                     builds=builds,
-                    nodes=nodes
+                    nodes=nodes,
+                    statusmsg=statusmsg
                     )
 
 
@@ -83,12 +84,12 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         configured limit.
         """
         limit = web.getConfigValue('rmake.build_display_limit', 5)
-        builds = self.callBackend('getBuilds', limit)
+        statusmsg, builds = self.callBackend('getBuilds', limit)
 
         # We want the most recent builds at the top
         builds.sort()
         builds.reverse()
-        return builds
+        return statusmsg, builds
 
 
     def _getNodes(self):
