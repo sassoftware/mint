@@ -17,7 +17,7 @@ import mint_rephelp
 import ec2test
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
-from catalogService import handler
+from catalogService import handler, storage
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def setUp(self):
@@ -45,13 +45,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                              self.normalizeXML(second))
 
     def testGetImagesNoCred(self):
+        # Enable EC2 in rbuilder
+        storagePath = os.path.join(self.mintCfg.dataPath,
+            'catalog', 'configuration', 'ec2', 'aws')
+        store = storage.DiskStorage(storage.StorageConfig(storagePath))
+        store.set("enabled", 1)
+
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [400])
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body,
-                "<?xml version='1.0' encoding='UTF-8'?>\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>\n")
+                '''<?xml version='1.0' encoding='UTF-8'?>\n<fault>\n  <code>400</code>\n  <message>Cloud credentials are not set in rBuilder</message>\n</fault>\n''')
 
     def testGetImagesNoSession(self):
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [403])
