@@ -108,8 +108,9 @@ class SetupHandler(WebHandler):
         newCfg = self._copyCfg()
         
         # enforce acceptance of terms of service
-        if not acceptedTos:
-            return self._write("setup/tos")
+        # this is now done via rapa tos plugin, RBL-3803
+        #if not acceptedTos:
+        #    return self._write("setup/tos")
 
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.
