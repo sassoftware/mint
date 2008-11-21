@@ -809,6 +809,23 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         return self._write('packageList', pkgList=pkgList, version=version,
                 namespace=namespace, message=None)
 
+    @writersOnly
+    def sourcePackages(self, auth):
+        #This method is not supported, and should not be used
+        versionId = self._getCurrentProductVersion()
+        pkgList = self.client.getProductVersionSourcePackages(self.project.getId(), versionId)
+        pkgList = [(x[0], versions.ThawVersion(x[1])) for x in pkgList]
+        return self._write('sourcePackageList', pkgList=pkgList, message=None)
+
+    @writersOnly
+    @strFields(troveName=None, troveVersion='')
+    def buildSourcePackage(self, auth, troveName, troveVersion):
+        #This method is not supported, and should not be used
+        versionId = self._getCurrentProductVersion()
+        sesH = self.client.buildSourcePackage(self.project.getId(), versionId, troveName, troveVersion)
+        return self._write('buildPackage', sessionHandle = sesH,
+                message = None)
+
     @ownerOnly
     def newRelease(self, auth):
         currentBuilds = []

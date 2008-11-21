@@ -27,6 +27,7 @@ import fixtures
 import mint_rephelp
 
 from mint import packagecreator
+from mint import helperfuncs
 from mint.web import whizzyupload
 from mint_rephelp import MINT_HOST, MINT_DOMAIN
 from mint.server import deriveBaseFunc
@@ -37,6 +38,7 @@ from factory_test.factorydatatest import basicXmlDef
 import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
+from rpath_common.proddef import api1 as proddef
 
 from testrunner import resources
 
@@ -354,6 +356,70 @@ content-type=text/plain
         self.assertEquals(self.client.server.getPackageBuildStatus('88889'), [True, -1, "fake build error", []])
 
     @fixtures.fixture('Full')
+    def testBuildSourcePackage(self, db, data):
+        projectId = data['projectId']
+        self.client = self.getClient('owner')
+
+        @pcreator.backend.public
+        def startSession(s, *args, **kwargs):
+            self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
+            self.assertEquals(args[2], 'foo:source=testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
+            self.assertEquals(kwargs, {})
+            return '88889'
+        self.mock(pcreator.backend.BaseBackend, '_startPackagingSession', startSession)
+
+        @pcreator.backend.public
+        def buildParams(x, sesH, commit):
+            self.buildCalled = True
+            self.assertEquals(sesH, '88889')
+            self.assertEquals(commit, True)
+            return True
+
+        self.mock(pcreator.backend.BaseBackend, '_build',
+                buildParams)
+        sesH = self.client.buildSourcePackage(projectId, 1, 'foo:source', 'testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+        self.assertEquals(sesH, '88889')
+
+    @fixtures.fixture('Full')
+    def testBuildSourcePackageBuildFail(self, db, data):
+        projectId = data['projectId']
+        self.client = self.getClient('owner')
+
+        @pcreator.backend.public
+        def startSession(s, *args, **kwargs):
+            self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
+            self.assertEquals(args[2], 'foo:source=testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
+            self.assertEquals(kwargs, {})
+            return '88889'
+        self.mock(pcreator.backend.BaseBackend, '_startPackagingSession', startSession)
+
+        @pcreator.backend.public
+        def buildParams(x, sesH, commit):
+            raise packagecreator.errors.ProductDefinitionTroveNotFound()
+
+        self.mock(pcreator.backend.BaseBackend, '_build',
+                buildParams)
+        self.assertRaises(mint.mint_error.PackageCreatorError,
+                self.client.buildSourcePackage, projectId, 1, 'foo:source',
+                'testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+
+    @fixtures.fixture('Full')
+    def testBuildSourcePackageErrStart(self, db, data):
+        projectId = data['projectId']
+        self.client = self.getClient('owner')
+
+        @pcreator.backend.public
+        def startSession(s, *args, **kwargs):
+            raise packagecreator.errors.ProductDefinitionTroveNotFound()
+        self.mock(pcreator.backend.BaseBackend, '_startPackagingSession', startSession)
+
+        self.assertRaises(mint.mint_error.PackageCreatorError,
+                self.client.buildSourcePackage, projectId, 1, 'foo:source',
+                'testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+
+    @fixtures.fixture('Full')
     def testGetPackageBuildStatus(self, db, data):
         self._set_up_path()
         @pcreator.backend.public
@@ -385,6 +451,41 @@ content-type=text/plain
         self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
 
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
+    def _createProductVersion(self, mintclient, project, version, namespace, description=''):
+        versionId = mintclient.addProductVersion(project.id, namespace, version, description)
+        pd = helperfuncs.sanitizeProductDefinition(project.name,
+                    project.description, project.hostname, project.domainname,
+                    project.shortname, version, description, namespace)
+        mintclient.setProductDefinitionForVersion(versionId, pd)
+        return versionId
+
+    def testGetSourcePackages(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        cclient = conaryclient.ConaryClient(cfg)
+        repos = cclient.getRepos()
+
+        versionId = self._createProductVersion(client, project, 'vs1', 'ns1', 'bogus description')
+
+        self.assertEquals([], client.getProductVersionSourcePackages(projectId, versionId))
+
+        #Now write some troves
+        self.addComponent('foo:source', '/testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
+        self.addComponent('foo:source', '/testproject.rpath.local2@ns1:testproject-vs1-devel/2.0-1')
+        self.addComponent('bar:source', '/testproject.rpath.local2@ns1:testproject-vs1-devel/2.0-1')
+        self.addComponent('bar:source', '/testproject.rpath.local2@ns2:testproject-vs1-devel/2.0-1')
+        self.addComponent('bar:source', '/testproject.rpath.local2@ns1:testproject-vs2-devel/2.0-1')
+        self.addComponent('bar:runtime', '/testproject.rpath.local2@ns1:testproject-vs2-devel/2.0-1-1')
+        self.addCollection('bar', ['bar:runtime'], '/testproject.rpath.local2@ns1:testproject-vs2-devel/2.0-1-1')
+        ret = client.getProductVersionSourcePackages(projectId, versionId)
+        ret = set([(x[0], str(versions.ThawVersion(x[1]))) for x in ret]) # Gets rid of the timestamp in the return value
+        self.assertEquals(set([
+                        ('bar:source', '/testproject.rpath.local2@ns1:testproject-vs1-devel/2.0-1'),
+                        ('foo:source', '/testproject.rpath.local2@ns1:testproject-vs1-devel/2.0-1')]), ret)
+
     def testGetPackageCreatorPackages(self):
         self.startMintServer()
         client, userId = self.quickMintUser('testuser', 'testpass')

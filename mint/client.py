@@ -461,6 +461,14 @@ class MintClient:
         '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
         return self.server.getPackageCreatorPackages(projectId)
 
+    def getProductVersionSourcePackages(self, projectId, versionId):
+        """See L{mint.server.getProductVersionSourcePackages}"""
+        return self.server.getProductVersionSourcePackages(projectId, versionId)
+
+    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
+        """See L{mint.server.buildSourcePackage}"""
+        return self.server.buildSourcePackage(projectId, versionId, troveName, troveVersion)
+
     def startApplianceCreatorSession(self, projectId, versionId,
             rebuild):
         """See L{mint.server.startApplianceCreatorSession}"""
