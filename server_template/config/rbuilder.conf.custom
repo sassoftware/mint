@@ -3,3 +3,5 @@ projectDomainName         @DOMAIN@:@PORT@
 secureHost                @HOST@.@DOMAIN@:@SSLPORT@
 siteDomainName            @DOMAIN@:@PORT@
 debugMode                 False
+reposDBDriver             @REPOSDBDRIVER@
+reposDBPath               @REPOSDBPATH@
