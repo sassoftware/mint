@@ -156,7 +156,7 @@ class SetupHandler(WebHandler):
         if kwargs.get('externalPasswordURL'):
             userAuth = netauth.UserAuthorization( \
                 None, pwCheckUrl = kwargs['externalPasswordURL'],
-                cacheTimeout = kwargs.get('authCacheTimeout'))
+                cacheTimeout = int(kwargs.get('authCacheTimeout')))
             if self.auth.admin and not userAuth._checkPassword( \
                 self.auth.username, None, None, self.auth.token[1]):
                 errors.append('Username: %s was not accepted by: %s' % \
@@ -200,7 +200,7 @@ class SetupHandler(WebHandler):
 
         for key in keys:
             if key in newCfg:
-                newCfg[key] = self.fields[key]
+                newCfg[key] = kwargs[key]
 
         if errors:
             return self._write("setup/setup", configGroups = configGroups,
