@@ -23,7 +23,7 @@
             <li py:attrs="{'class': (lastchunk in ('external', 'addExternal', 'processAddExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Externally-Managed ${projectText().title()}s</a></li>
             <li py:attrs="{'class': (lastchunk in ('updateServices', 'editUpdateService', 'processEditUpdateService')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/updateServices">Configure Update Services</a></li>
             <li py:attrs="{'class': (lastchunk in ('outbound', 'editOutbound', 'processEditOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
-            <li py:attrs="{'class': (lastchunk == 'cloudConfig') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/cloudConfig">Configure Clouds</a></li>
+            <li py:attrs="{'class': (lastchunk == 'cloudConfig') and 'selectedItem' or None}"><a href="https://${cfg.hostName}.${cfg.siteDomainName.split(':')[0]}/admin/cloudConfig">Configure Targets</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
             <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
             <li py:if="cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>

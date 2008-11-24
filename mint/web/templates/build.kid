@@ -192,7 +192,7 @@ from mint import constants
                         <table class="troveinfo">
                         <tr py:if="amiId and not buildInProgress">
                             <th>AMI ID</th>
-                            <td><span class="amiLaunchLink" py:if="showLaunchButton">&nbsp;<a class="option" href="http://${SITE}cloudCatalog#/event/showLaunchUI/imageId=${amiId}" target="_blank">Launch this image on Amazon EC2</a></span>${amiId}</td>
+                            <td><span class="amiLaunchLink" py:if="showLaunchButton">&nbsp;<a class="option" href="https://${SITE}cloudCatalog#/event/showLaunchUI/imageId=${amiId}" target="_blank">Launch this image on Amazon EC2</a></span>${amiId}</td>
                         </tr>
                         <tr py:if="amiS3Manifest and not buildInProgress">
                             <th>AMI Bundle Manifest</th>

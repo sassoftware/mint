@@ -38,6 +38,7 @@ Internal Changes
   redirect to the product homepage even when the product is marked as
   private (RBL-3148).
 * Private products now produce private EC2 Images. (RBL-3477)
+* The rPath Management Console goes over https now, not http. (RBL-3871)
 
 Web Front End Changes
 ---------------------
