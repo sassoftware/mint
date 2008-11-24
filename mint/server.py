@@ -2419,7 +2419,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildIds = []
         for buildDefinition, nvf in filteredBuilds:
             buildImage = buildDefinition.getBuildImage()
-            buildSettings = buildImage.fields.copy()
+
+            containerTemplate = pd.getContainerTemplate( \
+                    buildDefinition.containerTemplateRef, None)
+            if not containerTemplate:
+                containerTemplate = pd.getPlatformContainerTemplate( \
+                        buildDefinition.containerTemplateRef, None)
+            buildSettings = {}
+            if containerTemplate:
+                buildSettings = containerTemplate.fields.copy()
+
+            for key, val in buildImage.fields.iteritems():
+                if val:
+                    buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
 
