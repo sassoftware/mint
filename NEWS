@@ -142,6 +142,9 @@ Bug Fixes
 * Failures while creating the product repository no longer result in a
   broken product being created. (RBL-3613)
 * The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
+* The license and crypto report now allows you to click on the package names when they contain flavors.  (RBL-3856)
+* veth network interfaces are no longer shown in the rAPA configuration interface. (RAA-1627)
+
 
 Changes in 4.1.1
 ================
