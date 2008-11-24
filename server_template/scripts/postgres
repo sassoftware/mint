@@ -31,3 +31,4 @@ else
    exit 1
 fi
 createlang -p ${PGPORT} plpgsql template1 >> $PGLOG 2>&1
+psql -p ${PGPORT} postgres -c "CREATE USER pguser WITH PASSWORD 'pgpasswd' CREATEDB"
