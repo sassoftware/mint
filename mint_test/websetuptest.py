@@ -91,10 +91,6 @@ class SetupHandlerTest(fixtures.FixturedUnitTest):
         ret = func(auth, True)
         self.failUnless('<h1>rBuilder Configuration</h1>' in ret)
         
-        # test with terms of service not accepted
-        ret = func(auth, False)
-        self.failUnless('<h1>rBuilder Terms of Service</h1>' in ret)
-
     @testsuite.context("more_cowbell")
     @fixtures.fixture("Full")
     def testSetupBadRequest(self, db, data):

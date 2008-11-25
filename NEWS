@@ -101,6 +101,9 @@ Web Front End Changes
 * The application now expands to fill the width of the browser. (RBL-3740)
 * SLE is available as a platform definition to those who have access to it.
   (RBL-3256)
+* The rMake server and rMake node logs are available for viewing from the rAPA
+  logs plugin. (RBL-3780)
+* The rBuilder Terms of Service is now a rapa plugin. (RBL-3803)
 * Changed the name of the rPath Catalog for EC2 to the rPath Management Console.
   (RBL-3693)
 * The rMake server and rMake node logs are available for viewing from the rAPA

@@ -707,25 +707,6 @@ Much like Powdermilk Biscuits[tm]."""
         text = validateNamespace("rpl@blah")
         self.assertTrue(isinstance(text, str))
         
-    def testBuildEC2AuthToken(self):
-        
-        # test empty
-        cfg = None
-        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
-        
-        # test with some empty data
-        cfg = config.MintConfig()
-        cfg.ec2AccountId = 'accountId'
-        cfg.ec2PublicKey = ''
-        cfg.ec2PrivateKey = ''
-        self.assertRaises(mint_error.EC2NotConfigured, buildEC2AuthToken, cfg)
-        
-        # test with data
-        cfg = config.MintConfig()
-        cfg.ec2AccountId = 'accountId'
-        cfg.ec2PublicKey = 'awsPublicKey'
-        cfg.ec2PrivateKey = 'awsPrivateKey'
-        self.assertTrue(buildEC2AuthToken(cfg) == ('accountId', 'awsPublicKey', 'awsPrivateKey'))
 
     def testProductDefinition(self):
         prd = sanitizeProductDefinition('foo', '', 'foo', 'rpath.local',

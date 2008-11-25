@@ -148,6 +148,10 @@ class PublishedReleaseNotPublished(MintError):
 class PublishedReleasePublished(MintError):
     "Release has already been published."
 class SchemaMigrationError(MintError): pass
+class TargetMissing(MintError):
+    "Target does not exist"
+class TargetExists(MintError):
+    "target already exists"
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    
