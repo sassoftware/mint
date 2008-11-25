@@ -1111,7 +1111,8 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         pd.addArchitecture('x86_64', 'x86 (64-bit)',
                 '!grub.static,!dietlibc is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64')
 
-        pd.addContainerTemplate(pd.imageType('installableIsoImage'))
+        pd.addContainerTemplate(pd.imageType('installableIsoImage',
+            {'showMediaCheck' : True}))
         pd.addContainerTemplate(pd.imageType('vmwareImage'))
         pd.addContainerTemplate(pd.imageType('xenOvaImage'))
         pd.addBuildDefinition(name='ISO 32',
@@ -1235,7 +1236,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
             client.newBuildsFromProductDefinition(versionId, 'Booya', False)
         # Should have created 1 build for Booya stage
         self.assertEquals(1, len(buildIds))
-        
+        build = client.getBuild(buildIds[0])
+        self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
+
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')
     def testBuildsFromProductDefinitionBoolVal(self, db, data):
