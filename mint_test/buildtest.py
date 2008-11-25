@@ -632,6 +632,21 @@ class BuildTest(fixtures.FixturedUnitTest):
             self.cfg.excludeBuildTypes = excludeBuildTypes
             self.cfg.includeBuildTypes = includeBuildTypes
 
+    def testAlphabatizeBuildTypes(self):
+        refList = [buildtypes.INSTALLABLE_ISO,
+                    buildtypes.RAW_HD_IMAGE,
+                    buildtypes.VMWARE_IMAGE]
+        testList = list(reversed(refList))
+        res = buildtypes.alphabatizeBuildTypes(testList)
+        self.assertEquals(refList, res)
+
+        # test that ImageLess shows up at the top of the list regardless of
+        # the sorting of the other image types
+        refList.insert(0, buildtypes.IMAGELESS)
+        testList.append(buildtypes.IMAGELESS)
+        res = buildtypes.alphabatizeBuildTypes(testList)
+        self.assertEquals(refList, res)
+
     @fixtures.fixture('Full')
     def testSetMissingFilenames(self, db, data):
         client = self.getClient('owner')

@@ -238,6 +238,13 @@ buildDefinitionFlavorMap = {
     BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
 
+def alphabatizeBuildTypes(visibleBuildTypes):
+    sortedList = sorted([x for x in visibleBuildTypes if x != IMAGELESS],
+            key = lambda x: typeNames.get(x))
+    if IMAGELESS in visibleBuildTypes:
+        sortedList.insert(0, IMAGELESS)
+    return sortedList
+
 def makeBuildFlavorMap(prd):
     baseFlavor = prd.getBaseFlavor() or prd.getPlatformBaseFlavor() or ''
     baseFlavor = deps.parseFlavor(baseFlavor)

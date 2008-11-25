@@ -86,7 +86,7 @@ allowNone = ['anaconda-custom', 'media-template']
                     <h2>Image Type</h2>
                     <div class="formgroup">
                         <table class="formgrouptable">
-                        <div py:strip="True" py:for="key in visibleTypes">
+                        <div py:strip="True" py:for="key in buildtypes.alphabatizeBuildTypes(visibleTypes)">
                             <tr>
                               <td class="radio">
                                 <input id="buildtype_${key}" type="radio" name="buildtype" value="${key}" 

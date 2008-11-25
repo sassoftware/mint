@@ -59,6 +59,7 @@
                 from mint import buildtypes
                 from mint import buildtemplates
                 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+                alphaBuildTypes = buildtypes.alphabatizeBuildTypes(visibleBuildTypes)
                 if bdef:
                     imageType = bdef.getBuildImage()
                     buildType = buildtypes.xmlTagNameImageTypeMap.get(imageType.containerFormat)
@@ -67,7 +68,7 @@
                     buildName = bdef.getBuildName()
                     buildBaseFlavor = '%s,%s' % (bdef.flavorSetRef, bdef.architectureRef)
                 else:
-                    buildType = visibleBuildTypes[0]
+                    buildType = alphaBuildTypes[0]
                     buildSettings = {}
                     buildName = 'NEWBUILD'
                     buildBaseFlavor = ''
@@ -78,7 +79,7 @@
                     <input type="text" name="pdbuilddef-${ordinal}-name" value="${buildName}" /></td>
                 <td>
                     <select class="pdbuilddef-picker-buildType" name="pdbuilddef-${ordinal}-_buildType">
-                        <option py:for="key in visibleBuildTypes"
+                        <option py:for="key in alphaBuildTypes"
                             py:attrs="{'value': key, 'selected': (buildType == key) and 'selected' or None}"
                             py:content="buildtypes.typeNames[key]" />
                     </select></td>
@@ -96,7 +97,7 @@
 
                             # get a default flavor to work with in case build type has not been set
                             # this is just the first value in the supported archs dict
-                            defaultVal = suppArchTypes and suppArchTypes.values()[0] or ''
+                            defaultVal = suppArchTypes and sorted(suppArchTypes.values())[0] or ''
                         ?>
                         <select py:attrs="{'id': elementId, 'name': elementName, 'disabled': elementDisabled}" style="${elementStyle}" class="${elementClasses}">
                             <option py:for="v in sorted(suppArchTypes)"
