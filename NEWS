@@ -38,6 +38,7 @@ Internal Changes
   redirect to the product homepage even when the product is marked as
   private (RBL-3148).
 * Private products now produce private EC2 Images. (RBL-3477)
+* rMake log files are now collected by the collection tool (RBL-3859)
 * The rPath Management Console goes over https now, not http. (RBL-3871)
 
 Web Front End Changes
@@ -139,6 +140,9 @@ Bug Fixes
 * Failures while creating the product repository no longer result in a
   broken product being created. (RBL-3613)
 * The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
+* The license and crypto report now allows you to click on the package names when they contain flavors.  (RBL-3856)
+* veth network interfaces are no longer shown in the rAPA configuration interface. (RAA-1627)
+
 
 Changes in 4.1.1
 ================
