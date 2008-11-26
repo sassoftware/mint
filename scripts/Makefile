@@ -20,7 +20,8 @@ static_files =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password		
+	set-password			\
+	setup_rmake.py
 
 generated_files =	\
 	rbuilder_database.py

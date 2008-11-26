@@ -753,6 +753,15 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(prd2.platform.baseFlavor)
         self.failIf(prd2.baseFlavor)
 
+    def testProdDefNoPlatDer(self):
+        from rpath_common.proddef import api1 as proddef
+        prd = proddef.ProductDefinition()
+        # ensure we don't have a platform definition at all
+        if hasattr(prd, 'platform'):
+            del prd.platform
+        addDefaultPlatformToProductDefinition(prd)
+        self.failUnless(hasattr(prd, 'platform'))
+
 
 if __name__ == "__main__":
     testsuite.main()

@@ -49,6 +49,7 @@ python_files =			\
 	pubreleases.py		\
 	rbuilderaction.py	\
 	requests.py		\
+	rmake_setup.py		\
 	schema.py		\
 	scriptlibrary.py	\
 	searcher.py		\

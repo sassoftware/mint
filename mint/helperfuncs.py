@@ -5,7 +5,7 @@
 #
 
 from conary.deps import arch, deps
-from conary.repository.errors import RoleAlreadyExists
+from conary.repository.errors import RoleAlreadyExists, RoleNotFound
 
 from mint import constants
 from mint import buildtypes
@@ -486,7 +486,8 @@ def addDefaultPlatformToProductDefinition(productDefinition):
     function modifies the original object
     """
     from rpath_common.proddef import api1 as proddef
-    if not productDefinition.platform:
+    if not (hasattr(productDefinition, 'platform') and \
+            productDefinition.platform):
         productDefinition.platform = proddef.PlatformDefinition()
     if not (productDefinition.platform.getArchitectures() or
             productDefinition.platform.getFlavorSets() or

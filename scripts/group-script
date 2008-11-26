@@ -61,6 +61,9 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
+# this script is set up to use exit code 1 if rMake is already set up
+/usr/share/rbuilder/scripts/rmake_setup || true
+
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
 then
