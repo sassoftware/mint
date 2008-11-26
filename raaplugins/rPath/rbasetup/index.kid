@@ -19,6 +19,12 @@ Copyright (c) 2006-2008 rPath, Inc.
         host = socket.gethostname()
         url = "http://" + host + "/setup/"
     ?>
+    <script type="text/javascript">
+        function redirect(url)
+        {
+            window.open(url, 'config');
+        }
+    </script>
 </head>
 
 <body>
@@ -27,12 +33,11 @@ Copyright (c) 2006-2008 rPath, Inc.
      <div class="page-section-content-bottom">
 
     <br/>
-    The system level configuration of rBuilder is complete.  To finish the configuration process, click
-    <a target="_blank" href="${url}">${url}</a>.
+    The system level configuration of rBuilder is complete.  Click 'Continue' to finish the configuration process.
         
     <br/><br/>
-    <form py:if="raaInWizard" action="javascript:void(0);" method="POST" id="page_form" name="page_form"
-	    onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'doSetup');">
+    <form action="javascript:void(0);" method="POST" id="page_form" name="page_form"
+	    onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'doSetup');redirect('${url}')">
 	    <a class="rnd_button float-right" id="OK" href="javascript:button_submit(document.page_form)">Continue</a>
     </form>
     </div>
