@@ -1213,8 +1213,8 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             self.mintCfg.projectDomainName = projectDomainName
             util.rmtree(rmakeCfgPath, ignore_errors = True)
 
-        self.assertEquals([x.split()[0] for x in data.splitlines()],
-                ['reposUser', 'reposName', 'reposUrl', 'rBuilderUrl'])
+        self.assertEquals(set(x.split()[0] for x in data.splitlines()),
+            set(['#', 'reposUser', 'reposName', 'reposUrl', 'rBuilderUrl']))
 
         self.assertEquals(self.commands,
                 ['sudo /sbin/service rmake restart',
