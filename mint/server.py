@@ -3260,7 +3260,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
 
-        if buildType != buildtypes.IMAGELESS:
+        if buildType == buildtypes.IMAGELESS:
+            return ""
+        else:
             data = self.serializeBuild(buildId)
             try:
                 mc = self._getMcpClient()
