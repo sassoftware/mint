@@ -46,8 +46,7 @@ class rMakeManagement(services.Services):
         self.config = self.server.getConfigData()
         pluginManager = self._getPluginManager()
         buildConfig = buildcfg.BuildConfiguration(readConfigFiles=True)
-        buildConfig['rmakeUser'] = (self.config['rmake.rmakeUser'], 
-            self.config['rmake.rmakePassword'])
+        buildConfig['clientCert'] = self.config['rmake.client_certificate']
         return helper.rMakeHelper(buildConfig=buildConfig, configureClient=True)
 
     def _getPluginManager(self):
