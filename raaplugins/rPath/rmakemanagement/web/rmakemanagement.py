@@ -44,6 +44,7 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
 
         builds = []
         nodes = []
+        statusmsg = ''
         if rmakeUser:
             statusmsg, builds = self._getBuilds()
             nodes = self._getNodes()
