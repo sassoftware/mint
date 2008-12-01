@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(45, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(45, 6)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -861,6 +861,32 @@ def _createProductVersions(db):
         db.commit()
         db.loadSchema()
 
+def _createTargets(db):
+    cu = db.cursor()
+    commit = False
+    if 'Targets' not in db.tables:
+        cu.execute("""
+            CREATE TABLE Targets (
+                targetId   %(PRIMARYKEY)s,
+                targetType VARCHAR(16),
+                targetName VARCHAR(16)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Targets'] = []
+        commit = True
+
+    if 'TargetData' not in db.tables:
+        cu.execute("""
+            CREATE TABLE TargetData (
+                targetId  INT NOT NULL,
+                name      VARCHAR(16),
+                value     TEXT
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['TargetData'] = []
+        commit = True
+
+    if commit:
+        db.commit()
+        db.loadSchema()
 
 # create the (permanent) server repository schema
 def createSchema(db):
@@ -882,6 +908,7 @@ def createSchema(db):
     _createEC2Data(db)
     _createSessions(db)
     _createProductVersions(db)
+    _createTargets(db)
 
 
 #############################################################################
