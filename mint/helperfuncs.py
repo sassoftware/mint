@@ -464,8 +464,8 @@ def getBuildDefsAvaliableBuildTypes(allBuildTypes):
     """
     # get the build types to allow
     #    remove online update builds (i.e. imageless)
-    allBuildTypes.remove(buildtypes.IMAGELESS)
-        
+    if buildtypes.IMAGELESS in allBuildTypes:
+        allBuildTypes.remove(buildtypes.IMAGELESS)
     return allBuildTypes
 
 def addDefaultStagesToProductDefinition(productDefinitionObj):
