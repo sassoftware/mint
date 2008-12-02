@@ -2253,9 +2253,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             
             # add conaryProxy if we have it enabled
             if self.cfg.useInternalConaryProxy:
-                proxies = self.cfg.getInternalProxies()
-                for proto, url in proxies.iteritems():
-                    f.write('conaryProxy %s %s\n' % (proto, url))
+                f.write('conaryProxy http http://%s.%s\n' % (
+                    self.cfg.hostName, self.cfg.siteDomainName))
+                f.write('conaryProxy https https://%s\n' % (
+                    self.cfg.secureHost,))
 
             self.cfg.displayKey('proxy', out=f)
             f.close()
