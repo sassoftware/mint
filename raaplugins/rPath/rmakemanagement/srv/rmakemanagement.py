@@ -3,6 +3,7 @@
 # All rights reserved
 #
 import logging
+import os
 import time
 
 from raa import rpath_error
@@ -44,9 +45,14 @@ class rMakeManagement(services.Services):
 
     def _getrMakeHelper(self):
         self.config = self.server.getConfigData()
+
+        certPath = self.config['rmake.client_certificate']
+        if not os.path.exists(certPath):
+            return None
+
         pluginManager = self._getPluginManager()
         buildConfig = buildcfg.BuildConfiguration(readConfigFiles=True)
-        buildConfig['clientCert'] = self.config['rmake.client_certificate']
+        buildConfig['clientCert'] = certPath
         return helper.rMakeHelper(buildConfig=buildConfig, configureClient=True)
 
     def _getPluginManager(self):
@@ -65,6 +71,10 @@ class rMakeManagement(services.Services):
         self.rmakeHelper = self._getrMakeHelper()
         statusmsg = ''
         ret = []
+
+        if not self.rmakeHelper:
+            log.info('rMake client certificate not available')
+            return 'rMake client certificiate not configured', []
 
         # Gracefully handle an rMake server communication error.
         try:
@@ -93,12 +103,15 @@ class rMakeManagement(services.Services):
         Return the log for a given build.
         """
         self.rmakeHelper = self._getrMakeHelper()
-        build_log = BuildLog()
-        self.rmakeHelper.displayJobInfo(jobId=buildId,
-                                        proxy=self.rmakeHelper,
-                                        out=build_log)
+        if self.rmakeHelper:
+            build_log = BuildLog()
+            self.rmakeHelper.displayJobInfo(jobId=buildId,
+                                            proxy=self.rmakeHelper,
+                                            out=build_log)
 
-        return build_log.log
+            return build_log.log
+        else:
+            return 'rMake client certificate not configured\n'
 
 
     def getServiceStatus(self, schedId, execId, serviceName):

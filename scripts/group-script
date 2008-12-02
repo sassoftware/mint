@@ -64,8 +64,8 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
-# this script is set up to use exit code 1 if rMake is already set up
-/usr/share/rbuilder/scripts/rmake_setup || true
+# Create a project for rMake to use as a repository.
+RBUILDER_NORESTART=1 /usr/share/rbuilder/scripts/rmake_setup
 
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
@@ -87,8 +87,13 @@ do
 done
 
 # Restart rMake
-service rmake-node stop
-service rmake stop
+if [ -f /var/lock/subsys/rmake ]
+then
+    service rmake-node stop
+    service rmake stop
+    START_RMAKE=1
+fi
+
 if [[ -f /usr/sbin/gencert-rmake && ! -f /srv/rmake/certs/ca.crt ]]
 then
     # Generate rMake client CA and admin cert
@@ -96,15 +101,19 @@ then
     mkdir -p /srv/rmake/certs
     /usr/sbin/gencert-rmake -a \
         -o /srv/rmake/certs/ca.crt -O /srv/rmake/certs/ca.key \
-        -e 3653 --O='Auto-Generated' --OU='rMake Client CA' \
+        -e 3653 --O='Auto-Generated' --OU='rMake Client CA'
     chmod 0644 /srv/rmake/certs/ca.crt
     /usr/sbin/gencert-rmake -n \
         -c /srv/rmake/certs/ca.crt -C /srv/rmake/certs/ca.key \
         -o /srv/rmake/certs/admin.pem -e 3653 -i /srv/rmake/certs/index.txt \
         --O='Auto-Generated' --OU='rMake Admin Client' --site-user='admin'
 fi
-service rmake start
-# TODO: Delete sleep workaround pending RMK-938
-#   -- 5.0.0 - 2008-12-01
-sleep 3
-service rmake-node start
+
+if [ "$START_RMAKE" -eq 1 ]
+then
+    service rmake start
+    # TODO: Delete sleep workaround pending RMK-938
+    #   -- 5.0.0 - 2008-12-01
+    sleep 3
+    service rmake-node start
+fi
