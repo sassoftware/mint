@@ -595,12 +595,15 @@ class ProjectsTable(database.KeyedTable):
         addUserToRepository(repos, anon, anon, anon)
         repos.auth.addAcl(anon, None, None, write=False, remove=False)
 
-        # add the mint auth user so we can add additional permissions
-        # to this repository
-        addUserToRepository(repos, self.cfg.authUser, self.cfg.authPass, 
-            self.cfg.authUser)
-        repos.auth.addAcl(self.cfg.authUser, None, None, write=True, 
-            remove=False)
+        # make it possible to use the auth user account to create a project
+        # used to create the rMake repository (RBL-3810)
+        if username != self.cfg.authUser:
+            # add the mint auth user so we can add additional permissions
+            # to this repository
+            addUserToRepository(repos, self.cfg.authUser, self.cfg.authPass,
+                self.cfg.authUser)
+            repos.auth.addAcl(self.cfg.authUser, None, None, write=True,
+                remove=False)
         repos.auth.setAdmin(self.cfg.authUser, True)
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:

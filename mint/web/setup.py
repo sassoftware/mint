@@ -239,55 +239,11 @@ class SetupHandler(WebHandler):
         os.system("%skillall -USR1 httpd" % sudo)
 
         if not self.cfg.configured:
-            # Create a product (as the admin user) for use by the internal rmake.
-            adminClient = shimclient.ShimMintClient(newCfg, 
-                [kwargs['new_username'], kwargs['new_password']])
-
-            shortName = 'rmake-repository'
-            projectId = adminClient.newProject(name="rMake Repository",
-                hostname=shortName,
-                domainname=str(newCfg.projectDomainName),
-                projecturl="",
-                desc="This product's repository is used by the rMake server running on this rBuilder for building packages and groups with Package Creator and Appliance Creator.",
-                appliance="no",
-                shortname=shortName,
-                namespace="rpath",
-                prodtype="Component",
-                version="1",
-                commitEmail="",
-                isPrivate=False,
-                projectLabel="")
-
-            rmakeUser = "%s-user" % shortName
-            rmakePassword = helperfuncs.genPassword(32)
-            adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
-                rmakePassword)
-    
-            self._writeRmakeConfig(rmakeUser, rmakePassword, 
-                "https://%s" % newCfg.siteHost, 
-                "%s.%s" % (shortName, newCfg.projectDomainName),
-                "https://%s/repos/%s" % (newCfg.siteHost, shortName))
-
-            if os.environ.get('RBUILDER_NOSUDO', False):
-                sudo = ''
-            else:
-                sudo = 'sudo '
-
-            os.system("%s/sbin/service rmake restart" % sudo)                
-            os.system("%s/sbin/service rmake-node restart" % sudo)                
-
+            from mint import rmake_setup
+            rmakeConfigFilePath = self.req.get_options().get(\
+                    'rmakeConfigFilePath', RBUILDER_RMAKE_CONFIG)
+            rmake_setup.setupRmake(newCfg, rmakeConfigFilePath)
         return self._write("setup/saved")
-
-    def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
-        path = self.req.get_options().get('rmakeConfigFilePath',
-            RBUILDER_RMAKE_CONFIG)
-        mkdirChain(os.path.dirname(path))
-        f = file(path, 'w')
-        f.write('%s %s %s %s\n' % ('reposUser', reposName, user, password))
-        f.write('%s %s\n' % ('reposName', reposName))
-        f.write('%s %s\n' % ('reposUrl', reposUrl))
-        f.write('%s %s\n' % ('rBuilderUrl', rBuilderUrl))
-        f.close()
 
     def restart(self, auth):
 

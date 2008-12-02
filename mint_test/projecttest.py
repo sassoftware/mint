@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import socket
+import tempfile
 import time
 
 from mint_rephelp import MintRepositoryHelper
@@ -23,6 +24,7 @@ from mint import urltypes
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
+from conary.lib import util
 
 import fixtures
 
@@ -1168,9 +1170,64 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             # reset the labels
             client.server._server.cfg.groupApplianceLabel = _groupApplianceLabel
 
+    def testNewProjectAuthUser(self):
+        client = self.openMintClient((self.mintCfg.authUser, self.mintCfg.authPass))
+        projectId = client.newProject('foo', 'foo', 'rpath.local', shortname = 'foo', prodtype = 'Component', version = '1', isPrivate = True)
+
+        project = client.getProject(projectId)
+
+        self.assertEquals(project.getMembers(), [])
+        self.assertEquals(project.hidden, 1)
+
+        adminClient, adminId = self.quickMintAdmin('testuser', 'testpass')
+        adminProject = adminClient.getProject(projectId)
+        hidden = 1
+        self.assertEquals(adminClient.getProjectsList(),
+                [(projectId, hidden, 'foo - foo')])
+
+        # ensure that site admins can add themselves to the project
+        adminProject.addMemberById(adminId, userlevels.OWNER)
+        projectList = adminClient.getProjectsByMember(adminId)
+        self.assertEquals(len(projectList), 1)
+        self.assertEquals(projectList[0][0].name, 'foo')
 
         # TODO: Add additional tests to exercise the label selecting, and
         # optional groupnames, label, etc.
+
+    def testSetupRmake(self):
+        from mint import rmake_setup
+        fd, rmakeCfgPath = tempfile.mkstemp()
+        self.commands = []
+
+        def newSystem(command):
+            self.commands.append(command)
+
+        self.mock(os, 'system', newSystem)
+        projectDomainName = self.mintCfg.projectDomainName
+        try:
+            os.close(fd)
+            self.mintCfg.projectDomainName = projectDomainName.split(':')[0]
+            rmake_setup.setupRmake(self.mintCfg, rmakeCfgPath)
+            data = open(rmakeCfgPath).read()
+        finally:
+            self.mintCfg.projectDomainName = projectDomainName
+            util.rmtree(rmakeCfgPath, ignore_errors = True)
+
+        self.assertEquals([x.split()[0] for x in data.splitlines()],
+                ['reposUser', 'reposName', 'reposUrl', 'rBuilderUrl'])
+
+        self.assertEquals(self.commands,
+                ['sudo /sbin/service rmake restart',
+                'sudo /sbin/service rmake-node restart'])
+
+        client, userId = self.quickMintAdmin('testuser', 'testpass')
+        project = client.getProjectByHostname('rmake-repository')
+        self.assertEquals(client.getProjectsList(),
+                [(project.id, 1, 'rmake-repository - rMake Repository')])
+
+        err = self.assertRaises(RuntimeError,
+                rmake_setup.setupRmake, self.mintCfg, rmakeCfgPath)
+        self.assertEquals(str(err), 'rMake repository already configured')
 
 
 if __name__ == "__main__":
