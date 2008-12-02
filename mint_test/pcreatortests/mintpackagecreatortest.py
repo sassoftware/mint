@@ -35,6 +35,7 @@ if _envName in os.environ:
     from pcreator import backend as pcreatorBackend
     from pcreator import factorydata as pcreatorFactoryData
     from pcreator import client as pcreatorClient
+    from pcreator import errors as pcreatorErrors
 
 class mockfield(object):
     name='foo'
@@ -172,6 +173,42 @@ generatedXML = """<?xml version='1.0' encoding='UTF-8'?>
 </factoryData>
 """
 
+# this data set is for attempting to upload a trove with an empty name
+xmlDataEmptyName = """<?xml version='1.0' encoding='UTF-8'?>
+<factoryData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.org/permanent/factorydata-1.0.xsd factorydata-1.0.xsd">
+  <field>
+    <name>name</name>
+    <type>str</type>
+    <value />
+    <modified>true</modified>
+  </field>
+  <field>
+    <name>version</name>
+    <type>str</type>
+    <value>1.2</value>
+    <modified>true</modified>
+  </field>
+  <field>
+    <name>license</name>
+    <type>str</type>
+    <value>Some License</value>
+    <modified>true</modified>
+  </field>
+  <field>
+    <name>summary</name>
+    <type>str</type>
+    <value>Some Summary</value>
+    <modified>true</modified>
+  </field>
+  <field>
+    <name>description</name>
+    <type>str</type>
+    <value>Some Description</value>
+    <modified>true</modified>
+  </field>
+</factoryData>
+"""
+
 class testPackageCreatorManipulation(packagecreatortest.RepoTest):
     def testgetFactoryDataFromDataDict(self):
         #create a pcreator client object
@@ -201,6 +238,33 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
                 sesH, 'currentFiles').keys()),
                 ['foo-0.3-1.noarch.rpm', 'tags-1.2-3.noarch.rpm'])
 
+    def testEmptyName(self):
+        #create a pcreator client object
+        #set up enough client to call getFactoryDataDefinition
+        pClient = self.getPackageCreatorClient()
+        mincfg = self._getMinimalFactoryConfig()
+        sesH = pClient.startSession(self.productDefinitionDict, mincfg)
+        rpmFileName = 'tags-1.2-3.noarch.rpm'
+        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+                            rpmFileName)
+        pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
+
+        #This is throwaway, but you have to call it to cache the factory data
+        #definitions
+        res = pClient.getCandidateBuildFactories(sesH)
+
+        self.failUnless(res, "no results from repo")
+        # fatory-rpm validates the empty name, factory-rpm-suse does not.
+        # both cases should trigger an error
+        for factFingerprint, refData in (('rpm=',
+                (["'Package name': '' fails regexp check '^[\\w\\.\\-]+$'"],)),
+                ('rpm-suse=', (['Package name cannot be empty'],))):
+            # attempt to make the trove, but leave the name field empty
+            factH = [x[0] for x in res if x[0].startswith(factFingerprint)][0]
+
+            err = self.assertRaises(pcreatorErrors.ConstraintsValidationError,
+                    pClient.makeSourceTrove, sesH, factH, xmlDataEmptyName)
+            self.assertEquals(err.args, refData)
 
 
 if __name__ == '__main__':
