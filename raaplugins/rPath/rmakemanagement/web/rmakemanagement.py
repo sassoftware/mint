@@ -37,16 +37,11 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         netinfo = self.plugins['/configure/Network'].index()
         self.host = netinfo.get('host_hostName', _('Local rMake server'))
 
-        builds = []
-        nodes = []
-        statusmsg = ''
-        if self._getClientCertPath():
-            statusmsg, builds = self._getBuilds()
-            nodes = self._getNodes()
+        statusmsg, builds = self._getBuilds()
+        nodes = self._getNodes()
         
         return dict(server=self.host,
                     status=status,
-                    rmakeUser=rmakeUser,
                     builds=builds,
                     nodes=nodes,
                     statusmsg=statusmsg
@@ -57,9 +52,7 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
             path=rmakemanagement.pluginpath)
         if path is None:
             return None
-        if os.path.exists(path):
-            return os.path.abspath(path)
-        return None
+        return os.path.abspath(path)
 
     def _getBuilds(self):
         """

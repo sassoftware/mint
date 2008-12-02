@@ -51,13 +51,15 @@ def setupRmake(cfg, rmakeConfigFilePath):
         "%s.%s" % (shortName, cfg.projectDomainName),
         "https://%s/repos/%s" % (cfg.siteHost, shortName))
 
-    if os.environ.get('RBUILDER_NOSUDO', False):
-        sudo = ''
-    else:
-        sudo = 'sudo '
+    if not os.getenv('RBUILDER_NORESTART'):
+        if os.getenv('RBUILDER_NOSUDO'):
+            sudo = ''
+        else:
+            sudo = 'sudo'
 
-    os.system("%s/sbin/service rmake restart" % sudo)
-    os.system("%s/sbin/service rmake-node restart" % sudo)
+        os.system("%s/sbin/service rmake restart" % sudo)
+        os.system("%s/sbin/service rmake-node restart" % sudo)
+
 
 def _writeRmakeConfig(path, user, password, rBuilderUrl, reposName, reposUrl):
     util.mkdirChain(os.path.dirname(path))
