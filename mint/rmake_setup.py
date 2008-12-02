@@ -55,7 +55,7 @@ def setupRmake(cfg, rmakeConfigFilePath):
         if os.getenv('RBUILDER_NOSUDO'):
             sudo = ''
         else:
-            sudo = 'sudo'
+            sudo = 'sudo '
 
         os.system("%s/sbin/service rmake restart" % sudo)
         os.system("%s/sbin/service rmake-node restart" % sudo)
