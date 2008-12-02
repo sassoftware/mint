@@ -65,7 +65,7 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
-RBUILDER_NORESTART=1 /usr/share/rbuilder/scripts/rmake_setup
+RBUILDER_NORESTART=1 /usr/share/rbuilder/scripts/rmake-setup
 
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
