@@ -1,0 +1,296 @@
+<?xml version="1.0"?><!-- generator="b2evolution/0.9.1" -->
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:admin="http://webns.net/mvcb/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+	<channel>
+		<title>rpath.com News</title>
+		<link>http://blogs.conary.com/index.php/rpathcom</link>
+		<description></description>
+		<language>en-US</language>
+		<docs>http://backend.userland.com/rss</docs>
+		<admin:generatorAgent rdf:resource="http://b2evolution.net/?v=0.9.1"/>
+		<ttl>60</ttl>
+				<item>
+			<title>Introducing rBuilder 2.0.0</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2006/07/27/introducing_rbuilder_2_0_0</link>
+			<pubDate>Fri, 28 Jul 2006 02:41:55 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">385@http://blogs.conary.com</guid>
+			<description>rBuilder Online has been updated to version 2.0.0! Here's a summary of the most recent changes:
+	
+New Release Architecture
+
+	
+		Redesigned the releases system, and replaced it with releases and builds, described below.
+		Releases can now consist of an arbitrary set of builds; a build is a combination of group-trove (trove, version, flavor) + build type (ISO, VMware, QEMU, etc.).
+		Project developers are now able to create and delete builds (e.g. for testing purposes). The creatiion, publishing and deleting of releases is still the exclusive domain of the project owner(s).
+		Added release unpublish capability; unpublishing a release hides the release from the public, and allows you to edit the release contents.
+		Releases may now be deleted after being published.
+		The New Build page has been enhanced with an improved group trove selection mechanism, making it easier to choose the particular flavor of a group.
+	
+
+	More information on the New Release Architecture here.
+
+        rMake
+        
+                rBuilder can manage an rMake server local to the web browser&#8217;s machine.
+                rMake integration with rBuilder is automatically enabled when you install rMake.
+                Manipulating the rMake panel works similarly to Group Builder.
+                rMake integration offers real-time status updates in the rMake panel, so you can monitor the status of your build from anywhere on the site.
+                You can save and edit as many rMake builds as you desire.
+        
+
+        More information on rMake is available here.
+
+	Other New Features
+
+	
+		Searching (all types) now prioritizes exact matches above all other results.
+		The file prefix may now be changed for ISOs, etc. You are no longer tied to using the source group-trove name.
+		Demo (aka &#8220;Live&#8221;) CD/DVDs may now be created for x86 architectures.
+		VMware images now default to bridged networking mode.
+                rBuilder Online now produces VMware images with hardware version 4.
+	
+
+	Bugfixes
+
+	
+                VMware images generated with rBuilder Online no longer trigger an obscure VMware bug. (RBL-738)
+		Opening two &#8220;create release&#8221; (now called &#8220;Create build&#8221;) pages at once no longer gives &#8220;requested item not found&#8221; (RBL-408).
+	
+</description>
+			<content:encoded><![CDATA[	<p>rBuilder Online has been updated to version 2.0.0! Here's a summary of the most recent changes:</p>
+	<h4>New Release Architecture</h4>
+	<ul>
+	<li>Redesigned the releases system, and replaced it with releases and builds, described below.</li>
+	<li>Releases can now consist of an arbitrary set of builds; a build is a combination of group-trove (trove, version, flavor) + build type (ISO, VMware, QEMU, etc.).</li>
+	<li>Project developers are now able to create and delete builds (e.g. for testing purposes). The creatiion, publishing and deleting of releases is still the exclusive domain of the project owner(s).</li>
+	<li>Added release unpublish capability; unpublishing a release hides the release from the public, and allows you to edit the release contents.</li>
+	<li>Releases may now be deleted after being published.</li>
+	<li>The New Build page has been enhanced with an improved group trove selection mechanism, making it easier to choose the particular flavor of a group.</li>
+	</ul>
+	<p>More information on the New Release Architecture <b><a href="http://www.smerpology.org/sprocket/article/1154/rbuilder-release-rearrangement-aka-rrr">here</a></b>.</p>
+	<h4>rMake</h4>
+	<ul>
+	<li>rBuilder can manage an rMake server local to the web browser&#8217;s machine.</li>
+	<li>rMake integration with rBuilder is automatically enabled when you install rMake.</li>
+	<li>Manipulating the rMake panel works similarly to Group Builder.</li>
+	<li>rMake integration offers real-time status updates in the rMake panel, so you can monitor the status of your build from anywhere on the site.</li>
+	<li>You can save and edit as many rMake builds as you desire.</li>
+	</ul>
+	<p>More information on rMake is available <b><a href="http://wiki.rpath.com/wiki/Conary:About_rMake">here</a></b>.</p>
+	<h4>Other New Features</h4>
+	<ul>
+	<li>Searching (all types) now prioritizes exact matches above all other results.</li>
+	<li>The file prefix may now be changed for ISOs, etc. You are no longer tied to using the source group-trove name.</li>
+	<li>Demo (aka &#8220;Live&#8221;) CD/DVDs may now be created for x86 architectures.</li>
+	<li>VMware images now default to bridged networking mode.</li>
+	<li>rBuilder Online now produces VMware images with hardware version 4.</li>
+	</ul>
+	<h4>Bugfixes</h4>
+	<ul>
+	<li>VMware images generated with rBuilder Online no longer trigger an obscure VMware bug. (<a href="https://issues.rpath.com/browse/RBL-738">RBL-738</a>)</li>
+	<li>Opening two &#8220;create release&#8221; (now called &#8220;Create build&#8221;) pages at once no longer gives &#8220;requested item not found&#8221; (<a href="https://issues.rpath.com/browse/RBL-408">RBL-408</a>).</li>
+	</ul>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=385&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>Anaconda Templates Updated</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2006/07/12/anaconda_templates_updated</link>
+			<pubDate>Wed, 12 Jul 2006 14:11:39 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">376@http://blogs.conary.com</guid>
+			<description>We have updated the anaconda-templates package to version 1.0.3 in preparation for rPath Linux 1.0.3. The anaconda templates define the initial installation environment for installable CDs generated by rBuilder Online.
+
+Changes:
+
+
+Updated Conary to 1.0.22
+Updated Linux Kernel to 2.6.16.24
+</description>
+			<content:encoded><![CDATA[	<p>We have updated the anaconda-templates package to version 1.0.3 in preparation for rPath Linux 1.0.3. The anaconda templates define the initial installation environment for installable CDs generated by rBuilder Online.</p>
+	<p>Changes:</p>
+	<ul>
+	<li>Updated Conary to 1.0.22</li>
+	<li>Updated Linux Kernel to 2.6.16.24</li>
+	</ul>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=376&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>rBuilder Online Maintenance Complete</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2006/06/28/rbuilder_online_maintenance_complete</link>
+			<pubDate>Thu, 29 Jun 2006 01:21:09 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">366@http://blogs.conary.com</guid>
+			<description>The maintenance scheduled for rBuilder Online is now complete.  Thank you for your interest in rBuilder Online!</description>
+			<content:encoded><![CDATA[	<p>The maintenance scheduled for rBuilder Online is now complete.  Thank you for your interest in rBuilder Online!
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=366&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>rBuilder Online Updated</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2006/06/15/rbuilder_online_updated_10</link>
+			<pubDate>Fri, 16 Jun 2006 03:28:18 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">357@http://blogs.conary.com</guid>
+			<description>rBuilder Online has been updated to version 1.6.3.  New features include:
+
+
+Added tar archive as a new release target; various ISO image sizes can now be selected as well.
+A bug causing VMware builds to fail occasionally has been fixed.
+The download landing page has been removed.
+The "show media check" option for installable ISOs now behaves correctly. The sense used to be backwards: selecting "show media check" would skip the media check, and vice-versa.
+Component removal from Group Builder now exists. For now, the settings are in the 'Edit Group' dialog, but this location may change in the future.
+Client cookie settings are tested at login instead of silently failing.
+Several months ago the default URL to rBuilder Online changed to /rbuilder/ from /. All RSS feeds and other links will not respond to the old URLs anymore.
+
+
+Thanks for your interest in rBuilder Online!</description>
+			<content:encoded><![CDATA[	<p>rBuilder Online has been updated to version 1.6.3.  New features include:</p>
+	<ul>
+	<li>Added tar archive as a new release target; various ISO image sizes can now be selected as well.</li>
+	<li>A bug causing VMware builds to fail occasionally has been fixed.</li>
+	<li>The download landing page has been removed.</li>
+	<li>The "show media check" option for installable ISOs now behaves correctly. The sense used to be backwards: selecting "show media check" would skip the media check, and vice-versa.</li>
+	<li>Component removal from Group Builder now exists. For now, the settings are in the 'Edit Group' dialog, but this location may change in the future.</li>
+	<li>Client cookie settings are tested at login instead of silently failing.</li>
+	<li>Several months ago the default URL to rBuilder Online changed to <tt>/rbuilder/</tt> from <tt>/</tt>. All RSS feeds and other links will not respond to the old URLs anymore.
+</li>
+</ul>
+	<p>Thanks for your interest in rBuilder Online!
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=357&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>rPath is Hiring!</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2006/05/23/rpath_is_hiring</link>
+			<pubDate>Wed, 24 May 2006 02:14:10 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">342@http://blogs.conary.com</guid>
+			<description>rPath, Inc. is seeking people to join our team at our Raleigh, NC location. We're going to change the face of computing; for that we need your help.  If any of the following positions look interesting, send your resume to jobs@rpath.com for a chance to work with some of the best and brightest the Linux community has to offer.
+
+Build System
+
+We're looking for a Software Engineer to work on rPath's core technologies. We're not looking for someone that just uses Linux distributions, we're looking for someone that creates them -- from bootstrap, to stabilization, to maintenance.
+
+In other words, you have:
+
+
+  An understanding of Linux-based operating system structure and    development including a deep understanding of the GNU toolchain (binutils, gcc, autoconf, automake, and friends)
+
+  Experience handling complex interdependencies between software components, both at build time and run time
+
+  An understanding of Software Configuration Management (SCM) concepts and techniques
+
+  Experience designing and developing web-based applications
+
+  Experience applying automated testing methodologies
+
+  Experience applying Object Oriented Programming principles to solve real-world problems
+
+
+Did we just describe you?  If so, let's talk -- email your resume to
+jobs@rpath.com!
+
+Distribution
+
+We're looking for a Software Engineer to help us develop our reference Linux distribution -- rPath Linux.
+
+This means you have:
+
+
+  Experience developing Open Source software, especially participating in teams developing Open Source software and providing patches to other existing Open Source project teams
+
+  GNU toolchain and OS build process experience, including bootstrapping
+
+  Experience creating and building any type of Linux distribution
+
+
+Is this you?  If so, send your resume to jobs@rpath.com!
+
+rBuilder
+
+We're looking for a Software Engineer to help us develop rBuilder and associated technologies.
+
+This means you have:
+
+
+  Experience designing, developing, and deploying large-scale Web applications
+
+  Knowledge of SQL
+
+  Familiarity with relational database design/administration using open source RDBMS technology
+
+  Experience configuring/tuning Apache for maximum performance in a high-traffic environment
+
+  Experience performance tuning open source relational databases
+
+  Recent Linux/Unix experience
+
+  Current object-oriented programming experience, with exposure to Python a plus
+
+
+Sound familiar?  If so, your resume needs to go to jobs@rpath.com!
+
+Web Apps (Intern)
+
+We're looking for a summer intern to help out with web application development. You'll be building the next generation of applications for managing virtual appliances built with rPath's core technologies.  This is not your typical intern position!
+
+Want to really have something to write about for that "What I did on my Summer vacation" essay?  Email a resume to jobs@rpath.com!
+
+Documentation
+
+We're looking for a Technical Writer to help us describe all the cool stuff we're doing here at rPath.
+
+We need people with 2+ years of real-world experience describing complex technical concepts to audiences of varying experience levels. In other words, if you find yourself delving into the latest technology and then explaining it to your friends for the fun of it, we should talk!
+
+You must have solid Linux experience and a tool-agnostic approach to content delivery. If you know some Python and have experience with Linux package management technologies, so much the better.
+
+Are you this person?  If so, fire off a carefully-crafted resume to jobs@rpath.com!
+</description>
+			<content:encoded><![CDATA[	<p>rPath, Inc. is seeking people to join our team at our Raleigh, NC location. We're going to change the face of computing; for that we need your help.  If any of the following positions look interesting, send your resume to <a href="mailto:jobs@rpath.com">jobs@rpath.com</a> for a chance to work with some of the best and brightest the Linux community has to offer.</p>
+	<h4>Build System</h4>
+	<p>We're looking for a Software Engineer to work on rPath's core technologies. We're not looking for someone that just <em>uses</em> Linux distributions, we're looking for someone that <em>creates</em> them -- from bootstrap, to stabilization, to maintenance.</p>
+	<p>In other words, you have:</p>
+	<ul>
+	<li>An understanding of Linux-based operating system structure and    development including a deep understanding of the GNU toolchain (<code>binutils</code>, <code>gcc</code>, <code>autoconf</code>, <code>automake</code>, and friends)</li>
+	<li>Experience handling complex interdependencies between software components, both at build time and run time</li>
+	<li>An understanding of Software Configuration Management (SCM) concepts and techniques</li>
+	<li>Experience designing and developing web-based applications</li>
+	<li>Experience applying automated testing methodologies</li>
+	<li>Experience applying Object Oriented Programming principles to solve real-world problems</li>
+	</ul>
+	<p>Did we just describe you?  If so, let's talk -- email your resume to<br />
+<a href="mailto:jobs@rpath.com">jobs@rpath.com</a>!</p>
+	<h4>Distribution</h4>
+	<p>We're looking for a Software Engineer to help us develop our reference Linux distribution -- rPath Linux.</p>
+	<p>This means you have:</p>
+	<ul>
+	<li>Experience developing Open Source software, especially participating in teams developing Open Source software and providing patches to other existing Open Source project teams</li>
+	<li>GNU toolchain and OS build process experience, including bootstrapping</li>
+	<li>Experience creating and building any type of Linux distribution</li>
+	</ul>
+	<p>Is this you?  If so, send your resume to <a href="mailto:jobs@rpath.com">jobs@rpath.com</a>!</p>
+	<h4>rBuilder</h4>
+	<p>We're looking for a Software Engineer to help us develop rBuilder and associated technologies.</p>
+	<p>This means you have:</p>
+	<ul>
+	<li>Experience designing, developing, and deploying large-scale Web applications</li>
+	<li>Knowledge of SQL</li>
+	<li>Familiarity with relational database design/administration using open source RDBMS technology</li>
+	<li>Experience configuring/tuning Apache for maximum performance in a high-traffic environment</li>
+	<li>Experience performance tuning open source relational databases</li>
+	<li>Recent Linux/Unix experience</li>
+	<li>Current object-oriented programming experience, with exposure to Python a plus</li>
+	</ul>
+	<p>Sound familiar?  If so, your resume needs to go to <a href="mailto:jobs@rpath.com">jobs@rpath.com</a>!</p>
+	<h4>Web Apps (Intern)</h4>
+	<p>We're looking for a summer intern to help out with web application development. You'll be building the next generation of applications for managing virtual appliances built with rPath's core technologies.  This is not your typical intern position!</p>
+	<p>Want to <em>really</em> have something to write about for that "What I did on my Summer vacation" essay?  Email a resume to <a href="mailto:jobs@rpath.com">jobs@rpath.com</a>!</p>
+	<h4>Documentation</h4>
+	<p>We're looking for a Technical Writer to help us describe all the cool stuff we're doing here at rPath.</p>
+	<p>We need people with 2+ years of real-world experience describing complex technical concepts to audiences of varying experience levels. In other words, if you find yourself delving into the latest technology and then explaining it to your friends for the fun of it, we should talk!</p>
+	<p>You must have solid Linux experience and a tool-agnostic approach to content delivery. If you know some Python and have experience with Linux package management technologies, so much the better.</p>
+	<p>Are you this person?  If so, fire off a carefully-crafted resume to <a href="mailto:jobs@rpath.com">jobs@rpath.com</a>!</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=342&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+			</channel>
+</rss>

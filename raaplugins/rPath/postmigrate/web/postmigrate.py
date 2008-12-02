@@ -1,10 +1,10 @@
 # Copyright (c) 2005-2007 rPath, Inc
 # All rights reserved
 
+from gettext import gettext as _
+
 from raa.modules import raawebplugin
 import raa
-
-import cherrypy
 
 import os
 markerFile = os.path.join(os.path.sep, 'tmp', 'rbuilder_migration')
@@ -21,7 +21,7 @@ class rBuilderMigration(raawebplugin.rAAWebPlugin):
         if os.path.exists(markerFile):
             os.unlink(markerFile)
 
-    @raa.expose(template = "rPath.postmigrate.index")
+    @raa.web.expose(template = "rPath.postmigrate.index")
     def index(self, restore = False):
         prompt = not restore
         diskPresent, backups = self.callBackend('getBackups')
@@ -31,11 +31,11 @@ class rBuilderMigration(raawebplugin.rAAWebPlugin):
                 'diskPresent': diskPresent,
                 'backups': backups}
 
-    @raa.expose(allow_xmlrpc = True, allow_json = True)
+    @raa.web.expose(allow_xmlrpc = True, allow_json = True)
     def skipPlugin(self):
         self.disable()
         return dict()
 
-    @raa.expose(allow_xmlrpc = True, allow_json = True)
+    @raa.web.expose(allow_xmlrpc = True, allow_json = True)
     def doRestore(self, filename):
         return self.callBackend('doRestore', filename)

@@ -1,4 +1,152 @@
-Changes in @new@:
+Changes in @NEW@
+===============
+API Changes
+---------------------
+* getPackageCreatorRecipe and savePackageCreatorRecipe have been added to the
+  conary client. (RBL-3483)
+* added getAllBuildsByType call (RBL-3711)
+* isBuildFinished() call now returns the also list of built troves
+  along with the rest of the information about the build. (RBL-3586)
+
+Internal Changes
+---------------------
+* A new api method, newBuildWithOptions, has been added. (RBL-2959)
+* Fixed a bug where a missing GROUP BY argument in an SQL statement was
+  causing a traceback in MySQL. (RBL-2995)
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
+* The jobmaster now copies /etc/hosts into jobslaves. (RBL-2963)
+* The backend now allows EC2 calls to be run using user supplied credentials.
+  (RBL-3039)
+* The user's EC2 credentials are now validated by the EC2 web service.
+  (RBL-3038)
+* The EC2 backend calls now have common error handling. (RBL-3043)
+* A backend call has been added to get all AMI builds for a particular
+  user. (RBL-3053)
+* EC2 credentials and AMI launch permissions are now properly removed when a
+  user account is removed. (RBL-3065)
+* Modifying a user's product membership status now sets EC2 launch permissions 
+  appropriately. (RBL-3062)
+* Publishing and Unpublishing AMI images now sets EC2 launch permissions 
+  appropriately. (RBL-3064)
+* A bug that prevented non-admins from adding or modifying a product
+  team member's permissions has been corrected (RBL-3146).
+* A bug that caused the wrong versions of anaconda templates to be specified to
+  the build system resulting in failed builds has been fixed.  (RBL-2763)
+* Requests to http://<producthostname>.<rbuilderdomainname>/ now properly
+  redirect to the product homepage even when the product is marked as
+  private (RBL-3148).
+* Private products now produce private EC2 Images. (RBL-3477)
+* rMake log files are now collected by the collection tool (RBL-3859)
+* The rPath Management Console goes over https now, not http. (RBL-3871)
+
+Web Front End Changes
+---------------------
+* Product Version is now set as a view on the Product, affecting all pages that
+  interact with the product version (RBL-3163)
+* Fixed a bug where the cook group page mistakenly referenced the "Images" 
+  link instead of the "Manage Images" link. (RBL-3014)
+* There is now a link on the account settings page to edit a user's EC2
+  settings. (RBL-3029)
+* There is now a link on the account settings page to clear a user's EC2 
+  settings. (RBL-3045)
+* There is now a checkbox on the "Create Product" page to create private
+  products. (RBL-3080)
+* The "Administrative Options" area of the product hompegae has been removed.
+  (RBL-3080)
+* There is now a checkbox on the "Edit Product Settings" page to convert
+  a private product to a public product.  Note that a public product cannot
+  be converted to a private product. (RBL-3080)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on IE 6/7. (RBL-3094)
+* Fixed a bug where creating a public product or making a private product
+  public resulted in a JavaScript error on FF3.  This was caused by RBL-3094.
+  (RBL-3100)
+* Admin users are now allowed to convert public projects to private.
+  (RBL-3095)
+* There was a conceptual disconnect between the role "User" and "Watching" a
+  product.  This has been changed so that users now "register for" and "use"
+  products. (RBL-2972)
+* EC2 credentials will now be stripped of whitespace. (RBL-3119)
+* Fixed a bug where the arrows indicating required fields were not present
+  on the "Edit Amazon Web Services Settings" page. (RBL-3126)
+* The "rBuilder Catalog for EC2" page now contains a link to the EC2
+  documentation. (RB-3127)
+* Fixed a bug where the "rBuilder Catalog for EC2" was being blocked by
+  the adblock extension on Firefox 3. (RBL-3123)
+* The versions of special troves used to build an Installable
+  ISO is now displayed in the image build's detail page. (RBL-2600)
+* A new page will require the acceptance of the rPath terms of service prior 
+  to initial setup. (RBL-3213)
+* Terms of service and privacy policy links now open in new tabs/windows.
+* Platform selection is now shown upon creating a new product (and its
+  initial version) or creating a new version. Additionally, rebasing and/or
+  changing a platform has been relocated to its own page, linked off of 
+  the edit product version page. (RBL-2985)
+* The product and membership requests have been consolidated into dropdown
+  menus in the right-hand sidebar. (RBL-3306)
+* Pages are rendered as HTML 4.01 Strict to work around issues with
+  Javascript libraries that use innerHTML with application/xhtml+xml.
+  This fixes issues that involve using the jQuery UI.Dialog control
+  with WebKit-based browsers (RBL-3489, RBL-3507)
+* "Select Additional Packages" now works in more browsers (RBL-3508)
+* There is now a link in the admin page for configuring clouds. (RBL-3430)
+* Recipes in Appliance Creator and Pacakge Creator may now be
+  customized via the Web UI (RBL-3424, RBL-3425)
+* The group recipe created when initially creating an appliance product
+  will now attempt to load group-appliance from the label the platform
+  is on, and only fall back to the groupApplianceLabel if no platform is
+  selected. (RBL-3541)
+* The application now expands to fill the width of the browser. (RBL-3740)
+* SLE is available as a platform definition to those who have access to it.
+  (RBL-3256)
+* The rMake server and rMake node logs are available for viewing from the rAPA
+  logs plugin. (RBL-3780)
+* The rBuilder Terms of Service is now a rapa plugin. (RBL-3803)
+* Changed the name of the rPath Catalog for EC2 to the rPath Management Console.
+  (RBL-3693)
+* The rMake server and rMake node logs are available for viewing from the rAPA
+  logs plugin. (RBL-3780)
+
+Bug Fixes
+---------------------
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
+* Fixed a bug preventing admin users from being able to browse the
+  repository for private products they are not members of. (RBL-3108)
+* The edit external products page now retrieves the correct label
+  information in all cases. (RBL-3179)
+* The help text for Group Builder and package creator has been moved to the top
+  of the page. (RBL-3083, RBL-3182)
+* A tool for guiding users through the process of creating an appliance, named
+  Appliance Creator, has been added (RDST-407)
+* The Edit Version page now allows you to rebase your platform definition.
+  (RBL-2383)
+* The Appliance Creator Wizard has been modified to allow the addition of
+  arbitrary packages to your appliance definition. (RDST-533)
+* Fixed a bug where the Edit Version page referred to "Image Sets" when dealing
+  with an "Image Set". (RBL-3281)
+* The namespace field has been removed from the edit and create product
+  version pages.  The product versions namespace is obtained through the
+  product now. (RBL-3296)
+* Moved the choice of appliance or component when creating a new product to the
+  top of the page under title. (RBL-3298)
+* Changed the "No images defined." message on the create/edit product version
+  pages to use a bold font. (RBL-3319)
+* When creating or editing a product version, users will now be prompted with
+  a modal warning if they do not define any builds. (RBL-3301)
+* The "Update Appliance Platform" checkbox is now the proper size. (RBL-3336)
+* Rerunning the rbuilder initial setup no longer resets the internal password,
+  as that caused previously created repositories to become unavailable. (RBL-3344)
+* Failures while creating the product repository no longer result in a
+  broken product being created. (RBL-3613)
+* The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
+* The license and crypto report now allows you to click on the package names when they contain flavors.  (RBL-3856)
+* veth network interfaces are no longer shown in the rAPA configuration interface. (RAA-1627)
+
+Changes in 4.1.3:
 ================
 
 Bug Fixes
@@ -30,6 +178,7 @@ Bug Fixes
 * The edit external products page now retrieves the correct label
   information in all cases. (RBL-3179)
 * Fixed a bug with UI rendering in the MCP Console Plug-in on IE 6. (RBL-3401)
+
 
 
 Changes in 4.1.1

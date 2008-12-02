@@ -4,15 +4,15 @@
 # All rights reserved
 #
 
-SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert
+SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert rmakemanagement tos rbasetup
 
 extra_dist = __init__.py
 
 all: default-all
 
-install: default-install
+install: default-install raaplugins-link
 
-clean: default-clean
+clean: default-clean 
 
 
 include ../../Make.rules

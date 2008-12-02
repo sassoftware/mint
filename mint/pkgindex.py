@@ -4,8 +4,6 @@
 # All Rights Reserved
 #
 
-from conary import versions
-
 from mint import database
 from mint import searcher
 

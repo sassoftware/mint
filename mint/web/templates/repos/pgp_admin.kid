@@ -36,7 +36,7 @@
         <div py:for="id in keyEntry['uids']"> uid: &#160; &#160; ${id}</div>
         <div py:for="subKey in keyEntry['subKeys']">sub: ${breakKey(subKey)}</div>
       </td>
-      <td py:if="auth.admin" style="text-align: right;">${generateOwnerListForm(keyEntry['fingerprint'], users, userName)}</td>
+      <td py:if="auth.admin">${generateOwnerListForm(keyEntry['fingerprint'], users, userName)}</td>
      </tr>
     </div>
 
@@ -45,27 +45,47 @@
         <title>${formatTitle('PGP Keys: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
-        <td id="main" class="spanall">
-          <div class="pad">
-            <h2>${admin and "All " or "My "}PGP Keys</h2>
-            NOTE: Keys owned by '--Nobody--' may not be used to sign troves.
-            These keys are, for all intents and purposes, disabled.
-            <table class="results" id="users">
-                <thead>
-                    <tr>
-                        <td>Key</td>
-                        <td py:if="auth.admin" style="text-align: right;">Owner</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <div py:for="userName in sorted(users)" py:strip="True">
-                      <div py:for="keyEntry in openPgpKeys[userName]" py:strip="True">
-                          ${printKeyTableEntry(keyEntry, userName)}
-                      </div>
-                    </div>
-                </tbody>
-            </table>
-          </div>
-        </td>
+        <div id="layout">
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+            </div>
+            
+            <div id="innerpage">
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
+                </div>
+                <div id="middle">
+              
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">${admin and "All " or "My "}PGP Keys</div>
+                    NOTE: Keys owned by '--Nobody--' may not be used to sign troves.
+                    These keys are, for all intents and purposes, disabled.
+                    <p>
+                    <table class="results" id="users">
+                    <thead>
+                        <tr>
+                            <td>Key</td>
+                            <td py:if="auth.admin">Owner</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <div py:for="userName in sorted(users)" py:strip="True">
+                          <div py:for="keyEntry in openPgpKeys[userName]" py:strip="True">
+                              ${printKeyTableEntry(keyEntry, userName)}
+                          </div>
+                        </div>
+                    </tbody>
+                    </table>
+                    </p>
+                </div>
+                <br class="clear" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
+            </div>
+        </div>
     </body>
 </html>

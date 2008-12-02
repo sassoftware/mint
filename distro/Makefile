@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = postgresql
+SUBDIRS = postgresql stubs
 
 extra_dist = schema.in.py
 
@@ -19,10 +19,7 @@ install: default-install
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
-	install -D -m0644 rbuilder-generated.conf $(DESTDIR)/srv/rbuilder/config/rbuilder-generated.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
-	echo '# Custom configuration overrides for rBuilder may be placed here' \
-		> $(DESTDIR)/srv/rbuilder/config/rbuilder-custom.conf
 	# rBuilder misc
 	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
 	# rAPA bits
@@ -31,10 +28,12 @@ install: default-install
 	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
+	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
-	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
+	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
+	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
@@ -54,7 +53,7 @@ custom.cfg: custom.cfg.in
 	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
 
 rbuilder.conf: rbuilder.conf.in
-	sed -e s,@VERSION@,$(VERSION), rbuilder.conf.in >rbuilder.conf
+	sed -e 's,@VERSION@,$(VERSION),' -e 's,@LIBDIR@,$(LIBDIR),' rbuilder.conf.in >rbuilder.conf
 
 
 include ../Make.rules

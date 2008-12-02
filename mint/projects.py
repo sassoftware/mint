@@ -17,18 +17,13 @@ from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
 from mint import userlevels
-from mint import builds
 from mint.mint_error import *
 
 from conary import dbstore
 from conary.deps import deps
-from conary import sqlite3
-from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
-from conary.conarycfg import ConaryConfiguration, UserInformation, \
-        EntitlementList
-
+from conary.conarycfg import ConaryConfiguration
 
 # functions to convert a repository name to a database-safe name string
 transTables = {
@@ -37,14 +32,12 @@ transTables = {
     'postgresql': string.maketrans("-.:", "___")
 }
 
-
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
-    __slots__ = ('projectId', 'creatorId', 'name',
-                 'description', 'hostname', 'domainname', 'projecturl', 
-                 'hidden', 'external', 'isAppliance', 'disabled',
-                 'timeCreated', 'timeModified', 'commitEmail', 'shortname',
-                 'prodtype', 'version', 'backupExternal')
+    __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',
+        'domainname', 'namespace', 'projecturl', 'hidden', 'external',
+        'isAppliance', 'disabled', 'timeCreated', 'timeModified',
+        'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -60,6 +53,9 @@ class Project(database.TableObject):
 
     def getDomainname(self):
         return self.domainname
+    
+    def getNamespace(self):
+        return self.namespace
 
     def getProjectUrl(self):
         return self.projecturl
@@ -129,6 +125,9 @@ class Project(database.TableObject):
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
 
+    def setNamespace(self, namespace):
+        return self.server.setProjectNamespace(self.id, namespace)
+
     def setCommitEmail(self, commitEmail):
         return self.server.setProjectCommitEmail(self.id, commitEmail)
 
@@ -161,9 +160,9 @@ class Project(database.TableObject):
         for host, entitlement in entMap:
             cfg.entitlement.addEntitlement(host, entitlement[1])
 
-        useInternalConaryProxy, httpProxies = self.server.getProxies()
-        cfg = helperfuncs.configureClientProxies(cfg, useInternalConaryProxy,
-                httpProxies)
+        internalConaryProxies, httpProxies = self.server.getProxies()
+        cfg = helperfuncs.configureClientProxies(cfg, internalConaryProxies,
+                httpProxies, internalConaryProxies)
         return cfg
 
     def addLabel(self, label, url, authType='none', username='', password='', entitlement=''):
@@ -296,10 +295,10 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
-    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl',
-              'description', 'disabled', 'hidden', 'external', 'isAppliance', 'timeCreated',
-              'timeModified', 'commitEmail', 'backupExternal',
-              'shortname', 'prodtype', 'version']
+    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname',
+        'namespace', 'projecturl', 'description', 'disabled', 'hidden',
+        'external', 'isAppliance', 'timeCreated', 'timeModified',
+        'commitEmail', 'backupExternal', 'shortname', 'prodtype', 'version']
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -369,17 +368,42 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
         # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
                         ON Projects.projectId=ProjectUsers.projectId
-                    WHERE ProjectUsers.userId=? AND
-                    NOT (hidden=1 AND level not in %s)""" % \
-            str(tuple(userlevels.WRITERS))
+                    WHERE ProjectUsers.userId=?"""
         if filter:
             stmt += " AND hidden=0"
         cu.execute(stmt, userId)
 
         return [tuple(x) for x in cu.fetchall()]
+
+    def getProjectDataByMember(self, userId, filter = False):
+        cu = self.db.cursor()
+        # audited for sql injection. check sat.
+        # We used to filter these results with another condition that if the
+        # project was hidden, you had to be a userlevels.WRITER.  That has
+        # been changed to allow normal users to browse hidden projects of
+        # which they are a member.
+        stmt = """SELECT Projects.*, ProjectUsers.level,
+                     EXISTS(SELECT 1 FROM MembershipRequests
+                            WHERE projectId=Projects.projectid) AS hasRequests
+                  FROM ProjectUsers
+                  JOIN Projects ON Projects.projectId=ProjectUsers.projectId
+                  WHERE ProjectUsers.userId=?"""
+        if filter:
+            stmt += " AND hidden=0"
+        cu.execute(stmt, userId)
+        ret = []
+        for x in cu.fetchall_dict():
+            level = x.pop('level')
+            hasRequests = x.pop('hasRequests')
+            ret.append((x, level, hasRequests))
+        return ret
 
     def getNewProjects(self, limit, showFledgling):
         cu = self.db.cursor()
@@ -582,13 +606,30 @@ class ProjectsTable(database.KeyedTable):
         if username:
             repos.auth.setMirror(username, True)
 
-    def hide(self, projectId):
-        # Anonymous user is added/removed in server
-        cu = self.db.cursor()
+    def addProjectRepositoryUser(self, username, password, hostName, 
+                                 domainName, reposPath, contentsDir):
+        name = "%s.%s" % (hostName, domainName)
+        dbPath = os.path.join(reposPath, name)
 
+        cfg = netserver.ServerConfig()
+        cfg.serverName = name
+        cfg.tmpDir = os.path.join(dbPath, 'tmp')
+        cfg.repositoryMap = {}
+        cfg.contentsDir = " ".join(x % name for x in contentsDir.split(" "))
+        cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
+
+        repos = netserver.NetworkRepositoryServer(cfg, '')
+        addUserToRepository(repos, username, password, username)
+        repos.auth.addAcl(username, None, None, write=True, remove=False)
+        repos.auth.setAdmin(username, True)
+
+        return username
+
+    @database.dbWriter
+    def hide(self, cu, projectId):
+        # Anonymous user is added/removed in server
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
         cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
-        self.db.commit()
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in server
@@ -599,7 +640,7 @@ class ProjectsTable(database.KeyedTable):
 
     def isHidden(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
+        cu.execute("SELECT COALESCE(hidden, 0) from Projects WHERE projectId=?", projectId)
         res = cu.fetchone()
         return res and res[0] or 0
 
@@ -669,7 +710,7 @@ class LabelsTable(database.KeyedTable):
                         protocol = "http"
                         newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
 
-                    url = rewriteUrlProtocolPort(url, protocol)
+                    url = rewriteUrlProtocolPort(url, protocol, newPort)
 
                 map = url
             else:
@@ -707,10 +748,9 @@ class LabelsTable(database.KeyedTable):
             return dict(label=p[0], url=p[1], authType=p[2],
                 username=username, password=password, entitlement=entitlement)
 
-    def addLabel(self, projectId, label, url=None, authType='none',
+    @database.dbWriter
+    def addLabel(self, cu, projectId, label, url=None, authType='none',
             username=None, password=None, entitlement=None):
-        cu = self.db.cursor()
-
         cu.execute("""SELECT count(labelId) FROM Labels WHERE label=? and projectId=?""",
                    label, projectId)
         c = cu.fetchone()[0]
@@ -721,20 +761,17 @@ class LabelsTable(database.KeyedTable):
             username, password, entitlement)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""", projectId, label, url,
                     authType, username, password, entitlement)
-        self.db.commit()
         return cu._cursor.lastrowid
 
-    def editLabel(self, labelId, label, url, authType='none',
+    @database.dbWriter
+    def editLabel(self, cu, labelId, label, url, authType='none',
             username=None, password=None, entitlement=None):
-        cu = self.db.cursor()
         cu.execute("""UPDATE Labels SET label=?, url=?, authType=?,
             username=?, password=?, entitlement=? WHERE labelId=?""",
             label, url, authType, username, password, entitlement, labelId)
-        self.db.commit()
 
-    def removeLabel(self, projectId, labelId):
-        cu = self.db.cursor()
-
+    @database.dbWriter
+    def removeLabel(self, cu, projectId, labelId):
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
 
@@ -772,8 +809,6 @@ class RepositoryDatabase:
             r = None
 
         if r:
-            print >> sys.stderr, "using alternate database:", r[0], r[1]
-            sys.stderr.flush()
             return r[0], r[1]
         else:
             name = self.translate(name)
@@ -871,6 +906,7 @@ class ProductVersions(database.TableObject):
 
     __slots__ = ( 'productVersionId',
                   'projectId',
+                  'namespace',
                   'name',
                   'description',
                 )
@@ -878,12 +914,12 @@ class ProductVersions(database.TableObject):
     def getItem(self, id):
         return self.server.getProductVersion(id)
 
-
 class ProductVersionsTable(database.KeyedTable):
     name = 'ProductVersions'
     key = 'productVersionId'
     fields = [ 'productVersionId',
                'projectId',
+               'namespace',
                'name',
                'description',
              ]

@@ -8,7 +8,6 @@ from mint import database
 from mint import helperfuncs
 from mint import projects
 from mint import scriptlibrary
-from mint import server
 from mint import pkgindex
 
 from conary import conaryclient
@@ -18,7 +17,6 @@ from conary import versions
 from conary.repository import repository
 
 import os
-import sys
 import time
 
 hiddenLabels = [
@@ -58,7 +56,7 @@ class UpdatePackageIndex(PackageIndexer):
             cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
             if not cu.fetchone()[0]:
                 cu.execute('INSERT INTO PackageIndexMark VALUES(0)')
-            cu.execute("SELECT IFNULL(MAX(timestamp), 0) FROM Commits")
+            cu.execute("SELECT COALESCE(MAX(timestamp), 0) FROM Commits")
             newMark = cu.fetchone()[0]
 
             # Clear out Package index if the timestamp in PackageIndexMark == 0
@@ -209,7 +207,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 for host, entitlement in entMap:
                     ccfg.entitlement.addEntitlement(host, entitlement[1])
             ccfg = helperfuncs.configureClientProxies(ccfg,
-                    self.cfg.useInternalConaryProxy, self.cfg.proxy)
+                    self.cfg.useInternalConaryProxy, self.cfg.proxy,
+                    self.cfg.getInternalProxies())
             repos = conaryclient.ConaryClient(ccfg).getRepos()
             netclients[hostname] = repos
 

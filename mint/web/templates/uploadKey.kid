@@ -19,16 +19,26 @@ from mint.web.templatesupport import projectText
         <title>${formatTitle('Upload a Key')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Upload a Package Signing Key</h2>
-            <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-            <form method="post" action="processKey">
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${builderPane()}
+            </div>
+            <div id="leftcenter">
+                <div class="page-title-no-project">
+                    Upload a Package Signing Key
+                </div>
 
-                <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
-                    <tr>
-                        <th><em class="required">${projectText().title()} or ${projectText().title()}s:</em></th>
+                <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
+                <form method="post" action="processKey">
+
+                <table class="mainformhorizontal">
+                <tr>
+                        <td class="form-label"><em class="required">Select ${projectText().title()}s:</em></td>
                         <td>
-                             <select class="wide" multiple="multiple" size="10" name="projects">
+                             <select class="key-project-list" multiple="multiple" size="10" name="projects">
                                 <option py:for="project, hostname in projects"
                                     py:content="project"
                                     py:attrs="(hostname in kwargs['projects']) and {'selected': 'selected'} or {}"
@@ -45,7 +55,7 @@ from mint.web.templatesupport import projectText
                     </tr>
 
                     <tr>
-                        <th><em class="required">Public Key:</em></th>
+                        <td class="form-label"><em class="required">Public Key:</em></td>
                         <td>
                             <textarea rows="15" type="text" name="keydata" py:content="kwargs['keydata']" />
 
@@ -65,12 +75,16 @@ from mint.web.templatesupport import projectText
                         </td>
                     </tr>
                 </table>
-                <p>
+                <p class="p-button">
                     <button id="uploadKeySubmit" class="img" type="submit">
                         <img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" />
                     </button>
                 </p>
             </form>
-        </div>
+        </div><br class="clear"/>
+        <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+        <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+        <div class="bottom"/>
+    </div>
     </body>
 </html>

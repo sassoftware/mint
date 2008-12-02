@@ -6,18 +6,16 @@
 import os
 import sys
 
-from mint import constants
 from mint import buildtypes
 from mint import urltypes
 from mint import mint_error
 
-from conary import conarycfg
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
-from mint.mint_error import ConfigurationMissing
 
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
+RBUILDER_RMAKE_CONFIG = "/srv/rbuilder/config/rmake-server/rbuilder.conf"
 
 # These are keys that are generated for the "generated" configuration file
 # Note: this is *only* used for the product, as rBO doesn't get configured
@@ -176,7 +174,6 @@ class MintConfig(ConfigFile):
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
-    spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
     redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
     torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
@@ -198,13 +195,18 @@ class MintConfig(ConfigFile):
 
     language                = 'en'
     localeDir               = '/usr/share/locale/'
-    awsPublicKey            = None
-    awsPrivateKey           = None
 
+    # *** BEGIN DEPRECATED VALUES ***
     # AMI configuration data
-    ec2PublicKey            = None
-    ec2PrivateKey           = None
-    ec2AccountId            = None
+    # the targets.py module now stores these values in the
+    # Targets and TargetData tables
+    # these values are no longer used as of rBuilder 5.0, but must be maintained
+    # until we can guarantee no customers will be inconvenienced by their
+    # removal. schema upgrade (45, 6) copies these config values into
+    # the rBuilder database
+    ec2PublicKey            = (cfgtypes.CfgString, '', "The AWS account id")
+    ec2PrivateKey           = (cfgtypes.CfgString, '', "The AWS public key")
+    ec2AccountId            = (cfgtypes.CfgString, '', "The AWS private key")
     ec2S3Bucket             = None
     ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
     ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
@@ -217,6 +219,7 @@ class MintConfig(ConfigFile):
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
     ec2UseNATAddressing     = (cfgtypes.CfgBool, False)
+    # *** END DEPRECATED VALUES ***
 
     VAMUser                 = ''
     VAMPassword             = ''
@@ -247,6 +250,10 @@ class MintConfig(ConfigFile):
     bulletinPath            = os.path.join(os.path.sep, 'srv', \
             'rbuilder', 'config', 'bulletin.txt')
 
+    #marketing block file
+    frontPageBlock          = os.path.join(os.path.sep, 'srv', \
+            'rbuilder', 'config', 'frontPageBlock.html')
+
     # colo workarounds
     injectUserAuth          = (cfgtypes.CfgBool, True,
                                 'Inject user authentication into proxy '
@@ -265,6 +272,14 @@ class MintConfig(ConfigFile):
 
     # anaconda-templates fallback label
     anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
+
+    # package creator related settings
+    packageCreatorConfiguration = cfgtypes.CfgPath
+    packageCreatorURL           = cfgtypes.CfgString
+
+    # available platforms
+    availablePlatforms      = cfgtypes.CfgList(cfgtypes.CfgString)
+    acceptablePlatforms     = cfgtypes.CfgList(cfgtypes.CfgString)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
@@ -302,3 +317,17 @@ class MintConfig(ConfigFile):
         if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
         if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')
         if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')
+
+    def getInternalProxies(self):
+        # use localhost for the proxy due to a bug in proxy handling
+        # (RBL-3822)
+        if self.siteDomainName.startswith('rpath.local'):
+            # FIXME: SICK HACK
+            # if we're running under the test suite, we have to use
+            # a hostname other than "localhost"
+            return {'http' : 'http://%s.%s' %(self.hostName,
+                                              self.siteDomainName),
+                    'https' : 'https://%s' % (self.secureHost,)}
+
+        return {'http': 'http://localhost',
+                'https': 'https://localhost'}

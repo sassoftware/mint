@@ -5,6 +5,7 @@
 #
 
 import sys
+from conary.deps import deps
 
 validBuildTypes = {
     'BOOTABLE_IMAGE'    : 0,
@@ -79,11 +80,11 @@ typeNames = {
     VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
-    VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Appliance",
+    VIRTUAL_PC_IMAGE:   "VHD for Microsoft (R) Hyper-V",
     XEN_OVA:            "Citrix XenServer (TM) Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
-    AMI:                "Amazon Machine Image",
+    AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
     IMAGELESS:          "Online Update"
@@ -99,7 +100,7 @@ typeNamesShort = {
     VMWARE_ESX_IMAGE:   "VMware (R) ESX",
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar",
-    VIRTUAL_PC_IMAGE:   "Virtual Server",
+    VIRTUAL_PC_IMAGE:   "Microsoft (R) Hyper-V",
     XEN_OVA:            "Citrix XenServer (TM)",
     VIRTUAL_IRON:       "Virtual Iron",
     PARALLELS:          "Parallels",
@@ -150,11 +151,11 @@ typeNamesMarketing = {
     VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
-    VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Server",
+    VIRTUAL_PC_IMAGE:   "VHD for Microsoft(R) Hyper-V",
     XEN_OVA:            "Citrix XenServer (TM) Appliance",
     VIRTUAL_IRON:       "Virtual Iron Virtual Appliance",
     PARALLELS:          "Parallels Virtual Appliance",
-    AMI:                "Amazon Machine Image",
+    AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
     IMAGELESS:          "Online Update",
@@ -189,6 +190,11 @@ buildTypeIcons = {
         icon="get-xen-express.gif",
         href="http://www.citrix.com/xenserver/getexpress",
         text="Citrix XenServer Express Edition: Download Now",
+        ),
+    VIRTUAL_PC_IMAGE: dict(
+        icon="get-hyper-v.png",
+        href="http://www.microsoft.com/Hyper-V",
+        text="Learn more about Microsoft Hyper-V",
         ),
 }
 
@@ -231,6 +237,69 @@ buildDefinitionFlavorMap = {
     BD_VMWARE_X86       : '!dom0, !domU, !xen, vmware is: x86',
     BD_VMWARE_X86_64    : '!dom0, !domU, !xen, vmware is: x86_64',
 }
+
+def alphabatizeBuildTypes(visibleBuildTypes):
+    sortedList = sorted([x for x in visibleBuildTypes if x != IMAGELESS],
+            key = lambda x: typeNames.get(x))
+    if IMAGELESS in visibleBuildTypes:
+        sortedList.insert(0, IMAGELESS)
+    return sortedList
+
+def makeBuildFlavorMap(prd):
+    baseFlavor = prd.getBaseFlavor() or prd.getPlatformBaseFlavor() or ''
+    baseFlavor = deps.parseFlavor(baseFlavor)
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures = prd.platform.getArchitectures()
+    res = {}
+    for flavorSet in flavorSets:
+        for architecture in architectures:
+            flv = deps.parseFlavor(flavorSet.flavor)
+            arch = deps.parseFlavor(architecture.flavor)
+            flavor = deps.overrideFlavor(baseFlavor, flv)
+            flavor = deps.overrideFlavor(flavor, arch)
+            res[str(flavor)] = \
+                    "%s %s" % (flavorSet.displayName, architecture.displayName)
+    return res
+
+def makeFlavorMap(prd):
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures = prd.platform.getArchitectures()
+    return dict([("%s %s" % (x.displayName, y.displayName),
+                  "%s,%s" % (x.name, y.name)) \
+            for x in flavorSets for y in architectures])
+
+def makeFlavorsForBuild(prd, key):
+    # compose a flavor map much like above but filter illegal types
+    flavorSets = prd.getFlavorSets()
+    architectures = prd.getArchitectures()
+    buildTemplates = prd.getBuildTemplates()
+    if prd.platform:
+        flavorSets += prd.platform.getFlavorSets()
+        architectures += prd.platform.getArchitectures()
+        buildTemplates += prd.platform.getBuildTemplates()
+    containerTemplateRef = imageTypeXmlTagNameMap.get(key)
+    if not containerTemplateRef:
+        return makeFlavorMap(prd)
+
+    # for arch and flavorSet, if None is encountered, all available types
+    # are legal
+    arches = set([x.architectureRef for x in buildTemplates \
+            if x.containerTemplateRef == containerTemplateRef])
+    arches = [x for x in architectures if None in arches or x.name in arches]
+
+    flavors = set([x.flavorSetRef for x in buildTemplates \
+            if x.containerTemplateRef == containerTemplateRef])
+    flavors = [x for x in flavorSets if None in flavors or x.name in flavors]
+
+    return dict([("%s %s" % (x.displayName, y.displayName),
+                  "%s,%s" % (x.name, y.name)) \
+            for x in flavors for y in arches])
 
 # generate mapping of flavors to flavor names
 buildDefinitionFlavorToFlavorMapRev = \

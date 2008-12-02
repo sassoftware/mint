@@ -233,7 +233,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 3)
+    Version = (45, 6)
 
     # 45.0
     # - Create UpdateServices table
@@ -366,6 +366,92 @@ class MigrateTo_45(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""UPDATE Projects SET shortname=hostname
                     WHERE shortname is NULL""")
+        return True
+
+    # 45.4
+    # - Store the namespace with the Product Version
+    def migrate4(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'ProductVersions', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        #Drop and readd the unique index
+        self.db.dropIndex('ProductVersions', 'ProductVersionsProjects')
+        self.db.createIndex('ProductVersions', 'ProductVersionsNamespacesProjects',
+            'projectId,namespace,name', unique = True)
+        return True
+
+    # 45.5
+    # - Add namespace column to Project
+    def migrate5(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'Projects', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        return True
+
+    # 45.6
+    # - create Target tables
+    def migrate6(self):
+        cu = self.db.cursor()
+        if 'Targets' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE Targets (
+                    targetId   %(PRIMARYKEY)s,
+                    targetType VARCHAR(16),
+                    targetName VARCHAR(16)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['Targets'] = []
+
+        if 'TargetData' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE TargetData (
+                    targetId  INT NOT NULL,
+                    name      VARCHAR(16),
+                    value     TEXT
+                ) %(TABLEOPTS)s """ % self.db.keywords)
+            self.db.tables['TargetData'] = []
+
+        # this isn't ideal but the idea is to farm any ec2 settings data
+        # from the rBuilder config values, so that they can be ignored from
+        # now on. the alternative is to have data in two places, one of which
+        # rBuilder can't necessarily control properly. (rbuilder-custom.conf)
+        if self.cfg is not None:
+            amiData = {}
+            for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
+                      'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
+                      'ec2ExposeTryItLink', 'ec2MaxInstancesPerIP',
+                      'ec2DefaultInstanceTTL', 'ec2DefaultMayExtendTTLBy',
+                      'ec2UseNATAddressing'):
+                val = getattr(self.cfg, k, None)
+                if val:
+                    amiData[k] = val
+            for k in ('ec2CertificateKeyFile', 'ec2CertificateFile'):
+                path = getattr(self.cfg, k, '')
+                if os.path.exists(path):
+                    f = None
+                    try:
+                        f = open(path)
+                        # we're stripping the "File" off the end of the key
+                        amiData[k[:-4]] = f.read()
+                    finally:
+                        if f:
+                            f.close()
+            # only the important settings are enough to make us record
+            # the presence of ec2 settings
+            configured = False
+            for key in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
+                    'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
+                    'ec2CertificateKey', 'ec2Certificate'):
+                if amiData.get(key):
+                    configured = True
+            if configured:
+                import simplejson
+                cu.execute("""INSERT INTO Targets (targetType, targetName)
+                        VALUES('ec2', 'aws')""")
+                targetId = cu.lastid()
+                for name, value in amiData.iteritems():
+                    value = simplejson.dumps(value)
+                    cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
+                            targetId, name, value)
+                self.db.commit()
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -308,8 +308,8 @@ TrovePicker.prototype.getCustomVersion = function(e) {
     oldList = $(this.elId + 'selectionList');
     newList = UL({ 'id': this.elId + 'selectionList' });
 
-    label = LI({'style': 'font-size: 80%'},
-        "Example: foobar=example.com@rpl:1[is: x86]");
+    label = LI({'style': 'font-size: 100%'},
+        "Example: sample-package=app.example.com@corp:app-1[is: x86]");
 
     input = LI(null, INPUT({ 'id': this.elId + 'customInput', 'value': this.customSpec }));
     this.customSpec = null;

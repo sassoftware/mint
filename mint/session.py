@@ -49,7 +49,6 @@ class SqlSession(BaseSession):
         c.expires = 0
         Cookie.add_cookie(self._req, c)
         self._req.err_headers_out.add('Set-Cookie', str(c))
-        self._req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
         self.delete()
         self._invalid = 1
 

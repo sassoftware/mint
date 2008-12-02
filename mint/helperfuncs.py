@@ -4,19 +4,17 @@
 # All rights reserved
 #
 
-from conary import versions
 from conary.deps import arch, deps
 from conary.repository.errors import RoleAlreadyExists
 
 from mint import constants
 from mint import buildtypes
-from mint.config import isRBO
-from mint.mint_error import MintError
+from mint import mint_error
 
-from rpath_common.proddef import api1 as proddef
 
 import copy
 import htmlentitydefs
+import inspect
 import re
 import random
 import string
@@ -186,6 +184,9 @@ def getVersionForCacheFakeout():
 def formatTime(t):
     return time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(float(t)))
 
+def formatHTTPDate(t=None):
+    return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(t))
+
 def generateMirrorUserName(rbuilderHostname, updateServiceHostname):
     # Generate a mirrorUser for this rBuilder
     return "-mirroruser-%s-%s" % (rbuilderHostname, updateServiceHostname)
@@ -274,7 +275,7 @@ def configureClientProxies(conaryCfg, useInternalConaryProxy,
 
 def getProjectText():
     """Returns project if rBO and product if rBA"""
-    return isRBO() and "project" or "product"
+    return "product"
 
 def genPassword(length):
     """
@@ -420,7 +421,6 @@ def deleteUserFromRepository(repos, username, label=None, deleteRole=True):
                 # Conary deleted the role for us (probably)
                 pass
     else:
-        repos = _getShimServer(repos)
         repos.auth.deleteUserByName(username)
         if deleteRole:
             try:
@@ -478,13 +478,29 @@ def addDefaultStagesToProductDefinition(productDefinitionObj):
                 stage['labelSuffix'])
     return
 
+def addDefaultPlatformToProductDefinition(productDefinition):
+    """
+    Given a product definition object, add the canned platform defaults
+    to it, if needed. This function does nothing if any architectures,
+    flavorSets, containerTemplates or buildTemplates are defined. This
+    function modifies the original object
+    """
+    from rpath_common.proddef import api1 as proddef
+    if not productDefinition.platform:
+        productDefinition.platform = proddef.PlatformDefinition()
+    if not (productDefinition.platform.getArchitectures() or
+            productDefinition.platform.getFlavorSets() or
+            productDefinition.platform.getContainerTemplates() or
+            productDefinition.platform.getBuildTemplates()):
+        proddef._addPlatformDefaults(productDefinition.platform)
+
 def getDefaultImageGroupName(shortname):
     """
     Given the project's shortname, give the default image group name
     (e.g. group-<shortname>-appliance).
     """
     if not shortname:
-        raise MintError("Shortname missing when trying to determine default image group name")
+        raise mint_error.MintError("Shortname missing when trying to determine default image group name")
     return 'group-%s-appliance' % shortname
 
 def sanitizeProductDefinition(projectName, projectDescription,
@@ -496,6 +512,7 @@ def sanitizeProductDefinition(projectName, projectDescription,
     If a productDefinition object isn't passed in, one is
     created and returned.
     """
+    from rpath_common.proddef import api1 as proddef
     if not productDefinition:
         productDefinition = proddef.ProductDefinition()
     productDefinition.setProductName(projectName)
@@ -510,6 +527,8 @@ def sanitizeProductDefinition(projectName, projectDescription,
 
     addDefaultStagesToProductDefinition(productDefinition)
 
+    addDefaultPlatformToProductDefinition(productDefinition)
+
     return productDefinition
 
 def validateNamespace(ns):
@@ -518,8 +537,70 @@ def validateNamespace(ns):
     @param ns: a namespace to validate
     @return: True if valid, else a string explaining what is wrong
     """
+    if len(ns) > 16:
+        return "The namespace cannot be more than 16 characters long"
+
     valid = ns and "@" not in ns and ':' not in ns
     if not valid:
         return "The namespace can not contain '@' or ':'."
     
     return True
+
+
+def weak_signature_call(_func, *args, **kwargs):
+    '''
+    Call I{func} with keyword arguments I{kwargs}, removing any keyword
+    arguments not expected by I{func}.
+    '''
+
+    # Iterate down the chain of decorators until we hit the actual
+    # function
+    target_func = _func
+    while hasattr(target_func, '__wrapped_func__'):
+        target_func = target_func.__wrapped_func__
+
+    argnames, _, varkw, _ = inspect.getargspec(target_func)
+    if varkw:
+        # We can't guess what variable keywords are in use, so just pass
+        # them on. With any luck, the function will not care about extras
+        # in a dictionary.
+        keep_args = kwargs
+    else:
+        keep_args = dict((arg, value) for (arg, value) in kwargs.iteritems()
+            if arg in argnames)
+    return _func(*args, **keep_args)
+
+def formatProductVersion(versions, currentVersion):
+    if currentVersion is None:
+        return "Not Selected"
+    ret = None
+    namespaces = dict()
+    for vId, b, ns, ver, nada in versions:
+        namespaces[ns] = 1
+        if vId == currentVersion:
+            ret = (ns, ver)
+    if not ret:
+        raise RuntimeError("Could not find the current version in the version list")
+    showNamespace = len(namespaces.keys()) > 1
+    if showNamespace:
+        ret = "%s (%s)" % (ret[1], ret[0])
+    else:
+        ret = "%s" % ret[1]
+    return ret
+
+def getBasicConaryConfiguration(mintCfg):
+    """ Return a basic conary client configuration. """
+
+    import os
+    from conary import conarycfg
+    from mint import config
+
+    ccfg = conarycfg.ConaryConfiguration()
+    conarycfgFile = os.path.join(mintCfg.dataPath, 'config', 'conaryrc')
+    if os.path.exists(conarycfgFile):
+        ccfg.read(conarycfgFile)
+    ccfg.dbPath = ':memory:'
+    ccfg.root   = ':memory:'
+    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy, mintCfg.getInternalProxies())
+    return ccfg
+

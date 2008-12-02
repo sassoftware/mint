@@ -3,15 +3,17 @@
 # All rights reserved
 #
 
+from gettext import gettext as _
+
 import raa
 import time
-import cherrypy
 import logging
 from raa import rpath_error
 from raa import constants
 from raa.db import schedule, data
 from raa.lib import repeatschedules
 from raa.modules.raawebplugin import rAAWebPlugin, disablePlugin
+import raa.web
 from mint import config
 
 log = logging.getLogger('rPath.repoconvert')
@@ -27,16 +29,16 @@ class SqliteToPgsql(rAAWebPlugin):
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Convert your repository to use Postgres")
 
-    def _readConfig(self, repoconfig):
-        cfg = config.MintConfig()
-        cfg.read(repoconfig)
-        return cfg
+    def _readReposDBConfig(self, repoconfig):
+        mc = config.MintConfig()
+        mc.read(repoconfig)
+        return mc.reposDBDriver
 
     def _getConfig(self):
         ret = dict()
 
-        repoCfg = self._readConfig(config.RBUILDER_CONFIG)
-        ret['converted'] = (repoCfg.reposDBDriver == 'postgresql')
+        reposDBDriver = self._readReposDBConfig(config.RBUILDER_CONFIG)
+        ret['converted'] = (reposDBDriver == 'postgresql')
         ret['finalized'] = self.getPropertyValue('FINALIZED', False)
         if ret['finalized'] and not ret['converted']:
             self.setPropertyValue('raa.hidden', False, data.RDT_BOOL)
@@ -45,13 +47,13 @@ class SqliteToPgsql(rAAWebPlugin):
             ret['finalized'] = False
 
         #Figure out if a job is currently running
-        listTasks = cherrypy.root.execution.getUnfinishedSchedules(
+        listTasks = raa.web.getWebRoot().execution.getUnfinishedSchedules(
             schedule.typesValid,
             constants.TASKS_UNFINISHED, taskId = self.taskId)
         listTasks.reverse()
         running = False
         for (execId, schedId) in listTasks:
-            status = cherrypy.root.getStatus(schedId)
+            status = raa.web.getWebRoot().getStatus(schedId)
             statusCode = status['status']
             statusmsg = status['statusmsg']
             if statusCode == constants.TASK_RUNNING:
@@ -87,9 +89,9 @@ class SqliteToPgsql(rAAWebPlugin):
             return dict(error=_('Finalize step not confirmed'))
 
     def initPlugin(self):
-        repoCfg = self._readConfig(config.RBUILDER_CONFIG)
-        val = self.getPropertyValue('FINALIZED')
-        if repoCfg.reposDBDriver == 'postgresql' and (val==0 or val):
+        reposDBDriver = self._readReposDBConfig(config.RBUILDER_CONFIG)
+        val = self.getPropertyValue('FINALIZED', 0)
+        if reposDBDriver == 'postgresql' and (val==0 or val):
                 #val is 0 if this is a fresh install, True if we've
                 #already finalized
             self.setPropertyValue('raa.hidden', True, data.RDT_BOOL)

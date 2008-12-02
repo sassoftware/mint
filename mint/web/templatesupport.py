@@ -6,8 +6,6 @@
 """A handful of functions useful inside kid templates."""
 
 import time
-from mint import constants
-from mint import userlevels
 from mint.helperfuncs import getArchFromFlavor, getProjectText
 
 import conary

@@ -10,30 +10,39 @@
         <title>${formatTitle('Manage Update Services')}</title>
     </head>
     <body>
-        <div id="left" class="side">
-            ${adminResourcesMenu()}
-        </div>
-        <div id="spanright">
-            <form action="${cfg.basePath}admin/removeUpdateServices" method="post">
-                <h2>Manage Update Services</h2>
-                <p>Update Services are targets for an Outbound Mirror or
-                   publish operation.</p>
-
-                <table py:if="updateServices" cellspacing="0" cellpadding="0" class="results">
+        <div class="admin-page">
+            <div id="left" class="side">
+                ${adminResourcesMenu()}
+            </div>
+            <div id="admin-spanright">
+                <form action="${cfg.basePath}admin/removeUpdateServices" method="post">
+                    <div class="page-title-no-project">Manage Update Services</div>
+                    <p>Update Services are targets for an Outbound Mirror or
+                       publish operation.</p>
+    
+                    <table py:if="updateServices" class="admin-results">
                     <tr>
+                        <th></th>
                         <th>Update Service</th>
-                        <th>Remove</th>
                     </tr>
                     <div py:strip="True" py:for="id, hostname, _, _, description in updateServices">
-                        <tr>
-                            <td><a href="editUpdateService?id=${id}">${hostname}</a><div py:strip="True" py:if="description"><br /><div style="font-size: smaller;">${description}</div></div></td>
+                        <tr class="item-row">
                             <td><input type="checkbox" name="remove" value="${id}" /></td>
+                            <td width="100%" style="vertical-align: middle;">
+                                <a href="editUpdateService?id=${id}">${hostname}</a>
+                                <p py:strip="True" py:if="description" class="help">
+                                    ${description}
+                                </p></td>
                         </tr>
                     </div>
-                </table>
-                <button py:if="updateServices" style="float: right;" type="submit" name="operation" value="remove_updateservice">Remove Selected</button>
-            </form>
-            <p style="clear: right;"><b><a href="${cfg.basePath}admin/editUpdateService">Add an Update Service</a></b></p>
+                    </table>
+                    <p>
+                    <button py:if="updateServices" type="submit" name="operation" value="remove_updateservice">Remove Selected</button>
+                    </p>
+                </form>
+                <p><a href="${cfg.basePath}admin/editUpdateService">Add an Update Service</a></p>
+            </div>
+            <div class="bottom"/>
         </div>
     </body>
 </html>

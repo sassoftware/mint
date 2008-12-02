@@ -10,23 +10,27 @@
         <title>${formatTitle('Lost Password')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Lost Password:</h2>
-            <form method="post" action="resetPassword">
-                <p class="help">
-                    If you have forgotten your password, please enter
-                    your username in the field below, and click Forgot Password.
-                </p>
-                <table style="width: 50%; margin-bottom: 1em;">
-                    <tr>
-                        <td><b>Username:</b></td>
-                        <td><input type="text" autocomplete="off" name="username" /></td>
-                    </tr>
-                </table>
-                <p>
-                    <button type="submit">Forgot Password</button>
-                </p>
-            </form>
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Lost Password</div>
+                <form method="post" action="resetPassword">
+                    <p>
+                        If you have forgotten your password, please enter
+                        your username and a new password will be emailed to you.
+                    </p>
+                    <p>
+                    Username: <input class="email-address" type="text" autocomplete="off" name="username" />
+                    </p>
+                    <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/reset_password.png" alt="Reset Password" /></button></p>
+                </form>
+            </div>
+            <br class="clear"/>
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

@@ -24,15 +24,27 @@ from mint import userlisting
             </form>
         </div>
 
-        <div id="layout">
-            <h2>Browse Users</h2>
-            ${sortOrderForm(sortOrder)}
-            ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
-            <table class="results">
-                ${columnTitles(columns)}
-                ${searchResults(results)}
-            </table>
-            ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${builderPane()}
+            </div>
+            <div id="leftcenter">
+                <h1 class="search">Browse Users</h1>
+                ${sortOrderForm(sortOrder)}
+                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
+                <table class="results">
+                    ${columnTitles(columns)}
+                    ${searchResults(results)}
+                </table>
+                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)} <br class="clear" />
+            </div><br class="clear"/>
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"></div>
         </div>
+
     </body>
 </html>

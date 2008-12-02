@@ -5,15 +5,11 @@
 #
 from reportlab.graphics.shapes import Drawing, String
 from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.charts.barcharts import HorizontalBarChart
 
 from reportlab.lib import colors
 
-from conary import dbstore
 from mint import helperfuncs
 import time
-import tempfile
-import os
 
 DAY = 3600 * 24
 

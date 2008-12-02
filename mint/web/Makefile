@@ -6,23 +6,7 @@
 
 SUBDIRS = templates content
 
-python_files = \
-	__init__.py	\
-	admin.py	\
-	app.py		\
-	cache.py	\
-	fields.py	\
-	repos.py	\
-	rpchooks.py	\
-	decorators.py	\
-	hooks.py	\
-	project.py	\
-	setup.py	\
-	site.py		\
-	webhandler.py	\
-	templatesupport.py \
-	basictroves.py	\
-	vmtn.py
+python_files = $(wildcard *.py)
 
 all: default-all
 

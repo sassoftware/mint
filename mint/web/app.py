@@ -3,32 +3,31 @@
 #
 # All rights reserved
 #
-import base64
-import os
+import kid
 import re
 import sys
 import time
-from urllib import quote, unquote
 
 from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-from mint import database
+from mint.client import timeDelta
 from mint import server
 from mint import shimclient
-from mint import users, userlevels
-from mint.helperfuncs import getProjectText
+from mint import userlevels
+from mint.helperfuncs import (formatHTTPDate, getProjectText,
+    weak_signature_call)
 from mint.mint_error import *
-from mint.session import SqlSession, COOKIE_NAME
-from mint.web import cache, fields
+from mint.web import fields
 from mint.web.admin import AdminHandler
-from mint.web.cache import pageCache, reqHash
 from mint.web.project import ProjectHandler
+from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.setup import SetupHandler
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound
+from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
+    HttpNotFound)
 from mint import maintenance
 
 stagnantAllowedPages = ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']
@@ -55,18 +54,16 @@ class MintApp(WebHandler):
         self.req = req
         self.cfg = cfg
 
-        # always send xhtml-strict
-        self.output = 'xhtml-strict'
-
-        # Send the proper content type for those browser who know to ask
-        # for XHTML. Otherwise, serve XHTML as text/html with the proper
-        # charset encoding as per the W3C guidelines
-        # (c.f. http://www.w3.org/TR/xhtml1/guidelines.html)
-        if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
-            self.content_type = 'application/xhtml+xml'
+        # always send html-strict; xhtml FTL
+        # The default behavior of kid changed between 0.9.1 and 0.9.6
+        # in 0.9.1 html-strict produced upper case tags and HTML-strict did not
+        # exist. in 0.9.6 HTML-strict produces upper case tags and html-strict
+        # produces lower case tags. we want upper case tags.
+        if 'HTML-strict' in kid.output_methods:
+            self.output = 'HTML-strict'
         else:
-            self.content_type = 'text/html; charset=utf-8'
-
+            self.output = 'html-strict'
+        self.content_type = 'text/html; charset=utf-8'
         self.req.content_type = self.content_type
 
         try:
@@ -80,6 +77,7 @@ class MintApp(WebHandler):
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
+        self.apcHandler = APCHandler()
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
@@ -93,17 +91,18 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        if self.cfg.cookieSecretKey:
-            cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
-        else:
-            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        try:
+            if self.cfg.cookieSecretKey:
+                cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
+            else:
+                cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+        except:
+            # Parsing the cookies failed, so just pretend there aren't
+            # any and they'll get overwritten when our response goes
+            # out.
+            cookies = {}
 
-        if 'pysid' not in cookies:
-            rh = cache.reqHash(self.req)
-            if rh in cache.pageCache:
-                self.req.write(cache.pageCache[rh])
-                return apache.OK
-        else:
+        if 'pysid' in cookies:
             self._session_start()
 
         # default to anonToken if the current session has no authToken
@@ -113,14 +112,17 @@ class MintApp(WebHandler):
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
 
         self.auth = self.client.checkAuth()
+        self.membershipReqsList = None
         if self.auth.authorized:
             if not maintenance.getMaintenanceMode(self.cfg) or self.auth.admin:
                 self.user = self.client.getUser(self.auth.userId)
                 self.projectList = self.client.getProjectsByMember(self.auth.userId)
                 self.projectDict = {}
-                for project, level in self.projectList:
+                for project, level, memberReqs in self.projectList:
                     l = self.projectDict.setdefault(level, [])
-                    l.append(project)
+                    l.append((project, memberReqs))
+                self.membershipReqsList = [x[0] for x in self.projectList
+                        if x[2] > 0 and x[1] == userlevels.OWNER]
             else:
                 if pathInfo not in  ('/maintenance/', '/logout/'):
                     raise MaintenanceMode
@@ -133,33 +135,36 @@ class MintApp(WebHandler):
 
         def logTraceback():
             import traceback
-            tb = traceback.format_exc()
-
-            for line in tb.split("\n"):
-                self.req.log_error(line)
-            return tb
+            formatted = traceback.format_exc()
+            self.req.log_error("Handled user error: (not a bug)\n"
+                + formatted.rstrip())
+            return formatted
 
         try:
-            output = method(**d)
-            if self.auth.authorized:
-                self.session.save()
-            elif 'cacheable' in method.__dict__:
-                pageCache[reqHash(self.req)] = output
+            output = weak_signature_call(method, **d)
         except MintError, e:
             if isinstance(e, MaintenanceMode):
                 raise
             tb = logTraceback()
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = err_name, error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:
             tb = logTraceback()
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
         except fields.BadParameterError, e:
             tb = logTraceback()
+            setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
+        else:
+            if self.auth.authorized:
+                self.session.save()
+            setCacheControl(self.req)
+            self.req.headers_out['Last-modified'] = formatHTTPDate()
 
         self.req.set_content_length(len(output))
         self.req.write(output)
@@ -182,7 +187,7 @@ class MintApp(WebHandler):
 
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
-        dots = fullHost.split('.')
+        dots = fullHost.split(':')[0].split('.')
         hostname = dots[0]
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
@@ -190,19 +195,7 @@ class MintApp(WebHandler):
         if hostname not in server.reservedHosts \
             and hostname != self.cfg.hostName \
             and self.cfg.configured:
-            try:
-                project = self.client.getProjectByHostname(hostname)
-            except ItemNotFound:
-                # project does not exist, redirect to front page
-                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
-                raise HttpNotFound
-            else:
-                # coerce "external" projects to the externalSiteHost, or
-                # internal projects to projectSiteHost.
-                if project.external: # "external" projects are endorsed by us, so use siteHost
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
-                else:
-                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
 
@@ -212,6 +205,7 @@ class MintApp(WebHandler):
 
         # mapping of url regexps to handlers
         urls = (
+            (r'^/apc/',         self.apcHandler),
             (r'^/project/',     self.projectHandler),
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
@@ -238,11 +232,21 @@ class MintApp(WebHandler):
             self.groupProject = None
 
         # Handle messages stashed in the session
-        self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', '')
         self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
+
+        # get the news for the frontpage (only in non-maint mode)
+        self.latestRssNews = dict()
+        if not maintenance.getMaintenanceMode(self.cfg):
+            newNews = self.client.getNews()
+            if len(newNews) > 0:
+                self.latestRssNews = newNews[0]
+                if 'pubDate' in self.latestRssNews:
+                    self.latestRssNews['age'] = \
+                            timeDelta(self.latestRssNews['pubDate'],
+                                    capitalized=False)
 
         # a set of information to be passed into the next handler
         context = {
@@ -253,6 +257,7 @@ class MintApp(WebHandler):
             'fields':           self.fields,
             'projectList':      self.projectList,
             'projectDict':      self.projectDict,
+            'membershipReqsList': self.membershipReqsList,
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
@@ -267,11 +272,11 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
-            'inlineMime':       self.inlineMime,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
-            'remoteIp':         self.remoteIp
+            'remoteIp':         self.remoteIp,
+            'latestRssNews':    self.latestRssNews
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:

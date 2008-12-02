@@ -3,19 +3,12 @@
 #
 # All rights reserved
 #
-import time
-import os
 import sys
 
-from mint import buildtypes
 from mint import userlevels
-from mint import jobstatus
 from mint.cmdline import commands
 
-from conary import versions
 from conary.lib import options, log
-from conary.conaryclient.cmdline import parseTroveSpec
-
 
 class UserCreateCommand(commands.RBuilderCommand):
     commands = ['user-create']

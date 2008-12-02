@@ -44,17 +44,34 @@
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="spanright">
-            <h2>Roles</h2>
-            <table class="user-admin" id="roles">
-                <thead><tr><td style="width: 25%;">Role Name</td><td>Admin</td><td>Mirror</td><td>Permissions</td><td style="text-align
-: right;">Action</td></tr></thead>
-                <tbody>
+            
+            <div id="innerpage">
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
+                </div>
+
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                    <div class="page-title">
+                    Roles</div>
+                    <table class="user-admin" id="roles">
+                    <thead><tr>
+                        <td style="width: 25%;">Role Name</td>
+                        <td>Admin</td>
+                        <td>Mirror</td>
+                        <td>Permissions</td>
+                        <td style="text-align: right;">Action</td>
+                    </tr></thead>
+                    <tbody>
                     <tr py:for="i, role in enumerate([x for x in netAuth.getRoleList() if x != self.cfg.authUser])"
-                        class="${i % 2 and 'even' or 'odd'}">
-                    <?python #
-                    rows = list(enumerate(netAuth.iterPermsByRole(role)))
-                    ?>
+                                class="${i % 2 and 'even' or 'odd'}">
+                        <?python #
+                            rows = list(enumerate(netAuth.iterPermsByRole(role)))
+                        ?>
                         <td><b>${role}</b></td>
                         <td py:if="netAuth.roleIsAdmin(role)" py:content="'yes'"/>
                         <td py:if="not netAuth.roleIsAdmin(role)" py:content="'no'"/>
@@ -63,16 +80,20 @@
                         <td py:if="rows" py:content="permTable(role, rows)"/>
                         <td py:if="not rows" style="font-size: 80%;">Role has no permissions</td>
                         <td style="text-align: right;">
-                            <a href="addPermForm?roleName=${role}">Add Permission</a><br />
                             <a href="deleteRole?roleName=${role}">Delete</a> |
-                            <a href="manageRoleForm?roleName=${role}">Manage</a>
+                            <a href="manageRoleForm?roleName=${role}">Manage</a><br />
+                            <a href="addPermForm?roleName=${role}">Add Permission</a>
                         </td>
                     </tr>
-                </tbody>
-            </table>
-            <p>
-                <a href="addRoleForm">Add Role</a>
-            </p>
+                    </tbody>
+                    </table>
+                    <p>
+                        <a class="noline" href="addRoleForm"><img src="${cfg.staticPath}/apps/mint/images/icon_add-n.gif" title="Add" />&nbsp;Add Role</a>
+                    </p>
+                </div><br class="clear" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

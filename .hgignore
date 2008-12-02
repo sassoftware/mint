@@ -1,12 +1,23 @@
+^tags$
 ^state$
 ^state.journal$
 ~$
 \.(pyc|pyo|o|so|swp|swo|orig|rej)$
+.DS_Store
 (^|/).kiderror$
+^rpath_common$
+\.patch$
 
 ^bin/rbuilder(|-wrapper)$
 ^mint/constants\.py$
 ^mint/web/content/javascript/(buildtypes|buildtemplates|jobstatus)\.js$
+^mint/web/content/css/history.css
+^mint/web/content/javascript/AC_OETags.js
+^mint/web/content/javascript/history.js
+^mint/web/content/javascript/iClouds.js
+^mint/web/templates/catalogLayout.kid
+^mint/web/templates/cloudCatalog.kid
+^mint/web/templates/admin/cloudConfig.kid
 
 ^doc/rbuilder.1$
 
@@ -18,12 +29,12 @@
 ^.*project$
 ^.*pydevproject$
 
-^\.times
-^test/(raa-tests/)?\.(times|coverage)$
-^test/archive/macrosc$
-^test/logfile\.test\.*
+^mint_test/(raa-tests/)?\.(times|coverage)$
+^mint_test/archive/macrosc$
+^mint_test/logfile\.test\.*
 
 ^scripts/raw2vmdk$
+^scripts/rbuilder_database.py$
 
 .*,cover
 ^VERSION$

@@ -15,18 +15,26 @@ if 'traceback' not in locals():
         <title>${formatTitle('Error')}</title>
     </head>
     <body>
-        <div id="layout">
-            <h2>Error:</h2>
-            <p class="errormessage">${error}</p>
-            <p>
-                Please go back and try again or contact
-                ${XML(cfg.supportContactHTML)}
-                for assistance.
-            </p>
-            <div py:if="traceback" py:strip="True">
-                <h2>Traceback:</h2>
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Error</div>
+          
+                <p class="errormessage">${error}</p>
+                
+                <p>Please go back and try again or contact ${XML(cfg.supportContactHTML)} for assistance.</p>
+                <div py:if="traceback" py:strip="True">
+                    <h2>Traceback:</h2>
                 <pre py:content="traceback" />
+                </div>
             </div>
+        
+            <br class="clear"/>
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

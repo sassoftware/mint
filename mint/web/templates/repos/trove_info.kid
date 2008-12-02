@@ -43,8 +43,8 @@ else:
                 </tr>
                 <tr>
             <th>Version:</th>
-            <td><div id="shortVersion"><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
-            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <td><div id="shortVersion"><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/expand_string.gif"/></span></div>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
@@ -111,8 +111,8 @@ else:
         </tr>
         <tr>
             <th>Version:</th>
-            <td><div id="shortVersion" ><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
-            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <td><div id="shortVersion" ><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/expand_string.gif"/></span></div>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
@@ -128,7 +128,7 @@ else:
         <tr py:if="[x for x in trove.iterTroveList(strongRefs=True)] and not trove.name().startswith('group-')">
             <th>Components:</th>
             <td>
-            <div  py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${quote(component[0])};v=${component[1].freeze()}">${component[0]}</a></div></td>
+            <div  py:for="component in trove.iterTroveList(strongRefs=True)"> <a href="troveInfo?t=${quote(component[0])};v=${quote(component[1].freeze())}">${component[0]}</a></div></td>
         </tr>
         <tr py:for="trove in troves">
             <th>Flavor:</th>
@@ -140,8 +140,8 @@ else:
                         if len(instList):
                             shortFlavor = instList[0]
                 ?>
-                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span style="cursor: pointer;" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${shortFlavor}<img style="padding-left: 10px; cursor: pointer;" src="${cfg.staticPath}/apps/mint/images/next.gif"/></span></div>
-                <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/prev.gif"/></span></div>
+                <div py:if="str(trove.getFlavor())" id="short_${trove.getFlavor()}"><span style="cursor: pointer;" onclick="swapDisplay('short_${trove.getFlavor()}', 'long_${trove.getFlavor()}');">${shortFlavor}<img style="padding-left: 10px; cursor: pointer;" src="${cfg.staticPath}/apps/mint/images/expand_string.gif"/></span></div>
+                <div py:if="str(trove.getFlavor())" id="long_${trove.getFlavor()}" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('long_${trove.getFlavor()}', 'short_${trove.getFlavor()}');">${flavorWrap(trove.getFlavor())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div>
                  <div style="vertical-align: middle; margin-top: 10px; margin-bottom: 10px;">
                  <a style="font-weight: normal; text-decoration: underline;"
                                    href="files?t=${quote(troveName)};v=$frozenVersion;f=${quote(trove.getFlavor().freeze())}">Show Contents</a>
@@ -205,23 +205,32 @@ else:
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-                ${builderPane()}
-            </div>
-            <div id="middle">
-                <h2 title="${troveName}">${project.getNameForDisplay(maxWordLen = 50)} - Repository Browser</h2>
-
-                <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
-                    ${sourceTroveInfo(troves[0], referer)}
-                    <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
+            
+            <div id="innerpage">
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
                 </div>
-                <div py:strip="True" py:if="not troves[0].getName().endswith(':source')">
-                    ${binaryTroveInfo(troves, title)}
-                </div>
-
-                <h3>All Versions:</h3>
-                    <div id="treeDiv"/>
+                <div id="middle">
+                    <h1 title="${troveName}">${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">Repository Browser</div>
+    
+                    <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
+                        ${sourceTroveInfo(troves[0], referer)}
+                        <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
+                    </div>
+                    <div py:strip="True" py:if="not troves[0].getName().endswith(':source')">
+                        ${binaryTroveInfo(troves, title)}
+                    </div>
+    
+                    <h3>All Versions:</h3>
+                        <div id="treeDiv"/>
+                </div><br class="clear" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
             </div>
         </div>
     </body>

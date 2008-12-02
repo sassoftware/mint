@@ -63,28 +63,37 @@ from mint import buildtypes
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-                ${builderPane()}
-            </div>
-            <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
-                <h2>Releases</h2>
-                <p py:if="isOwner">
-                    <strong><a href="newRelease">Create a new release</a></strong>
-                </p>
-                <div py:if="not projectReleases">
-                    This ${projectText().lower()} currently has no releases.
+            
+            <div id="innerpage">
+                <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+                <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+                <div id="right" class="side">
+                    ${resourcePane()}
+                    ${builderPane()}
                 </div>
-                <div py:if="projectPublishedReleases">
-                    ${pubReleasesTable(projectPublishedReleases, isOwner)}
-                </div>
-                <div py:if="projectUnpublishedReleases and isWriter">
-                    <h3>Unpublished Releases</h3>
-                    ${pubReleasesTable(projectUnpublishedReleases, isOwner)}
-                </div>
-
-            </div>
+                <div id="middle">
+                    <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
+                    <div class="page-title">Releases</div>
+                    <p py:if="isOwner">
+                        <a class="pageSectionLink" href="newRelease">Create a new release</a>
+                    </p>
+                    <div py:if="not projectReleases">
+                        This ${projectText().lower()} currently has no releases.
+                    </div>
+                    <div py:if="projectPublishedReleases">
+                        ${pubReleasesTable(projectPublishedReleases, isOwner)}
+                    </div>
+                    <div py:if="projectUnpublishedReleases and isWriter">
+                        <h3>Unpublished Releases</h3>
+                        ${pubReleasesTable(projectUnpublishedReleases, isOwner)}
+                    </div>
+    
+                </div><br class="clear" />
+                <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+                <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+                <div class="bottom"></div>
+            </div>   
         </div>
     </body>
 </html>

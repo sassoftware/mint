@@ -15,13 +15,14 @@
         <title py:if="not isNew">${formatTitle('Edit Update Service')}</title>
     </head>
     <body>
+    <div class="admin-page">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
-        <div id="spanright">
+        <div id="admin-spanright">
             <form action="${cfg.basePath}admin/processEditUpdateService" method="post">
                 <div py:strip="True" py:if="isNew">
-                <h2>Add Update Service</h2>
+                <div class="page-title-no-project">Add Update Service</div>
                 <p>Fill in the form below to set up an rPath Appliance
                    Platform Update Service.</p>
                 <p>Note: the target Update Service must be online and
@@ -42,40 +43,44 @@
                   Outbound Mirror targets as appropriate.</p>
                 </div>
 
-                <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
-                    <tr>
-                        <th><em py:attrs="{'class': isNew and 'required' or 'optional'}">Update Service Hostname</em></th>
-                        <td py:if="isNew">
-                            <input type="text" name="hostname" maxlength="255" value="${kwargs['hostname']}" />
-                            <p class="help">Use the fully-qualified domain name of the target repository or Update Service (example: mirror.rpath.com).</p>
-                        </td>
-                        <td py:if="not isNew" py:content="kwargs['hostname']" />
+                <table class="mainformhorizontal">
+                <tr>
+                    <td class="form-label"><em py:attrs="{'class': isNew and 'required' or 'optional'}">Update Service Hostname:</em></td>
+                    <td py:if="isNew">
+                        <input type="text" name="hostname" maxlength="255" value="${kwargs['hostname']}" />
+                        <p class="help">Use the fully-qualified domain name of the target repository or Update Service (example: mirror.rpath.com).</p>
+                    </td>
+                    <td py:if="not isNew" py:content="kwargs['hostname']" />
 
-                    </tr>
-                    <tr>
-                        <th><em class="optional">Description</em></th>
-                        <td>
-                            <textarea name="description" py:content="kwargs['description']"/>
-                            <p class="help">A description of this Update Service used for informational purposes only.</p>
-                        </td>
-                    </tr>
-                    <tr py:if="isNew">
-                        <th><em class="required">Update Service Username:</em></th>
-                        <td><input type="text" name="adminUser" style="width: 25%;" value="${kwargs['adminUser']}" />
-                        </td>
-                    </tr>
-                    <tr py:if="isNew">
-                        <th><em class="required">Update Service Password:</em></th>
-                        <td><input autocomplete="off" type="password" name="adminPassword" style="width: 25%;" value="${kwargs['adminPassword']}" />
-                        <p class="help">The above username and password must match an administrator's account on the target Update Service.</p></td>
-                    </tr>
+                </tr>
+                <tr>
+                    <td class="form-label"><em class="optional">Description:</em></td>
+                    <td>
+                        <textarea name="description" py:content="kwargs['description']"/>
+                        <p class="help">A description of this Update Service used for informational purposes only.</p>
+                    </td>
+                </tr>
+                <tr py:if="isNew">
+                    <td class="form-label"><em class="required">Update Service Username:</em></td>
+                    <td><input type="text" name="adminUser" style="width: 25%;" value="${kwargs['adminUser']}" />
+                    </td>
+                </tr>
+                <tr py:if="isNew">
+                    <td class="form-label"><em class="required">Update Service Password:</em></td>
+                    <td><input autocomplete="off" type="password" name="adminPassword" style="width: 25%;" value="${kwargs['adminPassword']}" />
+                    <p class="help">The above username and password must match an administrator's account on the target Update Service.</p></td>
+                </tr>
                 </table>
+                <br />
                 <p>
                     <input id="submitButton" type="submit" name="action" value="Submit" />
                     <input type="submit" name="action" value="Cancel" />
                 </p>
+                <br />
                 <input type="hidden" name="id" value="${id}" />
             </form>
         </div>
+        <div class="bottom"/>
+    </div>
     </body>
 </html>

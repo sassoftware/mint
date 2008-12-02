@@ -2,4 +2,9 @@
 /srv/rbuilder/{config,mcp}
 /srv/rbuilder/jobmaster/{config,config.d}
 /var/log/rbuilder/{jobmaster.log,mcp.log,mirror-inbound.log,mirror-outbound.log,package-index.log,jobs,conary-db-migration.log}
-
+/var/log/rmake/{dispatcher.log,messagebus.log,repos.log,rmake-node.log,rmake-server.log,subscriber.log,xmlrpc.log}
+/var/log/pgsql
+/etc/sysconfig/pgsql/*
+/etc/postgresql.conf.rbuilder
+/srv/pgsql/8.2-rbuilder/pg_log/*
+/tmp/mint-error-*.txt

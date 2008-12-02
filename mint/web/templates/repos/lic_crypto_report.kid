@@ -37,7 +37,7 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
                 <?python #
                     from mint.client import flavorWrap
                     from urllib import quote
-                    url = "troveInfo?t=%s;v=%s;f=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
+                    url = "troveInfo?t=%s;v=%s" % (quote(name), quote(str(version)))
                 ?>
                 <td style="width: 1%; padding-right: 10px;"><a href="${url}">${name}</a></td>
                 <td style="width: 33%;"><span class="expand" id="${url}_short" onclick="swapDisplay('${url}_short', '${url}_long');">${"%s:%s/%s" % (version.trailingLabel().getNamespace(), version.trailingLabel().getLabel(), version.trailingRevision().getVersion())}</span>
@@ -62,11 +62,21 @@ from mint.helperfuncs import truncateForDisplay, splitVersionForDisplay
 
     <head/>
     <body>
-        <div id="layout">
-            <h2>License and Crypto for ${troveName}</h2>
-            <p class="help">Although rPath believes the information provided related to the licenses and cryptography is accurate, such information may be out of date and anyone using this software should rely only on its own review of this information.</p>
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">License and Crypto for ${troveName}</div>
 
-            ${troveList(troves)}
+                <p class="help">Although rPath believes the information provided related to the licenses and cryptography is accurate, such information may be out of date and anyone using this software should rely only on its own review of this information.</p>
+
+                ${troveList(troves)}
+            </div>
+            <br class="clear"/>
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

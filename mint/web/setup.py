@@ -4,31 +4,26 @@
 # All rights reserved
 #
 
-from cStringIO import StringIO
 from copy import deepcopy
 from mint import helperfuncs
 import kid
-import sys
 import os
+import os.path
 import random
 random = random.SystemRandom()
 import time
 
-from mod_python import apache
-
-from mint import constants
 from mint import helperfuncs
-from mint import mint_error
 from mint import shimclient
 from mint import config
-from mint.config import RBUILDER_GENERATED_CONFIG
+from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG
 from mint.config import keysForGeneratedConfig
-from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 from mint.web.decorators import postOnly
-from mint.web.fields import strFields, intFields, listFields, boolFields
+from mint.web.fields import intFields
 
 from conary.repository.netrepos import netauth
+from conary.lib.util import mkdirChain
 
 # be careful with 'Server Setup', code below and the associated kid template
 # refer to this key directly. be sure to find all instances if you change it.
@@ -113,8 +108,9 @@ class SetupHandler(WebHandler):
         newCfg = self._copyCfg()
         
         # enforce acceptance of terms of service
-        if not acceptedTos:
-            return self._write("setup/tos")
+        # this is now done via rapa tos plugin, RBL-3803
+        #if not acceptedTos:
+        #    return self._write("setup/tos")
 
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.
@@ -160,7 +156,7 @@ class SetupHandler(WebHandler):
         if kwargs.get('externalPasswordURL'):
             userAuth = netauth.UserAuthorization( \
                 None, pwCheckUrl = kwargs['externalPasswordURL'],
-                cacheTimeout = kwargs.get('authCacheTimeout'))
+                cacheTimeout = int(kwargs.get('authCacheTimeout')))
             if self.auth.admin and not userAuth._checkPassword( \
                 self.auth.username, None, None, self.auth.token[1]):
                 errors.append('Username: %s was not accepted by: %s' % \
@@ -204,7 +200,7 @@ class SetupHandler(WebHandler):
 
         for key in keys:
             if key in newCfg:
-                newCfg[key] = self.fields[key]
+                newCfg[key] = kwargs[key]
 
         if errors:
             return self._write("setup/setup", configGroups = configGroups,
@@ -237,17 +233,74 @@ class SetupHandler(WebHandler):
         else:
             newCfg.authPass = helperfuncs.genPassword(32)
         self._generateConfig(newCfg)
-        os.system("sudo killall -USR1 httpd")
+        if os.environ.get('RBUILDER_NOSUDO', False):
+            sudo = ''
+        else:
+            sudo = 'sudo '
+        os.system("%skillall -USR1 httpd" % sudo)
+
+        if not self.cfg.configured:
+            # Create a product (as the admin user) for use by the internal rmake.
+            adminClient = shimclient.ShimMintClient(newCfg, 
+                [kwargs['new_username'], kwargs['new_password']])
+
+            shortName = 'rmake-repository'
+            projectId = adminClient.newProject(name="rMake Repository",
+                hostname=shortName,
+                domainname=str(newCfg.projectDomainName),
+                projecturl="",
+                desc="This product's repository is used by the rMake server running on this rBuilder for building packages and groups with Package Creator and Appliance Creator.",
+                appliance="no",
+                shortname=shortName,
+                namespace="rpath",
+                prodtype="Component",
+                version="1",
+                commitEmail="",
+                isPrivate=False,
+                projectLabel="")
+
+            rmakeUser = "%s-user" % shortName
+            rmakePassword = helperfuncs.genPassword(32)
+            adminClient.addProjectRepositoryUser(projectId, rmakeUser, 
+                rmakePassword)
+    
+            self._writeRmakeConfig(rmakeUser, rmakePassword, 
+                "https://%s" % newCfg.siteHost, 
+                "%s.%s" % (shortName, newCfg.projectDomainName),
+                "https://%s/repos/%s" % (newCfg.siteHost, shortName))
+
+            if os.environ.get('RBUILDER_NOSUDO', False):
+                sudo = ''
+            else:
+                sudo = 'sudo '
+
+            os.system("%s/sbin/service rmake restart" % sudo)                
+            os.system("%s/sbin/service rmake-node restart" % sudo)                
 
         return self._write("setup/saved")
+
+    def _writeRmakeConfig(self, user, password, rBuilderUrl, reposName, reposUrl):
+        path = self.req.get_options().get('rmakeConfigFilePath',
+            RBUILDER_RMAKE_CONFIG)
+        mkdirChain(os.path.dirname(path))
+        f = file(path, 'w')
+        f.write('%s %s %s %s\n' % ('reposUser', reposName, user, password))
+        f.write('%s %s\n' % ('reposName', reposName))
+        f.write('%s %s\n' % ('reposUrl', reposUrl))
+        f.write('%s %s\n' % ('rBuilderUrl', rBuilderUrl))
+        f.close()
 
     def restart(self, auth):
 
         newCfg = self._copyCfg()
         newCfg.configured = True
         self._generateConfig(newCfg)
-        os.system("sudo killall -USR1 httpd")
-        os.system("sudo /sbin/service multi-jobserver restart")
+        if os.environ.get('RBUILDER_NOSUDO', False):
+            sudo = ''
+        else:
+            sudo = 'sudo '
+        os.system("%skillall -USR1 httpd" % sudo)
+        os.system("%s/sbin/service multi-jobserver restart" % sudo)
         time.sleep(5)
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 

@@ -3,28 +3,23 @@
 #
 # All Rights Reserved
 #
-import base64
 import difflib
 import itertools
 import os
 import string
 import sys
-import traceback
 
 from mimetypes import guess_type
-
-from mod_python import apache
 
 from urllib import quote, unquote
 
 import simplejson
 
 
-from mint import database
 from mint import userlevels
 from mint import helperfuncs
 from mint.mint_error import *
-from mint.session import SqlSession
+from mint.web import productversion
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
@@ -41,7 +36,7 @@ from conary import conarycfg
 from conary import errors as conaryerrors
 from conary.trove import Trove
 
-class ConaryHandler(WebHandler):
+class ConaryHandler(WebHandler, productversion.ProductVersionView):
     def _filterAuth(self, **kwargs):
         memberList = kwargs.get('memberList', [])
         if isinstance(memberList, str):
@@ -741,9 +736,9 @@ class ConaryHandler(WebHandler):
         conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
         if os.path.exists(conarycfgFile):
             cfg.read(conarycfgFile)
-
         cfg = helperfuncs.configureClientProxies(cfg,
-                self.cfg.useInternalConaryProxy, self.cfg.proxy)
+                self.cfg.useInternalConaryProxy, self.cfg.proxy,
+                self.client.getProxies()[0])
 
         if 'repServer' not in self.__dict__:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
@@ -760,6 +755,8 @@ class ConaryHandler(WebHandler):
 
         d = self.fields
         d['auth'] = self.authToken
+
+        self.setupView()
 
         try:
             d['auth'] = self.authToken

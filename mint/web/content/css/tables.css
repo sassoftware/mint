@@ -11,34 +11,27 @@ table.pretty-fullwidth {
     width: 100%;
 }
 
-table.pretty-fullwidth input {
-    background-color: white;
-}
-
 table.pretty-fullwidth tr td {
-    font-size: small;
+    font-family: verdana, sans-serif;
+    font-size: 11px;
 }
 
 table.pretty-fullwidth tr th,
 table.pretty-fullwidth tr td {
-    padding: 4px 4px;
     border-bottom: 1px solid #e0e0e0;
 }
 
 table.pretty-fullwidth tr.pdbuilddef-expanded td,
 table.pretty-fullwidth tr.pdbuilddef-more td {
-    background: #fffded;
     border-bottom: none;
 }
 
 table.pretty-fullwidth tr.pdbuilddef-more td {
-    border-bottom: 1px solid #e0e0e0;
 }
 
 table.pretty-fullwidth th {
-    font-size: normal;
-    font-weight: bold;
-    background-color: #ccc;
+    font-weight: normal;
+    background-color: #f0f0f0;
     color: #000;
 }
 
@@ -60,16 +53,12 @@ table.pretty-fullwidth td.row-button {
 }
 
 div.field-row {
-    margin: 0 0 1em 0;
-    padding: 0 0 1em 0;
+    margin: 0 10px 10px 10px;
 }
 
 div.field-row label,
 div.field-example {
-    float: left;
-    width: 400px;
-    text-align: right;
-    margin: 0.1em 1em 0 0;
+
 }
 
 div.field-row input,
@@ -80,7 +69,7 @@ div.field-row select {
 }
 
 div.field-row input.field-text-string {
-    width: 250px;
+    width: 100%;
 }
 
 div.field-row input.field-text-int {
@@ -88,14 +77,28 @@ div.field-row input.field-text-int {
 }
 
 div.field-row br {
-    clear: left;
 }
 
 div.field-example {
-    font-size: smaller;
     text-align: left;
-    margin: 0 0 0 50px;
-    width: 650px;
+    margin: 0 10px 0 10px;
+    width: 95%;
+}
+
+.check-table {
+    margin: 0px;
+    padding: 0px;
+}
+
+.check-table td {
+    margin: 0px;
+    padding: 0px;
+}
+
+.check-table td.checkbox-label {
+    padding-left: 4px;
+    padding-top: 4px;
+    width: 100%;
 }
 
 /***************************** PRETTY FULLWIDTH *****************************/

@@ -47,11 +47,29 @@ kid-build:
 	kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
 	rm .kiderror
 
+raaplugins-link:
+ifdef SUBDIRS
+	mkdir -p $(DESTDIR)$(LIBDIR)/raa/rPath
+	for dir in $(SUBDIRS); do \
+		ln -s ../../python$(PYVERSION)/site-packages/rPath/$$dir \
+		      $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
+	done
+endif
+
+raaplugins-unlink:
+ifdef SUBDIRS
+	for dir in $(SUBDIRS); do \
+		rm -f $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
+	done
+endif
+	rm -rf $(DESTDIR)$(LIBDIR)/raa
 
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
 ifdef python_files
 	cp $(python_files) $(DESTDIR)$(STATICDEST)/
+	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
+	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
 endif
 ifdef kid_files
 	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
@@ -69,6 +87,9 @@ static-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
 	cp $(static_files) $(DESTDIR)$(STATICDEST)/
 
+cgi-install:
+	mkdir -p $(DESTDIR)$(CGIDEST)
+	cp $(cgi_files) $(DESTDIR)$(CGIDEST)/
 
 kid-clean:
 

@@ -46,14 +46,23 @@ from mint.web.templatesupport import projectText
             </tbody>
         </table>
     </div>
-
-    <head/>
+    
     <body>
-        <div id="layout">
-            <h2>Troves in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
-            <p class="help">The following troves are included in ${troveName}.  Click <a href="javascript:history.back();">Back</a> to return to the repository browser.</p>
+        <div class="fullpage">
+            <img class="pagetopleft" src="${cfg.staticPath}/apps/mint/images/innerpage_topleft.png" alt="" />
+            <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
+            
+            <div class="full-content">
+                <div class="page-title-no-project">Troves in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></div>
+               
+                <p class="help">The following troves are included in ${troveName}.  Click <a href="javascript:history.back();">Back</a> to return to the repository browser.</p>
 
-            ${troveList(troves)}
+                ${troveList(troves)}
+            </div>
+            <br class="clear"/>
+            <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
+            <img class="pagebottomright" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomright.png" alt="" />
+            <div class="bottom"/>
         </div>
     </body>
 </html>

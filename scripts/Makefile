@@ -22,11 +22,18 @@ static_files =				\
 	update-top-projects		\
 	set-password		
 
+generated_files =	\
+	rbuilder_database.py
+
+cgi_files =				\
+	fileupload.cgi
+
 override STATICDEST = /usr/share/rbuilder/scripts
+override CGIDEST = /srv/www/cgi-bin
 
 all: default-all
 
-install: static-install default-install
+install: static-install cgi-install default-install
 
 clean: default-clean
 

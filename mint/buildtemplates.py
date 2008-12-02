@@ -8,8 +8,10 @@ from mint.mint_error import InvalidBuildOption, BuildOptionValidationException
 
 class BuildOption(tuple):
     errordesc = None
+    help = None
+    password = False
     def __new__(cls):
-        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc))
+        return tuple.__new__(cls, (cls.type, cls.default, cls.prompt, cls.errordesc, cls.help, cls.password))
     def validate(self, value):
         pass
 
@@ -134,7 +136,7 @@ class swapSize(IntegerOption):
 
 class vmMemory(IntegerOption):
     default = 256
-    prompt = 'How much memory should be used when running this image?'
+    prompt = 'How many MB of RAM should be allocated when this virtual machine is started?'
     errordesc = "vmware memory"
 
 class vmSnapshots(BooleanOption):
@@ -185,15 +187,15 @@ class enumArg(EnumOption):
 
 class mediaTemplateTrove(TroveOption):
     default = ''
-    prompt  = 'media-template to use when creating this image'
+    prompt  = 'media-template'
 
 class anacondaCustomTrove(TroveOption):
     default = ''
-    prompt  = 'anaconda-custom to use when creating this image'
+    prompt  = 'anaconda-custom'
 
 class anacondaTemplatesTrove(TroveOption):
     default = ''
-    prompt  = 'anaconda-templates to use when creating this image'
+    prompt  = 'anaconda-templates'
 
 class amiHugeDiskMountpoint(StringOption):
     default = ''
