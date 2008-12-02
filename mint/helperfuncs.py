@@ -571,22 +571,6 @@ def weak_signature_call(_func, *args, **kwargs):
             if arg in argnames)
     return _func(*args, **keep_args)
 
-def buildEC2AuthToken(cfg):
-    """
-    Convenience function to build the EC2 auth token from the config data
-    """
-    at = ()
-    if cfg:
-        # make sure all the values are set
-        if not cfg.ec2AccountId or not cfg.ec2PublicKey or not cfg.ec2PrivateKey:
-            raise mint_error.EC2NotConfigured()
-        at = (cfg.ec2AccountId, cfg.ec2PublicKey, cfg.ec2PrivateKey)
-        
-    if not at:
-        raise mint_error.EC2NotConfigured()
-    
-    return at
-
 def formatProductVersion(versions, currentVersion):
     if currentVersion is None:
         return "Not Selected"

@@ -29,6 +29,9 @@ install: default-install
 	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
 	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
+	# rMake node configuration
+	install -D -m0644 noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
+	install -D -m0644 serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
 	# system dist (data)
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron

@@ -3,13 +3,11 @@
 # All rights reserved
 #
 import logging
-import sha
+import os
 from gettext import gettext as _
 
 from raa import authorization
-from raa import crypto
 from raa import web
-from raa.db.data import RDT_STRING
 from raa.modules import raawebplugin
 from rPath import rmakemanagement
 
@@ -39,43 +37,22 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         netinfo = self.plugins['/configure/Network'].index()
         self.host = netinfo.get('host_hostName', _('Local rMake server'))
 
-        rmakeUser = self.getPropertyValue('rmakeUser')
-        rmakePassword = self.getPropertyValue('rmakePassword')
-
-        builds = []
-        nodes = []
-        if rmakeUser:
-            builds = self._getBuilds()
-            nodes = self._getNodes()
+        statusmsg, builds = self._getBuilds()
+        nodes = self._getNodes()
         
         return dict(server=self.host,
                     status=status,
-                    rmakeUser=rmakeUser,
                     builds=builds,
-                    nodes=nodes
+                    nodes=nodes,
+                    statusmsg=statusmsg
                     )
 
-
-    @web.expose(allow_xmlrpc=True, allow_json=True)
-    def saverMakeUserPass(self, username, password):
-        if username and type(username) != type(str):
-            username = str(username)
-        if password and type(password) != type(str):
-            password = str(password)
-
-        self.setPropertyValue('rmakeUser', username, RDT_STRING)
-        self.setPropertyValue('rmakePassword', password, RDT_STRING)
-
-        self.wizardDone()
-
-        return dict(message=_("rMake username and password saved."))
-
-    @web.expose(allow_xmlrpc=True, allow_json=True)
-    def deleterMakeUserPass(self):
-        self.deletePropertyValue('rmakeUser')
-        self.deletePropertyValue('rmakePassword')
-
-        return dict(message=_("rMake username and password deleted."))
+    def _getClientCertPath(self):
+        path = web.getConfigValue('rmake.client_certificate',
+            path=rmakemanagement.pluginpath)
+        if path is None:
+            return None
+        return os.path.abspath(path)
 
     def _getBuilds(self):
         """
@@ -83,12 +60,12 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         configured limit.
         """
         limit = web.getConfigValue('rmake.build_display_limit', 5)
-        builds = self.callBackend('getBuilds', limit)
+        statusmsg, builds = self.callBackend('getBuilds', limit)
 
         # We want the most recent builds at the top
         builds.sort()
         builds.reverse()
-        return builds
+        return statusmsg, builds
 
 
     def _getNodes(self):
@@ -134,23 +111,9 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
         # Ideally we need a method in raa.web to return a config section.
         config = {}
 
-        config['rmake.build_display_limit'] = \
-            web.getConfigValue('rmake.build_display_limit',
-                               path=rmakemanagement.pluginpath)
-        config['rmake.db'] = \
-            web.getConfigValue('rmake.db',
-                               path=rmakemanagement.pluginpath)
-        config['rmake.contents'] = \
-            web.getConfigValue('rmake.contents',
-                               path=rmakemanagement.pluginpath)
-        config['rmake.node_config_file'] = \
-            web.getConfigValue('rmake.node_config_file', 
-                               path=rmakemanagement.pluginpath)
-        config['rmake.rmakeUser'] = \
-            self.getPropertyValue('rmakeUser', '')
-
-        config['rmake.rmakePassword'] = \
-            self.getPropertyValue('rmakePassword', '')
+        config['rmake.node_config_file'] = web.getConfigValue(
+            'rmake.node_config_file', '', path=rmakemanagement.pluginpath)
+        config['rmake.client_certificate'] = self._getClientCertPath() or ''
 
         return config
 

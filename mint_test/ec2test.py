@@ -6,7 +6,12 @@
 import testsuite
 testsuite.setup()
 
+import os
 import time
+from conary.lib import util
+
+from testrunner import resources
+
 
 import boto
 import boto.s3
@@ -16,12 +21,13 @@ from boto.exception import EC2ResponseError
 from mint import ec2
 from mint import mint_error
 
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, buildEC2AuthToken
+from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp
 
 import fixtures
 import mock
 
 from mint import buildtypes
+from mint import shimclient
 from mint import userlevels
 from mint.data import RDT_STRING
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -187,7 +193,8 @@ class FakeEC2Connection(object):
     def _checkKeys(self):
         if self.accessKey != FAKE_PUBLIC_KEY or \
                 self.secretKey != FAKE_PRIVATE_KEY:
-            raise EC2ResponseError()
+                    # XXX I don't know what to put here but it had no args
+            raise EC2ResponseError(401, '', AWS_ERROR_XML_SINGLE)
 
     def run_instances(self, amiId, user_data=None, addressing_type = 'public'):
         self._checkKeys()
@@ -277,7 +284,28 @@ def getFakeEC2Connection(accessKey, secretKey):
 def getFakeS3Connection(accessKey, secretKey):
     return FakeS3Connection((None, accessKey, secretKey))
 
-class Ec2Test(fixtures.FixturedUnitTest):
+class BaseEC2Test(fixtures.FixturedUnitTest):
+    def setupEC2Credentials(self):
+        """
+        set up rBuilder to have EC2 credentials.
+        """
+        amiData = {
+                'ec2PublicKey' : '123456789ABCDEFGHIJK',
+                'ec2PrivateKey' : '123456789ABCDEFGHIJK123456789ABCDEFGHIJK',
+                'ec2AccountId' : '000000000000',
+                'ec2S3Bucket' : 'extracrispychicken',
+                'ec2LaunchUsers' : ["000000001111", "000000002222"],
+                'ec2LaunchGroups' : ["group1", "group2"],
+                'ec2Certificate': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.pem')).read(),
+                'ec2CertificateKey': open(os.path.join( \
+                        resources.mintArchivePath, 'ec2.key')).read()
+                }
+        adminClient = shimclient.ShimMintClient(self.cfg, ("admin", "adminpass"))
+        adminClient.addTarget('ec2', 'aws', amiData)
+
+
+class Ec2Test(BaseEC2Test):
 
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
@@ -296,6 +324,27 @@ class Ec2Test(fixtures.FixturedUnitTest):
         boto.connect_ec2 = self.old_connect_ec2
         boto.connect_s3 = self.old_connect_s3
         boto.s3.key.Key = self.oldKey
+
+    def _buildEC2AuthToken(self, client):
+        """
+        Convenience function to build the EC2 auth token from the config data
+        """
+        amiData = client.getTargetData('ec2', 'aws')
+        at = ()
+        if amiData:
+            # make sure all the values are set
+            if not (amiData.get('ec2AccountId') and \
+                    amiData.get('ec2PublicKey') and\
+                    amiData.get('ec2PrivateKey')):
+                raise EC2NotConfigured()
+            at = (amiData.get('ec2AccountId'),
+                    amiData.get('ec2PublicKey'),
+                    amiData.get('ec2PrivateKey'))
+
+        if not at:
+            raise EC2NotConfigured()
+
+        return at
 
     @fixtures.fixture("Full")
     def testBlessedAMI_CRUD(self, db, data):
@@ -401,7 +450,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                               amiIds[0])
         self.failUnlessEqual(1, instanceId)
 
@@ -415,11 +464,11 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                               amiIds[0])
-        instanceId2 = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+        instanceId2 = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                                amiIds[1])
-        instanceId3 = client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+        instanceId3 = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                                amiIds[2])
 
         activeAMIs = client.getActiveLaunchedAMIs()
@@ -436,7 +485,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         # kill 'em
         self.failUnlessEqual([instanceId, instanceId3],
-                client.terminateExpiredAMIInstances(buildEC2AuthToken(self.cfg)))
+                client.terminateExpiredAMIInstances(self._buildEC2AuthToken(client)))
         del activeAMIs
 
         # there better only be one active now
@@ -450,7 +499,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         amiIds = data['amiIds']
         for i in range(0, self.cfg.ec2MaxInstancesPerIP):
             try:
-                client.launchAMIInstance(buildEC2AuthToken(self.cfg), 
+                client.launchAMIInstance(self._buildEC2AuthToken(client),
                                          amiIds[0])
             except mint_error.TooManyAMIInstancesPerIP:
                 self.fail()
@@ -463,7 +512,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
         # but this should
         self.assertRaises(mint_error.TooManyAMIInstancesPerIP,
-                client.launchAMIInstance, buildEC2AuthToken(self.cfg), 
+                client.launchAMIInstance, self._buildEC2AuthToken(client),
                 amiIds[0])
 
         # this should not fail
@@ -477,11 +526,11 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg),
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                               amiIds[0])
 
         state, dns_name = client.getLaunchedAMIInstanceStatus(
-                              buildEC2AuthToken(self.cfg), instanceId)
+                              self._buildEC2AuthToken(client), instanceId)
         self.failUnlessEqual(state, 'pending')
         self.failIf(dns_name)
 
@@ -489,15 +538,18 @@ Please log in via raa using the following password. %(raaPassword)s"""
     def testLaunchNonexistentAMIInstance(self, db, data):
         client = self.getClient("admin")
 
+        self.assertRaises(mint_error.TargetMissing,
+                self._buildEC2AuthToken, client)
+        # synthesize a fake auth token
         self.assertRaises(mint_error.FailedToLaunchAMIInstance,
-                client.launchAMIInstance, buildEC2AuthToken(self.cfg), 3431)
+                client.launchAMIInstance, ('', '', ''), 3431)
 
     @fixtures.fixture("EC2")
     def testExtendInstanceTTL(self, db, data):
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), amiIds[0])
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client), amiIds[0])
 
         blessedAMI = client.getBlessedAMI(amiIds[0])
         launchedAMI = client.getLaunchedAMI(instanceId)
@@ -515,7 +567,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg), amiIds[0])
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client), amiIds[0])
 
         blessedAMI = client.getBlessedAMI(amiIds[0])
         blessedAMIUserDataTemplate = \
@@ -535,7 +587,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         blessedAMI.userDataTemplate = blessedAMIUserDataTemplate
         blessedAMI.save()
 
-        instanceId = client.launchAMIInstance(buildEC2AuthToken(self.cfg),
+        instanceId = client.launchAMIInstance(self._buildEC2AuthToken(client),
                                               amiIds[0])
         launchedAMIInstance = client.getLaunchedAMI(instanceId)
 
@@ -551,7 +603,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client = self.getClient("admin")
 
         # test getting all
-        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), [])
+        pairs = client.getEC2KeyPairs(self._buildEC2AuthToken(client), [])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key'), 
@@ -559,13 +611,13 @@ conaryproxy = http://proxy.hostname.com/proxy/
              'another RSA private key')])
         
         # test getting 1
-        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), ['key1'])
+        pairs = client.getEC2KeyPairs(self._buildEC2AuthToken(client), ['key1'])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key')])
         
         # test getting multiple
-        pairs = client.getEC2KeyPairs(buildEC2AuthToken(self.cfg), ['key1', 'key2'])
+        pairs = client.getEC2KeyPairs(self._buildEC2AuthToken(client), ['key1', 'key2'])
         self.assertTrue(pairs == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key'), 
@@ -577,7 +629,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         client = self.getClient("admin")
 
         # test getting all
-        pair = client.getEC2KeyPair(buildEC2AuthToken(self.cfg), 'key1')
+        pair = client.getEC2KeyPair(self._buildEC2AuthToken(client), 'key1')
         self.assertTrue(pair == [
             ('key1', '1f:51:ae:28:bf:89:e9:d8:1f:25:5d:37:2d:7d:b8:ca:9f:f5:f1:6f', 
              'some RSA private key')])
@@ -913,6 +965,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
     @fixtures.fixture("Empty")
     def testAMIBuildsData(self, db, data):
+        self.setupEC2Credentials()
         client = self.getClient('admin')
         testClient = self.getClient('test')
 
@@ -1299,7 +1352,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
              'manifest-file-name.xml'
             ])
 
-class Ec2DefaultCredentialsTest(fixtures.FixturedUnitTest):
+class EC2DefaultCredentialsTest(BaseEC2Test):
 
     def setUp(self):
         self.mockEC2Connect = mock.MockObject()
@@ -1310,12 +1363,152 @@ class Ec2DefaultCredentialsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('EC2')
     def testTypicalGuidedTourPath(self, db, data):
         client = self.getClient("admin")
+        amiData = client.getTargetData('ec2', 'aws')
         launchedInstanceId = client.launchAMIInstance((), 1)
-        self.mockEC2Connect._mock.assertCalled(self.cfg.ec2PublicKey,
-                self.cfg.ec2PrivateKey)
+        self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
+                amiData.get('ec2PrivateKey'))
         client.getLaunchedAMIInstanceStatus((), launchedInstanceId)
-        self.mockEC2Connect._mock.assertCalled(self.cfg.ec2PublicKey,
-                self.cfg.ec2PrivateKey)
+        self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
+                amiData.get('ec2PrivateKey'))
+
+class EC2SitewideTest(BaseEC2Test):
+    def setUp(self):
+        self.mockEC2Connect = mock.MockObject()
+        self.mock(boto, 'connect_ec2', self.mockEC2Connect)
+        fixtures.FixturedUnitTest.setUp(self)
+
+    @fixtures.fixture('Empty')
+    @testsuite.context('RBL-3757')
+    def testSetSitewideEC2Data(self, db, data):
+        client = self.getClient("admin")
+        refData = {'key': 'value'}
+        targetId = client.addTarget('ec2', 'aws', refData)
+
+        res = client.getTargetData('ec2', 'aws')
+        self.assertEquals(res, refData)
+
+        client.deleteTarget('ec2', 'aws')
+        err = self.assertRaises(mint_error.TargetMissing,
+                client.getTargetData, 'ec2', 'aws')
+        self.assertEquals(str(err), "No target named 'aws' of type 'ec2'")
+
+    @fixtures.fixture('Empty')
+    @testsuite.context('RBL-3757')
+    def testSetDuplicateEC2Data(self, db, data):
+        client = self.getClient("admin")
+        refData = {'key': 'value'}
+        targetId = client.addTarget('ec2', 'aws', refData)
+        err = self.assertRaises(mint_error.TargetExists,
+                client.addTarget, 'ec2', 'aws', refData)
+        self.assertEquals(str(err),
+                "Target named 'aws' of type 'ec2' already exists")
+
+        targetId = client.deleteTarget('ec2', 'aws')
+        err = self.assertRaises(mint_error.TargetMissing,
+                client.deleteTarget, 'ec2', 'aws')
+        self.assertEquals(str(err), "No target named 'aws' of type 'ec2'")
+
+    @fixtures.fixture('Empty')
+    @testsuite.context('RBL-3757')
+    def testSetSitewideEC2DataPermissions(self, db, data):
+        client = self.getClient("loneUserId")
+        refData = {'key': 'value'}
+        self.assertRaises(mint_error.PermissionDenied,
+                client.addTarget, 'ec2', 'aws', refData)
+
+        self.assertRaises(mint_error.PermissionDenied,
+                client.getTargetData, 'ec2', 'aws')
+
+        self.assertRaises(mint_error.PermissionDenied,
+                client.deleteTarget, 'ec2', 'aws')
+
+    @fixtures.fixture('Empty')
+    @testsuite.context('RBL-3757')
+    def testEC2DataMigration(self, db, data):
+        # this test pretends the schema is version (45, 5) because the next
+        # version jump imports the ec2 cfg items into the database.
+        # this test might fail at some point if the Targets or TargetData
+        # table schema ends up being modified. since those tables didn't exist
+        # in (45, 5) just drop them and unmock the cursor's CREATE calls
+        # this test must be maintained until the deprecated cfg.ec2*
+        # values are removed.
+        from conary.dbstore import sqllib
+
+        def getAMIConfig(testCfg):
+            # AMI testing
+            testCfg.ec2PublicKey = '123456789ABCDEFGHIJK'
+            testCfg.ec2PrivateKey = '123456789ABCDEFGHIJK123456789ABCDEFGHIJK'
+            testCfg.ec2AccountId   = '000000000000'
+            testCfg.ec2S3Bucket    = 'extracrispychicken'
+            testCfg.ec2CertificateFile = os.path.join(testCfg.dataPath,
+                    'config', 'ec2.pem')
+            testCfg.ec2CertificateKeyFile = os.path.join(testCfg.dataPath,
+                    'config', 'ec2.key')
+            testCfg.configLine("ec2LaunchUsers 000000001111")
+            testCfg.configLine("ec2LaunchUsers 000000002222")
+            testCfg.configLine("ec2LaunchGroups group1")
+            testCfg.configLine("ec2LaunchGroups group2")
+            util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.key'),
+                          os.path.join(testCfg.dataPath, 'config'))
+            util.copyfile(os.path.join(resources.mintArchivePath, 'ec2.pem'),
+                          os.path.join(testCfg.dataPath, 'config'))
+
+        getAMIConfig(self.cfg)
+
+        self.count = 0
+        class DummyCursor(object):
+            def __init__(x, cu):
+                x._realCursor = cu
+            def __call__(x, cmd, *args, **kwargs):
+                if cmd == 'execute' and args and args[0].strip().split()[0] == 'CREATE':
+                    pass
+                else:
+                    return x._realCursor.__call__(cmd, *args, **kwargs)
+            def execute(x, *args, **kwargs):
+                if args and args[0].strip().split()[0] == 'CREATE':
+                    pass
+                else:
+                    return x._realCursor.execute(*args, **kwargs)
+            def lastid(x):
+                self.count += 1
+                return self.count
+
+        origCursor = db.cursor
+        def newCursor():
+            cu = origCursor()
+            return DummyCursor(cu)
+        self.dummyMigration = sqllib.DBversion(45, 5)
+        def setVer(toVer):
+            self.dummyMigration = toVer
+        cursor = db.cursor
+        self.mock(db, 'getVersion', lambda *args, **kwargs: self.dummyMigration)
+        self.mock(db, 'cursor', newCursor)
+        self.mock(db, 'setVersion', setVer)
+
+        from mint import migrate
+        db.tables = {}
+        migrate.migrateSchema(db, self.cfg)
+
+        db.cursor = cursor
+        client = self.getClient("admin")
+        data = client.getTargetData('ec2', 'aws')
+
+        # truncate some unwieldy values. they don't matter as much as their
+        # format
+        res = dict([(x[0], isinstance(x[1], unicode) and x[1][:40] or x[1]) \
+                for x in data.iteritems()])
+        ref = {'ec2LaunchGroups': ['group1', 'group2'],
+               'ec2S3Bucket': 'extracrispychicken',
+               'ec2MaxInstancesPerIP': 10,
+               'ec2PublicKey': '123456789ABCDEFGHIJK',
+               'ec2DefaultInstanceTTL': 600,
+               'ec2Certificate': '-----BEGIN CERTIFICATE-----\nMIIBzTvnnvaF',
+               'ec2AccountId': '000000000000',
+               'ec2PrivateKey': '123456789ABCDEFGHIJK123456789ABCDEFGHIJK',
+               'ec2DefaultMayExtendTTLBy': 2700,
+               'ec2CertificateKey': '-----BEGIN PRIVATE KEY-----\nMIIB5QIBADAN',
+               'ec2LaunchUsers': ['000000001111', '000000002222']}
+        self.assertEquals(res, ref)
 
 
 if __name__ == '__main__':

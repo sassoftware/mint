@@ -9,13 +9,16 @@ import logging
 import os
 import optparse
 import sys
+import tempfile
+import time
+import traceback
 
 from mint import config
 from mint import scriptlibrary
 from mint import maintenance
 from mint.projects import transTables
 from conary import dbstore
-from conary.lib import tracelog
+from conary.lib import tracelog, formattrace, util
 from conary.server import schema
 
 
@@ -99,6 +102,7 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
 
         dbNames = [(x[0] + "." + x[1]).translate(transTables[self.cfg.reposDBDriver]) for x in cu.fetchall()]
 
+        errorLogFiles = {}
         errors = 0
         for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
             # lookup things in the repnamemap to resolve external local
@@ -115,19 +119,42 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
                 schema.loadSchema(reposDb, doMigrate=True)
             except:
                 errors += 1
-                e = sys.exc_info()[1]
+                exc, e, tb = sys.exc_info()
                 if str(e).startswith('Unknown database'):
                     continue
                 if str(e) == 'unable to open database file':
                     continue
+                fn = os.path.join(self.cfg.logPath, 'migration-errors',
+                        self.currentProjectName + '.log')
+                util.mkdirChain(os.path.dirname(fn))
+                errorLog = open(fn, 'a')
+                errorLog.write("Unhandled exception from rBuilder Migration script\n")
+                errorLog.write("Time of occurrence: %s (GMT)\n\n" % \
+                        time.asctime(time.gmtime()))
+                errorLog.write("%s: %s\n\nTraceback (most recent call last):\n" \
+                        % (exc, str(e)))
+                traceback.print_tb(tb, file = errorLog)
+                errorLog.write("\nFull stack:\n\n")
+                formattrace.formatTrace(exc, e, tb, stream = errorLog,
+                        withLocals = True)
+                errorLog.close()
                 self.log.error("[%s] %s" % (self.currentProjectName,
                     str(e)))
+                self.log.error("[%s] Full traceback appended to: %s" % \
+                        (self.currentProjectName, fn))
+                errorLogFiles[self.currentProjectName] = fn
 
             self.log.info("[%s] Completed (%d of %d)" % \
                     (self.currentProjectName, count, len(dbNames)))
 
         if errors:
             self.log.error("Conary repository migration completed with errors.")
+            # some rBuilder's have large numbers of projects. repeat the errors
+            # at the end for easier reference
+            self.log.error("Tracebacks were appended to the following files:")
+            for projectName, logFileName in errorLogFiles.iteritems():
+                self.log.error("[%s] %s" % \
+                        (projectName, logFileName))
             return 1
 
         self.log.info("Conary repository migration complete.")

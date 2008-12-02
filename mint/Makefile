@@ -59,6 +59,7 @@ python_files =			\
 	sessiondb.py		\
 	shimclient.py		\
 	stats.py		\
+	targets.py              \
 	urltypes.py		\
 	userlevels.py		\
 	userlisting.py		\

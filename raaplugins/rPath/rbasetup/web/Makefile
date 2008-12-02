@@ -6,7 +6,7 @@
 
 SUBDIRS =
 
-python_files = __init__.py postmigrate.py
+python_files = __init__.py rba_setup.py
 
 all: default-all
 
