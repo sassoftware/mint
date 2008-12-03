@@ -1207,7 +1207,8 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
         try:
             os.close(fd)
             self.mintCfg.projectDomainName = projectDomainName.split(':')[0]
-            rmake_setup.setupRmake(self.mintCfg, rmakeCfgPath)
+            rmake_setup.setupRmake(self.mintCfg, rmakeCfgPath,
+                    restartRmake=True)
             data = open(rmakeCfgPath).read()
         finally:
             self.mintCfg.projectDomainName = projectDomainName
@@ -1225,9 +1226,8 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
         self.assertEquals(client.getProjectsList(),
                 [(project.id, 1, 'rmake-repository - rMake Repository')])
 
-        err = self.assertRaises(RuntimeError,
+        self.assertRaises(RmakeRepositoryExistsError,
                 rmake_setup.setupRmake, self.mintCfg, rmakeCfgPath)
-        self.assertEquals(str(err), 'rMake repository already configured')
 
 
 if __name__ == "__main__":

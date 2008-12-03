@@ -6,13 +6,13 @@
 
 import os
 
-from mint import database
 from mint import helperfuncs
 from mint import shimclient
+from mint import mint_error
 
 from conary.lib import util
 
-def setupRmake(cfg, rmakeConfigFilePath):
+def setupRmake(cfg, rmakeConfigFilePath, restartRmake=False):
     # Create a product (as the admin user) for use by the internal rmake.
     adminClient = shimclient.ShimMintClient(cfg,
         [cfg.authUser, cfg.authPass])
@@ -22,10 +22,10 @@ def setupRmake(cfg, rmakeConfigFilePath):
     # ensure the rMake repository doesn't exist by attempting to reference it
     try:
         adminClient.getProjectByHostname('rmake-repository')
-    except database.ItemNotFound:
+    except mint_error.ItemNotFound:
         pass
     else:
-        raise RuntimeError('rMake repository already configured')
+        raise mint_error.RmakeRepositoryExistsError()
 
     projectId = adminClient.newProject(name="rMake Repository",
         hostname=shortName,
@@ -51,7 +51,7 @@ def setupRmake(cfg, rmakeConfigFilePath):
         "%s.%s" % (shortName, cfg.projectDomainName),
         "https://%s/repos/%s" % (cfg.siteHost, shortName))
 
-    if not os.getenv('RBUILDER_NORESTART'):
+    if restartRmake:
         if os.getenv('RBUILDER_NOSUDO'):
             sudo = ''
         else:

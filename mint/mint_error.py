@@ -147,6 +147,8 @@ class PublishedReleaseNotPublished(MintError):
     "Release has already been unpublished."
 class PublishedReleasePublished(MintError):
     "Release has already been published."
+class RmakeRepositoryExistsError(MintError):
+    "The internal rMake repository is already configured."
 class SchemaMigrationError(MintError): pass
 class TargetMissing(MintError):
     "Target does not exist"
