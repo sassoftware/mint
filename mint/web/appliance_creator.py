@@ -193,7 +193,6 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
     @output_handler('buildPackageWiz')
     @wizard_position(WIZ_PACKCREAT)
     def savePackage(self, sessionHandle, factoryHandle, recipeContents, useOverrideRecipe, **kwargs):
-        name = kwargs['name']
         if not useOverrideRecipe:
             recipeContents = ''
         self.client.savePackageCreatorRecipe(sessionHandle, recipeContents)
