@@ -1315,7 +1315,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         return self._write("editVersion",
                 isNew = isNew,
                 id=id,
-                visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
+                visibleBuildTypes = self._productVersionAvaliableBuildTypes(pd),
                 buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                 productDefinition = pd,
                 availablePlatforms = availablePlatforms,
@@ -1480,7 +1480,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             return self._write("editVersion", 
                isNew = isNew,
                id=id,
-               visibleBuildTypes = self._productVersionAvaliableBuildTypes(),
+               visibleBuildTypes = self._productVersionAvaliableBuildTypes(pd),
                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
                availablePlatforms = availablePlatforms,
                acceptablePlatform = acceptablePlatform,
@@ -1551,13 +1551,35 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self._addError("Problem updating product version")
         self._predirect(return_to)
 
-    def _productVersionAvaliableBuildTypes(self):
+    def _productVersionAvaliableBuildTypes(self, pd):
         """
         Get a list of the available build types for build defs
         """
-        return helperfuncs.getBuildDefsAvaliableBuildTypes(
+        # get a list of all the types this rBuilder knows about
+        availableTypes = helperfuncs.getBuildDefsAvaliableBuildTypes(
             self.client.getAvailableBuildTypes())
-            
+
+        # get a list of all the containerTemplates this proddef has defined
+        # filter any containers that don't actually have defined flavors
+        definedTypes = set()
+        containerTemplates = []
+        buildTemplates = []
+
+        if hasattr(pd, 'platform') and pd.platform:
+            containerTemplates = pd.platform.containerTemplates
+            buildTemplates = pd.platform.buildTemplates
+        containerTemplates += pd.getContainerTemplates()
+        buildTemplates += pd.getBuildTemplates()
+        definedContainers = set([x.containerTemplateRef \
+                for x in buildTemplates])
+
+        for template in containerTemplates:
+            if template.containerFormat not in definedContainers:
+                continue
+            definedTypes.add(buildtypes.xmlTagNameImageTypeMap[template.containerFormat])
+
+        return list(definedTypes.intersection(availableTypes))
+
     def _validateStages(self, stagesList):
         """
         Validate the release stages

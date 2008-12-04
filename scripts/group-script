@@ -65,7 +65,7 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
-RBUILDER_NORESTART=1 /usr/share/rbuilder/scripts/rmake_setup
+sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
 
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
@@ -94,18 +94,18 @@ then
     START_RMAKE=1
 fi
 
-if [[ -f /usr/sbin/gencert-rmake && ! -f /srv/rmake/certs/ca.crt ]]
+if [[ -f /usr/sbin/gencert-rmake && ! -f /etc/rmake/ssl/ca.crt ]]
 then
     # Generate rMake client CA and admin cert
     #   -- 5.0.0 - 2008-12-01
-    mkdir -p /srv/rmake/certs
+    mkdir -p /etc/rmake/ssl
     /usr/sbin/gencert-rmake -a \
-        -o /srv/rmake/certs/ca.crt -O /srv/rmake/certs/ca.key \
+        -o /etc/rmake/ssl/ca.crt -O /etc/rmake/ssl/ca.key \
         -e 3653 --O='Auto-Generated' --OU='rMake Client CA'
-    chmod 0644 /srv/rmake/certs/ca.crt
+    chmod 0644 /etc/rmake/ssl/ca.crt
     /usr/sbin/gencert-rmake -n \
-        -c /srv/rmake/certs/ca.crt -C /srv/rmake/certs/ca.key \
-        -o /srv/rmake/certs/admin.pem -e 3653 -i /srv/rmake/certs/index.txt \
+        -c /etc/rmake/ssl/ca.crt -C /etc/rmake/ssl/ca.key \
+        -o /etc/rmake/ssl/admin.pem -e 3653 -i /etc/rmake/ssl/index.txt \
         --O='Auto-Generated' --OU='rMake Admin Client' --site-user='admin'
 fi
 

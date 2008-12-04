@@ -135,9 +135,16 @@ class MintApp(WebHandler):
 
         def logTraceback():
             import traceback
-            formatted = traceback.format_exc()
-            self.req.log_error("Handled user error: (not a bug)\n"
-                + formatted.rstrip())
+            e_type, e_value, e_tb = sys.exc_info()
+
+            short = ''.join(traceback.format_exception_only(
+                e_type, e_value))
+            self.req.log_error("Handled user error: (not a bug)")
+            sys.stderr.write(short)
+            sys.stderr.flush()
+
+            formatted = ''.join(traceback.format_exception(
+                e_type, e_value, e_tb))
             return formatted
 
         try:

@@ -14,6 +14,7 @@ random = random.SystemRandom()
 import time
 
 from mint import helperfuncs
+from mint import rmake_setup
 from mint import shimclient
 from mint import config
 from mint.config import RBUILDER_GENERATED_CONFIG, RBUILDER_RMAKE_CONFIG
@@ -240,10 +241,10 @@ class SetupHandler(WebHandler):
         os.system("%skillall -USR1 httpd" % sudo)
 
         if not self.cfg.configured:
-            from mint import rmake_setup
             rmakeConfigFilePath = self.req.get_options().get(\
                     'rmakeConfigFilePath', RBUILDER_RMAKE_CONFIG)
-            rmake_setup.setupRmake(newCfg, rmakeConfigFilePath)
+            rmake_setup.setupRmake(newCfg, rmakeConfigFilePath,
+                    restartRmake=True)
         return self._write("setup/saved")
 
     def restart(self, auth):

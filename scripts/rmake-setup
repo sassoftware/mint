@@ -6,28 +6,29 @@
 #
 
 from mint import config
+from mint import mint_error
 from mint import scriptlibrary
 from mint import rmake_setup
-import os
+import traceback
+import sys
 
 class CreateRmakeProject(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     rmakeCfgPath = config.RBUILDER_RMAKE_CONFIG
 
     def action(self):
-        try:
-            cfg = config.getConfig(self.cfgPath)
-            rmake_setup.setupRmake(cfg, self.rmakeCfgPath)
-        except Exception, e:
+        cfg = config.getConfig(self.cfgPath)
+        if cfg.configured:
             try:
-                print e
-            except:
-                pass
-            os._exit(1)
+                rmake_setup.setupRmake(cfg, self.rmakeCfgPath)
+            except mint_error.RmakeRepositoryExistsError:
+                # Not an error condition, but provide a useful return code
+                return 1
         else:
-            os._exit(0)
+            print ('warning: not initializing rMake repository as '
+                    'initial setup has not been run')
+        return 0
 
 if __name__ == "__main__":
     create = CreateRmakeProject()
-    os._exit(create.run())
-
+    sys.exit(create.run())
