@@ -465,8 +465,11 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         context = {'auth': auth, 'cmd': cmd, 'client': projectHandler.client, 'fields': fields}
         func = projectHandler.handle(context)
 
-        #Mock out the product definition completely
-        self.mock(proddef, 'ProductDefinition', mock.mockClass(proddef.ProductDefinition))
+        def fail(*args, **kwargs):
+            raise RuntimeError('rebase was called')
+
+        # make sure that rebase does NOT get called
+        self.mock(proddef.ProductDefinition, 'rebase', fail)
 
         #mock the write method, since we really want to see what was returned, instead of a rendered page
         self.mock(projectHandler, '_write', lambda *a, **k: (a,k))
@@ -475,8 +478,6 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         #The primary result
         self.assertEquals(pagea[0], 'editVersion')
         self.assertEquals(projectHandler._getErrors(), ['Missing major version'])
-        # make sure that rebase did NOT get called
-        pagek['productDefinition'].rebase._mock.assertNotCalled()
 
     def testListPackagesEmpty(self):
         fields = {}
