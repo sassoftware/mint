@@ -17,11 +17,11 @@ static_files =				\
 	mirror-inbound			\
 	mirror-outbound			\
 	rbuilder-database		\
+	rmake-setup			\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password			\
-	setup_rmake.py
+	set-password
 
 generated_files =	\
 	rbuilder_database.py

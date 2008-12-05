@@ -147,7 +147,13 @@ class PublishedReleaseNotPublished(MintError):
     "Release has already been unpublished."
 class PublishedReleasePublished(MintError):
     "Release has already been published."
+class RmakeRepositoryExistsError(MintError):
+    "The internal rMake repository is already configured."
 class SchemaMigrationError(MintError): pass
+class TargetMissing(MintError):
+    "Target does not exist"
+class TargetExists(MintError):
+    "target already exists"
 class TooManyAMIInstancesPerIP(MintError):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    

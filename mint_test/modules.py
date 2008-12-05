@@ -35,6 +35,7 @@ PythonModule('mint-test', modulePath='mint/mint_test', test=''),
 ]
 
 flexModules = [
+PythonModule('flexlibs', setup='make', test=''),
 PythonModule('catalog-client', setup='make', reposName='catalog/catalog-client',
              test=''),
 ]

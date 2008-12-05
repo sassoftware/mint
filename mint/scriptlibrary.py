@@ -11,9 +11,6 @@ import sys
 import traceback
 import fcntl
 
-from mint import config
-from mint.client import MintClient
-
 from conary.lib.log import logger
 
 class GenericScript:
@@ -198,6 +195,9 @@ class TriggerScript(GenericScript):
     """
 
     def __init__(self):
+        from mint import config
+        from mint.client import MintClient
+
         GenericScript.__init__(self)
 
         # get the rBuilder configuration and a client; you'll probably need it
