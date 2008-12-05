@@ -57,7 +57,7 @@
         <p></p>
         NOTE: Update Service appliance(s) are updated between the hour selected and the following hour. The precise time a mirroring operation will occur will be shown in a message dialog when the schedule is saved.
         <p></p>
-          ${RepeatScheduleWidget(schedule, enabled, toggleText='Enable inbound mirroring schedule?', toggleName='enabled', divClass='form-line')}
+          ${RepeatScheduleWidget(schedule, enabled, toggleText='Enable outbound mirroring schedule?', toggleName='enabled', divClass='form-line')}
         <a class="rnd_button float-left" id="Save" href="javascript:button_submit(document.page_form)">Save</a>
         </div>
         </form>
