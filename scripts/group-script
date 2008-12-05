@@ -51,9 +51,10 @@ die() {
 # Shut down apache, if it's running
 shutdown_apache
 
-# Migrate the mint database
-/usr/share/rbuilder/scripts/rbuilder-database --migrate || die "Failed to migrate the rBuilder database"
-chown apache:apache /srv/rbuilder/data/db
+# Migrate the mint database (or create it if it doesn't exist)
+/usr/share/rbuilder/scripts/rbuilder-database --migrate \
+    || die "Failed to migrate the rBuilder database"
+chown apache:apache /srv/rbuilder/data/{db,platformName.cache}
 
 # Migrate all conary repositories
 /usr/share/rbuilder/scripts/migrate-all-projects || die "Failed to migrate all repositories"
@@ -109,7 +110,7 @@ then
         --O='Auto-Generated' --OU='rMake Admin Client' --site-user='admin'
 fi
 
-if [ "$START_RMAKE" -eq 1 ]
+if [ "$START_RMAKE" == 1 ]
 then
     service rmake start
     # TODO: Delete sleep workaround pending RMK-938
