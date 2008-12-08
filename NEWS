@@ -147,6 +147,8 @@ Bug Fixes
 * veth network interfaces are no longer shown in the rAPA configuration interface. (RAA-1627)
 * startImageJob() for imageless builds no longer returns an error when called 
   over xmlrpc. (RBL-3885)
+* Package creator now works with external products that require entitlements
+  for access. (RBL-3956)
 
 Changes in 4.1.3:
 ================

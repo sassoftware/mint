@@ -4872,6 +4872,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
+        cfg.entitlementDirectory = os.path.join(self.cfg.dataPath,
+                'entitlements')
+        cfg.readEntitlementDirectory()
+
         #package creator service should get the searchpath from the product definition
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
         return mincfg

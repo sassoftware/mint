@@ -148,7 +148,7 @@ class _Method(object):
 
 class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
     fields = ['name', 'contact', 'repositoryMap', 'buildLabel', 'user',
-            'installLabelPath', 'searchPath']
+            'installLabelPath', 'searchPath', 'entitlement', 'conaryProxy']
     def __init__(self, conarycfg):
         hidePasswords = conarycfg.getDisplayOption('hidePasswords')
         try:
