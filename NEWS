@@ -139,6 +139,8 @@ Bug Fixes
 * Failures while creating the product repository no longer result in a
   broken product being created. (RBL-3613)
 * The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
+* Package creator now works with external products that require entitlements
+  for access. (RBL-3956)
 
 Changes in 4.1.1
 ================

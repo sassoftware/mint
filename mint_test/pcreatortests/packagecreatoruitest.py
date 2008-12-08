@@ -450,6 +450,29 @@ content-type=text/plain
         self.mock(pcreator.backend.BaseBackend, '_getBuildLogs', validateParams)
         self.assertEquals(self.client.getPackageBuildLogs('88889'), 'Some Data')
 
+    @fixtures.fixture('Full')
+    def testMinCfgData(self, db, data):
+        self.proxyLinePresent = False
+        @pcreator.backend.public
+        def startSession(*args):
+            cfgArgs = simplejson.loads(args[2])
+            proxyLines = [x for x in cfgArgs if x.startswith('conaryProxy')]
+            self.assertEquals(bool(proxyLines), self.proxyLinePresent)
+            return 'asdfasdfasdfasdfsdf'
+        self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
+        client = self.getClient('owner')
+        sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
+
+        def newGetConfig(*args, **kwargs):
+            cfg = conary.conarycfg.ConaryConfiguration()
+            cfg.configLine('conaryProxy http://test/')
+            return cfg
+        self.mock(mint.server.MintServer, '_getProjectConaryConfig', newGetConfig)
+        self.proxyLinePresent = True
+
+        client = self.getClient('owner')
+        sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
+
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def _createProductVersion(self, mintclient, project, version, namespace, description=''):
         versionId = mintclient.addProductVersion(project.id, namespace, version, description)
