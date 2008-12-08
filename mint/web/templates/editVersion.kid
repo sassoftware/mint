@@ -67,6 +67,10 @@
                     buildSettings = dict([(buildtemplates.optionNameMap.get(k,k),v) for k, v in imageType.fields.iteritems()])
                     buildName = bdef.getBuildName()
                     buildBaseFlavor = '%s,%s' % (bdef.flavorSetRef, bdef.architectureRef)
+                    # preserve the buildType even if it is not in the proddef
+                    # this prevents the build from inadverdently changing type
+                    if buildType not in alphaBuildTypes:
+                        alphaBuildTypes.append(buildType)
                 else:
                     buildType = alphaBuildTypes[0]
                     buildSettings = {}

@@ -1416,8 +1416,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             # Coerce trove type options back to their class name
             buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
 
-            flavorSetRef, architectureRef = \
-                    builddef.get('flvSetArchRef').split(',')
+            flvSetArchRef = builddef.get('flvSetArchRef')
+            if flvSetArchRef:
+                flavorSetRef, architectureRef = flvSetArchRef.split(',')
+            else:
+                self._addErrors("The combination of image type and architecture for image '%s' is not compatible with your platform. Please remove it from your image set." % buildName)
+                flavorSetRef = architectureRef = None
             pd.addBuildDefinition(name=buildName,
                 flavorSetRef = flavorSetRef,
                 architectureRef = architectureRef,
@@ -1470,6 +1474,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     platformName = pName
                     break
             if not platformName:
+                if not platformLabel:
+                    platformTroveSpec = pd.getPlatformSourceTrove()
+                    platformNVF = parseTroveSpec(platformTroveSpec)
+                    platformVersion = versions.VersionFromString(platformNVF[1])
+                    platformLabel = str(platformVersion.trailingLabel())
+
                 platformName = 'Custom appliance platform on %s' % platformLabel
                 customPlatform = (platformLabel, platformName)
                 acceptablePlatform = \
