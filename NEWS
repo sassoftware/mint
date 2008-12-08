@@ -38,6 +38,7 @@ Internal Changes
   redirect to the product homepage even when the product is marked as
   private (RBL-3148).
 * Private products now produce private EC2 Images. (RBL-3477)
+* rMake log files are now collected by the collection tool (RBL-3859)
 * The rPath Management Console goes over https now, not http. (RBL-3871)
 
 Web Front End Changes
@@ -100,6 +101,9 @@ Web Front End Changes
 * The application now expands to fill the width of the browser. (RBL-3740)
 * SLE is available as a platform definition to those who have access to it.
   (RBL-3256)
+* The rMake server and rMake node logs are available for viewing from the rAPA
+  logs plugin. (RBL-3780)
+* The rBuilder Terms of Service is now a rapa plugin. (RBL-3803)
 * Changed the name of the rPath Catalog for EC2 to the rPath Management Console.
   (RBL-3693)
 * The rMake server and rMake node logs are available for viewing from the rAPA
@@ -139,8 +143,46 @@ Bug Fixes
 * Failures while creating the product repository no longer result in a
   broken product being created. (RBL-3613)
 * The rbuilder rAPA plugins now contain .pyc and .pyo files (RAA-1605)
+* The license and crypto report now allows you to click on the package names when they contain flavors.  (RBL-3856)
+* veth network interfaces are no longer shown in the rAPA configuration interface. (RAA-1627)
+* startImageJob() for imageless builds no longer returns an error when called 
+  over xmlrpc. (RBL-3885)
 * Package creator now works with external products that require entitlements
   for access. (RBL-3956)
+
+Changes in 4.1.3:
+================
+
+Bug Fixes
+---------------------
+* A bug in purging the stompserver message queue when a large number of files
+  are present has been fixed (RBL-3472).
+* Rerunning the rbuilder initial setup no longer resets the internal
+  password, as that caused previously created repositories to become
+  unavailable. (RBL-3344)
+
+Changes in 4.1.2:
+================
+
+Web Front End Changes
+---------------------
+* The versions of special troves used to build an Installable
+  ISO is now displayed in the image build's detail page. (RBL-2600)
+* A new page will require the acceptance of the rPath terms of service prior 
+  to initial setup. (RBL-3213)
+* Terms of service and privacy policy links now open in new tabs/windows.
+
+Bug Fixes
+---------------------
+* The default search settings in the web interface was not being set
+  properly, causing no radio buttons to be selected in the interface.
+  This has been corrected. (RBL-3002)
+* Fixed a bug preventing admin users from being able to browse the
+  repository for private products they are not members of. (RBL-3108)
+* The edit external products page now retrieves the correct label
+  information in all cases. (RBL-3179)
+* Fixed a bug with UI rendering in the MCP Console Plug-in on IE 6. (RBL-3401)
+
 
 Changes in 4.1.1
 ================

@@ -142,6 +142,28 @@ class WebProjectTest(WebProjectBaseTest):
                                   content='HREF="newBuild"',
                                   server=self.getProjectServerHostname())
 
+    def testImagelessBuild(self):
+        #raise testsuite.SkipTestException("startImageJob returns None")
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+
+        build = client.newBuild(projectId, 'build 1')
+        build.setTrove("group-dist", "/testproject." + \
+                           MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1",
+                       "1#x86")
+        build.setBuildType(buildtypes.IMAGELESS)
+        build.setFiles([["file", "file title 1"]])
+
+        self.webLogin('testuser', 'testpass')
+        job = client.startImageJob(build.getId())
+        assert not job
+        page = self.assertContent('/project/testproject/builds',
+                                  code=[200],
+                                  content='Finished',
+                                  server=self.getProjectServerHostname())
+
+
     def testBuildsList(self):
         raise testsuite.SkipTestException("startImageJob returns None")
         client, userId = self.quickMintUser('testuser', 'testpass')

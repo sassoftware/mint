@@ -4,10 +4,13 @@
 # All rights reserved.
 #
 # This script is executed from the group after each update. It migrates
-# the mint database and all repository databases. Any transitional
-# migrations (e.g. config files) should indicate which version they were
-# added in and should test whether they need to be run beforehand, in order to
-# ease maintenance.
+# the mint database and all repository databases.
+#
+# NOTE: In the interests of avoiding cruft which no-one can explain 3
+# years from now, all transitional migrations, workarounds, and anything
+# that will not otherwise be self-explanatory in the future should be
+# marked with a comment indicating when and for what version it was
+# added as well as any relevant issue IDs.
 
 check_apache() {
     pidof httpd > /dev/null 2>&1
@@ -48,9 +51,10 @@ die() {
 # Shut down apache, if it's running
 shutdown_apache
 
-# Migrate the mint database
-/usr/share/rbuilder/scripts/rbuilder-database --migrate || die "Failed to migrate the rBuilder database"
-chown apache:apache /srv/rbuilder/data/db
+# Migrate the mint database (or create it if it doesn't exist)
+/usr/share/rbuilder/scripts/rbuilder-database --migrate \
+    || die "Failed to migrate the rBuilder database"
+chown apache:apache /srv/rbuilder/data/{db,platformName.cache}
 
 # Migrate all conary repositories
 /usr/share/rbuilder/scripts/migrate-all-projects || die "Failed to migrate all repositories"
@@ -61,8 +65,8 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
-# this script is set up to use exit code 1 if rMake is already set up
-/usr/share/rbuilder/scripts/rmake_setup || true
+# Create a project for rMake to use as a repository.
+sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
 
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
@@ -82,3 +86,35 @@ do
         /sbin/chkconfig --add $initscript
     fi
 done
+
+# Restart rMake
+if [ -f /var/lock/subsys/rmake ]
+then
+    service rmake-node stop
+    service rmake stop
+    START_RMAKE=1
+fi
+
+if [[ -f /usr/sbin/gencert-rmake && ! -f /etc/rmake/ssl/ca.crt ]]
+then
+    # Generate rMake client CA and admin cert
+    #   -- 5.0.0 - 2008-12-01
+    mkdir -p /etc/rmake/ssl
+    /usr/sbin/gencert-rmake -a \
+        -o /etc/rmake/ssl/ca.crt -O /etc/rmake/ssl/ca.key \
+        -e 3653 --O='Auto-Generated' --OU='rMake Client CA'
+    chmod 0644 /etc/rmake/ssl/ca.crt
+    /usr/sbin/gencert-rmake -n \
+        -c /etc/rmake/ssl/ca.crt -C /etc/rmake/ssl/ca.key \
+        -o /etc/rmake/ssl/admin.pem -e 3653 -i /etc/rmake/ssl/index.txt \
+        --O='Auto-Generated' --OU='rMake Admin Client' --site-user='admin'
+fi
+
+if [ "$START_RMAKE" == 1 ]
+then
+    service rmake start
+    # TODO: Delete sleep workaround pending RMK-938
+    #   -- 5.0.0 - 2008-12-01
+    sleep 3
+    service rmake-node start
+fi
