@@ -1478,9 +1478,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     platformLabel = str(platformVersion.trailingLabel())
                 if platformLabel:
                     platformName = 'Custom appliance platform on %s' % platformLabel
-                    customPlatform = (platformLabel, platformName)
                     acceptablePlatform = \
                             self.client.isPlatformAcceptable(platformLabel)
+                else:
+                    platformName = 'None'
+                    acceptablePlatform = False
+                customPlatform = (platformLabel, platformName)
 
 
             kwargs.update(name = name, description = description,
