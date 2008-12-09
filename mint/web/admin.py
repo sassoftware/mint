@@ -21,7 +21,7 @@ from mod_python import apache
 from mint import users
 from mint import maintenance
 from mint import mirror
-from mint.helperfuncs import getUrlHost, getProjectText
+from mint.helperfuncs import getUrlHost, getProjectText, configureClientProxies
 from mint.mint_error import *
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
@@ -163,6 +163,7 @@ class AdminHandler(WebHandler):
                                                                 url))
 
                     cfg.entitlement.addEntitlement(extLabel.host, externalEntKey)
+                    cfg = configureClientProxies(cfg, False, self.cfg.proxy)
                     nc = conaryclient.ConaryClient(cfg).getRepos()
                     try:
                         # use 2**64 to ensure we won't make the server do much
