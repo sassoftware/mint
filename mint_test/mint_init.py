@@ -5,25 +5,26 @@ import __builtin__
 # twice - once as __main__, once as testsuite.py
 
 def setup_paths():
-    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath('../../conary'))
+    curDir = os.path.realpath(os.path.dirname(__file__)) + '/'
+    conaryPath      = os.getenv('CONARY_PATH',      os.path.realpath(curDir + '../../conary'))
     conaryTestPath  = os.getenv('CONARY_TEST_PATH', os.path.realpath(os.path.join(conaryPath, '..', 'conary-test')))
-    rmakePath       = os.getenv('RMAKE_PATH',       os.path.realpath('../../rmake'))
+    rmakePath       = os.getenv('RMAKE_PATH',       os.path.realpath(curDir + '../../rmake'))
     rmakePrivatePath = os.getenv('RMAKE_PRIVATE_PATH',       os.path.realpath('../../rmake-private'))
-    mcpPath         = os.getenv('MCP_PATH',         os.path.realpath('../../mcp'))
+    mcpPath         = os.getenv('MCP_PATH',         os.path.realpath(curDir + '../../mcp'))
     mcpTestPath     = os.getenv('MCP_TEST_PATH',    os.path.realpath(os.path.join(mcpPath, 'test')))
-    jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath('../../jobslave'))
-    mintPath        = os.getenv('MINT_PATH',        os.path.realpath('..'))
-    mintTestPath    = os.getenv('MINT_TEST_PATH',   os.path.realpath('.'))
-    raaPath         = os.getenv('RAA_PATH',         os.path.realpath('../../raa-2.1'))
-    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath('../../raa-test-2.1'))
-    raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath('../raaplugins'))
-    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath('../../rpath-product-definition'))
-    coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath('../../utils'))
-    catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath('../../catalog-service'))
-    restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath('../../restlib'))
+    jobslavePath    = os.getenv('JOB_SLAVE_PATH',   os.path.realpath(curDir + '../../jobslave'))
+    mintPath        = os.getenv('MINT_PATH',        os.path.realpath(curDir + '..'))
+    mintTestPath    = os.getenv('MINT_TEST_PATH',   os.path.realpath(curDir))
+    raaPath         = os.getenv('RAA_PATH',         os.path.realpath(curDir + '../../raa-2.1'))
+    raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath(curDir + '../../raa-test-2.1'))
+    raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath(curDir + '../raaplugins'))
+    proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath(curDir + '../../rpath-product-definition'))
+    coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath(curDir + '../../utils'))
+    catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath(curDir + '../../catalog-service'))
+    restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath(curDir + '../../restlib'))
 
     #Package creator
-    packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath('../../package-creator-service'))
+    packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath(curDir + '../../package-creator-service'))
     if not os.path.exists(packageCreatorPath):
         print >> sys.stderr, "Please set PACKAGE_CREATOR_SERVICE_PATH"
         sys.exit(1)

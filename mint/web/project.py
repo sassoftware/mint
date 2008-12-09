@@ -1377,10 +1377,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         for s in stages:
             pd.addStage(s['name'], s['labelSuffix'])
 
-        # TODO add baseflavor from the UI
-        # hardcoding baseFlavor isn't appropriate in proddef schema
-        # version 2.0 and higher
-
         # Process build definitions
         buildDefsList = collatedDict.get('pdbuilddef',[])
 
@@ -1465,6 +1461,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self._setCurrentProductVersion(id)
             self._predirect()
         else:
+            # we're displaying the page 
             availablePlatforms = self.client.getAvailablePlatforms()
             platformName = ''
             customPlatform = ()
@@ -1474,16 +1471,17 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     platformName = pName
                     break
             if not platformName:
-                if not platformLabel:
+                if not platformLabel and pd.getPlatformSourceTrove():
                     platformTroveSpec = pd.getPlatformSourceTrove()
                     platformNVF = parseTroveSpec(platformTroveSpec)
                     platformVersion = versions.VersionFromString(platformNVF[1])
                     platformLabel = str(platformVersion.trailingLabel())
+                if platformLabel:
+                    platformName = 'Custom appliance platform on %s' % platformLabel
+                    customPlatform = (platformLabel, platformName)
+                    acceptablePlatform = \
+                            self.client.isPlatformAcceptable(platformLabel)
 
-                platformName = 'Custom appliance platform on %s' % platformLabel
-                customPlatform = (platformLabel, platformName)
-                acceptablePlatform = \
-                        self.client.isPlatformAcceptable(platformLabel)
 
             kwargs.update(name = name, description = description,
                     platformLabel = platformLabel, namespace = namespace)

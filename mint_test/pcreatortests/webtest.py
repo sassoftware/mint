@@ -472,6 +472,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         self.mock(proddef.ProductDefinition, 'rebase', fail)
 
         #mock the write method, since we really want to see what was returned, instead of a rendered page
+        self.mock(projectHandler.client, 'getAvailablePlatforms', lambda: [])
         self.mock(projectHandler, '_write', lambda *a, **k: (a,k))
 
         pagea, pagek = func(auth=auth, **fields)
