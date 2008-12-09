@@ -2,6 +2,7 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
+import bootstrap
 import copy
 import inspect
 from testrunner import testhelp
@@ -29,7 +30,7 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 from conary.dbstore import sqlerrors
-import sqlharness
+from testutils import sqlharness
 
 from mcp_test import mcp_helper
 from mcp import queue
