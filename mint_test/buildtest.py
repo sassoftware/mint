@@ -488,6 +488,14 @@ class BuildTest(fixtures.FixturedUnitTest):
                           buildId, {})
 
     @fixtures.fixture('Full')
+    def testUpdateInvalidColumn(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        buildId = build.id
+        self.assertRaises(ParameterError,
+                client.server.updateBuild, buildId, {'createdBy':  42})
+
+    @fixtures.fixture('Full')
     def testGetReleaseCompat(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
