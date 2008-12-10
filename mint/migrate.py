@@ -394,8 +394,8 @@ class MigrateTo_45(SchemaMigration):
             cu.execute("""
                 CREATE TABLE Targets (
                     targetId   %(PRIMARYKEY)s,
-                    targetType VARCHAR(16),
-                    targetName VARCHAR(16)
+                    targetType VARCHAR(255),
+                    targetName VARCHAR(255)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['Targets'] = []
 
@@ -403,7 +403,7 @@ class MigrateTo_45(SchemaMigration):
             cu.execute("""
                 CREATE TABLE TargetData (
                     targetId  INT NOT NULL,
-                    name      VARCHAR(16),
+                    name      VARCHAR(255),
                     value     TEXT
                 ) %(TABLEOPTS)s """ % self.db.keywords)
             self.db.tables['TargetData'] = []
