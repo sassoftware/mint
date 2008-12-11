@@ -489,7 +489,11 @@ def addDefaultPlatformToProductDefinition(productDefinition):
     if not (hasattr(productDefinition, 'platform') and \
             productDefinition.platform):
         productDefinition.platform = proddef.PlatformDefinition()
-    if not (productDefinition.platform.getArchitectures() or
+    if not (productDefinition.getArchitectures() or
+            productDefinition.getFlavorSets() or
+            productDefinition.getContainerTemplates() or
+            productDefinition.getBuildTemplates() or
+            productDefinition.platform.getArchitectures() or
             productDefinition.platform.getFlavorSets() or
             productDefinition.platform.getContainerTemplates() or
             productDefinition.platform.getBuildTemplates()):

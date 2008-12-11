@@ -2669,9 +2669,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
         if len(valDict):
-            valDict.update({'timeUpdated': time.time(),
-                            'updatedBy':   self.auth.userId})
-            return self.builds.update(buildId, **valDict)
+            columns = { 'timeUpdated': time.time(),
+                        'updatedBy':   self.auth.userId,
+                        }
+            for column in ('pubReleaseId', 'name', 'description'):
+                if column in valDict:
+                    columns[column] = valDict.pop(column)
+            if valDict:
+                # Unknown argument
+                raise ParameterError()
+            return self.builds.update(buildId, **columns)
+        return False
 
     # build data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -2898,9 +2906,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
             raise PublishedReleasePublished
         if len(valDict):
-            valDict.update({'timeUpdated': time.time(),
-                            'updatedBy': self.auth.userId})
-            return self.publishedReleases.update(pubReleaseId, **valDict)
+            columns = { 'timeUpdated': time.time(),
+                        'updatedBy': self.auth.userId,
+                        }
+            for column in ('name', 'version', 'description'):
+                if column in valDict:
+                    columns[column] = valDict.pop(column)
+            if valDict:
+                # Unknown argument
+                raise ParameterError()
+            return self.publishedReleases.update(pubReleaseId, **columns)
+        return False
 
     @typeCheck(int, bool)
     @requiresAuth

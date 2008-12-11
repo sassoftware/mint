@@ -99,6 +99,10 @@ if [[ -f /usr/sbin/gencert-rmake && ! -f /etc/rmake/ssl/ca.crt ]]
 then
     # Generate rMake client CA and admin cert
     #   -- 5.0.0 - 2008-12-01
+
+    # /dev is rather empty at image build time, but openssl needs entropy.
+    [ -c /dev/urandom ] || /sbin/MAKEDEV -x urandom
+
     mkdir -p /etc/rmake/ssl
     /usr/sbin/gencert-rmake -a \
         -o /etc/rmake/ssl/ca.crt -O /etc/rmake/ssl/ca.key \

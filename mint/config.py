@@ -219,6 +219,10 @@ class MintConfig(ConfigFile):
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
     ec2UseNATAddressing     = (cfgtypes.CfgBool, False)
+    # These are not migrated as they are redundant
+    awsPublicKey            = None
+    awsPrivateKey           = None
+
     # *** END DEPRECATED VALUES ***
 
     VAMUser                 = ''

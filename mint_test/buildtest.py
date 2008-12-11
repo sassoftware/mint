@@ -488,6 +488,14 @@ class BuildTest(fixtures.FixturedUnitTest):
                           buildId, {})
 
     @fixtures.fixture('Full')
+    def testUpdateInvalidColumn(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        buildId = build.id
+        self.assertRaises(ParameterError,
+                client.server.updateBuild, buildId, {'createdBy':  42})
+
+    @fixtures.fixture('Full')
     def testGetReleaseCompat(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
@@ -1803,6 +1811,32 @@ class BuildTestConaryRepository(MintRepositoryHelper):
                 "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86",
                 coll.getVersion().freeze(), coll.getFlavor().freeze())
         self.failUnlessEqual(foundSpec, "%s=%s[%s]" % coll.getNameVersionFlavor())
+
+    def testMakeFlavorMap(self):
+        from rpath_common.proddef import api1 as proddef
+        prd = proddef.ProductDefinition()
+
+        res = buildtypes.makeFlavorMap(prd)
+        self.assertEquals(res, {})
+
+        # test both being degenerate
+        prd.platform = proddef.PlatformDefinition()
+        res = buildtypes.makeFlavorMap(prd)
+        self.assertEquals(res, {})
+
+        prd.addFlavorSet('foo', 'Foo Flavor', '~foo')
+        prd.addArchitecture('arch', 'Arch Flavor', 'arch')
+        res = buildtypes.makeFlavorMap(prd)
+        self.assertEquals(res, {'Foo Flavor Arch Flavor': 'foo,arch'})
+
+        # add platform settings
+        prd.platform.addFlavorSet('bar', 'Bar Flavor', '~bar')
+        prd.platform.addArchitecture('arch2', 'Arch2 Flavor', 'arch2')
+        res = buildtypes.makeFlavorMap(prd)
+        self.assertEquals(res, {'Foo Flavor Arch2 Flavor': 'foo,arch2',
+                                'Bar Flavor Arch2 Flavor': 'bar,arch2',
+                                'Foo Flavor Arch Flavor': 'foo,arch',
+                                'Bar Flavor Arch Flavor': 'bar,arch'})
 
 
 if __name__ == "__main__":
