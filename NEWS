@@ -108,6 +108,7 @@ Web Front End Changes
   (RBL-3693)
 * The rMake server and rMake node logs are available for viewing from the rAPA
   logs plugin. (RBL-3780)
+* There is now an RPA plug-in to configure targets. (RBL-3950)
 
 Bug Fixes
 ---------------------
