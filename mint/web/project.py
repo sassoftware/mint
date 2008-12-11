@@ -694,14 +694,26 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
                     n,v,f = parseTroveSpec(anacondaVars[key])
-                    if not v:  # skip things that don't have valid versions
-                        anacondaVars[key] = ''
-                        continue
-                    try:
-                        vObj = versions.VersionFromString(v)
-                    except ParseError:
-                        vObj = versions.ThawVersion(v)
-                    anacondaVars[key] = '%s/%s' % (vObj.trailingLabel(), vObj.trailingRevision())
+                    outParts = []
+
+                    if n != key:
+                        # Display the name only if it's not the default
+                        outParts.append('%s=' % n)
+
+                    if v:
+                        # Try to parse the version so that full
+                        # ones can be reformatted as a label + rev.
+                        vObj = helperfuncs.parseVersion(v)
+                        if vObj:
+                            outParts.append('%s/%s' % (vObj.trailingLabel(),
+                                    vObj.trailingRevision()))
+                        else:
+                            outParts.append(v)
+
+                    if f is not None and f != deps.Flavor():
+                        outParts.append('[%s]' % f)
+
+                    anacondaVars[key] = ''.join(outParts)
 
             amiId = build.getDataValue('amiId', validate = False)
             amiS3Manifest = build.getDataValue('amiS3Manifest', validate=False)
