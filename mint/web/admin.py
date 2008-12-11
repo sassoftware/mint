@@ -388,9 +388,6 @@ class AdminHandler(WebHandler):
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
                            spotlightData=self.client.getSpotlightAll())
-        
-    def cloudConfig(self, auth):
-        return self._write('admin/cloudConfig')
 
     def _makeMirrorOrderingLinks(self, name, count, order, index, id):
         """Helper function to make the up/down links for mirror ordering"""
