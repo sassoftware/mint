@@ -4,7 +4,9 @@
 # All rights reserved
 #
 
+from conary import versions
 from conary.deps import arch, deps
+from conary.errors import ParseError
 from conary.repository.errors import RoleAlreadyExists, RoleNotFound
 
 from mint import constants
@@ -609,3 +611,19 @@ def getBasicConaryConfiguration(mintCfg):
     ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy, mintCfg.getInternalProxies())
     return ccfg
 
+
+def parseVersion(vStr):
+    """
+    Try to parse C{vStr} as a version with or without timestamps.
+    """
+    try:
+        return versions.ThawVersion(vStr)
+    except:
+        pass
+
+    try:
+        return versions.VersionFromString(vStr)
+    except:
+        pass
+
+    return None
