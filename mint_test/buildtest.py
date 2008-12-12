@@ -611,7 +611,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(BuildMissing, client.server._server.getBuildType, 99)
 
     @fixtures.fixture('Full')
-    def testGetAvailBuildTypes(self, db, data):
+    def testGetAvailableBuildTypes(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
         excludeBuildTypes = self.cfg.excludeBuildTypes
@@ -639,6 +639,17 @@ class BuildTest(fixtures.FixturedUnitTest):
         finally:
             self.cfg.excludeBuildTypes = excludeBuildTypes
             self.cfg.includeBuildTypes = includeBuildTypes
+
+    @fixtures.fixture('Full')
+    def testGetAvailableBuildTypes2(self, db, data):
+        client = self.getClient('admin')
+        targetData = client.getTargetData('ec2', 'aws')
+        client.deleteTarget('ec2', 'aws')
+        self.failIf(buildtypes.AMI in client.getAvailableBuildTypes(),
+                "Expected AMI to be omitted")
+        client.addTarget('ec2', 'aws', targetData)
+        self.failUnless(buildtypes.AMI in client.getAvailableBuildTypes(),
+                "AMI should have been included")
 
     def testAlphabatizeBuildTypes(self):
         refList = [buildtypes.INSTALLABLE_ISO,

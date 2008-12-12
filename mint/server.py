@@ -3242,6 +3242,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getAvailableBuildTypes(self):
         buildTypes = set(buildtypes.TYPES)
 
+        # XXX we have one special case for now, but this won't scale
+        # if AMI is not configured, remove it from the list
+        amiData = self._getTargetData('ec2', 'aws', supressException = True)
+        if not (amiData.get('ec2AccountId') and \
+                amiData.get('ec2PublicKey') and \
+                amiData.get('ec2PrivateKey')):
+            buildTypes.remove(buildtypes.AMI)
+
         if self.cfg.excludeBuildTypes:
             buildTypes -= set(self.cfg.excludeBuildTypes)
 
