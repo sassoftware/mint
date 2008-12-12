@@ -46,43 +46,34 @@
 
             <table class="mainformhorizontal">
             <tr>
-                <td class="form-label"><em class="required">${projectText().title()} Name:</em></td>
+                  <td class="form-label"><em class="required">${projectText().title()} Title:</em></td>
+                  <td>
+                    <input type="text" autocomplete="off" name="name" value="${kwargs['name']}"/>
+                    <p class="help">Enter a description for this
+                    ${projectText().lower()}. To reduce confusion, we recommend
+                   that you enter the external ${projectText().lower()}'s title.</p>
+                  </td>
+            </tr>
+            <tr>
+                <td class="form-label"><em py:strip="editing" class="required">${projectText().title()} Short Name:</em></td>
                 <td py:if="editing" class="form-label">
                     ${kwargs['hostname']}<input type="${editing and 'hidden' or 'text'}" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
                 </td>
                 <td py:if="not editing">
                     <input type="${editing and 'hidden' or 'text'}" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
-                    <p class="help">Enter a local name for this
-                    ${projectText().lower()}. The local name will be used as the hostname
-                    for this ${projectText().lower()}'s site and repository
-                    (http://&lt;${projectText().lower()}-name&gt;.${cfg.projectDomainName}/). It
-                    must start with a letter and contain only letters and
+                    <p class="help">Enter a name for this
+                    ${projectText().lower()}.
+                    It must start with a letter and contain only letters and
                     numbers, and be less than or equal to 16 characters
-                    long.  For example, <strong>mylinux</strong></p>
-
-                    <p class="help">(To reduce confusion, we recommend
-                    that you enter the external ${projectText().lower()}'s name.)</p>
+                    long. To reduce confusion, we recommend
+                    that you enter the external ${projectText().lower()}'s short name.</p>
                 </td>
-            </tr>
-            <tr>
-                  <td class="form-label"><em class="required">${projectText().title()} Title:</em></td>
-                  <td>
-                    <input type="text" autocomplete="off" name="name" value="${kwargs['name']}"/>
-                    <p class="help">Enter a local title for this
-                    ${projectText().lower()}.  The title is a longer, more descriptive
-                    name for the ${projectText().lower()}. For example, <strong>My
-                    Custom Linux</strong></p>
-
-                   <p class="help">(To reduce confusion, we recommend
-                   that you enter the external ${projectText().lower()}'s title.)</p>
-                  </td>
             </tr>
             <tr>
                 <td class="form-label"><em class="required">${projectText().title()} Label:</em></td>
                 <td>
                   <input type="text" autocomplete="off" name="label" value="${kwargs['label']}" />
-                  <p class="help">Enter this ${projectText().lower()}'s label.  For
-                  example, <strong>conary.example.com@rpl:1</strong></p>
+                  <p class="help">Enter this ${projectText().lower()}'s label.</p>
                 </td>
             </tr>
             <tr>
@@ -91,11 +82,7 @@
                   <input type="text" autocomplete="off" name="url" value="${kwargs['url']}"/>
                   <p class="help">Enter the URL for this ${projectText().lower()}'s
                   repository.  If a URL is not provided, the standard
-                  URL format will be derived from the ${projectText().lower()}'s label
-                  (eg; for label
-                  <strong>conary.example.com@rpl:1</strong> the
-                  repository URL will be
-                  <strong>http://conary.example.com/conary/</strong>)</p>
+                  URL format will be derived from the ${projectText().lower()}'s label.</p>
                 </td>
             </tr>
             </table>
