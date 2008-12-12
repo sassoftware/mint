@@ -126,7 +126,7 @@
                         </td>
                     </tr>
             <tr>
-                <td class="form-label"><em class="required">${projectText().title()} is Private:</em></td>
+                <td class="form-label">${projectText().title()} is Private:</td>
                 <td>
                             <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
                             <div id="modalYesNo" title="Confirmation" style="display: none;">
