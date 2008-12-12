@@ -57,7 +57,7 @@ from mint.web.templatesupport import projectText
                             <span id="verhelp" class="help">Enter a version for this release. (Example: 1.1.1)</span></td>
                         </tr>
                         <tr>
-                            <td class="form-label"><em class="required">Description:</em>&nbsp;</td>
+                            <td class="form-label">Description:&nbsp;</td>
                             <td><textarea id="reldesc" name="desc" type="text" py:content="desc" /><br/>
                             <span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span></td>
                         </tr>
