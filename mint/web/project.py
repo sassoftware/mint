@@ -693,6 +693,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             for key in anacondaVars:
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
+                    if anacondaVars[key] == 'NONE':
+                        anacondaVars[key] = ''
+                        continue
+
                     n,v,f = parseTroveSpec(anacondaVars[key])
                     outParts = []
 
