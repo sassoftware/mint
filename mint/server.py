@@ -66,6 +66,7 @@ from conary import conarycfg
 from conary import conaryclient
 from conary import versions
 from conary.conaryclient import filetypes
+from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
 from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
@@ -2511,9 +2512,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def newBuildWithOptions(self, projectId, productName,
                             groupName, groupVersion, groupFlavor,
                             buildType, buildSettings):
-        customTroveDict = { 'mediaTemplateTrove' : 'media-template',
-                            'anacondaCustomTrove' : 'anaconda-custom',
-                            'anacondaTemplatesTrove' : 'anaconda-templates'}
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
 
@@ -2532,33 +2530,54 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         template = newBuild.getDataTemplate()
 
-        # handle custom troves
-        for customTroveSetting in ['mediaTemplateTrove', 'anacondaCustomTrove',
-                            'anacondaTemplatesTrove']:
-            if buildSettings.has_key(customTroveSetting):
-                troveName = customTroveDict[customTroveSetting]
-                troveVersion = str(buildSettings.pop(customTroveSetting))
-                customTroveSpec = self.resolveExtraTrove(projectId, troveName,
-                                                     troveVersion, '',
-                                                     groupVersion, groupFlavor)
-                if customTroveSpec:
-                    newBuild.setDataValue(troveName, customTroveSpec)
+        # Aliases for custom trove settings from product-definition
+        for before, after in buildtemplates.optionNameMap.items():
+            if before in buildSettings:
+                buildSettings[after] = buildSettings.pop(before)
 
         # handle the rest
-        for k, v in buildSettings.iteritems():
+        for name, value in buildSettings.iteritems():
             try:
-                if template[k][0] == data.RDT_BOOL:
-                    v = (str(v).lower() == 'true')
-                elif template[k][0] in (data.RDT_STRING, data.RDT_ENUM):
-                    v = str(v)
-                elif template[k][0] == data.RDT_INT:
-                    v = int(v)
-                else:
-                    continue
+                settingType = template[name][0]
             except KeyError:
-                pass # if it's not int the template, no matter
+                # If there is no template, ignore it.
+                continue
+
+            if settingType == data.RDT_BOOL:
+                value = (str(value).lower() == 'true')
+            elif settingType in (data.RDT_STRING, data.RDT_ENUM):
+                value = str(value)
+            elif settingType == data.RDT_INT:
+                value = int(value)
+            elif settingType == data.RDT_TROVE:
+                if isinstance(value, unicode):
+                    value = value.encode('utf8')
+                if '@' in value and '=' not in value:
+                    # Just a version (probably a label)
+                    # The setting name is the trove name.
+                    specName, specVersion, specFlavor = name, value, ''
+                else:
+                    # A trovespec
+                    specName, specVersion, specFlavor = parseTroveSpec(value)
+                    if not specVersion:
+                        specVersion = ''
+                    if specFlavor:
+                        specFlavor = str(specFlavor)
+                    else:
+                        specFlavor = ''
+
+                # Resolve to an exact NVF so recreating will use the
+                # old thing.
+                value = self.resolveExtraTrove(projectId,
+                        specName, specVersion, specFlavor,
+                        groupVersion, groupFlavor)
+                if not value:
+                    continue
             else:
-                newBuild.setDataValue(k, v)
+                # Unknown type
+                continue
+
+            newBuild.setDataValue(name, value)
 
         return buildId
 
@@ -5283,7 +5302,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for x in pc.listTroves(sessionHandle).get('explicitTroves', []):
             if ':source' in x:
                 src = (x.replace(":source", '') + '-1').encode('utf-8') #Have to assume the build count
-                ts = conaryclient.cmdline.parseTroveSpec(src)
+                ts = parseTroveSpec(src)
                 try:
                     # Later on we can use this to get a specific version, now
                     # we just care that it doesn't raise a TroveNotFound
