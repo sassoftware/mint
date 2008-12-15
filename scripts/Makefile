@@ -9,6 +9,7 @@ static_files =				\
 	check-repository		\
 	deleteproject			\
 	ec2-terminator			\
+	generate-certs.sh		\
 	group-script			\
 	load-offline-mirror		\
 	mcp-stack			\
