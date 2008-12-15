@@ -6,7 +6,9 @@
 
 SUBDIRS =
 
-python_files = __init__.py rba_setup.py
+python_files = 	\
+		__init__.py \
+		rbasetup.py
 
 all: default-all
 
