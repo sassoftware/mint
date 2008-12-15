@@ -25,3 +25,4 @@ class rBASetupTest(raatest.rAATest):
 
     def test_index(self):
         # TODO
+        pass
