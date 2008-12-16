@@ -102,12 +102,6 @@
             </tr>
             </table>
             
-            <h2>Amazon EC2 Settings</h2>
-            <ul class="pageSectionList">
-                <li><a href="http://${SITE}cloudSettings">Edit Settings</a></li>
-                <li><a href="http://${SITE}removeCloudSettings">Remove Settings</a></li>
-            </ul>
-
             <h2>Package Signing Keys</h2>
             <ul class="pageSectionList">
                 <li><a href="http://${SITE}uploadKey">Upload a package signing key</a></li>
