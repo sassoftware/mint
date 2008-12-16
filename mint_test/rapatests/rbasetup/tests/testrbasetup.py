@@ -94,7 +94,7 @@ class rBASetupTest(raatest.rAATest):
         self.rbasetup = rbasetup_srv.rBASetup()
 
         self.rootConfig = self._createTempfile()
-        self.generatedConfig = = self._createTempfile()
+        self.generatedConfig = self._createTempfile()
 
         # Write out our test root config
         f = open(self.rootConfig, 'w')
