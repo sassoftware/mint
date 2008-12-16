@@ -2,20 +2,21 @@
 # Copyright (C) 2008 rPath, Inc.
 # All rights reserved
 #
-from raa.modules import raasrvplugin
-from raaplugins.services.srv import services
+import logging
+
+from raa.modules.raasrvplugin import rAASrvPlugin
 
 from mint import config
 
 log = logging.getLogger('raa.server.rbasetup')
 
-class rBASetup(services.Services):
+class rBASetup(rAASrvPlugin):
     """
     Plugin for the backend work of the rBuilder Appliance Setup plugin.
     """
 
     def __init__(self, *args, **kwargs):
-        raasrvplugin.rAASrvPlugin.__init__(self, *args, **kwargs)
+        rAASrvPlugin.__init__(self, *args, **kwargs)
         self.config = self.server.getConfigData()
 
     def _readConfigFile(self, configFileName):
@@ -36,12 +37,12 @@ class rBASetup(services.Services):
         """
         Writes the generated configuration file.
         """
-        log.info('Writing new configuration to %s' % configFileName)
+        log.info('Writing new configuration to %s' % generatedConfigFileName)
 
         # Create a new configuration object to store the new values in
         newCfg = config.MintConfig()
-        for n, v in newValues:
-            if n in newCfg: newCfg[key] = v
+        for k, v in newValues.iteritems():
+            if k in newCfg: newCfg[k] = v
 
         # Ensure that configured is True
         newCfg.configured = True
@@ -76,11 +77,14 @@ class rBASetup(services.Services):
         cfg = self._readConfigFile(config.RBUILDER_CONFIG)
         isConfigured = cfg.configured
         configurableOptions = dict()
-        for n, v in cfg.iteritems():
+        for k in config.keysForGeneratedConfig:
+            if k not in cfg:
+                continue
+            v = cfg[k]
             # make safe for XMLRPC
-            if not v: v = ''
-            docstring = cfg[n].__doc__ or ''
-            configurableOptions[n] = (v, docstring)
+            if v == None: v = ''
+            docstring = cfg._options[k].__doc__ or ''
+            configurableOptions[k] = (v, docstring)
         return isConfigured, configurableOptions
 
     def updateRBAConfig(self, schedId, execId, newValues):
@@ -88,7 +92,7 @@ class rBASetup(services.Services):
         Updates the generated configuration file. Expects a
         dictionary of name value pairs to update.
         """
-        return self._writeGeneratedConfigFile(config.RBUILDER_GENERATED_CONFIG,
-                newValues)
+        return self._writeGeneratedConfigFile(newValues,
+                config.RBUILDER_GENERATED_CONFIG)
 
 

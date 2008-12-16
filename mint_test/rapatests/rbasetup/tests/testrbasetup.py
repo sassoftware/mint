@@ -3,20 +3,21 @@
 # All rights reserved.
 #
 
+import raa.web
 import os
 import raapluginstest
 import raatest
-import raa.web
 import tempfile
+from testrunner import resources
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command
 from raa.rpath_error import RestartWebException
-from raaplugins.rbasetup.srv import rbasetup as rbasetup_srv
+from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
 
-MINT_CONFIG_ROOT = """
+MINT_CONFIG_ROOT="""
 # A file that approxiamates what the setup plugin will read.
 
 # This is rBuilder
@@ -36,14 +37,6 @@ basePath                /
 # Support contact information
 supportContactTXT       your local system administrator
 supportContactHTML      <p>your local system administrator</p>
-
-# Default action that occurs when something is committed to a Conary
-# repository
-commitAction    /usr/lib/python2.4/site-packages/conary/commitaction --repmap='%(repMap)s' --build-label=%(buildLabel)s \
-   --username=%(authUser)s --password=%(authPass)s \
-   --module='/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user=%%(user)s --url=http://127.0.0.1/xmlrpc-private/'
-commitActionEmail \
-    --module='/usr/lib/python2.4/site-packages/conary/changemail.py --user=%%(user)s --from=%(commitFromEmail)s --email=%(commitEmail)s'
 
 # Group template label
 groupApplianceLabel     rap.rpath.com@rpath:linux-1
@@ -89,20 +82,24 @@ class rBASetupTest(raatest.rAATest):
                         (self.testconfigfile, str(e))
 
     def setUp(self):
+        # Save for later
         self.oldinit = rbasetup_srv.rBASetup.__init__
+        self.oldConfig = config.RBUILDER_CONFIG
+        self.oldGeneratedConfig = config.RBUILDER_GENERATED_CONFIG
+
         rbasetup_srv.rBASetup.__init__ = lambda *args: None
-        self.rbasetup = rbasetup_srv.rBASetup()
+        self.rbasetupsrv = rbasetup_srv.rBASetup()
 
-        self.rootConfig = self._createTempfile()
-        self.generatedConfig = = self._createTempfile()
+        config.RBUILDER_CONFIG = self._createTempfile()
+        config.RBUILDER_GENERATED_CONFIG = self._createTempfile()
 
-        # Write out our test root config
-        f = open(self.rootConfig, 'w')
-        f.write(MINT_CONFIG_ROOT % {'testGeneratedFile': self.generatedConfig}
+        # Write out our test rbuilder config
+        f = open(config.RBUILDER_CONFIG, 'w')
+        f.write(MINT_CONFIG_ROOT % {'testGeneratedFile': config.RBUILDER_GENERATED_CONFIG})
         f.close()
 
-        # Write out our test generated config
-        f = open(self.generatedConfig, 'w')
+        # Write out our test rbuilder generated config
+        f = open(config.RBUILDER_GENERATED_CONFIG, 'w')
         f.write("# This file is blank and waiting to be filled in")
         f.close()
 
@@ -115,11 +112,14 @@ class rBASetupTest(raatest.rAATest):
         raatest.rAATest.setUp(self)
 
     def tearDown(self):
-        rbasetup_srv.rBASetup.__init__ = self.oldinit
-
         # Cleanup our configuration files
-        self._removeFile(self.rootConfig)
-        self._removeFile(self.generatedConfig)
+        self._removeFile(config.RBUILDER_CONFIG)
+        self._removeFile(config.RBUILDER_GENERATED_CONFIG)
+
+        # Reset
+        rbasetup_srv.rBASetup.__init__ = self.oldinit
+        config.RBUILDER_CONFIG = self.oldConfig
+        config.RBUILDER_GENERATED_CONFIG = self.oldGeneratedConfig
 
         raatest.rAATest.tearDown(self)
 
@@ -128,5 +128,90 @@ class rBASetupTest(raatest.rAATest):
         pass
 
     def testGetConfig(self):
-        # TODO: write service backend tests
-        pass
+        """
+        Make sure that the get configuration path can:
+        1. Read a configuration.
+        2. Return a dict that contains only the subset of items
+           required for generating an rBuilder config.
+        3. isConfigured is False at the start.
+        4. Make sure return types are as we expect:
+           a. values of configurable options are doubles
+           b. NoneType is not present in the results (for XML-RPC's sake)
+        """
+
+        # Call the backend function
+        isConfigured, configurableOptions = \
+                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
+
+        # Make sure that we are *not* configured now
+        self.failIf(isConfigured, "Initial setup should not be configured")
+
+        # Check expected keys.
+        for k in configurableOptions.keys():
+            if k in config.keysForGeneratedConfig:
+                v = configurableOptions[k]
+                self.failUnless(isinstance(v, tuple),
+                        "Value of %s should be a tuple" % k)
+                self.assertEqual(len(v), 2,
+                        "Length of tuple should be 2")
+                for x in v:
+                    self.assertNotEqual(x, None, "None should not be present")
+                configurableOptions.pop(k)
+
+        # Configurable options should be empty, unless we
+        # got extraneous stuff
+        self.failIf(configurableOptions, "Too many configurable options returned")
+
+    def testUpdateConfig(self):
+        """
+        Verify that a configuration can be written by the backend.
+        Make sure it has only the keys we expect.
+        """
+
+        # Pass in a dict that has some values we may receive from the
+        # web frontend. This dict will have some values that should
+        # not be saved in the generated config.
+        newValues = dict(hostName="justified",
+                         siteDomainName="mumu.org",
+                         secureHost="ancient.mumu.org",
+                         companyName="The JAMMs",
+                         bugsEmail="icecreamvan@mumu.org",
+                         waddle="frob")
+
+        # Call the backend function
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.updateRBAConfig,
+                newValues)
+
+        # Make sure return is OK
+        self.failUnlessEqual(ret, True,
+                "Expected return of True from backend call")
+
+        # Read the generated config back
+        cfgfile = file(config.RBUILDER_GENERATED_CONFIG, 'r').read()
+
+        # Check for rogue elements
+        self.failIf("waddle" in cfgfile,
+            "Unexpected keys have infiltrated the generated config!")
+
+        # We have no need for this guy anymore
+        newValues.pop("waddle")
+
+        # Merge values written into a config, check
+        newCfg = config.MintConfig()
+        newCfg.read(config.RBUILDER_GENERATED_CONFIG)
+
+        # Check values
+        for k in newValues:
+            self.assertEqual(newCfg[k], newValues[k])
+
+        # And now, let's use the backend to get the config, too
+        isConfigured, configurableOptions = \
+                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
+
+        # We should be configured now
+        self.failUnless(isConfigured,
+                "We should be configured now (backend call missed it)")
+
+        # Final check
+        for k in newValues:
+            self.assertEqual(configurableOptions[k][0], newValues[k])
