@@ -1910,57 +1910,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         bf.close()
         self.assertContent('/', content=XMLbulletinContent)
 
-    def testCloudSettings(self):
-        raise testsuite.SkipTestException(
-            'Need a way to mock out EC2 calls. See RBL-3059')
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        
-        self.webLogin('foouser', 'foopass')
-        page = self.fetchWithRedirect('/cloudSettings')
-        page = page.postForm(2, page.post,
-                          { 'awsAccountNumber': '1234-5678-9011',
-                            'awsPublicAccessKeyId': '01010101010101010101',
-                            'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
-                            'force': "1"})
-
-        ec2Creds = client.getEC2CredentialsForUser(userId)
-        self.failUnlessEqual(ec2Creds['awsAccountNumber'], '123456789011')
-        self.failUnlessEqual(ec2Creds['awsPublicAccessKeyId'],
-                '01010101010101010101')
-        self.failUnlessEqual(ec2Creds['awsSecretAccessKey'],
-                '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
-        
-    def testRemoveCloudSettings(self):
-        raise testsuite.SkipTestException(
-            'Need a way to mock out EC2 calls. See RBL-3059')
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        
-        self.webLogin('foouser', 'foopass')
-        
-        # add some settings and enusre they are there
-        page = self.fetchWithRedirect('/cloudSettings')
-        page = page.postForm(2, page.post,
-                          { 'awsAccountNumber': '1234-5678-9011',
-                            'awsPublicAccessKeyId': '01010101010101010101',
-                            'awsSecretAccessKey': '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123',
-                            'force': "1"})
-
-        ec2Creds = client.getEC2CredentialsForUser(userId)
-        self.failUnlessEqual(ec2Creds['awsAccountNumber'], '123456789011')
-        self.failUnlessEqual(ec2Creds['awsPublicAccessKeyId'],
-                '01010101010101010101')
-        self.failUnlessEqual(ec2Creds['awsSecretAccessKey'],
-                '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+123')
-        
-        # remove them and make sure they are gone
-        page = self.fetchWithRedirect('/removeCloudSettings')
-        page = page.postForm(2, page.post, {'confirm': "1"})
-        ec2Creds = client.getEC2CredentialsForUser(userId)
-        self.assertTrue(ec2Creds == {'awsPublicAccessKeyId': '', 
-                                     'awsSecretAccessKey': '', 
-                                     'awsAccountNumber': ''})
-
-
     def testFrontPageBlock(self):
         HTMLcontent = """<DIV>The MARKETING block of code</DIV>"""
 
