@@ -8,6 +8,7 @@ import os
 from raa.modules.raasrvplugin import rAASrvPlugin
 
 from mint import config
+from conary.lib.cfgtypes import CfgBool
 
 log = logging.getLogger('raa.server.rbasetup')
 
@@ -84,8 +85,8 @@ class rBASetup(rAASrvPlugin):
             v = cfg[k]
             # make safe for XMLRPC
             if v == None: v = ''
-            docstring = cfg._options[k].__doc__ or ''
-            configurableOptions[k] = (v, docstring)
+            docstring = cfg._options[k].__doc__ or k
+            configurableOptions[k] = (v, docstring, isinstance(cfg._options[k].valueType, CfgBool))
         return isConfigured, configurableOptions
 
     def updateRBAConfig(self, schedId, execId, newValues):
