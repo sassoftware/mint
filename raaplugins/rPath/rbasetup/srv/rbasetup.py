@@ -19,7 +19,6 @@ class rBASetup(rAASrvPlugin):
 
     def __init__(self, *args, **kwargs):
         rAASrvPlugin.__init__(self, *args, **kwargs)
-        self.config = self.server.getConfigData()
 
     def _readConfigFile(self, configFileName):
         """
