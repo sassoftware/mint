@@ -150,22 +150,11 @@ class rBASetupTest(raatest.rAATest):
         # Make sure that we are *not* configured now
         self.failIf(isConfigured, "Initial setup should not be configured")
 
-        # Spot check boolean options
-        self.failUnlessEqual(configurableOptions['requireSigs'][2], True,
-                "requireSigs is a boolean and should be noted as such")
-        self.failUnlessEqual(configurableOptions['hostName'][2], False,
-                "hostName is a string but is flagged as a boolean")
-
         # Check expected keys.
         for k in configurableOptions.keys():
             if k in config.keysForGeneratedConfig:
                 v = configurableOptions[k]
-                self.failUnless(isinstance(v, tuple),
-                        "Value of %s should be a tuple" % k)
-                self.assertEqual(len(v), 3,
-                        "Length of tuple should be 3")
-                for x in v:
-                    self.assertNotEqual(x, None, "None should not be present")
+                self.assertNotEqual(v, None, "None should not be present")
                 configurableOptions.pop(k)
 
         # Configurable options should be empty, unless we
@@ -224,7 +213,7 @@ class rBASetupTest(raatest.rAATest):
 
         # Final check
         for k in newValues:
-            self.assertEqual(configurableOptions[k][0], newValues[k])
+            self.assertEqual(configurableOptions[k], newValues[k])
 
     def testRestartApache(self):
         """

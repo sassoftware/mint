@@ -72,8 +72,7 @@ class rBASetup(rAASrvPlugin):
 
         Returns a double: the first is whether or not this rBuilder has
         been configured. The second is a dict of configurable options,
-        each of whose values is also a double: the value, along with a
-        docstring for the configuration value.
+        as a key/value pair.
         """
         cfg = self._readConfigFile(config.RBUILDER_CONFIG)
         isConfigured = cfg.configured
@@ -83,15 +82,15 @@ class rBASetup(rAASrvPlugin):
                 continue
             v = cfg[k]
             # make safe for XMLRPC
-            if v == None: v = ''
-            docstring = cfg._options[k].__doc__ or k
-            configurableOptions[k] = (v, docstring, isinstance(cfg._options[k].valueType, CfgBool))
+            if v == None:
+                v = ''
+            configurableOptions[k] = v
         return isConfigured, configurableOptions
 
     def updateRBAConfig(self, schedId, execId, newValues):
         """
         Updates the generated configuration file. Expects a
-        dictionary of name value pairs to update.
+        dictionary of key/value pairs to update.
         """
         return self._writeGeneratedConfigFile(newValues,
                 config.RBUILDER_GENERATED_CONFIG)
