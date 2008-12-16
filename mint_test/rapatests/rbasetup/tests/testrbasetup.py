@@ -12,7 +12,7 @@ import tempfile
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command
 from raa.rpath_error import RestartWebException
-from raaplugins.rbasetup.srv import rbasetup as rbasetup_srv
+from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
 
