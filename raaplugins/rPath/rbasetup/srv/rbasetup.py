@@ -7,6 +7,8 @@ from raaplugins.services.srv import services
 
 from mint import config
 
+import logging
+
 log = logging.getLogger('raa.server.rbasetup')
 
 class rBASetup(services.Services):
