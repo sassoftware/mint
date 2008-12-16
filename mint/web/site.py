@@ -320,70 +320,7 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatUserSearch(results)
         return self._write("users", sortOrder = sortOrder, limit = limit, offset = offset,
             results = formattedRows, columns = columns, count = count)
-
-    @requiresAuth
-    @redirectHttps
-    def cloudSettings(self, auth):
-        return self._write("cloudSettings",
-                           user = self.user,
-                           dataDict = self.user.getDataDict())
-
-    @strFields(awsAccountNumber = "", awsPublicAccessKeyId = "",
-               awsSecretAccessKey = "")
-    @boolFields(force = False)
-    @requiresHttps
-    @requiresAuth
-    def processCloudSettings(self, auth, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey, force):
-
-        def getDataDict():
-            dataDict = self.user.getDataDict()
-            dataDict['awsAccountNumber'] = awsAccountNumber
-            dataDict['awsPublicAccessKeyId'] = awsPublicAccessKeyId
-            dataDict['awsSecretAccessKey'] = awsSecretAccessKey
-            return dataDict
-        
-        # make sure all the fields are set
-        if not awsAccountNumber:
-            self._addErrors("Missing account number")
-        if not awsPublicAccessKeyId:
-            self._addErrors("Missing access key ID")
-        if not awsSecretAccessKey:
-            self._addErrors("Missing secret access key")
-            
-        if self._getErrors():
-            return self._write("cloudSettings", dataDict=getDataDict())
-        
-        try:
-            self.client.setEC2CredentialsForUser(self.user.id,
-                awsAccountNumber, awsPublicAccessKeyId, awsSecretAccessKey,
-                force)
-            self._setInfo("Updated EC2 settings")
-            self._redirect("http://%s%suserSettings" %
-                    (self.cfg.siteHost, self.cfg.basePath))
-        except mint_error.MintError, e:
-            self._addErrors("Failed to update EC2 settings: %s" % str(e))
-            return self._write("cloudSettings", dataDict=getDataDict())
-        
-    @requiresAuth
-    @redirectHttps
-    @dictFields(yesArgs = {})
-    @boolFields(confirmed = False)
-    def removeCloudSettings(self, auth, confirmed, **yesArgs):
-        
-        if confirmed:
-            # clear the credentials
-            self.client.removeEC2CredentialsForUser(self.user.id)
-            self._setInfo("Removed EC2 settings")
-            self._redirect("http://%s%suserSettings" %
-                    (self.cfg.siteHost, self.cfg.basePath))
-        else:
-            return self._write("confirm", 
-                message = "Are you sure you want to remove your EC2 settings?",
-                yesArgs = {'func':'removeCloudSettings', 'confirmed':'1'}, 
-                noLink = "http://%s%suserSettings" %
-                    (self.cfg.siteHost, self.cfg.basePath))
-
+    
     @requiresAuth
     @redirectHttps
     def userSettings(self, auth):

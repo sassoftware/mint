@@ -594,6 +594,8 @@ Fixes
   mirror updates. (RBL-1308)
 * The rBuilder CLI no longer stacktraces if a child process in a pipeline
   exits before all data is consumed in the pipeline. (RBL-1276)
+* Target credentials are no longer managed via the user settings page.  They
+  are managed by rMC. (RBL-4028)
 
 Changes in 2.1.1
 ================
