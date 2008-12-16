@@ -56,7 +56,7 @@
                 <td class="form-label">Email Address:</td>
                 <td>
                     <input type="text" name="email" value="${auth.email}" />
-                    <div class="help">This email address will not be displayed on the ${cfg.companyName} website.</div>
+                    <div class="help" py:if="cfg.rBuilderOnline">This email address will not be displayed on the ${cfg.companyName} website.</div>
                 </td>
             </tr>
             <tr>
