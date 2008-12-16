@@ -8,6 +8,7 @@ import os
 import raapluginstest
 import raatest
 import tempfile
+import mock
 from testrunner import resources
 
 from raa.modules.raasrvplugin import rAASrvPlugin
@@ -86,6 +87,9 @@ class rBASetupTest(raatest.rAATest):
         self.oldinit = rbasetup_srv.rBASetup.__init__
         self.oldConfig = config.RBUILDER_CONFIG
         self.oldGeneratedConfig = config.RBUILDER_GENERATED_CONFIG
+        self.mockOSSystem = mock.MockObject()
+        self.mock(os, 'system', self.mockOSSystem)
+
 
         rbasetup_srv.rBASetup.__init__ = lambda *args: None
         self.rbasetupsrv = rbasetup_srv.rBASetup()
@@ -215,3 +219,33 @@ class rBASetupTest(raatest.rAATest):
         # Final check
         for k in newValues:
             self.assertEqual(configurableOptions[k][0], newValues[k])
+
+    def testRestartApache(self):
+        """
+        Exercises the Apache restart option.
+        """
+
+        # Call the backend function (note: setUp has mocked os.system)
+        self.mockOSSystem._mock.setReturn(0, "/sbin/service httpd restart")
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+
+        # Make sure the right things happened
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.failUnless(ret, "Expected a successful return in the normal case")
+
+        # Now, simulate an error
+        self.mockOSSystem._mock.setReturn(256, "/sbin/service httpd restart")
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+
+        # Check error path
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.failIf(ret, "Expected a failed return in the error case")
+
+        # Finally, simulate an exception
+        self.mockOSSystem._mock.raiseErrorOnAccess(OSError)
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+
+        # Check exception path
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.failIf(ret, "Expected a failed return in the exception case")
+

@@ -3,6 +3,7 @@
 # All rights reserved
 #
 import logging
+import os
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 
@@ -95,4 +96,17 @@ class rBASetup(rAASrvPlugin):
         return self._writeGeneratedConfigFile(newValues,
                 config.RBUILDER_GENERATED_CONFIG)
 
+    def restartApache(self, schedId, execId):
+        """
+        Restarts Apache (rBuilder web service).
+        """
+        try:
+            retval = os.system("/sbin/service httpd restart")
+            if retval != 0:
+                log.error("Failed to restart Apache (error: %d)" % retval)
+                return False
+        except Exception, e:
+            log.error("Failed to restart Apache (reason: %s)" % str(e))
+            return False
+        return True
 
