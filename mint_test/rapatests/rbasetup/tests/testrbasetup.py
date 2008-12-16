@@ -98,7 +98,7 @@ class rBASetupTest(raatest.rAATest):
 
         # Write out our test root config
         f = open(self.rootConfig, 'w')
-        f.write(MINT_CONFIG_ROOT % {'testGeneratedFile': self.generatedConfig}
+        f.write(MINT_CONFIG_ROOT % {'testGeneratedFile': self.generatedConfig})
         f.close()
 
         # Write out our test generated config
