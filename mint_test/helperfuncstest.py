@@ -743,6 +743,46 @@ Much like Powdermilk Biscuits[tm]."""
         addDefaultPlatformToProductDefinition(prd)
         self.failUnless(hasattr(prd, 'platform'))
 
+    def testUrlSplitUnsplit(self):
+        tests = [
+            (("http", None, None, "localhost", None, "/path", "q", "f"),
+              "http://localhost/path?q#f"),
+            (("http", 'u', 'p', "localhost", None, "/path", None, None),
+              "http://u:p@localhost/path"),
+            (("http", 'u', 'p', "localhost", 103, "/path", None, None),
+              "http://u:p@localhost:103/path"),
+            (("http", 'u', 'p a s s', "localhost", 103, "/path", None, None),
+              "http://u:p%20a%20s%20s@localhost:103/path"),
+            # According to RFC2617, the password can be any character,
+            # including newline. However, urllib's regex will stop at the new
+            # line.
+            #(("http", 'u', 'p\nq', "localhost", 103, "/path", None, None),
+            #  "http://u:p%0Aq@localhost:103/path"),
+            (("http", 'u\tv', 'p\tq', "localhost", 103, "/path", None, None),
+              "http://u%09v:p%09q@localhost:103/path"),
+        ]
+        for tup, url in tests:
+            nurl = urlUnsplit(tup)
+            self.failUnlessEqual(nurl, url)
+            self.failUnlessEqual(urlSplit(url), tup)
+
+        # One-way tests
+        tests = [
+            (("http", None, None, "localhost", "10", "/path", "", ""),
+              "http://localhost:10/path"),
+        ]
+        for tup, url in tests:
+            nurl = urlUnsplit(tup)
+            self.failUnlessEqual(nurl, url)
+
+        # One-way tests
+        tests = [
+            (("http", None, None, "localhost", None, "/path", "q", "f"),
+              "http://localhost/path?q#f"),
+        ]
+        for tup, url in tests:
+            nurl = urlUnsplit(tup)
+            self.failUnlessEqual(urlSplit(url), tup)
 
 if __name__ == "__main__":
     testsuite.main()

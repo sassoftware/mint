@@ -22,6 +22,7 @@ import random
 import string
 import time
 import urlparse
+import urllib
 
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
@@ -93,11 +94,43 @@ def hostPortParse(hostname, defaultPort):
 
     return (h, int(p))
 
+def urlSplit(url, defaultPort = None):
+    """A function to split a URL in the format
+    <scheme>://<user>:<pass>@<host>:<port>/<path>;<params>#<fragment>
+    into a tuple
+    (<scheme>, <user>, <pass>, <host>, <port>, <path>, <params>, <fragment>)
+    Any missing pieces (user/pass) will be set to None.
+    If the port is missing, it will be set to defaultPort; otherwise, the port
+    should be a numeric value.
+    """
+    scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
+    userpass, hostport = urllib.splituser(netloc)
+    host, port = urllib.splitnport(hostport, None)
+    if userpass:
+        user, passwd = urllib.splitpasswd(userpass)
+    else:
+        user, passwd = None, None
+    return scheme, user, passwd, host, port, path, \
+        query or None, fragment or None
+
+def urlUnsplit(urlTuple):
+    """Recompose a split URL as returned by urlSplit into a single string
+    """
+    scheme, user, passwd, host, port, path, query, fragment = urlTuple
+    userpass = None
+    if user and passwd:
+        userpass = urllib.quote("%s:%s" % (user, passwd), safe = ':')
+    hostport = host
+    if port:
+        hostport = urllib.quote("%s:%s" % (host, port), safe = ':')
+    netloc = hostport
+    if userpass:
+        netloc = "%s@%s" % (userpass, hostport)
+    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+
 def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
     """ Given a URL, rewrites it to point to a different protocol. 
         Optionally rewrites the port if newPort is given. """
-
-    import urlparse
 
     spliturl = urlparse.urlsplit(url)
     hostname = spliturl[1]
