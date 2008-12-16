@@ -161,8 +161,7 @@ def loadDatabase(targetDir):
     os.system(cmd)
 
 def linkCatalogClient(targetDir):
-    for file, newFile, dir in (('cloudConfig', 'cloudConfig', 'admin/'), 
-                      ('iCloudsLayout', 'catalogLayout', ''),
+    for file, newFile, dir in (('iCloudsLayout', 'catalogLayout', ''),
                       ('iClouds', 'cloudCatalog', '')):
         targetPath = '/pythonpath/mint/web/templates/%s%s.kid' % (dir, newFile)
         origPath = '/supporting_modules/catalog-client/iclouds-build/bin/assets/templates/%s.kid' % file

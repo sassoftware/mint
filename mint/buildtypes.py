@@ -269,7 +269,7 @@ def makeFlavorMap(prd):
     architectures = prd.getArchitectures()
     if prd.platform:
         flavorSets += prd.platform.getFlavorSets()
-        architectures = prd.platform.getArchitectures()
+        architectures += prd.platform.getArchitectures()
     return dict([("%s %s" % (x.displayName, y.displayName),
                   "%s,%s" % (x.name, y.name)) \
             for x in flavorSets for y in architectures])

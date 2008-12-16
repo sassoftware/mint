@@ -52,6 +52,9 @@ start)
     exit 1
   fi
 
+  # Generate SSL certs for various things on initial boot.
+  /usr/share/rbuilder/scripts/generate-certs.sh
+
   # PostgreSQL must be running for initialization
   if [ ! -f /var/lock/subsys/$pgsql_service ]
   then

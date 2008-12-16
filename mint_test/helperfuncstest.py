@@ -734,7 +734,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(prd2.platform.baseFlavor)
         self.failIf(prd2.baseFlavor)
 
-    def testProdDefNoPlatDer(self):
+    def testProdDefNoPlatDef(self):
         from rpath_common.proddef import api1 as proddef
         prd = proddef.ProductDefinition()
         # ensure we don't have a platform definition at all
@@ -742,6 +742,45 @@ Much like Powdermilk Biscuits[tm]."""
             del prd.platform
         addDefaultPlatformToProductDefinition(prd)
         self.failUnless(hasattr(prd, 'platform'))
+
+    def testProdDefPredefined(self):
+        from rpath_common.proddef import api1 as proddef
+        # a single definition of flavorSet, architecture, containerTemplate, or
+        # buildTemplate should be enough to stop the defaults
+        prd = proddef.ProductDefinition()
+        prd.addFlavorSet('test', 'test', 'test')
+        addDefaultPlatformToProductDefinition(prd)
+        self.failIf(prd.platform.containerTemplates)
+        self.failIf(prd.platform.architectures)
+        self.failIf(prd.platform.flavorSets)
+        self.failIf(prd.platform.buildTemplates)
+
+        prd = proddef.ProductDefinition()
+        prd.addArchitecture('test', 'test', 'test')
+        addDefaultPlatformToProductDefinition(prd)
+        self.failIf(prd.platform.containerTemplates)
+        self.failIf(prd.platform.architectures)
+        self.failIf(prd.platform.flavorSets)
+        self.failIf(prd.platform.buildTemplates)
+
+        prd = proddef.ProductDefinition()
+        prd.addContainerTemplate(prd.imageType({}))
+        addDefaultPlatformToProductDefinition(prd)
+        self.failIf(prd.platform.containerTemplates)
+        self.failIf(prd.platform.architectures)
+        self.failIf(prd.platform.flavorSets)
+        self.failIf(prd.platform.buildTemplates)
+
+        prd = proddef.ProductDefinition()
+        prd.addBuildTemplate(name = "ami_large",
+                displayName = "EC2 AMI Large/Huge", architectureRef = "x86_64",
+                containerTemplateRef = "amiImage", flavorSetRef = "ami")
+        addDefaultPlatformToProductDefinition(prd)
+        self.failIf(prd.platform.containerTemplates)
+        self.failIf(prd.platform.architectures)
+        self.failIf(prd.platform.flavorSets)
+        self.failIf(prd.platform.buildTemplates)
+
 
     def testUrlSplitUnsplit(self):
         tests = [

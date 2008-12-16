@@ -12,6 +12,14 @@
 # marked with a comment indicating when and for what version it was
 # added as well as any relevant issue IDs.
 
+if [[ `awk '{print $2}' /proc/mounts | grep -c ^/proc$` > 1 ]]
+then
+    # If /proc appears to be mounted more than once, then it means we're
+    # chrooted. It manifests itself this way as the actual path is
+    # outside the chroot and thus can't be addressed.
+    is_chrooted=1
+fi
+
 check_apache() {
     pidof httpd > /dev/null 2>&1
 }
@@ -92,25 +100,20 @@ if [ -f /var/lock/subsys/rmake ]
 then
     service rmake-node stop
     service rmake stop
-    START_RMAKE=1
+    start_rmake=1
 fi
 
-if [[ -f /usr/sbin/gencert-rmake && ! -f /etc/rmake/ssl/ca.crt ]]
+# Generate rMake certificates IFF we're not chrooted; otherwise we
+# might end up sticking them pre-generated in the ISOs which would be
+# very bad.
+#   -- 5.0.0 - 2008-12-01
+if [ "x$is_chrooted" == "x" ]
 then
-    # Generate rMake client CA and admin cert
-    #   -- 5.0.0 - 2008-12-01
-    mkdir -p /etc/rmake/ssl
-    /usr/sbin/gencert-rmake -a \
-        -o /etc/rmake/ssl/ca.crt -O /etc/rmake/ssl/ca.key \
-        -e 3653 --O='Auto-Generated' --OU='rMake Client CA'
-    chmod 0644 /etc/rmake/ssl/ca.crt
-    /usr/sbin/gencert-rmake -n \
-        -c /etc/rmake/ssl/ca.crt -C /etc/rmake/ssl/ca.key \
-        -o /etc/rmake/ssl/admin.pem -e 3653 -i /etc/rmake/ssl/index.txt \
-        --O='Auto-Generated' --OU='rMake Admin Client' --site-user='admin'
+    /usr/share/rbuilder/scripts/generate-certs.sh \
+        || die "Failed to generate certificates"
 fi
 
-if [ "$START_RMAKE" == 1 ]
+if [ "x$start_rmake" == "x1" ]
 then
     service rmake start
     # TODO: Delete sleep workaround pending RMK-938
@@ -118,3 +121,6 @@ then
     sleep 3
     service rmake-node start
 fi
+
+
+exit 0

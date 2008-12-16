@@ -693,6 +693,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             for key in anacondaVars:
                 anacondaVars[key] = build.getDataValue(key, validate = False)
                 if anacondaVars[key]:
+                    if anacondaVars[key] == 'NONE':
+                        anacondaVars[key] = ''
+                        continue
+
                     n,v,f = parseTroveSpec(anacondaVars[key])
                     outParts = []
 
@@ -1490,9 +1494,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                     platformLabel = str(platformVersion.trailingLabel())
                 if platformLabel:
                     platformName = 'Custom appliance platform on %s' % platformLabel
-                    customPlatform = (platformLabel, platformName)
                     acceptablePlatform = \
                             self.client.isPlatformAcceptable(platformLabel)
+                else:
+                    platformName = 'None'
+                    acceptablePlatform = False
+                customPlatform = (platformLabel, platformName)
 
 
             kwargs.update(name = name, description = description,

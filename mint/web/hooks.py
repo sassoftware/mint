@@ -525,6 +525,8 @@ def handler(req):
                 break
     finally:
         prof.stopHttp(req.uri)
+        if db:
+            db.rollback()
         coveragehook.save()
     return ret
 

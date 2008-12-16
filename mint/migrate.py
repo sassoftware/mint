@@ -103,7 +103,6 @@ class MigrateTo_40(SchemaMigration):
         cu.execute("ALTER TABLE Labels ADD COLUMN entitlement VARCHAR(254)")
         cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceAuthType VARCHAR(254)")
         cu.execute("ALTER TABLE InboundMirrors ADD COLUMN sourceEntitlement VARCHAR(254)")
-        self.db.commit()
 
         # Fix existing data - anonymous
         cu.execute("""UPDATE Labels
@@ -123,8 +122,6 @@ class MigrateTo_40(SchemaMigration):
             WHERE authType IS NULL""")
         cu.execute("""UPDATE InboundMirrors SET sourceAuthType = 'userpass'
             WHERE sourceAuthType IS NULL""")
-
-        self.db.commit()
 
         # Import entitlements
         entDir = os.path.join(self.cfg.dataPath, 'entitlements')
@@ -157,8 +154,6 @@ class MigrateTo_40(SchemaMigration):
                         SET authType = 'entitlement', entitlement = ?
                         WHERE projectId = ?""",
                             ent, projectId)
-
-        self.db.commit()
 
         return True
 
@@ -281,7 +276,6 @@ class MigrateTo_45(SchemaMigration):
                     ON DELETE CASCADE
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['OutboundMirrorsUpdateServices'] = []
-            commit = True
         self.db.createIndex('OutboundMirrorsUpdateServices', 'ous_omi_usi_uq',
                 'outboundMirrorId, updateServiceId', unique = True)
 
@@ -394,8 +388,8 @@ class MigrateTo_45(SchemaMigration):
             cu.execute("""
                 CREATE TABLE Targets (
                     targetId   %(PRIMARYKEY)s,
-                    targetType VARCHAR(16),
-                    targetName VARCHAR(16)
+                    targetType VARCHAR(255),
+                    targetName VARCHAR(255)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['Targets'] = []
 
@@ -403,7 +397,7 @@ class MigrateTo_45(SchemaMigration):
             cu.execute("""
                 CREATE TABLE TargetData (
                     targetId  INT NOT NULL,
-                    name      VARCHAR(16),
+                    name      VARCHAR(255),
                     value     TEXT
                 ) %(TABLEOPTS)s """ % self.db.keywords)
             self.db.tables['TargetData'] = []
@@ -450,7 +444,6 @@ class MigrateTo_45(SchemaMigration):
                     value = simplejson.dumps(value)
                     cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                             targetId, name, value)
-                self.db.commit()
 
         return True
 
@@ -470,6 +463,19 @@ def majorMinor(major):
         return (major, 0)
     return migr.Version
 
+
+def tryMigrate(db, func):
+    db.transaction()
+    try:
+        rv = func()
+    except:
+        db.rollback()
+        raise
+    else:
+        db.commit()
+    return rv
+
+
 # entry point that migrates the schema
 def migrateSchema(db, cfg=None):
     version = db.getVersion()
@@ -485,12 +491,12 @@ def migrateSchema(db, cfg=None):
             "Could not find migration code that deals with repository "
             "schema %s" % version, version)
     # migrate all the way to the latest minor for the current major
-    migrateFunc(db, cfg)()
+    tryMigrate(db, migrateFunc(db, cfg))
     version = db.getVersion()
     # migrate to the latest major
     while version.major < schema.RBUILDER_DB_VERSION.major:
         migrateFunc = _getMigration(version.major+1)
-        newVersion = migrateFunc(db, cfg)()
+        newVersion = tryMigrate(db, migrateFunc(db, cfg))
         assert(newVersion.major == version.major+1)
         version = newVersion
     return version

@@ -576,6 +576,15 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
         assert(pubRel.getUniqueBuildTypes() == [(2, 'x86_64', [])])
 
+    @fixtures.fixture('Full')
+    def testUpdateRelease(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        client.server.updatePublishedRelease(pubRel.id,
+                {'description': 'I like turtles.'})
+        self.assertRaises(ParameterError,
+                client.server.updatePublishedRelease, pubRel.id, {'projectId': 42})
+
 
 if __name__ == "__main__":
     testsuite.main()

@@ -108,6 +108,7 @@ Web Front End Changes
   (RBL-3693)
 * The rMake server and rMake node logs are available for viewing from the rAPA
   logs plugin. (RBL-3780)
+* There is now an RPA plug-in to configure targets. (RBL-3950)
 
 Bug Fixes
 ---------------------
@@ -593,6 +594,8 @@ Fixes
   mirror updates. (RBL-1308)
 * The rBuilder CLI no longer stacktraces if a child process in a pipeline
   exits before all data is consumed in the pipeline. (RBL-1276)
+* Target credentials are no longer managed via the user settings page.  They
+  are managed by rMC. (RBL-4028)
 
 Changes in 2.1.1
 ================

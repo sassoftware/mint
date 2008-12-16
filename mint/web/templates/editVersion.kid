@@ -72,7 +72,9 @@
                     if buildType not in alphaBuildTypes:
                         alphaBuildTypes.append(buildType)
                 else:
-                    buildType = alphaBuildTypes[0]
+                    buildType = alphaBuildTypes and alphaBuildTypes[0] or 0
+                    if buildtypes.APPLIANCE_ISO in alphaBuildTypes:
+                        buildType = buildtypes.APPLIANCE_ISO
                     buildSettings = {}
                     buildName = 'NEWBUILD'
                     buildBaseFlavor = ''
@@ -102,6 +104,8 @@
                             # get a default flavor to work with in case build type has not been set
                             # this is just the first value in the supported archs dict
                             defaultVal = suppArchTypes and sorted(suppArchTypes.values())[0] or ''
+                            if 'generic,x86' in suppArchTypes.values():
+                                defaultVal = 'generic,x86'
                         ?>
                         <select py:attrs="{'id': elementId, 'name': elementName, 'disabled': elementDisabled}" style="${elementStyle}" class="${elementClasses}">
                             <option py:for="v in sorted(suppArchTypes)"

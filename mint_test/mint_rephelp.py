@@ -862,6 +862,17 @@ class WebRepositoryHelper(BaseWebHelper):
         webunittest.HTTPResponse._TestCase__testMethodName = \
                                           self._TestCase__testMethodName
 
+        # by this point, apache's already forked and running but no calls
+        # needing the mcpClient have been made, so put the cfg values
+        # we need into the cfg file it'll look for so the server side code
+        # can work properly
+        mcpCfgPath = os.path.join(self.mintCfg.dataPath, 'mcp', 'client-config')
+        util.mkdirChain(os.path.dirname(mcpCfgPath))
+        cfgFile = open(mcpCfgPath, 'w')
+        for key in ('queueHost', 'queuePort', 'namespace'):
+            cfgFile.write('%s %s' % (key, self.mcpCfg.__getitem__(key)))
+
+
     def tearDown(self):
         BaseWebHelper.tearDown(self)
         self.clearCookies()
