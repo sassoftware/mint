@@ -1435,7 +1435,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Set up EC2 connection
             authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken)
+            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
             # all project members, including users, can see published builds
             for publishedAMIId in published:
@@ -1478,7 +1478,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Set up EC2 connection
             authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken)
+            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
             # published builds will be made public
             for publishedAMIId in published:
@@ -2677,7 +2677,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype C{str}
         """
         authToken = self._buildEC2AuthToken()
-        s3Wrap = ec2.S3Wrapper(authToken)
+        s3Wrap = ec2.S3Wrapper(authToken, self.cfg.proxy.get('https'))
         return s3Wrap.deleteAMI(amiId)
 
     @typeCheck(int, dict)
@@ -3382,7 +3382,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Set up EC2 connection
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         try:
             if writers:
@@ -4574,7 +4574,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool}
         @raises: C{EC2Exception}
         """
-        return ec2.EC2Wrapper(authToken).validateCredentials()
+        return ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https')).validateCredentials()
     
     @typeCheck(tuple, list)
     @private
@@ -4590,7 +4590,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{tuple}
         @raises: C{EC2Exception}
         """
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         return ec2Wrapper.getAllKeyPairs(keyNames)
 
     @typeCheck(str, str)
@@ -4651,7 +4651,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises: C{EC2Exception}
         """
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
@@ -4699,7 +4699,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # attempt to boot it up
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
                 useNATAddressing = amiData.get('ec2UseNATAddressing', False))
@@ -4729,7 +4729,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises: C{EC2Exception}
         """
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
         for launchedAMIId, ec2InstanceId in instancesToKill:
@@ -5716,7 +5716,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         for amiId in amiIds:
             ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
@@ -5739,7 +5739,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         for amiId in amiIds:
             ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
@@ -5760,7 +5760,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         amiIds = self._getAllAMIIdsForPermChange(userId)
 
         for amiId in amiIds:
@@ -5782,7 +5782,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getAllAMIIdsForPermChange(userId)
         
@@ -5809,7 +5809,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
@@ -5836,7 +5836,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
@@ -5892,7 +5892,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
 
@@ -5934,7 +5934,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
 
