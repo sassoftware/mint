@@ -24,6 +24,7 @@ class InitializeExternalRepositories(scriptlibrary.SingletonScript):
             return 0
         conaryCfg = conarycfg.ConaryConfiguration(False)
         conaryCfg.read(self.conaryCfgPath)
+        conaryCfg.readEntitlementDirectory()
         mintClient = shimclient.ShimMintClient(mintConfig, 
                                                (mintConfig.authUser,
                                                 mintConfig.authPass))
