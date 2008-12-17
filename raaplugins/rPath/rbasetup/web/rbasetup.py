@@ -22,6 +22,7 @@ from raa.db import wizardrun
 from raa.modules.raawebplugin import rAAWebPlugin
 
 from mint import config
+from mint import helperfuncs
 
 class rBASetup(rAAWebPlugin):
     """
@@ -33,6 +34,80 @@ class rBASetup(rAAWebPlugin):
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Plugin for setting up the rBuilder Appliance")
 
+    def _normalizeFormKwArgs(self, kwargsFromForm):
+        """
+        Takes a pile of kwargs from the form post and normalizes it,
+        stripping leading and trailing whitespace and converting
+        booleans into the Boolean type.
+        """
+        boolean_options = ('requireSigs', 'configured', 'allowNamespaceChange')
+        normalizedOptions = dict()
+
+        for k, v in kwargsFromForm:
+            newV = v.strip()
+            if k in boolean_options:
+                normalizedOptions[k] = bool(int(str(v)))
+            else:
+                if newV:
+                    normalizedOptions[k] = newV
+
+        return normalizedOptions
+
+    def _validateSetupForm(self, options):
+        """
+        Takes a list of options and validates them.
+        Returns a list of errors (empty list if OK).
+        """
+        errorList = list()
+
+        if '.' in options['hostName']:
+            errorList.append("""The hostname of the rBuilder server must not contain periods. The
+                hostname is only the first part of the fully-qualified domain name.""")
+        if 'siteDomainName' not in options:
+            errorList.append("""You must specify a domain name for this installation.""")
+        if not options['configured'] and 'new_username' not in options:
+            errorList.append("You must enter a username to be created")
+        if not options['configured'] and 'new_email' not in options:
+            errorList.append("You must enter an administrator email address")
+        if not options['configured'] and \
+               ('new_password' not in options or 'new_password2' not in options):
+            errorList.append("You must enter initial passwords")
+        elif not options['configured'] and options['new_password'] != \
+                 options['new_password2']:
+            errorList.append("Passwords must match")
+        if options.get('externalPasswordURL'):
+            # XXX Removing the validation for this for now;
+            #     it was more necessary when you could lock yourself
+            #     out of rBuilder if you messed it up.
+            #userAuth = netauth.UserAuthorization( \
+            #    None, pwCheckUrl = options['externalPasswordURL'],
+            #    cacheTimeout = int(options.get('authCacheTimeout')))
+            #if self.auth.admin and not userAuth._checkPassword( \
+            #    self.auth.username, None, None, self.auth.token[1]):
+            #    errorList.append('Username: %s was not accepted by: %s' % \
+            #                  (self.auth.username,
+            #                   options['externalPasswordURL']))
+            #if options.get('new_username') and \
+            #       not userAuth._checkPassword(options.get('new_username'),
+            #                                   None, None,
+            #                                   options.get('new_password')):
+            #    errorList.append('Username: %s was not accepted by: %s' % \
+            #                  (options.get('new_username'),
+            #                   options.get('new_password')))
+            pass
+
+        # validate the namespace
+        namespaceValid = False
+        if 'namespace' not in options:
+            errorList.append("You must specify a namespace for this installation.")
+        else:
+            # returns text explanation if invalid
+            valid = helperfuncs.validateNamespace(options['namespace'])
+            if valid != True:
+                errorList.append(valid)
+
+        return errorList
+
     @raa.web.expose(template="rPath.rbasetup.index")
     def index(self):
         # Get the configuration from the backend
@@ -42,7 +117,7 @@ class rBASetup(rAAWebPlugin):
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.
         dflNamespace = config.MintConfig().namespace
-        allowNamespaceChange = (configurableOptions['namespace'] == dflNamespace)
+        allowNamespaceChange = not isConfigured or (configurableOptions['namespace'] == dflNamespace)
 
         # Backend returns Unicode for keys, which is suboptimal for Kid
         sanitizedConfigurableOptions = \
@@ -53,7 +128,41 @@ class rBASetup(rAAWebPlugin):
                 **sanitizedConfigurableOptions)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    def doSetup(self):
+    def doSetup(self, *args, **kwargs):
+        """
+        Called upon posting the setup form.
+        """
+
+        # Normalize kwargs into a minimal set of options
+        normalizedOptions = self._normalizeFormKwargs(kwargs)
+
+        # Validate the setup form
+        errorList = self._validateSetupForm(normalizedOptions)
+        if errorList:
+            return dict(errors=errorList)
+
+        # Post- process options, returning any other things necessary
+        self._postProcessOptions(options)
+
+        # Call backend to save, return error if unsuccessful
+        saved = self.callBackend('updateRBAConfig', normalizedOptions)
+        if not saved:
+            return dict(errors=['Failed to save rBuilder configuration.'])
+
+        # Attempt to restart Apache; warn if we can't
+        apacheRestarted = self.callBackend('restartApache')
+        message = "Successfully saved the rBuilder configuration."
+        if not apacheRestarted:
+            successMsg += " However, there was a problem restarting the rBuilder " \
+                          "web service. You may need to restart the appliance "  \
+                          "for the new configuration to take effect."
+
+        # Create the rMake repository and restart rMake if needed.
+        # If this gets called twice, it's no big deal, as the
+        # underlying code will not create duplicate repositories.
+        self.callBackend('setupRMake')
+
+        # Regardless if Apache restarts, move on in the wizard
         self.wizardDone()
-        return dict()
+        return dict(message=successMsg)
 

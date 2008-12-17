@@ -8,6 +8,9 @@ import os
 from raa.modules.raasrvplugin import rAASrvPlugin
 
 from mint import config
+from mint import helperfuncs
+from mint import shimclient
+
 from conary.lib.cfgtypes import CfgBool
 
 log = logging.getLogger('raa.server.rbasetup')
@@ -40,15 +43,38 @@ class rBASetup(rAASrvPlugin):
         """
         log.info('Writing new configuration to %s' % generatedConfigFileName)
 
-        # Create a new configuration object to store the new values in
-        newCfg = config.MintConfig()
+        # Read back in the current config from disk
+        newCfg = self._readConfigFile(config.RBUILDER_CONFIG)
         for k, v in newValues.iteritems():
             if k in newCfg: newCfg[k] = v
+
+        firstTimeSetup = newCfg.configured
+
+        # Post process the configuration
+        newCfg.postCfg()
+        newCfg.SSL = True
+        newCfg.secureHost = newCfg.siteHost
+        newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
+
+        # Set up the initial rBuilder user
+        if not firstTimeSetup:
+            newCfg.bugsEmail = newCfg.adminMail = newValues['new_email']
+            addedUser = self._addRBuilderAdminAccount(
+                    newValues['new_username'],
+                    newValues['new_password'],
+                    newValues['new_email'])
+            if not addedUser:
+                log.error("Failed to add initial administrative user to rBuilder, not saving config")
+                return False
+
+        # Generate a new authPass IFF we're not configured
+        if not firstTimeSetup:
+            newCfg.authPass = helperfuncs.genPassword(32)
 
         # Ensure that configured is True
         newCfg.configured = True
 
-        # Write the file
+        # Write the generated config
         f = None
         try:
             try:
@@ -60,9 +86,33 @@ class rBASetup(rAASrvPlugin):
                         (generatedConfigFileName, str(ioe)))
                 return False
         finally:
-            f.close()
+            if f: f.close()
 
         return True
+
+    def _addRBuilderAdminAccount(self, adminUsername, adminPassword, adminEmail):
+        """
+        Adds an admin user to the locally installed rBuilder.
+        """
+        cfg = self._readConfigFile(config.RBUILDER_CONFIG)
+        shmclnt = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+
+        try:
+            # XXX stubbed temporarily
+            #userId = shmclnt.registerNewUser(adminUsername, adminPassword,
+            #    "Administrator", adminEmail, "", "", active=True)
+            #log.info("Created initial rBuilder account %s (id=%d)" % \
+            #        (adminUsername, userId))
+            #shmclnt.promoteUserToAdmin(userId)
+            #log.info("Promoted initial rBuilder account to admin level")
+            return True
+        except Exception, e:
+            log.error("Failed to create rBuilder admin account %s (reason: %s)" % \
+                    (adminUsername, str(e)))
+            return False
+
+        return True
+
 
     def getRBAConfiguration(self, schedID, execId):
         """
@@ -109,3 +159,48 @@ class rBASetup(rAASrvPlugin):
             return False
         return True
 
+    def setupRMake(self, schedId, execId):
+        """
+        Sets up rMake for appliance creator, etc.
+        """
+        cfg = self._readConfigFile(config.RBUILDER_CONFIG)
+        restartNeeded = False
+        try:
+            # Drop privs temporarily to Apache so as to not create
+            # repositories that cannot be written to by rBuilder
+            try:
+                apacheUID, apacheGUID = os.getpwnam('apache')[2:4]
+                os.setuid(apacheUID)
+                os.setgid(apacheUID)
+                os.setgroups([apacheGID])
+                # XXX stubbed temporarily
+                # rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
+                log.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                restartNeeded = True
+            except mint_error.RmakeRepositoryExistsError:
+                log.warn("rMake Repository already exists, skipping")
+            except Exception, e:
+                log.error("Unexpected error occurred when attempting to create the rMake repository.")
+                return False
+        finally:
+            # Restore privs to root
+            os.setuid(0)
+            os.setguid(0)
+            os.setgroups([0])
+
+        if restartNeeded:
+            rMakeRestartRC = os.system("/sbin/service rmake restart")
+            if rMakeRestarRC == 0:
+                rMakeNodeRestartRC = os.system("/sbin/service rmake-node restart")
+            if rMakeRestartRC != 0 or rMakeNodeRestartRC != 0:
+                log.warn("Failed to restart rMake services. You may need to reboot " \
+                         "the appliance for changes to take effect.")
+
+        return True
+
+    def setupExternalProjects(self, schedId, execId):
+        """
+        Sets up a set of canned external projects.
+        """
+        # TODO: implement me
+        return True

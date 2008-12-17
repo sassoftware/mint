@@ -100,10 +100,12 @@ Copyright (c) 2006-2008 rPath, Inc.
                     <h3>Repository Options</h3>
                     <div class="form-line">
                         <div class="rbasetup-label">Require OpenPGP-signed commits:</div>
-                        <input type="checkbox" name="requireSigs" value="${requireSigs}"
+                        <input type="checkbox" name="requireSigs" value="1"
                             py:attrs="{'checked': requireSigs and 'checked' or None}" />
                     </div>
                 </div>
+                <input type="hidden" name="configured" value="${int(configured)}" />
+                <input type="hidden" name="allowNamespaceChange" value="${int(allowNamespaceChange)}" />
             </form>
 
             <div class="page-section-content-bottom">

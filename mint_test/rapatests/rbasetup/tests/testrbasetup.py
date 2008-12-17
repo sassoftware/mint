@@ -8,7 +8,7 @@ import os
 import raapluginstest
 import raatest
 import tempfile
-import mock
+from testutils import mock
 from testrunner import resources
 
 from raa.modules.raasrvplugin import rAASrvPlugin
@@ -17,6 +17,7 @@ from raa.rpath_error import RestartWebException
 from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
+from mint import shimclient
 
 MINT_CONFIG_ROOT="""
 # A file that approxiamates what the setup plugin will read.
@@ -67,6 +68,12 @@ useInternalConaryProxy  True
 includeConfigFile %(testGeneratedFile)s
 """
 
+DEFAULT_STARTING_CONFIG = dict(hostName='justified',
+                               siteDomainName='mumu.com',
+                               namespace='yournamespace',
+                               requireSigs=False,
+                               )
+
 class rBASetupTest(raatest.rAATest):
 
     def _createTempfile(self):
@@ -87,13 +94,25 @@ class rBASetupTest(raatest.rAATest):
         self.oldinit = rbasetup_srv.rBASetup.__init__
         self.oldConfig = config.RBUILDER_CONFIG
         self.oldGeneratedConfig = config.RBUILDER_GENERATED_CONFIG
-        self.mockOSSystem = mock.MockObject()
-        self.mock(os, 'system', self.mockOSSystem)
 
+        # Mock out a ton of crap by default
+        self.mockOSSystem = mock.MockObject()
+        self.mockOSSetUID = mock.MockObject()
+        self.mockOSSetGID = mock.MockObject()
+        self.mockOSSetGroups = mock.MockObject()
+        self.mockOSGetPwNam = mock.MockObject()
+        self.mockShimMintClient = mock.MockObject()
+        self.mock(os, 'system', self.mockOSSystem)
+        self.mock(os, 'setuid', self.mockOSSetUID)
+        self.mock(os, 'setgid', self.mockOSSetGID)
+        self.mock(os, 'setgroups', self.mockOSSetGroups)
+        self.mock(os, 'getpwnam', self.mockOSGetPwNam)
+        self.mock(shimclient, 'ShimMintClient', self.mockShimMintClient)
 
         rbasetup_srv.rBASetup.__init__ = lambda *args: None
         self.rbasetupsrv = rbasetup_srv.rBASetup()
 
+        # Create some default configurations to work with for the sake of testing
         config.RBUILDER_CONFIG = self._createTempfile()
         config.RBUILDER_GENERATED_CONFIG = self._createTempfile()
 
@@ -108,10 +127,14 @@ class rBASetupTest(raatest.rAATest):
         f.close()
 
         raaFramework = raapluginstest.webPluginTest()
-        raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup
-        self.rbasetupweb = raa.web.getWebRoot().rbasetup
+        raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup.rBASetup
+        self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
         self.root = raaFramework.pseudoroot
         self.rbasetupweb.server = self.rbasetupweb
+
+        # Get the initial canned data (can be modified in any test)
+        _ignored, self.initialConfigurableOptions = \
+                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
 
         raatest.rAATest.setUp(self)
 
@@ -127,11 +150,56 @@ class rBASetupTest(raatest.rAATest):
 
         raatest.rAATest.tearDown(self)
 
-    def testIndex(self):
-        # TODO: write web tests here
-        pass
+    def test_web_Index(self):
+        """
+        Make sure that the initial index page renders.
+        """
+        ret = None
+        oldCallBackend = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory((False, self.initialConfigurableOptions))
+            ret = self.callWithIdent(self.root.index)
+        finally:
+            self.root.callBackend = oldCallBackend
+        self.failIf(ret['configured'],
+                "Initially, the configuration should be marked as unconfigured.")
+        self.failUnless(ret['allowNamespaceChange'],
+                "Initially, the configuration's namespace should be changeable.")
 
-    def testGetConfig(self):
+    def test_web_IndexConfigured(self):
+        """
+        Make sure the configured flag is set when the backend sends it.
+        """
+        ret = None
+        oldCallBackend = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory((True, self.initialConfigurableOptions))
+            ret = self.callWithIdent(self.root.index)
+        finally:
+            self.root.callBackend = oldCallBackend
+        self.failUnless(ret['isConfigured'],
+                "The configuration should be marked as configured.")
+        self.failUnless(ret['allowNamespaceChange'],
+                "The configuration's namespace option still should be changeable.")
+
+    def test_web_IndexNoNamespaceChange(self):
+        """
+        Make sure that the namespace is non-changable after it's been set.
+        """
+        self.initialConfigurableOptions['namespace'] = 'klf'
+        ret = None
+        oldCallBackend = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory((True, self.initialConfigurableOptions))
+            ret = self.callWithIdent(self.root.index)
+        finally:
+            self.root.callBackend = oldCallBackend
+        self.failUnless(ret['isConfigured'],
+                "The configuration should be marked as configured.")
+        self.failIf(ret['allowNamespaceChange'],
+                "The configuration's namespace option should be frozen now.")
+
+    def test_srv_GetConfig(self):
         """
         Make sure that the get configuration path can:
         1. Read a configuration.
@@ -161,7 +229,7 @@ class rBASetupTest(raatest.rAATest):
         # got extraneous stuff
         self.failIf(configurableOptions, "Too many configurable options returned")
 
-    def testUpdateConfig(self):
+    def test_srv_UpdateConfig(self):
         """
         Verify that a configuration can be written by the backend.
         Make sure it has only the keys we expect.
@@ -172,10 +240,14 @@ class rBASetupTest(raatest.rAATest):
         # not be saved in the generated config.
         newValues = dict(hostName="justified",
                          siteDomainName="mumu.org",
-                         secureHost="ancient.mumu.org",
                          companyName="The JAMMs",
-                         bugsEmail="icecreamvan@mumu.org",
+                         new_username="King Boy D",
+                         new_password="Rockman Rock",
+                         new_email="icecreamvan@mumu.org",
                          waddle="frob")
+
+        # return userId = 1 when registerNewUser called
+        self.mockShimMintClient.registerNewUser._mock.setDefaultReturn(1)
 
         # Call the backend function
         ret = raapluginstest.backendCaller(self.rbasetupsrv.updateRBAConfig,
@@ -184,6 +256,13 @@ class rBASetupTest(raatest.rAATest):
         # Make sure return is OK
         self.failUnlessEqual(ret, True,
                 "Expected return of True from backend call")
+
+        # Make sure we regsitered a new user and promoted it
+        # XXX stubbed for now
+        #self.mockShimMintClient.registerNewUser._mock.assertCalled(
+        #        newValues['new_username'], newValues['new_password'],
+        #        newValues['new_email'])
+        #self.mockShimMintClient.promoteUserToAdmin._mock.assertCalled(1)
 
         # Read the generated config back
         cfgfile = file(config.RBUILDER_GENERATED_CONFIG, 'r').read()
@@ -201,7 +280,11 @@ class rBASetupTest(raatest.rAATest):
 
         # Check values
         for k in newValues:
-            self.assertEqual(newCfg[k], newValues[k])
+            try:
+                self.assertEqual(newCfg[k], newValues[k])
+            except KeyError:
+                # ignore things that aren't in either list
+                pass
 
         # And now, let's use the backend to get the config, too
         isConfigured, configurableOptions = \
@@ -213,9 +296,13 @@ class rBASetupTest(raatest.rAATest):
 
         # Final check
         for k in newValues:
-            self.assertEqual(configurableOptions[k], newValues[k])
+            try:
+                self.assertEqual(configurableOptions[k], newValues[k])
+            except KeyError:
+                # ignore things that aren't in either list
+                pass
 
-    def testRestartApache(self):
+    def test_srv_RestartApache(self):
         """
         Exercises the Apache restart option.
         """
