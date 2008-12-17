@@ -40,6 +40,7 @@ Internal Changes
 * Private products now produce private EC2 Images. (RBL-3477)
 * rMake log files are now collected by the collection tool (RBL-3859)
 * The rPath Management Console goes over https now, not http. (RBL-3871)
+* It is now possible to communicate to EC2 via an HTTP proxy. (RBL-4005)
 * rBuilder is now automatically set up with a number of external products
   for the platforms we provide, given that you have access to them. (RBL-4010)
 
