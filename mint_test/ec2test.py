@@ -157,10 +157,11 @@ deletedKeys = []
 
 class FakeS3Connection(object):
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyArgs):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.proxyArgs = proxyArgs
 
     def get_bucket(self, bucketName):
         return FakeBucket(bucketName)
@@ -185,10 +186,11 @@ class FakeKey(object):
 
 class FakeEC2Connection(object):
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyArgs):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.proxyArgs = proxyArgs
 
     def _checkKeys(self):
         if self.accessKey != FAKE_PUBLIC_KEY or \
@@ -278,11 +280,11 @@ class FakeEC2ResultSet(object):
         self.instances = instances
         pass
 
-def getFakeEC2Connection(accessKey, secretKey):
-    return FakeEC2Connection((None, accessKey, secretKey))
+def getFakeEC2Connection(accessKey, secretKey, **kwargs):
+    return FakeEC2Connection((None, accessKey, secretKey), kwargs)
 
-def getFakeS3Connection(accessKey, secretKey):
-    return FakeS3Connection((None, accessKey, secretKey))
+def getFakeS3Connection(accessKey, secretKey, **kwargs):
+    return FakeS3Connection((None, accessKey, secretKey), kwargs)
 
 class BaseEC2Test(fixtures.FixturedUnitTest):
     def setupEC2Credentials(self):
@@ -596,7 +598,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
     def testGetIncompleteEC2Credentials(self):
         self.failUnlessRaises(mint_error.EC2Exception,
-                ec2.EC2Wrapper, ('id', '', 'secretKey'))
+                ec2.EC2Wrapper, ('id', '', 'secretKey'), None)
         
     @fixtures.fixture("EC2")
     def testGetEC2KeyPairs(self, db, data):
@@ -1364,12 +1366,17 @@ class EC2DefaultCredentialsTest(BaseEC2Test):
     def testTypicalGuidedTourPath(self, db, data):
         client = self.getClient("admin")
         amiData = client.getTargetData('ec2', 'aws')
+        client._cfg.proxy['https'] = "https://user:pass@localhost:1234"
         launchedInstanceId = client.launchAMIInstance((), 1)
         self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
-                amiData.get('ec2PrivateKey'))
+                amiData.get('ec2PrivateKey'),
+                proxy = 'localhost', proxy_port = 1234,
+                proxy_user = 'user', proxy_pass = 'pass')
         client.getLaunchedAMIInstanceStatus((), launchedInstanceId)
         self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
-                amiData.get('ec2PrivateKey'))
+                amiData.get('ec2PrivateKey'),
+                proxy = 'localhost', proxy_port = 1234,
+                proxy_user = 'user', proxy_pass = 'pass')
 
 class EC2SitewideTest(BaseEC2Test):
     def setUp(self):
