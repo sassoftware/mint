@@ -11,6 +11,8 @@ from mint import config
 from mint import helperfuncs
 from mint import shimclient
 
+from mint.mint_error import RmakeRepositoryExistsError
+
 from conary.lib.cfgtypes import CfgBool
 
 log = logging.getLogger('raa.server.rbasetup')
@@ -177,7 +179,7 @@ class rBASetup(rAASrvPlugin):
                 # rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
                 log.info("rMake repository setup -- need to restart rmake and rmake-node services")
                 restartNeeded = True
-            except mint_error.RmakeRepositoryExistsError:
+            except RmakeRepositoryExistsError:
                 log.warn("rMake Repository already exists, skipping")
             except Exception, e:
                 log.error("Unexpected error occurred when attempting to create the rMake repository.")
@@ -185,7 +187,7 @@ class rBASetup(rAASrvPlugin):
         finally:
             # Restore privs to root
             os.setuid(0)
-            os.setguid(0)
+            os.setgid(0)
             os.setgroups([0])
 
         if restartNeeded:

@@ -34,7 +34,7 @@ class rBASetup(rAAWebPlugin):
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Plugin for setting up the rBuilder Appliance")
 
-    def _normalizeFormKwArgs(self, kwargsFromForm):
+    def _normalizeFormKwargs(self, kwargsFromForm):
         """
         Takes a pile of kwargs from the form post and normalizes it,
         stripping leading and trailing whitespace and converting
@@ -43,7 +43,7 @@ class rBASetup(rAAWebPlugin):
         boolean_options = ('requireSigs', 'configured', 'allowNamespaceChange')
         normalizedOptions = dict()
 
-        for k, v in kwargsFromForm:
+        for k, v in kwargsFromForm.iteritems():
             newV = v.strip()
             if k in boolean_options:
                 normalizedOptions[k] = bool(int(str(v)))
@@ -123,6 +123,18 @@ class rBASetup(rAAWebPlugin):
         sanitizedConfigurableOptions = \
                 dict([(str(k),v) for k, v in configurableOptions.iteritems()])
 
+        import epdb;epdb.st()
+        # Return the hostname from the request if it's not set
+        if not sanitizedConfigurableOptions['hostName']:
+            import cherrypy
+            fqdn = raa.lib.url.urlparse(cherrypy.request.base)[1].split(':')[0]
+            bits = fqdn.split('.',1)
+            sanitizedConfigurableOptions['hostName'] = bits[0]
+            try:
+                sanitizedConfigurableOptions['siteDomainName'] = bits[1]
+            except IndexError:
+                sanitizedConfigurableOptions['siteDomainName'] = ''
+
         return dict(isConfigured=isConfigured,
                 allowNamespaceChange=allowNamespaceChange,
                 **sanitizedConfigurableOptions)
@@ -140,9 +152,6 @@ class rBASetup(rAAWebPlugin):
         errorList = self._validateSetupForm(normalizedOptions)
         if errorList:
             return dict(errors=errorList)
-
-        # Post- process options, returning any other things necessary
-        self._postProcessOptions(options)
 
         # Call backend to save, return error if unsuccessful
         saved = self.callBackend('updateRBAConfig', normalizedOptions)
