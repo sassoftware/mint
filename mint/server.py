@@ -4425,12 +4425,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # normalize mirror order, in case of deletions
         updates = []
         cu = self.db.cursor()
-        cu.execute("SELECT %s FROM %s ORDER BY mirrorOrder"  % (idField, table))
-        for i, x in enumerate(cu.fetchall()):
-            updates.append((i, x[0]))
+        cu.execute("SELECT mirrorOrder, %s FROM %s ORDER BY mirrorOrder ASC"
+                % (idField, table))
+        for newIndex, (oldIndex, rowId) in enumerate(cu.fetchall()):
+            if newIndex != oldIndex:
+                updates.append((newIndex, rowId))
 
-        cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?" % (table, idField), updates)
-        self.db.commit()
+        if updates:
+            cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?"
+                    % (table, idField), updates)
+            self.db.commit()
         return True
 
     @private
