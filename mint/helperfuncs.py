@@ -4,11 +4,15 @@
 # All rights reserved
 #
 
+from conary import conarycfg
+from conary import conaryclient
 from conary import versions
 from conary.deps import arch, deps
 from conary.errors import ParseError
 from conary.repository.errors import RoleAlreadyExists, RoleNotFound
+from conary.repository.errors import InsufficientPermission
 
+from mint import config
 from mint import constants
 from mint import buildtypes
 from mint import mint_error
@@ -21,6 +25,7 @@ import re
 import random
 import string
 import time
+import traceback
 import urlparse
 import urllib
 
@@ -660,3 +665,85 @@ def parseVersion(vStr):
         pass
 
     return None
+
+REPOSITORY_LABELS = {
+  'rap.rpath.com@rpath:linux-2'    : 'rPath Appliance Platform - Linux Service',
+  'sle.rpath.com@rpath:sles-10'    : 'SUSE Linux 10',
+  'products.rpath.com@rpath:rapa-3': 'rPath Products Repository',
+  }
+REPOSITORY_LABELS = dict((versions.Label(x[0]), x[1]) 
+                          for x in REPOSITORY_LABELS.items())
+
+def initializeExternalProjects(client, conaryCfg=None):
+
+    """
+        Adds an initial set of external repositories with the correct
+        entitlements if they can be accessed.  This makes the repositories
+        needed for selecting platforms available immediately from mint.
+    """
+    try:
+        if conaryCfg is None:
+            conaryCfg = conarycfg.ConaryConfiguration(False)
+            conaryCfg.read(config.CONARY_CONFIG)
+        return _initializeExternalProjects(client, conaryCfg)
+    except Exception, e:
+        # Don't cause higher level initialization functions to fail if this
+        # fails.
+        print 'Warning: Failed initializing external products: %s' % e
+        traceback.print_exc()
+        return 10
+
+        
+
+def _initializeExternalProjects(client, conaryCfg):
+    defaultEntitlement = [ x[1] for x in conaryCfg.entitlement if x[0] == '*' ]
+    if not defaultEntitlement:
+        rapEntitlement = conaryCfg.entitlement.find('rap.rpath.com')
+        if not rapEntitlement:
+            # we don't have a good entitlement to test with for unconfigured
+            # labels.  Let's not guess.
+            return
+        conaryCfg.entitlement.addEntitlement('*', rapEntitlement[0][1])
+    cclient = conaryclient.ConaryClient(conaryCfg)
+    repos = cclient.getRepos()
+    numErrors = 0
+    for repositoryLabel, repositoryName in REPOSITORY_LABELS.items():
+        try:
+            host = repositoryLabel.getHost()
+            try:
+                # use 2**64 to ensure we won't make the server do much
+                repos.getNewTroveList(host, '4611686018427387904')
+            except InsufficientPermission:
+                continue
+            # if we have a repository map set up for this host,
+            # let's respect that (useful mostly for testing)
+            url = conaryCfg.repositoryMap.get(host, 'https://%s/conary/' % host)
+            # whatever entitlement we used worked, let's use that.
+            entitlement = str(conaryCfg.entitlement.find(host)[0][1])
+            hostname, domainname = host.split('.', 1)
+            try:
+                projectId = client.newExternalProject(name=repositoryName, 
+                                          hostname=hostname, 
+                                          domainname=domainname, 
+                                          label=str(repositoryLabel),
+                                          url=url,
+                                          mirror=False)
+            except mint_error.DuplicateHostname, e:
+                # just update the entitlement if the project
+                # is already there.
+                project = client.getProjectByHostname(hostname)
+                projectId = project.id
+            else:
+                project = client.getProject(projectId)
+            labelIdMap = client.getLabelsForProject(projectId)[0]
+            label, labelId = labelIdMap.items()[0]
+            project.editLabel(labelId, str(repositoryLabel), url,
+                              'entitlement', '', '', entitlement)
+        except Exception, e:
+            print 'Failed adding external repository for %s:' %  host
+            traceback.print_exc()
+            numErrors += 1
+        else:
+            print 'Added external repository for %s' % host
+    return numErrors
+

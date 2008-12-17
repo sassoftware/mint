@@ -245,6 +245,7 @@ class SetupHandler(WebHandler):
                     'rmakeConfigFilePath', RBUILDER_RMAKE_CONFIG)
             rmake_setup.setupRmake(newCfg, rmakeConfigFilePath,
                     restartRmake=True)
+            helperfuncs.initializeExternalProjects(mintClient)
         return self._write("setup/saved")
 
     def restart(self, auth):
