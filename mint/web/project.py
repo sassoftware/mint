@@ -1097,7 +1097,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self._predirect("releases")
         else:
             return self._write("confirm",
-                    message = "Unpublishing your release will hide the release from the public, as well as allow you edit the contents of the release. Are you sure you want to unpublish your release?",
+                    message = "Unpublishing your release will hide the release from the public, as well as allow you edit the contents of the release.  Note that unpublishing a release will not remove the related content from any repository.  Are you sure you want to unpublish your release?",
                     yesArgs = { 'func': 'unpublishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
