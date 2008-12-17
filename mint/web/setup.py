@@ -247,7 +247,6 @@ class SetupHandler(WebHandler):
                     restartRmake=True)
             # this has to be root since it has to be able to 
             # read the entitlement directory
-            os.system("%s/usr/share/rbuilder/scripts/init-extproducts" % sudo)
         return self._write("setup/saved")
 
     def restart(self, auth):
@@ -259,6 +258,7 @@ class SetupHandler(WebHandler):
             sudo = ''
         else:
             sudo = 'sudo '
+        os.system("%s/usr/share/rbuilder/scripts/init-extproducts" % sudo)
         os.system("%skillall -USR1 httpd" % sudo)
         os.system("%s/sbin/service multi-jobserver restart" % sudo)
         time.sleep(5)
