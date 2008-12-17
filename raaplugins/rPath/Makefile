@@ -10,7 +10,7 @@ extra_dist = __init__.py
 
 all: default-all
 
-install: default-install raaplugins-link
+install: default-install
 
 clean: default-clean 
 
