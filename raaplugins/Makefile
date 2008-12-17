@@ -6,7 +6,7 @@
 
 SUBDIRS = rPath
 
-override STATICDEST = $(PYDIR)
+override STATICDEST = $(LIBDIR)/raa
 
 all: default-all
 
