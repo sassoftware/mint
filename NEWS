@@ -40,6 +40,9 @@ Internal Changes
 * Private products now produce private EC2 Images. (RBL-3477)
 * rMake log files are now collected by the collection tool (RBL-3859)
 * The rPath Management Console goes over https now, not http. (RBL-3871)
+* It is now possible to communicate to EC2 via an HTTP proxy. (RBL-4005)
+* rBuilder is now automatically set up with a number of external products
+  for the platforms we provide, given that you have access to them. (RBL-4010)
 
 Web Front End Changes
 ---------------------
@@ -109,6 +112,8 @@ Web Front End Changes
 * The rMake server and rMake node logs are available for viewing from the rAPA
   logs plugin. (RBL-3780)
 * There is now an RPA plug-in to configure targets. (RBL-3950)
+* The confirmation message for unpublishing a release has been updated to
+  inform users that content is not removed from rUS.  (RBL-2917)
 
 Bug Fixes
 ---------------------

@@ -19,7 +19,7 @@ import xml.dom.minidom
 
 from mint import database
 from mint import mint_error
-from mint.helperfuncs import toDatabaseTimestamp
+from mint.helperfuncs import toDatabaseTimestamp, urlSplit
 from rpath_common.xmllib import api1 as xmllib
 
 class BlessedAMIsTable(database.KeyedTable):
@@ -205,7 +205,7 @@ class S3Wrapper(object):
 
     __slots__ = ('s3conn', 'ec2conn', 'accountId', 'accessKey', 'secretKey')
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyUrl):
         
         # quick sanity check to prevent boto death
         if not accountId or not accessKey or not secretKey:
@@ -217,8 +217,11 @@ class S3Wrapper(object):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
-        self.s3conn = boto.connect_s3(self.accessKey, self.secretKey)
-        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey)
+        pxArgs = S3Wrapper.splitProxyUrl(proxyUrl)
+        self.s3conn = boto.connect_s3(self.accessKey, self.secretKey,
+            **pxArgs)
+        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey,
+            **pxArgs)
 
     def deleteAMI(self, amiId):
         """
@@ -269,11 +272,22 @@ class S3Wrapper(object):
 
         return amiId
 
+    @classmethod
+    def splitProxyUrl(self, proxyUrl):
+        if proxyUrl:
+            splitUrl = urlSplit(proxyUrl)
+        else:
+            splitUrl = [ None ] * 7
+        kwargs = {}
+        kwargs['proxy_user'], kwargs['proxy_pass'], \
+            kwargs['proxy'], kwargs['proxy_port'] = splitUrl[1:5]
+        return kwargs
+
 class EC2Wrapper(object):
 
     __slots__ = ('ec2conn', 'accountId', 'accessKey', 'secretKey')
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyUrl):
         
         # quick sanity check to prevent boto death
         if not accountId or not accessKey or not secretKey:
@@ -285,7 +299,9 @@ class EC2Wrapper(object):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
-        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey)
+        pxArgs = S3Wrapper.splitProxyUrl(proxyUrl)
+        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey,
+            **pxArgs)
 
     def launchInstance(self, ec2AMIId, userData=None, useNATAddressing=False):
 

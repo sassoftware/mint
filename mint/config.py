@@ -13,6 +13,7 @@ from mint import mint_error
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.lib import cfgtypes
 
+CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
 RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
 RBUILDER_RMAKE_CONFIG = "/etc/rmake/server.d/25_rbuilder-rapa.conf"
