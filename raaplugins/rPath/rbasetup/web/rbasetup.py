@@ -23,21 +23,6 @@ from raa.modules.raawebplugin import rAAWebPlugin
 
 from mint import config
 
-# be careful with 'Server Setup', code below and the associated kid template
-# refer to this key directly. be sure to find all instances if you change it.
-configGroups = {
-    'Server Setup':
-        ('hostName', 'siteDomainName'),
-    'Branding':
-        ('companyName', 'corpSite'),
-    'Repository Setup':
-        ('namespace',),
-    '(Optional) External Passwords':
-        ('externalPasswordURL', 'authCacheTimeout'),
-    '(Optional) Miscellaneous':
-        ('requireSigs',),
-}
-
 class rBASetup(rAAWebPlugin):
     """
     Represents the web side of the plugin.
@@ -57,12 +42,15 @@ class rBASetup(rAAWebPlugin):
         # if the namespace has already been set, don't allow them to change it
         # FIXME this needs to be changed - implemented for RBL-2905.
         dflNamespace = config.MintConfig().namespace
-        allowNamespaceChange = (configurableOptions['namespace'][0] == dflNamespace)
+        allowNamespaceChange = (configurableOptions['namespace'] == dflNamespace)
+
+        # Backend returns Unicode for keys, which is suboptimal for Kid
+        sanitizedConfigurableOptions = \
+                dict([(str(k),v) for k, v in configurableOptions.iteritems()])
 
         return dict(isConfigured=isConfigured,
-                configurableOptions=configurableOptions,
-                configGroups=configGroups,
-                allowNamespaceChange=allowNamespaceChange)
+                allowNamespaceChange=allowNamespaceChange,
+                **sanitizedConfigurableOptions)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def doSetup(self):

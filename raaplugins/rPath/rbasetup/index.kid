@@ -18,7 +18,7 @@ Copyright (c) 2006-2008 rPath, Inc.
     <style type="text/css">
         .rbasetup-label {
             float: left;
-            width: 120px;
+            width: 220px;
             white-space: nowrap;
             padding-top: 3px;
         }
@@ -34,6 +34,12 @@ Copyright (c) 2006-2008 rPath, Inc.
                 onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'doSetup');">
                 <div class="page-section">Initial Administrator Account</div>
                 <div class="page-section-content">
+                    <p>
+                        In order to access the web interface for rBuilder, you will
+                        need to create an administrator account. This account is
+                        separate from the account you use to access the rPath
+                        Platform Agent.
+                    </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">Username:</div>
                         <input type="text" name="new_username" autocomplete="off" />
@@ -51,45 +57,52 @@ Copyright (c) 2006-2008 rPath, Inc.
                         <input type="text" name="new_email" autocomplete="off" />
                     </div>
                 </div>
-                <div py:strip="True" py:for="group, groupItems in configGroups.items()">
-                <div class="page-section" py:content="group" />
+                <div class="page-section">Server Setup</div>
                 <div class="page-section-content">
-                    <div py:if="group == 'Server Setup'" py:strip="True">
-                        <p><strong>Note:</strong> The hostname and domain name
+                    <p>
+                        <strong>Note:</strong> The hostname and domain name
                         displayed below are based on the URL you used to access your
                         rBuilder server.  You may change these values, but be aware
                         that the resulting fully-qualified domain name constructed from
                         the values you've entered must match the URL your users will
-                        use to access rBuilder.</p>
-
-                        <p py:if="'Server Setup' in configGroups">
+                        use to access rBuilder.
+                    </p>
+                    <p>
                         Once you have created a ${projectText().lower()} on your 
-                        rBuilder server, you will no longer be able to change the 
-                        hostName or siteDomainName fields.</p>
+                        rBuilder server, you will no longer be able to change these fields.
+                    </p>
+                    <div class="form-line-top">
+                        <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
+                        <input type="text" name="hostName" value="${hostName}" />&nbsp;.&nbsp;<input type="text" name="siteDomainName" value="${siteDomainName}" />
                     </div>
-                    <table>
-                        <tr py:for="i, key in enumerate(groupItems)">
-                            <?python
-                                val, docstring, isBoolean = configurableOptions[key]
-                            ?>
-                            <td>${XML(docstring)}</td>
-                            <td>
-                                <input py:if="isBoolean" class="check" type="checkbox" name="${key}" value="${val}"
-                                    py:attrs="{'checked': val and 'checked' or None}" />
-                                <div py:strip="True" py:if="not isBoolean">
-                                <div py:if="key == 'namespace'" py:strip="True">
-                                <input py:if="allowNamespaceChange" type="text" name="${item}" value="${val}"/>
-                                <span py:if="not allowNamespaceChange" py:strip="True">
-                                ${val}
-                                <input type="hidden" name="${key}" value="${val}" />
-                                </span>
-                                </div>
-                                <input py:if="key != 'namespace'" type="text" name="${key}" value="${val}" />
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
+                    <div class="form-line">
+                        <div class="rbasetup-label">Default repository namespace:</div>
+                        <input type="text" name="namespace" value="${namespace}" py:attrs="{'disabled': not allowNamespaceChange and 'disabled' or None}" />
+                    </div>
                 </div>
+
+                <div class="page-section">Advanced Options</div>
+                <div class="page-section-content">
+                    <h3>External Authentication</h3>
+                    <p>
+                        The following options are only required for situations
+                        where you wish to use an external URL to handle authentication
+                        of rBuilder accounts.
+                    </p>
+                    <div class="form-line-top">
+                        <div class="rbasetup-label">External Authentication URL:</div>
+                        <input type="text" name="externalPasswordURL" value="${externalPasswordURL}" />
+                    </div>
+                    <div class="form-line">
+                        <div class="rbasetup-label">Authentication cache TTL (seconds):</div>
+                        <input type="text" name="authCacheTimeout" value="${authCacheTimeout}" />
+                    </div>
+                    <h3>Repository Options</h3>
+                    <div class="form-line">
+                        <div class="rbasetup-label">Require OpenPGP-signed commits:</div>
+                        <input type="checkbox" name="requireSigs" value="${requireSigs}"
+                            py:attrs="{'checked': requireSigs and 'checked' or None}" />
+                    </div>
                 </div>
             </form>
 
