@@ -245,7 +245,9 @@ class SetupHandler(WebHandler):
                     'rmakeConfigFilePath', RBUILDER_RMAKE_CONFIG)
             rmake_setup.setupRmake(newCfg, rmakeConfigFilePath,
                     restartRmake=True)
-            helperfuncs.initializeExternalProjects(mintClient)
+            # this has to be root since it has to be able to 
+            # read the entitlement directory
+            os.system("%s/usr/share/rbuilder/scripts/init-extproducts" % sudo)
         return self._write("setup/saved")
 
     def restart(self, auth):

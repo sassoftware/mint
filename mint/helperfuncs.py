@@ -685,6 +685,7 @@ def initializeExternalProjects(client, conaryCfg=None):
         if conaryCfg is None:
             conaryCfg = conarycfg.ConaryConfiguration(False)
             conaryCfg.read(config.CONARY_CONFIG)
+            conaryCfg.readEntitlementDirectory()
         return _initializeExternalProjects(client, conaryCfg)
     except Exception, e:
         # Don't cause higher level initialization functions to fail if this
