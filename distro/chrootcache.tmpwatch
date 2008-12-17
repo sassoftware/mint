@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# tmpwatch for rBuilder appliance
+
+# remove old cached chroots after 72 hours.
+/usr/sbin/tmpwatch 72 /var/rmake/chrootcache
