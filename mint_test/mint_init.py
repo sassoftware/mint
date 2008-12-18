@@ -19,7 +19,6 @@ def setup_paths():
     raaTestPath     = os.getenv('RAA_TEST_PATH',    os.path.realpath(curDir + '../../raa-test-2.1'))
     raaPluginsPath  = os.getenv('RAA_PLUGINS_PATH', os.path.realpath(curDir + '../raaplugins'))
     proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath(curDir + '../../rpath-product-definition'))
-    coveragePath    = os.getenv('COVERAGE_PATH',    os.path.realpath(curDir + '../../utils'))
     catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath(curDir + '../../catalog-service'))
     restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath(curDir + '../../restlib'))
 
@@ -35,7 +34,7 @@ def setup_paths():
 
     sys.path = [os.path.realpath(x) for x in (mintPath, mintTestPath,
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
-        raaPath, raaTestPath, raaPluginsPath, proddefPath, coveragePath,
+        raaPath, raaTestPath, raaPluginsPath, proddefPath,
         packageCreatorPath, conaryFactoryTestPath, catalogServicePath,
         restlibPath, rmakePath, rmakePrivatePath)] \
                 + sys.path
@@ -47,7 +46,6 @@ def setup_paths():
         JOB_SLAVE_PATH=jobslavePath, RAA_PATH=raaPath,
         RAA_TEST_PATH=raaTestPath, RAA_PLUGINS_PATH=raaPluginsPath,
         PRODUCT_DEFINITION_PATH=proddefPath,
-        COVERAGE_PATH=coveragePath, 
         PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
         CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,
         CATALOG_SERVICE_PATH=catalogServicePath,
