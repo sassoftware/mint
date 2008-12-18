@@ -917,6 +917,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         f.write(conarycfg.emitEntitlement('server.com', 'class', 'key'))
         f.close()
 
+        self.cfg.configLine( 'proxy http://proxy.example.com/proxy')
         build = client.getBuild(data['pubReleaseFinalId'])
 
         serialized = build.serialize()
@@ -932,6 +933,8 @@ class BuildTest(fixtures.FixturedUnitTest):
              'troveVersion', 'type', 'buildId', 'outputUrl']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
+
+        self.failUnless('proxy' in buildDict['project']['conaryCfg'])
 
     @fixtures.fixture('Full')
     def testBuildCount(self, db, data):
