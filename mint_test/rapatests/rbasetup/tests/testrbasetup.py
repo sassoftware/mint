@@ -5,6 +5,7 @@
 
 import raa.web
 import os
+import pwd
 import raapluginstest
 import raatest
 import tempfile
@@ -17,7 +18,10 @@ from raa.rpath_error import RestartWebException
 from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
+from mint import helperfuncs
+from mint import mint_error
 from mint import shimclient
+from mint import rmake_setup
 
 MINT_CONFIG_ROOT="""
 # A file that approxiamates what the setup plugin will read.
@@ -68,6 +72,25 @@ useInternalConaryProxy  True
 includeConfigFile %(testGeneratedFile)s
 """
 
+FAKE_GENERATED_CONFIG = """
+configured                True
+hostName                  justified
+siteDomainName            mumu.com
+companyName               Trancentral
+corpSite                  http://www.mumu.com/
+namespace                 klf
+projectDomainName         mumu.com
+externalDomainName        mumu.com
+SSL                       True
+secureHost                justified.mumu.com
+bugsEmail                 klfisgonnarocku@mumu.com
+adminMail                 klfisgonnarocku@mumu.com
+requireSigs               False
+authPass                  lasttraintotrancentral
+reposDBDriver             sqlite
+reposDBPath               /what/time/is/%s/love
+"""
+
 DEFAULT_STARTING_CONFIG = dict(hostName='justified',
                                siteDomainName='mumu.com',
                                namespace='yournamespace',
@@ -100,14 +123,28 @@ class rBASetupTest(raatest.rAATest):
         self.mockOSSetUID = mock.MockObject()
         self.mockOSSetGID = mock.MockObject()
         self.mockOSSetGroups = mock.MockObject()
-        self.mockOSGetPwNam = mock.MockObject()
+        self.mockOSFork = mock.MockObject()
+        self.mockOS_exit = mock.MockObject()
+        self.mockOSwaitpid = mock.MockObject()
+        self.mockpwdGetPwNam = mock.MockObject()
         self.mockShimMintClient = mock.MockObject()
         self.mock(os, 'system', self.mockOSSystem)
         self.mock(os, 'setuid', self.mockOSSetUID)
         self.mock(os, 'setgid', self.mockOSSetGID)
         self.mock(os, 'setgroups', self.mockOSSetGroups)
-        self.mock(os, 'getpwnam', self.mockOSGetPwNam)
+        self.mock(os, 'fork', self.mockOSFork)
+        self.mock(os, '_exit', self.mockOS_exit)
+        self.mock(os, 'waitpid', self.mockOSwaitpid)
+        self.mock(pwd, 'getpwnam', self.mockpwdGetPwNam)
         self.mock(shimclient, 'ShimMintClient', self.mockShimMintClient)
+
+        # Make fork always pretend to be a child
+        self.mockOSFork._mock.setDefaultReturn(0)
+
+        # Make sure getpwname returns something stable
+        self.mockpwdGetPwNam._mock.setReturn(
+                ('apache', 'x', 48, 48, 'Apache', '/var/www', '/sbin/nologin'),
+                'apache')
 
         rbasetup_srv.rBASetup.__init__ = lambda *args: None
         self.rbasetupsrv = rbasetup_srv.rBASetup()
@@ -247,7 +284,7 @@ class rBASetupTest(raatest.rAATest):
                          waddle="frob")
 
         # return userId = 1 when registerNewUser called
-        self.mockShimMintClient.registerNewUser._mock.setDefaultReturn(1)
+        self.mockShimMintClient().registerNewUser._mock.setDefaultReturn(1)
 
         # Call the backend function
         ret = raapluginstest.backendCaller(self.rbasetupsrv.updateRBAConfig,
@@ -258,11 +295,10 @@ class rBASetupTest(raatest.rAATest):
                 "Expected return of True from backend call")
 
         # Make sure we regsitered a new user and promoted it
-        # XXX stubbed for now
-        #self.mockShimMintClient.registerNewUser._mock.assertCalled(
-        #        newValues['new_username'], newValues['new_password'],
-        #        newValues['new_email'])
-        #self.mockShimMintClient.promoteUserToAdmin._mock.assertCalled(1)
+        self.mockShimMintClient().registerNewUser._mock.assertCalled(
+                newValues['new_username'], newValues['new_password'],
+                "Administrator", newValues['new_email'], "", "", active=True)
+        self.mockShimMintClient().promoteUserToAdmin._mock.assertCalled(1)
 
         # Read the generated config back
         cfgfile = file(config.RBUILDER_GENERATED_CONFIG, 'r').read()
@@ -330,4 +366,61 @@ class rBASetupTest(raatest.rAATest):
         # Check exception path
         self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
         self.failIf(ret, "Expected a failed return in the exception case")
+
+    def test_srv_setupRMakeChildSuccess(self):
+        """
+        Exercises the setup and restart rMake code, and assumes everything
+        worked. (Success case)
+        """
+        # Write a new generated config
+        f = open(config.RBUILDER_GENERATED_CONFIG, 'w')
+        f.write(FAKE_GENERATED_CONFIG)
+        f.close()
+
+        # Mock out _writeRmakeConfig, also
+        mock_writeRmakeConfig = mock.MockObject()
+        self.mock(rmake_setup, '_writeRmakeConfig', mock_writeRmakeConfig)
+
+        # and the helperfuncs.genPassword to return something we know
+        fakeGeneratedPassword = 'lasttraintotranscentral'
+        mockGenPassword = mock.MockObject()
+        self.mock(helperfuncs, 'genPassword', mockGenPassword)
+        mockGenPassword._mock.setDefaultReturn(fakeGeneratedPassword)
+
+        self.mockShimMintClient().getProjectByHostname._mock.raiseErrorOnAccess(mint_error.ItemNotFound)
+        self.mockShimMintClient().newProject._mock.setDefaultReturn(1)
+
+        # Call the darn thing
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.setupRMake)
+
+        # Check ourselves out
+        mock_writeRmakeConfig._mock.assertCalled(config.RBUILDER_RMAKE_CONFIG,
+                'rmake-repository-user', fakeGeneratedPassword,
+                'https://justified.mumu.com',
+                'rmake-repository.mumu.com',
+                'https://justified.mumu.com/repos/rmake-repository')
+        self.mockOS_exit._mock.assertCalled(0)
+
+
+    def test_srv_setupRMakeParentSuccess(self):
+        """
+        Just like test_srv_RMakeChildSuccess, except we are the parent
+        process.
+        """
+
+        # Set the mocked stuff to return useful values
+        self.mockOSFork._mock.setDefaultReturn(23)
+        self.mockOSwaitpid._mock.setDefaultReturn((23, 0))
+        self.mockOSSystem._mock.setReturn(0, "/sbin/service rmake restart")
+        self.mockOSSystem._mock.setReturn(0, "/sbin/service rmake-node restart")
+
+        # Call the darn thing
+        ret = raapluginstest.backendCaller(self.rbasetupsrv.setupRMake)
+
+        # Make sure we restarted rMake!
+        self.mockOSSystem._mock.assertCalled('/sbin/service rmake restart')
+        self.mockOSSystem._mock.assertCalled('/sbin/service rmake-node restart')
+
+
+
 

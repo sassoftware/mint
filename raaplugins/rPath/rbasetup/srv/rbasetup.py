@@ -4,14 +4,18 @@
 #
 import logging
 import os
+import pwd
+import sys
+import traceback
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 
 from mint import config
 from mint import helperfuncs
+from mint import rmake_setup
 from mint import shimclient
 
-from mint.mint_error import RmakeRepositoryExistsError
+from mint.mint_error import RmakeRepositoryExistsError, UserAlreadyExists
 
 from conary.lib.cfgtypes import CfgBool
 
@@ -100,17 +104,20 @@ class rBASetup(rAASrvPlugin):
         shmclnt = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
 
         try:
-            # XXX stubbed temporarily
-            #userId = shmclnt.registerNewUser(adminUsername, adminPassword,
-            #    "Administrator", adminEmail, "", "", active=True)
-            #log.info("Created initial rBuilder account %s (id=%d)" % \
-            #        (adminUsername, userId))
-            #shmclnt.promoteUserToAdmin(userId)
-            #log.info("Promoted initial rBuilder account to admin level")
+            userId = shmclnt.registerNewUser(adminUsername, adminPassword,
+                "Administrator", adminEmail, "", "", active=True)
+            log.info("Created initial rBuilder account %s (id=%d)" % \
+                    (adminUsername, userId))
+            shmclnt.promoteUserToAdmin(userId)
+            log.info("Promoted initial rBuilder account to admin level")
             return True
+        except UserAlreadyExists:
+            log.error("rBuilder user %s already exists!")
+            return False
         except Exception, e:
             log.error("Failed to create rBuilder admin account %s (reason: %s)" % \
                     (adminUsername, str(e)))
+            log.error(traceback.format_exc(sys.exc_info()[2]))
             return False
 
         return True
@@ -167,32 +174,38 @@ class rBASetup(rAASrvPlugin):
         """
         cfg = self._readConfigFile(config.RBUILDER_CONFIG)
         restartNeeded = False
-        try:
-            # Drop privs temporarily to Apache so as to not create
-            # repositories that cannot be written to by rBuilder
+        pid = os.fork()
+        if not pid: # child
+            rc = -3
             try:
-                apacheUID, apacheGUID = os.getpwnam('apache')[2:4]
-                os.setuid(apacheUID)
-                os.setgid(apacheUID)
-                os.setgroups([apacheGID])
-                # XXX stubbed temporarily
-                # rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
-                log.info("rMake repository setup -- need to restart rmake and rmake-node services")
-                restartNeeded = True
-            except RmakeRepositoryExistsError:
-                log.warn("rMake Repository already exists, skipping")
-            except Exception, e:
-                log.error("Unexpected error occurred when attempting to create the rMake repository.")
-                return False
-        finally:
-            # Restore privs to root
-            os.setuid(0)
-            os.setgid(0)
-            os.setgroups([0])
+                try:
+                    # Drop privs in the child to apache so as to not create
+                    # repositories that cannot be written to by rBuilder.
+                    apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
+                    os.setgroups([apacheGID])
+                    os.setgid(apacheUID)
+                    os.setuid(apacheUID)
+                    rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
+                    log.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                    rc = 0
+                except RmakeRepositoryExistsError:
+                    log.warn("rMake Repository already exists, skipping")
+                    rc = -1
+                except Exception, e:
+                    log.error("Unexpected error occurred when attempting to create the rMake repository: %s" % str(e))
+                    print traceback.format_exc(sys.exc_info()[2])
+                    rc = -2
+            finally:
+                os._exit(rc)
+        else: # parent
+            # if child exits and returns 0, we need to restart rMake
+            childStatus = os.waitpid(pid,0)[1]
+            restartNeeded = os.WIFEXITED(childStatus) and \
+                    (os.WEXITSTATUS(childStatus) == 0)
 
         if restartNeeded:
             rMakeRestartRC = os.system("/sbin/service rmake restart")
-            if rMakeRestarRC == 0:
+            if rMakeRestartRC == 0:
                 rMakeNodeRestartRC = os.system("/sbin/service rmake-node restart")
             if rMakeRestartRC != 0 or rMakeNodeRestartRC != 0:
                 log.warn("Failed to restart rMake services. You may need to reboot " \

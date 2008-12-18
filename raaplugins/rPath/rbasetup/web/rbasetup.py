@@ -123,7 +123,6 @@ class rBASetup(rAAWebPlugin):
         sanitizedConfigurableOptions = \
                 dict([(str(k),v) for k, v in configurableOptions.iteritems()])
 
-        import epdb;epdb.st()
         # Return the hostname from the request if it's not set
         if not sanitizedConfigurableOptions['hostName']:
             import cherrypy
@@ -160,7 +159,7 @@ class rBASetup(rAAWebPlugin):
 
         # Attempt to restart Apache; warn if we can't
         apacheRestarted = self.callBackend('restartApache')
-        message = "Successfully saved the rBuilder configuration."
+        successMsg = "Successfully saved the rBuilder configuration."
         if not apacheRestarted:
             successMsg += " However, there was a problem restarting the rBuilder " \
                           "web service. You may need to restart the appliance "  \
