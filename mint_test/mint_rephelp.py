@@ -25,9 +25,9 @@ from webunit import webunittest
 
 from mint.web import hooks
 from mint import builds
-from mint import client
+import mint.client
 from mint import config
-from mint import cooktypes, buildtypes
+from mint import cooktypes
 from mint import jobs
 from mint import server
 from mint import shimclient
@@ -481,7 +481,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         if useProxy:
             self.cfg.configKey('conaryProxy',
                                'http http://localhost:%s' % server.port)
-        cli = client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
         auth = cli.checkAuth()
         assert(auth.authorized)
         return cli
