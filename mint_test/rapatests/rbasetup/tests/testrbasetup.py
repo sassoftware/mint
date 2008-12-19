@@ -166,7 +166,7 @@ class rBASetupTest(raatest.rAATest):
         f.write("# This file is blank and waiting to be filled in")
         f.close()
 
-        raaFramework = raapluginstest.webPluginTest()
+        raaFramework = webPluginTest()
         raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup.rBASetup
         self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
         self.root = raaFramework.pseudoroot
