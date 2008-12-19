@@ -2814,7 +2814,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cc.display(cfgBuffer)
         cfgData = cfgBuffer.getvalue().split("\n")
 
-        allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
+        allowedOptions = ['proxy', 'repositoryMap', 'user', 'conaryProxy', 'entitlement']
         cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
 
         r = {}
