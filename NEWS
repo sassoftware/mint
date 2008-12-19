@@ -43,6 +43,9 @@ Internal Changes
 * It is now possible to communicate to EC2 via an HTTP proxy. (RBL-4005)
 * rBuilder is now automatically set up with a number of external products
   for the platforms we provide, given that you have access to them. (RBL-4010)
+* Published releases from public products set public launch permissions on EC2
+  for rBuilder Online, and give all users launch permissions (but not public
+  launch permissions) on rBA. (RBL-3981)
 
 Web Front End Changes
 ---------------------
