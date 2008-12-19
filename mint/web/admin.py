@@ -270,22 +270,8 @@ class AdminHandler(WebHandler):
 
     @strFields(authType = 'none')
     def addExternal(self, *args, **kwargs):
-        from mint import database
         kwargs.setdefault('authtype', 'none')
-        try:
-            self.client.getProjectByHostname('rap')
-        except ItemNotFound:
-            firstTime = True
-            kwargs.setdefault('name', 'rPath Appliance Platform - Linux Service')
-            kwargs.setdefault('hostname', 'rap')
-            kwargs.setdefault('url', 'https://rap.rpath.com/conary/')
-            kwargs.setdefault('label', 'rap.rpath.com@rpath:linux-1')
-            kwargs.setdefault('allLabels', 0)
-            kwargs.setdefault('backupExternal', 0)
-        else:
-            firstTime = False
-
-        return self._write('admin/addExternal', firstTime = firstTime,
+        return self._write('admin/addExternal',
                 editing = False, mirrored = False, projectId = -1,
                 kwargs = kwargs, initialKwargs = {})
 
