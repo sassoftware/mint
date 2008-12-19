@@ -25,7 +25,6 @@ from mint.web.project import ProjectHandler
 from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
-from mint.web.setup import SetupHandler
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
     HttpNotFound)
 from mint import maintenance
@@ -81,7 +80,6 @@ class MintApp(WebHandler):
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
-        self.setupHandler = SetupHandler()
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _handle(self, pathInfo):
@@ -217,7 +215,6 @@ class MintApp(WebHandler):
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
             (r'^/repos/',       self.conaryHandler),
-            (r'^/setup/',       self.setupHandler),
             (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
         )
