@@ -6,6 +6,7 @@ import logging
 import os
 import pwd
 import sys
+import tempfile
 import traceback
 
 from raa.modules.raasrvplugin import rAASrvPlugin
@@ -166,6 +167,8 @@ class rBASetup(rAASrvPlugin):
         except Exception, e:
             log.error("Failed to restart Apache (reason: %s)" % str(e))
             return False
+
+        log.info("Successfully restarted Apache")
         return True
 
     def setupRMake(self, schedId, execId):
@@ -174,36 +177,58 @@ class rBASetup(rAASrvPlugin):
         """
         cfg = self._readConfigFile(config.RBUILDER_CONFIG)
         restartNeeded = False
+        apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
+
+        # NASTY HACK. Need to create a tmpfile to store log messages in for the
+        # child process. A terrible hack needed since the standard logger
+        # handlers are writing to raa-service.log, which is owned by root,
+        # and thus cannot be written to by the child process, which will drop
+        # root privileges.
+        childLogFd, childLogFn = \
+                tempfile.mkstemp(suffix='.log', prefix='setupRMake-')
+        os.close(childLogFd)
+        os.chown(childLogFn, apacheUID, apacheGID)
+        log.info("Attempting to setup rMake - logging to %s" % childLogFn)
+
         pid = os.fork()
         if not pid: # child
             rc = -3
             try:
                 try:
+                    # Reset logging in the child (see NASTY HACK above)
+                    childLog = logging.getLogger('setupRMake')
+                    childLog.addHandler(logging.FileHandler(childLogFn))
+                    childLog.setLevel(logging.DEBUG)
+
                     # Drop privs in the child to apache so as to not create
                     # repositories that cannot be written to by rBuilder.
-                    apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
                     os.setgroups([apacheGID])
                     os.setgid(apacheUID)
                     os.setuid(apacheUID)
+                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
                     rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
-                    log.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
                     rc = 0
                 except RmakeRepositoryExistsError:
-                    log.warn("rMake Repository already exists, skipping")
+                    childLog.warn("rMake Repository already exists, skipping")
                     rc = -1
                 except Exception, e:
-                    log.error("Unexpected error occurred when attempting to create the rMake repository: %s" % str(e))
-                    print traceback.format_exc(sys.exc_info()[2])
+                    childLog.error("Unexpected error occurred when attempting to create the rMake repository: %s" % str(e))
+                    traceback.print_exc(file=childLogFn)
                     rc = -2
             finally:
                 os._exit(rc)
         else: # parent
+            # close the child log
             # if child exits and returns 0, we need to restart rMake
+            log.info("Parent waiting on PID %d" % pid)
             childStatus = os.waitpid(pid,0)[1]
-            restartNeeded = os.WIFEXITED(childStatus) and \
-                    (os.WEXITSTATUS(childStatus) == 0)
+            childRC = os.WEXITSTATUS(childStatus)
+            log.info("Child exited with %d" % childRC)
+            restartNeeded = os.WIFEXITED(childStatus) and (childRC == 0)
 
         if restartNeeded:
+            log.info("Restarting rMake service due to new configuration")
             rMakeRestartRC = os.system("/sbin/service rmake restart")
             if rMakeRestartRC == 0:
                 rMakeNodeRestartRC = os.system("/sbin/service rmake-node restart")
