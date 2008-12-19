@@ -126,6 +126,7 @@ class rBASetupTest(raatest.rAATest):
         self.mockOSFork = mock.MockObject()
         self.mockOS_exit = mock.MockObject()
         self.mockOSwaitpid = mock.MockObject()
+        self.mockOSchown = mock.MockObject()
         self.mockpwdGetPwNam = mock.MockObject()
         self.mockShimMintClient = mock.MockObject()
         self.mock(os, 'system', self.mockOSSystem)
@@ -135,6 +136,7 @@ class rBASetupTest(raatest.rAATest):
         self.mock(os, 'fork', self.mockOSFork)
         self.mock(os, '_exit', self.mockOS_exit)
         self.mock(os, 'waitpid', self.mockOSwaitpid)
+        self.mock(os, 'chown', self.mockOSchown)
         self.mock(pwd, 'getpwnam', self.mockpwdGetPwNam)
         self.mock(shimclient, 'ShimMintClient', self.mockShimMintClient)
 
