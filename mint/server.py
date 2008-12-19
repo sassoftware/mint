@@ -2245,7 +2245,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 f.write('repositoryMap %s %s\n' % (host, url))
             f.close()
             util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-            util.copyfile(fname, self.cfg.conaryRcFile)
+            util.copyfile(fname, self.cfg.conaryRcFile, verbose=False)
             os.chmod(self.cfg.conaryRcFile, 0644)
 
             # add proxy stuff for version 1 config clients
@@ -2261,7 +2261,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.cfg.displayKey('proxy', out=f)
             f.close()
-            util.copyfile(fname, v1config)
+            util.copyfile(fname, v1config, verbose=False)
             os.chmod(v1config, 0644)
 
         finally:
