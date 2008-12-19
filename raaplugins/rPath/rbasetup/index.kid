@@ -13,8 +13,16 @@ Copyright (c) 2006-2008 rPath, Inc.
     All Rights Reserved
 -->
 
+<?python
+    if not configured:
+        pageTitle = "Initial rBuilder Setup"
+        instructions = "Now it's time to configure your rBuilder Appliance.  Some of the following fields have been populated with default values, which you may change if necessary."
+    else:
+        pageTitle = "rBuilder Setup"
+        instructions = "Your rBuilder Applinace is already configured. You may make a limited number of changes to the setup via the form below."
+?>
 <head>
-    <title>${getConfigValue('product.productName')}: Initial Setup</title>
+    <title>${getConfigValue('product.productName')}: ${pageTitle}</title>
     <style type="text/css">
         .rbasetup-label {
             float: left;
@@ -26,14 +34,13 @@ Copyright (c) 2006-2008 rPath, Inc.
 </head>
 
 <body>
-    <?python instructions = "Now it's time to configure your rBuilder server.  Some of the following fields have been populated with default values, which you may change if necessary."?>
     <div class="plugin-page" id="plugin-page">
         <div class="page-content">
             <div py:replace="display_instructions(instructions, raaInWizard)" />
             <form id="page_form" name="page_form" action="javascript:void(0);" method="post"
                 onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'doSetup');">
-                <div class="page-section">Initial Administrator Account</div>
-                <div class="page-section-content">
+                <div py:if="not configured" class="page-section">Initial Administrator Account</div>
+                <div py:if="not configured" class="page-section-content">
                     <p>
                         In order to access the web interface for rBuilder, you will
                         need to create an administrator account. This account is
@@ -57,8 +64,8 @@ Copyright (c) 2006-2008 rPath, Inc.
                         <input type="text" name="new_email" autocomplete="off" />
                     </div>
                 </div>
-                <div class="page-section">Server Setup</div>
-                <div class="page-section-content">
+                <div class="page-section" py:if="not configured">Server Setup</div>
+                <div class="page-section-content" py:if="not configured">
                     <p>
                         <strong>Note:</strong> The hostname and domain name
                         displayed below are based on the URL you used to access your
@@ -66,10 +73,6 @@ Copyright (c) 2006-2008 rPath, Inc.
                         that the resulting fully-qualified domain name constructed from
                         the values you've entered must match the URL your users will
                         use to access rBuilder.
-                    </p>
-                    <p>
-                        Once you have created a ${projectText().lower()} on your 
-                        rBuilder server, you will no longer be able to change these fields.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
@@ -109,7 +112,7 @@ Copyright (c) 2006-2008 rPath, Inc.
             </form>
 
             <div class="page-section-content-bottom">
-                <a class="rnd_button float-right" id="OK" href="javascript:button_submit(document.page_form)">Continue</a>
+                <a class="rnd_button float-right" id="OK" href="javascript:button_submit(document.page_form)">${raaInWizard and "Continue" or "Save"}</a>
             </div>
         </div>
     </div>
