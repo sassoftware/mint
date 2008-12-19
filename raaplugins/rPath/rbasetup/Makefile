@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = web
+SUBDIRS = web srv
 
 python_files = __init__.py
 
