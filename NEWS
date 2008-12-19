@@ -46,6 +46,8 @@ Internal Changes
 
 Web Front End Changes
 ---------------------
+* rBuilder's initial setup is done via the rPath Platform Appliance
+  interface. (RBL-2032)
 * Product Version is now set as a view on the Product, affecting all pages that
   interact with the product version (RBL-3163)
 * Fixed a bug where the cook group page mistakenly referenced the "Images" 
