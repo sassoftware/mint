@@ -170,6 +170,10 @@ class rBASetup(rAAWebPlugin):
         # underlying code will not create duplicate repositories.
         self.callBackend('setupRMake')
 
+        # Add the canned external projects needed to enable platform
+        # building.
+        self.callBackend('setupExternalProjects')
+
         # Regardless if Apache restarts, move on in the wizard
         self.wizardDone()
         return dict(message=successMsg)

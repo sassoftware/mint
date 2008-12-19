@@ -241,6 +241,8 @@ class rBASetup(rAASrvPlugin):
     def setupExternalProjects(self, schedId, execId):
         """
         Sets up a set of canned external projects.
+        All this does is call a script which does the heavy lifting.
         """
-        # TODO: implement me
+        log.info("Attempting to set up external projects for platforms")
+        rc = os.system("/usr/share/rbuilder/scripts/init-extproducts")
         return True
