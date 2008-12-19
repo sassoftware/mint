@@ -17,9 +17,13 @@ Copyright (c) 2006-2008 rPath, Inc.
     if not configured:
         pageTitle = "Initial rBuilder Setup"
         instructions = "Now it's time to configure your rBuilder Appliance.  Some of the following fields have been populated with default values, which you may change if necessary."
+        advancedOptionsUrl = makeUrl('/static/images/icon_expand.gif')
+        advancedOptionsStyle = 'display: none;'
     else:
         pageTitle = "rBuilder Setup"
         instructions = "Your rBuilder Applinace is already configured. You may make a limited number of changes to the setup via the form below."
+        advancedOptionsUrl = makeUrl('/static/images/icon_collapse.gif')
+        advancedOptionsStyle = ''
 ?>
 <head>
     <title>${getConfigValue('product.productName')}: ${pageTitle}</title>
@@ -31,6 +35,28 @@ Copyright (c) 2006-2008 rPath, Inc.
             padding-top: 3px;
         }
     </style>
+    <script type="text/javascript">
+
+    expand_h = makeUrl('/static/images/icon_expand_h.gif');
+    expand = makeUrl('/static/images/icon_expand.gif');
+    collapse_h = makeUrl('/static/images/icon_collapse_h.gif');
+    collapse = makeUrl('/static/images/icon_collapse.gif');
+    function toggleAdvanced(link, expand, collapse, element) {
+        var el = $(element);
+        if(link.src.match("expand")) {
+            link.src = collapse;
+            el.style.display = '';
+            normal = collapse;
+            hover = collapse_h;
+        } else {
+            link.src = expand;
+            el.style.display = 'none';
+            normal = expand;
+            hover = expand_h;
+        }
+    }
+    </script>
+
 </head>
 
 <body>
@@ -84,8 +110,11 @@ Copyright (c) 2006-2008 rPath, Inc.
                     </div>
                 </div>
 
-                <div class="page-section">Advanced Options</div>
-                <div class="page-section-content">
+               <div class="page-section">Advanced Options
+		  <img src="${advancedOptionsUrl}" onclick="javascript:toggleAdvanced(this, expand, collapse, 'advanced_options')" style="cursor: pointer; vertical-align: text-top; padding-right: 4px;" onMouseOver="this.src = this.src.match('expand') ? expand_h : collapse_h" onMouseOut="this.src = this.src.match('expand') ? expand : collapse"/>
+                </div>
+                <div id="advanced_options" class="formgroup" style="${advancedOptionsStyle}">
+
                     <h3>External Authentication</h3>
                     <p>
                         The following options are only required for situations

@@ -49,10 +49,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
 
         self.webLogin('adminuser', 'adminpass')
-
-        # ensure "first time" content appears on page
-        page = self.assertContent("/admin/addExternal",
-                                  'NAME="hostname" VALUE="rap"')
+        page = self.fetch("/admin/addExternal")
 
         page = page.postForm(1, self.post,
                              {'hostname' : 'rap',
@@ -80,10 +77,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.webLogin('adminuser', 'adminpass')
 
-        # ensure "first time" content appears on page
-        page = self.assertContent("/admin/addExternal",
-                                  'NAME="hostname" VALUE="rap"')
-
+        page = self.fetch("/admin/addExternal")
         page = page.postForm(1, self.post,
                              {'hostname' : 'rap',
                               'name' : 'rPath Appliance Platform',
@@ -126,8 +120,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'externalPass': 'mirrorpass'}
 
         # Create without backup
-        page = self.assertContent("/admin/addExternal",
-                                  'NAME="hostname" VALUE="rap"')
+        page = self.fetch("/admin/addExternal")
+                        
         page.postForm(1, self.post, details)
 
         project = client.getProjectByHostname("rap")
@@ -273,10 +267,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testCreateExternalProjectNoAuth(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
-
-        # ensure "first time" content appears on page
-        page = self.assertContent("/admin/addExternal",
-                                  'NAME="hostname" VALUE="rap"')
 
         # check errors
         page = self.fetch("/admin/addExternal")
