@@ -205,9 +205,9 @@ class rBASetup(rAASrvPlugin):
                     os.setgroups([apacheGID])
                     os.setgid(apacheUID)
                     os.setuid(apacheUID)
-                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                    childLog.info("Setting up the rMake repository")
                     rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
-                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                    childLog.info("rMake repository setup complete; we need to restart rmake and rmake-node services")
                     rc = 0
                 except RmakeRepositoryExistsError:
                     childLog.warn("rMake Repository already exists, skipping")
