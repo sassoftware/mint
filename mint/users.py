@@ -343,6 +343,22 @@ class UsersTable(database.KeyedTable):
         results = cu.fetchall()
         return results
 
+    def getUsersWithAwsAccountNumber(self):
+        """
+        Returns a list of all users with Aws account numbers.
+        """
+        cu = self.db.cursor()
+        SQL = """
+            SELECT u.userId, ud.value
+            FROM Users u
+                JOIN UserData ud on u.userId = ud.userId
+            WHERE ud.name = 'awsAccountNumber'
+              AND ud.value is not NULL
+            """
+        cu.execute(SQL)
+        results = cu.fetchall()
+        return results
+
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """
         Returns a list of users for browsing limited by L{limit}

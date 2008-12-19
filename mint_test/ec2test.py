@@ -1208,20 +1208,20 @@ conaryproxy = http://proxy.hostname.com/proxy/
                     id = pubRelease[2].id
             # Unpublish the release of a public product
             client.unpublishPublishedRelease(id)
-            # Public launch perms were removed
-            self.assertTrue(self.removePublicLaunchPermissionCalled)
+            # Launch perms were reset
+            self.assertTrue(self.resetLaunchPermissionsCalled)
             # launch perms were added to the owner and developer in the product
             self.assertEquals(2, len(self.launchPermissions))
             self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
             self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
             reset()
 
-            # Publish the release of a public product
+            # Publish the release of a public product on rBA
             client.publishPublishedRelease(id, False)
-            # Public launch perms were added
-            self.assertTrue(addPublicLaunchPermission)
-            # Launch perms for the owner and developer in the product were removed
-            self.assertEquals(0, len(self.launchPermissions))
+            # Public launch perms were not added
+            self.assertTrue(not self.addPublicLaunchPermissionCalled)
+            # Launch perms for all 3 users were added.
+            self.assertEquals(3, len(self.launchPermissions))
             reset()
 
             # Unpublish the release of a private product.
