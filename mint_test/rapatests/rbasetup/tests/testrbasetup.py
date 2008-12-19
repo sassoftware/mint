@@ -15,6 +15,7 @@ from testrunner import resources
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command
 from raa.rpath_error import RestartWebException
+from mintraatests import webPluginTest
 from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
