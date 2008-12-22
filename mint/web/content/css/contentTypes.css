@@ -112,7 +112,7 @@
 }
 
 .mainformhorizontal select.key-project-list {
-    width:90%; 
+    width:90%;
 }
 
 .mainformhorizontal div.help,
@@ -120,6 +120,7 @@
 .singlerowhorizontal div.help,
 .singlerowhorizontal p.help {
     margin: 0px;
+    width:90%;
 }
 
 .mainformhorizontal table,
