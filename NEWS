@@ -119,6 +119,7 @@ Web Front End Changes
 * There is now an RPA plug-in to configure targets. (RBL-3950)
 * The confirmation message for unpublishing a release has been updated to
   inform users that content is not removed from rUS.  (RBL-2917)
+* The footer is now full-width. (RBL-3857)
 
 Bug Fixes
 ---------------------
