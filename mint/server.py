@@ -2564,7 +2564,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         specName = name
                     if not specVersion:
                         specVersion = ''
-                    if specFlavor:
+                    if specFlavor is not None:
                         specFlavor = str(specFlavor)
                     else:
                         specFlavor = ''
