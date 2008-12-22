@@ -252,6 +252,8 @@ div#main {
      padding: 6px 0px 10px 0px;
      text-align: center;
      font-size: 12px;
+     margin: 0 10px;
+     width: 99%;
 }
 
 #rssnews p {
@@ -1751,6 +1753,8 @@ img#nameSpinner, img#archSpinner {
      border-bottom: 5px solid #5c82b7;
      background: #ffffde url(../images/errors.gif) no-repeat 10px 10px;
      *background-position: 10px 14px;
+     margin: 0 10px;
+     width: auto;
 }
 
 #errors p {
