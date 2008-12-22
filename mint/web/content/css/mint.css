@@ -1111,6 +1111,10 @@ ul.commits li a:hover {
     height: 22px;
 }
 
+.boxPalette div.boxFooter {
+    width: 100%;
+}
+
 .downloadList {
     list-style-type: none;
     padding-left: 9px;
