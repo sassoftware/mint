@@ -228,7 +228,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" style="float: right;" id="statusSpinner" alt="Job Running" />
                 <div id="statusMessage" />
             </div>
-            <img class="left" src="${cfg.staticPath}apps/mint/images/block_bottom.gif" alt="" />
+            <img class="left" src="${cfg.staticPath}apps/mint/images/block_bottom.gif" width="100%" height="3px" alt="" />
        </div>
     </div>
 
