@@ -56,7 +56,7 @@ schema: schema.in.py
 	python schema.in.py > schema
 
 custom.cfg: custom.cfg.in
-	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
+	sed -e s,@VERSION@,$(SHORTVER), custom.cfg.in > custom.cfg
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e 's,@VERSION@,$(VERSION),' -e 's,@LIBDIR@,$(LIBDIR),' rbuilder.conf.in >rbuilder.conf
