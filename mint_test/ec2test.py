@@ -157,10 +157,11 @@ deletedKeys = []
 
 class FakeS3Connection(object):
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyArgs):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.proxyArgs = proxyArgs
 
     def get_bucket(self, bucketName):
         return FakeBucket(bucketName)
@@ -185,10 +186,11 @@ class FakeKey(object):
 
 class FakeEC2Connection(object):
 
-    def __init__(self, (accountId, accessKey, secretKey)):
+    def __init__(self, (accountId, accessKey, secretKey), proxyArgs):
         self.accountId = accountId
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.proxyArgs = proxyArgs
 
     def _checkKeys(self):
         if self.accessKey != FAKE_PUBLIC_KEY or \
@@ -278,11 +280,11 @@ class FakeEC2ResultSet(object):
         self.instances = instances
         pass
 
-def getFakeEC2Connection(accessKey, secretKey):
-    return FakeEC2Connection((None, accessKey, secretKey))
+def getFakeEC2Connection(accessKey, secretKey, **kwargs):
+    return FakeEC2Connection((None, accessKey, secretKey), kwargs)
 
-def getFakeS3Connection(accessKey, secretKey):
-    return FakeS3Connection((None, accessKey, secretKey))
+def getFakeS3Connection(accessKey, secretKey, **kwargs):
+    return FakeS3Connection((None, accessKey, secretKey), kwargs)
 
 class BaseEC2Test(fixtures.FixturedUnitTest):
     def setupEC2Credentials(self):
@@ -596,7 +598,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
 
     def testGetIncompleteEC2Credentials(self):
         self.failUnlessRaises(mint_error.EC2Exception,
-                ec2.EC2Wrapper, ('id', '', 'secretKey'))
+                ec2.EC2Wrapper, ('id', '', 'secretKey'), None)
         
     @fixtures.fixture("EC2")
     def testGetEC2KeyPairs(self, db, data):
@@ -1206,20 +1208,20 @@ conaryproxy = http://proxy.hostname.com/proxy/
                     id = pubRelease[2].id
             # Unpublish the release of a public product
             client.unpublishPublishedRelease(id)
-            # Public launch perms were removed
-            self.assertTrue(self.removePublicLaunchPermissionCalled)
+            # Launch perms were reset
+            self.assertTrue(self.resetLaunchPermissionsCalled)
             # launch perms were added to the owner and developer in the product
             self.assertEquals(2, len(self.launchPermissions))
             self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
             self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
             reset()
 
-            # Publish the release of a public product
+            # Publish the release of a public product on rBA
             client.publishPublishedRelease(id, False)
-            # Public launch perms were added
-            self.assertTrue(addPublicLaunchPermission)
-            # Launch perms for the owner and developer in the product were removed
-            self.assertEquals(0, len(self.launchPermissions))
+            # Public launch perms were not added
+            self.assertTrue(not self.addPublicLaunchPermissionCalled)
+            # Launch perms for all 3 users were added.
+            self.assertEquals(3, len(self.launchPermissions))
             reset()
 
             # Unpublish the release of a private product.
@@ -1364,12 +1366,17 @@ class EC2DefaultCredentialsTest(BaseEC2Test):
     def testTypicalGuidedTourPath(self, db, data):
         client = self.getClient("admin")
         amiData = client.getTargetData('ec2', 'aws')
+        client._cfg.proxy['https'] = "https://user:pass@localhost:1234"
         launchedInstanceId = client.launchAMIInstance((), 1)
         self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
-                amiData.get('ec2PrivateKey'))
+                amiData.get('ec2PrivateKey'),
+                proxy = 'localhost', proxy_port = 1234,
+                proxy_user = 'user', proxy_pass = 'pass')
         client.getLaunchedAMIInstanceStatus((), launchedInstanceId)
         self.mockEC2Connect._mock.assertCalled(amiData.get('ec2PublicKey'),
-                amiData.get('ec2PrivateKey'))
+                amiData.get('ec2PrivateKey'),
+                proxy = 'localhost', proxy_port = 1234,
+                proxy_user = 'user', proxy_pass = 'pass')
 
 class EC2SitewideTest(BaseEC2Test):
     def setUp(self):

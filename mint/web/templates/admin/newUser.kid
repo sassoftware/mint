@@ -41,7 +41,7 @@
                         <td>
                             <input type="text" autocomplete="off" name="email" value="${kwargs['email']}"/>
 
-                            <p class="help">This email address will not be displayed on the ${cfg.companyName} website.</p>
+                            <p class="help" py:if="cfg.rBuilderOnline">This email address will not be displayed on the ${cfg.companyName} website.</p>
                         </td>
                     </tr>
                     <tr>

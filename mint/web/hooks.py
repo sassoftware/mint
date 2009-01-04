@@ -383,19 +383,11 @@ def _resolveProjectRepos(db, hostname, domainname):
         extraWhere = ""
 
     # Determine if the project is local by checking the projects table
-    try:
-        cu = db.cursor()
-        cu.execute("""SELECT projectId, domainname, external,
-                         EXISTS(SELECT * FROM InboundMirrors
-                         WHERE projectId=targetProjectId) AS localMirror, commitEmail
-                      FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
-    except sqlerrors.CursorError:
-        # until schema migration hits, we won't have a commitEmail field
-        cu = db.cursor()
-        cu.execute("""SELECT projectId, domainname, external,
-                         EXISTS(SELECT * FROM InboundMirrors
-                         WHERE projectId=targetProjectId) AS localMirror, '' as commitEmail
-                      FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
+    cu = db.cursor()
+    cu.execute("""SELECT projectId, domainname, external,
+                     EXISTS(SELECT * FROM InboundMirrors
+                     WHERE projectId=targetProjectId) AS localMirror, commitEmail
+                  FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
     try:
         rs = cu.fetchone()
         if rs:
@@ -525,6 +517,8 @@ def handler(req):
                 break
     finally:
         prof.stopHttp(req.uri)
+        if db:
+            db.rollback()
         coveragehook.save()
     return ret
 

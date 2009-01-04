@@ -25,6 +25,7 @@ try:
 except ImportError:
     charts = None
 from mint import communityids
+from mint import config
 from mint import data
 from mint import database
 from mint import ec2
@@ -1435,7 +1436,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Set up EC2 connection
             authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken)
+            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
             # all project members, including users, can see published builds
             for publishedAMIId in published:
@@ -1478,7 +1479,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Set up EC2 connection
             authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken)
+            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
             # published builds will be made public
             for publishedAMIId in published:
@@ -2245,7 +2246,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 f.write('repositoryMap %s %s\n' % (host, url))
             f.close()
             util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-            util.copyfile(fname, self.cfg.conaryRcFile)
+            util.copyfile(fname, self.cfg.conaryRcFile, verbose=False)
             os.chmod(self.cfg.conaryRcFile, 0644)
 
             # add proxy stuff for version 1 config clients
@@ -2261,7 +2262,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.cfg.displayKey('proxy', out=f)
             f.close()
-            util.copyfile(fname, v1config)
+            util.copyfile(fname, v1config, verbose=False)
             os.chmod(v1config, 0644)
 
         finally:
@@ -2677,7 +2678,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype C{str}
         """
         authToken = self._buildEC2AuthToken()
-        s3Wrap = ec2.S3Wrapper(authToken)
+        s3Wrap = ec2.S3Wrapper(authToken, self.cfg.proxy.get('https'))
         return s3Wrap.deleteAMI(amiId)
 
     @typeCheck(int, dict)
@@ -3382,7 +3383,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # Set up EC2 connection
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         try:
             if writers:
@@ -4425,12 +4426,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # normalize mirror order, in case of deletions
         updates = []
         cu = self.db.cursor()
-        cu.execute("SELECT %s FROM %s ORDER BY mirrorOrder"  % (idField, table))
-        for i, x in enumerate(cu.fetchall()):
-            updates.append((i, x[0]))
+        cu.execute("SELECT mirrorOrder, %s FROM %s ORDER BY mirrorOrder ASC"
+                % (idField, table))
+        for newIndex, (oldIndex, rowId) in enumerate(cu.fetchall()):
+            if newIndex != oldIndex:
+                updates.append((newIndex, rowId))
 
-        cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?" % (table, idField), updates)
-        self.db.commit()
+        if updates:
+            cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?"
+                    % (table, idField), updates)
+            self.db.commit()
         return True
 
     @private
@@ -4574,7 +4579,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool}
         @raises: C{EC2Exception}
         """
-        return ec2.EC2Wrapper(authToken).validateCredentials()
+        return ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https')).validateCredentials()
     
     @typeCheck(tuple, list)
     @private
@@ -4590,7 +4595,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{tuple}
         @raises: C{EC2Exception}
         """
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         return ec2Wrapper.getAllKeyPairs(keyNames)
 
     @typeCheck(str, str)
@@ -4651,7 +4656,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises: C{EC2Exception}
         """
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
@@ -4699,7 +4704,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # attempt to boot it up
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
                 userData=userData,
                 useNATAddressing = amiData.get('ec2UseNATAddressing', False))
@@ -4729,7 +4734,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises: C{EC2Exception}
         """
         authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken)
+        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         instancesToKill = self.launchedAMIs.getCandidatesForTermination()
         instancesKilled = []
         for launchedAMIId, ec2InstanceId in instancesToKill:
@@ -5716,7 +5721,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         for amiId in amiIds:
             ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
@@ -5739,7 +5744,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         for amiId in amiIds:
             ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
@@ -5760,7 +5765,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         amiIds = self._getAllAMIIdsForPermChange(userId)
 
         for amiId in amiIds:
@@ -5782,7 +5787,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getAllAMIIdsForPermChange(userId)
         
@@ -5809,7 +5814,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
@@ -5836,7 +5841,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raises C{EC2Exception} if there is a problem contacting EC2.
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         amiIds = self._getProductAMIIdsForPermChange(userId, productId)
 
@@ -5892,7 +5897,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
 
@@ -5913,18 +5918,44 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if awsFound and user[2] == userlevels.USER:
                         ec2Wrap.addLaunchPermission(amiIdData['amiId'], 
                                                     awsAccountNumber)
-        else:
-            # Product is public.
-            # Need to set pulic launch perms and remove launch perms from
-            # every single user.
+        else:                                                    
+            # Product is public.  Need to do different things for rBA vs. rBO.
+            if config.isRBO():
+                self._addEC2LaunchPermsForPublicPublishRBO(
+                    ec2Wrap, affectedAMIIds)
+            else:
+                self._addEC2LaunchPermsForPublicPublishRBA(
+                    ec2Wrap, affectedAMIIds)
 
-            # TODO: perhaps we should do some type of check to only remove
-            # perms from users aws data that we manage.
-            for amiIdData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
-        return True                                              
+        return True                                                 
 
+    def _addEC2LaunchPermsForPublicPublishRBO(
+            self, ec2Wrap, affectedAMIIds):
+        # Set public launch perms and remove launch perms 
+        # from every single user.
+
+        # TODO: perhaps we should do some type of check to only remove
+        # perms from users aws data that we manage.
+        for amiIdData in affectedAMIIds:
+            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
+            ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
+
+    def _addEC2LaunchPermsForPublicPublishRBA(
+            self,  ec2Wrap, affectedAMIIds):
+        # Set launch perms for every user on the rBA who has EC2 creds set.
+        awsAccountNumbers = self._getAllAwsAccountNumbers()
+        for amiIdData in affectedAMIIds:
+            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
+            for awsAccountNumber in awsAccountNumbers:
+                ec2Wrap.addLaunchPermission(amiIdData['amiId'],
+                                            awsAccountNumber)
+
+    def _getAllAwsAccountNumbers(self):
+        awsAccountNumbers = []
+        users = self.users.getUsersWithAwsAccountNumber()
+        for user in users:
+            awsAccountNumbers.append(user[1])
+        return awsAccountNumbers            
 
     def removeEC2LaunchPermsForUnpublish(self, pubReleaseId):
         """
@@ -5934,7 +5965,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken)
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
 
@@ -5962,7 +5993,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # Remove public launch perms and then set launch perms for owners
             # and developers.
             for amiIDData in affectedAMIIds:
-                ec2Wrap.removePublicLaunchPermission(amiIdData['amiId'])
+                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
                 users = self.projectUsers.getMembersByProjectId(
                                               amiIdData['projectId'])
                 for user in users:

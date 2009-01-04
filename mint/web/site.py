@@ -139,9 +139,7 @@ class SiteHandler(WebHandler):
                 errors.append("An account with that username already exists.")
             except users.GroupAlreadyExists:
                 errors.append("An account with that username already exists.")
-            except users.MailError,e:
-                errors.append(e.context);
-            except users.InvalidUsername, e:
+            except (users.InvalidUsername, users.MailError), e:
                 errors.append(str(e))
         if not errors:
             self._redirectHttp('registerComplete')

@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = repos admin docs setup
+SUBDIRS = repos admin docs
 
 kid_files = *.kid
 

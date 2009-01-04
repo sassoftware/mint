@@ -11,6 +11,7 @@ static_files =				\
 	ec2-terminator			\
 	generate-certs.sh		\
 	group-script			\
+	init-extproducts	        \
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\

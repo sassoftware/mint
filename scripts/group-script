@@ -76,6 +76,11 @@ usermod -a -G apache raa-web
 # Create a project for rMake to use as a repository.
 sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
 
+# Set up external repositories for the platforms we support
+# this can't be run as apache as it needs root access to read the
+# entitlement dir
+/usr/share/rbuilder/scripts/init-extproducts
+
 # Start apache again (if it was running before)
 if [ $START_APACHE -eq 1 ]
 then

@@ -47,23 +47,6 @@ kid-build:
 	kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
 	rm .kiderror
 
-raaplugins-link:
-ifdef SUBDIRS
-	mkdir -p $(DESTDIR)$(LIBDIR)/raa/rPath
-	for dir in $(SUBDIRS); do \
-		ln -s ../../python$(PYVERSION)/site-packages/rPath/$$dir \
-		      $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
-	done
-endif
-
-raaplugins-unlink:
-ifdef SUBDIRS
-	for dir in $(SUBDIRS); do \
-		rm -f $(DESTDIR)$(LIBDIR)/raa/rPath/$$dir; \
-	done
-endif
-	rm -rf $(DESTDIR)$(LIBDIR)/raa
-
 raaplugins-install:
 	mkdir -p $(DESTDIR)$(STATICDEST)
 ifdef python_files
@@ -92,5 +75,36 @@ cgi-install:
 	cp $(cgi_files) $(DESTDIR)$(CGIDEST)/
 
 kid-clean:
+
+## DocBook files
+doc-build:
+ifndef MINIMAL
+	echo DOCBOOK $(doc_files)
+	for docfile in $(doc_files); do \
+		htmlfile=`echo $$docfile | sed -e s,xml$$,html,` ; \
+		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
+		$(DOCROOT)/makedoc.sh -h -x $(DOCROOT)/templates/section.xml -f $$docfile ; \
+		mv $$htmlfile $$kidfile ; \
+		kidc $$kidfile ; \
+	done
+endif
+
+doc-install:
+ifndef MINIMAL
+	mkdir -p $(DESTDIR)$(DEST)
+	for docfile in $(doc_files); do \
+		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
+		pycfile=`echo $$docfile | sed -e s,xml$$,pyc,` ; \
+		cp $$kidfile $$pycfile $(DESTDIR)$(DEST)/ ; \
+	done
+endif
+
+doc-clean:
+	for docfile in $(doc_files); do \
+		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
+		rm -f $$kidfile ; \
+	done
+
+
 
 # vim: set sts=8 sw=8 noexpandtab filetype=make :

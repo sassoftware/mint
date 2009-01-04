@@ -36,14 +36,6 @@
             your users to reference that organization's work in
             theirs.</p>
 
-            <p py:if="firstTime" class="help">Because you have not yet
-            added rPath Linux as an external ${projectText().lower()}, the following
-            fields have been pre-populated to make adding rPath Linux
-            easy.  If you do not wish to add rPath Linux as an external
-            ${projectText().lower()}, you can erase the contents of each field and add
-            the appropriate information for the external ${projectText().lower()} you
-            wish to add.</p>
-
             <table class="mainformhorizontal">
             <tr>
                   <td class="form-label"><em class="required">${projectText().title()} Title:</em></td>

@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = postgresql stubs
+SUBDIRS = artwork postgresql stubs
 
 extra_dist = schema.in.py
 
@@ -25,6 +25,7 @@ install: default-install
 	# rAPA bits
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
+	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/server.d/chrootcache.conf
 	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
@@ -33,12 +34,14 @@ install: default-install
 	install -D -m0644 noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
 	install -D -m0644 serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
 	# system dist (data)
+	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
 	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
+	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	# chkconfig overrides
@@ -53,7 +56,7 @@ schema: schema.in.py
 	python schema.in.py > schema
 
 custom.cfg: custom.cfg.in
-	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
+	sed -e s,@VERSION@,$(SHORTVER), custom.cfg.in > custom.cfg
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e 's,@VERSION@,$(VERSION),' -e 's,@LIBDIR@,$(LIBDIR),' rbuilder.conf.in >rbuilder.conf
