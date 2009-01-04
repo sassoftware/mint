@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = postgresql stubs
+SUBDIRS = artwork postgresql stubs
 
 extra_dist = schema.in.py
 
@@ -34,6 +34,7 @@ install: default-install
 	install -D -m0644 noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
 	install -D -m0644 serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
 	# system dist (data)
+	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
@@ -55,7 +56,7 @@ schema: schema.in.py
 	python schema.in.py > schema
 
 custom.cfg: custom.cfg.in
-	sed -e s,@VERSION@,$(VERSION), custom.cfg.in > custom.cfg
+	sed -e s,@VERSION@,$(SHORTVER), custom.cfg.in > custom.cfg
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e 's,@VERSION@,$(VERSION),' -e 's,@LIBDIR@,$(LIBDIR),' rbuilder.conf.in >rbuilder.conf

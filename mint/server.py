@@ -25,6 +25,7 @@ try:
 except ImportError:
     charts = None
 from mint import communityids
+from mint import config
 from mint import data
 from mint import database
 from mint import ec2
@@ -2563,7 +2564,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         specName = name
                     if not specVersion:
                         specVersion = ''
-                    if specFlavor:
+                    if specFlavor is not None:
                         specFlavor = str(specFlavor)
                     else:
                         specFlavor = ''
@@ -5920,18 +5921,44 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if awsFound and user[2] == userlevels.USER:
                         ec2Wrap.addLaunchPermission(amiIdData['amiId'], 
                                                     awsAccountNumber)
-        else:
-            # Product is public.
-            # Need to set pulic launch perms and remove launch perms from
-            # every single user.
+        else:                                                    
+            # Product is public.  Need to do different things for rBA vs. rBO.
+            if config.isRBO():
+                self._addEC2LaunchPermsForPublicPublishRBO(
+                    ec2Wrap, affectedAMIIds)
+            else:
+                self._addEC2LaunchPermsForPublicPublishRBA(
+                    ec2Wrap, affectedAMIIds)
 
-            # TODO: perhaps we should do some type of check to only remove
-            # perms from users aws data that we manage.
-            for amiIdData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
-        return True                                              
+        return True                                                 
 
+    def _addEC2LaunchPermsForPublicPublishRBO(
+            self, ec2Wrap, affectedAMIIds):
+        # Set public launch perms and remove launch perms 
+        # from every single user.
+
+        # TODO: perhaps we should do some type of check to only remove
+        # perms from users aws data that we manage.
+        for amiIdData in affectedAMIIds:
+            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
+            ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
+
+    def _addEC2LaunchPermsForPublicPublishRBA(
+            self,  ec2Wrap, affectedAMIIds):
+        # Set launch perms for every user on the rBA who has EC2 creds set.
+        awsAccountNumbers = self._getAllAwsAccountNumbers()
+        for amiIdData in affectedAMIIds:
+            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
+            for awsAccountNumber in awsAccountNumbers:
+                ec2Wrap.addLaunchPermission(amiIdData['amiId'],
+                                            awsAccountNumber)
+
+    def _getAllAwsAccountNumbers(self):
+        awsAccountNumbers = []
+        users = self.users.getUsersWithAwsAccountNumber()
+        for user in users:
+            awsAccountNumbers.append(user[1])
+        return awsAccountNumbers            
 
     def removeEC2LaunchPermsForUnpublish(self, pubReleaseId):
         """
@@ -5969,7 +5996,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # Remove public launch perms and then set launch perms for owners
             # and developers.
             for amiIDData in affectedAMIIds:
-                ec2Wrap.removePublicLaunchPermission(amiIdData['amiId'])
+                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
                 users = self.projectUsers.getMembersByProjectId(
                                               amiIdData['projectId'])
                 for user in users:
