@@ -18,6 +18,7 @@ import boto.s3
 import boto.s3.key
 from boto.exception import EC2ResponseError
 
+from mint import config
 from mint import ec2
 from mint import mint_error
 
@@ -1171,6 +1172,8 @@ conaryproxy = http://proxy.hostname.com/proxy/
         def resetLaunchPermissions(cls, amiId):
             self.launchPermissions = []
             self.resetLaunchPermissionsCalled = True
+        def isRBO():
+            return True
 
         oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
         ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
@@ -1184,6 +1187,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         ec2.EC2Wrapper.removeLaunchPermission = removeLaunchPermission
         oldresetLaunchPermissions = ec2.EC2Wrapper.resetLaunchPermissions
         ec2.EC2Wrapper.resetLaunchPermissions = resetLaunchPermissions
+        oldIsRBO = config.isRBO
 
         try:
             # Set some aws creds for the user
@@ -1206,7 +1210,8 @@ conaryproxy = http://proxy.hostname.com/proxy/
             for pubRelease in pubReleases:
                 if pubRelease[1] == 'testproject':
                     id = pubRelease[2].id
-            # Unpublish the release of a public product
+
+            # Unpublish the release of a public product on rBA
             client.unpublishPublishedRelease(id)
             # Launch perms were reset
             self.assertTrue(self.resetLaunchPermissionsCalled)
@@ -1224,7 +1229,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertEquals(3, len(self.launchPermissions))
             reset()
 
-            # Unpublish the release of a private product.
+            # Unpublish the release of a private product on rBA
             client.unpublishPublishedRelease(data['hiddenProjPubPubReleaseId'])
             # Perms were reset
             self.assertTrue(self.resetLaunchPermissionsCalled)
@@ -1234,7 +1239,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertTrue(('ami-00000007', 'sodevid') in self.launchPermissions)
             reset()
 
-            # Publish the release of a private product.
+            # Publish the release of a private product on rBA
             client.publishPublishedRelease(data['hiddenProjPubPubReleaseId'], False)
             # adding Public launch perms wasn't done
             self.assertFalse(self.addPublicLaunchPermissionCalled)
@@ -1244,6 +1249,50 @@ conaryproxy = http://proxy.hostname.com/proxy/
             self.assertEquals(1, len(self.launchPermissions))
             self.assertTrue(('ami-00000007', 'nuid') in self.launchPermissions)
             reset()
+
+            # Publish the release of a public product on rBO
+            config.isRBO = isRBO
+            # Unpublish the previously published release.
+            client.unpublishPublishedRelease(id)
+            client.publishPublishedRelease(id, False)
+            # Public launch perms were added
+            self.assertTrue(self.addPublicLaunchPermissionCalled)
+            reset()
+
+            # Unpublish the release of a public product on rBO
+            client.unpublishPublishedRelease(id)
+            # Launch perms were reset.
+            self.assertTrue(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for owner and developer.
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
+            reset()
+
+            # Publish the release of a private product on rBO
+            # Unpublish the previously published release first to run this
+            # test.
+            client.unpublishPublishedRelease(data['hiddenProjPubPubReleaseId'])
+            reset()
+            client.publishPublishedRelease(data['hiddenProjPubPubReleaseId'], False)
+            # Public launch perms were not added.
+            self.assertFalse(self.addPublicLaunchPermissionCalled)
+            # Launch perms were added for a normal user
+            self.assertEquals(1, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'nuid') in self.launchPermissions)
+            reset()
+
+            # Unpublish the release of a private product on rBO
+            client.unpublishPublishedRelease(data['hiddenProjPubPubReleaseId'])
+            # Launch perms were reset.
+            self.assertTrue(self.resetLaunchPermissionsCalled)
+            # Launch perms were added for owner and developer.
+            self.assertEquals(2, len(self.launchPermissions))
+            self.assertTrue(('ami-00000007', 'devid') in self.launchPermissions)
+            self.assertTrue(('ami-00000007', 'sodevid') in self.launchPermissions)
+            reset()
+
+            config.isRBO = oldIsRBO
         finally:
             ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
             ec2.EC2Wrapper.addPublicLaunchPermission = oldaddPublicLaunchPermission
@@ -1251,6 +1300,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             ec2.EC2Wrapper.addLaunchPermission = oldaddLaunchPermission
             ec2.EC2Wrapper.removeLaunchPermission = oldremoveLaunchPermission
             ec2.EC2Wrapper.resetLaunchPermissions = oldresetLaunchPermissions
+            config.isRBO = oldIsRBO
           
     @fixtures.fixture('EC2')
     def testCancelUserAccountEC2(self, db, data):
