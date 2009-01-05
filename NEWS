@@ -46,6 +46,8 @@ Internal Changes
 * Published releases from public products set public launch permissions on EC2
   for rBuilder Online, and give all users launch permissions (but not public
   launch permissions) on rBA. (RBL-3981)
+* rMC data and /etc/rmake/ssl are now backed up via the rPA backup
+  plugin. (RBL-4071)
 
 Web Front End Changes
 ---------------------
