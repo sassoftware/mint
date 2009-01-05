@@ -547,6 +547,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           ok_codes = [200])
 
         assert('Search Results:') in page.body
+        page = self.fetch('/search?type=Packages&search=foo%3Dconary.rpath.com%40rpl%3A1',
+                          ok_codes = [200])
+        assert('Search Results:') in page.body
 
     def testSearchUsers(self):
         client, userId = self.quickMintUser('foouser','foopass')

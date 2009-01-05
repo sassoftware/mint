@@ -473,7 +473,7 @@ class ProjectsTable(database.KeyedTable):
         # these are additive, unlike other search limiters.
         buildTypes = []
         flavorFlagTypes = []
-        terms, limiters = searcher.parseTerms(terms)
+        terms, limiters = searcher.parseTerms(terms, limiterNames=['buildtype'])
         for limiter in limiters:
             try:
                 key, val = limiter.split("=")

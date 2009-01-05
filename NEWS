@@ -163,6 +163,8 @@ Bug Fixes
 * Package creator now works with external products that require entitlements
   for access. (RBL-3956)
 * Better handling of undefined image types for a given platform. (RBL-3965)
+* Fixed an Internal Server Error that would arise when searching for a package
+  and including an '='. (RBL-3070)
 
 Changes in 4.1.3:
 ================
