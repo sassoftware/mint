@@ -85,7 +85,8 @@ class SearchHelperTest(unittest.TestCase):
 
     def testParseLimiters(self):
         self.failUnlessEqual(
-            searcher.parseLimiters("foo=bar baz=biz =wak bak="),
+            searcher.parseLimiters("foo=bar baz=biz =wak bak=",
+                                   ['foo', 'baz', 'bak']),
             [('foo', 'bar'), ('baz', 'biz')]
         )
 
@@ -311,8 +312,9 @@ class BrowseTest(fixtures.FixturedUnitTest):
         # broken search queries shouldn't traceback
         x = client.getProjectSearchResults("b buildtype=")
         self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2, 1128540046]], 1))
+        # this is just a bad search term now so no results
         x = client.getProjectSearchResults("b =101")
-        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2, 1128540046]], 1))
+        self.failUnlessEqual(x, ([], 0))
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")
