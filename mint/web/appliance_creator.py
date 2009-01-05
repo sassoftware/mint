@@ -28,8 +28,8 @@ def check_session(func):
 
 #Landing, component selection
 WIZ_PACKCREAT   = 3.0
-WIZ_SELECT_PACKAGES   = 4.0
-WIZ_EDIT_GROUP  = 6.0
+WIZ_EDIT_GROUP  = 4.0
+WIZ_SELECT_PACKAGES   = 6.0
 WIZ_REVIEW      = 7.0
 WIZ_BUILD_GROUP = 8.0
 WIZ_GENERATE    = 9.0

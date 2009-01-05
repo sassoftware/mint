@@ -36,7 +36,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                      successful or not -->
                 <div id="build_success" style="display:none">
                     <p>Your archive has been successfully packaged. You can now either package another archive, or continue the appliance creation process.</p>
-                    <p><a href="selectPackages">Continue</a></p>
+                    <p><a href="editApplianceGroup">Continue</a></p>
                     <p><a href="newPackage">Package another archive</a></p>
                 </div>
                 <div id="build_fail" style="display:none">
