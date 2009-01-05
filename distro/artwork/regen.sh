@@ -9,7 +9,7 @@ fi
 rm -f *.tmp.png
 
 # Straight PNG conversion
-for base in bootloader_splash
+for base in anaconda_splash bootloader_splash
 do
     echo Generating "$base"
     inkscape --without-gui --file "${base}.svg" --export-png "${base}.tmp.png" --export-area-canvas || exit 1
