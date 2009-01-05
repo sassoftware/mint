@@ -29,6 +29,13 @@ class SearchHelperTest(unittest.TestCase):
             searcher.parseTerms("server=conary.rpath.com"),
             ([], ['server=conary.rpath.com']))
 
+        self.failUnlessEqual(
+            searcher.parseTerms("server=conary.rpath.com", ['server']),
+            ([], ['server=conary.rpath.com']))
+        self.failUnlessEqual(
+            searcher.parseTerms("server=conary.rpath.com", ['server2']),
+            (['server=conary.rpath.com'], []))
+
     def testLimitersToSQL(self):
         self.failUnlessEqual(
             searcher.limitersToSQL(["server=conary.rpath.com"], pkgindex.termMap),
@@ -78,7 +85,8 @@ class SearchHelperTest(unittest.TestCase):
 
     def testParseLimiters(self):
         self.failUnlessEqual(
-            searcher.parseLimiters("foo=bar baz=biz =wak bak="),
+            searcher.parseLimiters("foo=bar baz=biz =wak bak=",
+                                   ['foo', 'baz', 'bak']),
             [('foo', 'bar'), ('baz', 'biz')]
         )
 
@@ -259,6 +267,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(client.getPackageSearchResults('foo')[1], 2)
         self.failUnlessEqual(client.getPackageSearchResults('barbot')[1], 2)
         self.failUnlessEqual(client.getPackageSearchResults(':source')[1], 1)
+        self.failUnlessEqual(client.getPackageSearchResults('foo=conary.rpath.com@rpl:1')[1], 0)
 
     @fixtures.fixture("Full")
     def testSearchProjectsWithBuilds(self, db, data):
@@ -303,8 +312,9 @@ class BrowseTest(fixtures.FixturedUnitTest):
         # broken search queries shouldn't traceback
         x = client.getProjectSearchResults("b buildtype=")
         self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2, 1128540046]], 1))
+        # this is just a bad search term now so no results
         x = client.getProjectSearchResults("b =101")
-        self.failUnlessEqual(x, ([[projectId, 'bar', 'Bar', '', 1128540046, 2, 1128540046]], 1))
+        self.failUnlessEqual(x, ([], 0))
 
         # search for two different flavor flags
         x = client.getProjectSearchResults("buildtype=100 buildtype=101")

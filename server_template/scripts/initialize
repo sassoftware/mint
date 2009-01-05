@@ -11,6 +11,8 @@ from webunit import webunittest
 baseDir = dirname(dirname(os.path.realpath(__file__)))
 
 sys.path.insert(0, baseDir + '/pythonpath')
+sys.path.insert(0, baseDir + '/supporting_modules/mint/raaplugins')
+sys.path.insert(0, baseDir + '/supporting_modules/raa')
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
@@ -18,6 +20,11 @@ from conary.conaryclient import filetypes
 
 from mint import config
 from mint.client import MintClient
+
+from rPath.rbasetup.srv import rbasetup
+
+config.RBUILDER_GENERATED_CONFIG  = baseDir + '/config/rbuilder.conf.generated'
+config.RBUILDER_CONFIG = baseDir + '/config/rbuilder.conf'
 
 
 class WebHandler(webunittest.WebFetcher):
@@ -47,8 +54,6 @@ class WebHandler(webunittest.WebFetcher):
                 newurl = response.headers['Location']
                 url = urlparse.urljoin(url, newurl)
             except webunittest.HTTPError, error:
-                import epdb
-                epdb.st()
                 raise
         return response
         
@@ -65,13 +70,9 @@ class WebHandler(webunittest.WebFetcher):
                    'new_password': 'tclmeSRS',
                    'new_password2': 'tclmeSRS',
                    'allowNamespaceChange': False }
-        page = self.fetch('/setup/')
-        newPage = page.postForm(0, self.fetchWithRedirect, fields)
-        try:
-            self.fetch('/setup/restart')
-        except Exception:
-            pass
-        time.sleep(4)
+        setupPlugin = rbasetup.rBASetup(None, None, '/')
+        setupPlugin.updateRBAConfig(1, 1, fields)
+        # NOTE: restart needed here.
 
 def addProjects(cfg, client, num):
     for i in range(num):
@@ -110,7 +111,7 @@ def main(argv):
     cfg.read(baseDir + '/config/rbuilder.conf')
     client = MintClient('http://%s:%s@%s.%s/xmlrpc-private/' % ('admin', 
                                'tclmeSRS', cfg.hostName, cfg.siteDomainName))
-    addProjects(cfg, client, 10)
+    #addProjects(cfg, client, 10)
 
 if __name__ == '__main__':
     main(sys.argv)

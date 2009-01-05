@@ -174,7 +174,7 @@ class Searcher :
             return extra
 
 
-def parseTerms(termsStr):
+def parseTerms(termsStr, limiterNames=None):
     """Extract actual search terms and 'limiters' from a string.
 
        Limiters look like: key=val
@@ -183,10 +183,19 @@ def parseTerms(termsStr):
     terms = [x.strip() for x in termsStr.split(" ")]
 
     # limiters are terms that look like: limiter=key, eg, branch=rpl:1
-    limiters = [x for x in terms if '=' in x]
-    terms = [x for x in terms if '=' not in x]
-
-    return terms, limiters
+    limiters = []
+    finalTerms = []
+    for term in terms:
+        if '=' in term:
+            if not limiterNames:
+                limiters.append(term)
+                continue
+            limiterName = term.split('=', 1)[0]
+            if limiterName in limiterNames:
+                limiters.append(term)
+                continue
+        finalTerms.append(term)
+    return finalTerms, limiters
 
 
 def limitersToSQL(limiters, termMap):
@@ -205,11 +214,11 @@ def limitersToSQL(limiters, termMap):
 
     return sql, subs
 
-def parseLimiters(termsStr):
+def parseLimiters(termsStr, limiterNames):
     """Return a list of all limiters as 2-tuples (key, value)."""
 
     limiterlist = []
-    terms, limiters = parseTerms(termsStr)
+    terms, limiters = parseTerms(termsStr, limiterNames)
     for limiter in limiters:
         k, v = limiter.split("=")
         if not k or not v:
@@ -218,21 +227,27 @@ def parseLimiters(termsStr):
 
     return limiterlist
 
-def limitersForDisplay(termsStr, describeFn = lambda x, y: "%s is %s" % (x, y)):
+def limitersForDisplay(termsStr, 
+                       describeFn =  None,
+                       limiterNames = None):
     """Parse a terms string and return a list of dicts containing
        a 'friendly' description of the limiter, and an associated
        search term string without that limiter, suitable for use
        in a "remove" link.
     """
+    if describeFn is None:
+        describeFn = lambda x, y: "%s is %s" % (x, y)
     limiterInfo = []
-    terms, limiters = parseTerms(termsStr)
+    terms, limiters = parseTerms(termsStr, limiterNames)
     for limiter in limiters:
         k, v = limiter.split("=")
         if not k or not v:
             continue
 
         info = {}
-        info['desc'] = describeFn(k, v)
+        description = describeFn(k, v)
+        info['desc'] = description
+        # this is the search query w/ the current limiter removed.
         info['newSearch'] = " ".join((set(limiters) - set([limiter])) | set(terms))
         limiterInfo.append(info)
 

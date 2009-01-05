@@ -693,15 +693,16 @@ class SiteHandler(WebHandler):
     def _packageSearch(self, terms, limit, offset, limitsRemoved = False):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
 
+        limiterNames = {
+            'branch': "only packages for %s branch",
+            'server': "only packages on %s server",
+        }
         def describeFn(key, val):
-            termNames = {
-                'branch': "only packages for %s branch",
-                'server': "only packages on %s server",
-            }
-            return termNames[key] % val
+            return limiterNames[key] % val
 
         fullTerms = terms
-        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn)
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn, 
+                                                      limiterNames)
 
         formattedRows, columns = self._formatPackageSearch(results)
 
@@ -737,7 +738,8 @@ class SiteHandler(WebHandler):
             filterNoDownloads = filterNoDownloads)
 
         buildTypes = list(set(self.client.getAvailableBuildTypes() + [buildtypes.XEN_DOMU]) - \
-                set([ int(v) for k, v in searcher.parseLimiters(terms) \
+                set([ int(v) for k, v in searcher.parseLimiters(terms, 
+                                                            ['buildtype']) \
                     if k == 'buildtype' ]))
 
         def describeFn(key, val):
@@ -749,7 +751,8 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatProjectSearch(results)
 
         fullTerms = terms
-        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn)
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn,
+                                                      ['buildtype'])
 
         terms = " ".join(terms)
 

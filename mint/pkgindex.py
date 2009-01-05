@@ -24,7 +24,7 @@ class PackageIndexTable(database.KeyedTable):
         columns = ['name', 'version', 'projectId']
         searchcols = ['name']
 
-        terms, limiters = searcher.parseTerms(terms)
+        terms, limiters = searcher.parseTerms(terms, termMap)
         extras, extraSubs = searcher.limitersToSQL(limiters, termMap)
 
         # with any kind of branch/server limiters, assume we want

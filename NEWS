@@ -46,6 +46,8 @@ Internal Changes
 * Published releases from public products set public launch permissions on EC2
   for rBuilder Online, and give all users launch permissions (but not public
   launch permissions) on rBA. (RBL-3981)
+* rMC data and /etc/rmake/ssl are now backed up via the rPA backup
+  plugin. (RBL-4071)
 
 Web Front End Changes
 ---------------------
@@ -163,6 +165,8 @@ Bug Fixes
 * Package creator now works with external products that require entitlements
   for access. (RBL-3956)
 * Better handling of undefined image types for a given platform. (RBL-3965)
+* Fixed an Internal Server Error that would arise when searching for a package
+  and including an '='. (RBL-3070)
 
 Changes in 4.1.3:
 ================

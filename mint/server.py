@@ -2838,6 +2838,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r['UUID'] = '%s-build-%d-%d' % (hostBase, buildId,
                 self.builds.bumpBuildCount(buildId))
 
+        #Set up the http/https proxy
+        r['proxy'] = dict(cc.proxy)
+
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
 
