@@ -9,7 +9,7 @@ from mint.web.templatesupport import projectText
     py:extends="raa.templates.master">
 
 <!--
-Copyright (c) 2006-2008 rPath, Inc.
+Copyright (c) 2008-2009 rPath, Inc.
     All Rights Reserved
 -->
 
