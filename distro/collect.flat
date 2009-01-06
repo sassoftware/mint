@@ -7,5 +7,4 @@
 /etc/sysconfig/pgsql/*
 /etc/postgresql.conf.rbuilder
 /srv/pgsql/8.2-rbuilder/pg_log/*
-/etc/rmake/ssl
 /tmp/mint-error-*.txt

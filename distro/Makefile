@@ -26,8 +26,8 @@ install: default-install
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/server.d/chrootcache.conf
-	install -D -m0644 rBAFiles $(DESTDIR)/etc/raa/collect.d/rBAFiles
-	install -D -m0755 rBAScript $(DESTDIR)/etc/raa/collect.d/rBAScript
+	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
+	install -D -m0755 collect.sh $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
 	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# rMake node configuration
@@ -42,7 +42,7 @@ install: default-install
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
-	install -D -m0755 backup $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
+	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
