@@ -6,9 +6,9 @@
 
 SUBDIRS = web srv
 
-python_files = __init__.py
+python_files = __init__.py lib.py
 
-kid_files = index.kid
+kid_files = index.kid firstTimeSetup.kid
 
 
 all: kid-build default-all

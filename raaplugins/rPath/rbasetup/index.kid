@@ -28,43 +28,55 @@ Copyright (c) 2006-2008 rPath, Inc.
 <head>
     <title>${getConfigValue('product.productName')}: ${pageTitle}</title>
     <style type="text/css">
-        .rbasetup-label {
-            float: left;
-            width: 220px;
-            white-space: nowrap;
-            padding-top: 3px;
-        }
+        <![CDATA[
+            .rbasetup-label {
+                float: left;
+                width: 220px;
+                white-space: nowrap;
+                padding-top: 3px;
+            }
+        ]]>
     </style>
     <script type="text/javascript">
+        <![CDATA[
+            function postFormRedirectFirstTimeSetupOnSuccess(form, url) {
+                var d = postFormData(form, url);
+                d = d.addCallback(callbackCheckError);
+                if(${not configured and "true" or "false"}) {
+                    d = d.addCallback(createCallbackRedirect("${makeUrl('firstTimeSetup')}"));
+                } else {
+                    d = d.addCallback(callbackMessage);
+                }
+                d = d.addErrback(callbackErrorGeneric);
+            }
 
-    expand_h = makeUrl('/static/images/icon_expand_h.gif');
-    expand = makeUrl('/static/images/icon_expand.gif');
-    collapse_h = makeUrl('/static/images/icon_collapse_h.gif');
-    collapse = makeUrl('/static/images/icon_collapse.gif');
-    function toggleAdvanced(link, expand, collapse, element) {
-        var el = $(element);
-        if(link.src.match("expand")) {
-            link.src = collapse;
-            el.style.display = '';
-            normal = collapse;
-            hover = collapse_h;
-        } else {
-            link.src = expand;
-            el.style.display = 'none';
-            normal = expand;
-            hover = expand_h;
-        }
-    }
+            expand_h = "${makeUrl('/static/images/icon_expand_h.gif')}";
+            expand = "${makeUrl('/static/images/icon_expand.gif')}";
+            collapse_h = "${makeUrl('/static/images/icon_collapse_h.gif')}";
+            collapse = "${makeUrl('/static/images/icon_collapse.gif')}";
+            function toggleAdvanced(link, expand, collapse, element) {
+                var el = $(element);
+                if(link.src.match("expand")) {
+                    link.src = collapse;
+                    el.style.display = '';
+                    normal = collapse;
+                    hover = collapse_h;
+                } else {
+                    link.src = expand;
+                    el.style.display = 'none';
+                    normal = expand;
+                    hover = expand_h;
+                }
+            }
+        ]]>
     </script>
-
 </head>
 
 <body>
     <div class="plugin-page" id="plugin-page">
         <div class="page-content">
             <div py:replace="display_instructions(instructions, raaInWizard)" />
-            <form id="page_form" name="page_form" action="javascript:void(0);" method="post"
-                onsubmit="javascript:postFormWizardRedirectOnSuccess(this,'doSetup');">
+                <form id="page_form" name="page_form" action="javascript:void(0);" method="post" onsubmit="javascript:postFormRedirectFirstTimeSetupOnSuccess(this,'saveConfig');">
                 <div py:if="not configured" class="page-section">Initial Administrator Account</div>
                 <div py:if="not configured" class="page-section-content">
                     <p>
@@ -96,7 +108,7 @@ Copyright (c) 2006-2008 rPath, Inc.
                         <strong>Note:</strong> The hostname and domain name
                         displayed below are based on the URL you used to access your
                         rBuilder server.  You may change these values, but be aware
-                        that the resulting fully-qualified domain name constructed from
+                        that the resulting fully-qualified domain name (FQDN) constructed from
                         the values you've entered must match the URL your users will
                         use to access rBuilder.
                     </p>

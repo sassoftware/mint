@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS =
+SUBDIRS = static
 
 python_files = 	\
 		__init__.py \
