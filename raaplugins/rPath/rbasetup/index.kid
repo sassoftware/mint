@@ -116,8 +116,11 @@ Copyright (c) 2008-2009 rPath, Inc.
                         <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
                         <input type="text" name="hostName" value="${hostName}" />&nbsp;.&nbsp;<input type="text" name="siteDomainName" value="${siteDomainName}" />
                     </div>
+                    <p>Choose a namespace related to your organization's name. For
+                       example, if your organization's name is "XYZ Incorporated",
+                       a namespace of "xyz" would be appropriate.</p>
                     <div class="form-line">
-                        <div class="rbasetup-label">Default repository namespace:</div>
+                        <div class="rbasetup-label">Default namespace:</div>
                         <input type="text" name="namespace" value="${namespace}" py:attrs="{'disabled': not allowNamespaceChange and 'disabled' or None}" />
                     </div>
                 </div>
