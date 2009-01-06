@@ -125,7 +125,8 @@ Copyright (c) 2008-2009 rPath, Inc.
                <div class="page-section">Advanced Options
 		  <img src="${advancedOptionsUrl}" onclick="javascript:toggleAdvanced(this, expand, collapse, 'advanced_options')" style="cursor: pointer; vertical-align: text-top; padding-right: 4px;" onMouseOver="this.src = this.src.match('expand') ? expand_h : collapse_h" onMouseOut="this.src = this.src.match('expand') ? expand : collapse"/>
                 </div>
-                <div id="advanced_options" class="formgroup" style="${advancedOptionsStyle}">
+                <div class="page-section-content">
+                    <div id="advanced_options" style="${advancedOptionsStyle}">
 
                     <h3>External Authentication</h3>
                     <p>
@@ -146,6 +147,7 @@ Copyright (c) 2008-2009 rPath, Inc.
                         <div class="rbasetup-label">Require OpenPGP-signed commits:</div>
                         <input type="checkbox" name="requireSigs" value="1"
                             py:attrs="{'checked': requireSigs and 'checked' or None}" />
+                    </div>
                     </div>
                 </div>
                 <input type="hidden" name="configured" value="${int(configured)}" />
