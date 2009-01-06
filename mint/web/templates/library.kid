@@ -250,7 +250,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
                     rBuilder ${constants.mintVersion} Administration Guide</a> | </span>
             </div>
             <div id="bottomText">
-                <span id="copyright">Copyright &copy; 2005-2008 rPath. All Rights Reserved.</span>
+                <span id="copyright">Copyright &copy; 2005-2009 rPath. All Rights Reserved.</span>
             </div>
          
         </div><br class="clear" />
