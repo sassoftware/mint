@@ -67,5 +67,9 @@ function getUpdatedStatus() {
             _callback, _callbackErr, false);
 }
 
+// Neuter the postRequest's WORKING message box for these requests; it's
+// glitchy and redundant
+post.showWorking = function(req) { void(0); }
+
 addLoadEvent(getUpdatedStatus);
 
