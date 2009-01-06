@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2008 rPath, Inc.
+# Copyright (C) 2008-2009 rPath, Inc.
 # All rights reserved
 #
 import logging
@@ -7,9 +7,12 @@ import os
 import pwd
 import sys
 import tempfile
+import time
 import traceback
 
 from raa.modules.raasrvplugin import rAASrvPlugin
+
+from rPath.rbasetup import lib
 
 from mint import config
 from mint import helperfuncs
@@ -30,80 +33,13 @@ class rBASetup(rAASrvPlugin):
     def __init__(self, *args, **kwargs):
         rAASrvPlugin.__init__(self, *args, **kwargs)
 
-    def _readConfigFile(self, configFileName):
-        """
-        This reads the whole configuration at /srv/rbuilder/conf/rbuilder.conf.
-        The reason for doing this is so we can break if someone has 
-        already configured rBuilder using the custom configuration file.
-        """
-        cfg = config.MintConfig()
-        try:
-            cfg.read(configFileName)
-        except Exception, e:
-            log.warn("Failed to read rBuilder configuration (reason: %s)." \
-                     "Using default values!" % str(ioe))
-        return cfg
-
-    def _writeGeneratedConfigFile(self, newValues, generatedConfigFileName):
-        """
-        Writes the generated configuration file.
-        """
-        log.info('Writing new configuration to %s' % generatedConfigFileName)
-
-        # Read back in the current config from disk
-        newCfg = self._readConfigFile(config.RBUILDER_CONFIG)
-        for k, v in newValues.iteritems():
-            if k in newCfg: newCfg[k] = v
-
-        firstTimeSetup = newCfg.configured
-
-        # Post process the configuration
-        newCfg.postCfg()
-        newCfg.SSL = True
-        newCfg.secureHost = newCfg.siteHost
-        newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
-
-        # Set up the initial rBuilder user
-        if not firstTimeSetup:
-            newCfg.bugsEmail = newCfg.adminMail = newValues['new_email']
-            addedUser = self._addRBuilderAdminAccount(
-                    newValues['new_username'],
-                    newValues['new_password'],
-                    newValues['new_email'])
-            if not addedUser:
-                log.error("Failed to add initial administrative user to rBuilder, not saving config")
-                return False
-
-        # Generate a new authPass IFF we're not configured
-        if not firstTimeSetup:
-            newCfg.authPass = helperfuncs.genPassword(32)
-
-        # Ensure that configured is True
-        newCfg.configured = True
-
-        # Write the generated config
-        f = None
-        try:
-            try:
-                f = file(generatedConfigFileName, 'w')
-                for k in config.keysForGeneratedConfig:
-                    newCfg.displayKey(k, out = f)
-            except IOError, ioe:
-                log.error("Failed to write configuration to %s, reason %s" %
-                        (generatedConfigFileName, str(ioe)))
-                return False
-        finally:
-            if f: f.close()
-
-        return True
-
-    def _addRBuilderAdminAccount(self, adminUsername, adminPassword, adminEmail):
+    def _addRBuilderAdminAccount(self, mintcfg, adminUsername,
+            adminPassword, adminEmail):
         """
         Adds an admin user to the locally installed rBuilder.
         """
-        cfg = self._readConfigFile(config.RBUILDER_CONFIG)
-        shmclnt = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
-
+        shmclnt = shimclient.ShimMintClient(mintcfg,
+                (mintcfg.authUser, mintcfg.authPass))
         try:
             userId = shmclnt.registerNewUser(adminUsername, adminPassword,
                 "Administrator", adminEmail, "", "", active=True)
@@ -123,59 +59,27 @@ class rBASetup(rAASrvPlugin):
 
         return True
 
-
-    def getRBAConfiguration(self, schedID, execId):
+    def _gracefulApache(self):
         """
-        Reads the configuration file and returns only the items that
-        can be configured by the first-time setup (defined in
-        mint.config.keysForGeneratedConfig).
-
-        Returns a double: the first is whether or not this rBuilder has
-        been configured. The second is a dict of configurable options,
-        as a key/value pair.
-        """
-        cfg = self._readConfigFile(config.RBUILDER_CONFIG)
-        isConfigured = cfg.configured
-        configurableOptions = dict()
-        for k in config.keysForGeneratedConfig:
-            if k not in cfg:
-                continue
-            v = cfg[k]
-            # make safe for XMLRPC
-            if v == None:
-                v = ''
-            configurableOptions[k] = v
-        return isConfigured, configurableOptions
-
-    def updateRBAConfig(self, schedId, execId, newValues):
-        """
-        Updates the generated configuration file. Expects a
-        dictionary of key/value pairs to update.
-        """
-        return self._writeGeneratedConfigFile(newValues,
-                config.RBUILDER_GENERATED_CONFIG)
-
-    def restartApache(self, schedId, execId):
-        """
-        Restarts Apache (rBuilder web service).
+        Use the graceful option to restart Apache (rBuilder web service).
+        This, of course, assumes that Apache is running (a good assumption).
         """
         try:
-            retval = os.system("/sbin/service httpd restart")
+            retval = os.system("/sbin/service httpd graceful")
             if retval != 0:
-                log.error("Failed to restart Apache (error: %d)" % retval)
+                log.error("Failed to gracefully restart Apache (error: %d)" % retval)
                 return False
         except Exception, e:
-            log.error("Failed to restart Apache (reason: %s)" % str(e))
+            log.error("Failed to gracefully restart Apache (reason: %s)" % str(e))
             return False
 
-        log.info("Successfully restarted Apache")
+        log.info("Successful graceful restart of Apache")
         return True
 
-    def setupRMake(self, schedId, execId):
+    def _setupRMake(self, mintcfg):
         """
         Sets up rMake for appliance creator, etc.
         """
-        cfg = self._readConfigFile(config.RBUILDER_CONFIG)
         restartNeeded = False
         apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
 
@@ -205,9 +109,9 @@ class rBASetup(rAASrvPlugin):
                     os.setgroups([apacheGID])
                     os.setgid(apacheUID)
                     os.setuid(apacheUID)
-                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
-                    rmake_setup.setupRmake(cfg, config.RBUILDER_RMAKE_CONFIG)
-                    childLog.info("rMake repository setup -- need to restart rmake and rmake-node services")
+                    childLog.info("Setting up the rMake repository")
+                    rmake_setup.setupRmake(mintcfg, config.RBUILDER_RMAKE_CONFIG)
+                    childLog.info("rMake repository setup complete; we need to restart rmake and rmake-node services")
                     rc = 0
                 except RmakeRepositoryExistsError:
                     childLog.warn("rMake Repository already exists, skipping")
@@ -238,11 +142,99 @@ class rBASetup(rAASrvPlugin):
 
         return True
 
-    def setupExternalProjects(self, schedId, execId):
+    def _setupExternalProjects(self):
         """
         Sets up a set of canned external projects.
         All this does is call a script which does the heavy lifting.
         """
         log.info("Attempting to set up external projects for platforms")
         rc = os.system("/usr/share/rbuilder/scripts/init-extproducts")
+        if (rc == 0):
+            log.info("Successfully set up initial external projects")
+        else:
+            log.error("Failed to set up initial external projects")
         return True
+
+    def updateRBAConfig(self, schedId, execId, newValues):
+        """
+        Updates the generated configuration file. Expects a
+        dictionary of key/value pairs to update.
+        """
+
+        # Read back in the current config from disk
+        newCfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
+        for k, v in newValues.iteritems():
+            if k in newCfg: newCfg[k] = v
+
+        # If configured = False, it's the first time we've done this
+        firstTimeSetup = (not newCfg.configured)
+
+        # Post process the configuration
+        newCfg.postCfg()
+        newCfg.SSL = True
+        newCfg.secureHost = newCfg.siteHost
+        newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
+        # Post processing for first timers
+        if firstTimeSetup:
+            # Set the bugs / adminMail to be the initial admin account
+            if 'new_email' in newValues:
+                newCfg.bugsEmail = newCfg.adminMail = newValues['new_email']
+
+            # Generate a new authorized secret (mintpass)
+            newCfg.authPass = helperfuncs.genPassword(32)
+
+        # Make sure that configured is True
+        newCfg.configured = True
+
+        # Attempt to write the new generated configuration and restart Apache
+        wroteConfig = lib.writeRBAGeneratedConfig(newCfg,
+                config.RBUILDER_GENERATED_CONFIG)
+
+        # Signal apache to restart itself
+        self._gracefulApache()
+
+        return wroteConfig
+
+    def doTask(self, schedId, execId):
+        """
+        Calls first time setup.
+        """
+        return self.firstTimeSetup(schedId, execId)
+
+    def firstTimeSetup(self, schedId, execId):
+        """
+        If this is a first-time configuration, this call will
+        also do the following:
+         -- create an initial administrative rBuilder account
+         -- setup rMake
+         -- create initial external projects
+        """
+
+        # Add the initial admin account
+        self.server.setFirstTimeSetupState(lib.FTS_STEP_ADMINACCT)
+        newCfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
+        newValues = self.server.getFirstTimeSetupAdminInfo()
+        addedUser = self._addRBuilderAdminAccount(
+                newCfg,
+                newValues['new_username'],
+                newValues['new_password'],
+                newValues['new_email'])
+        if not addedUser:
+            errorMsg = "Failed to add initial administrative user '%s' to rBuilder" % newValues['new_username']
+            log.warning(errorMsg)
+
+            return False
+
+        # Create the rMake repository and restart rMake if needed.
+        # If this gets called twice, it's no big deal, as the
+        # underlying code will not create duplicate repositories.
+        self.server.setFirstTimeSetupState(lib.FTS_STEP_RMAKE)
+        self._setupRMake(newCfg)
+
+        # Setup the initial external projects
+        self.server.setFirstTimeSetupState(lib.FTS_STEP_INITEXTERNAL)
+        self._setupExternalProjects()
+
+        # Done
+        self.server.setFirstTimeSetupState(lib.FTS_STEP_COMPLETE)
+

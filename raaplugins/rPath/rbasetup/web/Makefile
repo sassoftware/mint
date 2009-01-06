@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2008-2009 rPath, Inc.
 #
 # All rights reserved
 #
 
-SUBDIRS =
+SUBDIRS = static
 
 python_files = 	\
 		__init__.py \

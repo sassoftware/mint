@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2008 rPath, Inc.
+# Copyright (C) 2008-2009 rPath, Inc.
 # All rights reserved.
 #
 
@@ -16,6 +16,7 @@ from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command
 from raa.rpath_error import RestartWebException
 from mintraatests import webPluginTest
+from rPath.rbasetup import lib as rbasetup_lib
 from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
 from mint import config
@@ -171,10 +172,7 @@ class rBASetupTest(raatest.rAATest):
         self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
         self.root = raaFramework.pseudoroot
         self.rbasetupweb.server = self.rbasetupweb
-
-        # Get the initial canned data (can be modified in any test)
-        _ignored, self.initialConfigurableOptions = \
-                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
+        _ignored, self.initialConfigurableOptions = rbasetup_lib.getRBAConfiguration()
 
         raatest.rAATest.setUp(self)
 
@@ -194,13 +192,10 @@ class rBASetupTest(raatest.rAATest):
         """
         Make sure that the initial index page renders.
         """
-        ret = None
-        oldCallBackend = self.root.callBackend
-        try:
-            self.root.callBackend = raatest.backendFactory((False, self.initialConfigurableOptions))
-            ret = self.callWithIdent(self.root.index)
-        finally:
-            self.root.callBackend = oldCallBackend
+        mockGetRBAConfiguration = mock.MockObject()
+        self.mock(rbasetup_lib, 'getRBAConfiguration', mockGetRBAConfiguration)
+        mockGetRBAConfiguration._mock.setDefaultReturn((False, self.initialConfigurableOptions))
+        ret = self.callWithIdent(self.root.index)
         self.failIf(ret['configured'],
                 "Initially, the configuration should be marked as unconfigured.")
         self.failUnless(ret['allowNamespaceChange'],
@@ -210,13 +205,11 @@ class rBASetupTest(raatest.rAATest):
         """
         Make sure the configured flag is set when the backend sends it.
         """
-        ret = None
-        oldCallBackend = self.root.callBackend
-        try:
-            self.root.callBackend = raatest.backendFactory((True, self.initialConfigurableOptions))
-            ret = self.callWithIdent(self.root.index)
-        finally:
-            self.root.callBackend = oldCallBackend
+        self.initialConfigurableOptions['configured'] = True
+        mockGetRBAConfiguration = mock.MockObject()
+        self.mock(rbasetup_lib, 'getRBAConfiguration', mockGetRBAConfiguration)
+        mockGetRBAConfiguration._mock.setDefaultReturn((True, self.initialConfigurableOptions))
+        ret = self.callWithIdent(self.root.index)
         self.failUnless(ret['isConfigured'],
                 "The configuration should be marked as configured.")
         self.failUnless(ret['allowNamespaceChange'],
@@ -227,19 +220,62 @@ class rBASetupTest(raatest.rAATest):
         Make sure that the namespace is non-changable after it's been set.
         """
         self.initialConfigurableOptions['namespace'] = 'klf'
-        ret = None
-        oldCallBackend = self.root.callBackend
-        try:
-            self.root.callBackend = raatest.backendFactory((True, self.initialConfigurableOptions))
-            ret = self.callWithIdent(self.root.index)
-        finally:
-            self.root.callBackend = oldCallBackend
+        self.initialConfigurableOptions['configured'] = True
+        mockGetRBAConfiguration = mock.MockObject()
+        self.mock(rbasetup_lib, 'getRBAConfiguration', mockGetRBAConfiguration)
+        mockGetRBAConfiguration._mock.setDefaultReturn((True, self.initialConfigurableOptions))
+        ret = self.callWithIdent(self.root.index)
         self.failUnless(ret['isConfigured'],
                 "The configuration should be marked as configured.")
         self.failIf(ret['allowNamespaceChange'],
                 "The configuration's namespace option should be frozen now.")
 
-    def test_srv_GetConfig(self):
+    def test_web_AttemptSaveFirstTimeConfigWithDefaults(self):
+        """
+        This test simulates an empty first time setup form's return value if the
+        user didn't bother to change anything. Should error out massively.
+        """
+        webFormValues = dict(hostName="justified",
+                             siteDomainName="mumu.org",
+                             new_username="",
+                             new_password="",
+                             new_password2="",
+                             new_email="",
+                             namespace="yournamespace",
+                             externalPasswordURL="",
+                             authCacheTimeout="",
+                             configured="0",
+                             allowNamesaceChange="1")
+
+        oldBackendCall = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory(False)
+            ret = self.callWithIdent(self.root.saveConfig, **webFormValues)
+        finally:
+            self.root.callBackend = oldBackendCall
+
+        self.failUnless('errors' in ret, "Attempting save with default should have resulted in errors")
+
+    def test_web_AttemptSaveLaterWithDefaults(self):
+        """
+        This test simulates an subsequent submission of the setup form; one
+        where the admin user name is not submitted, as well as the hostname, etc.
+        """
+        webFormValues = dict(externalPasswordURL="",
+                             authCacheTimeout="",
+                             configured="1",
+                             allowNamesaceChange="0")
+
+        oldBackendCall = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory(False)
+            ret = self.callWithIdent(self.root.saveConfig, **webFormValues)
+        finally:
+            self.root.callBackend = oldBackendCall
+
+        self.failUnless('errors' in ret, "Attempting save with default should have resulted in errors")
+
+    def test_lib_GetRBAConfig(self):
         """
         Make sure that the get configuration path can:
         1. Read a configuration.
@@ -252,8 +288,7 @@ class rBASetupTest(raatest.rAATest):
         """
 
         # Call the backend function
-        isConfigured, configurableOptions = \
-                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
+        isConfigured, configurableOptions = rbasetup_lib.getRBAConfiguration()
 
         # Make sure that we are *not* configured now
         self.failIf(isConfigured, "Initial setup should not be configured")
@@ -297,11 +332,14 @@ class rBASetupTest(raatest.rAATest):
         self.failUnlessEqual(ret, True,
                 "Expected return of True from backend call")
 
+        # We had better have attempted to restart Apache
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd graceful")
+
         # Make sure we regsitered a new user and promoted it
-        self.mockShimMintClient().registerNewUser._mock.assertCalled(
-                newValues['new_username'], newValues['new_password'],
-                "Administrator", newValues['new_email'], "", "", active=True)
-        self.mockShimMintClient().promoteUserToAdmin._mock.assertCalled(1)
+        #self.mockShimMintClient().registerNewUser._mock.assertCalled(
+        #        newValues['new_username'], newValues['new_password'],
+        #        "Administrator", newValues['new_email'], "", "", active=True)
+        #self.mockShimMintClient().promoteUserToAdmin._mock.assertCalled(1)
 
         # Read the generated config back
         cfgfile = file(config.RBUILDER_GENERATED_CONFIG, 'r').read()
@@ -326,8 +364,7 @@ class rBASetupTest(raatest.rAATest):
                 pass
 
         # And now, let's use the backend to get the config, too
-        isConfigured, configurableOptions = \
-                raapluginstest.backendCaller(self.rbasetupsrv.getRBAConfiguration)
+        isConfigured, configurableOptions = rbasetup_lib.getRBAConfiguration()
 
         # We should be configured now
         self.failUnless(isConfigured,
@@ -341,33 +378,33 @@ class rBASetupTest(raatest.rAATest):
                 # ignore things that aren't in either list
                 pass
 
-    def test_srv_RestartApache(self):
+    def test_srv_gracefulApache(self):
         """
         Exercises the Apache restart option.
         """
 
         # Call the backend function (note: setUp has mocked os.system)
-        self.mockOSSystem._mock.setReturn(0, "/sbin/service httpd restart")
-        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+        self.mockOSSystem._mock.setReturn(0, "/sbin/service httpd graceful")
+        ret = self.rbasetupsrv._gracefulApache()
 
         # Make sure the right things happened
-        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd graceful")
         self.failUnless(ret, "Expected a successful return in the normal case")
 
         # Now, simulate an error
-        self.mockOSSystem._mock.setReturn(256, "/sbin/service httpd restart")
-        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+        self.mockOSSystem._mock.setReturn(256, "/sbin/service httpd graceful")
+        ret = self.rbasetupsrv._gracefulApache()
 
         # Check error path
-        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd graceful")
         self.failIf(ret, "Expected a failed return in the error case")
 
         # Finally, simulate an exception
         self.mockOSSystem._mock.raiseErrorOnAccess(OSError)
-        ret = raapluginstest.backendCaller(self.rbasetupsrv.restartApache)
+        ret = self.rbasetupsrv._gracefulApache()
 
         # Check exception path
-        self.mockOSSystem._mock.assertCalled("/sbin/service httpd restart")
+        self.mockOSSystem._mock.assertCalled("/sbin/service httpd graceful")
         self.failIf(ret, "Expected a failed return in the exception case")
 
     def test_srv_setupRMakeChildSuccess(self):
@@ -379,6 +416,9 @@ class rBASetupTest(raatest.rAATest):
         f = open(config.RBUILDER_GENERATED_CONFIG, 'w')
         f.write(FAKE_GENERATED_CONFIG)
         f.close()
+
+        # Read it in
+        cfg = rbasetup_lib.readRBAConfig(config.RBUILDER_CONFIG)
 
         # Mock out _writeRmakeConfig, also
         mock_writeRmakeConfig = mock.MockObject()
@@ -394,7 +434,7 @@ class rBASetupTest(raatest.rAATest):
         self.mockShimMintClient().newProject._mock.setDefaultReturn(1)
 
         # Call the darn thing
-        ret = raapluginstest.backendCaller(self.rbasetupsrv.setupRMake)
+        ret = self.rbasetupsrv._setupRMake(cfg)
 
         # Check ourselves out
         mock_writeRmakeConfig._mock.assertCalled(config.RBUILDER_RMAKE_CONFIG,
@@ -410,6 +450,13 @@ class rBASetupTest(raatest.rAATest):
         Just like test_srv_RMakeChildSuccess, except we are the parent
         process.
         """
+        # Write a new generated config
+        f = open(config.RBUILDER_GENERATED_CONFIG, 'w')
+        f.write(FAKE_GENERATED_CONFIG)
+        f.close()
+
+        # Read it in
+        cfg = rbasetup_lib.readRBAConfig(config.RBUILDER_CONFIG)
 
         # Set the mocked stuff to return useful values
         self.mockOSFork._mock.setDefaultReturn(23)
@@ -418,12 +465,10 @@ class rBASetupTest(raatest.rAATest):
         self.mockOSSystem._mock.setReturn(0, "/sbin/service rmake-node restart")
 
         # Call the darn thing
-        ret = raapluginstest.backendCaller(self.rbasetupsrv.setupRMake)
+        ret = self.rbasetupsrv._setupRMake(cfg)
 
         # Make sure we restarted rMake!
         self.mockOSSystem._mock.assertCalled('/sbin/service rmake restart')
         self.mockOSSystem._mock.assertCalled('/sbin/service rmake-node restart')
-
-
 
 
