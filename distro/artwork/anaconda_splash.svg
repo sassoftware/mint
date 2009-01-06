@@ -54,7 +54,7 @@
      inkscape:cx="199.78974"
      inkscape:cy="209.99999"
      inkscape:document-units="px"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer5"
      showgrid="false"
      showguides="true"
      inkscape:guide-bbox="true"
@@ -206,7 +206,7 @@
     </g>
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 125.48321,394.63258 L 274.5168,394.63258"
+       d="M 123.18647,394.63258 L 276.81353,394.63258"
        id="path3812"
        sodipodi:nodetypes="cc" />
     <switch
@@ -361,13 +361,13 @@
     <text
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS"
-       x="136.66992"
+       x="124.32617"
        y="407.03552"
        id="text4026"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan4028"
-         x="136.66992"
-         y="407.03552">Copyright © 2009 rPath, Inc.</tspan></text>
+         x="124.32617"
+         y="407.03552">Copyright © 2007-2009 rPath, Inc.</tspan></text>
   </g>
 </svg>
