@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -83,7 +83,7 @@ ifndef MINIMAL
 	for docfile in $(doc_files); do \
 		htmlfile=`echo $$docfile | sed -e s,xml$$,html,` ; \
 		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
-		$(DOCROOT)/makedoc.sh -h -x $(DOCROOT)/templates/section.xml -f $$docfile ; \
+		$(TOPDIR)/scripts/devscripts/makedoc.sh -h -x $(TOPDIR)/doc/userguide/templates/section.xml -f $$docfile ; \
 		mv $$htmlfile $$kidfile ; \
 		kidc $$kidfile ; \
 	done
