@@ -1,4 +1,5 @@
 #!/bin/sh
+cd `dirname $0`
 
 if [ ! -e /usr/bin/inkscape ] || [ ! -e /usr/bin/pngcrush ]
 then

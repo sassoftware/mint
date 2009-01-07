@@ -24,6 +24,8 @@ install: default-install
 	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
 	# rAPA bits
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
+	install -D -m0644 backup.flat $(DESTDIR)/etc/raa/backup.d/rBAFiles
+	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/server.d/chrootcache.conf
 	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
@@ -42,7 +44,6 @@ install: default-install
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
-	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
