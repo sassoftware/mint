@@ -31,6 +31,9 @@ from repostest import testRecipe
 from conary import versions
 from conary.lib import util
 
+from testutils import mock
+
+
 testDirRecipe = """
 class TestCase(PackageRecipe):
     name = "testcase"
@@ -683,31 +686,54 @@ class DirectProjectTest(testsuite.TestCase):
                     "getUserDict returned bad results")
 
 
+def testAs(roleName):
+    def decorate(func):
+        def wrapper(self, db, data):
+            self._use(db, data, roleName)
+            return func(self, db, data)
+        wrapper.__wrapped_func__ = func
+        wrapper.func_name = func.func_name
+        return wrapper
+    return decorate
+
+
 class FixturedProjectTest(fixtures.FixturedUnitTest):
     def setUp(self):
         fixtures.FixturedUnitTest.setUp(self)
         self.ph = project.ProjectHandler()
+        self.ph.cfg = self.cfg
         self.ph.session = session()
+        self.ph.req = mock.MockObject()
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved
 
         self.ph._redirect = fakeRedirect
 
+    def _use(self, db, data, roleName):
+        self.ph.cfg = self.cfg
+        self.ph.client = self.client = self.getClient(roleName)
+        self.ph.project = self.project = self.client.getProject(data['projectId'])
+        self.userId = data[roleName]
+        self.ph.userLevel = self.project.getUserLevel(self.userId)
+        self.ph.auth = self.auth = users.Authorization(
+                userId=self.userId, username=roleName, authorized=True)
+
 
     @fixtures.fixture('Full')
+    @testAs('developer')
     def testResign(self, db, data):
-        client = self.getClient("developer")
-        p = client.getProject(data['projectId'])
+        self.assertRaises(HttpMoved, self.ph.resign, auth=self.auth,
+            confirmed=True, id=data['developer'])
 
-        self.ph.cfg = self.cfg
-        self.ph.client = client
-        self.ph.project = p
-        self.ph.userLevel = userlevels.DEVELOPER
-
-        auth = users.Authorization(userId = data['developer'], authorized = True)
-        self.assertRaises(HttpMoved, self.ph.resign, auth = auth,
-            confirmed = True, id = data['developer'])
+    @fixtures.fixture('Full')
+    @testAs('developer')
+    def testAdoptPermissions(self, db, data):
+        self.assertRaises(HttpMoved, self.ph.adopt, auth=self.auth)
+        self.assertEquals(self.project.getUserLevel(self.userId),
+                userlevels.DEVELOPER, "User was promoted illegally")
+        self.assertEquals(self.ph.session, {'errorMsgList': [
+            'You cannot adopt this project at this time.']})
 
 
 if __name__ == "__main__":

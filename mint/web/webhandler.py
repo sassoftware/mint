@@ -217,26 +217,26 @@ class WebHandler(object):
     # Currently, rBO only doles out a real session if a user is logged in.
 
     def _setInfo(self, message):
+        self.session['infoMsg'] = message
+        self.infoMsg = message
         if (isinstance(self.session, SqlSession)):
-            self.session['infoMsg'] = message
-            self.infoMsg = message
             self.session.save()
 
     def _getErrors(self):
         return self.session.setdefault('errorMsgList', [])
 
     def _addErrors(self, message):
+        errorMsgList = self._getErrors()
+        errorMsgList.append(message)
+        self.session['errorMsgList'] = errorMsgList
         if (isinstance(self.session, SqlSession)):
-            errorMsgList = self._getErrors()
-            errorMsgList.append(message)
-            self.session['errorMsgList'] = errorMsgList
             self.session.save()
 
     def _clearAllMessages(self):
+        for key in ('infoMsg', 'errorMsgList'):
+            if self.session.has_key(key):
+                del self.session[key]
         if (isinstance(self.session, SqlSession)):
-            for key in ('infoMsg', 'errorMsgList'):
-                if self.session.has_key(key):
-                    del self.session[key]
             self.session.save()
 
 def normPath(path):

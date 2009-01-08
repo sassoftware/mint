@@ -11,7 +11,6 @@
         from mint.web.templatesupport import projectText
         from mint import userlevels
         isTrueOwner = userLevel == userlevels.OWNER
-        isDeveloper = userLevel == userlevels.DEVELOPER
     ?>
 
     <head>
@@ -98,10 +97,10 @@
                                 
                           <div py:strip="True" py:if="not project.external">
                             <li py:if="isWriter"><a href="${basePath}resign">Resign</a> from this ${projectText().lower()}</li>
-                            <li py:if="auth.authorized and not isTrueOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in projectMemberList]">
+                            <li py:if="joinable">
                                 <span py:if="not userHasReq"><a href="${basePath}joinRequest">Request to join</a> this ${projectText().lower()}</span>
                                 <span py:if="userHasReq"><a href="${basePath}joinRequest">Modify your comments</a> to a pending join request</span></li>
-                            <li py:if="True not in [ x[2] not in userlevels.READERS for x in projectMemberList]">
+                            <li py:if="adoptable">
                                 <span py:if="auth.authorized"><a href="${basePath}adopt">Adopt</a> this ${projectText().lower()}</span>
                                 <span py:strip="True" py:if="not auth.authorized">Log in to adopt this ${projectText().lower()}</span></li>
                           </div>
