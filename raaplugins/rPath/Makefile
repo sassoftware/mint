@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
 
-SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert rmakemanagement tos rbasetup
+SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole repoconvert rmakemanagement tos rbasetup nextsteps
 
 extra_dist = __init__.py
 
