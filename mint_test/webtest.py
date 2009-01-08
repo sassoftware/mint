@@ -755,10 +755,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertCode('/project/foo/latestRelease', code = 302)
 
     def testReleasesPage(self):
+        from mint import userlevels
         client, userId = self.quickMintUser('foouser','foopass')
         hostname = 'foo'
         projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
                         shortname=hostname, version="1.0", prodtype="Component")
+
+        project = client.getProject(projectId)
+        devClient, userId = self.quickMintUser('devuser','devpass')
+        project.addMemberByName('devuser', userlevels.DEVELOPER)
 
         build = client.newBuild(projectId, 'Kung Foo Fighting')
         build.setDesc("It's a little bit frightening!")
@@ -769,7 +774,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
 
-        release = client.newPublishedRelease(projectId)
+        release = devClient.newPublishedRelease(projectId)
         release.name = "Foo Fighters"
         release.version = "0.1"
         release.addBuild(build.id)
@@ -794,6 +799,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # make sure /latestRelease redirects to latest release
         self.assertCode('/project/foo/latestRelease', code = 302)
+        try:
+            devClient.publishPublishedRelease(release.id, False)
+            assert(0)
+        except mint_error.PermissionDenied, e:
+            # make sure we get permission denied when trying to
+            # publish as a developer
+            pass
+        client.publishPublishedRelease(release.id, False)
+
 
     def testReleasesPageMultipleFileUrls(self):
         client, userId = self.quickMintUser('foouser','foopass')

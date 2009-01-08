@@ -2908,7 +2908,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def newPublishedRelease(self, projectId):
         self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
             raise PermissionDenied
         timeCreated = time.time()
         createdBy = self.auth.userId
@@ -2926,7 +2926,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def updatePublishedRelease(self, pubReleaseId, valDict):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
             raise PermissionDenied
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
             raise PublishedReleasePublished
@@ -2949,6 +2949,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def publishPublishedRelease(self, pubReleaseId, shouldMirror):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
         project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
@@ -3204,7 +3206,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
         if not self._checkProjectAccess(buildData['projectId'],
-                [userlevels.OWNER]):
+                userlevels.WRITERS):
             raise PermissionDenied()
         if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
             raise PublishedReleaseMissing()
