@@ -1359,10 +1359,22 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                     auth.userId),
                 reqList = reqList)
 
+    def _isAdoptable(self, memberList=None):
+        if memberList is None:
+            memberList = self.project.getMembers()
+        return not [x for x in memberList if x[2] in userlevels.WRITERS]
+
     @requiresAuth
     def adopt(self, auth):
-        self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
+        if self._isAdoptable():
+            self.project.adopt(auth, self.cfg.EnableMailLists,
+                    self.cfg.MailListBaseURL, self.cfg.MailListPass)
+            self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
+        else:
+            self.req.log_error("User %s attempted to illegally adopt "
+                    "project %s" % (self.auth.username,
+                        self.project.shortname))
+            self._addErrors("You cannot adopt this project at this time.")
         self._predirect("members")
 
     @strFields(username = None)
@@ -1401,7 +1413,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             self._setInfo("Your join request for %s has been deleted" % self.project.getNameForDisplay())
         self._predirect("members")
 
-    @requiresAuth
+    @ownerOnly
     @intFields(userId = None)
     def viewJoinRequest(self, auth, userId):
         user = self.client.getUser(userId)
@@ -1411,7 +1423,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
                comments = self.client.getJoinReqComments(self.project.getId(),
                    userId))
 
-    @requiresAuth
+    @ownerOnly
     @strFields(action = '')
     @intFields(userId = None)
     def acceptJoinRequest(self, auth, userId, action):
@@ -1438,7 +1450,7 @@ perl, ~!pie, ~!postfix.mysql, python, qt, readline, sasl,
             pass
         self._predirect("members")
 
-    @requiresAuth
+    @ownerOnly
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):
