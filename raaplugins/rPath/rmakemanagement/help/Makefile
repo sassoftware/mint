@@ -13,7 +13,7 @@ doc_files =		\
 
 all: doc-build default-all
 
-install: doc-install static-install default-install
+install: doc-install raaplugins-install default-install
 
 clean: doc-clean default-clean
 
