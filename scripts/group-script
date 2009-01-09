@@ -45,9 +45,6 @@ shutdown_apache() {
                 fi
             fi
         fi
-        START_APACHE=1
-    else
-        START_APACHE=0
     fi
 }
 
@@ -111,8 +108,8 @@ sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
 # entitlement dir
 /usr/share/rbuilder/scripts/init-extproducts
 
-# Start apache again (if it was running before)
-if [ $START_APACHE -eq 1 ]
+# Start apache, if not chrooted
+if [ "x$is_chrooted" == "x" ]
 then
     service httpd start
 fi
