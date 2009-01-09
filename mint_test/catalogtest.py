@@ -54,10 +54,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [200])
+        page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [400])
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body, 
-                        "<?xml version='1.0' encoding='UTF-8'?>\n<images/>\n")
+                "<?xml version='1.0' encoding='UTF-8'?>\n<fault>\n  "
+                "<code>400</code>\n  <message>Target credentials not set for "
+                "user</message>\n</fault>\n")
 
     def testGetImagesNoSession(self):
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [403])
