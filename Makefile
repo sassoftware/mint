@@ -18,7 +18,7 @@ export PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || 
 export PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 export PYDIR = $(LIBDIR)/python$(PYVERSION)/site-packages
 
-SUBDIRS = mint scripts raaplugins commands doc distro
+SUBDIRS = mint scripts raaplugins doc distro
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 
