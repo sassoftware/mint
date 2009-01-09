@@ -33,6 +33,7 @@ testRecipe = """
 class TestCase(PackageRecipe):
     name = "testcase"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.Create("/temp/foo")
@@ -42,6 +43,7 @@ testRecipe2 = """
 class TestCase2(PackageRecipe):
     name = "testcase2"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.Create("/temp/foo")
@@ -51,6 +53,7 @@ testGroup = """
 class GroupTest(GroupRecipe):
     name = "group-test"
     version = "1.0"
+    clearBuildReqs()
 
     def setup(r):
         r.add('testcase')
