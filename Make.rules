@@ -59,27 +59,35 @@ ifdef kid_files
 endif
 
 pyfiles-install:
+ifdef python_files
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
 	cp $(python_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+endif
 
 kid-install:
+ifdef kid_files
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
 	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(PYDIR)/$(PYDEST)/
+endif
 
 static-install:
+ifdef static_files
 	mkdir -p $(DESTDIR)$(STATICDEST)
 	cp $(static_files) $(DESTDIR)$(STATICDEST)/
+endif
 
 cgi-install:
+ifdef cgi_files
 	mkdir -p $(DESTDIR)$(CGIDEST)
 	cp $(cgi_files) $(DESTDIR)$(CGIDEST)/
+endif
 
 kid-clean:
 
 ## DocBook files
 doc-build:
 ifndef MINIMAL
-	echo DOCBOOK $(doc_files)
+	printf "%10s    %s\n" DOCBOOK "$(doc_files)"
 	for docfile in $(doc_files); do \
 		htmlfile=`echo $$docfile | sed -e s,xml$$,html,` ; \
 		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
@@ -91,20 +99,12 @@ endif
 
 doc-install:
 ifndef MINIMAL
-	mkdir -p $(DESTDIR)$(DEST)
-	for docfile in $(doc_files); do \
-		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
-		pycfile=`echo $$docfile | sed -e s,xml$$,pyc,` ; \
-		cp $$kidfile $$pycfile $(DESTDIR)$(DEST)/ ; \
-	done
+	mkdir -p $(DESTDIR)$(STATICDEST)
+	install -m0644 $(doc_files:%.xml=%.kid) $(doc_files:%.xml=%.pyc) $(DESTDIR)$(STATICDEST)/
 endif
 
 doc-clean:
-	for docfile in $(doc_files); do \
-		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
-		rm -f $$kidfile ; \
-	done
-
+	rm -f $(doc_files:%.xml=%.kid)
 
 
 # vim: set sts=8 sw=8 noexpandtab filetype=make :
