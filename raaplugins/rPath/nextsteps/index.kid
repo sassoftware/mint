@@ -17,7 +17,7 @@ Copyright (c) 2006-2009 rPath, Inc.
         from raa.web import makeUrl
         import socket
         host = socket.gethostname()
-        url = "http://" + host + "/cloudCatalog#/event/navigateToNode/groupName=CLOUDS_GROUP"
+        url = "http://" + host + "/"
     ?>
     <script type="text/javascript">
         function redirect(url)
@@ -35,6 +35,9 @@ Copyright (c) 2006-2009 rPath, Inc.
     <br/>
     Your rBuilder is now configured.  The list below contains other tasks you may wish to complete at this time:
     <ul>
+        <li><strong>Connect to your rBuilder</strong></li>
+        To connect to your rBuilder click <a href="${url}" target="_blank">here</a>.
+        <br/><br/>
         <li><strong>Configure Targets</strong></li>
         To configure targets such as EC2, VMware, and Citrix Xen, log in to your rBuilder and click on the "rPath Management Console" link.
         <br/><br/>

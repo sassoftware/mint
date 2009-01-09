@@ -20,6 +20,7 @@ from raa import constants
 from raa.db.data import RDT_BOOL, RDT_INT, RDT_JSON, RDT_STRING
 from raa.db import schedule
 from raa.db import wizardrun
+from raa.modules import raawebplugin
 from raa.modules.raawebplugin import rAAWebPlugin
 
 from mint import config
@@ -36,6 +37,16 @@ class rBASetup(rAAWebPlugin):
 
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Plugin for setting up the rBuilder Appliance")
+    
+    def __init__(self, *args, **kwargs):
+        raawebplugin.rAAWebPlugin.__init__(self, *args, **kwargs)
+        self.checkDisablement()
+        
+    def checkDisablement(self):
+        isConfigured, _ = lib.getRBAConfiguration()
+        if isConfigured:
+            raawebplugin.disablePlugin("/rbasetup/rBASetup", "already configured")
+
 
     def _getFirstTimeSetupStatus(self):
         # Get some status here
@@ -188,7 +199,6 @@ class rBASetup(rAAWebPlugin):
             self.setPropertyValue('FTS_CURRENTSTEP', lib.FTS_STEP_INITIAL, RDT_INT)
             sched = schedule.ScheduleNow()
             self.setPropertyValue('FTS_SCHEDID', self.schedule(sched), RDT_INT)
-
             # N.B.: the javascript on the page will redirect the user to
             # the first time setup page on success; we don't have to do it here.
 
@@ -233,6 +243,3 @@ class rBASetup(rAAWebPlugin):
 
         # mark done in the wizard
         self.wizardDone()
-
-        raa.web.raiseHttpRedirect(raa.web.makeUrl('/'))
-
