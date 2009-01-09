@@ -667,12 +667,13 @@ def parseVersion(vStr):
     return None
 
 REPOSITORY_LABELS = {
-  'rap.rpath.com@rpath:linux-2'    : 'rPath Appliance Platform - Linux Service',
-  'sle.rpath.com@rpath:sles-10'    : 'SUSE Linux 10',
-  'products.rpath.com@rpath:rapa-3': 'rPath Products Repository',
-  }
-REPOSITORY_LABELS = dict((versions.Label(x[0]), x[1]) 
-                          for x in REPOSITORY_LABELS.items())
+        'rap':      ('rap.rpath.com@rpath:linux-2',
+                        'rPath Appliance Platform - Linux Service'),
+        'rpath':    ('conary.rpath.com@rpl:2', 'rPath Linux'),
+        'sle':      ('sle.rpath.com@rpath:sles-10', 'SUSE Linux 10'),
+        'products': ('products.rpath.com@rpath:rapa-3',
+                        'rPath Products Repository'),
+    }
 
 def initializeExternalProjects(client, conaryCfg=None):
 
@@ -708,7 +709,9 @@ def _initializeExternalProjects(client, conaryCfg):
     cclient = conaryclient.ConaryClient(conaryCfg)
     repos = cclient.getRepos()
     numErrors = 0
-    for repositoryLabel, repositoryName in REPOSITORY_LABELS.items():
+    for reposShort, (repositoryLabel, repositoryName
+            ) in REPOSITORY_LABELS.items():
+        repositoryLabel = versions.Label(repositoryLabel)
         try:
             host = repositoryLabel.getHost()
             try:
@@ -721,18 +724,15 @@ def _initializeExternalProjects(client, conaryCfg):
             url = conaryCfg.repositoryMap.get(host, 'https://%s/conary/' % host)
             # whatever entitlement we used worked, let's use that.
             entitlement = str(conaryCfg.entitlement.find(host)[0][1])
-            hostname, domainname = host.split('.', 1)
             try:
-                projectId = client.newExternalProject(name=repositoryName, 
-                                          hostname=hostname, 
-                                          domainname=domainname, 
-                                          label=str(repositoryLabel),
-                                          url=url,
-                                          mirror=False)
+                # Here, domainname is '' so the default gets used
+                projectId = client.newExternalProject(name=repositoryName,
+                        hostname=reposShort, domainname='',
+                        label=str(repositoryLabel), url=url, mirror=False)
             except mint_error.DuplicateHostname, e:
                 # just update the entitlement if the project
                 # is already there.
-                project = client.getProjectByHostname(hostname)
+                project = client.getProjectByHostname(reposShort)
                 projectId = project.id
             else:
                 project = client.getProject(projectId)
