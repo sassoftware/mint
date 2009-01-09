@@ -10,6 +10,8 @@ python_files = __init__.py
 
 kid_files = index.kid
 
+cfg_files = nextsteps.cfg
+
 
 all: kid-build default-all
 

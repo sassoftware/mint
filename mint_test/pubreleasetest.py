@@ -228,7 +228,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testPublishedReleaseAccessCreate(self, db, data):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
-                 'developer': (False, PermissionDenied),
+                 'developer': (True, None),
                  'user': (False, PermissionDenied),
                  'nobody': (False, PermissionDenied),
                  'anonymous': (False, PermissionDenied) }
@@ -248,7 +248,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testPublishedReleaseAccessCreateInHidden(self, db, data):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
-                 'developer': (False, PermissionDenied),
+                 'developer': (True, None),
                  'user': (False, PermissionDenied),
                  'nobody': (False, ItemNotFound),
                  'anonymous': (False, PermissionDenied) }
@@ -341,11 +341,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPublishedReleaseAccessAddBuild(self, db, data):
-        acls = { 'admin': (True, None),
-                 'owner': (True, None),
-                 'developer': (False, PermissionDenied) }
-
-        for (user, (allowed, exc)) in acls.items():
+        for user in ('admin', 'owner', 'developer'):
             adminClient = self.getClient("admin")
             newBuild = adminClient.newBuild(data['projectId'],
                     "Test Published Build")
@@ -357,21 +353,12 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
             client = self.getClient(user)
             userPubRelease = client.getPublishedRelease(newPubRelease.id)
-
-            if allowed:
-                userPubRelease.addBuild(newBuild.id)
-            else:
-                self.assertRaises(exc,
-                        userPubRelease.addBuild, newBuild.id)
+            userPubRelease.addBuild(newBuild.id)
 
 
     @fixtures.fixture("Full")
     def testPublishedReleaseAccessRemoveBuild(self, db, data):
-        acls = { 'admin': (True, None),
-                 'owner': (True, None),
-                 'developer': (False, PermissionDenied) }
-
-        for (user, (allowed, exc)) in acls.items():
+        for user in ('admin', 'owner', 'developer'):
             adminClient = self.getClient("admin")
             newBuild = adminClient.newBuild(data['projectId'],
                     "Test Published Build")
@@ -384,12 +371,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
             client = self.getClient(user)
             userPubRelease = client.getPublishedRelease(newPubRelease.id)
-
-            if allowed:
-                userPubRelease.removeBuild(newBuild.id)
-            else:
-                self.assertRaises(exc,
-                        userPubRelease.removeBuild, newBuild.id)
+            userPubRelease.removeBuild(newBuild.id)
 
 
     @fixtures.fixture("Full")
@@ -523,7 +505,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         client = self.getClient('developer')
         pubRel = client.getPublishedRelease(data['pubReleaseId'])
-        self.assertRaises(PermissionDenied, pubRel.save)
+        self.assertRaises(PublishedReleasePublished, pubRel.save)
 
     @fixtures.fixture('Full')
     def testPubPubRelPerm(self, db, data):

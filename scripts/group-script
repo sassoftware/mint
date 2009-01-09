@@ -45,9 +45,6 @@ shutdown_apache() {
                 fi
             fi
         fi
-        START_APACHE=1
-    else
-        START_APACHE=0
     fi
 }
 
@@ -58,6 +55,36 @@ die() {
 
 # Shut down apache, if it's running
 shutdown_apache
+
+# Restart postgresql since it does not like the rPL 1 -> rPL 2
+# migration and probably does not like being run post-update either.
+#   -- 5.0.0 - 2009-01-08
+function waitForPg()
+{
+  echo "Waiting for postgres startup to complete"
+  ready="false"
+  retries=4
+  while [ "$ready" == "false" ]
+  do
+    psql -U postgres -p 5439 -l >/dev/null 2>&1
+    rc=$?
+    if [ "$rc" -eq 0 ]
+    then
+      ready="true"
+    elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
+    then
+      retries=$(( $retries - 1 ))
+      sleep 4
+    else
+      echo "Failed waiting for Postgres"
+      exit 1
+    fi
+  done
+}
+
+service postgresql-rbuilder condstop
+service postgresql-rbuilder start
+waitForPg
 
 # Migrate the mint database (or create it if it doesn't exist)
 /usr/share/rbuilder/scripts/rbuilder-database --migrate \
@@ -81,8 +108,8 @@ sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
 # entitlement dir
 /usr/share/rbuilder/scripts/init-extproducts
 
-# Start apache again (if it was running before)
-if [ $START_APACHE -eq 1 ]
+# Start apache, if not chrooted
+if [ "x$is_chrooted" == "x" ]
 then
     service httpd start
 fi
@@ -100,13 +127,6 @@ do
     fi
 done
 
-# Restart rMake
-if [ -f /var/lock/subsys/rmake ]
-then
-    service rmake-node stop
-    service rmake stop
-    start_rmake=1
-fi
 
 # Generate rMake certificates IFF we're not chrooted; otherwise we
 # might end up sticking them pre-generated in the ISOs which would be
@@ -116,15 +136,21 @@ if [ "x$is_chrooted" == "x" ]
 then
     /usr/share/rbuilder/scripts/generate-certs.sh \
         || die "Failed to generate certificates"
+else
+    echo Skipping certificate generation due to chrooting
 fi
 
-if [ "x$start_rmake" == "x1" ]
+# Restart rMake after update + cert generation.
+if [ -f /var/lock/subsys/rmake ]
 then
-    service rmake start
-    # TODO: Delete sleep workaround pending RMK-938
-    #   -- 5.0.0 - 2008-12-01
-    sleep 3
-    service rmake-node start
+    service rmake restart
+    service rmake-node restart
+fi
+
+# Shut down postgres if chrooted
+if [ "x$is_chrooted" == "x1" ]
+then
+    service postgresql-rbuilder stop
 fi
 
 

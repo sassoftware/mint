@@ -386,6 +386,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
+    @writersOnly
     @productversion.productVersionRequired
     def newBuildsFromProductDefinition(self, auth):
         return self._write("newBuildsFromProductDefinition")
@@ -1654,23 +1655,40 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             
         return troveName, label
 
+    def _isAdoptable(self, memberList=None):
+        if memberList is None:
+            memberList = self.project.getMembers()
+        return not [x for x in memberList if x[2] in userlevels.WRITERS]
+
     def members(self, auth):
-        self.projectMemberList = self.project.getMembers()
+        memberList = self.project.getMembers()
         if (self.userLevel == userlevels.OWNER or auth.admin):
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
         hidden = self.project.hidden
+        adoptable = self._isAdoptable(memberList)
+        joinable = (self.auth.authorized
+                and self.userLevel not in userlevels.WRITERS
+                and not adoptable)
         return self._write("members",
+                projectMemberList=memberList,
                 userHasReq = self.client.userHasRequested(self.project.getId(),
                     auth.userId),
-                reqList = reqList,
-                hidden = hidden)
+                reqList=reqList, hidden=hidden,
+                adoptable=adoptable, joinable=joinable)
 
     @requiresAuth
     def adopt(self, auth):
-        self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
+        if self._isAdoptable():
+            self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL,
+                    self.cfg.MailListPass)
+            self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
+        else:
+            self.req.log_error("User %s attempted to illegally adopt "
+                    "project %s" % (self.auth.username,
+                        self.project.shortname))
+            self._addErrors("You cannot adopt this project at this time.")
         self._predirect("members")
 
     @strFields(username = None)
@@ -1712,7 +1730,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self._setInfo("Your join request for %s has been deleted" % self.project.getNameForDisplay())
         self._predirect("members")
 
-    @requiresAuth
+    @ownerOnly
     @intFields(userId = None)
     def viewJoinRequest(self, auth, userId):
         user = self.client.getUser(userId)
@@ -1722,7 +1740,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                comments = self.client.getJoinReqComments(self.project.getId(),
                    userId))
 
-    @requiresAuth
+    @ownerOnly
     @strFields(action = '')
     @intFields(userId = None)
     def acceptJoinRequest(self, auth, userId, action):
@@ -1749,7 +1767,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             pass
         self._predirect("members")
 
-    @requiresAuth
+    @ownerOnly
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):

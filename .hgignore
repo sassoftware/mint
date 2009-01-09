@@ -3,6 +3,7 @@
 ^state.journal$
 ~$
 \.(pyc|pyo|o|so|swp|swo|orig|rej)$
+(^|/)help/[^/]+\.kid$
 .DS_Store
 (^|/).kiderror$
 ^rpath_common$

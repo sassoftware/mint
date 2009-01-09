@@ -17,7 +17,7 @@ function waitForPg()
   retries=4
   while [ "$ready" == "false" ]
   do
-    psql -U postgres -l >/dev/null
+    psql -U postgres -l >/dev/null 2>&1
     rc=$?
     if [ "$rc" -eq 0 ]
     then
