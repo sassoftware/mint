@@ -27,7 +27,7 @@ install: default-install
 	install -D -m0644 backup.flat $(DESTDIR)/etc/raa/backup.d/rBAFiles
 	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
-	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/server.d/chrootcache.conf
+	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/node.d/chrootcache.conf
 	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 collect.sh $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
