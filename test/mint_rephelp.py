@@ -173,6 +173,10 @@ class MintApacheServer(rephelp.ApacheServer):
         elif mintDb == "mysql":
             self.mintDb = MySqlMintDatabase(reposDB.path)
 
+    def getServerDir(self):
+        return os.path.realpath(os.path.join(
+            os.path.dirname(sys.modules['mint_rephelp'].__file__), 'server'))
+
     def createConfig(self):
         rephelp.ApacheServer.createConfig(self)
         # Add dynamic images path to apache settings if necessary
