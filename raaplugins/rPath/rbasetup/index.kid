@@ -142,7 +142,7 @@ Copyright (c) 2008-2009 rPath, Inc.
                         <input type="text" name="externalPasswordURL" value="${externalPasswordURL}" />
                     </div>
                     <div class="form-line">
-                        <div class="rbasetup-label">Authentication cache TTL (seconds):</div>
+                        <div class="rbasetup-label">Authentication Cache TTL (sec):</div>
                         <input type="text" name="authCacheTimeout" value="${authCacheTimeout}" />
                     </div>
                     <h3>Repository Options</h3>
