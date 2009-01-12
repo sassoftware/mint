@@ -38,15 +38,28 @@ class rBASetup(rAAWebPlugin):
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Plugin for setting up the rBuilder Appliance")
     
-    def __init__(self, *args, **kwargs):
-        raawebplugin.rAAWebPlugin.__init__(self, *args, **kwargs)
-        self.checkDisablement()
+    wizardSerial = 1
+    
+    def initPlugin(self):
+        self.checkSkipWizard()
         
-    def checkDisablement(self):
+    def checkSkipWizard(self):
+        # If the system is already configured and this plug-in hasn't been run
+        # in the wizard yet (i.e. migration) mark it as done.  We only want to
+        # run in the wizard during install.
         isConfigured, _ = lib.getRBAConfiguration()
         if isConfigured:
-            raawebplugin.disablePlugin("/rbasetup/rBASetup", "already configured")
-
+            # this initializes the pluginId dict which we need
+            raa.modules.helper.getWebPluginIdDict()
+            wizardRun = raa.web.getWebRoot().wizardRun
+            
+            # has wizard already run?
+            if wizardRun.getLastRunTime(self.taskId, self.wizardSerial) is not None:
+                return
+            
+            wizardRun.resetSession([(self.taskId, self.wizardSerial)])
+            self._wizardDone()
+            wizardRun.commit()
 
     def _getFirstTimeSetupStatus(self):
         # Get some status here
