@@ -92,7 +92,7 @@ class SiteHandler(WebHandler):
     @strFields(user = '', password = '')
     def pwCheck(self, auth, user, password):
         ret = 'false'
-        if not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off':
+        if self.cfg.configured and (not self.cfg.SSL or self.req.subprocess_env.get('HTTPS', 'off') != 'off'):
             ret = str(bool(self.client.pwCheck(user, password))).lower()
         return """<auth valid="%s" />\n""" % ret
 

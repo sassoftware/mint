@@ -51,6 +51,8 @@ Internal Changes
   launch permissions) on rBA. (RBL-3981)
 * rMC data and /etc/rmake/ssl are now backed up via the rPA backup
   plugin. (RBL-4071)
+* pwCheck calls now are processed even before the rbuilder is configured - 
+  it simply is the case that noone is authorized (RBL-4059).
 
 Web Front End Changes
 ---------------------

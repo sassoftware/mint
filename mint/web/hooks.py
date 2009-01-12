@@ -472,8 +472,13 @@ def handler(req):
         req.log_error("reopened a dead database connection in hooks.py", apache.APLOG_WARNING)
 
     if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
-        req.headers_out['Location'] = cfg.basePath + "setup/"
-        raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+        if req.uri == cfg.basePath + 'pwCheck':
+            # allow pwCheck requests to go through without being
+            # redirected - they will simply return "False"
+            pass
+        else:
+            req.headers_out['Location'] = cfg.basePath + "setup/"
+            raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
     prof.startHttp(req.uri)
 
