@@ -12,6 +12,9 @@
 # marked with a comment indicating when and for what version it was
 # added as well as any relevant issue IDs.
 
+. /etc/sysconfig/pgsql/postgresql-rbuilder
+export PGDATA PGPORT
+
 if [[ `awk '{print $2}' /proc/mounts | grep -c ^/proc$` > 1 ]]
 then
     # If /proc appears to be mounted more than once, then it means we're
@@ -61,25 +64,25 @@ shutdown_apache
 #   -- 5.0.0 - 2009-01-08
 function waitForPg()
 {
-  echo "Waiting for postgres startup to complete"
-  ready="false"
-  retries=4
-  while [ "$ready" == "false" ]
-  do
-    psql -U postgres -p 5439 -l >/dev/null 2>&1
-    rc=$?
-    if [ "$rc" -eq 0 ]
-    then
-      ready="true"
-    elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
-    then
-      retries=$(( $retries - 1 ))
-      sleep 4
-    else
-      echo "Failed waiting for Postgres"
-      exit 1
-    fi
-  done
+    echo "Waiting for postgres to start"
+    ready="false"
+    retries=4
+    while true
+    do
+        psql -U postgres -l >/dev/null 2>&1
+        rc=$?
+        if [ "$rc" -eq 0 ]
+        then
+            break
+        elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
+        then
+            retries=$(( $retries - 1 ))
+            sleep 4
+        else
+            echo "Failed waiting for PostgreSQL to start"
+            exit 1
+        fi
+    done
 }
 
 service postgresql-rbuilder condstop
@@ -158,6 +161,24 @@ fi
 if [ "x$is_chrooted" == "x1" ]
 then
     service postgresql-rbuilder stop
+
+    echo "Waiting for postgres to stop"
+    retries=4
+    while true
+    do
+        if [ ! -f "$PGDATA/postmaster.pid" ]
+        then
+            break
+        elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
+        then
+            retries=$(( $retries - 1 ))
+            sleep 4
+        else
+            echo "Giving up and killing the pidfile"
+            rm -f "$PGDATA/postmaster.pid"
+            break
+        fi
+    done
 fi
 
 
