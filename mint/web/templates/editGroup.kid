@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
+import conary
 from urllib import quote
-from conary import versions
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
 from mint.grouptrove import KNOWN_COMPONENTS
@@ -100,7 +100,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
                         <td>${t['trvName']}</td>
                         <td py:if="t['versionLock']">
                             <a href="${t['baseUrl']}troveInfo?t=${quote(t['trvName'])};v=${quote(injectVersion(t['trvVersion']))}" title="${t['trvVersion']}">
-                                ${versions.VersionFromString(t['trvVersion']).trailingRevision().asString()}
+                                ${conary.versions.VersionFromString(t['trvVersion']).trailingRevision().asString()}
                             </a>
                         </td>
                         <td py:if="not t['versionLock']">
