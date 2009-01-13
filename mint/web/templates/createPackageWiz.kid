@@ -34,7 +34,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/whizzyupload.js?v=${cacheFakeoutVersion}" />
                 ${createPackage(uploadDirectoryHandle, sessionHandle, name, 'If you have an archive containing files you would like to add to your appliance, you can upload it and have its contents packaged for you. Otherwise, click the "No archive to package" link.')}
                 <div>
-                    <a href="selectPackages">No archive to package</a>
+                    <a href="editApplianceGroup">No archive to package</a>
                 </div>
             </div>
             <br class="clear"/>

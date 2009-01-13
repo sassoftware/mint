@@ -20,6 +20,7 @@ from raa import constants
 from raa.db.data import RDT_BOOL, RDT_INT, RDT_JSON, RDT_STRING
 from raa.db import schedule
 from raa.db import wizardrun
+from raa.modules import raawebplugin
 from raa.modules.raawebplugin import rAAWebPlugin
 
 from mint import config
@@ -36,6 +37,29 @@ class rBASetup(rAAWebPlugin):
 
     # Name to be displayed on mouse over in the side bar.
     tooltip = _("Plugin for setting up the rBuilder Appliance")
+    
+    wizardSerial = 1
+    
+    def initPlugin(self):
+        self.checkSkipWizard()
+        
+    def checkSkipWizard(self):
+        # If the system is already configured and this plug-in hasn't been run
+        # in the wizard yet (i.e. migration) mark it as done.  We only want to
+        # run in the wizard during install.
+        isConfigured, _ = lib.getRBAConfiguration()
+        if isConfigured:
+            # this initializes the pluginId dict which we need
+            raa.modules.helper.getWebPluginIdDict()
+            wizardRun = raa.web.getWebRoot().wizardRun
+            
+            # has wizard already run?
+            if wizardRun.getLastRunTime(self.taskId, self.wizardSerial) is not None:
+                return
+            
+            wizardRun.resetSession([(self.taskId, self.wizardSerial)])
+            self._wizardDone()
+            wizardRun.commit()
 
     def _getFirstTimeSetupStatus(self):
         # Get some status here
@@ -188,7 +212,6 @@ class rBASetup(rAAWebPlugin):
             self.setPropertyValue('FTS_CURRENTSTEP', lib.FTS_STEP_INITIAL, RDT_INT)
             sched = schedule.ScheduleNow()
             self.setPropertyValue('FTS_SCHEDID', self.schedule(sched), RDT_INT)
-
             # N.B.: the javascript on the page will redirect the user to
             # the first time setup page on success; we don't have to do it here.
 
@@ -233,6 +256,6 @@ class rBASetup(rAAWebPlugin):
 
         # mark done in the wizard
         self.wizardDone()
-
+        
+        # force redirect to reload the page moving on to the next step
         raa.web.raiseHttpRedirect(raa.web.makeUrl('/'))
-

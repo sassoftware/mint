@@ -54,7 +54,11 @@ class fileuploader(object):
         if not os.path.isfile(self.manifestfile):
             # kill the upload
             if info.get('pid', None) is not None:
-                os.kill(int(info['pid']), signal.SIGUSR1)
+                try:
+                    os.kill(int(info['pid']), signal.SIGUSR1)
+                except OSError:
+                    # Gone already
+                    pass
 
         #Remove all the relevant files
         conary.lib.util.rmtree(os.path.join(self.wkdir, '%s-*' % self.fieldname))

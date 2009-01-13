@@ -51,6 +51,8 @@ Internal Changes
   launch permissions) on rBA. (RBL-3981)
 * rMC data and /etc/rmake/ssl are now backed up via the rPA backup
   plugin. (RBL-4071)
+* pwCheck calls now are processed even before the rbuilder is configured - 
+  it simply is the case that noone is authorized (RBL-4059).
 
 Web Front End Changes
 ---------------------
@@ -127,6 +129,7 @@ Web Front End Changes
 * The footer is now full-width. (RBL-3857)
 * RSS news and error display are now proper width. (RBL-3784)
 * Fix width of job console plugin. (RBL-4088)
+* Fixed a bug where editing groups was throwing traceback. (RBL-3480)
 
 Bug Fixes
 ---------------------

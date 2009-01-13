@@ -1,22 +1,23 @@
 #
-# Copyright (c) 2007-2008 rPath, Inc.
+# Copyright (c) 2007-2009 rPath, Inc.
 # All rights reserved
 #
 
 import os
-
 import sys
 sys.path.insert(0, '/usr/lib/anaconda/installclasses')
 
-from rhpl.translate import *
+from pykickstart.constants import CLEARPART_TYPE_ALL
+from rhpl.translate import N_
 
+import bootloader
 import iutil
 import partRequests
 import parted
 from fsset import FileSystemType, fileSystemTypeGet, fileSystemTypeGetDefault, fileSystemTypeRegister
-from constants import *
+from constants import BL_EXTLINUX
 from rpathapp import InstallClass as BaseInstallClass
-from autopart import getAutopartitionBoot, autoCreatePartitionRequests
+
 
 class blankFileSystem(FileSystemType):
     def __init__(self):
@@ -102,11 +103,17 @@ class InstallClass(BaseInstallClass):
     def setInstallData(self, anaconda):
         BaseInstallClass.setInstallData(self, anaconda)
         anaconda.id.partitions.autoClearPartType = CLEARPART_TYPE_ALL
+        anaconda.id.bootloader.setBootLoader(BL_EXTLINUX)
 
+    def postAction(self, anaconda, serial):
         # assume that half of total mem is at least 2G
         totalMem = iutil.memInstalled() / 1024 # in MB
         dom0mem = max(int(totalMem / 2), 2048) # in MB
 
-        anaconda.id.bootloader.setBootLoader(BL_EXTLINUX)
-        anaconda.id.bootloader.bootman._cfg.xenoptions('dom0_mem=%sM'
-                % dom0mem)
+        fObj = open(os.path.join(anaconda.rootPath, 'etc/bootloader.d/dom0-mem.conf'), 'w')
+        print >> fObj, 'add_xen_options dom0_mem=%dM' % dom0mem
+        fObj.close()
+
+        iutil.execWithRedirect('/sbin/bootman', [], root=anaconda.rootPath)
+
+        BaseInstallClass.postAction(self, anaconda, serial)

@@ -121,15 +121,14 @@
                 <td><input type="radio" class="radio" name="useMirror" value="none" id="useMirror_none"
                        py:attrs="{'checked': (kwargs['useMirror'] == 'none' or not kwargs['useMirror']) and 'checked' or None}" /></td>
                 <td><label for="useMirror_none">
-                    Cache contents of this repository locally as needed. (Choose this option if you have a mirror preload disk 
-                    supplied by rPath.)</label>
+                    Cache contents of this repository locally as needed. (This is the recommended setting.)</label>
                 </td>
             </tr>
             <tr>
                 <td><input type="radio" class="radio" name="useMirror" value="net" id="useMirror_net"
                         py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" /></td>
                 <td>
-                <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication)</label></td>
+                <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication.  Only use if directed by rPath support.)</label></td>
             </tr>
             <tr>
                <td><input class="radio" type="checkbox" name="allLabels" value="1"

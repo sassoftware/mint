@@ -103,7 +103,7 @@
                                 ${projectText().title()}. Are you sure you want to make this ${projectText().title()} public?
                             </div>
                             <p class="help">
-                                Check this box if you want your Private ${projectText().title()} to be made Public. Public
+                                Uncheck this box if you want your Private ${projectText().title()} to be made Public. Public
                                 ${projectText().title()}s are visible to all users whether they are a ${projectText().title()} 
                                 Team Member or not. Once your ${projectText().title()} is public you cannot make it private again.</p>
                         </div>

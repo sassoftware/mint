@@ -972,6 +972,8 @@ class MintServer(object):
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
         # make sure the hostname is valid
+        if not domainname:
+            domainname = self.cfg.projectDomainName
         self._validateHostname(hostname, domainname, reservedExtHosts)
 
         # ensure that the label we were passed is valid

@@ -10,7 +10,7 @@ fi
 rm -f *.tmp.png
 
 # PNGs without transparency (strips out alpha channel)
-for base in bootloader_splash
+for base in prodlogo
 do
     echo Generating "$base"
     inkscape --without-gui --file "${base}.svg" --export-png "${base}.tmp.png" --export-area-canvas || exit 1
@@ -20,7 +20,7 @@ do
 done
 
 # PNGs with transparency
-for base in anaconda_splash
+for base in 
 do
     echo Generating "$base"
     inkscape --without-gui --file "${base}.svg" --export-png "${base}.tmp.png" --export-area-canvas || exit 1
