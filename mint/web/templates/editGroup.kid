@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-import conary
+import conary.versions
 from urllib import quote
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
