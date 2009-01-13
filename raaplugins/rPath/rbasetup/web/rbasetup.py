@@ -256,3 +256,6 @@ class rBASetup(rAAWebPlugin):
 
         # mark done in the wizard
         self.wizardDone()
+        
+        # force redirect to reload the page moving on to the next step
+        raa.web.raiseHttpRedirect(raa.web.makeUrl('/'))
