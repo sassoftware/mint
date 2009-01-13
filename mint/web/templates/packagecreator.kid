@@ -288,7 +288,7 @@ lang = None;
             <!-- The factory interview -->
             <div id="chosen_factory" />
 
-            ${recipeEditor('appliance', recipeContents, useOverrideRecipe, 'savePackage')}
+            ${recipeEditor('package', recipeContents, useOverrideRecipe, 'savePackage')}
 
             <p py:if="editing" class="p-button"><button id="submitButton_savePackage" type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/save_package_button.png" alt="Submit" /></button></p>
             <p py:if="not editing" class="p-button"><button id="submitButton_savePackage" type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/create_package_button.png" alt="Submit" /></button></p>
