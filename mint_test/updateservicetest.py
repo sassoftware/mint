@@ -10,11 +10,13 @@ from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, WebRepositoryHe
 
 from mint.mint_error import UpdateServiceNotFound
 from conary.dbstore import sqlerrors
+from conary.repository import transport
 
 from mint import database
 from mint import helperfuncs
 from mint import mirror
 from mint import mint_error
+from mint import proxiedtransport
 from mint.web.webhandler import HttpMoved
 
 import StringIO
@@ -33,6 +35,18 @@ class FakeUpdateServiceServerProxy:
 
     def addRandomUser(self, name):
         return STOCK_MIRROR_PASSWORD
+
+
+usedProxy = False
+def fake_proxy_request(self, *args, **kw):
+    global usedProxy
+    usedProxy = True
+    return [[None, [STOCK_MIRROR_PASSWORD,]], None] 
+
+def fake_proxy_parse_response(self, *args, **kw):
+    global usedProxy
+    usedProxy = True
+    return STOCK_MIRROR_PASSWORD
 
 class UpdateServiceTest(fixtures.FixturedUnitTest):
 
@@ -57,6 +71,35 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
         self.failUnless(us1Id,
                 "Expecting an id to be returned from addUpdateService,"
                 " got %s" % us1Id)
+
+    @testsuite.context("quick")
+    @fixtures.fixture("Full")
+    def testCreateUpdateServiceWithProxy(self, db, data):
+        xmlrpclib.ServerProxy = self._oldServerProxy
+        self.cfg.proxy = {'http' : 'http://proxyuser:proxypass@proxy.foo.com:3128',
+                          'https' : 'https://proxyuser:proxypass@proxy.foo.com:3128'}
+        oldRequest = transport.Transport.request
+        oldParseResponse = transport.Transport.parse_response
+        transport.Transport.request = fake_proxy_request
+        transport.Transport.parse_response = fake_proxy_parse_response
+
+        adminClient = self.getClient("admin")
+        us1 = ['foo.example.com',
+                helperfuncs.generateMirrorUserName(FQDN, 'foo.example.com'),
+                STOCK_MIRROR_PASSWORD, 'Foo 1']
+        us1Id = adminClient.addUpdateService(*us1)
+
+        self.failUnless(us1Id,
+                "Expecting an id to be returned from addUpdateService,"
+                " got %s" % us1Id)
+        global usedProxy
+        self.assertTrue(usedProxy)
+
+        self.cfg.proxy = {}
+        xmlrpclib.ServerProxy = FakeUpdateServiceServerProxy
+        transport.Transport.request = oldRequest
+        transport.Transport.parse_response = oldParseResponse
+        usedProxy = False
 
     @testsuite.context("quick")
     @fixtures.fixture("Full")
