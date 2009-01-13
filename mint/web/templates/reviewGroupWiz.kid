@@ -41,7 +41,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                         <li py:for="trove in explicitTroves">${trove}</li>
                     </ul>
                     <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                     <p><a href="editApplianceGroup">Edit appliance contents</a></p>
                 </div>
@@ -49,7 +49,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <div py:if="not explicitTroves">
                     No packages added
                     <p><a class="option" href="buildApplianceGroup">Build Appliance</a></p>
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                 </div>
             </div>

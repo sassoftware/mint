@@ -52,7 +52,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
 
                     <input py:attrs="{'value': packageList and 'Confirm Contents' or 'Continue'}" type="submit" id="packagecreatortrovessubmit" />
 
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                 </form>
             </div>

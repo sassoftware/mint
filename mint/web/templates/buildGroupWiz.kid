@@ -42,7 +42,7 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 </div>
                 <div id="build_fail" style="display:none">
                     <p>The manifest for your appliance could not be created. Select from the following links to continue.</p>
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                     <p><a href="selectPackages">Select additional packages</a></p>
                     <p><a href="editApplianceGroup">Edit appliance contents</a></p>
                 </div>
