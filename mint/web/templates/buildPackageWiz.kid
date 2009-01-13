@@ -37,12 +37,12 @@ from mint.helperfuncs import formatProductVersion, truncateForDisplay
                 <div id="build_success" style="display:none">
                     <p>Your archive has been successfully packaged. You can now either package another archive, or continue the appliance creation process.</p>
                     <p><a href="editApplianceGroup">Continue</a></p>
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                 </div>
                 <div id="build_fail" style="display:none">
                     <p>Your archive could not be packaged. Select from the following links to continue.</p>
                     <p><a href="javascript: history.go(-1);">Review package details</a></p>
-                    <p><a href="newPackage">Package another archive</a></p>
+                    <p><a href="newPackage">Package an archive</a></p>
                 </div>
             </div>
             <br class="clear"/>

@@ -75,6 +75,7 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
+from conary.repository import transport
 from conary.repository.netrepos import netserver
 from conary import errors as conary_errors
 from conary.dbstore import sqlerrors
@@ -692,16 +693,26 @@ class MintServer(object):
 
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
-        from mint.proxiedtransport import ProxiedTransport
+        from mint import proxiedtransport
         mirrorUser = ''
         try:
             # Make sure that we deal with any HTTP proxies
             proxy_host = self.cfg.proxy.get('https') or \
-                            self.cfg.proxy.get('http')
-            if proxy_host:
-                transport = ProxiedTransport(proxy_host)
+                         self.cfg.proxy.get('http')
+
+            if proxy_host and proxy_host.startswith('https'):
+                proxy_proto_https = True
             else:
-                transport = None
+                proxy_proto_https = False 
+
+            # Set up a transport object to override the default if we're using
+            # a proxy.
+            if proxy_host:
+                conaryTransport = proxiedtransport.ProxiedTransport(
+                                    https=proxy_proto_https,
+                                    proxies=self.cfg.proxy)
+            else:
+                conaryTransport = None
 
             # Connect to the rUS via XML-RPC
             urlhostname = hostname
@@ -714,7 +725,7 @@ class MintServer(object):
                 protocol = 'http'
             url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
-            sp = xmlrpclib.ServerProxy(url, transport=transport)
+            sp = xmlrpclib.ServerProxy(url, transport=conaryTransport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)

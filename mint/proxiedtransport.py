@@ -1,33 +1,39 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
 
-import httplib
 import urllib
-import xmlrpclib
+from conary.repository import transport
 
-class ProxiedTransport(xmlrpclib.Transport):
+class ProxiedTransport(transport.Transport):
     """
     Transport class for contacting rUS through a proxy
     """
-    def __init__(self, proxy):
-        splitUrl = urllib.splittype(proxy)
-        self.protocol = splitUrl[0]
-        self.proxy = splitUrl[1].lstrip('/')
+    def __init__(self, *args, **kw):
+        # Override transport.XMLOpener with our own that does the right thing
+        # with the selector.
+        transport.XMLOpener = ProxiedXMLOpener
+        return transport.Transport.__init__(self, *args, **kw)
 
-    def make_connection(self, host):
-        self.realHost = host
-        if self.protocol == 'https':
-            h = httplib.HTTPS(self.proxy)
-        else:
-            h = httplib.HTTP(self.proxy)
-        return h
+    def parse_response(self, *args, **kw):
+        resp = transport.Transport.parse_response(self, *args, **kw)
+        # The request method on transport.Transport expects this return
+        # result.
+        return [[resp,]]
 
-    def send_request(self, connection, handler, request_body):
-        connection.putrequest('POST', 'https://%s%s' % (self.realHost,
-                                                         handler))
+    def request(self, *args, **kw):
+        resp = transport.Transport.request(self, *args, **kw)
+        # Return just the value.
+        return resp[0][1][0]
 
-    def send_host(self, connection, host):
-        connection.putheader('Host', self.realHost)
+class ProxiedXMLOpener(transport.XMLOpener):
+    def createConnection(self, *args, **kw):
+        h, urlstr, selector, headers = transport.URLOpener.createConnection(self, *args, **kw)
+        # transport.URLOpener.createConnection leaves selector as the full
+        # protocol, host, path string.  That does not always work with proxy,
+        # so parse out just the path.
+        proto, rest = urllib.splittype(selector)
+        host, rest = urllib.splithost(rest)
+        return h, urlstr, rest, headers
