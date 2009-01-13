@@ -12,7 +12,6 @@ export PGDATA PGPORT
 
 function waitForPg()
 {
-  echo "Waiting for postgres startup to complete"
   ready="false"
   retries=4
   while [ "$ready" == "false" ]
@@ -27,7 +26,7 @@ function waitForPg()
       retries=$(( $retries - 1 ))
       sleep 4
     else
-      echo "Failed waiting for Postgres"
+      echo "Failed waiting for PostgreSQL to start"
       exit 1
     fi
   done
