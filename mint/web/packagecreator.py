@@ -24,8 +24,9 @@ class PackageCreatorMixin(object):
             self._addErrors(str(e))
             self._predirect('newPackage', temporary=True)
         if not factories:
-            self._addErrors('Package Creator is unable to handle the file that was uploaded: no candidate package types found.')
-            self._predirect('newPackage', temporary=True)
+            self._addErrors("Update to the latest appliance platform to continue.")
+            self._predirect('editVersion?id=%d' % self.currentVersion,
+                    temporary=True)
 
         return {'editing': editing, 'sessionHandle': sessionHandle, 'factories': factories, 'prevChoices': prevChoices,
                 'recipeContents': recipeContents, 'useOverrideRecipe': not isDefault}
