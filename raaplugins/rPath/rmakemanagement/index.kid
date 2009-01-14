@@ -254,8 +254,7 @@ from rPath.rmakemanagement import pageList
                         <tr> 
                             <td><span class="emphasis">${build[0]}</span></td>
                             <td>${build[1]}</td>
-                            <td py:if="not build[3]">${build[2]}</td>
-                            <td py:if="build[3]">Built</td>
+                            <td>${build[2]}</td>
                             <td py:if="build[3]">${build[4]}</td>
                             <td py:if="not build[3]"></td>
                             <td class="button-column">
