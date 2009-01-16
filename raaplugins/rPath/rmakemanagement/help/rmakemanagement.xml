@@ -8,70 +8,113 @@
 <article lang="&lang;" id="usermanagement">
   <title>rMake Management</title>
   <para>
-  The rMake Management page is used to manage the multi-node rMake server
-  on this Appliance. This interface can be used to start and stop the rMake
-  server or worker nodes and to view build status and logs.
+  The rMake Management page is used to manage this appliance's rMake
+  server, its associated rMake worker nodes, and the most recent builds.
   </para>
   <sect1>
   <title>rMake Server Management</title>
     <para>
-    This rMake server can be controlled from this interface. The
-    <emphasis role="bold">start</emphasis>,
-    <emphasis role="bold">stop</emphasis>,
-    <emphasis role="bold">restart</emphasis>, and
-    <emphasis role="bold">reset</emphasis>,
-    buttons are active when their use is appropriate.
+    The following operations can be performed on the rMake Server by
+    clicking the following buttons:
+
+    <itemizedlist>
+      <listitem>
+        <para>
+        <emphasis role="bold">Start</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Stop</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Restart</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Reset</emphasis>
+        </para>
+      </listitem>
+    </itemizedlist>
     </para>
     <para>
-    The <emphasis role="bold">reset</emphasis> button is used to clear
-    everything in the current rmake repository and database.
+    The <emphasis role="bold">Reset</emphasis> button clears the contents
+    of the rMake repository and database.
     </para>
   </sect1>
   <sect1>
   <title>rMake Node Management</title>
     <para>
-    rMake worker nodes can be controlled from this interface. The
-    <emphasis role="bold">start</emphasis>,
-    <emphasis role="bold">stop</emphasis>,
-    <emphasis role="bold">restart</emphasis>, and
-    <emphasis role="bold">reset</emphasis>,
-    buttons are active when their use is appropriate.
+    The following operations can be performed on the rMake worker nodes by
+    clicking the following buttons:
+
+    <itemizedlist>
+      <listitem>
+        <para>
+        <emphasis role="bold">Start</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Stop</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Restart</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Reset</emphasis>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        <emphasis role="bold">Edit</emphasis>
+        </para>
+      </listitem>
+    </itemizedlist>
     </para>
     <para>
-    The <emphasis role="bold">reset</emphasis> button is used to clear
-    the cache and chroots used by each worker node.
+    The <emphasis role="bold">Reset</emphasis> button clears the cache and
+    chroots used by each rMake worker node.
     </para>
     <para>
-    The <emphasis role="bold">edit</emphasis> button can be used to modify
-    the <emphasis role="bold">slots</emphasis> and
-    <emphasis role="bold">chrootLimit</emphasis> settings for each worker node.
+    The <emphasis role="bold">Edit</emphasis> button is used to modify the
+    following settings for each rMake worker node:
     </para>
     <para>
     <itemizedlist>
       <listitem>
         <para>
-        <emphasis role="bold">slots</emphasis> -- Maximum number of
-        individual packages (not jobs) to build in parallel within a
-        single job on one rMake node.
+        <emphasis role="bold">Slots</emphasis> -- The maximum number of
+        packages that can be built simultaneously by the rMake worker
+        node.
         </para>
       </listitem>
       <listitem>
         <para>
-        <emphasis role="bold">chrootLimit</emphasis> -- Number of chroots
-        that should be allowed to be created on this node at the same time.
-        After this point, old chroots will be deleted.
+        <emphasis role="bold">chrootLimit</emphasis> -- The maximum number
+        of chroots that can be kept for future use by the rMake worker
+        node.  Once this limit is reached, old chroots will be deleted to
+        make room for new ones.
         </para>
       </listitem>
     </itemizedlist>
-    Click <emphasis role="bold">Save</emphasis> to save changes or click
+    Click <emphasis role="bold">Save</emphasis> to save changes or
     <emphasis role="bold">Cancel</emphasis> to revert.
     </para>
   </sect1>
   <sect1>
   <title>Builds</title>
   <para>
-  Build status and logs can be viewed in this section.
+  Information on the most recent builds can be viewed here.  The log for a
+  particular build can be displayed by clicking <emphasis role="bold">View
+  build log</emphasis>.
   </para>
   </sect1>
 </article>
-
