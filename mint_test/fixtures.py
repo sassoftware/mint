@@ -81,6 +81,7 @@ class FixtureCache(object):
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
         cfg.debugMode = True
+        cfg.namespace = 'yournamespace'
         cfg.hostName = MINT_HOST
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.externalDomainName = MINT_DOMAIN

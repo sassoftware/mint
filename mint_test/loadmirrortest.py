@@ -141,6 +141,7 @@ class LoadMirrorUnitTest(unittest.TestCase):
             callback = loadmirror.Callback('test.rpath.local', 1)
             lm = loadmirror.LoadMirror(None, None)
             lm.cfg = MintConfig()
+            lm.cfg.namespace = 'yournamespace'
             lm.cfg.dataPath = tempfile.mkdtemp()
             lm.cfg.projectSiteHost = 'test.rpath.local'
             lm.cfg.projectDomainName = 'rpath.local'

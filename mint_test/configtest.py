@@ -44,6 +44,7 @@ class ConfigTest(unittest.TestCase):
         # if we get here, there are no apparent issues with the CfgBuildType
         # class. errors with the cfg object manipulation generated elsewhere.
         cfg = config.MintConfig()
+        cfg.namespace = 'yournanespace'
         self.failIf(cfg.excludeBuildTypes,
                     "Build type illegally appeared as visible")
 

@@ -37,6 +37,7 @@ class WebDecoratorTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.cfg = config.MintConfig()
         self.cfg.secureHost = "www.secure.com"
+        self.cfg.namespace = 'yournamespace'
 
     def _redirect(self, *args, **kwargs):
         return args[0]

@@ -112,6 +112,7 @@ class TestPackageCreatorHelperMethods(testsuite.TestCase):
 
     def testGetClientSwitch(self):
         cfg = config.MintConfig()
+        cfg.namespace = 'yournamespace'
         self.shimClient = False
         self.networkedClient = False
         class DummyClient(object):
