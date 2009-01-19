@@ -34,7 +34,7 @@ from mint import buildtypes
                 <div class="page-title">Appliance Creator</div>
                 
                 <h2>Generate Appliance Images</h2>
-                <p>The following appliance image(s) are now being generated.  Refresh this page for updated status. When an image displays the "Finished" status, it is ready to be deployed.</p>
+                <p>The following appliance image(s) are now being generated.  When an image displays the "Finished" status, it is ready to be deployed.</p>
 
                 <div py:if="builds" py:strip="True">
                     ${buildsTable(builds.values(), allowDelete=False)}
