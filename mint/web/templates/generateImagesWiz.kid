@@ -13,6 +13,7 @@ from mint import buildtypes
       py:extends="'builds_common.kid', 'wizard.kid'">
     <head>
         <title>${formatTitle('%s Image'%projectText().title())}</title>
+        <meta http-equiv="refresh" content="30" />
     </head>
     <body>
         <div class="fullpage">
