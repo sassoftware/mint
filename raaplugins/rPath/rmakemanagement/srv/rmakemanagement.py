@@ -89,7 +89,7 @@ class rMakeManagement(services.Services):
             
             # The first trove in the build is the only one we will display.
             for trove in job.troves:
-                ret.append((build, trove[0], job.status, job.isFinished(),
+                ret.append((build, trove[0], job.getStateName(), job.isFinished(),
                             time.strftime("%m-%d-%Y %I:%M %p", 
                                           time.gmtime(job.finish))))
                 break
