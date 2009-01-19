@@ -212,8 +212,10 @@ class rBASetupTest(raatest.rAATest):
         ret = self.callWithIdent(self.root.index)
         self.failUnless(ret['isConfigured'],
                 "The configuration should be marked as configured.")
-        self.failUnless(ret['allowNamespaceChange'],
-                "The configuration's namespace option still should be changeable.")
+        # we now are required to set the namespace, for all cases
+        # so namespace never == defaultnamespace.
+        #self.failUnless(ret['allowNamespaceChange'],
+        #        "The configuration's namespace option still should be changeable.")
 
     def test_web_IndexNoNamespaceChange(self):
         """
@@ -353,6 +355,7 @@ class rBASetupTest(raatest.rAATest):
 
         # Merge values written into a config, check
         newCfg = config.MintConfig()
+        newCfg.namespace = 'yournamespace'
         newCfg.read(config.RBUILDER_GENERATED_CONFIG)
 
         # Check values

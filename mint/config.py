@@ -103,7 +103,7 @@ class MintConfig(ConfigFile):
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
        "The default namespace and tag used by products you create in rBuilder")
 
-    namespace               = (cfgtypes.CfgString, 'yournamespace',
+    namespace               = (cfgtypes.CfgString, '',
         "The default namespace used by products you create in rBuilder")
 
     groupApplianceLabel     = (cfgtypes.CfgString, 

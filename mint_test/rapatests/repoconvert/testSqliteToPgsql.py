@@ -326,6 +326,7 @@ exit %d
 
             #Check the new config
             mc = config.MintConfig()
+            mc.namespace = 'yournamespace'
             mc.read(config.RBUILDER_GENERATED_CONFIG)
             self.assertEqual(mc.reposDBDriver, 'postgresql')
             self.assertEqual(mc.reposDBPath, 'postgres@localhost.localdomain:5439/%s')

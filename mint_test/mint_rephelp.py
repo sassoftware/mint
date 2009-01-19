@@ -306,6 +306,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg = config.MintConfig()
 
+        cfg.namespace = 'yournamespace'
         cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.projectDomainName = "%s:%i" % (MINT_PROJECT_DOMAIN,
                 self.sslDisabled and self.port or self.securePort)
