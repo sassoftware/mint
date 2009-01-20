@@ -98,8 +98,11 @@
                           <div py:strip="True" py:if="not project.external">
                             <li py:if="isWriter"><a href="${basePath}resign">Resign</a> from this ${projectText().lower()}</li>
                             <li py:if="joinable">
-                                <span py:if="not userHasReq"><a href="${basePath}joinRequest">Request to join</a> this ${projectText().lower()}</span>
-                                <span py:if="userHasReq"><a href="${basePath}joinRequest">Modify your comments</a> to a pending join request</span></li>
+                              <span py:if="not userHasReq"><a href="${basePath}joinRequest">Request to join</a>
+                                this ${projectText().lower()} as a developer</span>
+                              <span py:if="userHasReq"><a href="${basePath}joinRequest">Modify your comments</a>
+                                to a pending join request</span>
+                            </li>
                             <li py:if="adoptable">
                                 <span py:if="auth.authorized"><a href="${basePath}adopt">Adopt</a> this ${projectText().lower()}</span>
                                 <span py:strip="True" py:if="not auth.authorized">Log in to adopt this ${projectText().lower()}</span></li>

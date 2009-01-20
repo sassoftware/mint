@@ -10,7 +10,6 @@ static_files =				\
 	deleteproject			\
 	ec2-terminator			\
 	generate-certs.sh		\
-	group-pre-script		\
 	group-script			\
 	init-extproducts	        \
 	load-offline-mirror		\
