@@ -40,8 +40,6 @@ groupApplianceLabel     rap.rpath.com@rpath:linux-1
 configured              False
 companyName             Your Company Name Here
 corpSite                http://www.example.com/
-defaultBranch           yournamespace:yourtag
-namespace               yournamespace
 
 # Miscellany
 authUser                mintauth
