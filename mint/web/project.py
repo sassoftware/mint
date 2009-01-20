@@ -1775,7 +1775,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         user = self.client.getUser(userId)
         if self.cfg.sendNotificationEmails:
             subject = "Membership Rejection Notice"
-            body = "Your request to register as a user of the following %s on %s:\n\n" % (pText, self.cfg.productName)
+            body = "Your request to join the following %s on %s:\n\n" % (pText, self.cfg.productName)
             body += "%s\n\n" % self.project.getName()
             body += " has been rejected by the %s's owner.\n\n"%pText
             if comments:
