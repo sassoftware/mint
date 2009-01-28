@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -96,58 +96,11 @@
                             <p class="help">Select a platform on which to base your appliance or component.</p>
                         </td>
                     </tr>
-
-            <tr>
-                <td class="form-label">${projectText().title()} Description:</td>
-                <td>
-                    <textarea rows="6" cols="72" name="blurb" py:content="kwargs['blurb']"></textarea>
-                </td>
-            </tr>
-            <tr>
-                <td class="form-label">${projectText().title()} Home Page:</td>
-                <td>
-                    <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
-                    <p class="help">
-                        Type a URL for an externally-hosted web page that can be identified as
-                        the ${projectText().lower()}'s main online resource.
-                    </p>
-                </td>
-            </tr>
             </table>
 
 
             <h2>Advanced Options</h2>
             <table class="mainformhorizontal">
-            <tr>
-                <td class="form-label">Commits Email:</td>
-                <td>
-                    <input type="text" name="commitEmail" value="${kwargs['commitEmail']}" />
-                    <p class="help">
-                        Type an email address to which notices are sent when users save
-                        work to the ${projectText().lower()}'s repository.  Emails include the commit messages 
-                        required when "committing" ("checking in" or "saving") anything to a 
-                        Conary repository during appliance development.  Emails also include 
-                        Conary's summary of what was committed, typically a list of things that 
-                        changed between the previous commit and the current commit.
-                    </p>
-                </td>
-            </tr>
-                    
-            <tr>
-                <td class="form-label"><em class="required">${projectText().title()} Namespace:</em></td>
-                <td>
-                    <input type="text" name="namespace" value="${kwargs['namespace']}" size="16" maxlength="128"/>
-                    <p class="help">
-                        Type a ${projectText().title()} Namespace for your appliance ${projectText().lower()}.  
-                        Namespaces usually represent the organization behind the ${projectText().lower()}, or the namespace of
-                        the ${projectText().lower()} that is being derived.  Namespaces must start with an alphanumeric
-                        character and can be followed by any number of other alphanumeric characters.
-                        For example: <strong>rpath</strong>, <strong>rpl</strong>, and <strong>fl</strong> 
-                        are all valid namespaces, but 'rPath Linux', and '#' are not valid.
-                    </p>
-                </td>
-            </tr>
-
             <tr py:if="not isRBO()">
                 <td class="form-label"><em class="required">Repository Domain Name:</em></td>
                 <td>
