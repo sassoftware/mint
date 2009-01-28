@@ -1577,7 +1577,7 @@ class EC2SitewideTest(BaseEC2Test):
             cu = origCursor()
             return DummyCursor(cu)
         self.dummyMigration = sqllib.DBversion(45, 5)
-        def setVer(toVer):
+        def setVer(toVer, skipCommit=False):
             self.dummyMigration = toVer
         cursor = db.cursor
         self.mock(db, 'getVersion', lambda *args, **kwargs: self.dummyMigration)
