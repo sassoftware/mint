@@ -130,6 +130,11 @@ Web Front End Changes
 * RSS news and error display are now proper width. (RBL-3784)
 * Fix width of job console plugin. (RBL-4088)
 * Fixed a bug where editing groups was throwing traceback. (RBL-3480)
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+  to the rBuilder. (RBL-4186)
 
 Bug Fixes
 ---------------------
