@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail', 'isPrivate']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'commitEmail']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -18,36 +18,7 @@
     </head>
     <body>
     
-        <script type="text/javascript">
-        <![CDATA[
-            function doSubmit() {
-                var form = document.getElementById('createForm');
-                form.submit();
-            }
         
-            function handleYes() {
-                // they confirmed to create public, so do it
-                doSubmit();
-            }
-            
-            function handleNo() {
-                // do nothing
-            }
-        
-            function handleVisibility() {
-                var isPrivate = document.getElementById('isPrivate');
-                if(isPrivate) {
-                   if(!isPrivate.checked) {
-                      // make them confirm creating public
-                      modalYesNo(handleYes, handleNo);
-                   } else {
-                      // creating private, just do it
-                      doSubmit();
-                   }
-                }
-            }
-        ]]>
-        </script>
     
 
         <div class="fullpage">
@@ -125,25 +96,6 @@
                             <p class="help">Select a platform on which to base your appliance or component.</p>
                         </td>
                     </tr>
-            <tr>
-                <td class="form-label">${projectText().title()} is Private:</td>
-                <td>
-                            <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
-                            <div id="modalYesNo" title="Confirmation" style="display: none;">
-                                    You have selected to create a public ${projectText().title()}. 
-                                    Once a ${projectText().title()} is public it cannot be made 
-                                    private. Are you sure you want to make this ${projectText().title()} 
-                                    public?
-                            </div>
-                            <p class="help">
-                                Check the box if you want the new ${projectText().title()} to be 
-                                a private one. Private ${projectText().title()}s are only accessible
-                                by ${projectText().title()} Team Members (Owners, Developers, and 
-                                Users).  If you choose to make your ${projectText().title()} public, 
-                                do not check the box.
-                            </p>
-                </td>
-            </tr>
 
             <tr>
                 <td class="form-label">${projectText().title()} Description:</td>
@@ -211,7 +163,7 @@
             </tr>
             </table>
             <p class="p-button">
-                <button class="img" type="button" onclick="handleVisibility()">
+                <button class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
                 </button>
             </p>

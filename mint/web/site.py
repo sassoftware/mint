@@ -468,7 +468,7 @@ class SiteHandler(WebHandler):
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace='',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'off',
+               prodtype = '', version = '', commitEmail='', isPrivate = 'on',
                platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth

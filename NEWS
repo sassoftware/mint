@@ -135,6 +135,7 @@ Web Front End Changes
 * The Next Steps plugin has been removed.  (RBL-4186)
 * The rBA Setup plugin now informs users how to login and redirects them
   to the rBuilder. (RBL-4186)
+* Products are created as private by default now. (RBL-4188)
 
 Bug Fixes
 ---------------------
