@@ -5609,9 +5609,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 # Add launch permissions
                 self.addAllEC2LaunchPermissions(userId, 
                                                 newValues['awsAccountNumber'])
-        except:
+        except EC2Exception, e:
+            # see if the error is because the ami no longer exists (ignore)
+            if e.ec2ResponseObj:
+                error = e.ec2ResponseObj.errors and e.ec2ResponseObj.errors[0] or None
+                if error and error["code"] == "InvalidAMIID.Unavailable":
+                    self.db.commit()
+                    return True
+            
+            # if we get here, fail
             self.db.rollback()
             raise
+        except Exception, e:
+            self.db.rollback()
+            raise                
         else:
             self.db.commit()
             return True

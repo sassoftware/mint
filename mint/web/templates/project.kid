@@ -154,7 +154,10 @@
 	        <div id="administer" py:if="auth.admin" class="projectsPaneAction">
                 <a href="http://${SITE}admin/">Site administration</a>
             </div>
-            <p class="rboJoin" >To join an existing ${projectText().lower()}, browse or search above to find the ${projectText().lower()} of interest. Open ${projectText().lower()} page, select "View ${projectText().title()} Membership" and click "Request to join this ${projectText().lower()}."</p>
+            <p class="rboJoin" >To participate in an existing ${projectText().lower()}, browse or
+              search above to find the ${projectText().lower()} of interest. Open the
+              ${projectText().lower()} page, select "View ${projectText().title()} Membership" and
+              click "Request to join this ${projectText().lower()}".</p>
             <div class="projectsPaneBottom">
             </div>
         </div>

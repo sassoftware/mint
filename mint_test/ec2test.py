@@ -719,6 +719,48 @@ conaryproxy = http://proxy.hostname.com/proxy/
                 oldAddAllEC2LaunchPermissions
             client.server._server.removeAllEC2LaunchPermissions = \
                 oldRemoveAllEC2LaunchPermissions
+                
+    @testsuite.tests('RBL-4146')
+    @fixtures.fixture("EC2")
+    def testEC2CredentialsForUserInvalidAMI(self, db, data):
+        """
+        This tests setting credentials for a user where we try to set
+        permissions on an invalid AMI (i.e. removed from S3).
+        """
+        client = self.getClient("admin")
+        
+        def addAllEC2LaunchPermissions(userId, awsAccountNumber):
+            ec2ResponseObj = ec2.ErrorResponseObject()
+            ec2ResponseObj.addError("InvalidAMIID.Unavailable", 
+                "The image ID 'ami-3c1bfe55' is no longer available")
+            raise mint_error.EC2Exception(ec2ResponseObj)
+
+        def validateEC2Credentials(authToken):
+            return True
+                
+        oldValidateAMICredentials = client.server._server.validateEC2Credentials
+        client.server._server.validateEC2Credentials = validateEC2Credentials
+        oldAddAllEC2LaunchPermissions = \
+            client.server._server.addAllEC2LaunchPermissions
+        client.server._server.addAllEC2LaunchPermissions = \
+            addAllEC2LaunchPermissions
+        
+        failed = False
+        
+        try:
+            # try adding the credentials
+            client.setEC2CredentialsForUser(data['adminId'], 'id', 'publicKey',
+                                            'secretKey', False)
+        except:
+            failed = True
+
+        client.server._server.validateEC2Credentials = \
+            oldValidateAMICredentials
+        client.server._server.addAllEC2LaunchPermissions = \
+            oldAddAllEC2LaunchPermissions
+            
+        if failed:
+            self.fail("Should not fail setting EC2 credentials if AMI is missing!")
             
     @fixtures.fixture("EC2")
     def testAddRemoveEC2LaunchPermissions(self, db, data):
