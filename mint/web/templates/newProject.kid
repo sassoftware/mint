@@ -44,17 +44,6 @@
                     </p>
                 </td>
             </tr>
-                    
-            <tr>
-                <td class="form-label"><em class="required">${projectText().title()} Type:</em></td>
-                <td>
-                     <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
-                     <label for="prodtype">Appliance</label>
-                     <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
-                     <label for="prodtype">Component</label>
-                     <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
-                </td>
-            </tr>
 
             <tr>
                 <td class="form-label"><em class="required">${projectText().title()} Short Name:</em></td>
@@ -101,6 +90,16 @@
 
             <h2>Advanced Options</h2>
             <table class="mainformhorizontal">
+            <tr>
+                <td class="form-label"><em class="required">${projectText().title()} Type:</em></td>
+                <td>
+                     <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
+                     <label for="prodtype">Appliance</label>
+                     <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
+                     <label for="prodtype">Component</label>
+                     <p class="help">Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.</p>
+                </td>
+            </tr>
             <tr py:if="not isRBO()">
                 <td class="form-label"><em class="required">Repository Domain Name:</em></td>
                 <td>
@@ -113,7 +112,7 @@
                         the default is sufficient.
                     </p>
                 </td>
-            </tr>
+            </tr>            
             </table>
             <p class="p-button">
                 <button class="img" type="submit">

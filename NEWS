@@ -138,6 +138,8 @@ Web Front End Changes
 * Products are created as private by default now. (RBL-4188)
 * Removed description, home page, commits email, and namespace options
   from "Create Product" page.  (RBL-4188)
+* "Is Appliance" field on "Create Product" page is now an advanced option.
+  (RBL-4188)
 
 Bug Fixes
 ---------------------
