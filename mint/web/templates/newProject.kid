@@ -147,7 +147,7 @@
             </div>
             <p class="p-button">
                 <button class="img" type="submit">
-                    <img src="${cfg.staticPath}/apps/mint/images/next_button.png" alt="Create" />
+                    <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                 </button>
             </p>
         </form>

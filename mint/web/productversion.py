@@ -4,6 +4,7 @@
 # All rights reserved
 #
 
+from mint import helperfuncs
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 def productVersionRequired(func):
@@ -36,7 +37,7 @@ class ProductVersionView(object):
         if versionId < 0:
             self.session.setdefault('currentVersion', {}).pop(self.project.getId(), None)
         else:
-            self.session.setdefault('currentVersion', {})[self.project.getId()] = versionId
+            helperfuncs.setCurrentProductVersion(self.session, self.project.getId(), versionId)
         self.session.save()
 
     @intFields(versionId=-1)

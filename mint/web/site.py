@@ -534,9 +534,10 @@ class SiteHandler(WebHandler):
                     self._addErrors(str(e))
                 
         if not self._getErrors():
-            # don't output status here since we now move on the updating the 
-            # version.  Status will be updated after that.
-            self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
+            helperfuncs.setCurrentProductVersion(self.session, projectId, versionId)
+            self._setInfo("Successfully created %s %s '%s' version '%s'" % \
+                              (isPrivate and "private" or "public", pText, title, version))
+            self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
             availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
