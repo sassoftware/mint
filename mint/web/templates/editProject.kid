@@ -90,7 +90,11 @@
                     </tr>
                     </table>
                     
-                    <h2>Advanced Options</h2>
+                    <div class="expandableFormGroupTitle" onclick="javascript:toggle_display('advanced_settings');">
+                        Advanced Options
+                        <img id="advanced_settings_expander" class="noborder" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />
+                    </div>
+                    <div id="advanced_settings" class="formgroup" style="display: none;">
                     <table class="mainformhorizontal">
                     <tr>
                         <td class="form-label">Is Private:</td>
@@ -152,6 +156,7 @@
                             </td>
                         </tr>
                     </table>
+                   </div>
 
                    <p class="p-button"><button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button></p>
                     </form>
