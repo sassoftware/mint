@@ -5,7 +5,7 @@
 # may be adjusted by recipe (via make commandline)
 DESTDIR =	/
 export PRODUCT =	rbuilder
-export VERSION =	4.1
+export VERSION =	5.0
 export SHORTVER =	$(VERSION)
 export TOPDIR =		$(shell pwd)
 export DISTNAME =	$(PRODUCT)-$(SHORTVER)
