@@ -1,5 +1,9 @@
 Changes in @NEW@
 ===============
+
+
+Changes in 5.0.0
+===============
 API Changes
 ---------------------
 * Methods getPackageCreatorRecipe and savePackageCreatorRecipe have been added 
@@ -9,7 +13,6 @@ API Changes
   along with the rest of the information about the build. (RBL-3586)
 * Developers can now create and edit releases, but cannot 
   publish or unpublish them. (RBL-4081)
-  
 
 Internal Changes
 ---------------------
