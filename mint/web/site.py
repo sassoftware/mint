@@ -438,7 +438,9 @@ class SiteHandler(WebHandler):
            customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
                    'appliance': 'unknown', 
-                   'prodtype' : 'Appliance',
+                   'prodtype' : 'Appliance', 
+                   'namespace': self.cfg.namespace,
+                   'isPrivate': False,
                    'platformLabel': platformLabel})
 
     @mailList
@@ -465,8 +467,8 @@ class SiteHandler(WebHandler):
         return not error
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
-               blurb = '', appliance = 'unknown', shortname = '', namespace = '',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'on',
+               blurb = '', appliance = 'unknown', shortname = '', namespace='',
+               prodtype = '', version = '', commitEmail='', isPrivate = 'off',
                platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth
@@ -481,7 +483,7 @@ class SiteHandler(WebHandler):
 
         pText = getProjectText().lower()
         if not namespace:
-            namespace = self.cfg.namespace
+            self._addErrors('You must supply a %s namespace' % pText)
         if not title:
             self._addErrors("You must supply a %s title"%pText)
         if not shortname:
