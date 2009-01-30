@@ -34,9 +34,7 @@
             <table class="mainformhorizontal">
             <tr>
                 <td class="form-label">
-                    <div class="required-help" onclick="javascript:toggle_display('title_help');">
-                        ${projectText().title()} Title
-                    </div>
+                    ${formLabelWithHelp("title_help", projectText().title() + " Title")}
                 </td>
                 <td>
                     <input type="text" autocomplete="off" name="title" value="${kwargs['title']}"/>
@@ -51,9 +49,7 @@
 
             <tr>
                 <td class="form-label">
-                    <div class="required-help" onclick="javascript:toggle_display('sn_help');">
-                        ${projectText().title()} Short Name
-                    </div>
+                    ${formLabelWithHelp("sn_help", projectText().title() + " Short Name")}
                 </td>
                 <td>
                     <input type="text" autocomplete="off" name="shortname" value="${kwargs['shortname']}" maxlength="16"/>
@@ -70,9 +66,7 @@
 
             <tr>
                 <td class="form-label">
-                    <div class="required-help" onclick="javascript:toggle_display('version_help');">
-                        ${projectText().title()} Major Version
-                    </div>
+                    ${formLabelWithHelp("version_help", projectText().title() + " Major Version")}
                 </td>
                 <td>
                     <input type="text" name="version" value="${kwargs['version']}" size="16" maxlength="128"/>
@@ -89,9 +83,7 @@
             
             <tr py:if="availablePlatforms">
                 <td class="form-label">
-                    <div class="required-help" onclick="javascript:toggle_display('platform_help');">
-                        Select Platform
-                    </div>
+                    ${formLabelWithHelp("platform_help", projectText().title() + " Platform")}
                 </td>
                 <td>
                     <select name="platformLabel">
@@ -112,9 +104,7 @@
                 <table class="mainformhorizontal">
                 <tr>
                     <td class="form-label">
-                        <div class="required-help" onclick="javascript:toggle_display('type_help');">
-                            ${projectText().title()} Type
-                        </div>
+                        ${formLabelWithHelp("type_help", projectText().title() + " Type")}
                     </td>
                     <td>
                          <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
@@ -128,9 +118,7 @@
                 </tr>
                 <tr py:if="not isRBO()">
                     <td class="form-label">
-                        <div class="required-help" onclick="javascript:toggle_display('dn_help');">
-                            Repository Domain Name
-                        </div>
+                        ${formLabelWithHelp("dn_help", "Repository Domain Name")}
                     </td>
                     <td>
                         <input type="text" name="domainname" value="${kwargs['domainname']}" />
