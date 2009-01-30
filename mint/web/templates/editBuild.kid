@@ -102,9 +102,9 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
 
                     <div class="expandableFormGroupTitle" onclick="javascript:toggle_display('advanced_settings');">
-                        Advanced Options
                         <img id="advanced_settings_expander" class="noborder" 
                             src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />
+                        Advanced Options
                     </div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">
