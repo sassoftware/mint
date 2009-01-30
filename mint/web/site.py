@@ -437,8 +437,7 @@ class SiteHandler(WebHandler):
            availablePlatforms = availablePlatforms,
            customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
-                   'appliance': 'unknown', 
-                   'prodtype' : 'Appliance',
+                   'appliance': 'unknown',
                    'platformLabel': platformLabel})
 
     @mailList
@@ -466,7 +465,7 @@ class SiteHandler(WebHandler):
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace = '',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'on',
+               prodtype = 'Appliance', version = '', commitEmail='', isPrivate = 'on',
                platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth

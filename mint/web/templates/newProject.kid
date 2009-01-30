@@ -102,20 +102,6 @@
             </div>
             <div id="advanced_settings" class="formgroup" style="display: none;">
                 <table class="mainformhorizontal">
-                <tr>
-                    <td class="form-label">
-                        ${formLabelWithHelp("type_help", projectText().title() + " Type")}
-                    </td>
-                    <td>
-                         <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Appliance" py:attrs="{'checked': (kwargs['prodtype'] == 'Appliance') and 'checked' or None}" checked="checked"/>
-                         <label for="prodtype">Appliance</label>
-                         <input style="width: auto;" id="prodtype" type="radio" name="prodtype" value="Component" py:attrs="{'checked': (kwargs['prodtype'] == 'Component') and 'checked' or None}" />
-                         <label for="prodtype">Component</label>
-                         <div id="type_help" class="help" style="display: none;">
-                             Please select "Appliance" if this ${projectText().lower()}'s main purpose is to produce a software appliance.
-                         </div>
-                    </td>
-                </tr>
                 <tr py:if="not isRBO()">
                     <td class="form-label">
                         ${formLabelWithHelp("dn_help", "Repository Domain Name")}
