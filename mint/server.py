@@ -2879,6 +2879,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
 
+            if self.cfg.ec2ProductCode:
+                amiData['ec2ProductCode'] = self.cfg.ec2ProductCode
+
             r['amiData'] = amiData
 
         r['outputUrl'] = 'http://%s.%s%s' % \
