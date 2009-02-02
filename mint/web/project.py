@@ -1872,6 +1872,20 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
+            
+    @requiresAuth
+    @boolFields(confirmed = False)
+    @dictFields(yesArgs = {})
+    def deleteProject(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pName = self.project.name
+            self._setInfo("%s '%s' has been deleted." % \
+                    (getProjectText().title(), pName))
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            noLink = "http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.getHostname())
+            return self._write("confirm", message = "Are you sure you want to delete this %s?" % getProjectText().lower(),
+                yesArgs = {'func':'deleteProject', 'confirmed':'1'}, noLink = noLink)
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):

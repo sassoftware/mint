@@ -72,6 +72,9 @@ from mint.web.templatesupport import projectText
                             Select a product version above to edit that version<span py:if="project.isAppliance" py:strip="True">, or manage the appliance</span>
                             </li>
                             <li py:if="versions and currentVersion and project.isAppliance"><a href="${cfg.basePath}apc/${project.shortname}/">Manage</a> the ${project.getNameForDisplay(maxWordLen=25)} ${truncateForDisplay(formatProductVersion(versions, currentVersion), maxWordLen=30)} appliance</li>
+                            <li py:if="not external">
+                                <a href="${basePath}deleteProject">Delete</a> this ${projectText().lower()}
+                            </li>
                         </ul>
                     </div>
                     <div class="pageSection" py:if="isWriter">
