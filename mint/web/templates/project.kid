@@ -146,9 +146,6 @@
         </div>
         <div class="boxBody" py:if="not projectList">
             <div class="projectsPaneActionTop">
-                <a href="http://${SITE}newAppliance">Create a new appliance</a>
-            </div>
-            <div class="projectsPaneActionTop">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
             </div>
             <div id="userSettings" class="projectsPaneAction">
@@ -187,9 +184,6 @@
                     <option value="--">--</option>
                     <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl()}members">${project.getName()}</option>
                 </select>
-            </div>
-            <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
-                <a href="http://${SITE}newAppliance">Create a new appliance</a>
             </div>
             <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
