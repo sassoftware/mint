@@ -4,6 +4,8 @@ plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/F
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 services.Services.hidden = True
+apphome.visible = True
+apphome.text = "rBuilder"
 
 # Wizard plugins to run in this order. 
 # -- Terms of service should always be first!

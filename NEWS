@@ -136,6 +136,7 @@ Web Front End Changes
 * The rBA Setup plugin now informs users how to login and redirects them
   to the rBuilder. (RBL-4186)
 * The "Create Product" page has been re-designed. (RBL-4188)
+* rPA now contains an icons/link to access the rBuilder. (RBL-4179)
 
 
 Bug Fixes
