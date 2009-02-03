@@ -1082,8 +1082,11 @@ class MintServer(object):
     @requiresAuth
     def listJoinRequests(self, projectId):
         self._filterProjectAccess(projectId)
-        reqList = self.membershipRequests.listRequests(projectId)
+        reqList = self._listAllJoinRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
+    
+    def _listAllJoinRequests(self, projectId):
+        return self.membershipRequests.listRequests(projectId)
 
     @typeCheck(int, str)
     @private
@@ -2630,13 +2633,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([ x[1] for x in scored if x[0] == maxScore ], 
                       key=lambda x: x[2])[-1:]
 
-    @typeCheck(int)
-    @requiresAuth
-    def deleteBuild(self, buildId):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
+    def _deleteBuild(self, buildId, force=False):
+        if not self.builds.buildExists(buildId)  and not force:
             raise BuildMissing()
-        if self.builds.getPublished(buildId):
+
+        if self.builds.getPublished(buildId) and not force:
             raise BuildPublished()
 
         try:
@@ -2659,6 +2660,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
             for urlId, urlType, url in fileUrlList:
+                if self.db.driver == 'sqlite':
+                    # sqlite doesn't do cascading deletes, so we'll do it for them
+                    self.buildFilesUrlsMap.delete(fileId, urlId)
                 # if this location is local, delete the file
                 if urlType == urltypes.LOCAL:
                     fileName = url
@@ -2679,6 +2683,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                 raise
 
         return True
+
+    @typeCheck(int)
+    @requiresAuth
+    def deleteBuild(self, buildId):
+        """
+        Delete a build
+        @param buildId: The id of the build to delete
+        @type buildId: C{int}
+        """
+        self._filterBuildAccess(buildId)
+        return self._deleteBuild(buildId, force=False)      
 
     @typeCheck(str)
     @requiresAuth
@@ -6177,3 +6192,98 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
         self.newsCache.refresh()
+        return True
+        
+    @typeCheck(int)
+    @requiresAuth
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        
+        project = projects.Project(self, projectId)
+        reposName = self._translateProjectFQDN(project.getFQDN())
+        
+        if project.external and not self.isLocalMirror(project.id):
+            # can't do it
+            return False
+        
+        # this should not fail at this point, delete what we can and move on
+        try:
+            # delete the images
+            imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
+            util.rmtree(imagesDir, ignore_errors = True)
+            
+            # delete the repository
+            if self.db.driver != 'sqlite':
+                try:
+                    cu = self.db.cursor()
+                    cu.execute("DROP DATABASE %s" % reposName)
+                except sqlerrors.DatabaseError, e:
+                    # ignore unless it's a "Can't drop database error"
+                    if e.args[0][1] != 1008:
+                        raise
+            util.rmtree(self.cfg.reposPath + reposName, ignore_errors = True)
+            
+            # delete the entitlements
+            entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
+            util.rmtree(entFile, ignore_errors = True)
+            
+            # delete the group troves
+            troves = self.groupTroves.listGroupTrovesByProject(project.id)
+            for trove in troves:
+                self.groupTroves.delGroupTrove(trove[0])
+            
+            # delete the releases
+            pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
+                            project.id, publishedOnly=False)
+            for id in pubRelIds:
+                self.publishedReleases.delete(id)
+            
+            # delete the builds
+            for buildId in self.builds.iterBuildsForProject(project.id):
+                self._deleteBuild(buildId, force=True)
+            
+            # delete the membership requests
+            self.membershipRequests.deleteRequestsByProject(project.id)
+            
+            # delete the commits
+            self.commits.deleteCommitsByProject(project.id)
+            
+            # delete package indices
+            self.pkgIndex.deleteByProject(project.id)
+            
+            # delete project user references
+            users = self.projectUsers.getMembersByProjectId(project.id)
+            for userId, _, _ in users:
+                self.projectUsers.delete(project.id, userId, force=True)
+            
+            # delete inbound mirror
+            ibmirror = self.getInboundMirror(project.id)
+            if ibmirror:
+                self.delInboundMirror(ibmirror['inboundMirrorId'])
+            
+            # delete outbound mirror 
+            obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
+            if obmirror:
+                self.delOutboundMirror(obmirror['outboundMirrorId'])
+            
+            # delete project labels
+            labelIdMap, _, _, _ = self.labels.getLabelsForProject(project.id)
+            for labelId in labelIdMap.itervalues():
+                self.labels.removeLabel(project.id, labelId)
+            
+            # delete repo names
+            self.delRemappedRepository(project.getFQDN())
+            
+            # delete the project itself
+            self.projects.delete(project.id)
+        except Exception, e:
+            # log error?
+            pass
+        
+        return True
