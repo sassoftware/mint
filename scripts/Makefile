@@ -44,7 +44,7 @@ httpdgraceful:
 	gcc httpd-graceful.c -o httpd-graceful
 
 httpdgraceful-install:
-	install -m4755 httpd-graceful $(DESTDIR)/usr/libexec/
+	install -D -m4755 httpd-graceful $(DESTDIR)/usr/libexec/httpd-graceful
 
 httpdgraceful-clean:
 	rm -f httpd-graceful
