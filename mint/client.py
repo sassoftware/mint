@@ -85,6 +85,23 @@ class MintClient:
         """
         return self.server.newExternalProject(name, hostname, domainname,
                                               label, url, mirror)
+        
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        return self.server.deleteProject(projectId)
+    
+    def deleteProjectByName(self, hostname):
+        """
+        Delete a project
+        @param hostname: The hostname of the project to delete
+        @type hostname: C{str}
+        """
+        project = self.getProjectByHostname(hostname)
+        return self.server.deleteProject(project.id)
 
     def checkAuth(self):
         """

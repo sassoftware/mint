@@ -1872,6 +1872,28 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
+            
+    @requiresAuth
+    @boolFields(confirmed = False)
+    @dictFields(yesArgs = {})
+    def deleteProject(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pName = self.project.name
+            self.client.deleteProject(self.project.id)
+            self._setInfo("%s '%s' has been deleted." % \
+                    (getProjectText().title(), pName))
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            pText = getProjectText().lower()
+            noLink = "http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.getHostname())
+            return self._write("confirm",
+                message = """Are you sure you want to delete this %s?  This is an irreversable 
+                             operation!  If there are downstream consumers of this %s, please 
+                             note that 1) they will no longer be able to consume this %s
+                             and 2) they will be affected by severe unintended consequences
+                             should a %s be created with this same name.                   
+                             """ % (pText, pText, pText, pText),
+                yesArgs = {'func':'deleteProject', 'confirmed':'1'}, noLink = noLink)
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):

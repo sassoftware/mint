@@ -813,6 +813,146 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         self.assertRaises(DuplicateLabel, project.addLabel,
                           project.getLabel(), '')
+        
+    @fixtures.fixture('Full')
+    def testDeleteProject(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        
+        # make sure there is at least 1 group trove
+        self.failUnless(len(client.listGroupTrovesByProject(project.id)) > 0, 
+            "Need at least one group trove for a valid test")
+        
+        # make sure there is at least 1 build
+        self.failUnless(len(client.server._server.getBuildsForProject(project.id)) > 0, 
+            "Need at least one build for a valid test")
+        
+        # make sure there is at least 1 published release
+        self.failUnless(len(client.server._server.getPublishedReleasesByProject(project.id)) > 0, 
+            "Need at least one published release for a valid test")
+        
+        # make sure there is at least one membership request
+        client.server._server.membershipRequests.setComments(project.id, '80', 'some comment')
+        self.failUnless(len(client.server._server._listAllJoinRequests(project.id)) > 0, 
+            "Need at least one membership request for a valid test")
+        
+        # make sure there is at least 1 commit
+        client.server.registerCommit(project.getFQDN(), 'testuser', 'mytrove:source',
+                                     '/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1')
+        self.failUnless(len(client.server._server.getCommitsForProject(project.id)) > 0, 
+            "Need at least one commit for a valid test")
+        
+        # make sure there is at least 1 project user
+        self.failUnless(len(client.server._server.getMembersByProjectId(project.id)) > 0, 
+            "Need at least one project user for a valid test")        
+        
+        # make sure there is an inbound and outbound mirror
+        client.addInboundMirror(project.id, ['conary.rpath.com@rpl:1'],
+            'http://example.com/conary/', 'user', 'pass')
+        client.addOutboundMirror(project.id,
+                ["localhost.rpath.local2@rpl:devel"], allLabels = True)
+        
+        # add repo name map
+        client.addRemappedRepository('somefrom', project.getFQDN())
+        
+        # add entitlement
+        entDir = self.cfg.dataPath + "/entitlements"
+        os.mkdir(entDir)
+        entFile = os.path.join(entDir, "foo.%s" % MINT_PROJECT_DOMAIN)
+        f = open(entFile, 'w')
+        f.write("...")
+        f.close()
+        
+        # add image files
+        imageDir = os.path.join(self.cfg.imagesPath, project.hostname)
+        os.mkdir(imageDir)
+        f = open(os.path.join(imageDir, "someimagefile"), 'w')
+        f.write("...")
+        f.close()
+
+        # delete the project
+        self.failUnless(client.deleteProject(project.id) == True, "Failed deleting project")
+
+        # make sure project is gone
+        self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
+        
+        # make sure entitlement file is gone
+        self.failUnless(not os.path.exists(entFile))
+        
+        # make sure images dir is gone
+        self.failUnless(not os.path.exists(imageDir))
+        
+        # make sure the group troves have been removed
+        self.failUnless(len(client.listGroupTrovesByProject(project.id)) == 0, 
+            "Failed deleting group troves")
+        
+        # make sure the builds have been removed
+        self.failUnless(len(client.server._server.getBuildsForProject(project.id)) == 0, 
+            "Failed deleting builds")
+        
+        # make sure the published releases have been removed
+        self.failUnless(len(client.server._server.getPublishedReleasesByProject(project.id)) == 0, 
+            "Failed deleting published releases")
+        
+        # make sure the membership requests have been removed
+        self.failUnless(len(client.server._server._listAllJoinRequests(project.id)) == 0, 
+            "Failed deleting membership requests")
+        
+        # make sure commits have been removed
+        self.failUnless(len(client.server._server.getCommitsForProject(project.id)) == 0, 
+            "Failed deleting commits")
+        
+        # make sure project user references have been removed
+        self.failUnless(len(client.server._server.getMembersByProjectId(project.id)) == 0, 
+            "Failed deleting project users")
+        
+        # make sure mirrors are gone
+        self.failUnless(len(client.server._server.getInboundMirror(project.id)) == 0, 
+            "Failed deleting inbound mirror")
+        self.failUnless(len(client.server._server.outboundMirrors.getOutboundMirrorByProject(project.id)) == 0, 
+            "Failed deleting outbound mirror")
+        
+        # make sure project labels are gone
+        self.failUnless(client.server._server.getLabelsForProject(project.id, False, '', '') == ({}, {}, [], []), 
+            "Failed deleting project labels")
+        
+        # make sure repo map names are gone
+        self.failUnless(client.server._server.repNameMap.getCountByFromName(project.getFQDN()) == 0, 
+            "Failed deleting repo map names")
+        
+        
+    @fixtures.fixture('Full')
+    def testDeleteExternalProject(self, db, data):
+        client = self.getClient('admin')
+        projectId = client.newExternalProject('rPath Linux', 'rpath',
+                          'rpath.local', 'conary.rpath.com@rpl:devel', '')
+
+        project = client.getProject(projectId)
+
+        # call the database deletion script
+        self.failUnless(client.deleteProject(project.id) == False, "Don't allow deleting external projects")
+        
+    @fixtures.fixture('Full')
+    def testDeleteExternalProjectLocalMirror(self, db, data):
+        client = self.getClient('admin')
+        projectId = client.newExternalProject('rPath Linux', 'rpath',
+                          'rpath.local', 'conary.rpath.com@rpl:devel', '')
+
+        project = client.getProject(projectId)
+        client.addInboundMirror(project.id, ['conary.rpath.com@rpl:1'],
+            'http://example.com/conary/', 'user', 'pass')
+        project.refresh()
+
+        # call the database deletion script
+        self.failUnless(client.deleteProject(project.id) == True, "Allow deleting external projects if local mirror")
+        
+    @fixtures.fixture('Full')
+    def testDeleteProjectNotOwner(self, db, data):
+        adminClient = self.getClient('admin')
+        project = adminClient.getProject(data['projectId'])
+        
+        client = self.getClient('nobody')
+        self.assertRaises(PermissionDenied, client.deleteProject, project.id)
 
     @fixtures.fixture('Full')
     def testDeleteProjectScript(self, db, data):

@@ -593,9 +593,10 @@ class ProjectUsersTable(database.DatabaseTable):
             return False
         return self.onlyOwner(projectId, userId)
 
-    def delete(self, projectId, userId, commit=True):
+    def delete(self, projectId, userId, commit=True, force=False):
         if self.lastOwner(projectId, userId):
-            raise LastOwner()
+            if not force:
+                raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
         if commit:

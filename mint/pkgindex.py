@@ -43,4 +43,9 @@ class PackageIndexTable(database.KeyedTable):
             ids[i] = list(x)
 
         return ids, count
+    
+    def deleteByProject(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
+        self.db.commit()
 

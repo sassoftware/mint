@@ -15,6 +15,11 @@ class BuildFilesUrlsMapTable(database.KeyedTable):
     name = 'BuildFilesUrlsMap'
     key = 'fileId'
     fields = ['fileId', 'urlId']
+    
+    def delete(self, fileId, urlId):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM BuildFilesUrlsMap WHERE fileId = ? AND urlId = ?", fileId, urlId)
+        self.db.commit()
 
 class FilesUrlsTable(database.KeyedTable):
     name = 'FilesUrls'
