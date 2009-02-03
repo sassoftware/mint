@@ -6220,6 +6220,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # can't do it
             return False
         
+        self.db.flush()
+        
+        # delete the project itself
+        self.projects.delete(project.id)
+            
+        # delete project labels
+        labelIdMap, _, _, _ = self.labels.getLabelsForProject(project.id)
+        for labelId in labelIdMap.itervalues():
+            self.labels.removeLabel(project.id, labelId)
+        
         # this should not fail at this point, delete what we can and move on
         
         # delete the images
@@ -6316,24 +6326,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except Exception, e:
             handleNonFatalException('delete-outbound-mirrors')
         
-        # delete project labels
-        try:
-            labelIdMap, _, _, _ = self.labels.getLabelsForProject(project.id)
-            for labelId in labelIdMap.itervalues():
-                self.labels.removeLabel(project.id, labelId)
-        except Exception, e:
-            handleNonFatalException('delete-labels')
-        
         # delete repo names
         try:
             self.delRemappedRepository(project.getFQDN())
         except Exception, e:
             handleNonFatalException('delete-repo-names')
-        
-        # delete the project itself
-        try:
-            self.projects.delete(project.id)
-        except Exception, e:
-            handleNonFatalException('delete-project')
         
         return True
