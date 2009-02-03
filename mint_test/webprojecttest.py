@@ -193,6 +193,24 @@ class WebProjectTest(WebProjectBaseTest):
                                   code=[200],
                                   content='currently in progress',
                                   server=self.getProjectServerHostname())
+        
+    def testDeleteProject(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+       
+        self.webLogin('testuser', 'testpass')
+        
+        page = self.fetch('/project/testproject/deleteProject',
+                          server=self.getProjectServerHostname())
+        assert "deleteProject" in page.body
+        project.refresh()
+        page = self.fetch('/project/testproject/deleteProject?confirmed=1',
+                          server=self.getProjectServerHostname())
+        self.assertRaises(database.ItemNotFound, client.getProject, projectId)
 
     def testGroupPerms(self):
         raise testsuite.SkipTestException('This test depends on accessing conary.rpath.com through the proxy (and thus requires a multi-process mint server as well as conary.rpath.com being accessible)')

@@ -6216,12 +6216,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return False
         
         # this should not fail at this point, delete what we can and move on
+        
+        # delete the images
         try:
-            # delete the images
             imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
             util.rmtree(imagesDir, ignore_errors = True)
-            
-            # delete the repository
+        except Exception, e:
+            pass
+        
+        # delete the repository
+        try:
             if self.db.driver != 'sqlite':
                 try:
                     cu = self.db.cursor()
@@ -6231,62 +6235,100 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if e.args[0][1] != 1008:
                         raise
             util.rmtree(self.cfg.reposPath + reposName, ignore_errors = True)
-            
-            # delete the entitlements
+        except Exception, e:
+            pass
+        
+        # delete the entitlements
+        try:
             entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
             util.rmtree(entFile, ignore_errors = True)
-            
-            # delete the group troves
+        except Exception, e:
+            pass
+        
+        # delete the group troves
+        try:
             troves = self.groupTroves.listGroupTrovesByProject(project.id)
             for trove in troves:
                 self.groupTroves.delGroupTrove(trove[0])
-            
-            # delete the releases
+        except Exception, e:
+            pass
+        
+        # delete the releases
+        try:
             pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
                             project.id, publishedOnly=False)
             for id in pubRelIds:
                 self.publishedReleases.delete(id)
-            
-            # delete the builds
+        except Exception, e:
+            pass
+        
+        # delete the builds
+        try:
             for buildId in self.builds.iterBuildsForProject(project.id):
                 self._deleteBuild(buildId, force=True)
-            
-            # delete the membership requests
+        except Exception, e:
+            pass
+        
+        # delete the membership requests
+        try:
             self.membershipRequests.deleteRequestsByProject(project.id)
-            
-            # delete the commits
+        except Exception, e:
+            pass
+        
+        # delete the commits
+        try:
             self.commits.deleteCommitsByProject(project.id)
-            
-            # delete package indices
+        except Exception, e:
+            pass
+        
+        # delete package indices
+        try:
             self.pkgIndex.deleteByProject(project.id)
-            
-            # delete project user references
+        except Exception, e:
+            pass
+        
+        # delete project user references
+        try:
             users = self.projectUsers.getMembersByProjectId(project.id)
             for userId, _, _ in users:
                 self.projectUsers.delete(project.id, userId, force=True)
-            
-            # delete inbound mirror
+        except Exception, e:
+            pass
+        
+        # delete inbound mirror
+        try:
             ibmirror = self.getInboundMirror(project.id)
             if ibmirror:
                 self.delInboundMirror(ibmirror['inboundMirrorId'])
-            
-            # delete outbound mirror 
+        except Exception, e:
+            pass
+        
+        # delete outbound mirror
+        try:
             obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
             if obmirror:
                 self.delOutboundMirror(obmirror['outboundMirrorId'])
-            
-            # delete project labels
+        except Exception, e:
+            pass
+        
+        # delete project labels
+        try:
             labelIdMap, _, _, _ = self.labels.getLabelsForProject(project.id)
             for labelId in labelIdMap.itervalues():
                 self.labels.removeLabel(project.id, labelId)
-            
-            # delete repo names
+        except Exception, e:
+            pass
+        
+        # delete repo names
+        try:
             self.delRemappedRepository(project.getFQDN())
-            
-            # delete the project itself
+        except Exception, e:
+            pass
+        
+        # delete the project itself
+        try:
             self.projects.delete(project.id)
         except Exception, e:
-            # log error?
             pass
         
         return True
