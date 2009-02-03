@@ -57,6 +57,7 @@ from mint import urltypes
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.logerror import logErrorAndEmail
 from mint import packagecreator
 
 from mcp import client as mcpClient
@@ -6208,6 +6209,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         
+        def handleNonFatalException(desc):
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.cfg, e_type, e_value, e_tb, desc, {}, doEmail=False)
+        
         project = projects.Project(self, projectId)
         reposName = self._translateProjectFQDN(project.getFQDN())
         
@@ -6222,7 +6227,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
             util.rmtree(imagesDir, ignore_errors = True)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-images')
         
         # delete the repository
         try:
@@ -6236,14 +6241,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         raise
             util.rmtree(self.cfg.reposPath + reposName, ignore_errors = True)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-repo')
         
         # delete the entitlements
         try:
             entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
             util.rmtree(entFile, ignore_errors = True)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-entitlements')
         
         # delete the group troves
         try:
@@ -6251,7 +6256,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             for trove in troves:
                 self.groupTroves.delGroupTrove(trove[0])
         except Exception, e:
-            pass
+            handleNonFatalException('delete-group-troves')
         
         # delete the releases
         try:
@@ -6260,32 +6265,32 @@ If you would not like to be %s %s of this project, you may resign from this proj
             for id in pubRelIds:
                 self.publishedReleases.delete(id)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-releases')
         
         # delete the builds
         try:
             for buildId in self.builds.iterBuildsForProject(project.id):
                 self._deleteBuild(buildId, force=True)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-builds')
         
         # delete the membership requests
         try:
             self.membershipRequests.deleteRequestsByProject(project.id)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-membership-requests')
         
         # delete the commits
         try:
             self.commits.deleteCommitsByProject(project.id)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-commits')
         
         # delete package indices
         try:
             self.pkgIndex.deleteByProject(project.id)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-package-indices')
         
         # delete project user references
         try:
@@ -6293,7 +6298,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             for userId, _, _ in users:
                 self.projectUsers.delete(project.id, userId, force=True)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-project-users')
         
         # delete inbound mirror
         try:
@@ -6301,7 +6306,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if ibmirror:
                 self.delInboundMirror(ibmirror['inboundMirrorId'])
         except Exception, e:
-            pass
+            handleNonFatalException('delete-inbound-mirrors')
         
         # delete outbound mirror
         try:
@@ -6309,7 +6314,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if obmirror:
                 self.delOutboundMirror(obmirror['outboundMirrorId'])
         except Exception, e:
-            pass
+            handleNonFatalException('delete-outbound-mirrors')
         
         # delete project labels
         try:
@@ -6317,18 +6322,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
             for labelId in labelIdMap.itervalues():
                 self.labels.removeLabel(project.id, labelId)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-labels')
         
         # delete repo names
         try:
             self.delRemappedRepository(project.getFQDN())
         except Exception, e:
-            pass
+            handleNonFatalException('delete-repo-names')
         
         # delete the project itself
         try:
             self.projects.delete(project.id)
         except Exception, e:
-            pass
+            handleNonFatalException('delete-project')
         
         return True
