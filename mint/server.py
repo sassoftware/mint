@@ -6198,6 +6198,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.newsCache.refresh()
         return True
         
+    def _gracefulHttpd(self):
+        return os.system('/usr/share/rbuilder/scripts/httpd-graceful')
+        
     @typeCheck(int)
     @requiresAuth
     def deleteProject(self, projectId):
@@ -6219,18 +6222,39 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if project.external and not self.isLocalMirror(project.id):
             # can't do it
             return False
+                
+        self.db.transaction()
         
-        self.db.flush()
-        
-        # delete the project itself
-        self.projects.delete(project.id)
+        try:
+            # we need to make sure the project is deleted before we can continue.
+            # just fail after trying a couple of times
+            numTries = 0
+            maxTries = 3
+            deleted = False
+            while (numTries < maxTries) and not deleted:
+                # need to graceful httpd to try to get cached db connections closed
+                self._gracefulHttpd()
+                
+                # delete the project itself
+                try:
+                    self.projects.deleteProject(project.id, commit=False)
+                    deleted = True
+                except Exception, e:
+                    if numTries >= maxTries:
+                        raise
+                    else:
+                        time.sleep(1)
+                        numTries += 1
             
-        # delete project labels
-        labelIdMap, _, _, _ = self.labels.getLabelsForProject(project.id)
-        for labelId in labelIdMap.itervalues():
-            self.labels.removeLabel(project.id, labelId)
+            # delete project labels - must be successful to continue
+            self.labels.deleteLabels(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
         
-        # this should not fail at this point, delete what we can and move on
+        self.db.commit()        
+        
+        # this should not fail after this point, delete what we can and move on
         
         # delete the images
         try:

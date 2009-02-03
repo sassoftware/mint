@@ -920,6 +920,34 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnless(client.server._server.repNameMap.getCountByFromName(project.getFQDN()) == 0, 
             "Failed deleting repo map names")
         
+    @fixtures.fixture('Full')
+    def testDeleteProjectFailure(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        
+        self.numGracefulHttp = 0
+        
+        def myGracefulHttpd():
+            self.numGracefulHttp += 1
+        
+        orgGracefulHttpd = client.server._server._gracefulHttpd
+        client.server._server._gracefulHttpd = myGracefulHttpd
+
+        try:
+            # delete the project
+            self.failUnless(client.deleteProject(project.id) == True, "This must succeed to be valid test")
+            
+            # try deleting again
+            numGracefulHttp = 0
+            failures = 0
+            try:
+                client.deleteProject(project.id)
+            except Exception, e:
+                failures += 1
+            
+            self.failUnless(failures == self.numGracefulHttp)
+        finally:
+            client.server._server._gracefulHttpd = orgGracefulHttpd
         
     @fixtures.fixture('Full')
     def testDeleteExternalProject(self, db, data):
@@ -929,7 +957,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         project = client.getProject(projectId)
 
-        # call the database deletion script
         self.failUnless(client.deleteProject(project.id) == False, "Don't allow deleting external projects")
         
     @fixtures.fixture('Full')

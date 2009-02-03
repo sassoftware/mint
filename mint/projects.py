@@ -325,6 +325,17 @@ class ProjectsTable(database.KeyedTable):
             if len(results) > 0:
                 raise DuplicateName()
         return id
+    
+    def deleteProject(self, projectId, commit=True):
+        try:
+            cu = self.db.cursor()
+            cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            if commit:
+                self.db.commit()
 
     def getProjectsList(self):
         cu = self.db.cursor()
@@ -778,6 +789,16 @@ class LabelsTable(database.KeyedTable):
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
 
+    def deleteLabels(self, projectId, commit=True):
+        try:
+            cu = self.db.cursor()
+            cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            if commit:
+                self.db.commit()
 
 class Databases(database.KeyedTable):
     name = "ReposDatabases"
