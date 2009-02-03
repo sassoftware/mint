@@ -23,23 +23,22 @@ def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
   location='web interface', doEmail=True):
     from mod_python import apache
     
-    if req:
-        conn = req.connection
-        req.add_common_vars()
-        info_dict = {
-            'local_addr'     : conn.local_ip + ':' + str(conn.local_addr[1]),
-            'local_host'     : conn.local_host,
-            'protocol'       : req.protocol,
-            'hostname'       : req.hostname,
-            'request_time'   : time.ctime(req.request_time),
-            'status'         : req.status,
-            'method'         : req.method,
-            'headers_in'     : req.headers_in,
-            'headers_out'    : req.headers_out,
-            'uri'            : req.uri,
-            'subprocess_env' : req.subprocess_env,
-            'referer'        : req.headers_in.get('referer', 'N/A')
-        }
+    conn = req.connection
+    req.add_common_vars()
+    info_dict = {
+        'local_addr'     : conn.local_ip + ':' + str(conn.local_addr[1]),
+        'local_host'     : conn.local_host,
+        'protocol'       : req.protocol,
+        'hostname'       : req.hostname,
+        'request_time'   : time.ctime(req.request_time),
+        'status'         : req.status,
+        'method'         : req.method,
+        'headers_in'     : req.headers_in,
+        'headers_out'    : req.headers_out,
+        'uri'            : req.uri,
+        'subprocess_env' : req.subprocess_env,
+        'referer'        : req.headers_in.get('referer', 'N/A')
+    }
 
     apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail,
         cfg.smallBugsEmail))
