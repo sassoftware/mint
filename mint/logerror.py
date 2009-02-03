@@ -20,7 +20,7 @@ from mint import users
 
 
 def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
-  location='web interface'):
+  location='web interface', doEmail=True):
     from mod_python import apache
     conn = req.connection
     req.add_common_vars()
@@ -43,7 +43,7 @@ def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
         cfg.smallBugsEmail))
     try:
         logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
-           smallStream=sys.stderr)
+           smallStream=sys.stderr, doEmail=doEmail)
     except MailError, error:
         apache.log_error("Failed to send e-mail to %s, reason: %s" %
             (cfg.bugsEmail, str(error)))
@@ -51,7 +51,7 @@ def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
 
 
 def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
-  prefix='mint-error-', smallStream=sys.stderr):
+  prefix='mint-error-', smallStream=sys.stderr, doEmail=True):
     timeStamp = time.ctime(time.time())
     realHostName = socket.getfqdn()
 
@@ -109,7 +109,7 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
     conary_util.copyfileobj(small, smallStream)
 
     # send email
-    if cfg:
+    if cfg and doEmail:
         base_exception = traceback.format_exception_only(
             e_type, e_value)[-1].strip()
         if cfg.rBuilderOnline:
