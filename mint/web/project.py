@@ -1887,11 +1887,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             pText = getProjectText().lower()
             noLink = "http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.getHostname())
             return self._write("confirm",
-                message = """Are you sure you want to delete this %s?  This is an irreversable 
-                             operation!  If there are downstream consumers of this %s, please 
-                             note that 1) they will no longer be able to consume this %s
-                             and 2) they will be affected by severe unintended consequences
-                             should a %s be created with this same name.                   
+                message = """Warning: Deleting this %s is an irreversible operation, and
+                             will negatively impact all %ss and individuals that consume
+                             it, even if a %s is later created with the same name.\n
+                             Are you sure you want to delete this %s?                   
                              """ % (pText, pText, pText, pText),
                 yesArgs = {'func':'deleteProject', 'confirmed':'1'}, noLink = noLink)
 
