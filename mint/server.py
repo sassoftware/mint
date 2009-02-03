@@ -6199,7 +6199,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
         
     def _gracefulHttpd(self):
-        return os.system('/usr/share/rbuilder/scripts/httpd-graceful')
+        return os.system('/usr/libexec/httpd-graceful')
         
     @typeCheck(int)
     @requiresAuth
