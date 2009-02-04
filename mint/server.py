@@ -6223,30 +6223,35 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # can't do it
             return False
                 
+        # We need to make sure the project and labels are deleted before doing 
+        # anything else.  Any failure here should end with a rollback so no
+        # changes are preserved.  Note that we try a few times after doing an
+        # http graceful.  This is done to get rid of any cached connections
+        # that block the repo DB from being dropped.
         self.db.transaction()
-        
         try:
-            # we need to make sure the project is deleted before we can continue.
-            # just fail after trying a couple of times
             numTries = 0
             maxTries = 3
             deleted = False
             while (numTries < maxTries) and not deleted:
-                # need to graceful httpd to try to get cached db connections closed
+                
                 self._gracefulHttpd()
                 
-                # delete the project itself
+                # delete the project
                 try:
-                    self.projects.deleteProject(project.id, commit=False)
+                    self.projects.deleteProject(project.id, project.getFQDN(), commit=False)
                     deleted = True
                 except Exception, e:
                     if numTries >= maxTries:
-                        raise
+                        # this is fatal, but we want the original traceback logged
+                        # and then mask the error for the user
+                        handleNonFatalException('delete-project')
+                        raise ProjectNotDeleted(project.name)
                     else:
                         time.sleep(1)
                         numTries += 1
             
-            # delete project labels - must be successful to continue
+            # delete project labels
             self.labels.deleteLabels(projectId, commit=False)
         except:
             self.db.rollback()
@@ -6262,20 +6267,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             util.rmtree(imagesDir, ignore_errors = True)
         except Exception, e:
             handleNonFatalException('delete-images')
-        
-        # delete the repository
-        try:
-            if self.db.driver != 'sqlite':
-                try:
-                    cu = self.db.cursor()
-                    cu.execute("DROP DATABASE %s" % reposName)
-                except sqlerrors.DatabaseError, e:
-                    # ignore unless it's a "Can't drop database error"
-                    if e.args[0][1] != 1008:
-                        raise
-            util.rmtree(self.cfg.reposPath + reposName, ignore_errors = True)
-        except Exception, e:
-            handleNonFatalException('delete-repo')
         
         # delete the entitlements
         try:

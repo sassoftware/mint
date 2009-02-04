@@ -326,8 +326,12 @@ class ProjectsTable(database.KeyedTable):
                 raise DuplicateName()
         return id
     
-    def deleteProject(self, projectId, commit=True):
+    def deleteProject(self, projectId, projectFQDN, commit=True):
         try:
+            # try deleteing the repository
+            self.reposDB.delete(projectFQDN)
+            
+            # try removing the project
             cu = self.db.cursor()
             cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
         except:
@@ -848,6 +852,9 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
     def create(self, name):
         util.mkdirChain(os.path.dirname(self.cfg.reposDBPath % name))
         RepositoryDatabase.create(self, name)
+        
+    def delete(self, name):
+        util.rmtree(self.cfg.reposDBPath + name, ignore_errors = True)
 
 
 class PostgreSqlRepositoryDatabase(RepositoryDatabase):
@@ -887,14 +894,21 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                     reposCu.execute("DROP TABLE %s CASCADE" % (t,))
                 reposDb.close()
             else:
-                # raise an error that alomst certainly won't be trapped,
-                # so that a traceback will be generated.
-                raise AssertionError( \
-                    "Attempted to delete an existing %s database."%getProjectText().lower())
+                raise RepositoryAlreadyExists(name)
+            
         if createDb:
             cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
+        
+    def delete(self, name):
+        path = self.cfg.reposDBPath % 'postgres'
+        db = dbstore.connect(path, 'postgresql')
+        reposName = self.translate(name)
+
+        cu = db.cursor()
+        cu.execute("DROP DATABASE %s" % reposName)
+        util.rmtree(path + reposName, ignore_errors = True)
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
     tableOpts = "character set latin1 collate latin1_bin"
@@ -918,13 +932,19 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
             if self.cfg.debugMode:
                 cu.execute("DROP DATABASE %s" % dbName)
             else:
-                # raise an error that alomst certainly won't be trapped,
-                # so that a traceback will be generated.
-                raise AssertionError( \
-                    "Attempted to delete an existing %s database."%getProjectText().lower())
+                raise RepositoryAlreadyExists(name)
         cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
+        
+    def delete(self, name):
+        path = self.cfg.reposDBPath % 'mysql'
+        db = dbstore.connect(path, 'mysql')
+        reposName = self.translate(name)
+
+        cu = db.cursor()
+        cu.execute("DROP DATABASE %s" % reposName)
+        util.rmtree(path + reposName, ignore_errors = True)
 
 class ProductVersions(database.TableObject):
 
