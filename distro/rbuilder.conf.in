@@ -54,7 +54,6 @@ excludeBuildTypes       PARALLELS
 # Activate Internal Conary Proxy for rBuilder
 useInternalConaryProxy  True
 
-
 # Available platforms (these are officially supported)
 availablePlatforms      rap.rpath.com@rpath:linux-2
 availablePlatforms      sle.rpath.com@rpath:sles-10
@@ -67,6 +66,9 @@ acceptablePlatforms      rap.rpath.com@rpath:linux-2-devel
 acceptablePlatforms      sle.rpath.com@rpath:sles-10-devel
 acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
+
+# Amazon DevPay product code
+ec2ProductCode           9961934F
 
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy
