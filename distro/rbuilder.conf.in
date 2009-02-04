@@ -69,6 +69,7 @@ acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
 # Amazon DevPay product code
 ec2ProductCode           9961934F
+ec2ProductOfferingUrl    https://aws-portal.amazon.com/gp/aws/user/subscription/index.html?offeringCode=9CA65222
 
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy

@@ -925,6 +925,14 @@ class MintClient:
         return self.server.setEC2CredentialsForUser(userId,
                 awsAccountNumber, awsPublicAccessKeyId,
                 awsSecretAccessKey, force)
+        
+    def getEC2ProductCodeMappings(self):
+        """
+        Get a list of EC2 product code to product offering mappings
+        @return: list of mappings in the form of ({code: <code>, url: <url>},...)
+        @rtype C{list}
+        """
+        return self.server.getEC2ProductCodeMappings()
 
     def addTarget(self, targetType, targetName, dataDict):
         return self.server.addTarget(targetType, targetName, dataDict)

@@ -227,6 +227,7 @@ class MintConfig(ConfigFile):
     # *** END DEPRECATED VALUES ***
 
     ec2ProductCode          = (cfgtypes.CfgString, None)
+    ec2ProductOfferingUrl   = (cfgtypes.CfgString, None)
 
     VAMUser                 = ''
     VAMPassword             = ''
