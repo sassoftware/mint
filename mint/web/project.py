@@ -1889,9 +1889,9 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             return self._write("confirm",
                 message = """Warning: Deleting this %s is an irreversible operation, and
                              will negatively impact all %ss and individuals that consume
-                             it, even if a %s is later created with the same name.\n
-                             Are you sure you want to delete this %s?                   
-                             """ % (pText, pText, pText, pText),
+                             it, even if a %s is later created with the same name."""
+                             % (pText, pText, pText),
+                messageBottom = "Are you sure you want to delete this %s?" % pText,
                 yesArgs = {'func':'deleteProject', 'confirmed':'1'}, noLink = noLink)
 
     @strFields(feed= "releases")
