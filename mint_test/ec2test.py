@@ -1523,7 +1523,7 @@ class EC2SitewideTest(BaseEC2Test):
         
     @fixtures.fixture('Empty')
     @testsuite.context('RBL-4211')
-    def getEC2ProductCodeMappings(self, db, data):
+    def testEC2ProductCodeMappings(self, db, data):
         client = self.getClient("admin")
         
         self.cfg.ec2ProductCode = None
