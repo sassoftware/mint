@@ -5657,24 +5657,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype C{bool}
         """
         return self.setEC2CredentialsForUser(userId, '', '', '', True)
-    
-    @typeCheck()
-    @requiresAuth
-    def getEC2ProductCodeMappings(self):
-        """
-        Get a list of EC2 product code to product offering mappings
-        @return: list of mappings in the form of [{code: <code>, url: <url>},...]
-        @rtype C{list}
-        """
-        mapping = []
-        
-        # we only support one mapping for now
-        code = self.cfg.ec2ProductCode or ''
-        url = self.cfg.ec2ProductOfferingUrl or ''
-        
-        mapping.append({'code': code, 'url': url})
-        
-        return mapping
 
     @typeCheck(str)
     @requiresAuth
