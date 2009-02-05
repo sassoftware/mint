@@ -53,6 +53,9 @@ install: default-install
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
+	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
+	install -D -m0644 welcome_text.py $(DESTDIR)/usr/share/anaconda/
+
 
 clean: default-clean
 
