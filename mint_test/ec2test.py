@@ -1520,19 +1520,6 @@ class EC2SitewideTest(BaseEC2Test):
 
         self.assertRaises(mint_error.PermissionDenied,
                 client.deleteTarget, 'ec2', 'aws')
-        
-    @fixtures.fixture('Empty')
-    @testsuite.context('RBL-4211')
-    def getEC2ProductCodeMappings(self, db, data):
-        client = self.getClient("admin")
-        
-        self.cfg.ec2ProductCode = None
-        self.cfg.ec2ProductOfferingUrl = None
-        self.assertEquals(client.getEC2ProductCodeMappings(), [{'code': "", 'url': ""}])
-        
-        self.cfg.ec2ProductCode = "samiam"
-        self.cfg.ec2ProductOfferingUrl = "idonotlikegreeneggsandham"
-        self.assertEquals(client.getEC2ProductCodeMappings(), [{'code': "samiam", 'url': "idonotlikegreeneggsandham"}])
 
     @fixtures.fixture('Empty')
     @testsuite.context('RBL-3757')
