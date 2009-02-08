@@ -465,13 +465,18 @@ class SiteHandler(WebHandler):
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace = '',
-               prodtype = 'Appliance', version = '', commitEmail='', isPrivate = 'on',
+               prodtype = 'Appliance', version = '', commitEmail='', isPrivate = '',
                platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, 
                       blurb, optlists, appliance, shortname, namespace, 
                       prodtype, version, commitEmail, isPrivate, platformLabel):
+        
+        # project should be private for rba but public for rbo by default
+        if not isPrivate:
+            isPrivate = self.cfg.rBuilderOnline and 'off' or 'on'
+        
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
         shortname = shortname.lower()
