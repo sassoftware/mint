@@ -6202,15 +6202,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return os.system('/usr/libexec/rbuilder/httpd-graceful')
         
     @typeCheck(int)
-    @requiresAuth
+    @requiresAdmin
     def deleteProject(self, projectId):
         """
         Delete a project
         @param projectId: The id of the project to delete
         @type projectId: C{int}
         """
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
         
         def handleNonFatalException(desc):
             e_type, e_value, e_tb = sys.exc_info()

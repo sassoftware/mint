@@ -973,12 +973,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # call the database deletion script
         self.failUnless(client.deleteProject(project.id) == True, "Allow deleting external projects if local mirror")
         
+    @testsuite.tests('RBL-4225')
     @fixtures.fixture('Full')
-    def testDeleteProjectNotOwner(self, db, data):
+    def testDeleteProjectNotAdmin(self, db, data):
         adminClient = self.getClient('admin')
         project = adminClient.getProject(data['projectId'])
         
-        client = self.getClient('nobody')
+        client = self.getClient('owner')
         self.assertRaises(PermissionDenied, client.deleteProject, project.id)
 
     @fixtures.fixture('Full')
