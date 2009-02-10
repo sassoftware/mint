@@ -1,5 +1,12 @@
 Changes in @NEW@
 ===============
+Web Front End Changes
+---------------------
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+  to the rBuilder. (RBL-4186)
 
 Bug Fixes
 ---------------------

@@ -335,7 +335,7 @@ class MintServer(object):
                 raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
-            return (True, ("MethodNotSupported", methodName, ""))
+            return (True, ("MethodNotSupported", (methodName,)))
 
         # start profile
         prof.startXml(methodName)

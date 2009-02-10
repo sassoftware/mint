@@ -134,12 +134,18 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testBadCall(self, db, data):
         client = self.getClient("test")
+
         funcName = "someRandomFunction"
-        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
-            self.fail("xml rpc server responded to bad method call")
+        self.failUnlessEqual(
+                client.server.callWrapper(funcName,
+                    ('username, userpass'), None),
+                (True, ("MethodNotSupported", (funcName,))))
+
         funcName = '_' + funcName
-        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
-            self.fail("xml rpc server responded to hidden method call")
+        self.failUnlessEqual(
+                client.server.callWrapper(funcName,
+                    ('username, userpass'), None),
+                (True, ("MethodNotSupported", (funcName,))))
 
     @fixtures.fixture("Empty")
     def testCheckVersion(self, db, data):
