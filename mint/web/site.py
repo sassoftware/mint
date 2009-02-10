@@ -856,7 +856,7 @@ class SiteHandler(WebHandler):
                 self.req.content_type = "application/octet-stream"
             imgF = file(filename)
             util.copyfileobj(imgF, self.req)
-            return HttpOK
+            return ""
         if redirectUrl:
             self._redirect(redirectUrl)
         else:

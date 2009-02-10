@@ -40,10 +40,6 @@ SSLCertificateKeyFile test.key
     SSLOptions +StdEnvVars
 </Directory>
 
-SetEnvIf User-Agent ".*MSIE.*" \
-         nokeepalive ssl-unclean-shutdown \
-         downgrade-1.0 force-response-1.0
-
 CustomLog ssl_request_log \
           "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
 
