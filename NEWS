@@ -1,5 +1,35 @@
 Changes in @NEW@
 ===============
+Web Front End Changes
+---------------------
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+  to the rBuilder. (RBL-4186)
+* Products are created as private by default now. (RBL-4188)
+* Removed description, home page, commits email, and namespace options
+  from "Create Product" page.  (RBL-4188)
+* "Is Appliance" field on "Create Product" page is now an advanced option.
+  (RBL-4188)
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+  to the rBuilder. (RBL-4186)
+* The "Create Product" page has been re-designed. (RBL-4188)
+* rPA now contains an icons/link to access the rBuilder. (RBL-4179)
+* There is now an option to delete a product from the product homepage.
+  (RBL-4175).
+
+Bug Fixes
+---------------------
+* Downloads of images larger than 2GiB are no longer sent with a
+  trailing HTML fragment that caused checksum failures on some Windows
+  browsers.  (RBL-4222)
+
+Changes in 5.0.0
+===============
 API Changes
 ---------------------
 * Methods getPackageCreatorRecipe and savePackageCreatorRecipe have been added 
@@ -130,16 +160,6 @@ Web Front End Changes
 * RSS news and error display are now proper width. (RBL-3784)
 * Fix width of job console plugin. (RBL-4088)
 * Fixed a bug where editing groups was throwing traceback. (RBL-3480)
-* There are now fewer wizard plugins, however the plugins themselves
-  are still there.  (RBL-4186)
-* The Next Steps plugin has been removed.  (RBL-4186)
-* The rBA Setup plugin now informs users how to login and redirects them
-  to the rBuilder. (RBL-4186)
-* The "Create Product" page has been re-designed. (RBL-4188)
-* rPA now contains an icons/link to access the rBuilder. (RBL-4179)
-* There is now an option to delete a product from the product homepage.
-  (RBL-4175).
-
 
 Bug Fixes
 ---------------------

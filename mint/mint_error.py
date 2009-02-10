@@ -432,8 +432,8 @@ class UnknownException(Exception):
         self.eArgs = eArgs
 
 # Make only exceptions importable as "from mint_error import *"
-import types
+import inspect
 __all__ = []
 for name, obj in locals().copy().iteritems():
-    if isinstance(obj, types.ClassType) and issubclass(obj, Exception):
+    if inspect.isclass(obj) and issubclass(obj, Exception):
         __all__.append(name)
