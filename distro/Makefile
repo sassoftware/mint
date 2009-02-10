@@ -42,6 +42,8 @@ install: default-install
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
 	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
+	mkdir -p $(DESTDIR)/etc/httpd/conf.d/rbuilder
+	touch $(DESTDIR)/etc/httpd/conf.d/rbuilder/.keep.rbuilder
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
