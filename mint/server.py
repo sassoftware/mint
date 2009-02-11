@@ -57,6 +57,7 @@ from mint import urltypes
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.logerror import logErrorAndEmail
 from mint import packagecreator
 
 from mcp import client as mcpClient
@@ -1082,8 +1083,11 @@ class MintServer(object):
     @requiresAuth
     def listJoinRequests(self, projectId):
         self._filterProjectAccess(projectId)
-        reqList = self.membershipRequests.listRequests(projectId)
+        reqList = self._listAllJoinRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
+    
+    def _listAllJoinRequests(self, projectId):
+        return self.membershipRequests.listRequests(projectId)
 
     @typeCheck(int, str)
     @private
@@ -2630,13 +2634,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([ x[1] for x in scored if x[0] == maxScore ], 
                       key=lambda x: x[2])[-1:]
 
-    @typeCheck(int)
-    @requiresAuth
-    def deleteBuild(self, buildId):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
+    def _deleteBuild(self, buildId, force=False):
+        if not self.builds.buildExists(buildId)  and not force:
             raise BuildMissing()
-        if self.builds.getPublished(buildId):
+
+        if self.builds.getPublished(buildId) and not force:
             raise BuildPublished()
 
         try:
@@ -2659,6 +2661,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
             for urlId, urlType, url in fileUrlList:
+                if self.db.driver == 'sqlite':
+                    # sqlite doesn't do cascading deletes, so we'll do it for them
+                    self.buildFilesUrlsMap.delete(fileId, urlId)
                 # if this location is local, delete the file
                 if urlType == urltypes.LOCAL:
                     fileName = url
@@ -2679,6 +2684,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                 raise
 
         return True
+
+    @typeCheck(int)
+    @requiresAuth
+    def deleteBuild(self, buildId):
+        """
+        Delete a build
+        @param buildId: The id of the build to delete
+        @type buildId: C{int}
+        """
+        self._filterBuildAccess(buildId)
+        return self._deleteBuild(buildId, force=False)      
 
     @typeCheck(str)
     @requiresAuth
@@ -2878,6 +2894,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if writers + readers:
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
+
+            if self.cfg.ec2ProductCode:
+                amiData['ec2ProductCode'] = self.cfg.ec2ProductCode
 
             r['amiData'] = amiData
 
@@ -6177,3 +6196,153 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
 
         self.newsCache.refresh()
+        return True
+        
+    def _gracefulHttpd(self):
+        return os.system('/usr/libexec/rbuilder/httpd-graceful')
+        
+    @typeCheck(int)
+    @requiresAdmin
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        
+        def handleNonFatalException(desc):
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.cfg, e_type, e_value, e_tb, desc, {}, doEmail=False)
+        
+        project = projects.Project(self, projectId)
+        reposName = self._translateProjectFQDN(project.getFQDN())
+        
+        if project.external and not self.isLocalMirror(project.id):
+            # can't do it
+            return False
+                
+        # We need to make sure the project and labels are deleted before doing 
+        # anything else.  Any failure here should end with a rollback so no
+        # changes are preserved.  Note that we try a few times after doing an
+        # http graceful.  This is done to get rid of any cached connections
+        # that block the repo DB from being dropped.
+        self.db.transaction()
+        try:
+            numTries = 0
+            maxTries = 3
+            deleted = False
+            while (numTries < maxTries) and not deleted:
+                
+                self._gracefulHttpd()
+                
+                # delete the project
+                try:
+                    self.projects.deleteProject(project.id, project.getFQDN(), commit=False)
+                    deleted = True
+                except Exception, e:
+                    if numTries >= maxTries:
+                        # this is fatal, but we want the original traceback logged
+                        # and then mask the error for the user
+                        handleNonFatalException('delete-project')
+                        raise ProjectNotDeleted(project.name)
+                    else:
+                        time.sleep(1)
+                        numTries += 1
+            
+            # delete project labels
+            self.labels.deleteLabels(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        
+        self.db.commit()        
+        
+        # this should not fail after this point, delete what we can and move on
+        
+        # delete the images
+        try:
+            imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
+            util.rmtree(imagesDir, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-images')
+        
+        # delete the entitlements
+        try:
+            entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
+            util.rmtree(entFile, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-entitlements')
+        
+        # delete the group troves
+        try:
+            troves = self.groupTroves.listGroupTrovesByProject(project.id)
+            for trove in troves:
+                self.groupTroves.delGroupTrove(trove[0])
+        except Exception, e:
+            handleNonFatalException('delete-group-troves')
+        
+        # delete the releases
+        try:
+            pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
+                            project.id, publishedOnly=False)
+            for id in pubRelIds:
+                self.publishedReleases.delete(id)
+        except Exception, e:
+            handleNonFatalException('delete-releases')
+        
+        # delete the builds
+        try:
+            for buildId in self.builds.iterBuildsForProject(project.id):
+                self._deleteBuild(buildId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-builds')
+        
+        # delete the membership requests
+        try:
+            self.membershipRequests.deleteRequestsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-membership-requests')
+        
+        # delete the commits
+        try:
+            self.commits.deleteCommitsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-commits')
+        
+        # delete package indices
+        try:
+            self.pkgIndex.deleteByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-package-indices')
+        
+        # delete project user references
+        try:
+            users = self.projectUsers.getMembersByProjectId(project.id)
+            for userId, _, _ in users:
+                self.projectUsers.delete(project.id, userId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-project-users')
+        
+        # delete inbound mirror
+        try:
+            ibmirror = self.getInboundMirror(project.id)
+            if ibmirror:
+                self.delInboundMirror(ibmirror['inboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-inbound-mirrors')
+        
+        # delete outbound mirror
+        try:
+            obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
+            if obmirror:
+                self.delOutboundMirror(obmirror['outboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-outbound-mirrors')
+        
+        # delete repo names
+        try:
+            self.delRemappedRepository(project.getFQDN())
+        except Exception, e:
+            handleNonFatalException('delete-repo-names')
+        
+        return True

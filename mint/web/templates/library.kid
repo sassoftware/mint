@@ -231,6 +231,12 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             <img class="left" src="${cfg.staticPath}apps/mint/images/block_bottom.gif" width="100%" height="3px" alt="" />
        </div>
     </div>
+    
+    <div py:def="formLabelWithHelp(helpDivId, labelTitle, tooltip='Click here for more information', required=True)">
+        <div class="required-help" onclick="javascript:toggle_display('${helpDivId}');" title="${tooltip}">
+            ${labelTitle}
+       </div>
+    </div>
 
     <div py:def="layoutFooter()">
         <div id="footer">

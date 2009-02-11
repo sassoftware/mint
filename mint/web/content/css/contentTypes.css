@@ -162,6 +162,15 @@ a:hover
 	background:url(../images/required.gif) no-repeat 0px 4px;
 }
 
+.required-help {
+    padding-left: 10px; 
+    color: blue; 
+    font-style:italic;
+    text-decoration: underline;
+    cursor: pointer;
+    background:url(../images/required.gif) no-repeat 0px 4px;
+}
+
 .requiredselect {
 	padding-left:0.9em;
 	background:url(../images/required.gif) no-repeat 0px 4px;

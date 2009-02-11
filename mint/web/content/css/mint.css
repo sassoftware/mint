@@ -47,7 +47,7 @@ h1.search {
 }
 
 h2 {
-    font-size: 20px;
+    font-size: 16px;
     font-family: verdana, sans-serif;
     font-weight: normal;
     color: #000;
@@ -57,7 +57,7 @@ h2 {
 }
 
 div#admin-spanright h2 {
-    font-size: 20px;
+    font-size: 16px;
     font-family: verdana, sans-serif;
     font-weight: normal;
     color: #000;
@@ -170,15 +170,17 @@ label a:hover {
 
 .page-title {
     margin-bottom: 6px;
-    font-size: 21px;
+    font-size: 16px;
     font-weight: bold;
+    border-bottom: medium solid #DDDDDD
 }
 
 .page-title-no-project {
     margin-bottom: 6px;
-    font-size: 21px;
+    font-size: 16px;
     font-weight: bold;
     padding-top: 16px;
+    border-bottom: medium solid #DDDDDD
 }
 
 .page-subtitle {
@@ -1371,10 +1373,10 @@ tr.editGroupHeader,
     padding: 13px 0px 10px 0px;
 }
 
-.expandableFormGroupTitle {
+.expandableHelpTitle {
     cursor: pointer;
     color: #000;
-    font-size: 20px;
+    font-size: 10px;
     font-family: verdana, sans-serif;
     font-weight:  normal;
     margin: 13px 0px 10px 0px;
@@ -1382,8 +1384,24 @@ tr.editGroupHeader,
     width: 98%;
 }
 
+.expandableFormGroupTitle {
+    cursor: pointer;
+    color: #000;
+    font-size: 16px;
+    font-family: verdana, sans-serif;
+    font-weight:  normal;
+    margin: 13px 0px 10px 0px;
+    border-bottom: 1px solid #ddd;
+    width: 98%;
+}
 
-.expandableFormGroupTitle img,
+.expandableHelpTitle,
+.expandableFormGroupTitle img
+{
+    float: left;
+    padding-right: 10px;
+}
+
 .formGroupTitle img {
     float: right;
 }
@@ -1410,6 +1428,7 @@ tr.editGroupHeader,
 
 .form-label {
     white-space: nowrap;
+    width: 1%; /* forces min width */
 }
 
 .form-label-text {

@@ -47,6 +47,8 @@ class InstallClass(BaseInstallClass):
     sortPriority = 100
     showLoginChoice = 1
 
+    in_advanced_mode = False
+
     def setSteps(self, anaconda):
         BaseInstallClass.setSteps(self, anaconda);
         anaconda.dispatch.skipStep("authentication")
@@ -54,7 +56,16 @@ class InstallClass(BaseInstallClass):
         anaconda.dispatch.skipStep("package-selection")
         anaconda.dispatch.skipStep("firewall")
         anaconda.dispatch.skipStep("confirminstall")
+        self.set_advanced(False, anaconda)
 
+    def set_advanced(self, enabled, anaconda):
+        self.in_advanced_mode = enabled
+        anaconda.dispatch.skipStep('parttype', skip=not enabled)
+        anaconda.dispatch.skipStep('partition', skip=not enabled)
+        anaconda.dispatch.skipStep('network', skip=not enabled)
+        anaconda.dispatch.skipStep('timezone', skip=not enabled)
+        anaconda.dispatch.skipStep('accounts', skip=not enabled)
+        anaconda.dispatch.skipStep('complete', skip=not enabled)
 
     def setDefaultPartitioning(self, partitions, clear = CLEARPART_TYPE_ALL,
                                doClear = 1):

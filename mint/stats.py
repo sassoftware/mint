@@ -47,3 +47,11 @@ class CommitsTable(database.DatabaseTable):
             commitList.append( (x[0], v.trailingRevision().asString(),
                                 v.freeze(), x[2]) )
         return commitList
+    
+    def deleteCommitsByProject(self, projectId):
+        """
+        Delete all committs for the specified project
+        """
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM Commits WHERE projectId=?", projectId)
+        return True

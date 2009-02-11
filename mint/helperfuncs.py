@@ -748,3 +748,12 @@ def _initializeExternalProjects(client, conaryCfg):
             print 'Added external repository for %s' % host
     return numErrors
 
+def setCurrentProductVersion(session, projectId, versionId):
+    '''
+    Set the current product version
+    @param session -- the current session object
+    @param projectId -- the id of the project
+    @param versionId -- the id of the version
+    '''
+    session.setdefault('currentVersion', {})[projectId] = versionId
+    session.save()

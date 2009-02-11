@@ -36,6 +36,7 @@
 
 ^scripts/raw2vmdk$
 ^scripts/rbuilder_database.py$
+^scripts/httpd-graceful$
 
 .*,cover
 ^VERSION$

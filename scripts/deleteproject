@@ -1,260 +1,71 @@
 #!/usr/bin/python
+import os
+import sys
+import traceback
 
-import os, sys
+from conary import conarycfg
 
 from mint import config
-from mint import database
-from mint import urltypes
-from mint.projects import transTables
+from mint import mint_error
+from mint import helperfuncs
+from mint import scriptlibrary
+from mint import shimclient
 
-from conary import dbstore
-from conary.lib import util
+class DeleteProject(scriptlibrary.SingletonScript):
+    cfgPath = config.RBUILDER_CONFIG
+    conaryCfgPath = config.CONARY_CONFIG
+    startArg = 1
+    
+    def run(self):
+        if not sys.argv[1:]:
+            dp.usage()
+        
+        # make sure they want to do it
+        self.confirm()
+        
+        if sys.argv[1].startswith('--xyzzy='):
+            self.startArg = 2
+            _, self.cfgPath =  sys.argv[1].split('=')
+            print "Test mode using configuration from %s" % self.cfgPath
+        else:
+            if os.getuid():
+                print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
+                sys.stderr.flush()
+                sys.exit(1)
+        
+        mintConfig = config.getConfig(self.cfgPath)
+        conaryCfg = conarycfg.ConaryConfiguration(False)
+        conaryCfg.read(self.conaryCfgPath)
+        conaryCfg.readEntitlementDirectory()
+        mintClient = shimclient.ShimMintClient(mintConfig, 
+                                               (mintConfig.authUser,
+                                                mintConfig.authPass))
 
-def rmtree(path):
-    status("Deleting: %s" % path)
-    try:
-        return util.rmtree(path)
-    except OSError, e:
-        if e.errno != 2:
-            raise
-
-def status(output):
-    print >> sys.stdout, output, ' ' * (78-len(output)), chr(13),
-    sys.stdout.flush()
-
-def deleteProject(cfg, projectName):
-    # properly delete a given project by ensuring we walk the entire schema.
-    # this script is verified accurate as of schema version 12.
-
-    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-    cu = db.cursor()
-
-    # get project information
-    cu.execute("""SELECT projectId, hostname, domainname, external
-                  FROM Projects
-                  WHERE hostname = ?""", projectName)
-    res = cu.fetchone()
-    if not res:
-        status("Project %s not found in the database; skipping" % projectName)
-        print >> sys.stdout, ""
-        return
-
-    (projectId, hostname, domainname, external) = res
-    projectFQDN = "%s.%s" % (hostname, domainname)
-
-    # check to see if there is a different db for mirror
-    cu.execute("""SELECT toName FROM RepNameMap WHERE
-                  fromName = ? LIMIT 1""", projectFQDN)
-    res = cu.fetchone()
-    if res:
-        actualFQDN = res[0]
-    else:
-        actualFQDN = projectFQDN
-
-    # check for local mirror
-    cu.execute("""SELECT EXISTS(
-                SELECT * From InboundMirrors WHERE targetProjectId=?)""", projectId)
-    isLocalMirror = bool(cu.fetchone()[0])
-
-    print "Deleting Project: %s %s" % (projectName, (isLocalMirror and '[mirror]' or ''))
-
-    # remove the local repository
-    print "Deleting Conary Repository"
-
-    if (not external) or isLocalMirror:
-
-        reposToDelete = [ projectFQDN ]
-        if actualFQDN != projectFQDN:
-            reposToDelete.append(actualFQDN)
-
-        for reposName in reposToDelete:
-
-            status("Deleting Conary Repository: " + reposName)
-
-            dbName = reposName.translate(transTables[cfg.reposDBDriver])
-
-            if cfg.reposDBDriver == 'mysql':
-                # we need to delete the database manually with a drop database
-                try:
-                    cu.execute("DROP DATABASE %s" % dbName)
-                except dbstore.sqlerrors.DatabaseError, e:
-                    # ignore unless it's a "Can't drop database error"
-                    if e.args[0][1] != 1008:
-                        raise
-            elif cfg.reposDBDriver == 'postgresql':
-                pdb = dbstore.connect('postgres@localhost:5439/postgres', 'postgresql')
-                pcu = pdb.cursor()
-                try:
-                    pcu.execute("DROP DATABASE %s" % dbName)
-                except dbstore.sqlerrors.DatabaseError, e:
-                    # ignore unless it's a "Can't drop database error"
-                    if e.args[0][1] != 1008:
-                        raise
-                pdb.close()
-
-            # delete the actual repos directory
-            rmtree(cfg.reposPath + reposName)
-
-    status('')
-
-    print "Deleting Images"
-
-    # delete the images directory
-    imagesPath = cfg.imagesPath.split('/')[:-1]
-    imagesPath.append('images')
-    imagesPath.append(projectName)
-    imagesPath.insert(0, '/')
-    imagesPath = os.path.join(*imagesPath)
-    rmtree(imagesPath)
-
-    # delete the finished images directory
-    imagesPath = os.path.join(cfg.imagesPath, projectName)
-    rmtree(imagesPath)
-    status('')
-
-    # delete any entitlements
-    entFile = os.path.join(cfg.dataPath, 'entitlements', actualFQDN)
-    if os.path.exists(entFile):
-        os.unlink(entFile)
-
-    print "Deleting Records from rBuilder Database"
-    # remove bits from rBuilder Database
-    try:
-        # start a new transaction
-        cu = db.transaction()
-
-        status("Deleting Group Troves")
-        # get all group trove Ids
-        cu.execute("SELECT groupTroveId FROM GroupTroves WHERE projectId=?",
-                   projectId)
-        for groupTroveId in [x[0] for x in cu.fetchall()]:
-            # grab appropriate jobs and kill them
-            status("Deleting Jobs")
-            cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?",
-                       groupTroveId)
-            for jobId in [x[0] for x in cu.fetchall()]:
-                cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
-                cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
-            # now delete all group trove items for that group trove
-            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?",
-                       groupTroveId)
-            cu.execute("""DELETE FROM GroupTroveRemovedComponents
-                              WHERE groupTroveId=?""",
-                       groupTroveId)
-        # then delete all group troves for this project
-        cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
-
-        status("Deleting Builds")
-        # now grab all build Ids for this project
-        cu.execute("SELECT buildId FROM Builds WHERE projectId=?",
-                   projectId)
-        for buildId in [x[0] for x in cu.fetchall()]:
-            status("Deleting Jobs")
-            # grab appropriate jobs and kill them
-            cu.execute("SELECT jobId FROM Jobs WHERE buildId=?",
-                       buildId)
-            for jobId in [x[0] for x in cu.fetchall()]:
-                cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
-                cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
-
-            status("Deleting Build Files")
-            cu.execute("""SELECT bf.fileId, fu.urlId, fu.urlType
-                            FROM buildFiles bf
-                                LEFT OUTER JOIN BuildFilesUrlsMap bfum USING (fileId)
-                                LEFT OUTER JOIN FilesUrls fu USING (urlId)
-                            WHERE bf.buildId = ?""", buildId)
-
-            for fileId, urlId, urlType in [x for x in cu.fetchall()]:
-                # delete the local file
-                if urlType == urltypes.LOCAL:
-                    cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", urlId)
-
-                # sqlite doesn't do cascading deletes, so we'll do it for them
-                if db.driver == 'sqlite':
-                    cu.execute("DELETE FROM BuildFilesUrlsMap WHERE fileId = ? AND urlId = ?", fileId, urlId)
-
-            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
-            status("Deleting Build Data")
-            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
-
-        # now delete all builds for this project
-        cu.execute("DELETE FROM Builds WHERE projectId=?", projectId)
-
-        status("Deleting Releases")
-        # now delete all published releases
-        cu.execute("DELETE FROM PublishedReleases WHERE projectId=?", projectId)
-
-        status("Deleting Membership requests")
-        cu.execute("DELETE FROM MembershipRequests WHERE projectId=?",
-                   projectId)
-        status("Deleting Commits")
-        cu.execute("DELETE FROM Commits WHERE projectId=?", projectId)
-        status("Deleting Package Index")
-        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
-        status("Deleting Project Users")
-        cu.execute("DELETE FROM ProjectUsers WHERE projectId=?", projectId)
-        status("Deleting Project Entry")
-        status("Deleting Labels")
-        # delete from all other tables that refer to projectId directly
-        cu.execute("DELETE FROM InboundMirrors WHERE targetProjectId=?", projectId)
-        cu.execute("DELETE FROM OutboundMirrors WHERE sourceProjectId=?", projectId)
-        cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
-        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", projectFQDN)
-
-        cu.execute("DELETE FROM Projects WHERE projectId=?", projectId)
-        db.commit()
-    except:
-	print "Error occurred, rolling back transaction"
-        db.rollback()
-	raise
-    status('')
- 
-
-cfg = config.MintConfig()
-cfgPath = config.RBUILDER_CONFIG
-
-if not sys.argv[1:]:
-    print >> sys.stderr, "Usage: %s project [project] [project] ..." % \
-          sys.argv[0]
-    print >> sys.stderr, "Each project is referred to by short name only"
-    print >> sys.stderr, '(i.e. use "rpath" instead of "rPath Linux").'
-    sys.stderr.flush()
-    sys.exit(1)
-
-startArg = 1
-if sys.argv[1].startswith('--xyzzy='):
-    startArg = 2
-    _, cfgPath =  sys.argv[1].split('=')
-    print "Test mode using configuration from %s" % cfgPath
-else:
-    if os.getuid():
-        print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
+        for projectName in sys.argv[self.startArg:]:
+            print "Deleting '" + projectName + "'..."
+            mintClient.deleteProjectByName(projectName)
+        
+    def usage(self):
+        print >> sys.stderr, "Usage: %s project [project] [project] ..." % \
+            sys.argv[0]
+        print >> sys.stderr, "Each project is referred to by short name only"
+        print >> sys.stderr, '(i.e. use "rpath" instead of "rPath Linux").'
         sys.stderr.flush()
         sys.exit(1)
-
-cfg.read(cfgPath)
-
-print "Executing this script will completely eradicate the following Projects:"
-print '\n'.join(sys.argv[startArg:])
-print "If you do not have backups, it will be impossible to recover from this."
-print "are you ABSOLUTELY SURE you want to do this? [yes/N]"
-answer = sys.stdin.readline()[:-1]
-if answer.upper() != 'YES':
-    if answer.upper() not in ('', 'N', 'NO'):
-        print >> sys.stderr, "you must type 'yes' if you truly want to delete",
-        print >> sys.stderr, "these projects."
-    print >> sys.stderr, "aborting."
-    sys.exit(1)
-
-wereErrors = False
-for projectName in sys.argv[startArg:]:
-    try:
-        deleteProject(cfg, projectName)
-    except:
-        print "Errors occurred when deleting project %s" % projectName
-        wereErrors = True
-
-print >> sys.stdout, "Done."
-sys.exit(wereErrors and 1 or 0)
-
-
+        
+    def confirm(self):
+        print "Executing this script will completely eradicate the following Projects:"
+        print '\n'.join(sys.argv[self.startArg:])
+        print "If you do not have backups, it will be impossible to recover from this."
+        print "are you ABSOLUTELY SURE you want to do this? [yes/N]"
+        answer = sys.stdin.readline()[:-1]
+        if answer.upper() != 'YES':
+            if answer.upper() not in ('', 'N', 'NO'):
+                print >> sys.stderr, "you must type 'yes' if you truly want to delete",
+                print >> sys.stderr, "these projects."
+            print >> sys.stderr, "aborting."
+            sys.exit(1)
+        
+if __name__ == "__main__":
+    dp = DeleteProject()
+    sys.exit(dp.run())
