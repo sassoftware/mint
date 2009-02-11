@@ -489,6 +489,14 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             else:
                 self._predirect("builds")
 
+        # Various javascript corner cases may allow the user to submit
+        # without a group trove.
+        if not distTroveSpec:
+            self._addErrors("You must select a group from which to "
+                    "build your image.")
+            self._predirect("newBuild")
+            return
+
         # check to make sure that we didn't lose buildtype at some point
         # this condition isn't perfect because it loses state and forces
         # the user to redo their build setup, so we should figure out why
