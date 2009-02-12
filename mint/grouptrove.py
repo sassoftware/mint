@@ -291,7 +291,12 @@ class GroupTroveItemsTable(database.KeyedTable):
                               GroupTroveItems.groupTroveId=
                                       GroupTroves.groupTroveId""",
                    groupTroveItemId)
-        return cu.fetchone()[0]
+        result = cu.fetchone()
+        if result:
+            return result[0]
+        else:
+            raise ItemNotFound("group trove item")
+
 
 KNOWN_COMPONENTS = {'build-tree' : "Kernel build environment",
                     'config' : "Configuration-related files",
