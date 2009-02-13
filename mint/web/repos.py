@@ -22,7 +22,8 @@ from mint.mint_error import *
 from mint.web import productversion
 from mint.web.templates import repos
 from mint.web.fields import strFields, listFields, intFields
-from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
+from mint.web.webhandler import (WebHandler, normPath, HttpForbidden,
+        HttpNotFound, HttpBadRequest)
 from mint.web.decorators import ownerOnly
 
 from conary import checkin
@@ -110,9 +111,17 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
 
     @strFields(t = None, v = None, f = "")
     def files(self, t, v, f, auth):
-        v = versions.ThawVersion(v)
-        f = deps.ThawFlavor(f)
-        parentTrove = self.repos.getTrove(t, v, f, withFiles = False)
+        try:
+            v = versions.ThawVersion(v)
+            f = deps.ThawFlavor(f)
+        except conaryerrors.ParseError:
+            raise HttpBadRequest
+
+        try:
+            parentTrove = self.repos.getTrove(t, v, f, withFiles = False)
+        except errors.TroveMissing:
+            raise HttpNotFound
+
         # non-source group troves only show contained troves
         if t.startswith('group-') and not t.endswith(':source'):
             troves = sorted(parentTrove.iterTroveList(strongRefs=True))
@@ -138,15 +147,23 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
 
     @strFields(t=None, v='', f='')
     def licenseCryptoReport(self, t, v, f, auth):
-        tr = unquote(t)
-        ver = versions.VersionFromString(unquote(v))
-        fl = deps.parseFlavor(unquote(f))
+        try:
+            tr = unquote(t)
+            ver = versions.VersionFromString(unquote(v))
+            fl = deps.parseFlavor(unquote(f))
+        except:
+            raise HttpBadRequest
+
         try:
             data = self._getLicenseAndCrypto(tr, ver, fl)
-        except Exception, e:
+        except errors.TroveNotFound:
+            raise HttpNotFound
+        except Exception, err:
             return self._write("error",
-                               error = ('An error occurred while generating '
-                                        'the report: %s' %str(e)))
+                    error=('An error occurred while generating '
+                        'the report: %s' % str(err)))
+
+
         return self._write('lic_crypto_report', troves=data, troveName=t)
 
     def _getLicenseAndCrypto(self, tr, ver, fl):

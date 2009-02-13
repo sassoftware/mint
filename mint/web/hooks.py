@@ -518,7 +518,13 @@ def handler(req):
                     # Send an error page to the user and set the status
                     # code to 500 (internal server error).
                     req.status = 500
-                    ret = urlHandler(req, cfg, '/unknownError')
+                    try:
+                        ret = mintHandler(req, cfg, '/unknownError')
+                    except:
+                        # Some requests cause MintApp to choke on setup
+                        # We've already logged the error, so just display
+                        # the apache ISE page.
+                        ret = apache.HTTP_INTERNAL_SERVER_ERROR
                 break
     finally:
         prof.stopHttp(req.uri)

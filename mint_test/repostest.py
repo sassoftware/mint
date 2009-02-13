@@ -323,13 +323,13 @@ class RepositoryTest(MintRepositoryHelper):
         server = client.server._server
 
         r = server.getAllTroveLabels(projectId, "testproject." + MINT_PROJECT_DOMAIN, "testcase")
-        assert(r == [labelStr])
+        self.assertEqual(r, [labelStr])
 
         dct, lst = server.getTroveVersions(projectId, labelStr, "testcase")
         dct = dict((str(versions.ThawVersion(x[0])), x[1]) for x in dct.items())
         lst = [ str(versions.ThawVersion(x)) for x in lst ] 
-        assert(dct == {'/testproject.rpath.local2@rpl:devel/1.0-1-1': [('(no flavor)', '')]})
-        assert(lst == ['/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN])
+        self.assertEqual(dct, {'/testproject.rpath.local2@rpl:devel/1.0-1-1': [('(no flavor)', '')]})
+        self.assertEqual(lst, ['/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN])
 
 
     def testEntitlementAccess(self):
