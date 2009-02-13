@@ -3,15 +3,6 @@
 #
 # All Rights Reserved
 #
-
-global _dnspython_present
-
-try:
-    import dns.resolver
-    _dnspython_present = True
-except ImportError:
-    _dnspython_present = False
-
 import os
 import random
 import time
@@ -29,6 +20,7 @@ from mint.templates import validateNewEmail
 from mint import searcher
 from mint import userlisting
 from mint.mint_error import *
+from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
 
@@ -569,3 +561,7 @@ class UserGroupMembersTable(database.DatabaseTable):
         cu.execute("SELECT userGroupId FROM UserGroupMembers WHERE userId=?",
                    userId)
         return [x[0] for x in cu.fetchall()]
+
+class UserDataTable(data.GenericDataTable):
+    name = "UserData"
+

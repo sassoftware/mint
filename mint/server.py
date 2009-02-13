@@ -25,23 +25,9 @@ try:
     raise ImportError
 except ImportError:
     charts = None
+import mint.db.database
 from mint import config
-from mint.db import builds as dbbuilds
-from mint.db import communityids
-from mint.db import ec2 as dbec2
 from mint.db import grouptrove
-from mint.db import jobs
-from mint.db import mirror
-from mint.db import news
-from mint.db import pkgindex
-from mint.db import projects as dbprojects
-from mint.db import pubreleases
-from mint.db import requests
-from mint.db import sessiondb
-from mint.db import selections
-from mint.db import stats
-from mint.db import targets
-from mint.db import users as dbusers
 from mint import users
 from mint.lib import data
 from mint.lib import database
@@ -126,7 +112,6 @@ validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 # valid product version
 validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
 
-dbConnection = None
 callLog = None
 
 def deriveBaseFunc(func):
@@ -239,64 +224,6 @@ def typeCheck(*paramTypes):
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
-
-tables = {}
-def getTables(db, cfg):
-
-    # check to make sure the schema version is correct
-    from mint.db import schema
-    try:
-        schema.checkVersion(db)
-    except sqlerrors.SchemaVersionError, e:
-        raise DatabaseVersionMismatch(e.args[0])
-
-    d = {}
-    d['labels'] = dbprojects.LabelsTable(db, cfg)
-    d['projects'] = dbprojects.ProjectsTable(db, cfg)
-    d['buildFiles'] = jobs.BuildFilesTable(db)
-    d['filesUrls'] = jobs.FilesUrlsTable(db)
-    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
-    d['urlDownloads'] = dbbuilds.UrlDownloadsTable(db)
-    d['users'] = dbusers.UsersTable(db, cfg)
-    d['userGroups'] = dbusers.UserGroupsTable(db, cfg)
-    d['userGroupMembers'] = dbusers.UserGroupMembersTable(db, cfg)
-    d['userData'] = data.UserDataTable(db)
-    d['projectUsers'] = dbusers.ProjectUsersTable(db)
-    d['builds'] = dbbuilds.BuildsTable(db)
-    d['pkgIndex'] = pkgindex.PackageIndexTable(db)
-    d['newsCache'] = news.NewsCacheTable(db, cfg)
-    d['sessions'] = sessiondb.SessionsTable(db)
-    d['membershipRequests'] = requests.MembershipRequestTable(db)
-    d['commits'] = stats.CommitsTable(db)
-    d['buildData'] = data.BuildDataTable(db)
-    d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
-    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
-    d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
-    d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
-    d['jobData'] = data.JobDataTable(db)
-    d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
-    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
-    d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
-    d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
-    d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
-    d['topProjects'] = selections.TopProjectsTable(db)
-    d['popularProjects'] = selections.PopularProjectsTable(db)
-    d['latestCommit'] = selections.LatestCommitTable(db)
-    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
-    d['blessedAMIs'] = dbec2.BlessedAMIsTable(db)
-    d['launchedAMIs'] = dbec2.LaunchedAMIsTable(db)
-    d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['productVersions'] = dbprojects.ProductVersionsTable(db, cfg)
-
-    d['targets'] = targets.TargetsTable(db)
-    d['targetData'] = targets.TargetDataTable(db)
-
-    # tables for per-project repository db connections
-    d['projectDatabase'] = dbprojects.ProjectDatabase(db)
-    d['databases'] = dbprojects.Databases(db)
-
-    return d
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
@@ -415,6 +342,11 @@ class MintServer(object):
                 return (False, r)
         finally:
             prof.stopXml(methodName)
+
+    def __getattr__(self, key):
+        if key[0] != '_':
+            # backwards-compatible reference to all the database table objects.
+            return getattr(self.db, key)
 
     def _handleError(self, e, authToken, methodName, args):
         self.db.rollback()
@@ -2133,12 +2065,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @private
     def getNews(self):
-        return self.newsCache.getNews()
+        return self.db.newsCache.getNews()
 
     @typeCheck()
     @private
     def getNewsLink(self):
-        return self.newsCache.getNewsLink()
+        return self.db.newsCache.getNewsLink()
 
     @typeCheck(str, str, int)
     @private
@@ -6130,6 +6062,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
+        self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
@@ -6156,50 +6089,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
 
-        from conary import dbstore
-        global dbConnection
-        if db:
-            dbConnection = db
-
-        # Flag to indicate if we created a new self.db and need to force a
-        # call to getTables
-        reloadTables = False
-
-        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
-            self.db = dbConnection
-        else:
-            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
-            dbConnection = self.db
-            reloadTables = True
-
-        # reopen a dead database
-        if self.db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint server"
-            sys.stderr.flush()
-
-        genConaryRc = False
-        global tables
-        if not tables or alwaysReload or reloadTables:
-            tables = getTables(self.db, self.cfg)
-            genConaryRc = True
-
-        for table in tables:
-            tables[table].db = self.db
-            tables[table].cfg = self.cfg
-            self.__dict__[table] = tables[table]
-
-        self.users.confirm_table.db = self.db
-        self.newsCache.ageTable.db = self.db
-        self.projects.reposDB.cfg = self.cfg
-
-        if genConaryRc:
+        if self.db.tablesReloaded:
             self._generateConaryRcFile()
-
-            # do these only on table reloads too
-            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
-            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
-
-
         self.newsCache.refresh()
         
     def _gracefulHttpd(self):

@@ -79,18 +79,3 @@ class GenericDataTable(database.DatabaseTable):
             self.db.commit()
 
         return True
-
-
-class JobDataTable(GenericDataTable):
-    name = "JobData"
-
-class UserDataTable(GenericDataTable):
-    name = "UserData"
-
-# XXX This table is deprecated in favor of BuildDataTable
-class ReleaseDataTable(GenericDataTable):
-    name = "ReleaseData"
-
-class BuildDataTable(GenericDataTable):
-    name = "BuildData"
-

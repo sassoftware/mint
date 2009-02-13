@@ -588,7 +588,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         db = self.openMintDatabase()
         buildTable = builds.BuildsTable(db)
         buildFilesTable = jobs.BuildFilesTable(db)
-        dataTable = data.BuildDataTable(db)
+        dataTable = builds.BuildDataTable(db)
         buildId = buildTable.new(projectId=projectId, 
                                  buildType=imageType, name=name,
                                  description=description, createdBy=userId,

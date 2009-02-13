@@ -3,6 +3,7 @@
 #
 # All rights reserved
 #
+from mint.lib import data
 from mint.lib import database
 from mint.mint_error import *
 
@@ -25,3 +26,6 @@ class FilesUrlsTable(database.KeyedTable):
     name = 'FilesUrls'
     key = 'urlId'
     fields = ['urlId', 'urlType', 'url']
+
+class JobDataTable(data.GenericDataTable):
+    name = "JobData"
