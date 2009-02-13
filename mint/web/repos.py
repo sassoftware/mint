@@ -158,6 +158,11 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
             data = self._getLicenseAndCrypto(tr, ver, fl)
         except errors.TroveNotFound:
             raise HttpNotFound
+        except Exception, err:
+            return self._write("error",
+                    error=('An error occurred while generating '
+                        'the report: %s' % str(err)))
+
 
         return self._write('lic_crypto_report', troves=data, troveName=t)
 
