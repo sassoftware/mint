@@ -18,13 +18,6 @@ from mint.mint_error import *
 from conary.deps import deps
 from conary.conarycfg import ConaryConfiguration
 
-# functions to convert a repository name to a database-safe name string
-transTables = {
-    'sqlite': string.maketrans("", ""),
-    'mysql': string.maketrans("-.:", "___"),
-    'postgresql': string.maketrans("-.:", "___")
-}
-
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',

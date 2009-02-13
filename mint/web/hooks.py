@@ -21,9 +21,9 @@ from mint import users
 from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
+from mint.db.projects import transTables
 from mint.helperfuncs import extractBasePath
 from mint.logerror import logWebErrorAndEmail
-from mint.projects import transTables
 from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler

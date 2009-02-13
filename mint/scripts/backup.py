@@ -7,7 +7,7 @@
 import re, os, sys
 import pwd
 from mint import config
-from mint import projects
+from mint.db import projects
 from mint.db import schema
 from conary.lib import util
 from conary import dbstore
