@@ -10,7 +10,7 @@ import time
 import rfc822
 import urllib2
 
-from mint import database
+from mint.lib import database
 
 REFRESH_TIME = 600 # seconds
 

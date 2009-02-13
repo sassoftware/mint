@@ -1,4 +1,4 @@
-from mint import database
+from mint.lib import database
 
 class CommunityIdsTable(database.DatabaseTable):
 

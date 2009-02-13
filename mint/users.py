@@ -12,7 +12,7 @@ try:
 except ImportError:
     _dnspython_present = False
 
-import md5
+from conary.lib.digestlib import md5
 import os
 import random
 import smtplib
@@ -20,7 +20,6 @@ import socket
 import time
 from email import MIMEText
 
-from mint import database
 from mint import userlevels
 from mint import templates
 from mint import helperfuncs
@@ -30,6 +29,7 @@ from mint import searcher
 from mint import userlisting
 from mint.mint_error import *
 from mint import usertemplates
+from mint.lib import database
 
 from conary import repository
 from conary.lib import sha1helper
@@ -78,7 +78,7 @@ class UsersTable(database.KeyedTable):
                 user, salt, password, challenge)
 
     def _mungePassword(self, password):
-        m = md5.new()
+        m = md5()
         salt = os.urandom(4)
         m.update(salt)
         m.update(password)

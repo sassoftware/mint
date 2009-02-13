@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -30,7 +30,7 @@ import mock
 from mint import buildtypes
 from mint import shimclient
 from mint import userlevels
-from mint.data import RDT_STRING
+from mint.lib.data import RDT_STRING
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 FAKE_PUBLIC_KEY  = '123456789ABCDEFGHIJK'
@@ -1584,7 +1584,7 @@ class EC2SitewideTest(BaseEC2Test):
         self.mock(db, 'cursor', newCursor)
         self.mock(db, 'setVersion', setVer)
 
-        from mint import migrate
+        from mint.scripts import migrate
         db.tables = {}
         migrate.migrateSchema(db, self.cfg)
 

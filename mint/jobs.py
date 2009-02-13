@@ -3,7 +3,7 @@
 #
 # All rights reserved
 #
-from mint import database
+from mint.lib import database
 from mint.mint_error import *
 
 class BuildFilesTable(database.KeyedTable):

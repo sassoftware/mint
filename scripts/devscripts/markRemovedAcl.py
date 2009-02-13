@@ -2,7 +2,7 @@
 
 from conary import dbstore
 from mint import config
-from mint import database
+from mint.lib import database
 
 import optparse
 

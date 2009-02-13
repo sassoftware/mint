@@ -945,7 +945,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
     db.loadSchema()
 
     # avoid a recursive import by importing just what we need
-    from mint import migrate
+    from mint.scripts import migrate
 
     # expedite the initial repo creation
     if version == 0:

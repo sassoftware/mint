@@ -4,7 +4,7 @@
 #
 # All rights reserved
 #
-from mint import selections
+from mint.scripts import selections
 import os
 
 if __name__ == "__main__":

@@ -5,8 +5,8 @@
 #
 
 from mint import builds
-from mint import database
 from mint import helperfuncs
+from mint.lib import database
 from mint.mint_error import ItemNotFound
 
 class PublishedReleasesTable(database.KeyedTable):

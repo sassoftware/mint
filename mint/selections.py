@@ -4,12 +4,9 @@
 # All Rights Reserved
 #
 
-from mint import config
-from mint import database
-from mint import scriptlibrary
+from mint.lib import database
 import time
 
-from conary import dbstore
 from mint.helperfuncs import toDatabaseTimestamp
 
 # A convenience table with the latest timestamp of commit
@@ -118,30 +115,3 @@ def calculateTopProjects(db, daysBack = 7):
           GROUP BY projectId
           ORDER BY downloads DESC""", toDatabaseTimestamp(time.time()-(daysBack * 86400)))
     return [int(x[1]) for x in cu.fetchall() if x[1] != None]
-
-class UpdateProjectLists(scriptlibrary.SingletonScript):
-    db = None
-    cfg = None
-    cfgPath = config.RBUILDER_CONFIG
-
-    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
-        self.cfg = config.MintConfig()
-        self.cfg.read(self.cfgPath)
-        scriptlibrary.SingletonScript.__init__(self, aLockPath)
-
-    def action(self):
-        self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        self.db.loadSchema()
-        topProjects = TopProjectsTable(self.db)
-        popularProjects = PopularProjectsTable(self.db)
-        latestCommits = LatestCommitTable(self.db)
-
-        topProjects.calculate()
-        popularProjects.calculate()
-        latestCommits.calculate()
-
-        return 0
-
-    def cleanup(self):
-        if self.db:
-            self.db.close()

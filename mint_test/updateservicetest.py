@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -12,11 +12,11 @@ from mint.mint_error import UpdateServiceNotFound
 from conary.dbstore import sqlerrors
 from conary.repository import transport
 
-from mint import database
+from mint.lib import database
 from mint import helperfuncs
 from mint import mirror
 from mint import mint_error
-from mint import proxiedtransport
+from mint.lib import proxiedtransport
 from mint.web.webhandler import HttpMoved
 
 import StringIO

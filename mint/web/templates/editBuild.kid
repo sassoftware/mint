@@ -4,7 +4,7 @@
 from mint import buildtypes
 from mint.buildtypes import typeNames, buildTypeExtra
 from mint.web.templatesupport import shortTroveSpec
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 
 # troves that we can allow the user to select "None for this build"
 allowNone = ['anaconda-custom', 'media-template']

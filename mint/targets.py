@@ -4,7 +4,8 @@
 # All Rights Reserved
 #
 
-from mint import database, mint_error
+from mint import mint_error
+from mint.lib import database
 import simplejson
 
 class TargetsTable(database.KeyedTable):

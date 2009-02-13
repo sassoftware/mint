@@ -13,7 +13,7 @@ from mimetypes import guess_type
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
-from mint import data
+from mint.lib import data
 from mint import helperfuncs
 from mint import mint_error
 from mint import maintenance

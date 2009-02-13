@@ -7,7 +7,7 @@ from conary import dbstore
 from conary.lib.tracelog import logMe, initLog
 
 from mint import config
-from mint import scriptlibrary
+from mint.lib import scriptlibrary
 
 import optparse
 import os

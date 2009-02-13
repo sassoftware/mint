@@ -9,7 +9,7 @@ import sys
 import time
 
 from mint import buildtypes
-from mint import database
+from mint.lib import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse, configureClientProxies, getProjectText, \
         addUserToRepository

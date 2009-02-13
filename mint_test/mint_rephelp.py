@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import os
-import sha
 import shutil
 import pwd
 import rephelp
@@ -15,7 +14,7 @@ import testsuite
 import time
 import urlparse
 from testutils import sqlharness
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler
 
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
@@ -32,7 +31,7 @@ from mint import jobs
 from mint import server
 from mint import shimclient
 from mint import buildtypes
-from mint import data
+from mint.lib import data
 from mint import urltypes
 from mint import mint_error
 
@@ -45,6 +44,7 @@ from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import util
+from conary.lib.digestlib import sha1
 
 from mcp_test import mcp_helper
 from mcp import queue
@@ -596,12 +596,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                                  troveVersion=troveVersion,
                                  troveFlavor=troveFlavor)
         if imageFiles is None:
-            sha1 = sha.new()
-            sha1.update(str(buildId))
-            sha1 = sha1.hexdigest()
+            digest = sha1()
+            digest.update(str(buildId))
+            digest = digest.hexdigest()
 
             imageFiles = [('imageFile %s' % buildId, 'Image Title %s' % buildId,
-                          1024 * buildId, sha1)]
+                          1024 * buildId, digest)]
         client.server._server._setBuildFilenames(buildId, imageFiles)
         if buildData:
             for key, value in buildData.items():
@@ -860,8 +860,13 @@ class WebRepositoryHelper(BaseWebHelper):
         webunittest.HTTPResponse.fetchWithRedirect = self.fetchWithRedirect
         webunittest.WebTestCase.setUp(self)
         # this is tortured, but webunit won't run without it.
-        webunittest.HTTPResponse._TestCase__testMethodName = \
-                                          self._TestCase__testMethodName
+        testName = getattr(self, '_testMethodName', None) 
+        if not testName:
+             testName = getattr(self, '_TestCase__testMethodName')
+        
+
+        webunittest.HTTPResponse._TestCase__testMethodName = testName
+        webunittest.HTTPResponse._testMethodName = testName
 
         # by this point, apache's already forked and running but no calls
         # needing the mcpClient have been made, so put the cfg values
@@ -963,8 +968,12 @@ class StubXMLRPCServerController:
             rephelp.tryConnect('127.0.0.1', self.port)
             return
 
+        class RequestHandler(SimpleXMLRPCRequestHandler):
+            rpc_paths = ''
+
         server = SimpleXMLRPCServer(("127.0.0.1", self.port),
-                                    logRequests=False)
+                                    logRequests=False,
+                                    requestHandler=RequestHandler)
         server.register_instance(self.handlerFactory())
         server.serve_forever()
 

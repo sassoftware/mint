@@ -17,7 +17,7 @@ except ImportError:
 
 import xml.dom.minidom
 
-from mint import database
+from mint.lib import database
 from mint import mint_error
 from mint.helperfuncs import toDatabaseTimestamp, urlSplit
 from rpath_common.xmllib import api1 as xmllib
@@ -300,8 +300,8 @@ class EC2Wrapper(object):
         self.accessKey = accessKey
         self.secretKey = secretKey
         pxArgs = S3Wrapper.splitProxyUrl(proxyUrl)
-        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey,
-            **pxArgs)
+        self.ec2conn = boto.connect_ec2(str(self.accessKey), 
+             str(self.secretKey), **pxArgs)
 
     def launchInstance(self, ec2AMIId, userData=None, useNATAddressing=False):
 

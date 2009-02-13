@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -15,7 +15,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
-from mint import pkgindexer
+from mint.scripts import pkgindexer
 from mint.web.repos import ConaryHandler
 import recipes
 
@@ -325,10 +325,11 @@ class RepositoryTest(MintRepositoryHelper):
         r = server.getAllTroveLabels(projectId, "testproject." + MINT_PROJECT_DOMAIN, "testcase")
         assert(r == [labelStr])
 
-        r = server.getTroveVersions(projectId, labelStr, "testcase")
-        assert(r == {'/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN: ['']},
-                     ['/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN],
-                    {'': ''})
+        dct, lst = server.getTroveVersions(projectId, labelStr, "testcase")
+        dct = dict((str(versions.ThawVersion(x[0])), x[1]) for x in dct.items())
+        lst = [ str(versions.ThawVersion(x)) for x in lst ] 
+        assert(dct == {'/testproject.rpath.local2@rpl:devel/1.0-1-1': [('(no flavor)', '')]})
+        assert(lst == ['/testproject.%s@rpl:devel/1.0-1-1' % MINT_PROJECT_DOMAIN])
 
 
     def testEntitlementAccess(self):

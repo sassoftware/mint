@@ -4,7 +4,7 @@
 #
 
 from mint import config, client
-from mint import scriptlibrary, copyutils
+from mint.lib import scriptlibrary, copyutils
 from mint.helperfuncs import getProjectText, addUserToRepository
 from mint.mint_error import *
 from conary.lib import util

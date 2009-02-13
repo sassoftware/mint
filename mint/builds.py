@@ -8,11 +8,10 @@ import time
 
 from mint import buildtemplates
 from mint import buildtypes
-from mint import database
 from mint import flavors
 from mint import helperfuncs
-
-from mint.data import RDT_ENUM
+from mint.lib import database
+from mint.lib.data import RDT_ENUM
 from mint.mint_error import *
 
 from conary import versions

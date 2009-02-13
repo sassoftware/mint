@@ -4,11 +4,11 @@
 # All Rights Reserved
 #
 from mint import config
-from mint import database
 from mint import helperfuncs
 from mint import projects
-from mint import scriptlibrary
 from mint import pkgindex
+from mint.lib import database
+from mint.lib import scriptlibrary
 
 from conary import conaryclient
 from conary import conarycfg

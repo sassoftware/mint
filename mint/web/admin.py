@@ -558,7 +558,6 @@ class AdminHandler(WebHandler):
             description = '', action = 'Cancel')
     def processEditUpdateService(self, id, hostname, adminUser, adminPassword,
             description, action, *args, **kwargs):
-
         if action == "Cancel":
             self._redirect("http://%s%sadmin/updateServices" %
                     (self.cfg.siteHost, self.cfg.basePath))

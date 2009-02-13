@@ -5,7 +5,7 @@
 
 from StringIO import StringIO
 import os, struct, tempfile, time
-from mint.fileupload import fileuploader
+from mint.lib.fileupload import fileuploader
 
 ### Writer section
 def writeMetadata(metafile, size):

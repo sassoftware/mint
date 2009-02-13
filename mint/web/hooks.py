@@ -18,7 +18,7 @@ import urllib
 
 from mint import config
 from mint import users
-from mint import profile
+from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
 from mint.helperfuncs import extractBasePath

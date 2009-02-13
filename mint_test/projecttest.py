@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -19,7 +19,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 from mint import userlevels
 from mint.mint_error import *
 from mint.server import ParameterError, PermissionDenied
-from mint import database
+from mint.lib import database
 from mint import urltypes
 
 from conary import dbstore

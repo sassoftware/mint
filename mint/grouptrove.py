@@ -4,12 +4,12 @@
 # All Rights Reserved
 #
 
-import database
 import re
 import time
 
 from mint import jobs
 from mint.mint_error import *
+from mint.lib import database
 
 from conary import versions
 from conary.deps import deps

@@ -28,7 +28,7 @@ from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
-from mint.data import RDT_STRING
+from mint.lib.data import RDT_STRING
 
 from conary import dbstore
 from conary.deps import deps

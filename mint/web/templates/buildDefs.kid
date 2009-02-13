@@ -44,7 +44,7 @@ from mint.web.templatesupport import projectText
 
     <body>
         <?python
-            from mint.data import *
+            from mint.lib.data import *
             from mint import buildtypes
         ?>
         <div id="layout">

@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-import config
+from mint import config
 import os
 import sys
 import syslog

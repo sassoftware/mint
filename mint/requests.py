@@ -3,7 +3,7 @@
 #
 # All rights reserved
 #
-from mint import database
+from mint.lib import database
 
 class MembershipRequestTable(database.DatabaseTable):
     name = "MembershipRequests"

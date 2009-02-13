@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-from mint import database
+from mint.lib import database
 
 from conary import versions
 

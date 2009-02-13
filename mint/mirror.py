@@ -4,8 +4,8 @@
 # All Rights Reserved
 #
 from mint import config
-from mint import database
-from mint import scriptlibrary
+from mint.lib import scriptlibrary
+from mint.lib import database
 
 import os
 import sys

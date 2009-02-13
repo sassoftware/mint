@@ -21,7 +21,7 @@ from mod_python import apache
 
 from mint import helperfuncs
 from mint import shimclient
-from mint import profile
+from mint.lib import profile
 from mint import users
 from mint.session import SqlSession
 

@@ -21,7 +21,7 @@ from mint.mint_error import *
 from mint import buildtemplates
 from mint import helperfuncs
 from mint.helperfuncs import getProjectText
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.logerror import logWebErrorAndEmail
 from mint.users import sendMailWithChecks
 from mint.web import productversion

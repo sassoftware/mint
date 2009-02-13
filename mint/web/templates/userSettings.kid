@@ -9,7 +9,7 @@
     <head>
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
         <?python
-            from mint import data
+            from mint.lib import data
             from mint.web.templatesupport import projectText
         ?>
     </head>
