@@ -16,7 +16,7 @@ import traceback
 from conary.lib import util as conary_util
 
 from mint.mint_error import MailError
-from mint import users
+from mint.lib import maillib
 
 
 def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
@@ -120,11 +120,11 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
             subject = cfg.bugsEmailSubject % extra
 
         if cfg.bugsEmail:
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+            maillib.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.bugsEmail, subject, large.read())
         if cfg.smallBugsEmail:
             small.seek(0)
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+            maillib.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                 cfg.smallBugsEmail, subject, small.read())
 
     large.close()

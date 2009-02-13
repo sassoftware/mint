@@ -1,0 +1,22 @@
+from restlib.controller import RestController
+
+from mint import constants
+from conary import constants as conaryConstants
+
+from mint.rest.api import models
+from mint.rest.api import product
+from mint.rest.api import users
+
+class RbuilderRestServer(RestController):
+    urls = {'products' : product.ProductController,     
+            'projects' : product.ProductController,     
+            'users'    : users.UserController}
+
+    def __init__(self, cfg, db):
+        self.cfg = cfg
+        self.db = db
+        RestController.__init__(self, None, None, [cfg, db])
+
+    def index(self, request):
+        return models.RbuilderStatus(version=constants.mintVersion,
+                                     conaryVersion=conaryConstants.version)
