@@ -347,7 +347,7 @@ class PublishedReleaseMirrorRole(MintError):
 class DatabaseVersionMismatch(MintError):
     def __init__(self, currentVersion):
         MintError.__init__(self)
-	from mint import schema
+	from mint.db import schema
         self.currentVersion = currentVersion
         self.requiredVersion = schema.RBUILDER_DB_VERSION
 

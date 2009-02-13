@@ -48,7 +48,7 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
         [self.log.error(x) for x in tb.split("\n") if x.strip()]
 
     def action(self):
-        from mint import schema
+        from mint.db import schema
         from conary.lib.tracelog import logMe
         logMe(1, "Connecting to database %s (%s)" % (self.cfg.dbPath,
             self.cfg.dbDriver))
