@@ -22,43 +22,48 @@ import StringIO
 from mint import buildtypes
 try:
     from mint import charts
+    raise ImportError
 except ImportError:
     charts = None
-from mint import communityids
 from mint import config
+from mint.db import builds as dbbuilds
+from mint.db import communityids
+from mint.db import ec2 as dbec2
+from mint.db import grouptrove
+from mint.db import jobs
+from mint.db import mirror
+from mint.db import news
+from mint.db import pkgindex
+from mint.db import projects as dbprojects
+from mint.db import pubreleases
+from mint.db import requests
+from mint.db import sessiondb
+from mint.db import selections
+from mint.db import stats
+from mint.db import targets
+from mint.db import users as dbusers
+from mint import users
+from mint.lib import data
+from mint.lib import database
+from mint.lib import persistentcache
+from mint.lib import profile
+from mint import builds
 from mint import ec2
-from mint import grouptrove
 from mint import helperfuncs
-from mint import jobs
 from mint import jobstatus
 from mint import maintenance
-from mint import mirror
-from mint import news
-from mint.lib import persistentcache
-from mint import pkgindex
-from mint.lib import profile
-from mint import projects
-from mint import builds
 from mint import buildtemplates
-from mint import pubreleases
+from mint import projects
 from mint import reports
-from mint import requests
-from mint import sessiondb
-from mint import stats
 from mint import templates
-from mint import targets
 from mint import userlevels
-from mint import users
 from mint import usertemplates
-from mint import selections
 from mint import urltypes
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint.logerror import logErrorAndEmail
 from mint import packagecreator
-from mint.lib import data
-from mint.lib import database
 
 from mcp import client as mcpClient
 from mcp import mcp_error
@@ -239,25 +244,25 @@ tables = {}
 def getTables(db, cfg):
 
     # check to make sure the schema version is correct
-    from mint import schema
+    from mint.db import schema
     try:
         schema.checkVersion(db)
     except sqlerrors.SchemaVersionError, e:
         raise DatabaseVersionMismatch(e.args[0])
 
     d = {}
-    d['labels'] = projects.LabelsTable(db, cfg)
-    d['projects'] = projects.ProjectsTable(db, cfg)
+    d['labels'] = dbprojects.LabelsTable(db, cfg)
+    d['projects'] = dbprojects.ProjectsTable(db, cfg)
     d['buildFiles'] = jobs.BuildFilesTable(db)
     d['filesUrls'] = jobs.FilesUrlsTable(db)
     d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
-    d['urlDownloads'] = builds.UrlDownloadsTable(db)
-    d['users'] = users.UsersTable(db, cfg)
-    d['userGroups'] = users.UserGroupsTable(db, cfg)
-    d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
+    d['urlDownloads'] = dbbuilds.UrlDownloadsTable(db)
+    d['users'] = dbusers.UsersTable(db, cfg)
+    d['userGroups'] = dbusers.UserGroupsTable(db, cfg)
+    d['userGroupMembers'] = dbusers.UserGroupMembersTable(db, cfg)
     d['userData'] = data.UserDataTable(db)
-    d['projectUsers'] = users.ProjectUsersTable(db)
-    d['builds'] = builds.BuildsTable(db)
+    d['projectUsers'] = dbusers.ProjectUsersTable(db)
+    d['builds'] = dbbuilds.BuildsTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
     d['newsCache'] = news.NewsCacheTable(db, cfg)
     d['sessions'] = sessiondb.SessionsTable(db)
@@ -279,17 +284,17 @@ def getTables(db, cfg):
     d['popularProjects'] = selections.PopularProjectsTable(db)
     d['latestCommit'] = selections.LatestCommitTable(db)
     d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
-    d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
-    d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
+    d['blessedAMIs'] = dbec2.BlessedAMIsTable(db)
+    d['launchedAMIs'] = dbec2.LaunchedAMIsTable(db)
     d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
+    d['productVersions'] = dbprojects.ProductVersionsTable(db, cfg)
 
     d['targets'] = targets.TargetsTable(db)
     d['targetData'] = targets.TargetDataTable(db)
 
     # tables for per-project repository db connections
-    d['projectDatabase'] = projects.ProjectDatabase(db)
-    d['databases'] = projects.Databases(db)
+    d['projectDatabase'] = dbprojects.ProjectDatabase(db)
+    d['databases'] = dbprojects.Databases(db)
 
     return d
 

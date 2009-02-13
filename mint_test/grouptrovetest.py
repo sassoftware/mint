@@ -21,12 +21,12 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import jobstatus
-from mint import grouptrove
+from mint.db import grouptrove
 from mint import server
 from mint import userlevels
 from mint.mint_error import *
 # from mint.distro import group_trove
-from mint.jobs import DuplicateJob
+from mint.db.jobs import DuplicateJob
 
 refRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'

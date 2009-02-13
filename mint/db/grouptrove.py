@@ -7,9 +7,9 @@
 import re
 import time
 
-from mint import jobs
-from mint.mint_error import *
+from mint.db import jobs
 from mint.lib import database
+from mint.mint_error import *
 
 from conary import versions
 from conary.deps import deps

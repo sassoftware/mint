@@ -23,15 +23,15 @@ SimpleDOM.EMPTY_HTML_TAGS.remove('img')
 from webunit import webunittest
 
 from mint.web import hooks
-from mint import builds
+from mint.db import builds
+from mint.db import jobs
+from mint.lib import data
 import mint.client
 from mint import config
 from mint import cooktypes
-from mint import jobs
 from mint import server
 from mint import shimclient
 from mint import buildtypes
-from mint.lib import data
 from mint import urltypes
 from mint import mint_error
 
@@ -95,7 +95,7 @@ class MintDatabase:
         return db
 
     def createSchema(self, db):
-        from mint import schema
+        from mint.db import schema
         schema.loadSchema(db)
         db.commit()
 

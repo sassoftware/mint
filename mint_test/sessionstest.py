@@ -11,7 +11,7 @@ import time
 import rephelp
 import fixtures
 
-from mint import sessiondb
+from mint.db import sessiondb
 
 class SessionTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")

@@ -5,8 +5,8 @@
 #
 from mint import config
 from mint import helperfuncs
-from mint import projects
-from mint import pkgindex
+from mint.db import pkgindex
+from mint.db import projects
 from mint.lib import database
 from mint.lib import scriptlibrary
 

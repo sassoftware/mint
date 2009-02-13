@@ -14,7 +14,6 @@ from conary.repository import transport
 
 from mint.lib import database
 from mint import helperfuncs
-from mint import mirror
 from mint import mint_error
 from mint.lib import proxiedtransport
 from mint.web.webhandler import HttpMoved

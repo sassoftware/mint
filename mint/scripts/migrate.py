@@ -8,7 +8,7 @@ import sys
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
 from conary.lib.tracelog import logMe
-from mint import schema
+from mint.db import schema
 
 # SCHEMA Migration
 class SchemaMigration(migration.SchemaMigration):

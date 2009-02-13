@@ -5,7 +5,7 @@
 #
 
 from mint import config
-from mint import selections
+from mint.db import selections
 from mint.lib import scriptlibrary
 
 from conary import dbstore

@@ -10,8 +10,8 @@ import xmlrpclib
 
 from mint import builds
 from mint import ec2
-from mint import grouptrove
-from mint import jobs
+from mint.db import grouptrove
+from mint.db import jobs
 from mint import mint_error
 from mint import projects
 from mint import pubreleases

@@ -10,7 +10,7 @@ import time
 import fixtures
 from mint import mint_error
 import mint.scripts.selections
-from mint import selections
+from mint.db import selections
 from mint.helperfuncs import toDatabaseTimestamp
 
 class MarketingTest(fixtures.FixturedUnitTest):

@@ -10,7 +10,6 @@ from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
 from mint.lib import database
 from mint import server
-from mint import users
 from mint.projects import LabelMissing
 
 import fixtures

@@ -11,7 +11,7 @@ import time
 from mint.web import basictroves
 from mint import communitytypes
 from mint import mailinglists
-from mint import jobs
+from mint.db import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
@@ -23,7 +23,7 @@ from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.logerror import logWebErrorAndEmail
-from mint.users import sendMailWithChecks
+from mint.lib.maillib import sendMailWithChecks
 from mint.web import productversion
 from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields

@@ -4,7 +4,7 @@ import conary.versions
 from urllib import quote
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion, projectText
-from mint.grouptrove import KNOWN_COMPONENTS
+from mint.db.grouptrove import KNOWN_COMPONENTS
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

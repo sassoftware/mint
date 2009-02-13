@@ -12,7 +12,6 @@ import fixtures
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import buildtypes
-from mint import pubreleases
 from mint.mint_error import *
 
 from conary import versions
