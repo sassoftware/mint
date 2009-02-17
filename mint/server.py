@@ -30,6 +30,7 @@ from mint.db import grouptrove
 from mint import users
 from mint.lib import data
 from mint.lib import database
+from mint.lib import maillib
 from mint.lib import persistentcache
 from mint.lib import profile
 from mint import builds
@@ -1055,7 +1056,7 @@ class MintServer(object):
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
                                           name = name)
-                users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
+                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         self.membershipRequests.setComments(projectId, userId, comments)
         return True
 
@@ -1321,7 +1322,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if self.cfg.sendNotificationEmails:
             if message:
-                users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                user['email'],
                                "Your %s account" % \
                                self.cfg.productName,
@@ -1335,7 +1336,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         adminUsers.append(admnUsr)
                 for usr in adminUsers:
                     if usr['username'] != user['username']:
-                        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                        maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                        usr['email'],
                                        "%s project membership modification" % \
                                        self.cfg.productName,

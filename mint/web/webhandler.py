@@ -21,6 +21,7 @@ from mod_python import apache
 
 from mint import helperfuncs
 from mint import shimclient
+from mint.lib import maillib
 from mint.lib import profile
 from mint import users
 from mint.session import SqlSession
@@ -143,7 +144,7 @@ class WebHandler(object):
                              ])
 
         if self.cfg.sendNotificationEmails:
-            users.sendMail(self.cfg.adminMail, self.cfg.productName,
+            maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                        user.getEmail(),
                        "%s password reset"%self.cfg.productName, message)
         else:
