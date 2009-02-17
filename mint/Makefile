@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = db lib reports scripts templates web 
+SUBDIRS = db lib reports rest scripts templates web 
 
 python_files =			\
 	__init__.py		\
