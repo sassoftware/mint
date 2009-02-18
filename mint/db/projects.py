@@ -708,3 +708,106 @@ class ProductVersionsTable(database.KeyedTable):
                       projectId)
         return [ list(x) for x in cu.fetchall() ]
 
+class ProjectUsersTable(database.DatabaseTable):
+    name = "ProjectUsers"
+    fields = ["projectId", "userId", "level"]
+
+    def getOwnersByProjectName(self, projectname):
+        cu = self.db.cursor()
+        cu.execute("""SELECT u.username, u.email
+                      FROM Projects pr, ProjectUsers p, Users u
+                      WHERE pr.projectId=p.projectId AND p.userId=u.userId
+                      AND pr.hostname=?
+                      AND p.level=? AND pr.disabled=0""", projectname,
+                   userlevels.OWNER)
+        data = []
+        for r in cu.fetchall():
+            data.append(list(r))
+        return data
+
+    def getMembersByProjectId(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT p.userId, u.username, p.level
+                      FROM ProjectUsers p, Users u
+                      WHERE p.userId=u.userId AND p.projectId=?
+                      ORDER BY p.level, u.username""",
+                   projectId)
+        data = []
+        for r in cu.fetchall():
+            data.append( [r[0], r[1], r[2]] )
+        return data
+
+    def getUserlevelForProjectMember(self, projectId, userId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT level FROM ProjectUsers
+                      WHERE projectId = ? AND userId = ?""",
+                      projectId, userId)
+        res = cu.fetchone()
+        if res:
+            return res[0]
+        else:
+            raise ItemNotFound()
+
+    def getEC2AccountNumbersForProjectUsers(self, projectId):
+        writers = []
+        readers = []
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT CASE WHEN MIN(pu.level) <= 1 THEN 1 ELSE 0 END AS isWriter,
+                ud.value AS awsAccountNumber
+            FROM projectUsers AS pu
+                JOIN userData AS ud
+                    ON ud.name = 'awsAccountNumber'
+                       AND pu.userId = ud.userId
+                       AND length(ud.value) > 0
+            WHERE pu.projectId = ?
+            GROUP BY ud.value""", projectId)
+        for res in cu.fetchall():
+            if res[0]:
+                writers.append(res[1])
+            else:
+                readers.append(res[1])
+        return writers, readers
+
+    def new(self, projectId, userId, level, commit=True):
+        assert(level in userlevels.LEVELS)
+        cu = self.db.cursor()
+
+        cu.execute("SELECT * FROM ProjectUsers WHERE projectId=? AND userId = ?",
+                   projectId, userId)
+        if cu.fetchall():
+            self.db.rollback()
+            raise DuplicateItem("membership")
+
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
+                   userId, level)
+        if commit:
+            self.db.commit()
+
+    def onlyOwner(self, projectId, userId):
+        cu = self.db.cursor()
+        # verify userId is an owner of the project.
+        cu.execute("SELECT level from ProjectUsers where projectId=? and userId = ?", projectId, userId)
+        res = cu.fetchall()
+        if (not bool(res)) or (res[0][0] != userlevels.OWNER):
+            return False
+        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.OWNER)
+        return not cu.fetchone()[0]
+
+    def lastOwner(self, projectId, userId):
+        cu = self.db.cursor()
+        # check that there are developers
+        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.DEVELOPER)
+        if not cu.fetchone()[0]:
+            return False
+        return self.onlyOwner(projectId, userId)
+
+    def delete(self, projectId, userId, commit=True, force=False):
+        if self.lastOwner(projectId, userId):
+            if not force:
+                raise LastOwner()
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
+        if commit:
+            self.db.commit()
+
