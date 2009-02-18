@@ -40,7 +40,7 @@ class TableCache(object):
         self.userGroups = users.UserGroupsTable(db, cfg)
         self.userGroupMembers = users.UserGroupMembersTable(db, cfg)
         self.userData = users.UserDataTable(db)
-        self.projectUsers = users.ProjectUsersTable(db)
+        self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
         self.pkgIndex = pkgindex.PackageIndexTable(db)
         self.newsCache = news.NewsCacheTable(db, cfg)
