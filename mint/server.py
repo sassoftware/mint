@@ -101,7 +101,6 @@ SERVER_VERSIONS = [8]
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
-validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
 # XXX do we need to reserve localhost?
@@ -729,40 +728,6 @@ class MintServer(object):
         return SERVER_VERSIONS
 
     # project methods
-    def _validateHostname(self, hostname, domainname, resHosts):
-        if not hostname:
-            raise projects.InvalidHostname
-        if validHost.match(hostname) == None:
-            raise projects.InvalidHostname
-        if hostname in resHosts:
-            raise projects.InvalidHostname
-        if (hostname + "." + domainname) == socket.gethostname():
-            raise projects.InvalidHostname
-        return None
-
-    def _validateShortname(self, shortname, domainname, resHosts):
-        if not shortname:
-            raise InvalidShortname
-        if validHost.match(shortname) == None:
-            raise InvalidShortname
-        if shortname in resHosts:
-            raise InvalidShortname
-        if (shortname + "." + domainname) == socket.gethostname():
-            raise InvalidShortname
-        return None
-
-    def _validateNamespace(self, namespace):
-        v = helperfuncs.validateNamespace(namespace)
-        if v != True:
-            raise InvalidNamespace
-
-    def _validateProductVersion(self, version):
-        if not version:
-            raise ProductVersionInvalid
-        if not validProductVersion.match(version):
-            raise ProductVersionInvalid
-        return None
-
     def _buildEC2AuthToken(self):
         amiData = self._getTargetData('ec2', 'aws', supressException = True)
         at = ()
@@ -795,11 +760,11 @@ class MintServer(object):
         # make sure the shortname, version, and prodtype are valid, and
         # validate the hostname also in case it ever splits from being
         # the same as the short name
-        self._validateShortname(shortname, domainname, reservedHosts)
-        self._validateHostname(hostname, domainname, reservedHosts)
-        self._validateProductVersion(version)
+        projects._validateShortname(shortname, domainname, reservedHosts)
+        projects._validateHostname(hostname, domainname, reservedHosts)
+        projects._validateProductVersion(version)
         if namespace:
-            self._validateNamespace(namespace)
+            projects._validateNamespace(namespace)
         else:
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
@@ -912,7 +877,7 @@ class MintServer(object):
         # make sure the hostname is valid
         if not domainname:
             domainname = self.cfg.projectDomainName
-        self._validateHostname(hostname, domainname, reservedExtHosts)
+        projects._validateHostname(hostname, domainname, reservedExtHosts)
 
         # ensure that the label we were passed is valid
         try:
@@ -1369,7 +1334,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
 
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
 
         return self.projects.update(projectId, namespace = namespace)
 
@@ -4756,9 +4721,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         
         # Check the namespace
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
         # make sure it is a valid product version
-        self._validateProductVersion(name)
+        projects._validateProductVersion(name)
         
         try:
             # XXX: Should this add an entry to the labels table?

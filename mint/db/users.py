@@ -156,7 +156,7 @@ class UsersTable(database.KeyedTable):
     def registerNewUser(self, username, password, fullName, email,
                         displayEmail, blurb, active):
         if self.cfg.sendNotificationEmails and not active:
-            validateEmailDomain(email)
+            maillib.validateEmailDomain(email)
         if username.lower() == self.cfg.authUser.lower():
             raise IllegalUsername
         for letter in username:

@@ -4,7 +4,9 @@
 # All Rights Reserved
 #
 import os
+import re
 import string
+import socket
 import sys
 import time
 
@@ -291,3 +293,37 @@ class ProductVersions(database.TableObject):
     def getItem(self, id):
         return self.server.getProductVersion(id)
 
+validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
+def _validateHostname(hostname, domainname, resHosts):
+    if not hostname:
+        raise InvalidHostname
+    if validHost.match(hostname) == None:
+        raise InvalidHostname
+    if hostname in resHosts:
+        raise InvalidHostname
+    if (hostname + "." + domainname) == socket.gethostname():
+        raise InvalidHostname
+    return None
+
+def _validateShortname(shortname, domainname, resHosts):
+    if not shortname:
+        raise InvalidShortname
+    if validHost.match(shortname) == None:
+        raise InvalidShortname
+    if shortname in resHosts:
+        raise InvalidShortname
+    if (shortname + "." + domainname) == socket.gethostname():
+        raise InvalidShortname
+    return None
+
+def _validateNamespace( namespace):
+    v = helperfuncs.validateNamespace(namespace)
+    if v != True:
+        raise InvalidNamespace
+
+def _validateProductVersion(version):
+    if not version:
+        raise ProductVersionInvalid
+    if not validProductVersion.match(version):
+        raise ProductVersionInvalid
+    return None
