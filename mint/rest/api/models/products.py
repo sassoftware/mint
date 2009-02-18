@@ -5,6 +5,8 @@ class Product(Model):
     id = fields.IntegerField()
     hostname = fields.CharField(required=True)
     name = fields.CharField()
+    namespace = fields.CharField()
+    domainname = fields.CharField()
     url = fields.AbsoluteUrlField() # not modifiable
     shortname = fields.CharField() 
     description = fields.CharField()
@@ -17,6 +19,7 @@ class Product(Model):
     creatorUrl = fields.UrlField('users', 'creator') # not modifiable
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeModified = fields.DateTimeField(editable=False) # not modifiable
+    hidden = fields.BooleanField()
     versions = fields.UrlField('products.versions', ['hostname']) # not modifiable
 
     def get_absolute_url(self):
@@ -56,5 +59,3 @@ class ProductVersionList(Model):
         self.versions.append(ProductVersion(id=id, namespace=namespace,
                                             name=name, description=description,
                                             hostname=hostname))
-
-

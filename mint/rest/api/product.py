@@ -1,3 +1,5 @@
+from restlib import response
+
 from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
@@ -12,7 +14,6 @@ class ProductVersionController(base.BaseController):
     def get(self, request, hostname, version):
         return self.db.getProductVersions(hostname)
 
-
 class ProductMemberController(base.BaseController):
 
     modelName = 'username'
@@ -23,6 +24,16 @@ class ProductMemberController(base.BaseController):
     def get(self, request, hostname, username):
         return self.db.getProductMembership(hostname, username)
 
+    @requires('membership', models.UpdateMembership)
+    def update(self, request, hostname, username, membership):
+        self.db.setMemberLevel(hostname, username, membership.level)
+        return response.RedirectResponse(self.url(request, 'products.members', 
+                                                  hostname, username))
+
+    def destroy(self, request, hostname, username):
+        self.db.deleteMember(hostname, username)
+        return response.RedirectResponse(self.url(request, 'products.members', 
+                                                  hostname))
 
 class ProductController(base.BaseController):
     modelName = 'hostname'
@@ -38,4 +49,6 @@ class ProductController(base.BaseController):
 
     @requires('product', models.Product)
     def create(self, request, product):
-        return product
+        self.db.createProduct(product)
+        return response.RedirectResponse(self.url(request, 'products', 
+                                                  product.hostname))

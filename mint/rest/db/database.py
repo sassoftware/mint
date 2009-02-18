@@ -1,6 +1,14 @@
+from mint import projects
+from mint import userlevels
 from mint.rest.api import models
 from mint.rest import errors
+from mint.rest.db import productmgr
+from mint.rest.db import publisher
+from mint.rest.db import emailnotifier
+from mint.rest.db import awshandler
 
+
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 class Database(object):
     def __init__(self, cfg, db):
@@ -8,11 +16,16 @@ class Database(object):
         self.db = db
         self.userId = -1
         self.isAdmin = False
+        self.publisher = publisher.EventPublisher()
+        self.publisher.subscribe(emailnotifier.EmailNotifier(self.cfg, self))
+        #self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db, self))
+        self.productMgr = productmgr.ProductManager(self.cfg, self.db, self, self.publisher)
 
-    def setAuth(self, userId, username, isAdmin=False):
-        self.userId = userId
-        self.username = username
-        self.isAdmin = isAdmin
+    def setAuth(self, auth):
+        self.auth = auth
+        self.userId = auth.userId
+        self.username = auth.username
+        self.isAdmin = auth.admin
 
     def _getOne(self, cu, exception, key):
         try:
@@ -24,6 +37,10 @@ class Database(object):
         except:
             raise exception(key)
 
+    def getUsername(self, userId):
+        cu = self.db.cursor()
+        cu.execute('SELECT username from Users where userId=?', userId)
+        return self._getOne(cu, errors.UserNotFound, userId)[0]
 
     def listProducts(self):
         cu = self.db.cursor()
@@ -47,13 +64,23 @@ class Database(object):
             results.addProduct(id, hostname, name)
         return results
 
+    def getProductFQDN(self, productId):
+        cu = self.db.cursor()
+        cu.execute('SELECT hostname, domainname from Projects where projectId=?', productId)
+        hostname, domainname = self._getOne(cu, errors.ProductNotFound, 
+                                            productId)
+        return hostname + '.' + domainname
+
+
+        
+
     def getProduct(self, hostname):
         cu = self.db.cursor()
         # NOTE: access check is built into this query - perhaps break out
         # for non-bulk queries.
         sql = '''
             SELECT Projects.projectId,hostname,name,shortname
-                   description, Users.username as creator, projectUrl,
+                   domainname, description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
             from Projects
@@ -70,6 +97,10 @@ class Database(object):
         d['id'] = d.pop('projectId')
         return models.Product(**d)
 
+    def requireLogin(self):
+        if self.userId < 0:
+            raise PermissionDenied
+
     def requireProductReadAccess(self, hostname):
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
@@ -77,6 +108,17 @@ class Database(object):
                               AND ProjectUsers.projectId=Projects.projectId)
                       WHERE hostname=?''', self.userId, hostname)
         d = dict(self._getOne(cu, errors.ProductNotFound, hostname))
+
+    def requireProductOwner(self, hostname):
+        cu = self.db.cursor()
+        cu.execute('''SELECT hidden,level from Projects
+                      LEFT JOIN ProjectUsers ON (userId=? 
+                              AND ProjectUsers.projectId=Projects.projectId
+                              AND ProjectUsers.level=?)
+                      WHERE hostname=?''', self.userId, userlevels.OWNER,
+                      hostname)
+        d = dict(self._getOne(cu, errors.ProductNotFound, hostname))
+
 
     def listProductVersions(self, hostname):
         self.requireProductReadAccess(hostname=hostname)
@@ -104,7 +146,7 @@ class Database(object):
         for username, level in cu:
             member = models.Membership(hostname=hostname,
                                        username=username,
-                                       level=level)
+                                       level=userlevels.names[level])
             memberList.members.append(member)
         return memberList
 
@@ -138,24 +180,50 @@ class Database(object):
                                      description=description)
 
     def requireUserReadAccess(self, username):
-        if self.isAdmin or self.username == username:
+        if self.hasUserReadAccess(username):
             return
         raise errors.PermissionDenied()
+
+    def hasUserReadAccess(self, username):
+        return (self.isAdmin or self.username == username)
+
+    def requireProductCreationRights(self):
+        pass
 
     def requireAdmin(self):
         if not self.isAdmin:
             raise errors.PermissionDenied()
 
-    def getUser(self, username):
-        self.requireUserReadAccess(username)
+    def getUserId(self, username):
         cu = self.db.cursor()
-        cu.execute("""SELECT userId as id, username, fullName,
-                             email, displayEmail, timeCreated, timeAccessed,
-                             active, blurb 
-                       FROM Users WHERE username=?""", username)
+        cu.execute("""SELECT userId FROM Users WHERE username=?""", username)
+        userId, = self._getOne(cu, errors.UserNotFound, username)
+        return userId
+
+    def getUser(self, username):
+        self.requireLogin()
+        if self.hasUserReadAccess(username):
+            self._getUser(username, includePrivateInfo=True)
+        else:
+            self._getUser(username, includePrivateInfo=False)
+
+    def _getUser(self, username, includePrivateInfo=True):
+        if includePrivateInfo:
+            cu = self.db.cursor()
+            cu.execute("""SELECT userId as id, username, fullName,
+                                 email, displayEmail, timeCreated, timeAccessed,
+                                 active, blurb 
+                           FROM Users WHERE username=?""", username)
+        else:
+            cu = self.db.cursor()
+            cu.execute("""SELECT userId as id, username, fullName,
+                                 displayEmail, blurb 
+                           FROM Users WHERE username=? AND active=1""", 
+                           username)
         d = dict(self._getOne(cu, errors.UserNotFound, username))
         return models.User(**d)
 
+        
     def listMembershipsForUser(self, username):
         self.requireUserReadAccess(username)
         cu = self.db.cursor()
@@ -168,7 +236,7 @@ class Database(object):
         for hostname, level in cu:
             member = models.Membership(hostname=hostname,
                                        username=username,
-                                       level=level)
+                                       level=userlevels.names[level])
             memberList.members.append(member)
         return memberList
 
@@ -196,3 +264,64 @@ class Database(object):
             group = models.UserGroupMember(userGroup, username)
         groupList.groups.append(group)
         return groupList
+
+    def createProduct(self, product):
+        self.requireProductCreationRights()
+        if self.cfg.rBuilderOnline or not product.domainname:
+            product.domainname = self.cfg.projectDomainName.split(':')[0]
+        projects._validateShortname(product.shortname, product.domainname, reservedHosts)
+        projects._validateHostname(product.hostname, product.domainname, 
+                                   reservedHosts)
+        if product.namespace:
+            projects._validateNamespace(product.namespace)
+        else:
+            #If none was set use the default namespace set in config
+            product.namespace = self.cfg.namespace
+        prodtype = product.prodtype
+        if not prodtype:
+            prodtype = 'Appliance'
+        elif prodtype not in ('Appliance', 'Component'):
+            raise mint_error.InvalidProdType
+
+        fqdn = ".".join((product.hostname, product.domainname))
+        projecturl = product.projecturl
+        if (projecturl and not (projecturl.startswith('https://') 
+            or projecturl.startswith('http://'))):
+            product.projecturl = "http://" + projecturl
+        for attr in ('projecturl', 'description', 'commitEmail'):
+            if getattr(product, attr) is None:
+                setattr(product, attr, '')
+
+        if product.prodtype == 'Appliance':
+            applianceValue = 1
+        else:
+            applianceValue = 0
+
+
+        if self.cfg.hideNewProjects:
+            product.hidden = True
+        elif product.hidden is None:
+            product.hidden = False
+
+        productId = self.productMgr.createProduct(product.name, 
+                                      product.description, product.hostname,
+                                      product.domainname, product.namespace,
+                                      applianceValue, product.projecturl,
+                                      product.shortname, product.prodtype,
+                                      product.commitEmail, 
+                                      isPrivate=product.hidden)
+        product.id = productId
+        return product
+
+    def setMemberLevel(self, hostname, username, level):
+        self.requireProductOwner(hostname)
+        level = userlevels.idsByName[level]
+        product = self.getProduct(hostname)
+        userId = self.getUserId(username)
+        self.productMgr.setMemberLevel(product.id, userId, level)
+
+    def deleteMember(self, hostname, username):
+        self.requireProductOwner(hostname)
+        product = self.getProduct(hostname)
+        userId = self.getUserId(username)
+        self.productMgr.removeMember(product.id, userId)
