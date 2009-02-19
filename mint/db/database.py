@@ -216,3 +216,13 @@ class Database(object):
             cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?"
                     % (table, idField), updates)
             self.db.commit()
+
+    def _getOne(self, cu, exception, key):
+        try:
+            cu = iter(cu)
+            res = cu.next()
+            assert (not(list(cu))), key # make sure that we really only
+                                        # got one entry
+            return res
+        except:
+            raise exception(key)
