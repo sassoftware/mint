@@ -24,39 +24,31 @@ try:
     from mint import charts
 except ImportError:
     charts = None
-from mint import communityids
+import mint.db.database
 from mint import config
-from mint import data
-from mint import database
+from mint.db import grouptrove
+from mint import users
+from mint.lib import data
+from mint.lib import database
+from mint.lib import maillib
+from mint.lib import persistentcache
+from mint.lib import profile
+from mint import builds
 from mint import ec2
-from mint import grouptrove
 from mint import helperfuncs
-from mint import jobs
 from mint import jobstatus
 from mint import maintenance
-from mint import mirror
-from mint import news
-from mint import persistentcache
-from mint import pkgindex
-from mint import profile
-from mint import projects
-from mint import builds
 from mint import buildtemplates
-from mint import pubreleases
+from mint import projects
 from mint import reports
-from mint import requests
-from mint import sessiondb
-from mint import stats
 from mint import templates
-from mint import targets
 from mint import userlevels
-from mint import users
 from mint import usertemplates
-from mint import selections
 from mint import urltypes
 from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.logerror import logErrorAndEmail
 from mint import packagecreator
 
 from mcp import client as mcpClient
@@ -109,7 +101,6 @@ SERVER_VERSIONS = [8]
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
-validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
 # XXX do we need to reserve localhost?
@@ -120,7 +111,6 @@ validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 # valid product version
 validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
 
-dbConnection = None
 callLog = None
 
 def deriveBaseFunc(func):
@@ -233,64 +223,6 @@ def typeCheck(*paramTypes):
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
-
-tables = {}
-def getTables(db, cfg):
-
-    # check to make sure the schema version is correct
-    from mint import schema
-    try:
-        schema.checkVersion(db)
-    except sqlerrors.SchemaVersionError, e:
-        raise DatabaseVersionMismatch(e.args[0])
-
-    d = {}
-    d['labels'] = projects.LabelsTable(db, cfg)
-    d['projects'] = projects.ProjectsTable(db, cfg)
-    d['buildFiles'] = jobs.BuildFilesTable(db)
-    d['filesUrls'] = jobs.FilesUrlsTable(db)
-    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
-    d['urlDownloads'] = builds.UrlDownloadsTable(db)
-    d['users'] = users.UsersTable(db, cfg)
-    d['userGroups'] = users.UserGroupsTable(db, cfg)
-    d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
-    d['userData'] = data.UserDataTable(db)
-    d['projectUsers'] = users.ProjectUsersTable(db)
-    d['builds'] = builds.BuildsTable(db)
-    d['pkgIndex'] = pkgindex.PackageIndexTable(db)
-    d['newsCache'] = news.NewsCacheTable(db, cfg)
-    d['sessions'] = sessiondb.SessionsTable(db)
-    d['membershipRequests'] = requests.MembershipRequestTable(db)
-    d['commits'] = stats.CommitsTable(db)
-    d['buildData'] = data.BuildDataTable(db)
-    d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
-    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
-    d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
-    d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
-    d['jobData'] = data.JobDataTable(db)
-    d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
-    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
-    d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
-    d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
-    d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
-    d['topProjects'] = selections.TopProjectsTable(db)
-    d['popularProjects'] = selections.PopularProjectsTable(db)
-    d['latestCommit'] = selections.LatestCommitTable(db)
-    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
-    d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
-    d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
-    d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
-
-    d['targets'] = targets.TargetsTable(db)
-    d['targetData'] = targets.TargetDataTable(db)
-
-    # tables for per-project repository db connections
-    d['projectDatabase'] = projects.ProjectDatabase(db)
-    d['databases'] = projects.Databases(db)
-
-    return d
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
@@ -409,6 +341,11 @@ class MintServer(object):
                 return (False, r)
         finally:
             prof.stopXml(methodName)
+
+    def __getattr__(self, key):
+        if key[0] != '_':
+            # backwards-compatible reference to all the database table objects.
+            return getattr(self.db, key)
 
     def _handleError(self, e, authToken, methodName, args):
         self.db.rollback()
@@ -693,7 +630,7 @@ class MintServer(object):
 
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
-        from mint import proxiedtransport
+        from mint.lib import proxiedtransport
         mirrorUser = ''
         try:
             # Make sure that we deal with any HTTP proxies
@@ -791,40 +728,6 @@ class MintServer(object):
         return SERVER_VERSIONS
 
     # project methods
-    def _validateHostname(self, hostname, domainname, resHosts):
-        if not hostname:
-            raise projects.InvalidHostname
-        if validHost.match(hostname) == None:
-            raise projects.InvalidHostname
-        if hostname in resHosts:
-            raise projects.InvalidHostname
-        if (hostname + "." + domainname) == socket.gethostname():
-            raise projects.InvalidHostname
-        return None
-
-    def _validateShortname(self, shortname, domainname, resHosts):
-        if not shortname:
-            raise InvalidShortname
-        if validHost.match(shortname) == None:
-            raise InvalidShortname
-        if shortname in resHosts:
-            raise InvalidShortname
-        if (shortname + "." + domainname) == socket.gethostname():
-            raise InvalidShortname
-        return None
-
-    def _validateNamespace(self, namespace):
-        v = helperfuncs.validateNamespace(namespace)
-        if v != True:
-            raise InvalidNamespace
-
-    def _validateProductVersion(self, version):
-        if not version:
-            raise ProductVersionInvalid
-        if not validProductVersion.match(version):
-            raise ProductVersionInvalid
-        return None
-
     def _buildEC2AuthToken(self):
         amiData = self._getTargetData('ec2', 'aws', supressException = True)
         at = ()
@@ -857,11 +760,11 @@ class MintServer(object):
         # make sure the shortname, version, and prodtype are valid, and
         # validate the hostname also in case it ever splits from being
         # the same as the short name
-        self._validateShortname(shortname, domainname, reservedHosts)
-        self._validateHostname(hostname, domainname, reservedHosts)
-        self._validateProductVersion(version)
+        projects._validateShortname(shortname, domainname, reservedHosts)
+        projects._validateHostname(hostname, domainname, reservedHosts)
+        projects._validateProductVersion(version)
         if namespace:
-            self._validateNamespace(namespace)
+            projects._validateNamespace(namespace)
         else:
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
@@ -974,7 +877,7 @@ class MintServer(object):
         # make sure the hostname is valid
         if not domainname:
             domainname = self.cfg.projectDomainName
-        self._validateHostname(hostname, domainname, reservedExtHosts)
+        projects._validateHostname(hostname, domainname, reservedExtHosts)
 
         # ensure that the label we were passed is valid
         try:
@@ -1082,8 +985,11 @@ class MintServer(object):
     @requiresAuth
     def listJoinRequests(self, projectId):
         self._filterProjectAccess(projectId)
-        reqList = self.membershipRequests.listRequests(projectId)
+        reqList = self._listAllJoinRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
+    
+    def _listAllJoinRequests(self, projectId):
+        return self.membershipRequests.listRequests(projectId)
 
     @typeCheck(int, str)
     @private
@@ -1115,7 +1021,7 @@ class MintServer(object):
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
                                           name = name)
-                users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
+                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         self.membershipRequests.setComments(projectId, userId, comments)
         return True
 
@@ -1381,7 +1287,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if self.cfg.sendNotificationEmails:
             if message:
-                users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                user['email'],
                                "Your %s account" % \
                                self.cfg.productName,
@@ -1395,7 +1301,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         adminUsers.append(admnUsr)
                 for usr in adminUsers:
                     if usr['username'] != user['username']:
-                        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                        maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                        usr['email'],
                                        "%s project membership modification" % \
                                        self.cfg.productName,
@@ -1428,7 +1334,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
 
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
 
         return self.projects.update(projectId, namespace = namespace)
 
@@ -2124,12 +2030,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @private
     def getNews(self):
-        return self.newsCache.getNews()
+        return self.db.newsCache.getNews()
 
     @typeCheck()
     @private
     def getNewsLink(self):
-        return self.newsCache.getNewsLink()
+        return self.db.newsCache.getNewsLink()
 
     @typeCheck(str, str, int)
     @private
@@ -2630,13 +2536,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([ x[1] for x in scored if x[0] == maxScore ], 
                       key=lambda x: x[2])[-1:]
 
-    @typeCheck(int)
-    @requiresAuth
-    def deleteBuild(self, buildId):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
+    def _deleteBuild(self, buildId, force=False):
+        if not self.builds.buildExists(buildId)  and not force:
             raise BuildMissing()
-        if self.builds.getPublished(buildId):
+
+        if self.builds.getPublished(buildId) and not force:
             raise BuildPublished()
 
         try:
@@ -2659,6 +2563,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
             for urlId, urlType, url in fileUrlList:
+                if self.db.driver == 'sqlite':
+                    # sqlite doesn't do cascading deletes, so we'll do it for them
+                    self.buildFilesUrlsMap.delete(fileId, urlId)
                 # if this location is local, delete the file
                 if urlType == urltypes.LOCAL:
                     fileName = url
@@ -2679,6 +2586,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                 raise
 
         return True
+
+    @typeCheck(int)
+    @requiresAuth
+    def deleteBuild(self, buildId):
+        """
+        Delete a build
+        @param buildId: The id of the build to delete
+        @type buildId: C{int}
+        """
+        self._filterBuildAccess(buildId)
+        return self._deleteBuild(buildId, force=False)      
 
     @typeCheck(str)
     @requiresAuth
@@ -2878,6 +2796,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if writers + readers:
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
+
+            if self.cfg.ec2ProductCode:
+                amiData['ec2ProductCode'] = self.cfg.ec2ProductCode
 
             r['amiData'] = amiData
 
@@ -4800,9 +4721,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         
         # Check the namespace
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
         # make sure it is a valid product version
-        self._validateProductVersion(name)
+        projects._validateProductVersion(name)
         
         try:
             # XXX: Should this add an entry to the labels table?
@@ -4977,7 +4898,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             the package creator service, or if the L{uploadDirectoryHandle} does not
             contain a valid manifest file as generated by the upload CGI script.
         '''
-        from mint.fileupload import fileuploader
+        from mint.lib.fileupload import fileuploader
         from conary import versions as conaryVer
 
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
@@ -5223,7 +5144,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raise PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
         invalid.
         """
-        from mint.fileupload import fileuploader
+        from mint.lib.fileupload import fileuploader
         fieldname = str(fieldname)
         ## Connect up to the tmpdir
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
@@ -5252,7 +5173,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: True if the uploadDirectoryHandle is a valid session, False otherwise.
         @rtype: boolean
         """
-        from mint.fileupload import fileuploader
+        from mint.lib.fileupload import fileuploader
         str_fieldnames = [str(x) for x in fieldnames]
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
         if os.path.isdir(path):
@@ -6106,6 +6027,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
+        self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
@@ -6132,48 +6054,155 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
 
-        from conary import dbstore
-        global dbConnection
-        if db:
-            dbConnection = db
-
-        # Flag to indicate if we created a new self.db and need to force a
-        # call to getTables
-        reloadTables = False
-
-        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
-            self.db = dbConnection
-        else:
-            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
-            dbConnection = self.db
-            reloadTables = True
-
-        # reopen a dead database
-        if self.db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint server"
-            sys.stderr.flush()
-
-        genConaryRc = False
-        global tables
-        if not tables or alwaysReload or reloadTables:
-            tables = getTables(self.db, self.cfg)
-            genConaryRc = True
-
-        for table in tables:
-            tables[table].db = self.db
-            tables[table].cfg = self.cfg
-            self.__dict__[table] = tables[table]
-
-        self.users.confirm_table.db = self.db
-        self.newsCache.ageTable.db = self.db
-        self.projects.reposDB.cfg = self.cfg
-
-        if genConaryRc:
+        if self.db.tablesReloaded:
             self._generateConaryRcFile()
-
-            # do these only on table reloads too
-            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
-            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
-
-
         self.newsCache.refresh()
+        
+    def _gracefulHttpd(self):
+        return os.system('/usr/libexec/rbuilder/httpd-graceful')
+        
+    @typeCheck(int)
+    @requiresAdmin
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        
+        def handleNonFatalException(desc):
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.cfg, e_type, e_value, e_tb, desc, {}, doEmail=False)
+        
+        project = projects.Project(self, projectId)
+        reposName = self._translateProjectFQDN(project.getFQDN())
+        
+        if project.external and not self.isLocalMirror(project.id):
+            # can't do it
+            return False
+                
+        # We need to make sure the project and labels are deleted before doing 
+        # anything else.  Any failure here should end with a rollback so no
+        # changes are preserved.  Note that we try a few times after doing an
+        # http graceful.  This is done to get rid of any cached connections
+        # that block the repo DB from being dropped.
+        self.db.transaction()
+        try:
+            numTries = 0
+            maxTries = 3
+            deleted = False
+            while (numTries < maxTries) and not deleted:
+                
+                self._gracefulHttpd()
+                
+                # delete the project
+                try:
+                    self.projects.deleteProject(project.id, project.getFQDN(), commit=False)
+                    deleted = True
+                except Exception, e:
+                    if numTries >= maxTries:
+                        # this is fatal, but we want the original traceback logged
+                        # and then mask the error for the user
+                        handleNonFatalException('delete-project')
+                        raise ProjectNotDeleted(project.name)
+                    else:
+                        time.sleep(1)
+                        numTries += 1
+            
+            # delete project labels
+            self.labels.deleteLabels(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        
+        self.db.commit()        
+        
+        # this should not fail after this point, delete what we can and move on
+        
+        # delete the images
+        try:
+            imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
+            util.rmtree(imagesDir, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-images')
+        
+        # delete the entitlements
+        try:
+            entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
+            util.rmtree(entFile, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-entitlements')
+        
+        # delete the group troves
+        try:
+            troves = self.groupTroves.listGroupTrovesByProject(project.id)
+            for trove in troves:
+                self.groupTroves.delGroupTrove(trove[0])
+        except Exception, e:
+            handleNonFatalException('delete-group-troves')
+        
+        # delete the releases
+        try:
+            pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
+                            project.id, publishedOnly=False)
+            for id in pubRelIds:
+                self.publishedReleases.delete(id)
+        except Exception, e:
+            handleNonFatalException('delete-releases')
+        
+        # delete the builds
+        try:
+            for buildId in self.builds.iterBuildsForProject(project.id):
+                self._deleteBuild(buildId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-builds')
+        
+        # delete the membership requests
+        try:
+            self.membershipRequests.deleteRequestsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-membership-requests')
+        
+        # delete the commits
+        try:
+            self.commits.deleteCommitsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-commits')
+        
+        # delete package indices
+        try:
+            self.pkgIndex.deleteByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-package-indices')
+        
+        # delete project user references
+        try:
+            users = self.projectUsers.getMembersByProjectId(project.id)
+            for userId, _, _ in users:
+                self.projectUsers.delete(project.id, userId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-project-users')
+        
+        # delete inbound mirror
+        try:
+            ibmirror = self.getInboundMirror(project.id)
+            if ibmirror:
+                self.delInboundMirror(ibmirror['inboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-inbound-mirrors')
+        
+        # delete outbound mirror
+        try:
+            obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
+            if obmirror:
+                self.delOutboundMirror(obmirror['outboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-outbound-mirrors')
+        
+        # delete repo names
+        try:
+            self.delRemappedRepository(project.getFQDN())
+        except Exception, e:
+            handleNonFatalException('delete-repo-names')
+        
+        return True

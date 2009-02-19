@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -13,7 +13,7 @@ import fixtures
 from mint import buildtypes
 from mint import userlevels
 from mint import searcher
-from mint import pkgindex
+from mint.db import pkgindex
 
 class SearchHelperTest(unittest.TestCase):
     def testParseTerms(self):

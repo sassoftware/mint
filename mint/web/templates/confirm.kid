@@ -16,9 +16,13 @@
             <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
             
             <div class="full-content">
+                <?python
+                     messageBottom = locals().get('messageBottom', '')
+                ?>
                 <div class="page-title-no-project">Confirm:</div>
                 
-                <p class="errormessage">${message}</p>
+                <p py:if="not messageBottom" class="errormessage">${message}</p>
+                <p py:if="messageBottom" class="errormessage">${message}<br/><br/>${messageBottom}</p>
                 <form method="post" action="${yesArgs['func']}">
                 <span py:for="k, v in yesArgs.iteritems()">
                     <input type="hidden" name="${k}" value="${v}"/>

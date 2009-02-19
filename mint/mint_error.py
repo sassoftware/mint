@@ -217,6 +217,26 @@ class MethodNotSupported(MintError):
 
     def __str__(self):
         return "Method not supported by XMLRPC server: %s" % self.method
+    
+class RepositoryAlreadyExists(MintError):
+    def __init__(self, projectName):
+        MintError.__init__(self)
+        self.projectName = projectName
+
+    def freeze(self): return (self.projectName,)
+
+    def __str__(self):
+        return "A repository for '%s' already exists or was not properly deleted." % self.projectName
+    
+class ProjectNotDeleted(MintError):
+    def __init__(self, projectName):
+        MintError.__init__(self)
+        self.projectName = projectName
+
+    def freeze(self): return (self.projectName,)
+
+    def __str__(self):
+        return "Unable to delete '%s'.  See the error log for more information." % self.projectName
 
 class ProductDefinitionError(MintError):
     def __init__(self, reason):
@@ -327,7 +347,7 @@ class PublishedReleaseMirrorRole(MintError):
 class DatabaseVersionMismatch(MintError):
     def __init__(self, currentVersion):
         MintError.__init__(self)
-	from mint import schema
+	from mint.db import schema
         self.currentVersion = currentVersion
         self.requiredVersion = schema.RBUILDER_DB_VERSION
 

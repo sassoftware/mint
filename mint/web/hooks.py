@@ -18,13 +18,14 @@ import urllib
 
 from mint import config
 from mint import users
-from mint import profile
+from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
+from mint.db.projects import transTables
 from mint.helperfuncs import extractBasePath
 from mint.logerror import logWebErrorAndEmail
-from mint.projects import transTables
 from mint.users import MailError
+from mint.rest.server import restHandler
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
@@ -332,6 +333,7 @@ urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/catalog/',          catalogHandler),
+    (r'^/api/v1/',           restHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),

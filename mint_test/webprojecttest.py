@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -17,13 +17,14 @@ import mint_rephelp
 import fixtures
 from mint.web import project
 from mint.web import site
-from mint import database
+from mint.lib import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
 from mint import jobstatus
 from mint import buildtypes
 from mint import userlevels
 from mint import users
 from mint import helperfuncs
+from mint import mint_error
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
@@ -193,6 +194,46 @@ class WebProjectTest(WebProjectBaseTest):
                                   code=[200],
                                   content='currently in progress',
                                   server=self.getProjectServerHostname())
+        
+    @testsuite.tests('RBL-4225')
+    def testDeleteProjectAsAdmin(self):
+        client, userId = self.quickMintAdmin('testadmin', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        
+        project = client.getProject(projectId)
+       
+        self.webLogin('testadmin', 'testpass')
+        
+        page = self.fetch('/project/testproject',
+                          server=self.getProjectServerHostname())
+        # owner should not see the link
+        assert "deleteProject" in page.body
+        project.refresh()
+        page = self.fetch('/project/testproject/deleteProject?confirmed=1',
+                          server=self.getProjectServerHostname())
+        self.assertRaises(database.ItemNotFound, client.getProject, projectId)
+        
+    @testsuite.tests('RBL-4225')
+    def testDeleteProjectAsOwner(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject',
+                MINT_PROJECT_DOMAIN)
+        
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+       
+        self.webLogin('testuser', 'testpass')
+        
+        page = self.fetch('/project/testproject',
+                          server=self.getProjectServerHostname())
+        # owner should not see the link
+        assert "deleteProject" not in page.body
+        project.refresh()
+        page = self.fetch('/project/testproject/deleteProject?confirmed=1',
+                          server=self.getProjectServerHostname())
+        
+        assert "Permission Denied".lower() in page.body.lower()
 
     def testGroupPerms(self):
         raise testsuite.SkipTestException('This test depends on accessing conary.rpath.com through the proxy (and thus requires a multi-process mint server as well as conary.rpath.com being accessible)')

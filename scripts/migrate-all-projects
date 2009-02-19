@@ -14,9 +14,9 @@ import time
 import traceback
 
 from mint import config
-from mint import scriptlibrary
 from mint import maintenance
-from mint.projects import transTables
+from mint.lib import scriptlibrary
+from mint.db.projects import transTables
 from conary import dbstore
 from conary.lib import tracelog, formattrace, util
 from conary.server import schema

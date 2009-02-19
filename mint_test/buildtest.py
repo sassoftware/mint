@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -16,7 +16,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes, buildtemplates, projects
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
 from mint.server import deriveBaseFunc, ParameterError

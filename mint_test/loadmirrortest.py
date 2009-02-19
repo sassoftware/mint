@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -9,7 +9,8 @@ import unittest
 testsuite.setup()
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
-from mint import loadmirror, helperfuncs
+from mint import helperfuncs
+from mint.scripts import loadmirror
 from mint.client import MintClient
 from mint.projects import Project
 from mint.config import MintConfig

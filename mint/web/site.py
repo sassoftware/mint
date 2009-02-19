@@ -13,7 +13,7 @@ from mimetypes import guess_type
 from mint import buildtypes
 from mint import constants
 from mint import urltypes
-from mint import data
+from mint.lib import data
 from mint import helperfuncs
 from mint import mint_error
 from mint import maintenance
@@ -437,10 +437,7 @@ class SiteHandler(WebHandler):
            availablePlatforms = availablePlatforms,
            customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
-                   'appliance': 'unknown', 
-                   'prodtype' : 'Appliance', 
-                   'namespace': self.cfg.namespace,
-                   'isPrivate': False,
+                   'appliance': 'unknown',
                    'platformLabel': platformLabel})
 
     @mailList
@@ -467,14 +464,19 @@ class SiteHandler(WebHandler):
         return not error
 
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
-               blurb = '', appliance = 'unknown', shortname = '', namespace='',
-               prodtype = '', version = '', commitEmail='', isPrivate = 'off',
+               blurb = '', appliance = 'unknown', shortname = '', namespace = '',
+               prodtype = 'Appliance', version = '', commitEmail='', isPrivate = '',
                platformLabel = '')
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, 
                       blurb, optlists, appliance, shortname, namespace, 
                       prodtype, version, commitEmail, isPrivate, platformLabel):
+        
+        # project should be private for rba but public for rbo by default
+        if not isPrivate:
+            isPrivate = self.cfg.rBuilderOnline and 'off' or 'on'
+        
         isPrivate = (isPrivate.lower() == 'on') and True or False
         
         shortname = shortname.lower()
@@ -483,7 +485,7 @@ class SiteHandler(WebHandler):
 
         pText = getProjectText().lower()
         if not namespace:
-            self._addErrors('You must supply a %s namespace' % pText)
+            namespace = self.cfg.namespace
         if not title:
             self._addErrors("You must supply a %s title"%pText)
         if not shortname:
@@ -536,9 +538,10 @@ class SiteHandler(WebHandler):
                     self._addErrors(str(e))
                 
         if not self._getErrors():
-            # don't output status here since we now move on the updating the 
-            # version.  Status will be updated after that.
-            self._redirect("http://%s%sproject/%s/editVersion?id=%d&linked=%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, versionId, title))
+            helperfuncs.setCurrentProductVersion(self.session, projectId, versionId)
+            self._setInfo("Successfully created %s %s '%s' version '%s'" % \
+                              (isPrivate and "private" or "public", pText, title, version))
+            self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
             availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 

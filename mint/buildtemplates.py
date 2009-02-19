@@ -2,7 +2,7 @@
 #
 # All Rights Reserved
 import sys
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint import buildtypes
 from mint.mint_error import InvalidBuildOption, BuildOptionValidationException
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -17,8 +17,8 @@ from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 import rephelp
 
 from mint import mint_error
-from mint import database
-from mint import data
+from mint.lib import database
+from mint.lib import data
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -15,7 +15,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
-from mint import pkgindexer
+from mint.scripts import pkgindexer
 from mint.web.repos import ConaryHandler
 import recipes
 

@@ -4,7 +4,7 @@
 from mint import buildtypes
 from mint.buildtypes import typeNames, buildTypeExtra
 from mint.web.templatesupport import shortTroveSpec
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 
 # troves that we can allow the user to select "None for this build"
 allowNone = ['anaconda-custom', 'media-template']
@@ -103,7 +103,8 @@ allowNone = ['anaconda-custom', 'media-template']
 
                     <div class="expandableFormGroupTitle" onclick="javascript:toggle_display('advanced_settings');">
                         <img id="advanced_settings_expander" class="noborder" 
-                            src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />Advanced Options
+                            src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" />
+                        Advanced Options
                     </div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">

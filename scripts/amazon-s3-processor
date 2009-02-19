@@ -13,8 +13,8 @@ from conary.lib import sha1helper
 from conary.lib.cfg import CfgBool, CfgInt
 
 from mint import config
-from mint import scriptlibrary
 from mint import urltypes
+from mint.lib import scriptlibrary
 
 from es3 import s3obj
 from es3 import transport

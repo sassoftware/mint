@@ -7,7 +7,7 @@ import os
 import re
 import time
 
-from mint import loadmirror
+from mint.scripts import loadmirror
 from mint import config
 
 import raa.authorization

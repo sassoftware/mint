@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -8,7 +8,7 @@ testsuite.setup()
 
 import fixtures
 
-from mint import pkgindexer
+from mint.scripts import pkgindexer
 
 from conary import dbstore
 

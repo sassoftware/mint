@@ -4,7 +4,7 @@ import os
 import sys
 
 from mint import config
-from mint import scriptlibrary
+from mint.lib import scriptlibrary
 from mint.client import MintClient
 
 from conary.lib import log

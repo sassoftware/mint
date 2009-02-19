@@ -12,9 +12,9 @@ from conary.repository import errors
 
 from mint import users
 from mint import maintenance
-from mint import mirror
 from mint.helperfuncs import getProjectText, configureClientProxies
 from mint.mint_error import *
+from mint.scripts import mirror
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
@@ -558,7 +558,6 @@ class AdminHandler(WebHandler):
             description = '', action = 'Cancel')
     def processEditUpdateService(self, id, hostname, adminUser, adminPassword,
             description, action, *args, **kwargs):
-
         if action == "Cancel":
             self._redirect("http://%s%sadmin/updateServices" %
                     (self.cfg.siteHost, self.cfg.basePath))

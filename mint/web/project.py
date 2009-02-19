@@ -11,7 +11,7 @@ import time
 from mint.web import basictroves
 from mint import communitytypes
 from mint import mailinglists
-from mint import jobs
+from mint.db import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
@@ -21,9 +21,9 @@ from mint.mint_error import *
 from mint import buildtemplates
 from mint import helperfuncs
 from mint.helperfuncs import getProjectText
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.logerror import logWebErrorAndEmail
-from mint.users import sendMailWithChecks
+from mint.lib.maillib import sendMailWithChecks
 from mint.web import productversion
 from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
@@ -1880,6 +1880,27 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
+            
+    @requiresAuth
+    @boolFields(confirmed = False)
+    @dictFields(yesArgs = {})
+    def deleteProject(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pName = self.project.name
+            self.client.deleteProject(self.project.id)
+            self._setInfo("%s '%s' has been deleted." % \
+                    (getProjectText().title(), pName))
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            pText = getProjectText().lower()
+            noLink = "http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.getHostname())
+            return self._write("confirm",
+                message = """Warning: Deleting this %s is an irreversible operation, and
+                             will negatively impact all %ss and individuals that consume
+                             it, even if a %s is later created with the same name."""
+                             % (pText, pText, pText),
+                messageBottom = "Are you sure you want to delete this %s?" % pText,
+                yesArgs = {'func':'deleteProject', 'confirmed':'1'}, noLink = noLink)
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -9,7 +9,7 @@ testsuite.setup()
 import fixtures
 
 from mint import buildtypes
-from mint.data import RDT_BOOL
+from mint.lib.data import RDT_BOOL
 
 # arbitrary sha1 is trhe sha1 of nothing for when it doesn't matter
 fakeSha1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'

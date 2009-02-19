@@ -10,8 +10,8 @@ import xmlrpclib
 
 from mint import builds
 from mint import ec2
-from mint import grouptrove
-from mint import jobs
+from mint.db import grouptrove
+from mint.db import jobs
 from mint import mint_error
 from mint import projects
 from mint import pubreleases
@@ -85,6 +85,23 @@ class MintClient:
         """
         return self.server.newExternalProject(name, hostname, domainname,
                                               label, url, mirror)
+        
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        return self.server.deleteProject(projectId)
+    
+    def deleteProjectByName(self, hostname):
+        """
+        Delete a project
+        @param hostname: The hostname of the project to delete
+        @type hostname: C{str}
+        """
+        project = self.getProjectByHostname(hostname)
+        return self.server.deleteProject(project.id)
 
     def checkAuth(self):
         """

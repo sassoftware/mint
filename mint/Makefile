@@ -4,62 +4,38 @@
 # All Rights Reserved
 #
 
-SUBDIRS = reports templates web
+SUBDIRS = db lib reports rest scripts templates web 
 
 python_files =			\
 	__init__.py		\
-	backup.py		\
 	builds.py		\
 	buildtemplates.py	\
 	buildtypes.py		\
 	charts.py		\
 	checkhtml.py		\
 	client.py		\
-	communityids.py		\
 	communitytypes.py	\
 	config.py		\
 	cooktypes.py		\
 	constants.py		\
-	copyutils.py		\
-	data.py			\
-	database.py		\
 	ec2.py			\
-	fileupload.py		\
 	flavors.py		\
-	grouptrove.py		\
 	helperfuncs.py		\
-	jobs.py			\
 	jobstatus.py		\
-	loadmirror.py		\
 	logerror.py		\
 	mailinglists.py		\
 	maintenance.py		\
-	migrate.py		\
 	mint_error.py		\
 	mint_update.py		\
-	mirror.py		\
-	news.py			\
 	packagecreator.py	\
-	persistentcache.py	\
-	pkgindex.py		\
-	pkgindexer.py		\
-	profile.py		\
 	projects.py		\
-	proxiedtransport.py	\
 	pubreleases.py		\
 	rbuilderaction.py	\
-	requests.py		\
 	rmake_setup.py		\
-	schema.py		\
-	scriptlibrary.py	\
 	searcher.py		\
-	selections.py		\
 	server.py		\
 	session.py		\
-	sessiondb.py		\
 	shimclient.py		\
-	stats.py		\
-	targets.py              \
 	urltypes.py		\
 	userlevels.py		\
 	userlisting.py		\
