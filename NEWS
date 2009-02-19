@@ -8,6 +8,9 @@ Web Front End Changes
 * The rBA Setup plugin now informs users how to login and redirects them
   to the rBuilder. (RBL-4186)
 
+Changes in 5.0.1
+===============
+
 Bug Fixes
 ---------------------
 * Downloads of images larger than 2GiB are no longer sent with a
