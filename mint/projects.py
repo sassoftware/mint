@@ -294,6 +294,10 @@ class ProductVersions(database.TableObject):
         return self.server.getProductVersion(id)
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
+# valid product version
+validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
+validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
+
 def _validateHostname(hostname, domainname, resHosts):
     if not hostname:
         raise InvalidHostname
