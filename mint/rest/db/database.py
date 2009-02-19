@@ -310,6 +310,14 @@ class Database(object):
                                version=str(v.trailingRevision()), 
                                label=str(v.trailingLabel()))
 
+    def getProductVersionStages(self, hostname, version):
+        pd = self.getProductVersionDefinition(hostname, version)
+        stageList = models.Stages()
+        for stage in pd.getStages():
+            stageList.stages.append(models.Stage(name=str(stage.name),
+                                                 label=str(pd.getLabelForStage(stage.name))))
+        return stageList
+
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)

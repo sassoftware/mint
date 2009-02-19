@@ -91,10 +91,13 @@ class ProductManager(object):
             if domainname != projectDomainName:
                 self.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
                                        toName=fqdn, commit=False)
-            self.db.labels.addLabel(projectId, '%s@%s:%s-%s-devel' % (fqdn, namespace, hostname, version),
+            self.db.labels.addLabel(projectId, 
+                '%s@%s:%s-%s-devel' % (fqdn, namespace, 
+                                       hostname, version),
                 "http://%s%srepos/%s/" % (
                 self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-                authType='userpass', username=self.cfg.authUser, password=self.cfg.authPass, commit=False)
+                authType='userpass', username=self.cfg.authUser, 
+                password=self.cfg.authPass, commit=False)
 
             self.reposMgr.createRepository(hostname, domainname, isPrivate=isPrivate)
             # can only add members after the repository is set up
@@ -159,7 +162,8 @@ class ProductManager(object):
                                       level=level, commit=False)
                 self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
                                            mirror=True, admin=admin)
-                self.publisher.notify('UserProjectAdded', self.auth.auth, userId, projectId, level)
+                self.publisher.notify('UserProjectAdded', self.auth.auth, userId, 
+                                      projectId, level)
             except:
                 self.db.rollback()
                 raise

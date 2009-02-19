@@ -9,6 +9,9 @@ class ProductVersion(Model):
     productUrl = fields.UrlField('products', ('hostname',))
     namespace = fields.CharField()
     description = fields.CharField()
+    platform = fields.UrlField('products.versions.platform', ('hostname', 'name'))
+    stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
+    definition = fields.UrlField('products.versions.definition', ('hostname', 'name'))
 
     def get_absolute_url(self):
         return 'products.versions', self.hostname, self.name
