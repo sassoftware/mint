@@ -1,6 +1,9 @@
 Changes in @NEW@
 ===============
 
+Changes in 5.0.1
+===============
+
 Bug Fixes
 ---------------------
 * Downloads of images larger than 2GiB are no longer sent with a
