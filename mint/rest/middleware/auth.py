@@ -52,20 +52,20 @@ class AuthenticationCallback(object):
         return session.get('authToken', None)
 
     def processRequest(self, request):
-        auth = self.getAuth(request)
-        if not auth:
-            auth = self.getCookieAuth(request)
-        if not auth:
+        authToken = self.getAuth(request)
+        if not authToken:
+            authToken = self.getCookieAuth(request)
+        if not authToken:
             # require authentication
             return Response(status=401, 
                  headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
-        request.auth = auth
-        mintClient = shimclient.ShimMintClient(self.cfg, auth)
+        request.auth = authToken
+        mintClient = shimclient.ShimMintClient(self.cfg, authToken)
         mintAuth = mintClient.checkAuth()
         if not mintAuth.authorized:
             return Response(status=401, 
                  headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
         request.mintClient = mintClient
         request.mintAuth = mintAuth
-        self.db.setAuth(mintAuth)
+        self.db.setAuth(mintAuth, authToken)
         self.db.mintClient = mintClient

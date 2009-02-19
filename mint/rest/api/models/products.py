@@ -20,10 +20,14 @@ class Product(Model):
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeModified = fields.DateTimeField(editable=False) # not modifiable
     hidden = fields.BooleanField()
+    version = fields.CharField()
     versions = fields.UrlField('products.versions', ['hostname']) # not modifiable
 
     def get_absolute_url(self):
         return ('products', self.hostname)
+
+    def getFQDN(self):
+        return self.hostname + '.' + self.domainname
             
 class ProductSearchResult(Model):
     id = fields.IntegerField(required=True)
@@ -39,23 +43,3 @@ class ProductSearchResultList(Model):
     def addProduct(self, id, hostname, name):
         self.products.append(ProductSearchResult(id=id, hostname=hostname,
                                                  name=name))
-
-class ProductVersion(Model):
-    id = fields.IntegerField()
-    hostname = fields.CharField()
-    name = fields.CharField()
-    url = fields.AbsoluteUrlField()
-    productUrl = fields.UrlField('products', ('hostname',))
-    namespace = fields.CharField()
-    description = fields.CharField()
-
-    def get_absolute_url(self):
-        return 'products.versions', self.hostname, self.name
-
-class ProductVersionList(Model):
-    versions = fields.ListField(ProductVersion, itemName='productVersion')
-    def addProductVersion(self, id, namespace, name, description,
-                          hostname):
-        self.versions.append(ProductVersion(id=id, namespace=namespace,
-                                            name=name, description=description,
-                                            hostname=hostname))

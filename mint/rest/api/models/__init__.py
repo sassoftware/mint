@@ -10,3 +10,4 @@ class RbuilderStatus(Model):
 from members import *
 from users import *
 from products import *
+from productversions import *
