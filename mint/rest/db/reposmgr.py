@@ -1,11 +1,14 @@
+from cStringIO import StringIO
 import os
 
 from mint import helperfuncs
 from mint import userlevels
 
+from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
+from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib import util
 from conary.repository import errors
@@ -226,3 +229,35 @@ class RepositoryManager(object):
         if conaryCfg is None:
             conaryCfg = self._getProjectConaryConfig(fqdn)
         return conaryclient.ConaryClient(conaryCfg).getRepos()
+
+    def createSourceTrove(self, fqdn, trovename, buildLabel, 
+                          upstreamVersion, streamMap, changeLogMessage):
+        # Get repository + client
+        client = self.getInternalConaryClient(fqdn)
+
+        # ensure that the changelog message ends with a newline
+        if not changeLogMessage.endswith('\n'):
+            changeLogMessage += '\n'
+
+        # create a pathdict out of the streamMap
+        pathDict = {}
+        for filename, filestream in streamMap.iteritems():
+            if isinstance(filestream, str):
+                filestream = StringIO(filestream)
+            pathDict[filename] = filetypes.RegularFile(contents=filestream,
+                                                       config=True)
+
+        # create the changelog message using the currently
+        # logged-on user's username and fullname, if available
+        newchangelog = changelog.ChangeLog(self.auth.username,
+                             self.auth.fullName or '',
+                             changeLogMessage)
+
+        # create a change set object from our source data
+        changeSet = client.createSourceTrove('%s:source' % trovename,
+                                             buildLabel,
+                                             upstreamVersion, pathDict, 
+                                             newchangelog)
+
+        # commit the change set to the repository
+        client.getRepos().commitChangeSet(changeSet)

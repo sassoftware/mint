@@ -106,8 +106,6 @@ reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'li
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
-validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
-
 # valid product version
 validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
 
@@ -791,7 +789,7 @@ class MintServer(object):
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
-        if validLabel.match(label) == None:
+        if projects.validLabel.match(label) == None:
             raise projects.InvalidLabel(label)
 
         # All database operations must abort cleanly, especially when

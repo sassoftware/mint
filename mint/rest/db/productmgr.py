@@ -1,13 +1,18 @@
 import time
 
+from conary.lib import util
+from rpath_common.proddef import api1 as proddef
+
+from mint import helperfuncs
+from mint import mint_error
+from mint import projects
 from mint import userlevels
+from mint import templates
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import reposmgr
+from mint.templates import groupTemplate
 
-from rpath_common.proddef import api1 as proddef
-
-# FIXME - really shouldn't be any SQL in this file.
 
 class ProductManager(object):
     def __init__(self, cfg, db, auth, publisher=None):
@@ -24,7 +29,8 @@ class ProductManager(object):
         cu = self.db.cursor()
         sql = '''
             SELECT Projects.projectId,hostname,name,shortname,
-                   domainname, description, Users.username as creator, projectUrl,
+                   domainname, namespace, 
+                   description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
             FROM Projects
@@ -65,6 +71,8 @@ class ProductManager(object):
         # No database operation inside this block may commit the
         # transaction.
         self.db.transaction()
+        if namespace is None:
+            namespace = self.cfg.namespace
         try:
             createTime = time.time()
             projectId = self.db.projects.new(
@@ -99,7 +107,8 @@ class ProductManager(object):
                 authType='userpass', username=self.cfg.authUser, 
                 password=self.cfg.authPass, commit=False)
 
-            self.reposMgr.createRepository(hostname, domainname, isPrivate=isPrivate)
+            self.reposMgr.createRepository(hostname, domainname, 
+                                           isPrivate=isPrivate)
             # can only add members after the repository is set up
             if self.auth.userId >= 0:
                 self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER)
@@ -178,25 +187,55 @@ class ProductManager(object):
             raise users.LastOwner
         self.reposMgr.deleteUser(fqdn, username)
         self.db.projectUsers.delete(projectId, userId)
-        self.publisher.notify('UserProjectRemoved', self.auth.auth, userId, projectId)
+        self.publisher.notify('UserProjectRemoved', self.auth.auth, 
+                              userId, projectId)
 
-    def createProductVersion(self, fqdn, version, namespace, description):
-        product = self.db.getProduct(fqdn)
+    def createProductVersion(self, fqdn, version, namespace, description,
+                             platformLabel):
+        product = self.getProduct(fqdn)
         if not namespace:
             namespace = product.namespace
         projectId = product.id
         # Check the namespace
         projects._validateNamespace(namespace)
         # make sure it is a valid product version
-        projects._validateProductVersion(name)
+        projects._validateProductVersion(version)
+
+        # initial product definition
+        prodDef = helperfuncs.sanitizeProductDefinition(product.shortname,
+                        description, product.hostname, product.domainname, 
+                        product.shortname, version,
+                        '', namespace)
+        label = prodDef.getDefaultLabel()
+
+        # validate the label, which will be added later.  This is done
+        # here so the project is not created before this error occurs
+        if projects.validLabel.match(label) == None:
+            raise mint_error.InvalidLabel(label)
         
         try:
-            return self.productVersions.new(projectId = projectId,
-                                            namespace = namespace,
-                                            name = name,
-                                            description = description)
+            versionId = self.db.productVersions.new(projectId = projectId,
+                                               namespace = namespace,
+                                               name = version,
+                                               description = description)
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
+        self.setProductVersionDefinition(fqdn, version, prodDef)
+
+        groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
+        className = util.convertPackageNameToClassName(groupName)
+        # convert from unicode
+        recipeStr = str(templates.write(groupTemplate,
+                        cfg = self.cfg,
+                        groupApplianceLabel=platformLabel,
+                        groupName=groupName,
+                        recipeClassName=className,
+                        version=version) + '\n')
+        self.reposMgr.createSourceTrove(fqdn, groupName,
+                                    label, version,
+                                    {'%s.recipe' % groupName: recipeStr},
+                                    'Initial appliance image group template')
+        return versionId
 
     def updateProductVersion(self, fqdn, version, description):
         productVersion = self.getProductVersion(fqdn, version)

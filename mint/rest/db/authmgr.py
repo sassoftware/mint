@@ -55,6 +55,7 @@ class AuthenticationManager(object):
                               AND ProjectUsers.projectId=Projects.projectId)
                       WHERE hostname=?''', self.userId, 
                       hostname)
+        hidden, level = self.db._getOne(cu, errors.ProductNotFound, hostname)
         if hidden and level is None:
             raise errors.ProductNotFound(hostname)
         if level != userlevels.OWNER:

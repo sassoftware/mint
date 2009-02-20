@@ -81,6 +81,7 @@ class Database(object):
 
     def getProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname=hostname)
+        return self.productMgr.getProduct(hostname)
 
     def listProductVersions(self, hostname):
         self.auth.requireProductReadAccess(hostname=hostname)
@@ -289,11 +290,14 @@ class Database(object):
     def cancelUserAccount(self, username):
         self.userMgr.cancelUserAccount(userId)
 
-    def createProductVersion(self, productVersion):
-        self.auth.requireProductOwner(productVersion.hostname)
-        versionId = self.productMgr.createProductVersion(productVersion.hostname,
-                                                         productVersion.version,
-                                                         productVersion.description)
+    def createProductVersion(self, fqdn, productVersion):
+        self.auth.requireProductOwner(fqdn)
+        versionId = self.productMgr.createProductVersion(
+                                                fqdn,
+                                                productVersion.name,
+                                                productVersion.namespace,
+                                                productVersion.description,
+                                                productVersion.platformLabel)
         productVersion.id = versionId
         return productVersion
 

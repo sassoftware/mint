@@ -9,7 +9,9 @@ class ProductVersion(Model):
     productUrl = fields.UrlField('products', ('hostname',))
     namespace = fields.CharField()
     description = fields.CharField()
-    platform = fields.UrlField('products.versions.platform', ('hostname', 'name'))
+    platformLabel = fields.CharField()
+    platform = fields.UrlField('products.versions.platform', 
+                                ('hostname', 'name'))
     stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
     definition = fields.UrlField('products.versions.definition', ('hostname', 'name'))
 
