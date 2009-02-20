@@ -19,7 +19,8 @@ class ProductManager(object):
         self.cfg = cfg
         self.db = db
         self.auth = auth
-        self.reposMgr = reposmgr.RepositoryManager(cfg, db, self.db.projects.reposDB,
+        self.reposMgr = reposmgr.RepositoryManager(cfg, db, 
+                                                   self.db.projects.reposDB,
                                                    auth)
         self.publisher = publisher
 
@@ -212,6 +213,11 @@ class ProductManager(object):
         # here so the project is not created before this error occurs
         if projects.validLabel.match(label) == None:
             raise mint_error.InvalidLabel(label)
+
+        if platformLabel:
+            cclient = self.reposMgr.getInternalConaryClient(fqdn)
+            prodDef.rebase(cclient, platformLabel)
+        self.setProductVersionDefinition(fqdn, version, prodDef)
         
         try:
             versionId = self.db.productVersions.new(projectId = projectId,
@@ -220,7 +226,6 @@ class ProductManager(object):
                                                description = description)
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
-        self.setProductVersionDefinition(fqdn, version, prodDef)
 
         groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
         className = util.convertPackageNameToClassName(groupName)
@@ -256,7 +261,7 @@ class ProductManager(object):
         except Exception, e:
             # XXX could this exception handler be more specific? As written
             # any error in the proddef module will be masked.
-            raise ProductDefinitionVersionNotFound
+            raise mint_error.ProductDefinitionVersionNotFound
         return pd
 
     def setProductVersionDefinition(self, fqdn, version, prodDef):
