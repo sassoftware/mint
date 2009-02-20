@@ -22,6 +22,9 @@ Web Front End Changes
 * There is now an option to delete a product from the product homepage.
   (RBL-4175).
 
+Changes in 5.0.1
+===============
+
 Bug Fixes
 ---------------------
 * Downloads of images larger than 2GiB are no longer sent with a
