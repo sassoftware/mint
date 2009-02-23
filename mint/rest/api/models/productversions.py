@@ -2,10 +2,10 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class ProductVersion(Model):
-    id = fields.IntegerField()
+    id = fields.AbsoluteUrlField(isAttribute=True)
+    versionId = fields.IntegerField()
     hostname = fields.CharField()
     name = fields.CharField()
-    url = fields.AbsoluteUrlField()
     productUrl = fields.UrlField('products', ('hostname',))
     namespace = fields.CharField()
     description = fields.CharField()

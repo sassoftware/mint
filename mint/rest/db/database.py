@@ -51,26 +51,7 @@ class Database(object):
         return self._getOne(cu, errors.UserNotFound, userId)[0]
 
     def listProducts(self):
-        cu = self.db.cursor()
-        if self.isAdmin:
-            cu.execute('''
-                SELECT projectId, hostname, name 
-                FROM Projects ORDER BY hostname''')
-        else:
-            cu.execute('''
-                SELECT Projects.projectId, hostname, name
-                FROM Projects 
-                LEFT JOIN ProjectUsers ON (
-                    ProjectUsers.projectId=Projects.projectId 
-                    AND userId=?)
-                WHERE NOT Projects.hidden OR 
-                      ProjectUsers.level IS NOT NULL
-                ORDER BY hostname
-               ''', self.userId)
-        results = models.ProductSearchResultList()
-        for id, hostname, name in cu:
-            results.addProduct(id, hostname, name)
-        return results
+        return self.productMgr.listProducts()
 
     def getProductFQDNFromId(self, productId):
         cu = self.db.cursor()
@@ -160,13 +141,13 @@ class Database(object):
     def _getUser(self, username, includePrivateInfo=True):
         if includePrivateInfo:
             cu = self.db.cursor()
-            cu.execute("""SELECT userId as id, username, fullName,
+            cu.execute("""SELECT userId, username, fullName,
                                  email, displayEmail, timeCreated, timeAccessed,
                                  active, blurb 
                            FROM Users WHERE username=?""", username)
         else:
             cu = self.db.cursor()
-            cu.execute("""SELECT userId as id, username, fullName,
+            cu.execute("""SELECT userId, username, fullName,
                                  displayEmail, blurb 
                            FROM Users WHERE username=? AND active=1""", 
                            username)
@@ -193,7 +174,7 @@ class Database(object):
     def listUsers(self):
         self.auth.requireAdmin()
         cu = self.db.cursor()
-        cu.execute("""SELECT userId as id, username, fullName,
+        cu.execute("""SELECT userId, username, fullName,
                              email, displayEmail, timeCreated, timeAccessed,
                              active, blurb FROM Users""")
         userList = models.UserList()

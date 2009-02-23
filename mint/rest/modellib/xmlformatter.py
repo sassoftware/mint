@@ -64,7 +64,7 @@ class XMLFormatter(object):
     def getModelXObjClass(self, modelClass):
         if modelClass in self._modelClassCache:
             return self._modelClassCache[modelClass]
-        className = modelClass.__name__
+        className = modelClass._meta.name
         attrs = {'module' : __name__ }
         for fieldName in modelClass._fields:
             field = getattr(modelClass, fieldName)
@@ -72,7 +72,8 @@ class XMLFormatter(object):
                 fieldName = field.itemName
             attrs[fieldName] = self.getFieldXObjClass(field)
         # orders elements
-        attrs['_xobj'] = xobj.XObjMetadata(elements = modelClass._fields)
+        attrs['_xobj'] = xobj.XObjMetadata(elements = modelClass._elements,
+                                           attributes = modelClass._attributes)
         xobjClass = type.__new__(type, className, xobj.XObj.__mro__, attrs)
         self._modelClassCache[modelClass] = xobjClass
         return xobjClass
@@ -93,6 +94,13 @@ class XMLFormatter(object):
             return [ self.getXObjClass(field.valueClass) ]
         elif isinstance(field, (BooleanField, IntegerField)):
             return int
+        elif isinstance(field, UrlField):
+            attrs = {}
+            attrs['href'] = str
+            attrs['_xobj'] = xobj.XObjMetadata(attributes = ['href'])
+            xobjClass = type.__new__(type, 'XobjUrl', 
+                                     xobj.XObj.__mro__, attrs)
+            return xobjClass
         else:
             return str
 
@@ -100,10 +108,15 @@ class XMLFormatter(object):
         if isinstance(field, AbsoluteUrlField):
             return self.controller.url(self.request, *parent.get_absolute_url())
         elif isinstance(field, UrlField):
+            instance = self.getFieldXObjClass(field)()
             values = [ getattr(parent, x) for x in field.urlParameters]
             if None in values:
                 return None
-            return self.controller.url(self.request, field.location, *values)
+            instance.href = self.controller.url(self.request, 
+                                                field.location, *values)
+            if value:
+                instance._xobj.text = value
+            return instance
         elif value is None:
             return None
         elif isinstance(field, ListField):
@@ -111,5 +124,4 @@ class XMLFormatter(object):
                                         for x in value ]
         elif isinstance(field, BooleanField):
             return int(value)
-
         return value

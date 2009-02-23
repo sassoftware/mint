@@ -8,8 +8,8 @@ class UserGroupMember(Model):
 
 
 class User(Model):
-    id = fields.IntegerField(required=True)
-    url = fields.UrlField('users', 'username')
+    id = fields.AbsoluteUrlField(isAttribute=True)
+    userId = fields.IntegerField(required=True)
     username = fields.CharField()
     fullName = fields.CharField()
     email = fields.EmailField()
@@ -18,6 +18,9 @@ class User(Model):
     active = fields.BooleanField()
     timeCreated = fields.DateTimeField()
     timeAccessed = fields.DateTimeField()
+    
+    def get_absolute_url(self):
+        return ('users', self.username)
 
 class UserGroupMemberList(Model):
     groups = fields.ListField(UserGroupMember, itemName='group')

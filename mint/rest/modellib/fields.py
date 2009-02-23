@@ -13,11 +13,12 @@ def _sortRegisteredFields(fields):
 class Field(object):
     editable = True
     def __init__(self, default=None, required=False, visibility=None,
-                 editable=None):
+                 editable=None, isAttribute=False):
         registerField(self)
         self.default = default
         self.required = required
         self.visibility = visibility
+        self.isAttribute = isAttribute
         if editable is not None:
             self.editable = editable
 

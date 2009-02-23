@@ -1,11 +1,17 @@
 from xobj import xobj
 
 from mint.rest.modellib import fields
+from mint.rest.modellib import options
 
 class ModelMeta(type):
     def __new__(cls, name, bases, attrs):
         new_class = type.__new__(cls, name, bases, attrs)
-        new_class._fields = fields._sortRegisteredFields(attrs)
+        new_class._fields =  fields._sortRegisteredFields(attrs) 
+        new_class._attributes = [ x for x in new_class._fields 
+                                  if attrs[x].isAttribute ]
+        new_class._elements =  [ x for x in new_class._fields 
+                                 if not attrs[x].isAttribute ]
+        new_class._meta = options.Options(new_class, attrs.pop('Meta', None))
         return new_class
         
 class Model(object):

@@ -29,7 +29,7 @@ class ProductManager(object):
         hostname = hostname.split('.')[0]
         cu = self.db.cursor()
         sql = '''
-            SELECT Projects.projectId,hostname,name,shortname,
+            SELECT Projects.projectId as productId,hostname,name,shortname,
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
@@ -40,8 +40,41 @@ class ProductManager(object):
         '''
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
-        d['id'] = d.pop('projectId')
         return models.Product(**d)
+
+    def listProducts(self):
+        cu = self.db.cursor()
+        if self.auth.isAdmin:
+            cu.execute('''
+                SELECT Projects.projectId,hostname,name,shortname,
+                   domainname, namespace, 
+                   description, Users.username as creator, projectUrl,
+                   isAppliance, Projects.timeCreated, Projects.timeModified,
+                   commitEmail, prodtype, backupExternal 
+                FROM Projects ORDER BY hostname
+                JOIN Users ON (creatorId=Users.userId)''')
+        else:
+            cu.execute('''
+                SELECT Projects.projectId as productId,
+                   hostname,name,shortname, domainname, namespace, 
+                   description, Users.username as creator, projectUrl,
+                   isAppliance, Projects.timeCreated, Projects.timeModified,
+                   commitEmail, prodtype, backupExternal 
+                FROM Projects 
+                LEFT JOIN ProjectUsers ON (
+                    ProjectUsers.projectId=Projects.projectId 
+                    AND ProjectUsers.userId=?)
+                JOIN Users ON (creatorId=Users.userId)
+                WHERE NOT Projects.hidden OR 
+                      ProjectUsers.level IS NOT NULL
+                ORDER BY hostname
+               ''', self.auth.userId)
+        results = models.ProductSearchResultList()
+        for row in cu:
+            d = dict(row)
+            results.products.append(models.Product(**d))
+        return results
+
 
     def getProductVersion(self, hostname, versionName):
         # accept fqdn.

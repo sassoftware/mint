@@ -2,12 +2,12 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class Product(Model):
-    id = fields.IntegerField()
+    productId = fields.IntegerField()
+    id = fields.AbsoluteUrlField(isAttribute=True) # not modifiable
     hostname = fields.CharField(required=True)
     name = fields.CharField()
     namespace = fields.CharField()
     domainname = fields.CharField()
-    url = fields.AbsoluteUrlField() # not modifiable
     shortname = fields.CharField() 
     description = fields.CharField()
     projecturl = fields.CharField()
@@ -15,31 +15,30 @@ class Product(Model):
     prodtype = fields.CharField()
     commitEmail = fields.EmailField(visibility='owner')
     backupExternal = fields.BooleanField(visibility='owner')
-    creator    = fields.CharField(editable=False) # not modifiable
-    creatorUrl = fields.UrlField('users', 'creator') # not modifiable
-    timeCreated = fields.DateTimeField(editable=False) # not modifiable
-    timeModified = fields.DateTimeField(editable=False) # not modifiable
+    timeCreated = fields.DateTimeField(editable=False)
+    timeModified = fields.DateTimeField(editable=False)
     hidden = fields.BooleanField()
     version = fields.CharField()
-    versions = fields.UrlField('products.versions', ['hostname']) # not modifiable
 
+    versions   = fields.UrlField('products.versions', ['hostname'])
+    members    = fields.UrlField('products.members', ['hostname'])
+    creator    = fields.UrlField('users', 'creator')
+
+        
     def get_absolute_url(self):
         return ('products', self.hostname)
 
     def getFQDN(self):
         return self.hostname + '.' + self.domainname
             
-class ProductSearchResult(Model):
-    id = fields.IntegerField(required=True)
-    hostname = fields.CharField(required=True)
-    name = fields.CharField()
-    url = fields.AbsoluteUrlField()
-
-    def get_absolute_url(self):
-        return ('products', self.hostname)
-
 class ProductSearchResultList(Model):
-    products = fields.ListField(ProductSearchResult, itemName='product')
+    class Meta(object):
+        name = 'products'
+
+    products = fields.ListField(Product, itemName='product')
+
     def addProduct(self, id, hostname, name):
-        self.products.append(ProductSearchResult(id=id, hostname=hostname,
+        self.products.append(ProductSearchResult(productId=id, 
+                                                 hostname=hostname,
+                                                 domainname=domainname,
                                                  name=name))
