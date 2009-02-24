@@ -228,7 +228,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 6)
+    Version = (45, 7)
 
     # 45.0
     # - Create UpdateServices table
@@ -446,6 +446,12 @@ class MigrateTo_45(SchemaMigration):
                             targetId, name, value)
 
         return True
+
+    # 45.7
+    # - Reset GroupTrove sequence so that it's usable again
+    def migrate7(self):
+        self.db.setAutoIncrement('GroupTroves', 'groupTroveId')
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
