@@ -1004,7 +1004,7 @@ class _Method(xmlrpclib._Method):
             cls = getattr(mint_error, exceptionName)
             raise cls.thaw(exceptionArgs)
         else:
-            raise UnknownException(exceptionName, exceptionArgs)
+            raise mint_error.UnknownException(exceptionName, exceptionArgs)
 
 def upstream(version):
     """
