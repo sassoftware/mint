@@ -1558,6 +1558,7 @@ class EC2SitewideTest(BaseEC2Test):
         class DummyCursor(object):
             def __init__(x, cu):
                 x._realCursor = cu
+                x.fetchall = cu.fetchall
             def __call__(x, cmd, *args, **kwargs):
                 if cmd == 'execute' and args and args[0].strip().split()[0] == 'CREATE':
                     pass

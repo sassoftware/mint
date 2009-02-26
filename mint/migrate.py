@@ -451,6 +451,7 @@ class MigrateTo_45(SchemaMigration):
     # - Reset GroupTrove sequence so that it's usable again
     def migrate7(self):
         self.db.setAutoIncrement('GroupTroves', 'groupTroveId')
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
