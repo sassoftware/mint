@@ -10,7 +10,10 @@ class ModelMeta(type):
         new_class._attributes = [ x for x in new_class._fields 
                                   if attrs[x].isAttribute ]
         new_class._elements =  [ x for x in new_class._fields 
-                                 if not attrs[x].isAttribute ]
+                                 if not attrs[x].isAttribute  
+                                    and not attrs[x].isText]
+        new_class._text =  [ x for x in new_class._fields 
+                             if attrs[x].isText ]
         new_class._meta = options.Options(new_class, attrs.pop('Meta', None))
         return new_class
         

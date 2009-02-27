@@ -12,6 +12,12 @@ class ProductVersionNotFound(ItemNotFound):
 class UserNotFound(ItemNotFound):
     pass
 
+class BuildNotFound(ItemNotFound):
+    pass
+
+class ReleaseNotFound(ItemNotFound):
+    pass
+
 class MemberNotFound(ItemNotFound):
     pass
 

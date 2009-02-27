@@ -2,8 +2,8 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class Product(Model):
-    productId = fields.IntegerField()
     id = fields.AbsoluteUrlField(isAttribute=True) # not modifiable
+    productId = fields.IntegerField()
     hostname = fields.CharField(required=True)
     name = fields.CharField()
     namespace = fields.CharField()

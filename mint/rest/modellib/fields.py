@@ -13,12 +13,13 @@ def _sortRegisteredFields(fields):
 class Field(object):
     editable = True
     def __init__(self, default=None, required=False, visibility=None,
-                 editable=None, isAttribute=False):
+                 editable=None, isAttribute=False, isText=False):
         registerField(self)
         self.default = default
         self.required = required
         self.visibility = visibility
         self.isAttribute = isAttribute
+        self.isText = isText
         if editable is not None:
             self.editable = editable
 
@@ -42,6 +43,12 @@ class UrlField(Field):
             urlParameters = []
         self.urlParameters = urlParameters
 
+class ModelField(Field):
+    def __init__(self, model, *args, **kw):
+        Field.__init__(self, *args, **kw)
+        self.model = model
+    
+
 class AbsoluteUrlField(Field):
     editable = False
 
@@ -49,6 +56,12 @@ class EmailField(Field):
     pass
 
 class DateTimeField(Field):
+    pass
+
+class VersionField(Field):
+    pass
+
+class FlavorField(Field):
     pass
 
 class ListField(Field):

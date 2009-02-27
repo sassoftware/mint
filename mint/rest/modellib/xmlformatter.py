@@ -86,7 +86,10 @@ class XMLFormatter(object):
             childObject = self.getXObjObject(field, value, modelObject)
             if hasattr(field, 'itemName'):
                 fieldName = field.itemName
-            setattr(instance, fieldName, childObject)
+            if field.isText:
+                instance._xobj.text = childObject
+            else:
+                setattr(instance, fieldName, childObject)
         return instance
 
     def getFieldXObjClass(self, field):
@@ -101,6 +104,8 @@ class XMLFormatter(object):
             xobjClass = type.__new__(type, 'XobjUrl', 
                                      xobj.XObj.__mro__, attrs)
             return xobjClass
+        elif isinstance(field, ModelField):
+            return self.getModelXObjClass(field.model)
         else:
             return str
 
@@ -109,13 +114,13 @@ class XMLFormatter(object):
             return self.controller.url(self.request, *parent.get_absolute_url())
         elif isinstance(field, UrlField):
             instance = self.getFieldXObjClass(field)()
-            values = [ getattr(parent, x) for x in field.urlParameters]
+            values = [ str(getattr(parent, x)) for x in field.urlParameters]
             if None in values:
                 return None
             instance.href = self.controller.url(self.request, 
                                                 field.location, *values)
             if value:
-                instance._xobj.text = value
+                instance._xobj.text = str(value)
             return instance
         elif value is None:
             return None
@@ -124,4 +129,6 @@ class XMLFormatter(object):
                                         for x in value ]
         elif isinstance(field, BooleanField):
             return int(value)
-        return value
+        elif isinstance(field, ModelField):
+            return self.getModelXObjObject(field.model, value, parent)
+        return str(value)

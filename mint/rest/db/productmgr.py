@@ -24,7 +24,7 @@ class ProductManager(object):
                                                    auth)
         self.publisher = publisher
 
-    def getProduct(self, hostname):
+    def getProduct(self, fqdn):
         # accept fqdn.
         hostname = hostname.split('.')[0]
         cu = self.db.cursor()
@@ -46,13 +46,15 @@ class ProductManager(object):
         cu = self.db.cursor()
         if self.auth.isAdmin:
             cu.execute('''
-                SELECT Projects.projectId,hostname,name,shortname,
+                SELECT Projects.projectId as productId,
+                   hostname,name,shortname,
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
-                FROM Projects ORDER BY hostname
-                JOIN Users ON (creatorId=Users.userId)''')
+                FROM Projects 
+                JOIN Users ON (creatorId=Users.userId)
+                ORDER BY hostname''')
         else:
             cu.execute('''
                 SELECT Projects.projectId as productId,

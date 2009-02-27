@@ -6,8 +6,10 @@ from mint import userlevels
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
+from mint.rest.db import buildmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
+from mint.rest.db import releasemgr
 from mint.rest.db import emailnotifier
 from mint.rest.db import awshandler
 
@@ -28,6 +30,8 @@ class Database(object):
         #self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db, self))
         self.productMgr = productmgr.ProductManager(self.cfg, self.db, 
                                                     self.auth, self.publisher)
+        self.buildMgr = buildmgr.BuildManager(self.cfg, self.db, self.auth)
+        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self.db, self.auth)
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
@@ -314,6 +318,34 @@ class Database(object):
     def rebaseProductVersionPlatform(self, hostname, version, platformLabel=None):
         self.auth.requireProductDeveloper(hostname)
         self.productMgr.rebaseProductVersionDefinition(hostname, version, platformLabel)
+
+    def listBuildsForProduct(self, hostname):
+        self.auth.requireProductReadAccess(hostname)
+        return self.buildMgr.listBuildsForProduct(hostname)
+
+    def getBuildForProduct(self, hostname, buildId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.buildMgr.getBuildForProduct(hostname, buildId)
+
+    def listReleasesForProduct(self, hostname):
+        self.auth.requireProductReadAccess(hostname)
+        return self.releaseMgr.listReleasesForProduct(hostname)
+
+    def getReleaseForProduct(self, hostname, releaseId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
+
+    def getFilesForBuild(self, hostname, buildId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.buildMgr.listFilesForBuild(hostname, buildId)
+
+    def listBuildsForRelease(self, hostname, releaseId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.buildMgr.listBuildsForRelease(hostname, releaseId)
+
+    def listFilesForBuild(self, hostname, buildId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.buildMgr.listFilesForBuild(hostname, releaseId, buildId)
 
     def cursor(self):
         return self.db.cursor()
