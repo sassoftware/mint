@@ -50,7 +50,7 @@ class Build(Model):
     buildId = fields.IntegerField()
     hostname = fields.CharField()
     release = fields.UrlField('products.releases', ['hostname', 'release']) 
-    buildType = fields.IntegerField()
+    buildType = fields.CharField()
     name = fields.CharField()
     description = fields.CharField()
     troveName = fields.CharField()

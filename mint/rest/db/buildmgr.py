@@ -1,6 +1,7 @@
 from conary.deps import deps
 from conary import versions
 
+from mint import buildtypes
 from mint.rest import errors
 from mint.rest.api import models
 
@@ -38,6 +39,7 @@ class BuildManager(object):
                                        args))
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
+            row['buildType'] = buildtypes.typeNamesShort[row['buildType']]
             build = models.Build(**row)
             build.files = self.listFilesForBuild(hostname, build.buildId)
 
@@ -46,14 +48,14 @@ class BuildManager(object):
             row = dict(row)
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
+            row['buildType'] = buildtypes.typeNamesShort[row['buildType']]
             build = models.Build(**row)
             build.files = self.listFilesForBuild(hostname, build.buildId)
             builds.builds.append(build)
         return builds
 
     def listBuildsForProduct(self, fqdn):
-        cu.execute(sql, hostname)
-        return self._getBuilds(hostname)
+        return self._getBuilds(fqdn)
 
     def getBuildForProduct(self, fqdn, buildId):
         return self._getBuilds(fqdn, '', 'AND buildId=?', [buildId], getOne=True)
