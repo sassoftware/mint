@@ -10,7 +10,7 @@ import os
 import time
 
 import testbase
-from catalogService import notices_store
+from mint import notices_store
 
 class StorageConfig(object):
     __slots__ = [ 'storagePath' ]
