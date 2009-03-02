@@ -7,6 +7,11 @@ from mint import config
 from mint import shimclient
 from mint.session import SqlSession
 
+# Decorator for public (unauthenticated) methods/functions
+def public(deco):
+    deco.public = True
+    return deco
+
 class AuthenticationCallback(object):
 
     def __init__(self, cfg, db):
@@ -52,20 +57,31 @@ class AuthenticationCallback(object):
         return session.get('authToken', None)
 
     def processRequest(self, request):
+        request.mintClient = None
+        request.mintAuth = None
         authToken = self.getAuth(request)
         if not authToken:
             authToken = self.getCookieAuth(request)
-        if not authToken:
-            # require authentication
-            return Response(status=401, 
-                 headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
         request.auth = authToken
+
+        if request.auth is None:
+            # Not authenticated
+            return
+
         mintClient = shimclient.ShimMintClient(self.cfg, authToken)
         mintAuth = mintClient.checkAuth()
-        if not mintAuth.authorized:
-            return Response(status=401, 
-                 headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+        if not mintAuth:
+            # Bad auth info
+            return
+
         request.mintClient = mintClient
         request.mintAuth = mintAuth
         self.db.setAuth(mintAuth, authToken)
         self.db.mintClient = mintClient
+
+    def processMethod(self, request, viewMethod, args, kwargs):
+        if getattr(viewMethod, 'public', None) or request.mintAuth is not None:
+            return
+        # require authentication
+        return Response(status=401, 
+             headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
