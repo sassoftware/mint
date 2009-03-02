@@ -790,6 +790,17 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         # HACK
         os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
 
+    @staticmethod
+    def normalizeXML(data):
+        """lxml will produce the header with single quotes for its attributes,
+        while xmllint uses double quotes. This function normalizes the data"""
+        return data.replace(
+            "<?xml version='1.0' encoding='UTF-8'?>",
+            '<?xml version="1.0" encoding="UTF-8"?>').strip()
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(self.normalizeXML(first),
+                             self.normalizeXML(second))
 
 class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getServerData(self):
@@ -842,6 +853,8 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
                                and newsletter or insider),
                            data.RDT_BOOL)
         self.db.commit()
+
+
 
 
 class WebRepositoryHelper(BaseWebHelper):

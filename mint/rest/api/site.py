@@ -5,12 +5,14 @@ from conary import constants as conaryConstants
 
 from mint.rest.api import models
 from mint.rest.api import product
+from mint.rest.api import notices
 from mint.rest.api import users
 
 class RbuilderRestServer(RestController):
-    urls = {'products' : product.ProductController,     
-            'projects' : product.ProductController,     
-            'users'    : users.UserController}
+    urls = {'products' : product.ProductController,
+            'projects' : product.ProductController,
+            'users'    : users.UserController,
+            'notices'  : notices.NoticesController,}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
