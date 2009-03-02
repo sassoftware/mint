@@ -27,6 +27,7 @@ python_files =			\
 	maintenance.py		\
 	mint_error.py		\
 	mint_update.py		\
+	notices_store.py	\
 	packagecreator.py	\
 	projects.py		\
 	pubreleases.py		\
