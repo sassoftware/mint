@@ -5,7 +5,7 @@
 
 import os
 import time
-from catalogService import storage
+from rpath_common.storage import api1 as storage
 
 class DiskStorage(storage.DiskStorage):
     pass
