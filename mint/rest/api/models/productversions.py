@@ -7,7 +7,7 @@ class ProductVersion(Model):
     hostname = fields.CharField()
     name = fields.CharField()
     productUrl = fields.UrlField('products', ('hostname',))
-    namespace = fields.CharField()
+    namespace = fields.CharField(displayName='nameSpace')
     description = fields.CharField()
     platformLabel = fields.CharField()
     platform = fields.UrlField('products.versions.platform', 
@@ -15,14 +15,14 @@ class ProductVersion(Model):
     stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
     definition = fields.UrlField('products.versions.definition', 
                                  ('hostname', 'name'))
-    builds = fields.UrlField('products.versions.builds',
+    images = fields.UrlField('products.versions.images',
                               ('hostname', 'name'))
 
     def get_absolute_url(self):
         return 'products.versions', self.hostname, self.name
 
 class ProductVersionList(Model):
-    versions = fields.ListField(ProductVersion, itemName='productVersion')
+    versions = fields.ListField(ProductVersion, displayName='productVersion')
     def addProductVersion(self, id, namespace, name, description,
                           hostname):
         self.versions.append(ProductVersion(id=id, namespace=namespace,
@@ -45,7 +45,7 @@ class Stage(Model):
         return 'products.versions.stages', self.hostname, self.version, self.name
 
 class Stages(Model):
-    stages = fields.ListField(Stage, itemName='stage')
+    stages = fields.ListField(Stage, displayName='stage')
 
 class Platform(Model):
     name = fields.CharField()

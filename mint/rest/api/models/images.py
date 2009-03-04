@@ -13,13 +13,13 @@ class ImageFile(Model):
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
-    urls     = fields.ListField(FileUrl, itemName='url')
+    urls     = fields.ListField(FileUrl, displayName='url')
 
 class ImageFileList(Model):
     class Meta(object):
         name = 'files'
 
-    files = fields.ListField(ImageFile, itemName='file')
+    files = fields.ListField(ImageFile, displayName='file')
 
 
   
@@ -76,11 +76,11 @@ class ImageList(Model):
     class Meta(object):
         name = 'images'
 
-    images = fields.ListField(Image, itemName='image')
+    images = fields.ListField(Image, displayName='image')
 
 class ReleaseList(Model):
     class Meta(object):
         name = 'releases'
 
-    releases = fields.ListField(Release, itemName='release')
+    releases = fields.ListField(Release, displayName='release')
 

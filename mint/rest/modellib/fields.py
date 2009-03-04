@@ -13,13 +13,15 @@ def _sortRegisteredFields(fields):
 class Field(object):
     editable = True
     def __init__(self, default=None, required=False, visibility=None,
-                 editable=None, isAttribute=False, isText=False):
+                 editable=None, isAttribute=False, isText=False,
+                 displayName=None):
         registerField(self)
         self.default = default
         self.required = required
         self.visibility = visibility
         self.isAttribute = isAttribute
         self.isText = isText
+        self.displayName = displayName
         if editable is not None:
             self.editable = editable
 
@@ -74,9 +76,8 @@ class FlavorField(Field):
 
 class ListField(Field):
     listType = list
-    def __init__(self, valueClass, itemName, default=None, *args, **kw):
+    def __init__(self, valueClass, default=None, *args, **kw):
         self.valueClass = valueClass
-        self.itemName = itemName
         if default is None:
             default = self.listType()
         Field.__init__(self, default=default, *args, **kw)

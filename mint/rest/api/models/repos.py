@@ -19,4 +19,4 @@ class Trove(Model):
                  '%s=%s[%s]' % (self.name, self.version, self.flavor))
 
 class TroveList(Model):
-    troves   = fields.ListField(Trove, itemName='trove')
+    troves   = fields.ListField(Trove, displayName='trove')

@@ -12,4 +12,4 @@ class Membership(Model):
     level      = fields.CharField()
 
 class MemberList(Model):
-    members = fields.ListField(Membership, itemName='member')
+    members = fields.ListField(Membership, displayName='member')

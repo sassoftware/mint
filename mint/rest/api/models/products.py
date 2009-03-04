@@ -2,11 +2,10 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class Product(Model):
-    id = fields.AbsoluteUrlField(isAttribute=True) # not modifiable
     productId = fields.IntegerField()
     hostname = fields.CharField(required=True)
     name = fields.CharField()
-    namespace = fields.CharField()
+    namespace = fields.CharField(displayName='nameSpace')
     domainname = fields.CharField()
     shortname = fields.CharField() 
     description = fields.CharField()
@@ -19,10 +18,13 @@ class Product(Model):
     timeModified = fields.DateTimeField(editable=False)
     hidden = fields.BooleanField()
     version = fields.CharField()
+    id = fields.AbsoluteUrlField(isAttribute=True) # not modifiable
 
     versions   = fields.UrlField('products.versions', ['hostname'])
     members    = fields.UrlField('products.members', ['hostname'])
     creator    = fields.UrlField('users', 'creator')
+    releases    = fields.UrlField('products.releases', ['hostname'])
+    images    = fields.UrlField('products.images', ['hostname'])
 
         
     def get_absolute_url(self):
@@ -35,7 +37,7 @@ class ProductSearchResultList(Model):
     class Meta(object):
         name = 'products'
 
-    products = fields.ListField(Product, itemName='product')
+    products = fields.ListField(Product, displayName='product')
 
     def addProduct(self, id, hostname, name):
         self.products.append(ProductSearchResult(productId=id, 

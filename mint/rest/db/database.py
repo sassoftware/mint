@@ -322,13 +322,13 @@ class Database(object):
                                                  version=version))
         return stageList
 
-    def getProductVersionBuilds(self, hostname, version):
+    def getProductVersionImages(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listBuildsForProductVersion(hostname, version)
+        return self.imageMgr.listImagesForProductVersion(hostname, version)
 
-    def getProductVersionStageBuilds(self, hostname, version, stageName):
+    def getProductVersionStageImages(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listBuildsForProductVersionStage(hostname, version, stageName)
+        return self.imageMgr.listImagesForProductVersionStage(hostname, version, stageName)
 
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
@@ -342,9 +342,9 @@ class Database(object):
         self.auth.requireProductDeveloper(hostname)
         self.productMgr.rebaseProductVersionDefinition(hostname, version, platformLabel)
 
-    def listBuildsForProduct(self, hostname):
+    def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listBuildsForProduct(hostname)
+        return self.imageMgr.listImagesForProduct(hostname)
 
     def getBuildForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
@@ -366,9 +366,9 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listFilesForBuild(hostname, imageId)
 
-    def listBuildsForRelease(self, hostname, releaseId):
+    def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listBuildsForRelease(hostname, releaseId)
+        return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
     def listFilesForBuild(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)

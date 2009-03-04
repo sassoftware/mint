@@ -23,8 +23,8 @@ class User(Model):
         return ('users', self.username)
 
 class UserGroupMemberList(Model):
-    groups = fields.ListField(UserGroupMember, itemName='group')
+    groups = fields.ListField(UserGroupMember, displayName='group')
 
 class UserList(Model):
-    users = fields.ListField(User, itemName='user')
+    users = fields.ListField(User, displayName='user')
 

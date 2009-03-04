@@ -7,11 +7,17 @@ class ModelMeta(type):
     def __new__(cls, name, bases, attrs):
         new_class = type.__new__(cls, name, bases, attrs)
         new_class._fields =  fields._sortRegisteredFields(attrs) 
-        new_class._attributes = [ x for x in new_class._fields 
+        for fieldName in new_class._fields:
+            field = attrs[fieldName]
+            if not field.displayName:
+                field.displayName = fieldName
+        new_class._attributes = [ attrs[x].displayName 
+                                  for x in new_class._fields 
                                   if attrs[x].isAttribute ]
-        new_class._elements =  [ x for x in new_class._fields 
-                                 if not attrs[x].isAttribute  
-                                    and not attrs[x].isText]
+        new_class._elements = [ attrs[x].displayName 
+                                  for x in new_class._fields 
+                                  if not attrs[x].isAttribute
+                                     and not attrs[x].isText ]
         new_class._text =  [ x for x in new_class._fields 
                              if attrs[x].isText ]
         new_class._meta = options.Options(new_class, attrs.pop('Meta', None))

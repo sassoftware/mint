@@ -42,8 +42,8 @@ class XMLFormatter(object):
         attrs = {}
         for fieldName in modelClass._fields:
             field = getattr(modelClass, fieldName)
-            if hasattr(field, 'itemName'):
-                itemName = field.itemName
+            if hasattr(field, 'displayName') and field.displayName:
+                itemName = field.displayName
             else:
                 itemName = fieldName
             value = getattr(xobjObject, itemName)
@@ -68,8 +68,8 @@ class XMLFormatter(object):
         attrs = {'module' : __name__ }
         for fieldName in modelClass._fields:
             field = getattr(modelClass, fieldName)
-            if hasattr(field, 'itemName'):
-                fieldName = field.itemName
+            if hasattr(field, 'displayName') and field.displayName:
+                fieldName = field.displayName
             attrs[fieldName] = self.getFieldXObjClass(field)
         # orders elements
         attrs['_xobj'] = xobj.XObjMetadata(elements = modelClass._elements,
@@ -84,8 +84,8 @@ class XMLFormatter(object):
             field = getattr(modelClass, fieldName)
             value = getattr(modelObject, fieldName)
             childObject = self.getXObjObject(field, value, modelObject)
-            if hasattr(field, 'itemName'):
-                fieldName = field.itemName
+            if hasattr(field, 'displayName') and field.displayName:
+                fieldName = field.displayName
             if field.isText:
                 instance._xobj.text = childObject
             else:
