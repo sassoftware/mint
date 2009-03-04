@@ -35,6 +35,13 @@ class BooleanField(Field):
 class UrlField(Field):
     editable = False
     def __init__(self, location, urlParameters, *args, **kw):
+        if 'query' in kw:
+            query = kw.pop('query')
+        elif args:
+            query = args[0]
+            args = args[1:]
+        else:
+            query = None
         Field.__init__(self, *args, **kw)
         self.location = location
         if isinstance(urlParameters, str):
@@ -42,6 +49,7 @@ class UrlField(Field):
         if urlParameters is None:
             urlParameters = []
         self.urlParameters = urlParameters
+        self.query = query
 
 class ModelField(Field):
     def __init__(self, model, *args, **kw):

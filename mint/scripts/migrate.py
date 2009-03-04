@@ -447,6 +447,17 @@ class MigrateTo_45(SchemaMigration):
 
         return True
 
+    # 45.7
+    # - Add versionId and stage columns to Builds
+    def migrate7(self):
+        cu = self.db.cursor()
+        add_columns(cu, 'Builds', 
+                     'productVersionId INTEGER DEFAULT 0',
+                     'stage VARCHAR(255) DEFAULT ""', 
+                    )
+        return True
+        
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

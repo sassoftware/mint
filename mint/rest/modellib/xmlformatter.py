@@ -114,11 +114,15 @@ class XMLFormatter(object):
             return self.controller.url(self.request, *parent.get_absolute_url())
         elif isinstance(field, UrlField):
             instance = self.getFieldXObjClass(field)()
-            values = [ str(getattr(parent, x)) for x in field.urlParameters]
+            values = [ getattr(parent, x) for x in field.urlParameters]
             if None in values:
                 return None
+            values = [str(x) for x in values ]
             instance.href = self.controller.url(self.request, 
                                                 field.location, *values)
+            if field.query:
+                instance.href += '?' + field.query % parent.__dict__
+
             if value:
                 instance._xobj.text = str(value)
             return instance

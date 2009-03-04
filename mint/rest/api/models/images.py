@@ -6,20 +6,20 @@ class FileUrl(Model):
     url = fields.CharField(isText=True)
 
 
-class BuildFile(Model):
+class ImageFile(Model):
     fileId   = fields.IntegerField()
-    buildId  = fields.IntegerField()
+    imageId  = fields.IntegerField()
     filename = fields.CharField()
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
     urls     = fields.ListField(FileUrl, itemName='url')
 
-class BuildFileList(Model):
+class ImageFileList(Model):
     class Meta(object):
         name = 'files'
 
-    files = fields.ListField(BuildFile, itemName='file')
+    files = fields.ListField(ImageFile, itemName='file')
 
 
   
@@ -31,7 +31,7 @@ class Release(Model):
     name = fields.CharField()
     version = fields.CharField()
     description = fields.CharField()
-    builds = fields.UrlField('products.releases.builds', 
+    images = fields.UrlField('products.releases.images', 
                               ['hostname', 'releaseId'])
     creator = fields.UrlField('users', 'creator') 
     updater = fields.UrlField('users', 'updater') 
@@ -45,33 +45,38 @@ class Release(Model):
     def get_absolute_url(self):
         return ('products.releases', self.hostname, str(self.releaseId))
 
-class Build(Model):
+class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
-    buildId = fields.IntegerField()
+    imageId = fields.IntegerField()
     hostname = fields.CharField()
     release = fields.UrlField('products.releases', ['hostname', 'release']) 
-    buildType = fields.CharField()
+    imageType = fields.CharField()
     name = fields.CharField()
     description = fields.CharField()
     troveName = fields.CharField()
     troveVersion = fields.CharField()
+    trailingVersion = fields.CharField()
     troveFlavor = fields.CharField()
     troveLastChanged = fields.IntegerField()
+    version = fields.UrlField('products.versions', 
+                             ['hostname', 'version'])
+    stage = fields.UrlField('products.versions.stages', 
+                            ['hostname', 'version', 'stage'])
     creator = fields.UrlField('users', 'creator') # not modifiable
     updater = fields.UrlField('users', 'updater') # not modifiable
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     buildCount = fields.IntegerField()
-    files = fields.ModelField(BuildFileList)
+    files = fields.ModelField(ImageFileList)
 
     def get_absolute_url(self):
-        return ('products.builds', self.hostname, str(self.buildId))
+        return ('products.images', self.hostname, str(self.imageId))
 
-class BuildList(Model):
+class ImageList(Model):
     class Meta(object):
-        name = 'builds'
+        name = 'images'
 
-    builds = fields.ListField(Build, itemName='build')
+    images = fields.ListField(Image, itemName='image')
 
 class ReleaseList(Model):
     class Meta(object):

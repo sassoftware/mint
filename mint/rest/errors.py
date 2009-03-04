@@ -3,10 +3,16 @@ from mint import mint_error
 class ItemNotFound(mint_error.MintError):
     pass
 
+class InvalidSearchType(mint_error.MintError):
+    pass
+
 class ProductNotFound(ItemNotFound):
     pass
 
 class ProductVersionNotFound(ItemNotFound):
+    pass
+
+class StageNotFound(ItemNotFound):
     pass
 
 class UserNotFound(ItemNotFound):

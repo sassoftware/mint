@@ -6,7 +6,7 @@ from mint import userlevels
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
-from mint.rest.db import buildmgr
+from mint.rest.db import imagemgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
@@ -30,7 +30,7 @@ class Database(object):
         #self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db, self))
         self.productMgr = productmgr.ProductManager(self.cfg, self.db, 
                                                     self.auth, self.publisher)
-        self.buildMgr = buildmgr.BuildManager(self.cfg, self.db, self.auth)
+        self.imageMgr = imagemgr.ImageManager(self.cfg, self.db, self.auth)
         self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self.db, self.auth)
 
     def setAuth(self, auth, authToken):
@@ -292,24 +292,47 @@ class Database(object):
                                              version, productVersion.description)
 
     def getProductVersionPlatform(self, hostname, version):
-        pd = self.getProductVersionDefinition(hostname, version)
+        self.auth.requireProductReadAccess(hostname)
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
         n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
         v = versions.VersionFromString(v)
         return models.Platform(name=str(n), # convert from unicode
                                version=str(v.trailingRevision()), 
                                label=str(v.trailingLabel()))
 
+    def getProductVersionStage(self, hostname, version, stageName):
+        self.auth.requireProductReadAccess(hostname)
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
+        for stage in pd.getStages():
+            if str(stage.name) == stageName:
+                return models.Stage(name=str(stage.name),
+                                    label=str(pd.getLabelForStage(stage.name)),
+                                    hostname=hostname,
+                                    version=version)
+        raise errors.StageNotFound(stageName)
+
     def getProductVersionStages(self, hostname, version):
-        pd = self.getProductVersionDefinition(hostname, version)
+        self.auth.requireProductReadAccess(hostname)
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
         stageList = models.Stages()
         for stage in pd.getStages():
             stageList.stages.append(models.Stage(name=str(stage.name),
-                                                 label=str(pd.getLabelForStage(stage.name))))
+                                                 label=str(pd.getLabelForStage(stage.name)),
+                                                 hostname=hostname,
+                                                 version=version))
         return stageList
+
+    def getProductVersionBuilds(self, hostname, version):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.listBuildsForProductVersion(hostname, version)
+
+    def getProductVersionStageBuilds(self, hostname, version, stageName):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.listBuildsForProductVersionStage(hostname, version, stageName)
 
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
-        return self.productMgr.getProductVersionDefinition(hostname, version)
+        return self.imageMgr.getProductVersionDefinition(hostname, version)
 
     def setProductVersionDefinition(self, hostname, version, pd):
         self.auth.requireProductDeveloper(hostname)
@@ -321,11 +344,11 @@ class Database(object):
 
     def listBuildsForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
-        return self.buildMgr.listBuildsForProduct(hostname)
+        return self.imageMgr.listBuildsForProduct(hostname)
 
-    def getBuildForProduct(self, hostname, buildId):
+    def getBuildForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.buildMgr.getBuildForProduct(hostname, buildId)
+        return self.imageMgr.getBuildForProduct(hostname, imageId)
 
     def listReleasesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
@@ -335,17 +358,21 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
-    def getFilesForBuild(self, hostname, buildId):
+    def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
-        return self.buildMgr.listFilesForBuild(hostname, buildId)
+        return self.imageMgr.listImagesForTrove(hostname, name, version, flavor)
+
+    def getFilesForBuild(self, hostname, imageId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.listFilesForBuild(hostname, imageId)
 
     def listBuildsForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
-        return self.buildMgr.listBuildsForRelease(hostname, releaseId)
+        return self.imageMgr.listBuildsForRelease(hostname, releaseId)
 
-    def listFilesForBuild(self, hostname, buildId):
+    def listFilesForBuild(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.buildMgr.listFilesForBuild(hostname, releaseId, buildId)
+        return self.imageMgr.listFilesForBuild(hostname, releaseId, imageId)
 
     def cursor(self):
         return self.db.cursor()

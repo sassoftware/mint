@@ -2,9 +2,10 @@
 from restlib import response
 
 from mint.rest.api import base
-from mint.rest.api import builds
+from mint.rest.api import images
 from mint.rest.api import models
 from mint.rest.api import productversion
+from mint.rest.api import repos
 from mint.rest.api import requires
 
 
@@ -34,8 +35,9 @@ class ProductController(base.BaseController):
 
     urls = {'versions'   : productversion.ProductVersionController,
             'members'    : ProductMemberController,
-            'builds'     : builds.ProductBuildsController,
-            'releases'   : builds.ProductReleasesController  }
+            'repos'      : repos.RepositoryController,
+            'images'     : images.ProductImagesController,
+            'releases'   : images.ProductReleasesController  }
 
     def index(self, request):
         return self.db.listProducts()

@@ -11,4 +11,5 @@ from members import *
 from users import *
 from products import *
 from productversions import *
-from builds import *
+from images import *
+from repos import *

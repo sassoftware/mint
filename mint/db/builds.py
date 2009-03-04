@@ -27,7 +27,7 @@ class BuildsTable(database.KeyedTable):
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
-              'deleted', 'buildCount']
+              'deleted', 'buildCount', 'productVersionId', 'stageName']
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
@@ -61,6 +61,16 @@ class BuildsTable(database.KeyedTable):
                    buildId)
         self.db.commit()
         return 0
+
+    def setProductVersion(self, buildId, versionId, stageName):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Builds SET productVersionId=?,
+                                          stageName=?,
+                                          troveLastChanged=?
+                      WHERE buildId=?""",
+                   versionId, stageName,
+                   time.time(), buildId)
+        self.db.commit()
 
     def getTrove(self, buildId):
         cu = self.db.cursor()

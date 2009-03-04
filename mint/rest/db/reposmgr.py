@@ -209,8 +209,8 @@ class RepositoryManager(object):
             conaryCfg = self._getProjectConaryConfig(fqdn)
         server = self._getRepositoryServer(fqdn)
         conaryCfg = helperfuncs.configureClientProxies(conaryCfg, 
-                                                       self.cfg.useInternalConaryProxy, 
-                                                       self.cfg.proxy)
+                                           self.cfg.useInternalConaryProxy, 
+                                           self.cfg.proxy)
         if self.cfg.SSL:
             protocol = "https"
             port = 443
@@ -227,7 +227,7 @@ class RepositoryManager(object):
 
     def getRepositoryClient(self, fqdn, useShim=True, conaryCfg=None):
         if conaryCfg is None:
-            conaryCfg = self._getProjectConaryConfig(fqdn)
+            conaryCfg = self.getProjectConaryConfig(fqdn)
         return conaryclient.ConaryClient(conaryCfg).getRepos()
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 

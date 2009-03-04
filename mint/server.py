@@ -3097,6 +3097,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
+        troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
+        projectId = self.builds.get(buildId)['projectId']
+        productVersionId, stage = self._getProductVersionForLabel(projectId, 
+                                                                  troveLabel)
+        if productVersionId:
+            self.builds.setProductVersion(buildId, productVersionId, stage)
 
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
@@ -3106,6 +3112,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
         for x in builds.getImportantFlavors(troveFlavor):
             self.buildData.setDataValue(buildId, x, 1, data.RDT_INT)
         return r
+
+    def _getProductVersionForLabel(self, projectId, label):
+        cu = self.db.cursor()
+        cu.execute('''SELECT productVersionId, hostname, 
+                             domainname, shortname, 
+                             ProductVersions.namespace, 
+                             ProductVersions.name 
+                      FROM Projects 
+                      JOIN ProductVersions USING(projectId)
+                      WHERE projectId=?''', projectId)
+        for versionId, hostname, domainname, shortname, namespace, name in cu:
+            fqdn = '%s.%s' % (hostname, domainname)
+            pd = proddef.ProductDefinition()
+            pd.setProductShortname(shortname)
+            pd.setConaryRepositoryHostname(fqdn)
+            pd.setConaryNamespace(namespace)
+            pd.setProductVersion(name)
+            baseLabel = pd.getProductDefinitionLabel()
+            # assumption to speed this up.  
+            # Stages are baselabel + '-' + extention (or just baseLabel)
+            if not str(label).startswith(str(baseLabel)):
+                continue
+            try:
+                project = projects.Project(self, projectId)
+                projectCfg = self._getProjectConaryConfig(project)
+                cclient = conaryclient.ConaryClient(projectCfg)
+                pd.loadFromRepository(cclient)
+            except Exception, e:
+                return versionId, None
+
+            for stage in pd.getStages():
+                stageLabel = pd.getLabelForStage(stage.name)
+                if str(label) == stageLabel:
+                    return versionId, str(stage.name)
+            return versionId, None
+        return None, None
 
     @typeCheck(int, str)
     @requiresAuth

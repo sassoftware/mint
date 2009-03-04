@@ -310,4 +310,3 @@ class ProductManager(object):
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
-

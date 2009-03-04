@@ -4,15 +4,30 @@ from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
 
+class ProductVersionStages(base.BaseController):
+    modelName = 'stageName'
+
+    urls = {'images' : dict(GET='getImages')}
+    
+    def index(self, request, hostname, version):
+        return self.db.getProductVersionStages(hostname, version)
+
+    def get(self, request, hostname, version, stageName):
+        return self.db.getProductVersionStage(hostname, version, stageName)
+
+    def getImages(self, request, hostname, version, stageName):
+        return self.db.getProductVersionStageImages(hostname, version, stageName)
+
 class ProductVersionController(base.BaseController):
 
     modelName = 'version'
     urls = {'platform'   : dict(GET='getPlatform',
                                 PUT='setPlatform',
                                 POST='updatePlatform'),
-            'stages'     : dict(GET='getStages'),
+            'stages'     : ProductVersionStages,
             'definition' : dict(GET='getDefinition', 
-                                PUT='setDefinition')}
+                                PUT='setDefinition'),
+            'images'     : dict(GET='getImages')}
 
     def index(self, request, hostname):
         return self.db.listProductVersions(hostname)
@@ -31,11 +46,8 @@ class ProductVersionController(base.BaseController):
                            self.url(request, 'products.versions', 
                                     hostname, productVersion.name))
 
-
-
-
-    def getStages(self, request, hostname, version):
-        return self.db.getProductVersionStages(hostname, version)
+    def getImages(self, request, hostname, version):
+        return self.db.getProductVersionImages(hostname, version)
 
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)
