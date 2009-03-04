@@ -9,7 +9,6 @@ class Product(Model):
     shortname          = fields.CharField() 
     repositoryHostname = fields.CharField()
     description        = fields.CharField()
-    projecturl         = fields.CharField()
     isAppliance        = fields.BooleanField(default=True)
     prodtype           = fields.CharField()
     commitEmail        = fields.EmailField(visibility='owner')
