@@ -72,6 +72,10 @@ class WebHandler(webunittest.WebFetcher):
                    'allowNamespaceChange': False }
         setupPlugin = rbasetup.rBASetup(None, None, '/')
         setupPlugin.updateRBAConfig(1, 1, fields)
+        cfg = config.MintConfig()
+        cfg.read(baseDir + '/config/rbuilder.conf')
+        setupPlugin._addRBuilderAdminAccount(cfg, 'admin', 'tclmeSRS', 
+                            pwd.getpwuid(os.getuid())[0] + '@rpath.com')
         # NOTE: restart needed here.
 
 def addProjects(cfg, client, num):
