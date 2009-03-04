@@ -41,7 +41,7 @@ class Stage(Model):
     label = fields.CharField()
     groups = fields.UrlField('products.repos.search', 
                              ['hostname'], 'type=group&label=%(label)s')
-    builds = fields.UrlField('products.versions.stages.builds',
+    images = fields.UrlField('products.versions.stages.images',
                              ['hostname', 'version', 'name'])
                             
 

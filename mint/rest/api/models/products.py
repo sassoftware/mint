@@ -29,7 +29,7 @@ class Product(Model):
         return ('products', self.hostname)
 
     def getFQDN(self):
-        return self.hostname + '.' + self.domainname
+        return self.repositoryHostname
             
 class ProductSearchResultList(Model):
     class Meta(object):
