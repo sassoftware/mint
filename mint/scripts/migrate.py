@@ -228,7 +228,7 @@ class MigrateTo_44(SchemaMigration):
 
 # SCHEMA VERSION 45
 class MigrateTo_45(SchemaMigration):
-    Version = (45, 6)
+    Version = (45, 7)
 
     # 45.0
     # - Create UpdateServices table
