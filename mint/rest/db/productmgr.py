@@ -40,6 +40,7 @@ class ProductManager(object):
         '''
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
+        d['repositoryHostname'] = d['shortname'] + '.' + d.pop('domainname')
         return models.Product(**d)
 
     def listProducts(self):
