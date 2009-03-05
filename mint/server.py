@@ -3097,7 +3097,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
-        troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
+        try: 
+            troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
+        except ValueError:
+            troveLabel = versions.VersionFromString(troveVersion).trailingLabel()
         projectId = self.builds.get(buildId)['projectId']
         productVersionId, stage = self._getProductVersionForLabel(projectId, 
                                                                   troveLabel)
