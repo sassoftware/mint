@@ -538,9 +538,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testMissingBuildTrove(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
-        build.setTrove('foo', 'bar', 'baz')
+        build.setTrove('foo', '/localhost@rpl:1/1-1-1', 'baz')
         self.assertRaises(BuildMissing, client.server._server.setBuildTrove,
-                          99, 'foo', 'ver', 'flav')
+                          99, 'foo', '/localhost@rpl:1/1-1-1', 'flav')
     @fixtures.fixture('Full')
     def testMissingBuildName(self, db, data):
         client = self.getClient('owner')
