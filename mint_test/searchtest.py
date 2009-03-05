@@ -296,7 +296,7 @@ class BrowseTest(fixtures.FixturedUnitTest):
                         shortname="bar", version="1.0", prodtype="Component")
         rel2 = client.newPublishedRelease(projectId)
         build = client.newBuild(projectId, "Test Published Build")
-        build.setTrove("group-dist", "localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance")
+        build.setTrove("group-dist", "/localhost@rpl:devel/0.0:1.0-1-1", "1#x86|5#use:appliance")
         build.setBuildType(buildtypes.STUB_IMAGE)
         build.setFiles([["file", "file title 1"]])
         rel2.addBuild(build.id)
