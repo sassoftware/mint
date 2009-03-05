@@ -1,13 +1,21 @@
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
+class RepositoryUrlField(fields.CalculatedField):
+    def getValue(self, controller, request, class_, parent, value):
+        instance = class_()
+        instance.href = (request.getHostWithProtocol() + '/repos/%s/browse' % (parent.hostname, ))
+        return instance
+
 class Product(Model):
     productId          = fields.IntegerField()
     hostname           = fields.CharField(required=True)
     name               = fields.CharField()
     namespace          = fields.CharField(displayName='nameSpace')
     shortname          = fields.CharField() 
+    projecturl         = fields.CharField() 
     repositoryHostname = fields.CharField()
+    repositoryUrl      = RepositoryUrlField()
     description        = fields.CharField()
     isAppliance        = fields.BooleanField(default=True)
     prodtype           = fields.CharField()

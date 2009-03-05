@@ -97,7 +97,7 @@ class XMLFormatter(object):
             return [ self.getXObjClass(field.valueClass) ]
         elif isinstance(field, (BooleanField, IntegerField)):
             return int
-        elif isinstance(field, UrlField):
+        elif isinstance(field, (UrlField, CalculatedField)):
             attrs = {}
             attrs['href'] = str
             attrs['_xobj'] = xobj.XObjMetadata(attributes = ['href'])
@@ -112,20 +112,10 @@ class XMLFormatter(object):
     def getFieldXObjObject(self, field, value, parent):
         if isinstance(field, AbsoluteUrlField):
             return self.controller.url(self.request, *parent.get_absolute_url())
-        elif isinstance(field, UrlField):
-            instance = self.getFieldXObjClass(field)()
-            values = [ getattr(parent, x) for x in field.urlParameters]
-            if None in values:
-                return None
-            values = [str(x) for x in values ]
-            instance.href = self.controller.url(self.request, 
-                                                field.location, *values)
-            if field.query:
-                instance.href += '?' + field.query % parent.__dict__
-
-            if value:
-                instance._xobj.text = str(value)
-            return instance
+        elif isinstance(field, CalculatedField):
+            class_ = self.getFieldXObjClass(field)
+            return field.getValue(self.controller, self.request, 
+                                  class_, parent, value)
         elif value is None:
             return None
         elif isinstance(field, ListField):

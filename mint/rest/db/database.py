@@ -137,7 +137,7 @@ class Database(object):
 
     def getUser(self, username):
         self.auth.requireLogin()
-        if self.hasUserReadAccess(username):
+        if self.auth.hasUserReadAccess(username):
             self._getUser(username, includePrivateInfo=True)
         else:
             self._getUser(username, includePrivateInfo=False)

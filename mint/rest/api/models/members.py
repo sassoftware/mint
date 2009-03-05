@@ -10,6 +10,10 @@ class Membership(Model):
     userUrl    = fields.UrlField('users', 'username')
     username   = fields.CharField()
     level      = fields.CharField()
+    id         = fields.UrlField('products.members', ['hostname', 'username'],
+                                 isAttribute=True)
 
 class MemberList(Model):
+    class Meta(object):
+        name = 'members'
     members = fields.ListField(Membership, displayName='member')

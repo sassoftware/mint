@@ -34,17 +34,15 @@ class CharField(Field):
 class BooleanField(Field):
     pass
 
-class UrlField(Field):
-    editable = False
+class CalculatedField(Field):
+    def getValue(self, controller, request, class_, parent, value):
+        return value
+
+class UrlField(CalculatedField):
     def __init__(self, location, urlParameters, *args, **kw):
-        if 'query' in kw:
-            query = kw.pop('query')
-        elif args:
-            query = args[0]
-            args = args[1:]
-        else:
-            query = None
-        Field.__init__(self, *args, **kw)
+        query = kw.pop('query', None)
+
+        CalculatedField.__init__(self, *args, **kw)
         self.location = location
         if isinstance(urlParameters, str):
             urlParameters = [urlParameters]
@@ -52,6 +50,24 @@ class UrlField(Field):
             urlParameters = []
         self.urlParameters = urlParameters
         self.query = query
+
+    def getValue(self, controller, request, class_, parent, value):
+        instance = class_()
+        values = [ getattr(parent, x) for x in self.urlParameters]
+        if None in values:
+            return None
+        values = [str(x) for x in values ]
+        instance.href = controller.url(request, 
+                                            self.location, *values)
+        if self.trailingSlash:
+            instance.href += '/'
+        if self.query:
+            instance.href += '?' + self.query % parent.__dict__
+
+        if value:
+            instance._xobj.text = str(value)
+        return instance
+
 
 class ModelField(Field):
     def __init__(self, model, *args, **kw):

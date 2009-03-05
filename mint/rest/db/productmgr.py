@@ -41,7 +41,8 @@ class ProductManager(object):
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
         d['repositoryHostname'] = d['shortname'] + '.' + d.pop('domainname')
-        return models.Product(**d)
+        p = models.Product(**d)
+        return p
 
     def listProducts(self):
         cu = self.db.cursor()
@@ -75,7 +76,9 @@ class ProductManager(object):
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
-            results.products.append(models.Product(**d))
+            d['repositoryHostname'] = d['shortname'] + '.' + d.pop('domainname')
+            p = models.Product(**d)
+            results.products.append(p)
         return results
 
 
