@@ -51,4 +51,8 @@ class Model(object):
             field = getattr(cls, fieldName)
             if field.required:
                 raise TypeError('%s is a required parameter for %s()' % (fieldName, cls.__name__))
+            if isinstance(field.default, list):
+                default = list(field.default)
+            else:
+                default = field.default
             setattr(self, fieldName, field.default)
