@@ -183,7 +183,7 @@ class Database(object):
                              active, blurb FROM Users""")
         userList = models.UserList()
         for d in cu:
-            userList.users.append(models.User(**d))
+            userList.users.append(models.User(**dict(d)))
         return userList
 
     def listUserGroupsForUser(self, username):
