@@ -19,4 +19,6 @@ class Trove(Model):
                  '%s=%s[%s]' % (self.name, self.version, self.flavor))
 
 class TroveList(Model):
+    class Meta(object):
+        name = 'troves'
     troves   = fields.ListField(Trove, displayName='trove')
