@@ -332,7 +332,7 @@ class Database(object):
 
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getProductVersionDefinition(hostname, version)
+        return self.productMgr.getProductVersionDefinition(hostname, version)
 
     def setProductVersionDefinition(self, hostname, version, pd):
         self.auth.requireProductDeveloper(hostname)
