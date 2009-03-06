@@ -7,6 +7,7 @@ class Trove(Model):
     name     = fields.CharField()
     version  = fields.CharField()
     flavor   = fields.CharField()
+    timeStamp = fields.CharField()
     images   = fields.UrlField('products.repos.items.images',
                                ['hostname', 'nvf'])
 
