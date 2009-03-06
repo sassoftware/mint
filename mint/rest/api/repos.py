@@ -71,10 +71,14 @@ class RepositoryController(BaseReposController):
 
             for version, flavorList in versionDict.iteritems():
                 timeStamp = version.timeStamps()[-1]
+                trailingVersion = version.trailingRevision()
+                label = version.trailingLabel()
                 for flavor in flavorList:
                     trv = models.Trove(hostname=hostname, name=name, 
-                                       version=version, flavor=flavor,
-                                       timeStamp=timeStamp)
+                               version=version, flavor=flavor,
+                               timeStamp=timeStamp,
+                               trailingVersion=trailingVersion,
+                               label=label)
                     troveList.append(trv)
         troveList = sorted(troveList, key = lambda x: x.timeStamp)
         return models.TroveList(troveList)
