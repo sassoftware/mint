@@ -40,7 +40,7 @@ class Stage(Model):
     name  = fields.CharField()
     label = fields.CharField()
     groups = fields.UrlField('products.repos.search', 
-                             ['hostname'], 'type=group&label=%(label)s')
+                             ['hostname'], query='type=group&label=%(label)s')
     images = fields.UrlField('products.versions.stages.images',
                              ['hostname', 'version', 'name'])
                             
