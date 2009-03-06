@@ -26,5 +26,8 @@ class UserGroupMemberList(Model):
     groups = fields.ListField(UserGroupMember, displayName='group')
 
 class UserList(Model):
+    class Meta(object):
+        name = 'users'
+
     users = fields.ListField(User, displayName='user')
 
