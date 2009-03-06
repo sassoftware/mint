@@ -76,7 +76,7 @@ class ProductManager(object):
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
-            d['repositoryHostname'] = d['shortname'] + '.' + d.pop('domainname')
+            d['repositoryHostname'] = d['hostname'] + '.' + d.pop('domainname')
             p = models.Product(**d)
             results.products.append(p)
         return results
