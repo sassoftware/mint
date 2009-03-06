@@ -294,11 +294,15 @@ class Database(object):
     def getProductVersionPlatform(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
+        platformName = pd.getPlatformName()
         n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
         v = versions.VersionFromString(v)
         return models.Platform(name=str(n), # convert from unicode
-                               version=str(v.trailingRevision()), 
-                               label=str(v.trailingLabel()))
+                               platformVersion=str(v.trailingRevision()), 
+                               label=str(v.trailingLabel()),
+                               platformName=platformName,
+                               hostname=hostname,
+                               productVersion=version)
 
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
