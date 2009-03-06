@@ -59,8 +59,6 @@ class UrlField(CalculatedField):
         values = [str(x) for x in values ]
         instance.href = controller.url(request, 
                                             self.location, *values)
-        if self.trailingSlash:
-            instance.href += '/'
         if self.query:
             instance.href += '?' + self.query % parent.__dict__
 
