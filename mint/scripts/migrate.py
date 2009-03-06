@@ -453,7 +453,7 @@ class MigrateTo_45(SchemaMigration):
         cu = self.db.cursor()
         add_columns(cu, 'Builds', 
                      'productVersionId INTEGER DEFAULT 0',
-                     'stage VARCHAR(255) DEFAULT ""', 
+                     'stageName VARCHAR(255) DEFAULT ""', 
                     )
         return True
         
