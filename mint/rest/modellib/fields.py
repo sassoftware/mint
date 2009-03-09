@@ -1,3 +1,9 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
 
 _fieldRegistry = {}
 def registerField(field):

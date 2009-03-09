@@ -1,5 +1,12 @@
-from mint.rest.modellib.fields import *
-from mint.rest.modellib import *
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+from mint.rest.modellib import fields as f
+from mint.rest.modellib import Model, xobj
 
 class XMLFormatter(object):
     _modelClassCache = {}
@@ -21,19 +28,19 @@ class XMLFormatter(object):
         return xobj.toxml(xobjObject, xobjObject.__class__.__name__)
 
     def getXObjClass(self, cls):
-        if issubclass(cls, Field):
+        if issubclass(cls, f.Field):
             return self.getFieldXObjClass(cls)
         elif issubclass(cls, Model):
             return self.getModelXObjClass(cls)
 
     def getXObjObject(self, cls, value, parent=None):
-        if isinstance(cls, Field):
+        if isinstance(cls, f.Field):
             return self.getFieldXObjObject(cls, value, parent)
         elif issubclass(cls, Model):
             return self.getModelXObjObject(cls, value, parent)
 
     def fromXObjObject(self, cls, xobjObject):
-        if isinstance(cls, Field):
+        if isinstance(cls, f.Field):
             return self.fromFieldXObjObject(cls, xobjObject)
         elif issubclass(cls, Model):
             return self.fromModelXObjObject(cls, xobjObject)
@@ -54,9 +61,9 @@ class XMLFormatter(object):
     def fromFieldXObjObject(self, field, fieldValue):
         if fieldValue is None:
             return None
-        if isinstance(field, BooleanField):
+        if isinstance(field, f.BooleanField):
             return bool(fieldValue)
-        if isinstance(field, ListField):
+        if isinstance(field, f.ListField):
             return [ self.fromXObjObject(field.valueClass, x) 
                                          for x in fieldValue ]
         return fieldValue
@@ -93,36 +100,36 @@ class XMLFormatter(object):
         return instance
 
     def getFieldXObjClass(self, field):
-        if isinstance(field, ListField):
+        if isinstance(field, f.ListField):
             return [ self.getXObjClass(field.valueClass) ]
-        elif isinstance(field, (BooleanField, IntegerField)):
+        elif isinstance(field, (f.BooleanField, f.IntegerField)):
             return int
-        elif isinstance(field, (UrlField, CalculatedField)):
+        elif isinstance(field, (f.UrlField, f.CalculatedField)):
             attrs = {}
             attrs['href'] = str
             attrs['_xobj'] = xobj.XObjMetadata(attributes = ['href'])
             xobjClass = type.__new__(type, 'XobjUrl', 
                                      xobj.XObj.__mro__, attrs)
             return xobjClass
-        elif isinstance(field, ModelField):
+        elif isinstance(field, f.ModelField):
             return self.getModelXObjClass(field.model)
         else:
             return str
 
     def getFieldXObjObject(self, field, value, parent):
-        if isinstance(field, AbsoluteUrlField):
+        if isinstance(field, f.AbsoluteUrlField):
             return self.controller.url(self.request, *parent.get_absolute_url())
-        elif isinstance(field, CalculatedField):
+        elif isinstance(field, f.CalculatedField):
             class_ = self.getFieldXObjClass(field)
             return field.getValue(self.controller, self.request, 
                                   class_, parent, value)
         elif value is None:
             return None
-        elif isinstance(field, ListField):
+        elif isinstance(field, f.ListField):
             return [ self.getXObjObject(field.valueClass, x, parent) 
                                         for x in value ]
-        elif isinstance(field, BooleanField):
+        elif isinstance(field, f.BooleanField):
             return int(value)
-        elif isinstance(field, ModelField):
+        elif isinstance(field, f.ModelField):
             return self.getModelXObjObject(field.model, value, parent)
         return str(value)

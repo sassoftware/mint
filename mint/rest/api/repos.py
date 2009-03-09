@@ -1,3 +1,10 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from conary.conaryclient import cmdline
 from conary import trove
 from conary import versions

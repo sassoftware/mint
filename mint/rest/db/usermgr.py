@@ -1,3 +1,10 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 
 class UserManager(object):
     def __init__(self, cfg, db):

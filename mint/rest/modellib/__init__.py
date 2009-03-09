@@ -1,3 +1,10 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from xobj import xobj
 
 from mint.rest.modellib import fields
@@ -22,8 +29,27 @@ class ModelMeta(type):
                              if attrs[x].isText ]
         new_class._meta = options.Options(new_class, attrs.pop('Meta', None))
         return new_class
-        
+
 class Model(object):
+    """
+    Model objects are intended to be objects with structured content.
+    The object's structure is defined though class-level variables that are a
+    subclass of the fields.Field class.
+
+    This allows one to do:
+
+    class MyField(fields.Field):
+        pass
+
+    class YourField(fields.Field):
+        pass
+
+    class M(Model):
+        myField = MyField()
+        yourField = YourField()
+
+    m = M(myField = 'a', yourField = 'b')
+    """
     __metaclass__ = ModelMeta
 
     def __init__(self, *args, **kw):
