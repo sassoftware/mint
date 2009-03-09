@@ -11,9 +11,9 @@ class AMIPermissionsManager(object):
     def setUserKey(self, userId, oldAccountNumber, newAccountNumber):
         amiIds = self._getAMIsForPermChange(userId)
         if oldAccountNumber:
-            self._removeAMIPermissionsForAccount(oldAccountNumber)
+            self._removeAMIPermissionsForAccount(oldAccountNumber, amiIds)
         if newAccountNumber:
-            self._addAMIPermissionsForAccount(newAccountNumber)
+            self._addAMIPermissionsForAccount(newAccountNumber, amiIds)
     
     def addMemberToProject(self, userId, projectId):
         if not self._hasAWSAccount(userId):
@@ -82,9 +82,10 @@ class AMIPermissionsManager(object):
         self._addAMIPermissionsForUsers(writers, unpublished)
 
     def _getEC2Client(self):
-        amiData = self.db.targets.getTargetId('ec2', 'aws', None)
-        if not amiData:
+        targetId = self.db.targets.getTargetId('ec2', 'aws', None)
+        if targetId is None:
             raise mint_error.EC2NotConfigured()
+        amiData = self.db.targetData.getTargetData(targetId)
         authToken = (amiData['ec2AccountId'],
                      amiData['ec2PublicKey'],
                      amiData['ec2PrivateKey'])
@@ -108,33 +109,33 @@ class AMIPermissionsManager(object):
     def _addAMIPermissionsForUsers(self, userIds, amiIds):
         if not (userIds and amiIds):
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         for userId in userIds:
             awsAccountNumber = self._getAWSAccountNumber(userId)
             if not awsAccountNumber:
                 continue
             for amiId in amiIds:
-                ec2Client.addLaunchPermission(amiId,
-                                              awsAccountNumber)
+                self._tryAMIAction(ec2Client.addLaunchPermission, 
+                                   amiId, awsAccountNumber)
 
     def _addAMIPermissionsForAll(self, amiIds):
         if not amiIds:
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         if config.isRBO():
             for amiId in amiIds:
-                ec2Client.resetLaunchPermissions(amiId)
-                ec2Client.addPublicLaunchPermission(amiId)
+                self._tryAMIAction(ec2Client.resetLaunchPermissions, amiId)
+                self._tryAMIAction(ec2Client.addPublicLaunchPermission, amiId)
         else:
             awsAccountNumbers = []
             users = self.db.users.getUsersWithAwsAccountNumber()
             for user in users:
                 awsAccountNumbers.append(user[1])
             for amiId in amiIds:
-                ec2Client.resetLaunchPermissions(amiId)
+                self._tryAMIAction(ec2Client.resetLaunchPermissions, amiId)
                 for awsAccountNumber in awsAccountNumbers:
-                    ec2Client.addLaunchPermission(amiId,
-                                                  awsAccountNumber)
+                    self._tryAMIAction(ec2Client.addLaunchPermission, amiId,
+                                       awsAccountNumber)
 
     def _removeAMIPermissionsForUser(self, userId, amiIds):
         self._removeAMIPermissionsForUsers([userId], amiIds)
@@ -142,40 +143,55 @@ class AMIPermissionsManager(object):
     def _removeAMIPermissionsForUsers(self, userIds, amiIds):
         if not (userIds and amiIds):
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         for userId in userIds:
             awsAccountNumber = self._getAWSAccountNumber(userId)
             if not awsAccountNumber:
                 continue
             for amiId in amiIds:
-                ec2Client.removeLaunchPermissions(amiId, awsAccountNumber)
+                self._tryAMIAction(ec2Client.removeLaunchPermission, amiId, 
+                                   awsAccountNumber)
     
     def _removeAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
         if not amiIds:
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         for amiId in amiIds:
-            ec2Client.removeLaunchPermissions(amiId, awsAccountNumber)
+            self._tryAMIAction(ec2Client.removeLaunchPermission, amiId, 
+                               awsAccountNumber)
+
+    def _shouldIgnoreException(self, exc):
+        if not isinstance(exc, mint_error.EC2Exception):
+            return False
+        e = exc.ec2ResponseObj
+        if not e:
+            return False
+        error = e.errors and e.errors[0] or None
+        if error and error["code"] == "InvalidAMIID.Unavailable":
+            return True
 
     def _addAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
         if not amiIds:
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         for amiId in amiIds:
-            ec2Client.addLaunchPermissions(amiId, awsAccountNumber)
+            self._tryAMIAction(
+                ec2Client.addLaunchPermission, amiId, awsAccountNumber)
 
     def _removeAMIPermissionsForAll(self, amiIds):
         if not amiIds:
             return
-        ec2Client = self._getEc2Client()
+        ec2Client = self._getEC2Client()
         for amiId in amiIds:
-            ec2Client.resetLaunchPermissions(amiId)
+            self._tryAMIAction(ec2Client.resetLaunchPermissions, amiId)
 
     def _getAMIsForRelease(self, releaseId):
         pubreleaseTable = self.db.publishedReleases
         amiDataList = pubreleaseTable.getAMIBuildsForPublishedRelease(
                                                                     releaseId)
         amiIds = [ x['amiId'] for x in amiDataList ]
+        if not amiIds:
+            return [], False, None
         # list will be empty if all projects are public
         isPrivate = bool([x for x in amiDataList if x['isPrivate']])
         # really should only be one projectId for a release.
@@ -222,3 +238,11 @@ class AMIPermissionsManager(object):
                 if isPrivate or not isPublished:
                     amiIds.append(amiId)
         return amiIds
+
+    def _tryAMIAction(self, fn, *args, **kw):
+        try:
+            return fn(*args, **kw)
+        except mint_error.EC2Exception, e:
+            if not self._shouldIgnoreException(e):
+                raise
+

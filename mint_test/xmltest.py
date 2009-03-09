@@ -10,8 +10,9 @@ import fixtures
 
 import mint.server
 from mint import userlevels, mint_error
+from mint.mint_error import ParameterError
 from mint.server import deriveBaseFunc, checkParam, \
-    typeCheck, ParameterError, SERVER_VERSIONS
+    typeCheck, SERVER_VERSIONS
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 

@@ -21,6 +21,7 @@ import StringIO
 from mint import buildtypes
 try:
     from mint import charts
+    raise ImportError
 except ImportError:
     charts = None
 import mint.db.database
@@ -1440,7 +1441,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                               None, None, write=(level in userlevels.WRITERS),
                               canRemove=False)
                 repos.setRoleIsAdmin(label, user['username'],
-                                     level == userlevels.OWNER)
+                        self.cfg.projectAdmin and level == userlevels.OWNER)
                 repos.setRoleCanMirror(label, 
                          user['username'], int(level == userlevels.OWNER))
 
@@ -3955,7 +3956,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             leaves = repos.getAllTroveLeaves( \
                 versions.Label(project.getLabel()).host, {trvName: None})
         if trvName not in leaves:
-            raise mint_error.TroveNotFound
+            raise TroveNotFound
         trvVersion = sorted(leaves[trvName].keys(),
                             reverse = True)[0].asString()
 
@@ -5428,6 +5429,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
             return True
 
+    @typeCheck(int)
+    @requiresAuth
+    def removeEC2CredentialsForUser(self, userId):
+        """
+        Given a userId, remove the set of EC2 credentials for a user.
+        @param userId: a numeric rBuilder userId to operate on
+        @type  userId: C{int}
+        @return: True if removed successfully, False otherwise
+        @rtype C{bool}
+        """
+        return self.setEC2CredentialsForUser(userId, '', '', '', True)
+
     @typeCheck(str)
     @requiresAuth
     def getAllBuildsByType(self, buildType):
@@ -5447,10 +5460,40 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildId = buildData['buildId']
             buildData['buildPageUrl'] = \
                     self._getBuildPageUrl(buildId, hostname = hostname)
-            buildData['downloadUrl'] = urlTemplate % \
-                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildFilenames = self.getBuildFilenames(buildId)
+            if buildFilenames:
+                buildData['downloadUrl'] = urlTemplate % \
+                        buildFilenames[0]['fileId']
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
         return res
+
+    @typeCheck(int)
+    @requiresAuth
+    def getAMIBuildsForUser(self, userId):
+        """
+        Given a userId, give a list of dictionaries for each AMI build
+        that was created in a project that the user is a member of.
+        @param userId: the numeric userId of the rBuilder user
+        @type  userId: C{int}
+        @returns A list of dictionaries with the following members:
+           - amiId: the AMI identifier of the Amazon Machine Image
+           - projectId: the projectId of the project containing the build
+           - isPublished: 1 if the build is published, 0 otherwise
+           - level: the userlevel (see mint.userlevels) of the user
+               with respect to the containing project
+           - isPrivate: 1 if the containing project is private (hidden),
+               0 otherwise
+        @rtype: C{list} of C{dict} objects (see above)
+        @raises: C{PermissionDenied} if requesting userId is either
+           an admin or isn't the same userId as the currently logged
+           in user.
+        """
+        if userId != self.auth.userId and not self.auth.admin:
+            raise mint_error.PermissionDenied
+        # Check to see if the user even exists.
+        # This will raise ItemNotFound if the user doesn't exist
+        dummy = self.users.get(userId)
+        return self.users.getAMIBuildsForUser(userId)
 
     def getAvailablePlatforms(self):
         """

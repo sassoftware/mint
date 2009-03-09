@@ -19,7 +19,7 @@ from mint import buildtypes, buildtemplates, projects
 from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
-from mint.server import deriveBaseFunc, ParameterError
+from mint.server import deriveBaseFunc
 from mint import helperfuncs
 from mint import urltypes
 from mint import userlevels

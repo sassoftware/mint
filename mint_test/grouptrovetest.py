@@ -413,7 +413,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
 
         try:
             groupTrove.startCookJob("1#x86")
-        except server.GroupTroveEmpty:
+        except GroupTroveEmpty:
             pass
         else:
             self.fail("allowed to start an empty cook job")

@@ -18,7 +18,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
 from mint import userlevels
 from mint.mint_error import *
-from mint.server import ParameterError, PermissionDenied
+from mint.mint_error import ParameterError, PermissionDenied
 from mint.lib import database
 from mint import urltypes
 

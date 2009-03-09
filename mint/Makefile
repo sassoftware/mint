@@ -8,6 +8,7 @@ SUBDIRS = db lib reports rest scripts templates web
 
 python_files =			\
 	__init__.py		\
+	amiperms.py		\
 	builds.py		\
 	buildtemplates.py	\
 	buildtypes.py		\

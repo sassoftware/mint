@@ -12,7 +12,7 @@ import tempfile
 import time
 
 import fixtures
-from mint.server import PermissionDenied
+from mint.mint_error import PermissionDenied
 from mint.mint_error import InvalidReport
 
 class ReportTest(fixtures.FixturedUnitTest):

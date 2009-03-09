@@ -19,7 +19,8 @@ class VwsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testGetAllVwsBuilds(self, db, data):
         client = self.getClient("admin")
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.assertEquals(buildList, {})
         cu = db.cursor()
         buildId = data['buildId']
@@ -29,11 +30,13 @@ class VwsTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x.pop('sha1'), x) for x in buildList)
         self.assertEquals(buildList,
                 {fakeSha1: {'productDescription': '',
                     'buildId': 1,
@@ -52,7 +55,8 @@ class VwsTest(fixtures.FixturedUnitTest):
                     'baseFileName': 'foo-1.1-x86_64' }})
 
         client = self.getClient("owner")
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.assertEquals(buildList[fakeSha1]['role'], 'Product Owner')
 
     @fixtures.fixture('Full')
@@ -65,15 +69,18 @@ class VwsTest(fixtures.FixturedUnitTest):
         cu.execute('UPDATE Builds SET buildType=? WHERE buildId=?',
                 buildtypes.RAW_FS_IMAGE, buildId)
         db.commit()
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.assertEquals(buildList, {})
         build = client.getBuild(buildId)
         build.setDataValue('XEN_DOMU', True, RDT_BOOL, validate = False)
         db.commit()
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.failIf(len(buildList) != 1)
         client = self.getClient('nobody')
-        buildList = client.getAllVwsBuilds()
+        buildList = client.getAllBuildsByType('VWS')
+        buildList = dict((x['sha1'], x) for x in buildList)
         self.assertEquals(buildList, {})
 
 

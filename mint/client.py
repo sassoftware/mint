@@ -820,7 +820,9 @@ class MintClient:
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
-    # ec2 "try it now" support
+    # BEGIN GUIDED TOUR SUPPORT - since we call these via
+    # a javascript client, these methods are likely not needed
+    # outside of testing.
     def validateEC2Credentials(self, authToken):
         return self.server.validateEC2Credentials(authToken)
     
@@ -862,6 +864,7 @@ class MintClient:
 
     def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
         return self.server.checkHTTPReturnCode(uri, expectedCodes)
+    # END GUIDED TOUR SUPPORT
 
     def getFullRepositoryMap(self):
         return self.server.getFullRepositoryMap()
@@ -932,30 +935,17 @@ class MintClient:
     def deleteTarget(self, targetType, targetName):
         return self.server.deleteTarget(targetType, targetName)
 
-    def getTargetData(self, targetType, targetName):
-        return self.server.getTargetData(targetType, targetName)
-
     def removeEC2CredentialsForUser(self, userId):
         return self.server.removeEC2CredentialsForUser(userId)
 
-    def getAllAMIBuilds(self):
-        return self.server.getAllAMIBuilds()
-
-    def getAllBuildsByType(self, buildType):
-        return self.server.getAllBuildsByType(buildType)
+    def getTargetData(self, targetType, targetName):
+        return self.server.getTargetData(targetType, targetName)
 
     def getAMIBuildsForUser(self, userId):
         return self.server.getAMIBuildsForUser(userId)
 
-    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        return self.server.addAllEC2LaunchPermissions(userId, awsAccountNumber)
-
-    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        return self.server.removeAllEC2LaunchPermissions(userId,
-                                                      awsAccountNumber)
-
-    def getAllVwsBuilds(self):
-        return self.server.getAllVwsBuilds()
+    def getAllBuildsByType(self, buildType):
+        return self.server.getAllBuildsByType(buildType)
 
     def getAvailablePackages(self, sessionHandle):
         from conary import versions as conaryver
