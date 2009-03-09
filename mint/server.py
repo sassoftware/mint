@@ -33,6 +33,7 @@ from mint.lib import database
 from mint.lib import maillib
 from mint.lib import persistentcache
 from mint.lib import profile
+from mint import amiperms
 from mint import builds
 from mint import ec2
 from mint import helperfuncs
@@ -1066,40 +1067,18 @@ class MintServer(object):
 
         try:
             self.db.transaction()
-            if level != userlevels.USER:
-                self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=False)
             try:
                 self.projectUsers.new(projectId, userId, level,
                                       commit=False)
             except DuplicateItem:
-                project.updateUserLevel(userId, level)
-                # only attempt to modify acl's of local projects.
-                if not project.external:
-                    repos = self._getProjectRepo(project)
-                    # edit vice/drop+add is intentional to honor acl tweaks by
-                    # admins.
-                    repos.editAcl(label, username, None, None, None,
-                                  None, write=level in userlevels.WRITERS,
-                                  canRemove=False)
-                    repos.setRoleIsAdmin(label, username,
-                                         self.cfg.projectAdmin and
-                                         level == userlevels.OWNER)
-                    repos.setRoleCanMirror(label, username,
-                                           int(level == userlevels.OWNER))
-                self.db.commit()
+                self.db.rollback()
+                return self.setUserLevel(userId, projectId, level)
 
-                # Since the user is already a member of the product, we don't
-                # need to set EC2 permissions or repository permissions.
-                return True
+            if level != userlevels.USER:
+                self.membershipRequests.deleteRequest(projectId, userId,
+                                                      commit=False)
 
-            # Set any EC2 launch permissions if the user has aws 
-            # credentials set.
-            awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                             'awsAccountNumber')
-            if awsFound:
-                self.addProductEC2LaunchPermissions(userId, awsAccountNumber,
-                                                    projectId)
+            self.amiPerms.addMemberToProject(userId, projectId)
 
             if not project.external:
                 password = ''
@@ -1179,19 +1158,12 @@ class MintServer(object):
         except ItemNotFound:
             raise netclient.UserNotFound()
 
-        # Set any EC2 launch permissions if the user has aws credentials set.
-        awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            # Remove all old launch permissions.
-            amiIds = self._getProductAMIIdsForPermChange(userId, projectId)
-
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            if awsFound:
-                self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
-                                                amiIds)
+
+            self.amiPerms.deleteMemberFromProject(userId, projectId)
+
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
             label = versions.Label(project.getLabel())
@@ -1499,12 +1471,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                (level != userlevels.OWNER):
             raise users.LastOwner
 
-        # Get any EC2 launch permissions if the user has aws credentials set.
-        awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            currentAMIIds = self._getProductAMIIdsForPermChange(userId,
-                                                               projectId)
+        # given that we use UPDATE below we can be pretty
+        # the user already exists.
+        oldLevel = self.db.projectUsers.getUserlevelForProjectMember(projectId,
+                                                                     userId)
 
         try:
             self.db.transaction()
@@ -1528,16 +1498,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cu = self.db.cursor()
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
                 projectId=?""", level, userId, projectId)
-
-            if awsFound:
-                newAMIIds = self._getProductAMIIdsForPermChange(
-                                     userId, projectId)
-                if level == userlevels.USER:
-                    self.removeEC2LaunchPermissions(userId, awsAccountNumber,
-                           [id for id in currentAMIIds if id not in newAMIIds])
-                else:
-                    self.addEC2LaunchPermissions(userId, awsAccountNumber,
-                           [id for id in newAMIIds if id not in currentAMIIds])
+            self.amiPerms.setMemberLevel(userId, projectId, oldLevel, level)
         except:
             self.db.rollback()
             raise
@@ -1545,7 +1506,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
 
         self._notifyUser('Changed', user, project, level)
-
         return True
 
     @typeCheck(int)
@@ -1655,17 +1615,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied()
 
         self._ensureNoOrphans(userId)
-        
-        # remove EC2 launch permissions
-        ec2cred = self.getEC2CredentialsForUser(userId)
-        if ec2cred and ec2cred.has_key('awsAccountNumber'):
-            if ec2cred['awsAccountNumber']:
-                # revoke launch permissions
-                self.removeAllEC2LaunchPermissions(userId, 
-                                                   ec2cred['awsAccountNumber'])
-                
-        # remove EC2 credentials
-        self.removeEC2CredentialsForUser(userId)
 
         self.membershipRequests.userAccountCanceled(userId)
 
@@ -1731,6 +1680,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise PermissionDenied
         self.filterLastAdmin(userId)
         username = self.users.getUsername(userId)
+
+        self.setEC2CredentialsForUser(userId, '', '', '', True)
 
         #Handle projects
         projectList = self.getProjectIdsByMember(userId)
@@ -2896,18 +2847,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            try:
-                self.addEC2LaunchPermsForPublish(pubReleaseId)
-            except EC2NotConfigured, me:
-                # We don't want to fail if this rBuilder is not configured to talk
-                # to EC2.
-                pass
+            self.amiPerms.publishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
-            
         return result
 
     @typeCheck(int)
@@ -2967,18 +2912,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            try:
-                self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
-            except EC2NotConfigured, me:
-                # We don't want to fail if this rBuilder is not configured to talk
-                # to EC2.
-                pass
+            self.amiPerms.unpublishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
-
         return result
 
     @typeCheck(int)
@@ -4580,6 +4519,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         return ec2Wrapper.getAllKeyPairs(keyNames)
 
+## BEGIN Guided TOUR CODE
+
     @typeCheck(str, str)
     @requiresAdmin
     @private
@@ -4751,6 +4692,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return (code in expectedCodes)
 
+    # END GUIDED TOUR CODE
     @private
     def getProxies(self):
         return self._getProxies()
@@ -5361,42 +5303,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sesH
 
     @requiresAuth
-    def getProductVersionSourcePackages(self, projectId, versionId):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        label = versions.Label(pd.getDefaultLabel())
-        repo = self._getProjectRepo(project)
-        ret = []
-        trvlist = repo.findTroves(label, [(None, None, None)], allowMissing=True)
-        for k,v in trvlist.iteritems():
-            for n, v, f in v:
-                if n.endswith(':source'):
-                    ret.append((n, v.freeze()))
-        return ret
-
-    @typeCheck(int, int, ((str,unicode),), ((str,unicode),))
-    @requiresAuth
-    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
-        mincfg = self._getMinCfg(project)
-        try:
-            sesH = pc.startPackagingSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
-        except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
-                    "Error starting the package creator service session: %s", str(err))
-        try:
-            pc.build(sesH, commit=True)
-        except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
-                    "Error attempting to build package: %s", str(err))
-        return sesH
-
-    @requiresAuth
     def getAvailablePackages(self, sessionHandle):
         pkgs = self._loadAvailablePackages(sessionHandle)
         if pkgs is None:
@@ -5545,16 +5451,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
        
-        removing = True
-
         # Validate and add the credentials with EC2 if they're specified.
         if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
             if not force:
                 self.validateEC2Credentials((newValues['awsAccountNumber'],
                                              newValues['awsPublicAccessKeyId'],
                                              newValues['awsSecretAccessKey']))
-            removing = False
-        
         try:
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
@@ -5566,42 +5468,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     self.userData.setDataValue(userId, key, val, dType,
                             commit=False)
 
-            if awsFound:
-                # Remove all old launch permissions
-                self.removeAllEC2LaunchPermissions(userId, oldAwsAccountNumber)
-            if not removing:
-                # Add launch permissions
-                self.addAllEC2LaunchPermissions(userId, 
-                                                newValues['awsAccountNumber'])
-        except EC2Exception, e:
-            # see if the error is because the ami no longer exists (ignore)
-            if e.ec2ResponseObj:
-                error = e.ec2ResponseObj.errors and e.ec2ResponseObj.errors[0] or None
-                if error and error["code"] == "InvalidAMIID.Unavailable":
-                    self.db.commit()
-                    return True
-            
-            # if we get here, fail
-            self.db.rollback()
-            raise
+            self.amiPerms.setUserKey(userId, oldAwsAccountNumber, 
+                                     newValues['awsAccountNumber'])
         except Exception, e:
             self.db.rollback()
             raise                
         else:
             self.db.commit()
             return True
-        
-    @typeCheck(int)
-    @requiresAuth
-    def removeEC2CredentialsForUser(self, userId):
-        """
-        Given a userId, remove the set of EC2 credentials for a user.
-        @param userId: a numeric rBuilder userId to operate on
-        @type  userId: C{int}
-        @return: True if removed successfully, False otherwise
-        @rtype C{bool}
-        """
-        return self.setEC2CredentialsForUser(userId, '', '', '', True)
 
     @typeCheck(str)
     @requiresAuth
@@ -5626,424 +5500,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     self.getBuildFilenames(buildId)[0]['fileId']
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
         return res
-
-    @requiresAuth
-    def getAllAMIBuilds(self):
-        """
-        Returns a list of all of the AMI images that this rBuilder
-        manages. If the requesting user is an admin, the user will
-        be able to see all AMIs created for all projects regardless of
-        their visibility. Otherwise, the user will only see AMIs for
-        projects that they are able to see (i.e. AMIs created in hidden
-        projects of which the user is not a developer or owner
-        will remain hidden).
-        @returns A dictionary of dictionaries, keyed by amiId,
-          with the following members:
-          - productName: the name of the product containing this build
-          - projectId: the id of the project (product) containing this build
-          - productDescription: the description of the product containing
-              this build
-          - buildId: the id of the build that created the AMI
-          - buildName: the name of the build
-          - buildDescription: the description of the build, if given
-          - createdBy: the rBuilder user name of the person who
-              initiated the build (if known), otherwise returns
-              'Unknown' if we don't know (in the case of builds
-              created before RBL-3076 was fixed)
-          - awsAccountNumber: the AWS Account number of the user who
-              created the build (if the user supplied credentials)
-              otherwise, returns 'Unknown'
-          - role: the role of the user who created the build with
-              respoect to the containing product as a meatstring, e.g.
-              'Product User', 'Product Owner', 'Product Developer',
-              or '' (in the case where a user is not affiliated with
-              the product, or the relationship is unknown)
-          - isPrivate: 1 if the containing project is private (hidden),
-              0 otherwise
-          - isPublished: 1 if the build is published, 0 if not
-        @rtype: C{dict} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if user is not logged in
-        """
-        res =  self.builds.getAllBuildsByType('AMI', self.auth.userId,
-                                              not self.auth.admin)
-        return dict((x.pop('amiId'), x) for x in res)
-
-    @typeCheck(int)
-    @requiresAuth
-    def getAMIBuildsForUser(self, userId):
-        """
-        Given a userId, give a list of dictionaries for each AMI build
-        that was created in a project that the user is a member of.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @returns A list of dictionaries with the following members:
-           - amiId: the AMI identifier of the Amazon Machine Image
-           - projectId: the projectId of the project containing the build
-           - isPublished: 1 if the build is published, 0 otherwise
-           - level: the userlevel (see mint.userlevels) of the user
-               with respect to the containing project
-           - isPrivate: 1 if the containing project is private (hidden),
-               0 otherwise
-        @rtype: C{list} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if requesting userId is either
-           an admin or isn't the same userId as the currently logged
-           in user.
-        """
-        if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
-        # Check to see if the user even exists.
-        # This will raise ItemNotFound if the user doesn't exist
-        dummy = self.users.get(userId)
-        return self.users.getAMIBuildsForUser(userId)
-
-
-    @typeCheck(int, str, list)
-    @requiresAuth
-    @private
-    def removeEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
-        """
-        Given a userId, awsAccountNumber, and a list of amiIds, remove launch
-        permissions from each amiId for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param amiIds: The list of Amazon ami ids.
-        @type amiIds: C{list}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, list)
-    @requiresAuth
-    @private
-    def addEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
-        """
-        Given a userId, awsAccountNumber, and a list of amiIds, add launch
-        permissions to each amiId for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param amiIds: The list of Amazon ami ids.
-        @type amiIds: C{list}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        """
-        Given a userId and awsAccountNumber, remove launch permissions to each
-        eligible AMI build for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId[0], awsAccountNumber)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        """
-        Given a userId and awsAccountNumber, add launch permissions to each
-        eligible AMI build for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-        
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId[0], awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, int)
-    @requiresAuth
-    @private
-    def addProductEC2LaunchPermissions(self, userId, awsAccountNumber,
-                                       productId):
-        """
-        Given a userId, awsAccountNumber, and productId, add launch
-        permissions for each eligible AMI id in the product to the user's
-        awsAccountNumber.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param productId: the numberic productId of the rBuilder product
-        @type productId: C{int}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
-
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, int)
-    @requiresAuth
-    @private
-    def removeProductEC2LaunchPermissions(self, userId, awsAccountNumber,
-                                          productId):
-        """
-        Given a userId, awsAccountNumber, and productId, remove launch
-        permissions for each eligible AMI id in the product to the user's
-        awsAccountNumber.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param productId: the numberic productId of the rBuilder product
-        @type productId: C{int}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-
-    def _getAllAMIIdsForPermChange(self, userId):
-        """
-        Returns a list of AMI ids that need their launch permissions altered
-        for the given userId.
-
-        The logic is as follows:
-        For private (hidden) products, the AMI id is affected in all cases
-        except where userId is a regular user and the AMI is not published.
-
-        For public products, the AMI id is affected only if userId is an owner
-        or developer and the AMI is not published.
-        """
-        affectedAMIIds = []
-
-        # This returns all AMI ids that the user could interact with.
-        amiIds = self.users.getAMIBuildsForUser(userId)
-
-        for amiIdData in amiIds:
-            if amiIdData['isPrivate']:
-                # Product is private.
-                # We want all cases except where the user is a regular user
-                # and the image is not published.
-                if not (amiIdData['level'] == userlevels.USER and \
-                        not amiIdData['isPublished']):
-                    affectedAMIIds.append((amiIdData['amiId'],
-                                           amiIdData['projectId']))
-            else:
-                # Product is public.
-                # We only want the case where the user is owner or developer
-                # and the image is not published.
-                if amiIdData['level'] in (userlevels.OWNER,
-                                          userlevels.DEVELOPER) and \
-                   not amiIdData['isPublished']:
-                    affectedAMIIds.append((amiIdData['amiId'],
-                                           amiIdData['projectId']))
-
-        return affectedAMIIds
-
-
-    def addEC2LaunchPermsForPublish(self, pubReleaseId):
-        """
-        Given a pubReleaseId, set the EC2 launch permissions for publishing.
-        @param pubReleaseId: The id of the published release
-        @type pubReleaseId: C{int}
-        @rtype: C{bool} indicating success
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        affectedAMIIds = \
-          self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
-
-        private = False
-        for amiIdData in affectedAMIIds:
-            if amiIdData['isPrivate']:
-                private = True
-
-        if private:
-            # Product is private.
-            # Need to set launch perms on EC2 for normal product users.
-            for amiIdData in affectedAMIIds:
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId']) 
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] == userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'], 
-                                                    awsAccountNumber)
-        else:                                                    
-            # Product is public.  Need to do different things for rBA vs. rBO.
-            if config.isRBO():
-                self._addEC2LaunchPermsForPublicPublishRBO(
-                    ec2Wrap, affectedAMIIds)
-            else:
-                self._addEC2LaunchPermsForPublicPublishRBA(
-                    ec2Wrap, affectedAMIIds)
-
-        return True                                                 
-
-    def _addEC2LaunchPermsForPublicPublishRBO(
-            self, ec2Wrap, affectedAMIIds):
-        # Set public launch perms and remove launch perms 
-        # from every single user.
-
-        # TODO: perhaps we should do some type of check to only remove
-        # perms from users aws data that we manage.
-        for amiIdData in affectedAMIIds:
-            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-            ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
-
-    def _addEC2LaunchPermsForPublicPublishRBA(
-            self,  ec2Wrap, affectedAMIIds):
-        # Set launch perms for every user on the rBA who has EC2 creds set.
-        awsAccountNumbers = self._getAllAwsAccountNumbers()
-        for amiIdData in affectedAMIIds:
-            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-            for awsAccountNumber in awsAccountNumbers:
-                ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                            awsAccountNumber)
-
-    def _getAllAwsAccountNumbers(self):
-        awsAccountNumbers = []
-        users = self.users.getUsersWithAwsAccountNumber()
-        for user in users:
-            awsAccountNumbers.append(user[1])
-        return awsAccountNumbers            
-
-    def removeEC2LaunchPermsForUnpublish(self, pubReleaseId):
-        """
-        Given a pubReleaseId, set the EC2 launch permissions for unpublishing.
-        @param pubReleaseId: The id of the published release
-        @type pubReleaseId: C{int}
-        @rtype: C{bool} indicating success
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        affectedAMIIds = \
-          self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
-
-        private = False
-        for amiIdData in affectedAMIIds:
-            if amiIdData['isPrivate']:
-                private = True
-
-        if private:
-            # Product is private
-            # Remove all launch perms and then set launch perms for owners and
-            # developers.
-            for amiIdData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId'])
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] != userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                                    awsAccountNumber)
-        else:
-            # Product is public
-            # Remove public launch perms and then set launch perms for owners
-            # and developers.
-            for amiIDData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId'])
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] != userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                                    awsAccountNumber)
-        return True                                              
-
-
-
-    def _getProductAMIIdsForPermChange(self, userId, productId):
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-        # Save only those where it's the productId we want.
-        return [ami[0] for ami in amiIds if ami[1] == productId]
-
-    @requiresAuth
-    def getAllVwsBuilds(self):
-        """
-        Returns a list of all of the Workspaces compatible images that this
-        rBuilder manages. Workspaces images are merely raw filesystem images
-        with a xen domU flavor. If the requesting user is an admin, the
-        user will be able to see all Workspaces images created for all
-        projects regardless of their visibility. Otherwise, the user
-        will only see Workspaces images for projects that they are able to
-        see (i.e. Workspaces images created in hidden projects of which the
-        user is not a developer or owner will remain hidden).
-        @returns A dictionary of dictionaries, keyed by buildId,
-          with the following members:
-          - productName: the name of the product containing this build
-          - projectId: the id of the project (product) containing this build
-          - productDescription: the description of the product containing
-              this build
-          - buildId: the id of the build that created the Workspaces image
-          - buildName: the name of the build
-          - buildDescription: the description of the build, if given
-          - createdBy: the rBuilder user name of the person who
-              initiated the build (if known), otherwise returns
-              'Unknown' if we don't know (in the case of builds
-              created before RBL-3076 was fixed)
-          - awsAccountNumber: unused. always 'Unknown'
-          - role: the role of the user who created the build with
-              respoect to the containing product as a meatstring, e.g.
-              'Product User', 'Product Owner', 'Product Developer',
-              or '' (in the case where a user is not affiliated with
-              the product, or the relationship is unknown)
-          - isPrivate: 1 if the containing project is private (hidden),
-              0 otherwise
-          - isPublished: 1 if the build is published, 0 if not
-        @rtype: C{dict} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if user is not logged in
-        """
-        res = self.getAllBuildsByType('VWS')
-
-        resDict = dict((x.pop('sha1'), x) for x in res)
-        return resDict
 
     def getAvailablePlatforms(self):
         """
@@ -6074,6 +5530,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
+        self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
 
         global callLog
         if self.cfg.xmlrpcLogFile:

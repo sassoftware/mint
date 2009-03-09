@@ -325,6 +325,10 @@ class EC2Wrapper(object):
                                                  user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
+            # see if the error is because the ami no longer exists (ignore)
+            error = e.errors and e.errors[0] or None
+            if error and error["code"] == "InvalidAMIID.Unavailable":
+                return True
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def validateCredentials(self):
