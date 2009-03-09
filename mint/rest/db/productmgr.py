@@ -35,7 +35,7 @@ class ProductManager(object):
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
             FROM Projects
-            JOIN Users ON (creatorId=Users.userId)
+            LEFT JOIN Users ON (creatorId=Users.userId)
             WHERE hostname=?
         '''
         cu.execute(sql, hostname)
@@ -55,7 +55,7 @@ class ProductManager(object):
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
                 FROM Projects 
-                JOIN Users ON (creatorId=Users.userId)
+                LEFT JOIN Users ON (creatorId=Users.userId)
                 ORDER BY hostname''')
         else:
             cu.execute('''
@@ -68,7 +68,7 @@ class ProductManager(object):
                 LEFT JOIN ProjectUsers ON (
                     ProjectUsers.projectId=Projects.projectId 
                     AND ProjectUsers.userId=?)
-                JOIN Users ON (creatorId=Users.userId)
+                LEFT JOIN Users ON (creatorId=Users.userId)
                 WHERE NOT Projects.hidden OR 
                       ProjectUsers.level IS NOT NULL
                 ORDER BY hostname
