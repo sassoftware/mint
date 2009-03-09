@@ -37,6 +37,7 @@ from mint import ec2
 from mint import helperfuncs
 from mint import jobstatus
 from mint import maintenance
+from mint import mint_error
 from mint import buildtemplates
 from mint import projects
 from mint import reports
@@ -44,7 +45,6 @@ from mint import templates
 from mint import userlevels
 from mint import usertemplates
 from mint import urltypes
-from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint.logerror import logErrorAndEmail
@@ -119,7 +119,7 @@ def requiresAdmin(func):
         if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
@@ -128,7 +128,7 @@ def requiresAuth(func):
         if self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
@@ -140,7 +140,7 @@ def requiresCfgAdmin(cond):
                  (not self.cfg.__getitem__(cond) and self.auth.authorized):
                     return func(self, *args)
             else:
-                raise PermissionDenied
+                raise mint_error.PermissionDenied
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -152,7 +152,7 @@ def private(func):
         if self._allowPrivate:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     trueFunc = deriveBaseFunc(func)
     trueFunc.__private_enforced__ = True
     wrapper.__wrapped_func__ = func
@@ -207,7 +207,8 @@ def typeCheck(*paramTypes):
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError('%s was passed %s of type %s when '
+                    raise mint_error.ParameterError(
+                                           '%s was passed %s of type %s when '
                                            'expecting %s for parameter number '
                                            '%d' % \
                         (baseFunc.__name__, repr(args[i]), str(type(args[i])),
@@ -237,7 +238,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
                 cfg = self._server()._getProjectConaryConfig(
                                     projects.Project(self._server(), projectId))
                 client = conaryclient.ConaryClient(cfg)
-            except ItemNotFound:
+            except mint_error.ItemNotFound:
                 client = self._cclient
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
@@ -281,13 +282,13 @@ class MintServer(object):
                         mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
                         mac.update(val)
                         if mac.hexdigest() != sig:
-                            raise PermissionDenied
+                            raise mint_error.PermissionDenied
 
                         sid = val
                     elif len(authToken) == 32: # unsigned cookie
                         sid = authToken
                     else:
-                        raise PermissionDenied
+                        raise mint_error.PermissionDenied
 
                     d = self.sessions.load(sid)
                     authToken = d['_data']['authToken']
@@ -298,7 +299,7 @@ class MintServer(object):
 
                 try:
                     maintenance.enforceMaintenanceMode(self.cfg, self.auth)
-                except MaintenanceMode:
+                except mint_error.MaintenanceMode:
                     # supress exceptions for certain critical methods.
                     if methodName not in self.maintenanceMethods:
                         raise
@@ -323,7 +324,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except MintError, e:
+            except mint_error.MintError, e:
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
                 return (True, frozen)
@@ -497,7 +498,7 @@ class MintServer(object):
         except Exception, e:
             # XXX could this exception handler be more specific? As written
             # any error in the proddef module will be masked.
-            raise ProductDefinitionVersionNotFound
+            raise mint_error.ProductDefinitionVersionNotFound
         return pd
 
     def _getProductDefinitionForVersionObj(self, versionId):
@@ -534,12 +535,12 @@ class MintServer(object):
             self.auth.userId) in userlevels.LEVELS):
                 return
         # All the above checks must have failed, raise exception.
-        raise ItemNotFound()
+        raise mint_error.ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
         try:
             buildRow = self.builds.get(buildId, fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         self._filterProjectAccess(buildRow['projectId'])
@@ -549,14 +550,14 @@ class MintServer(object):
         try:
             pubReleaseRow = self.publishedReleases.get(pubReleaseId,
                     fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
         # if the release is not published, then only project members
         # with write access can see the published release
         if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
-            raise ItemNotFound()
+            raise mint_error.ItemNotFound()
         # if the published release is published, then anyone can see it
         # unless the project is hidden and the user is not an admin
         else:
@@ -565,7 +566,7 @@ class MintServer(object):
     def _filterLabelAccess(self, labelId):
         try:
             labelRow = self.labels.get(labelId, fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         self._filterProjectAccess(labelRow['projectId'])
@@ -601,7 +602,7 @@ class MintServer(object):
             if (self.projectUsers.getUserlevelForProjectMember(projectId,
                     self.auth.userId) in allowedUserlevels):
                 return True
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             pass
         return False
 
@@ -610,7 +611,7 @@ class MintServer(object):
         try:
             if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
                 return True
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             pass
         return False
 
@@ -667,15 +668,16 @@ class MintServer(object):
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
-                raise UpdateServiceAuthError(urlhostname)
+                raise mint_error.UpdateServiceAuthError(urlhostname)
             else:
-                raise UpdateServiceConnectionFailed(urlhostname, \
+                raise mint_error.UpdateServiceConnectionFailed(urlhostname,
                         "%d %s" % (e.errcode, e.errmsg))
         except socket.error, e:
-            raise UpdateServiceConnectionFailed(urlhostname, str(e[1]))
+            raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
+                                                           str(e[1]))
         else:
             if not mirrorPassword:
-                raise UpdateServiceUnknownError(urlhostname)
+                raise mint_error.UpdateServiceUnknownError(urlhostname)
 
         return (mirrorUser, mirrorPassword)
 
@@ -694,7 +696,7 @@ class MintServer(object):
         trvLeaves = repos.getTroveLeavesByLabel(\
                 {groupName: {label: None} }).get(groupName, [])
         if trvLeaves:
-            raise GroupTroveTemplateExists
+            raise mint_error.GroupTroveTemplateExists
 
         from mint.templates import groupTemplate
         recipeStream = StringIO.StringIO()
@@ -717,7 +719,8 @@ class MintServer(object):
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
-            raise InvalidClientVersion('Invalid client version %s. Server '
+            raise mint_error.InvalidClientVersion(
+                'Invalid client version %s. Server '
                 'accepts client versions %s' % (self.clientVer,
                     ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
@@ -731,13 +734,13 @@ class MintServer(object):
             if not (amiData.get('ec2AccountId') and \
                     amiData.get('ec2PublicKey') and\
                     amiData.get('ec2PrivateKey')):
-                raise EC2NotConfigured()
+                raise mint_error.EC2NotConfigured()
             at = (amiData.get('ec2AccountId'),
                     amiData.get('ec2PublicKey'),
                     amiData.get('ec2PrivateKey'))
 
         if not at:
-            raise EC2NotConfigured()
+            raise mint_error.EC2NotConfigured()
 
         return at
 
@@ -764,7 +767,7 @@ class MintServer(object):
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
-            raise projects.InvalidProdType
+            raise mint_error.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
@@ -787,7 +790,7 @@ class MintServer(object):
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
         if projects.validLabel.match(label) == None:
-            raise projects.InvalidLabel(label)
+            raise mint_error.InvalidLabel(label)
 
         # All database operations must abort cleanly, especially when
         # creating the repository fails. Otherwise, we'll end up with
@@ -878,7 +881,7 @@ class MintServer(object):
         try:
             versions.Label(label)
         except conary_errors.ParseError:
-            raise ParameterError("Not a valid Label")
+            raise mint_error.ParameterError("Not a valid Label")
 
         if not url:
             url = 'http://' + label.split('@')[0] + '/conary/'
@@ -1049,7 +1052,7 @@ class MintServer(object):
                               WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
-                raise ItemNotFound("username")
+                raise mint_error.ItemNotFound("username")
             else:
                 userId = r[0]
         elif userId and not username:
@@ -1057,7 +1060,7 @@ class MintServer(object):
                               WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
-                raise ItemNotFound("userId")
+                raise mint_error.ItemNotFound("userId")
             else:
                 username = r[0]
 
@@ -1066,7 +1069,7 @@ class MintServer(object):
             try:
                 self.projectUsers.new(projectId, userId, level,
                                       commit=False)
-            except DuplicateItem:
+            except mint_error.DuplicateItem:
                 self.db.rollback()
                 return self.setUserLevel(userId, projectId, level)
 
@@ -1084,7 +1087,7 @@ class MintServer(object):
                 try:
                     salt, password = cu.fetchone()
                 except TypeError:
-                    raise ItemNotFound("username")
+                    raise mint_error.ItemNotFound("username")
                 repos = self._getProjectRepo(project)
                 helperfuncs.addUserByMD5ToRepository(repos, username,
                     password, salt, username, label)
@@ -1151,7 +1154,7 @@ class MintServer(object):
         #XXX Make this atomic
         try:
             userLevel = self.getUserLevel(userId, projectId)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             raise netclient.UserNotFound()
 
         try:
@@ -1289,7 +1292,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setProjectCommitEmail(self, projectId, commitEmail):
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         return self.projects.update(projectId, commitEmail = commitEmail)
     
@@ -1298,7 +1301,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setProjectNamespace(self, projectId, namespace):
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         projects._validateNamespace(namespace)
 
@@ -1327,7 +1330,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def unhideProject(self, projectId):
 
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         self.amiPerms.unhideProject(projectId)
         project = projects.Project(self, projectId)
@@ -1358,12 +1361,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type  projectId: C{int}
         @param makePrivate: True to make private, False to make public
         @type  makePrivate: C{bool}
-        @raise PermissionDenied: if not the product owner
+        @raise mint_error.PermissionDenied: if not the product owner
         @raise PublicToPrivateConversionError: if trying to convert a public
                product to private
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         project = projects.Project(self, projectId)
         
@@ -1379,7 +1382,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     or self.auth.admin:
                 self.hideProject(projectId)
             else:
-                raise PublicToPrivateConversionError()
+                raise mint_error.PublicToPrivateConversionError()
         
         return True
 
@@ -1408,7 +1411,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if not r:
-            raise ItemNotFound("membership")
+            raise mint_error.ItemNotFound("membership")
         else:
             return r[0]
 
@@ -1418,7 +1421,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
-            raise users.LastOwner
+            raise mint_error.LastOwner
 
         # given that we use UPDATE below we can be pretty
         # the user already exists.
@@ -1482,9 +1485,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not ((list(self.authToken) == \
                 [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
                  or not self.cfg.adminNewUsers):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
                                           displayEmail, blurb, active)
 
@@ -1561,7 +1564,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         prior to removing the user.
         """
         if (self.auth.userId != userId) and (not self.auth.admin):
-            raise PermissionDenied()
+            raise mint_error.PermissionDenied()
 
         self._ensureNoOrphans(userId)
 
@@ -1593,7 +1596,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if r and r[0]:
-            raise users.LastOwner
+            raise mint_error.LastOwner
         
         return True
 
@@ -1614,7 +1617,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                           WHERE userGroup='MintAdmin'""")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
-            raise LastAdmin("There are no more admin accounts. Your request "
+            raise mint_error.LastAdmin(
+                            "There are no more admin accounts. Your request "
                             "to close your account has been rejected to "
                             "ensure that at least one account is admin.")
 
@@ -1626,7 +1630,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Also removes the user from each project listed in projects.
         """
         if not self.auth.admin and userId != self.auth.userId:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.filterLastAdmin(userId)
         username = self.users.getUsername(userId)
 
@@ -1674,17 +1678,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # this function exists solely for server testing scripts and should
         # not be used for any other purpose. Never enable in production mode.
         if not self.cfg.debugMode:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM Users WHERE username=?", username)
         r = cu.fetchall()
         if not r:
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
                    r[0][0])
         r = cu.fetchall()
         if not r:
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         return r[0][0]
 
     @typeCheck(str)
@@ -1704,9 +1708,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setUserDataValue(self, username, name, value):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if name not in usertemplates.userPrefsTemplate:
-            raise ParameterError("Undefined data entry")
+            raise mint_error.ParameterError("Undefined data entry")
         dataType = usertemplates.userPrefsTemplate[name][0]
         self.userData.setDataValue(userId, name, value, dataType)
         return True
@@ -1717,7 +1721,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataValue(self, username, name):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         found, res = self.userData.getDataValue(userId, name)
         if found:
             return res
@@ -1729,7 +1733,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDefaulted(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         cu = self.db.cursor()
         cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
@@ -1744,7 +1748,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDefaultedAWS(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         cu = self.db.cursor()
         cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
@@ -1759,7 +1763,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDict(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.userData.getDataDict(userId)
 
     @typeCheck(int, str)
@@ -1779,7 +1783,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             return True
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
 
     @typeCheck(str, int, int)
@@ -1894,7 +1898,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         mintAdminId = self.userGroups.getMintAdminId()
         if self._isUserAdmin(userId):
-            raise UserAlreadyAdmin
+            raise mint_error.UserAlreadyAdmin
 
         cu = self.db.cursor()
         cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
@@ -1913,7 +1917,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         # refuse to demote self. this ensures there will always be at least one
         if userId == self.auth.userId:
-            raise AdminSelfDemotion
+            raise mint_error.AdminSelfDemotion
 
         mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
@@ -2111,7 +2115,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         try:
             userId = self.getUserIdByName(username)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             userId = 0
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
@@ -2149,7 +2153,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         self._filterBuildAccess(buildId)
         build = self.builds.get(buildId)
 
@@ -2200,14 +2204,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             stageLabel = str(pd.getLabelForStage(stageName))
         except proddef.StageNotFoundError, snfe:
-            raise ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+            raise mint_error.ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
         except proddef.MissingInformationError, mie:
-            raise ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
+            raise mint_error.ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
         # Filter builds by stage
         builds = pd.getBuildsForStage(stageName)
         if not builds:
-            raise NoBuildsDefinedInBuildDefinition
+            raise mint_error.NoBuildsDefinedInBuildDefinition
 
         # Create build data for each defined build so we can create the builds
         # later
@@ -2257,7 +2261,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     (buildGroup, buildFlavor))))
 
         if buildErrors and not force:
-            raise TroveNotFoundForBuildDefinition(buildErrors)
+            raise mint_error.TroveNotFoundForBuildDefinition(buildErrors)
 
         # Create/start each build.
         buildIds = []
@@ -2436,10 +2440,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _deleteBuild(self, buildId, force=False):
         if not self.builds.buildExists(buildId)  and not force:
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
 
         if self.builds.getPublished(buildId) and not force:
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
 
         try:
             self.db.transaction()
@@ -2448,7 +2452,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
             if amiBuild:
                 self.deleteAMI(amiId)
-        except AMIInstanceDoesNotExist:
+        except mint_error.AMIInstanceDoesNotExist:
             # We do not want to fail this operation in this case.
             pass
         except:
@@ -2516,9 +2520,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def updateBuild(self, buildId, valDict):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         if len(valDict):
             columns = { 'timeUpdated': time.time(),
                         'updatedBy':   self.auth.userId,
@@ -2528,7 +2532,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     columns[column] = valDict.pop(column)
             if valDict:
                 # Unknown argument
-                raise ParameterError()
+                raise mint_error.ParameterError()
             return self.builds.update(buildId, **columns)
         return False
 
@@ -2539,9 +2543,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildDataValue(self, buildId, name, value, dataType):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
     @typeCheck(int, str, str, str, str, str)
@@ -2677,14 +2681,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             try:
                 storedAmiData = self._getTargetData('ec2', 'aws')
-            except TargetMissing, e:
-                raise EC2NotConfigured
+            except mint_error.TargetMissing, e:
+                raise mint_error.EC2NotConfigured
             for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
                        'ec2Certificate', 'ec2CertificateKey'):
                 amiData[k] = storedAmiData.get(k)
                 if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
-                    raise EC2NotConfigured
+                    raise mint_error.EC2NotConfigured
             if project.hidden:
                 # overwrite ec2LaunchUsers if any of the users have
                 # ec2 accounts, otherwise default to whatever the default
@@ -2741,7 +2745,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def newPublishedRelease(self, projectId):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         timeCreated = time.time()
         createdBy = self.auth.userId
         return self.publishedReleases.new(projectId = projectId,
@@ -2759,9 +2763,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
+            raise mint_error.PublishedReleasePublished
         if len(valDict):
             columns = { 'timeUpdated': time.time(),
                         'updatedBy': self.auth.userId,
@@ -2771,7 +2775,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     columns[column] = valDict.pop(column)
             if valDict:
                 # Unknown argument
-                raise ParameterError()
+                raise mint_error.ParameterError()
             return self.publishedReleases.update(pubReleaseId, **columns)
         return False
 
@@ -2782,7 +2786,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
@@ -2823,12 +2827,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Performs some sanity checks on the published release
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if not len(self.publishedReleases.getBuilds(pubReleaseId)):
-            raise PublishedReleaseEmpty
+            raise mint_error.PublishedReleaseEmpty
         if checkPublished:
             if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise PublishedReleasePublished
+                raise mint_error.PublishedReleasePublished
 
         return True
 
@@ -2837,10 +2841,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Performs some sanity checks on the unpublished release
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if failIfNotPub:
             if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise PublishedReleaseNotPublished
+                raise mint_error.PublishedReleaseNotPublished
 
         return True
 
@@ -2875,9 +2879,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
+            raise mint_error.PublishedReleasePublished
         self.publishedReleases.delete(pubReleaseId)
         return True
 
@@ -2981,9 +2985,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
         try: 
             troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
@@ -3046,9 +3050,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildDesc(self, buildId, desc):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         self.builds.update(buildId, description = desc)
         return True
 
@@ -3058,9 +3062,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildName(self, buildId, name):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         self.builds.update(buildId, name = name)
         return True
 
@@ -3072,19 +3076,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
         if not self._checkProjectAccess(buildData['projectId'],
                 userlevels.WRITERS):
-            raise PermissionDenied()
+            raise mint_error.PermissionDenied()
         if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
-            raise PublishedReleaseMissing()
+            raise mint_error.PublishedReleaseMissing()
         if self.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished()
+            raise mint_error.PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if published and (buildData['buildType'] != buildtypes.AMI and buildData['buildType'] != buildtypes.IMAGELESS and not self.getBuildFilenames(buildId)):
-            raise BuildEmpty()
+            raise mint_error.BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
         #if published and self.builds.getPublished(buildId):
-        #    raise BuildPublished()
+        #    raise mint_error.BuildPublished()
         pubReleaseId = published and pubReleaseId or None
         return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
@@ -3108,7 +3112,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getBuildType(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         cu = self.db.cursor()
         cu.execute("SELECT buildType FROM BuildsView WHERE buildId = ?",
                 buildId)
@@ -3120,9 +3124,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildType(self, buildId, buildType):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
                 buildType, buildId)
@@ -3168,9 +3172,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def startImageJob(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
 
         # image-less builds (i.e. group trove builds) don't actually get built,
         # they just get stuffed into the DB
@@ -3185,9 +3189,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 mc = self._getMcpClient()
                 return mc.submitJob(data)
             except mcp_error.NotEntitledError:
-                raise NotEntitledError()
+                raise mint_error.NotEntitledError()
             except mcp_error.NetworkError:
-                raise BuildSystemDown
+                raise mint_error.BuildSystemDown
 
     @typeCheck(int, str)
     @private
@@ -3196,17 +3200,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
-            raise GroupTroveEmpty
+            raise mint_error.GroupTroveEmpty
         try:
             mc = self._getMcpClient()
             data = self.serializeGroupTrove(groupTroveId, arch)
             return mc.submitJob(data)
         except mcp_error.NetworkError:
-            raise BuildSystemDown
+            raise mint_error.BuildSystemDown
         except mcp_error.NotEntitledError:
-            raise NotEntitledError
+            raise mint_error.NotEntitledError
 
     @typeCheck(int, str, list, (list, str, int))
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3219,7 +3223,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         if outputToken != \
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         ret = self._setBuildFilenames(buildId, filenames, normalize = True)
         self.buildData.removeDataValue(buildId, 'outputToken')
@@ -3233,7 +3237,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         if outputToken != \
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         self.buildData.setDataValue(buildId, 'amiId', amiId, data.RDT_STRING)
         self.buildData.setDataValue(buildId, 'amiManifestName,',
@@ -3258,7 +3262,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             if writers:
                 ec2Wrap.addLaunchPermissions(amiId, writers)
-        except EC2Exception, e:
+        except mint_error.EC2Exception, e:
             # This is a really lame way to handle this error, but until the jobslave can
             # return a status of "built with warnings", then we'll have to go with this.
             print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
@@ -3282,9 +3286,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
 
         return self._setBuildFilenames(buildId, filenames)
 
@@ -3343,7 +3347,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def addFileUrl(self, buildId, fileId, urlType, url):
         self._filterBuildFileAccess(fileId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         # Note bene: this can be done after a build has been published,
         # thus we don't have to check to see if the build is published.
 
@@ -3353,7 +3357,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cu.execute("SELECT fileId FROM BuildFiles where fileId = ?",
                     fileId)
             if not len(cu.fetchall()):
-                raise BuildFileMissing()
+                raise mint_error.BuildFileMissing()
 
             cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
                     urlType, url)
@@ -3373,14 +3377,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def removeFileUrl(self, buildId, fileId, urlId):
         self._filterBuildFileAccess(fileId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         cu = self.db.transaction()
         try:
             cu.execute("SELECT urlId FROM FilesUrls WHERE urlId = ?",
                     urlId)
             r = cu.fetchall()
             if not len(r):
-                raise BuildFileUrlMissing()
+                raise mint_error.BuildFileUrlMissing()
 
             # sqlite doesn't support cascading delete
             if self.db.driver == 'sqlite':
@@ -3481,7 +3485,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             filenames = [ (x[3], x[4], x[5]) for x in r ]
             return info[0], info[1], info[2], filenames
         else:
-            raise FileMissing
+            raise mint_error.FileMissing
 
     @typeCheck(int, ((str, unicode),))
     @requiresAuth
@@ -3652,7 +3656,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -3680,7 +3684,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
         return True
 
@@ -3690,7 +3694,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def listGroupTrovesByProject(self, projectId):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.listGroupTrovesByProject(projectId)
 
     @private
@@ -3700,7 +3704,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          description, autoResolve):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
@@ -3712,7 +3716,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.get(groupTroveId)
 
     @private
@@ -3722,7 +3726,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
@@ -3732,7 +3736,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
         return True
@@ -3744,7 +3748,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
         return True
 
@@ -3862,7 +3866,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @private
@@ -3872,7 +3876,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.troveInGroupTroveItems( \
             groupTroveId, name, version, flavor)
 
@@ -3882,7 +3886,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return self.groupTroveItems.get(groupTroveItemId)
 
@@ -3893,7 +3897,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
@@ -3904,7 +3908,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
@@ -3915,7 +3919,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
@@ -3951,7 +3955,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             leaves = repos.getAllTroveLeaves( \
                 versions.Label(project.getLabel()).host, {trvName: None})
         if trvName not in leaves:
-            raise TroveNotFound
+            raise mint_error.TroveNotFound
         trvVersion = sorted(leaves[trvName].keys(),
                             reverse = True)[0].asString()
 
@@ -3967,7 +3971,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
@@ -3977,7 +3981,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
@@ -3987,7 +3991,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
         return True
 
@@ -4006,7 +4010,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getReportObject(self, name):
         if name not in reports.__dict__:
-            raise InvalidReport
+            raise mint_error.InvalidReport
         repModule = reports.__dict__[name]
         for objName in repModule.__dict__.keys():
             try:
@@ -4021,7 +4025,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getReport(self, name):
         if name not in reports.getAvailableReports():
-            raise InvalidReport
+            raise mint_error.InvalidReport
         return self._getReportObject(name).getReport()
 
     @private
@@ -4029,7 +4033,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getReportPdf(self, name):
         if name not in reports.getAvailableReports():
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
     
@@ -4161,7 +4165,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if isinstance(matchStringList, str):
             matchStringList = [ str ]
         if [x for x in matchStringList if x[0] not in ('-', '+')]:
-            raise ParameterError("First character of each matchString must be + or -")
+            raise mint_error.ParameterError("First character of each matchString must be + or -")
         self.outboundMirrors.update(outboundMirrorId, matchStrings = ' '.join(matchStringList))
         return True
 
@@ -4226,7 +4230,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             ret = self.updateServices.get(upsrvId)
         except database.ItemNotFound:
-            raise UpdateServiceNotFound()
+            raise mint_error.UpdateServiceNotFound()
         else:
             return ret
 
@@ -4426,9 +4430,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             mc = self._getMcpClient()
             return str(mc.getJSVersion())
         except mcp_error.NotEntitledError:
-            raise NotEntitledError
+            raise mint_error.NotEntitledError
         except mcp_error.NetworkError:
-            raise BuildSystemDown
+            raise mint_error.BuildSystemDown
 
     def __del__(self):
         if self.mcpClient:
@@ -4551,13 +4555,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         amiData = self._getTargetData('ec2', 'aws', supressException = True)
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
-        except ItemNotFound:
-            raise FailedToLaunchAMIInstance()
+        except mint_error.ItemNotFound:
+            raise mint_error.FailedToLaunchAMIInstance()
 
         launchedFromIP = self.remoteIp
         if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
                 amiData.get('ec2MaxInstancesPerIP', 10)):
-           raise TooManyAMIInstancesPerIP()
+           raise mint_error.TooManyAMIInstancesPerIP()
 
         userDataTemplate = bami['userDataTemplate']
 
@@ -4582,7 +4586,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 useNATAddressing = amiData.get('ec2UseNATAddressing', False))
 
         if not ec2InstanceId:
-            raise ec2.FailedToLaunchAMIInstance()
+            raise mint_error.FailedToLaunchAMIInstance()
 
         # store the instance information in our database
         return self.launchedAMIs.new(blessedAMIId = bami['blessedAMIId'],
@@ -4652,7 +4656,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         
         # Check the namespace
         projects._validateNamespace(namespace)
@@ -4665,8 +4669,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                  namespace = namespace,
                                                  name = name,
                                                  description = description) 
-        except DuplicateItem:
-            raise DuplicateProductVersion
+        except mint_error.DuplicateItem:
+            raise mint_error.DuplicateProductVersion
 
     @private
     @requiresAuth
@@ -4675,7 +4679,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             ret = self.productVersions.get(versionId)
         except database.ItemNotFound:
-            raise ProductVersionNotFound()
+            raise mint_error.ProductVersionNotFound()
         else:
             return ret
 
@@ -4833,14 +4837,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
             contain a valid manifest file as generated by the upload CGI script.
         '''
         from mint.lib.fileupload import fileuploader
-        from conary import versions as conaryVer
 
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
         fileuploader = fileuploader(path, 'uploadfile')
         try:
             info = fileuploader.parseManifest()
         except IOError, e:
-            raise PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
+            raise mint_error.PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
 
@@ -4920,7 +4923,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=namespace,
                 version=prodVer), mincfg, "%s=%s" % (troveName, label))
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the package creator service session: %s", str(err))
         return sesH, pc
 
@@ -4989,7 +4992,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: a troveSpec pointing to the created source trove
         @rtype: str
         """
-        from conary import versions as conaryVer
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
 
@@ -4998,15 +5000,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
             srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
         except packagecreator.errors.ConstraintsValidationError, err:
-            raise PackageCreatorValidationError(*err.args)
+            raise mint_error.PackageCreatorValidationError(*err.args)
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error attempting to create source trove: %s", str(err))
         if build:
             try:
                 pc.build(sessionHandle, commit=True)
             except packagecreator.errors.PackageCreatorError, err:
-                raise PackageCreatorError( \
+                raise mint_error.PackageCreatorError( \
                         "Error attempting to build package: %s", str(err))
         return srcHandle
 
@@ -5053,7 +5055,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             return pc.getBuildLogs(sessionHandle)
         except packagecreator.errors.PackageCreatorError, e:
-            raise PackageCreatorError("Error retrieving build logs: %s" % str(e))
+            raise mint_error.PackageCreatorError("Error retrieving build logs: %s" % str(e))
 
     @typeCheck(((str,unicode),), ((str,unicode),))
     @requiresAuth
@@ -5075,7 +5077,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         upload speed, and estimated time remaining.
         @rtype: dictionary
 
-        @raise PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
+        @raise mint_error.PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
         invalid.
         """
         from mint.lib.fileupload import fileuploader
@@ -5087,7 +5089,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             #Look for the status and metadata files
             return fileuploader(path, fieldname).pollStatus()
         else:
-            raise PermissionDenied("You are not allowed to check status on this file")
+            raise mint_error.PermissionDenied("You are not allowed to check status on this file")
 
     @typeCheck(((str,unicode),), (list, ((str,unicode),)))
     @requiresAuth
@@ -5128,16 +5130,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, rebuild)
         except packagecreator.errors.NoFlavorsToCook, err:
-            raise NoImagesDefined( \
+            raise mint_error.NoImagesDefined( \
                     "Error starting the appliance creator service session: %s",
                     str(err))
         except packagecreator.errors.ApplianceFactoryNotFound, err:
-            raise OldProductDefinition( \
+            raise mint_error.OldProductDefinition( \
                     "Error starting the appliance creator service session: %s",
                     str(err))
 
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
         return sesH
 
@@ -5242,12 +5244,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the package creator service session: %s", str(err))
         try:
             pc.build(sesH, commit=True)
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error attempting to build package: %s", str(err))
         return sesH
 
@@ -5355,7 +5357,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
            in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         ret = dict()
         for x in usertemplates.userPrefsAWSTemplate.keys():
@@ -5386,7 +5388,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
            in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         
         # cleanup the data
         accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
@@ -5410,7 +5412,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
-                if removing:
+                if not newValues['awsAccountNumber']:
                     self.userData.removeDataValue(userId, key)
                 else:
                     val = newValues.get(key, default)
@@ -5553,7 +5555,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         # this is fatal, but we want the original traceback logged
                         # and then mask the error for the user
                         handleNonFatalException('delete-project')
-                        raise ProjectNotDeleted(project.name)
+                        raise mint_error.ProjectNotDeleted(project.name)
                     else:
                         time.sleep(1)
                         numTries += 1
