@@ -54,6 +54,33 @@ class AMIPermissionsManager(object):
         self._removeAMIPermissionsForAll(amiIds)
         self._addAMIPermissionsForUsers(userIds, amiIds)
 
+    def hideProject(self, projectId):
+        # Get a list of published and unpublished AMIs for this project
+        published, unpublished = self.db.builds.getAMIBuildsForProject(
+                                                                projectId)
+
+        if not (published or unpublished):
+            return
+
+        writers, readers = self.db.projectUsers.\
+                                getEC2AccountNumbersForProjectUsers(projectId)
+        self._removeAMIPermissionsForAll(published + unpublished)
+        # all project members, including users, can see published builds
+        self._addAMIPermissionsForUsers(writers + readers, published)
+        # only project developers and owners can see unpublished builds
+        self._addAMIPermissionsForUsers(writers, unpublished)
+
+    def unhideProject(self, projectId):
+        writers, readers = self.db.projectUsers.\
+                                getEC2AccountNumbersForProjectUsers(projectId)
+        published, unpublished = self.db.builds.getAMIBuildsForProject(
+                                                                projectId)
+        self._removeAMIPermissionsForAll(published + unpublished)
+        # everyone can view published releases
+        self._addAMIPermissionsForAll(published)
+        # writers can view unpublished releases
+        self._addAMIPermissionsForUsers(writers, unpublished)
+
     def _getEC2Client(self):
         amiData = self.db.targets.getTargetId('ec2', 'aws', None)
         if not amiData:
@@ -79,6 +106,8 @@ class AMIPermissionsManager(object):
         self._addAMIPermissionsForUsers([userId], amiIds)
 
     def _addAMIPermissionsForUsers(self, userIds, amiIds):
+        if not (userIds and amiIds):
+            return
         ec2Client = self._getEc2Client()
         for userId in userIds:
             awsAccountNumber = self._getAWSAccountNumber(userId)
@@ -89,6 +118,8 @@ class AMIPermissionsManager(object):
                                               awsAccountNumber)
 
     def _addAMIPermissionsForAll(self, amiIds):
+        if not amiIds:
+            return
         ec2Client = self._getEc2Client()
         if config.isRBO():
             for amiId in amiIds:
@@ -109,6 +140,8 @@ class AMIPermissionsManager(object):
         self._removeAMIPermissionsForUsers([userId], amiIds)
 
     def _removeAMIPermissionsForUsers(self, userIds, amiIds):
+        if not (userIds and amiIds):
+            return
         ec2Client = self._getEc2Client()
         for userId in userIds:
             awsAccountNumber = self._getAWSAccountNumber(userId)
@@ -118,16 +151,22 @@ class AMIPermissionsManager(object):
                 ec2Client.removeLaunchPermissions(amiId, awsAccountNumber)
     
     def _removeAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
+        if not amiIds:
+            return
         ec2Client = self._getEc2Client()
         for amiId in amiIds:
             ec2Client.removeLaunchPermissions(amiId, awsAccountNumber)
 
     def _addAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
+        if not amiIds:
+            return
         ec2Client = self._getEc2Client()
         for amiId in amiIds:
             ec2Client.addLaunchPermissions(amiId, awsAccountNumber)
 
     def _removeAMIPermissionsForAll(self, amiIds):
+        if not amiIds:
+            return
         ec2Client = self._getEc2Client()
         for amiId in amiIds:
             ec2Client.resetLaunchPermissions(amiId)
