@@ -117,7 +117,7 @@ class ProductManager(object):
             createTime = time.time()
             projectId = self.db.projects.new(
                 name=name,
-                creatorId=self.server.userId, 
+                creatorId=self.auth.userId, 
                 description=description, 
                 hostname=hostname,
                 domainname=domainname, 
