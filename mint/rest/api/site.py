@@ -20,5 +20,8 @@ class RbuilderRestServer(RestController):
         RestController.__init__(self, None, None, [cfg, db])
 
     def index(self, request):
+        identity = self.db.getIdentity()
         return models.RbuilderStatus(version=constants.mintVersion,
-                                     conaryVersion=conaryConstants.version)
+                                     conaryVersion=conaryConstants.version,
+                                     isRBO=self.cfg.rBuilderOnline, 
+                                     identity=identity)
