@@ -3,8 +3,8 @@ from mint.rest.modellib import fields
 
 class ServiceLevel(modellib.Model):
     status = fields.CharField(isAttribute=True)
-    expired = fields.BooleanField(isAttribute=True)
     daysRemaining = fields.IntegerField(isAttribute=True)
+    expired = fields.BooleanField(isAttribute=True)
     limited = fields.BooleanField(isAttribute=True)
 
 class Identity(modellib.Model):

@@ -6,6 +6,7 @@
 #
 
 import os
+import re
 
 import testsetup
 import testsuite
@@ -13,7 +14,31 @@ import testsuite
 from mint.rest import modellib
 from mint.rest.modellib import xmlformatter
 
+class _Controller(object):
+    def url(slf, req, *components):
+        return os.path.join(*components)
+
+
 class ModelLibTest(testsuite.TestCase):
+    def getFormatter(self):
+        controller = _Controller()
+        formatter = xmlformatter.XMLFormatter(controller)
+        return formatter
+
+    def toString(self, item):
+        return self.getFormatter().toText(None, item)
+
+    def getFieldString(self, item, fieldName):
+        txt = self.toString(item)
+        match = re.search('(<%s>.*</%s>)' % (fieldName, fieldName), txt)
+        if match:
+            return match.groups()[0]
+        match = re.search('(<%s[^>]*\>)' % (fieldName,), txt)
+        if match:
+            return match.groups()[0]
+        raise RuntimeError('no field %s' % fieldName)
+        
+        
     def testModelXmlFormatter(self):
         class Field1(modellib.fields.Field):
             pass
@@ -81,10 +106,7 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.intField, 1)
         self.failUnlessEqual(m.charField, "a")
 
-        class Controller(object):
-            def url(slf, req, *components):
-                return os.path.join(*components)
-        controller = Controller()
+        controller = _Controller()
         request = None
         formatter = xmlformatter.XMLFormatter(controller)
         self.failUnlessEqual(formatter.toText(request, m), """\
@@ -109,6 +131,12 @@ class ModelLibTest(testsuite.TestCase):
   </list_field>
 </root>
 """)
+
+    def testBooleanField(self):
+        class Model(modellib.Model):
+            boolField = modellib.fields.BooleanField()
+        xml = self.getFieldString(Model(True), 'boolField')
+        assert(xml == "<boolField>1</boolField>")
 
 
 if __name__ == "__main__":
