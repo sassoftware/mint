@@ -18,6 +18,7 @@ import time
 import gettext
 
 from mod_python import apache
+from mod_python import Cookie
 
 from mint import helperfuncs
 from mint import shimclient
@@ -259,6 +260,12 @@ def getHttpAuth(req):
     # instead of a real http authorization token
     if 'X-Session-Id' in req.headers_in:
         return req.headers_in['X-Session-Id']
+
+    # pysid cookies are just as good as the session id - flex uses the browser
+    # for authentication info and cookies are sent for free. (RBL-4276)
+    cookies = Cookie.get_cookies(req, Cookie.Cookie)
+    if 'pysid' in cookies:
+        return cookies['pysid'].value
 
     if not 'Authorization' in req.headers_in:
         authToken = ['anonymous', 'anonymous']
