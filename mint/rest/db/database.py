@@ -1,17 +1,19 @@
 from conary import versions
 from conary.conaryclient import cmdline
 
+from mint import mint_error
 from mint import projects
 from mint import userlevels
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
+from mint.rest.db import awshandler
+from mint.rest.db import emailnotifier
 from mint.rest.db import imagemgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
-from mint.rest.db import emailnotifier
-from mint.rest.db import awshandler
+from mint.rest.db import usermgr
 
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -27,11 +29,13 @@ class Database(object):
         self.auth = auth
         self.publisher = publisher.EventPublisher()
         self.publisher.subscribe(emailnotifier.EmailNotifier(self.cfg, self))
-        #self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db, self))
+        self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db))
         self.productMgr = productmgr.ProductManager(self.cfg, self.db, 
                                                     self.auth, self.publisher)
         self.imageMgr = imagemgr.ImageManager(self.cfg, self.db, self.auth)
-        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self.db, self.auth)
+        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self.db, 
+                                                    self.auth)
+        self.userMgr = usermgr.UserManager(self.cfg, self.db, self.publisher)
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
@@ -273,6 +277,8 @@ class Database(object):
         self.productMgr.removeMember(product.id, userId)
 
     def cancelUserAccount(self, username):
+        self.auth.requireUserAdmin(username)
+        userId = self.getUserId(username)
         self.userMgr.cancelUserAccount(userId)
 
     def createProductVersion(self, fqdn, productVersion):
@@ -350,9 +356,9 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)
 
-    def getBuildForProduct(self, hostname, imageId):
+    def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getBuildForProduct(hostname, imageId)
+        return self.imageMgr.getImageForProduct(hostname, imageId)
 
     def listReleasesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
@@ -366,17 +372,13 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version, flavor)
 
-    def getFilesForBuild(self, hostname, imageId):
-        self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listFilesForBuild(hostname, imageId)
-
     def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
-    def listFilesForBuild(self, hostname, imageId):
+    def listFilesForImage(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listFilesForBuild(hostname, releaseId, imageId)
+        return self.imageMgr.listFilesForImage(hostname, imageId)
 
     def cursor(self):
         return self.db.cursor()

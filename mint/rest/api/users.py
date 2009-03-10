@@ -1,9 +1,10 @@
+from restlib import response
 from mint.rest.api import base, notices
 
 class UserNoticesAggregationController(notices.NoticesAggregationController):
     def index(self, req, username = None):
         if username != req.auth[0]:
-            return Response(status = 403)
+            return response.Response(status = 403)
         title = "Notices for user %s" % username
         rss = notices.RssHelper(self.getStoragePath(), title = title,
             userId = username)
@@ -12,19 +13,19 @@ class UserNoticesAggregationController(notices.NoticesAggregationController):
 class UserNoticesContextController(notices.NoticesContextController):
     def get(self, req, username = None, context = None):
         if username != req.auth[0]:
-            return Response(status = 403)
+            return response.Response(status = 403)
         return notices.NoticesContextController.get(self, req,
             context = context)
 
     def process(self, req, username = None, context = None):
         if username != req.auth[0]:
-            return Response(status = 403)
+            return response.Response(status = 403)
         return notices.NoticesContextController.process(self, req,
             context = context)
 
     def destroy(self, req, username = None, context = None):
         if username != req.auth[0]:
-            return Response(status = 403)
+            return response.Response(status = 403)
         return notices.NoticesContextController.destroy(self, req,
             context = context)
 

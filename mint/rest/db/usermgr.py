@@ -1,16 +1,15 @@
+from mint import mint_error
 
 class UserManager(object):
-    def __init__(self, cfg, db):
+    def __init__(self, cfg, db, publisher):
         self.cfg = cfg
         self.db = db
-
+        self.publisher = publisher
         
-    def removeUserAccount(self, userId):
+    def cancelUserAccount(self, userId):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.
         """
-        if not self.auth.admin and userId != self.auth.userId:
-            raise PermissionDenied
         self._ensureNoOrphans(userId)
         self.membershipRequests.userAccountCanceled(userId)
         self.filterLastAdmin(userId)
@@ -44,9 +43,9 @@ class UserManager(object):
             raise
         else:
             self.db.commit()
+        self.publisher.notify('UserCancelled', userId)
         return True
 
-       
  
     def _ensureNoOrphans(self, userId):
         """
@@ -70,7 +69,7 @@ class UserManager(object):
 
         r = cu.fetchone()
         if r and r[0]:
-            raise users.LastOwner
+            raise mint_error.LastOwner
         
         return True
 
@@ -88,7 +87,8 @@ class UserManager(object):
                           WHERE userGroup='MintAdmin'""")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
-            raise LastAdmin("There are no more admin accounts. Your request "
-                            "to close your account has been rejected to "
-                            "ensure that at least one account is admin.")
+            raise mint_error.LastAdmin(
+                        "There are no more admin accounts. Your request "
+                        "to close your account has been rejected to "
+                        "ensure that at least one account is admin.")
 

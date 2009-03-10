@@ -6,8 +6,8 @@ class EmailNotifier(object):
         self.db = db
         self.cfg = cfg
 
-    def notify_UserProjectEvent(self, event, performer, userId, projectId, 
-                                userlevel=None):
+    def notify_UserProjectEvent(self, event, userId, projectId, userlevel=None):
+        performer = self.auth.auth
         fqdn = self.db.getProductFQDN(projectId)
         project = self.db.getProduct(fqdn.split('.')[0])
         username = self.db.getUsername(userId)

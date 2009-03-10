@@ -7,9 +7,9 @@ class RbuilderStatus(Model):
     products      = fields.UrlField('products', None)
     users         = fields.UrlField('users', None)
 
-from members import *
-from users import *
-from products import *
-from productversions import *
-from images import *
-from repos import *
+from mint.rest.api.models.members import *
+from mint.rest.api.models.users import *
+from mint.rest.api.models.products import *
+from mint.rest.api.models.productversions import *
+from mint.rest.api.models.images import *
+from mint.rest.api.models.repos import *

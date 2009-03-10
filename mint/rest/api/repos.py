@@ -4,6 +4,7 @@ from conary import versions
 
 from restlib import response
 
+from mint.rest import errors
 from mint.rest.api import base
 from mint.rest.api import models
 
@@ -60,7 +61,7 @@ class RepositoryController(BaseReposController):
                                                and not trove.troveIsGroup(x)),
                         None: None}
         if searchType not in checkFnDict:
-            raise InvalidSearchType(searchType)
+            raise errors.InvalidSearchType(searchType)
         checkFn = checkFnDict[searchType]
         troveDict = self.getRepos(hostname).getTroveVersionsByLabel(
                                 {None : {versions.Label(label) : None}})

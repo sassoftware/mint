@@ -4,8 +4,8 @@ from mint.rest.modellib import fields
 from mint.rest.modellib import options
 
 class ModelMeta(type):
-    def __new__(cls, name, bases, attrs):
-        new_class = type.__new__(cls, name, bases, attrs)
+    def __new__(mcs, name, bases, attrs):
+        new_class = type.__new__(mcs, name, bases, attrs)
         new_class._fields =  fields._sortRegisteredFields(attrs) 
         for fieldName in new_class._fields:
             field = attrs[fieldName]

@@ -69,7 +69,7 @@ class RepositoryManager(object):
                      write=True, mirror=True, admin=True)
 
     def deleteRepository(self, fqdn):
-        self.reposDB.delete(projectFQDN)
+        self.reposDB.delete(fqdn)
 
     def addUserByMd5(self, fqdn, username, salt, password, 
                      write=False, mirror=False,
@@ -113,9 +113,9 @@ class RepositoryManager(object):
             # Conary deleted the (unprivileged) role for us
             pass
 
-    def changePassword(self, repos, username, password):
+    def changePassword(self, fqdn, username, password):
         repos = self._getRepositoryServer(fqdn)
-        repos.auth.changePassword(username, newPassword)
+        repos.auth.changePassword(username, password)
 
     def _setUserPermissions(self, fqdn, username, write=False, mirror=False,
                             admin=False):

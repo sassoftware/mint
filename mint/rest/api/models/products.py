@@ -43,9 +43,3 @@ class ProductSearchResultList(Model):
         name = 'products'
 
     products = fields.ListField(Product, displayName='product')
-
-    def addProduct(self, id, hostname, name):
-        self.products.append(ProductSearchResult(productId=id, 
-                                                 hostname=hostname,
-                                                 domainname=domainname,
-                                                 name=name))

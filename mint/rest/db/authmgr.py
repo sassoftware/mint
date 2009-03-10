@@ -69,10 +69,14 @@ class AuthenticationManager(object):
     def hasUserReadAccess(self, username):
         return (self.isAdmin or self.username == username)
 
+    def requireUserAdmin(self, username):
+        if self.isAdmin or self.username == username:
+            pass
+        raise errors.PermissionDenied()
+
     def requireProductCreationRights(self):
         pass
 
     def requireAdmin(self):
-        return
         if not self.isAdmin:
             raise errors.PermissionDenied()

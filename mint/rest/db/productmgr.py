@@ -152,7 +152,7 @@ class ProductManager(object):
             # can only add members after the repository is set up
             if self.auth.userId >= 0:
                 self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER)
-            self.publisher.notify('ProjectCreated', self.auth.auth, projectId)
+            self.publisher.notify('ProjectCreated', projectId)
         except:
             self.db.rollback()
             raise
@@ -194,14 +194,14 @@ class ProductManager(object):
         if isMember:
             if self.db.projectUsers.onlyOwner(projectId, userId) and \
                    (level != userlevels.OWNER):
-                raise users.LastOwner
+                raise mint_error.LastOwner
             cu = self.db.cursor()
 
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
                 projectId=?""", level, userId, projectId)
             self.reposMgr.editUser(fqdn, username, write=write,
                                    mirror=mirror, admin=admin)
-            self.publisher.notify('UserProjectChanged', self.auth.auth, userId, projectId, level)
+            self.publisher.notify('UserProjectChanged', userId, projectId, level)
             return False
         else:
             password, salt = self._getPassword(userId)
@@ -211,7 +211,7 @@ class ProductManager(object):
                                       level=level, commit=False)
                 self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
                                            mirror=True, admin=admin)
-                self.publisher.notify('UserProjectAdded', self.auth.auth, userId, 
+                self.publisher.notify('UserProjectAdded', userId, 
                                       projectId, level)
             except:
                 self.db.rollback()
@@ -224,10 +224,10 @@ class ProductManager(object):
         fqdn = self._getProductFQDN(projectId)
         username = self._getUsername(userId)
         if self.db.projectUsers.onlyOwner(projectId, userId):
-            raise users.LastOwner
+            raise mint_error.LastOwner
         self.reposMgr.deleteUser(fqdn, username)
         self.db.projectUsers.delete(projectId, userId)
-        self.publisher.notify('UserProjectRemoved', self.auth.auth, 
+        self.publisher.notify('UserProjectRemoved', 
                               userId, projectId)
 
     def createProductVersion(self, fqdn, version, namespace, description,

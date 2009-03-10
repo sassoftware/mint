@@ -3,7 +3,6 @@ import base64
 from mod_python import Cookie
 
 from restlib.response import Response
-from mint import config
 from mint import shimclient
 from mint.session import SqlSession
 
