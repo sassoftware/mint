@@ -77,14 +77,14 @@ class Database(object):
         if '.' in hostname:
             hostname, domainname = hostname.split('.', 1)
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId as id, 
+        cu.execute('''SELECT productVersionId as versionId, 
                           PVTable.namespace, PVTable.name, PVTable.description  
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=?''', hostname)
         pvl = models.ProductVersionList()
-        for id, namespace, name, description in cu:
-            pvl.addProductVersion(id, namespace, name, description,
+        for versionId, namespace, name, description in cu:
+            pvl.addProductVersion(versionId, namespace, name, description,
                                   hostname)
         return pvl
 

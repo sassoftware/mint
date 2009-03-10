@@ -87,7 +87,7 @@ class ProductManager(object):
         if '.' in hostname:
             hostname, domainname = hostname.split('.', 1)
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId as id, 
+        cu.execute('''SELECT productVersionId as versionId, 
                           PVTable.namespace, PVTable.name, PVTable.description  
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
@@ -95,8 +95,8 @@ class ProductManager(object):
                       hostname, versionName)
         results = self.db._getOne(cu, errors.ProductVersionNotFound, 
                                   (hostname, versionName))
-        id, namespace, name, description = results
-        return models.ProductVersion(id=id, hostname=hostname,
+        versionId, namespace, name, description = results
+        return models.ProductVersion(versionId=versionId, hostname=hostname,
                                      namespace=namespace, name=name, 
                                      description=description)
 
