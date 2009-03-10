@@ -1,5 +1,3 @@
-from xobj import xobj
-
 from mint.rest.modellib import fields
 from mint.rest.modellib import options
 

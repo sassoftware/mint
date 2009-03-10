@@ -1,5 +1,7 @@
-from mint.rest.modellib.fields import *
-from mint.rest.modellib import *
+from xobj import xobj
+
+from mint.rest import modellib
+from mint.rest.modellib import fields
 
 class XMLFormatter(object):
     _modelClassCache = {}
@@ -21,21 +23,21 @@ class XMLFormatter(object):
         return xobj.toxml(xobjObject, xobjObject.__class__.__name__)
 
     def getXObjClass(self, cls):
-        if issubclass(cls, Field):
+        if issubclass(cls, fields.Field):
             return self.getFieldXObjClass(cls)
-        elif issubclass(cls, Model):
+        elif issubclass(cls, modellib.Model):
             return self.getModelXObjClass(cls)
 
     def getXObjObject(self, cls, value, parent=None):
-        if isinstance(cls, Field):
+        if isinstance(cls, fields.Field):
             return self.getFieldXObjObject(cls, value, parent)
-        elif issubclass(cls, Model):
+        elif issubclass(cls, modellib.Model):
             return self.getModelXObjObject(cls, value, parent)
 
     def fromXObjObject(self, cls, xobjObject):
-        if isinstance(cls, Field):
+        if isinstance(cls, fields.Field):
             return self.fromFieldXObjObject(cls, xobjObject)
-        elif issubclass(cls, Model):
+        elif issubclass(cls, modellib.Model):
             return self.fromModelXObjObject(cls, xobjObject)
 
     def fromModelXObjObject(self, modelClass, xobjObject):
@@ -54,9 +56,9 @@ class XMLFormatter(object):
     def fromFieldXObjObject(self, field, fieldValue):
         if fieldValue is None:
             return None
-        if isinstance(field, BooleanField):
+        if isinstance(field, fields.BooleanField):
             return bool(fieldValue)
-        if isinstance(field, ListField):
+        if isinstance(field, fields.ListField):
             return [ self.fromXObjObject(field.valueClass, x) 
                                          for x in fieldValue ]
         return fieldValue
@@ -93,36 +95,36 @@ class XMLFormatter(object):
         return instance
 
     def getFieldXObjClass(self, field):
-        if isinstance(field, ListField):
+        if isinstance(field, fields.ListField):
             return [ self.getXObjClass(field.valueClass) ]
-        elif isinstance(field, (BooleanField, IntegerField)):
+        elif isinstance(field, (fields.BooleanField, fields.IntegerField)):
             return int
-        elif isinstance(field, (UrlField, CalculatedField)):
+        elif isinstance(field, (fields.UrlField, fields.CalculatedField)):
             attrs = {}
             attrs['href'] = str
             attrs['_xobj'] = xobj.XObjMetadata(attributes = ['href'])
             xobjClass = type.__new__(type, 'XobjUrl', 
                                      xobj.XObj.__mro__, attrs)
             return xobjClass
-        elif isinstance(field, ModelField):
+        elif isinstance(field, fields.ModelField):
             return self.getModelXObjClass(field.model)
         else:
             return str
 
     def getFieldXObjObject(self, field, value, parent):
-        if isinstance(field, AbsoluteUrlField):
+        if isinstance(field, fields.AbsoluteUrlField):
             return self.controller.url(self.request, *parent.get_absolute_url())
-        elif isinstance(field, CalculatedField):
+        elif isinstance(field, fields.CalculatedField):
             class_ = self.getFieldXObjClass(field)
             return field.getValue(self.controller, self.request, 
                                   class_, parent, value)
         elif value is None:
             return None
-        elif isinstance(field, ListField):
+        elif isinstance(field, fields.ListField):
             return [ self.getXObjObject(field.valueClass, x, parent) 
                                         for x in value ]
-        elif isinstance(field, BooleanField):
+        elif isinstance(field, fields.BooleanField):
             return int(value)
-        elif isinstance(field, ModelField):
+        elif isinstance(field, fields.ModelField):
             return self.getModelXObjObject(field.model, value, parent)
         return str(value)
