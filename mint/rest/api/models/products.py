@@ -12,6 +12,7 @@ class Product(Model):
     hostname           = fields.CharField(required=True)
     name               = fields.CharField()
     namespace          = fields.CharField(displayName='nameSpace')
+    domainname         = fields.CharField()
     shortname          = fields.CharField() 
     projecturl         = fields.CharField() 
     repositoryHostname = fields.CharField()
