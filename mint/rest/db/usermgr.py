@@ -1,3 +1,10 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from mint import mint_error
 
 class UserManager(object):

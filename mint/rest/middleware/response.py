@@ -2,6 +2,8 @@
 #
 # Copyright (c) 2009 rPath, Inc.
 #
+# All Rights Reserved
+#
 
 from restlib import response
 

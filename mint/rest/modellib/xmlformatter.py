@@ -1,3 +1,9 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
 from xobj import xobj
 
 from mint.rest import modellib

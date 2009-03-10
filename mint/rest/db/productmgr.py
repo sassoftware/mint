@@ -1,3 +1,10 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import time
 
 from conary.lib import util

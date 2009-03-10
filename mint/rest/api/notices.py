@@ -2,6 +2,8 @@
 #
 # Copyright (c) 2009 rPath, Inc.
 #
+# All Rights Reserved
+#
 
 from lxml.builder import E
 from lxml import etree as ET
