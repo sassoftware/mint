@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2009 rPath, Inc.
 #
@@ -387,5 +386,14 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listFilesForImage(hostname, imageId)
 
+    def getIdentity(self):
+        serviceLevel = models.ServiceLevel(status='Trial', expired=False, 
+                                           daysRemaining=10, limited=True)
+        identity = models.Identity(serviceLevel=serviceLevel, 
+                                   rbuilderId="12347",
+                                   registered=False)
+        return identity
+
     def cursor(self):
         return self.db.cursor()
+

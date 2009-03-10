@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2009 rPath, Inc.
 #
@@ -38,7 +37,19 @@ class CharField(Field):
     pass
 
 class BooleanField(Field):
-    pass
+    def fromValue(self, controller, request, class_, parent, value):
+        if isinstance(value, int, bool):
+            return bool(value)
+        value = value.lower()
+        if value == 'true':
+            return True
+        elif value == 'false':
+            return False
+        else:
+            raise ParseError(value)
+
+    def toValue(self, controller, request, class_, parent, value):
+        return str(value).lower()
 
 class CalculatedField(Field):
     def getValue(self, controller, request, class_, parent, value):

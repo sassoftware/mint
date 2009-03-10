@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2009 rPath, Inc.
 #
@@ -8,6 +7,7 @@ from xobj import xobj
 
 from mint.rest import modellib
 from mint.rest.modellib import fields
+from mint.rest.modellib.ordereddict import OrderedDict
 
 class XMLFormatter(object):
     _modelClassCache = {}
@@ -81,7 +81,7 @@ class XMLFormatter(object):
             attrs[fieldName] = self.getFieldXObjClass(field)
         # orders elements
         attrs['_xobj'] = xobj.XObjMetadata(elements = modelClass._elements,
-                                           attributes = modelClass._attributes)
+                   attributes = OrderedDict.fromkeys(modelClass._attributes))
         xobjClass = type.__new__(type, className, xobj.XObj.__mro__, attrs)
         self._modelClassCache[modelClass] = xobjClass
         return xobjClass
