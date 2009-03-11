@@ -2291,8 +2291,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     str(buildImage.containerFormat) or ''
 
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
-            projectName = project.getName()
-            buildId = self.newBuildWithOptions(projectId, projectName,
+            buildName = buildDefinition.name
+            buildId = self.newBuildWithOptions(projectId, buildName,
                                                n, v, f, buildType,
                                                buildSettings)
             buildIds.append(buildId)
@@ -2335,17 +2335,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._getBuildPageUrl(buildId)
 
-    @typeCheck(int, str, str, str, str, str, dict)
+    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict)
     @requiresAuth
     @private
-    def newBuildWithOptions(self, projectId, productName,
+    def newBuildWithOptions(self, projectId, buildName,
                             groupName, groupVersion, groupFlavor,
                             buildType, buildSettings):
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
 
+        # Make sure we convert from Unicode to UTF-8
+        buildName = buildName.encode('UTF-8')
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName,
+                                      name = buildName,
                                       timeCreated = time.time(),
                                       buildCount = 0,
                                       createdBy = self.auth.userId)

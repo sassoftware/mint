@@ -1292,7 +1292,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
         builds = [ client.getBuild(x) for x in buildIds ]
         buildNames = set(x.name for x in builds)
-        #self.failUnlessEqual(buildNames, set(reqBuildNames))
+        self.failUnlessEqual(buildNames, set(reqBuildNames))
 
 
     @fixtures.fixture('Full')
