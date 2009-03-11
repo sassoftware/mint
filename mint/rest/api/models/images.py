@@ -4,6 +4,7 @@
 #
 # All Rights Reserved
 #
+from mint import buildtypes
 
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
@@ -74,10 +75,15 @@ class Image(Model):
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     buildCount = fields.IntegerField()
+    status = fields.IntegerField()
+    statusMessage = fields.CharField()
     files = fields.ModelField(ImageFileList)
 
     def get_absolute_url(self):
         return ('products.images', self.hostname, str(self.imageId))
+
+    def hasBuild(self):
+        return self.imageType not in (None, buildtypes.IMAGELESS)
 
 class ImageList(Model):
     class Meta(object):
