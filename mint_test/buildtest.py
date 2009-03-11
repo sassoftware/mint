@@ -1280,6 +1280,22 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
 
     @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionFilteredByBuildName(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        reqBuildNames = ['ISO 32', 'ISO 64']
+        buildIds = \
+            client.newBuildsFromProductDefinition(versionId, 'Development',
+                                                  False, reqBuildNames)
+        # Should have created 2 builds for Development stage
+        self.assertEquals(2, len(buildIds))
+
+        builds = [ client.getBuild(x) for x in buildIds ]
+        buildNames = set(x.name for x in builds)
+        #self.failUnlessEqual(buildNames, set(reqBuildNames))
+
+
+    @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')
     def testBuildsFromProductDefinitionBoolVal(self, db, data):
         

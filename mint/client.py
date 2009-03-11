@@ -913,9 +913,11 @@ class MintClient:
     def getProductVersionProdDefLabel(self, versionId):
         return self.server.getProductVersionProdDefLabel(versionId)
 
-    def newBuildsFromProductDefinition(self, versionId, stage, force):
+    def newBuildsFromProductDefinition(self, versionId, stage, force,
+            buildNames = None):
+        buildNames = buildNames or []
         return self.server.newBuildsFromProductDefinition(versionId, stage,
-                                                          force)
+                                                          force, buildNames)
         
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)

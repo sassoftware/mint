@@ -2178,10 +2178,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
-    @typeCheck(int, ((str, unicode),), bool)
+    @typeCheck(int, ((str, unicode),), bool, list)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, stageName, force):
+    def newBuildsFromProductDefinition(self, versionId, stageName, force,
+                                       buildNames = None):
         """
         Launch the image builds defined in the product definition for the
         given version id and stage.  If provided, use troveSpec as the top
@@ -2227,6 +2228,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                          groupNames ], allowMissing = True)
 
         for build in builds:
+            if buildNames and build.name not in buildNames:
+                continue
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
             buildGroup = str(build.getBuildImageGroup())
             groupList = groupTroves.get((buildGroup, stageLabel, None), [])
