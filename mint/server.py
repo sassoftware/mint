@@ -291,6 +291,10 @@ class MintServer(object):
                         raise mint_error.PermissionDenied
 
                     d = self.sessions.load(sid)
+                    if not d:
+                        # Loading the session returns False if the session ID
+                        # was bad.
+                        raise mint_error.PermissionDenied
                     authToken = d['_data']['authToken']
 
                 auth = self.users.checkAuth(authToken)

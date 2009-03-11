@@ -9,6 +9,7 @@ import xmlrpclib
 from mod_python import apache
 
 from mint import config
+from mint import mint_error
 from mint import server
 from mint import maintenance
 from mint.web.webhandler import getHttpAuth
@@ -56,7 +57,7 @@ def rpcHandler(req, cfg, pathInfo = None):
     try:
         # result is (isError, returnValues)
         result = srvr.callWrapper(*params)
-    except (errors.InsufficientPermission, server.PermissionDenied):
+    except (errors.InsufficientPermission, mint_error.PermissionDenied):
         return apache.HTTP_FORBIDDEN
 
     # create a response

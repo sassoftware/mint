@@ -173,6 +173,18 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(ret[1].get('displayEmail'), 'test at example.com')
         self.failUnlessEqual(ret[1].get('authorized'), True)
 
+    def testPysidXmlRpcAuthBad(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        cookie = "A" * 32
+
+        conn = xmlrpclib.ServerProxy("%s://%s:%s/xmlrpc-private/" % (
+            page.protocol, page.server, page.port),
+            transport = Transport("pysid=%s" % cookie))
+        ret = conn.checkAuth('RBUILDER_CLIENT:8')
+        self.failUnless(ret[0])
+        self.failUnlessEqual(ret[1], ['PermissionDenied', 'Permission Denied'])
 
     def testProcessUserAction(self):
         client, userId = self.quickMintUser('foouser','foopass')
