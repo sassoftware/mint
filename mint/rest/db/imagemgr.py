@@ -3,19 +3,30 @@
 #
 # All Rights Reserved
 #
+import os
 
 from conary.deps import deps
 from conary import versions
 
 from mint import buildtypes
+from mint import jobstatus
 from mint.rest import errors
 from mint.rest.api import models
+
+from mcp import client as mcpclient
+from mcp import mcp_error
+from conary.lib import cfgtypes
 
 class ImageManager(object):
     def __init__(self, cfg, db, auth):
         self.cfg = cfg
         self.db = db
         self.auth = auth
+        self.mcpClient = None
+
+    def __del__(self):
+        if self.mcpClient:
+            self.mcpClient.disconnect()
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
@@ -56,6 +67,7 @@ class ImageManager(object):
             row['imageType'] = buildtypes.typeNamesShort[row['imageType']]
             image = models.Image(**row)
             image.files = self.listFilesForImage(hostname, image.imageId)
+            self._addImageStatus(image)
             images.append(image)
         if getOne:
             return images[0]
@@ -115,3 +127,32 @@ class ImageManager(object):
                 urls.append(models.FileUrl(**d))
             file.urls = urls
         return models.ImageFileList(imageFiles)
+
+    def _addImageStatus(self, image):
+        if image.hasBuild():
+            uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
+                              self.cfg.externalDomainName, image.imageId, 
+                              image.buildCount)
+            try:
+                mc = self._getMcpClient()
+                image.status, image.statusMessage = mc.jobStatus(uuid)
+            except (mcp_error.UnknownJob, mcp_error.NetworkError):
+                image.status = jobstatus.NO_JOB
+                image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+        else:
+            image.status = jobstatus.FINISHED
+            image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+
+    def _getMcpClient(self):
+        if not self.mcpClient:
+            mcpClientCfg = mcpclient.MCPClientConfig()
+
+            try:
+                mcpClientCfg.read(os.path.join(self.cfg.dataPath,
+                                               'mcp', 'client-config'))
+            except cfgtypes.CfgEnvironmentError:
+                # If there is no client-config, default to localhost
+                pass
+
+            self.mcpClient = mcpclient.MCPClient(mcpClientCfg)
+        return self.mcpClient
