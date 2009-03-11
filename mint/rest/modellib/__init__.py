@@ -6,13 +6,24 @@
 
 from xobj import xobj
 
-from mint.rest.modellib import fields
 from mint.rest.modellib import options
+
+_fieldRegistry = {}
+def registerField(field):
+    count = len(_fieldRegistry)
+    _fieldRegistry[id(field)] = count 
+
+def _sortRegisteredFields(fields):
+    fieldNames = [ x[0] for x in fields.iteritems() 
+                   if id(x[1]) in _fieldRegistry ]
+    return sorted(fieldNames, 
+                  key=lambda x: _fieldRegistry[id(fields[x])])
+
 
 class ModelMeta(type):
     def __new__(mcs, name, bases, attrs):
         new_class = type.__new__(mcs, name, bases, attrs)
-        new_class._fields =  fields._sortRegisteredFields(attrs) 
+        new_class._fields =  _sortRegisteredFields(attrs) 
         for fieldName in new_class._fields:
             field = attrs[fieldName]
             if not field.displayName:
