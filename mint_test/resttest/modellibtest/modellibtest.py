@@ -12,7 +12,8 @@ import testsetup
 import testsuite
 
 from mint.rest import modellib
-from mint.rest.modellib import xmlformatter
+from mint.rest.modellib import fields
+from mint.rest.modellib import converter
 
 class _Controller(object):
     def url(slf, req, *components):
@@ -21,12 +22,15 @@ class _Controller(object):
 
 class ModelLibTest(testsuite.TestCase):
     def getFormatter(self):
-        controller = _Controller()
-        formatter = xmlformatter.XMLFormatter(controller)
         return formatter
 
     def toString(self, item):
-        return self.getFormatter().toText(None, item)
+        controller = _Controller()
+        return converter.toText('xml', item, controller, None)
+
+    def fromString(self, cls, text):
+        controller = _Controller()
+        return converter.fromText('xml', text, cls, controller, None)
 
     def getFieldString(self, item, fieldName):
         txt = self.toString(item)
@@ -40,9 +44,9 @@ class ModelLibTest(testsuite.TestCase):
         
         
     def testModelXmlFormatter(self):
-        class Field1(modellib.fields.Field):
+        class Field1(fields.Field):
             pass
-        class Field2(modellib.fields.Field):
+        class Field2(fields.Field):
             pass
         class Field3(object):
             pass
@@ -55,10 +59,7 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.foo1, "a")
         self.failUnlessEqual(m.foo2, "b")
 
-        controller = None
-        request = None
-        formatter = xmlformatter.XMLFormatter(controller)
-        self.failUnlessEqual(formatter.toText(request, m), """\
+        self.failUnlessEqual(self.toString(m), """\
 <?xml version='1.0' encoding='UTF-8'?>
 <model>
   <foo1>a</foo1>
@@ -75,24 +76,24 @@ class ModelLibTest(testsuite.TestCase):
             class Meta(object):
                 name = "subnode"
 
-            intField2 = modellib.fields.IntegerField()
+            intField2 = fields.IntegerField()
 
         class Model(modellib.Model):
             class Meta(object):
                 name = "root"
-            intField = modellib.fields.IntegerField()
-            charField = modellib.fields.CharField()
-            boolField = modellib.fields.BooleanField()
-            subNode = modellib.fields.ModelField(Model1)
-            absoluteUrl = modellib.fields.AbsoluteUrlField()
-            emailField = modellib.fields.EmailField()
-            dateTimeField = modellib.fields.DateTimeField()
-            versionField = modellib.fields.VersionField()
-            flavorField = modellib.fields.FlavorField()
-            listField = modellib.fields.ListField(Model1,
+            intField = fields.IntegerField()
+            charField = fields.CharField()
+            boolField = fields.BooleanField()
+            subNode = fields.ModelField(Model1)
+            absoluteUrl = fields.AbsoluteUrlField()
+            emailField = fields.EmailField()
+            dateTimeField = fields.DateTimeField()
+            versionField = fields.VersionField()
+            flavorField = fields.FlavorField()
+            listField = fields.ListField(Model1,
                 displayName = "list_field")
 
-            def get_absolute_url(slf):
+            def get_absolute_url(self):
                 return [ "http://world.top/plateau" ]
 
         m1 = Model1(intField2 = 2)
@@ -106,15 +107,13 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.intField, 1)
         self.failUnlessEqual(m.charField, "a")
 
-        controller = _Controller()
-        request = None
-        formatter = xmlformatter.XMLFormatter(controller)
-        self.failUnlessEqual(formatter.toText(request, m), """\
+        xml = self.toString(m)
+        self.failUnlessEqual(xml, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
   <intField>1</intField>
   <charField>a</charField>
-  <boolField>1</boolField>
+  <boolField>true</boolField>
   <subNode>
     <intField2>2</intField2>
   </subNode>
@@ -134,10 +133,44 @@ class ModelLibTest(testsuite.TestCase):
 
     def testBooleanField(self):
         class Model(modellib.Model):
-            boolField = modellib.fields.BooleanField()
+            boolField = fields.BooleanField()
         xml = self.getFieldString(Model(True), 'boolField')
-        assert(xml == "<boolField>1</boolField>")
+        assert(xml == "<boolField>true</boolField>")
+        xml = self.getFieldString(Model(False), 'boolField')
+        assert(xml == "<boolField>false</boolField>")
+        assert(self.fromString(Model,
+                    self.toString(Model(True))).boolField == True)
+        assert(self.fromString(Model,
+                    self.toString(Model(False))).boolField == False)
 
+    def testModelField(self):
+        class Model1(modellib.Model):
+            intField = fields.IntegerField()
+        
+        class Model(modellib.Model):
+            subNode = fields.ModelField(Model1)
+
+        xml = self.toString(Model(Model1(1)))
+        self.assertEquals(xml, """\
+<?xml version='1.0' encoding='UTF-8'?>
+<model>
+  <subNode>
+    <intField>1</intField>
+  </subNode>
+</model>
+""")
+        model = self.fromString(Model, xml)
+        assert(model.subNode.intField == 1)
+        self.assertEquals(self.toString(model), xml)
+
+    def testAbsoluteUrl(self):
+        class Model(modellib.Model):
+            url = fields.AbsoluteUrlField()
+            def get_absolute_url(self):
+                return ['http://foo']
+
+        xml = self.getFieldString(Model(), 'url')
+        self.assertEquals(xml, '<url>http://foo</url>')
 
 if __name__ == "__main__":
     testsetup.main()
