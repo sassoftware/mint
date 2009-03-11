@@ -192,7 +192,8 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
 class Transport(xmlrpclib.Transport):
     "Cookie-enabled transport"
     def __init__(self, cookie):
-        xmlrpclib.Transport.__init__(self)
+        if hasattr(xmlrpclib.Transport, '__init__'):
+            xmlrpclib.Transport.__init__(self)
         self.cookie = cookie
 
     def send_user_agent(self, connection):
