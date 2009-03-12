@@ -9,7 +9,6 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class ProductVersion(Model):
-
     id = fields.AbsoluteUrlField(isAttribute=True)
     versionId = fields.IntegerField()
     hostname = fields.CharField()
@@ -34,9 +33,10 @@ class ProductVersionList(Model):
         name = 'productVersions'
 
     versions = fields.ListField(ProductVersion, displayName='productVersion')
-    def addProductVersion(self, id, namespace, name, description,
+    def addProductVersion(self, versionId, namespace, name, description,
                           hostname):
-        self.versions.append(ProductVersion(id=id, namespace=namespace,
+        self.versions.append(ProductVersion(versionId=versionId, 
+                                            namespace=namespace,
                                             name=name, description=description,
                                             hostname=hostname))
 
