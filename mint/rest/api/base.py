@@ -11,3 +11,11 @@ class BaseController(RestController):
         self.cfg = cfg
         self.db = db
         RestController.__init__(self, parent, path, [cfg, db])
+
+    def url(self, request, *args, **kw):
+        result = RestController.url(self, request, *args, **kw)
+        if not request.extension:
+            return result
+        if result[-1] == '/':
+            return result[:-1] + request.extension  + '/'
+        return result[:-1] + request.extension

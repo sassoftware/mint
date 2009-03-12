@@ -42,14 +42,14 @@ class Converter(object):
                 value = field.valueToString(value, modelInstance, context)
             yield fieldName, field, value, childModel
 
-    def walkModelClassAndObject(self, modelClass, object):
+    def walkModelClassAndObject(self, modelClass, object, accessMethod=getattr):
         for fieldName in modelClass._fields:
             field = getattr(modelClass, fieldName)
             if hasattr(field, 'displayName') and field.displayName:
                 attrName = field.displayName
             else:
                 attrName = fieldName
-            value = getattr(object, attrName)
+            value = accessMethod(object, attrName)
             childModel = field.getModel()
             yield fieldName, field, value, childModel
 
@@ -153,7 +153,6 @@ class XobjConverter(Converter):
         entry = (modelClass, xobjObject, {}, None, None)
 
         # toProcess is FIFO - deque is better.
-        # toCreate is FILO - so use standard list.
         toProcess = [(entry, False)]
 
         while toProcess:
