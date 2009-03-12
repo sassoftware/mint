@@ -38,4 +38,4 @@ class RbuilderRestServer(RestController):
             return result
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
-        return result[:-1] + request.extension
+        return result + request.extension
