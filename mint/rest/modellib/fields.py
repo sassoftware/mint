@@ -33,7 +33,8 @@ class Field(object):
         return None
 
     def valueToString(self, value, parent, context):
-        return str(value)
+        if value is not None:
+            return str(value)
 
     def valueFromString(self, value):
         return value
@@ -97,11 +98,12 @@ class UrlField(CalculatedField):
         href = context.controller.url(context.request, self.location, *values)
         if self.query:
             href += '?' + self.query % parent.__dict__
+        return href
 
     def getModelInstance(self, value, parent, context):
         modelClass = self.getModel()
-        modelClass(href=self._getUrl(parent, context), 
-                   value=value)
+        return modelClass(href=self._getUrl(parent, context), 
+                          value=value)
 
 
 class ModelField(Field):
