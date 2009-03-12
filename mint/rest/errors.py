@@ -21,6 +21,9 @@ class ProductVersionNotFound(ItemNotFound):
 class StageNotFound(ItemNotFound):
     pass
 
+class ImageNotFound(ItemNotFound):
+    pass
+
 class UserNotFound(ItemNotFound):
     pass
 
