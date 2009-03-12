@@ -64,7 +64,9 @@ class BooleanField(Field):
             raise ParseError(value)
 
     def valueToString(self, value, parent, context):
-        return str(value).lower()
+        if value:
+            return 'true'
+        return 'false'
 
 class CalculatedField(Field):
     #TODO : add errors for trying to pass this in.
