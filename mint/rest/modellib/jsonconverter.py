@@ -28,7 +28,6 @@ class JSONConverterFactory(converter.Converter):
                         d[name] = {}
                         toProcess.append((d[name], value))
                 else:
-                    value = field.valueToString(value, modelInstance, context)
                     d[name] = value
         return topLevel
 

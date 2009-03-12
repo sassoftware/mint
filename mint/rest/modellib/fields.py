@@ -10,15 +10,18 @@ class Field(object):
     def __init__(self, default=None, required=False, visibility=None,
                  editable=None, isAttribute=False, isText=False,
                  displayName=None):
-        modellib.registerField(self)
+        self.displayName = displayName
         self.default = default
         self.required = required
         self.visibility = visibility
         self.isAttribute = isAttribute
         self.isText = isText
-        self.displayName = displayName
+        modellib.registerField(self)
         if editable is not None:
             self.editable = editable
+
+    def __del__(self):
+        modellib.deregisterField(self)
 
     def isList(self):
         return False

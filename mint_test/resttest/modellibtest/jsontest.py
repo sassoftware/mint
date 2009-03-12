@@ -89,7 +89,8 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.charField, "a")
 
         txt = self.toString(m)
-        self.failUnlessEqual(txt, '{"root": {"absoluteUrl": "http://world.top/plateau", "flavorField": "is: x86", "boolField": "1", "dateTimeField": "12/13/2004", "intField": "1", "emailField": "who@nowhere.net", "list_field": [{"intField2": "0"}, {"intField2": "1"}], "charField": "a", "versionField": "1.0", "subNode": {"intField2": "2"}}}')
+        self.failUnlessEqual(txt, '{"root": {"absoluteUrl": "http://world.top/plateau", "flavorField": "is: x86", "boolField": "true", "dateTimeField": "12/13/2004", "intField": "1", "emailField": "who@nowhere.net", "list_field": [{"intField2": "0"}, {"intField2": "1"}], "charField": "a", "versionField": "1.0", "subNode": {"intField2": "2"}}}')
+
 
     def testBooleanField(self):
         class Model(modellib.Model):

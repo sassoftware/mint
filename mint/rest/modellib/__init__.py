@@ -13,6 +13,12 @@ def registerField(field):
     count = len(_fieldRegistry)
     _fieldRegistry[id(field)] = count 
 
+def deregisterField(field):
+    try:
+        _fieldRegistry.remove(id(field))
+    except:
+        pass
+
 def _sortRegisteredFields(fields):
     fieldNames = [ x[0] for x in fields.iteritems() 
                    if id(x[1]) in _fieldRegistry ]
