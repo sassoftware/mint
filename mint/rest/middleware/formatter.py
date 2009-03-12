@@ -20,8 +20,6 @@ class FormatCallback(object):
         self.controller = controller
 
     def processRequest(self, request):
-        import epdb
-        epdb.serve()
         responseType = None
         extension = None
         accepted = request.headers.get('Accept', '').split(',')
