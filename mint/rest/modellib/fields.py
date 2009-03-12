@@ -64,6 +64,8 @@ class BooleanField(Field):
             raise ParseError(value)
 
     def valueToString(self, value, parent, context):
+        if value is None:
+            return
         if value:
             return 'true'
         return 'false'
