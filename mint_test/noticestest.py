@@ -14,59 +14,15 @@ import time
 from mint import notices_store
 from conary.lib import util
 
-import mint_rephelp
+import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class WebPageTest(mint_rephelp.WebRepositoryHelper):
+class WebPageTest(restbase.BaseRestTest):
     def tearDown(self):
-        mint_rephelp.WebRepositoryHelper.tearDown(self)
+        restbase.BaseRestTest.tearDown(self)
         util.rmtree(os.path.join(self.mintCfg.dataPath, 'notices'),
                     ignore_errors = True)
-
-    def getRestClient(self, uri, username = 'foouser', password = 'foopass',
-                      admin = False, **kwargs):
-        # Launch a mint server
-        defUser = username or 'foouser'
-        defPass = password or 'foopass'
-        if admin:
-            client, userId = self.quickMintAdmin(defUser, defPass)
-        else:
-            client, userId = self.quickMintUser(defUser, defPass)
-        page = self.webLogin(defUser, defPass)
-        if username is not None:
-            pysid = page.headers['Set-Cookie'].split(';', 1)[0]
-            headers = { 'Cookie' : page.headers['Set-Cookie'] }
-        else:
-            headers = {}
-            # Unauthenticated request
-        baseUrl = "http://%s:%s/api/v1" % (page.server, page.port)
-        client = Client(baseUrl, headers)
-        client.server = page.server
-        client.port = page.port
-        client.baseUrl = baseUrl
-        client.username = username
-        client.password = password
-
-        # Hack. Do the macro expansion in the URI - so we call __init__ again
-        uri = self.makeUri(client, uri)
-        client.__init__(uri, headers)
-        client.connect()
-        return client
-
-    def newConnection(self, client, uri):
-        uri = self.makeUri(client, uri)
-        client.__init__(uri, client.headers)
-        client.connect()
-        return client
-
-    def makeUri(self, client, uri):
-        if uri.startswith('http://') or uri.startswith('https://'):
-            return uri
-        replDict = dict(username = client.username, password =
-            client.password, port = client.port, server = client.server)
-
-        return ("%s/%s" % (client.baseUrl, uri)) % replDict
 
     def getStore(self, userId = None):
         return notices_store.createStore(
@@ -271,10 +227,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(response.read(), """\
 <?xml version='1.0' encoding='UTF-8'?>
 <rss version="2.0"><channel title="Global notices for context default"></channel></rss>""")
-
-
-class Client(restClient.Client):
-    pass
 
 if __name__ == "__main__":
         testsuite.main()
