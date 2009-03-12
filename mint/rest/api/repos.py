@@ -153,7 +153,9 @@ class RepositoryController(BaseReposController):
         return response.Response('Index.\n')
         
     def search(self, request, hostname):
+        name = request.GET.get('name', None)
         label = request.GET.get('label', None)
+        latest = request.GET.get('latest', False)
         searchType = request.GET.get('type', None)
         checkFnDict  = {'group'  : trove.troveIsGroup,
                         'source' : trove.troveIsSourceComponent,
@@ -164,8 +166,13 @@ class RepositoryController(BaseReposController):
         if searchType not in checkFnDict:
             raise errors.InvalidSearchType(searchType)
         checkFn = checkFnDict[searchType]
-        troveDict = self.getRepos(hostname).getTroveVersionsByLabel(
-                                {None : {versions.Label(label) : None}})
+        repos = self.getRepos(hostname)
+        if latest:
+            queryFn = repos.getTroveLatestByLabel
+        else:
+            queryFn = repos.getTroveVersionsByLabel
+
+        troveDict = queryFn({name : {versions.Label(label) : None}})
         troveList = []
         for name, versionDict in troveDict.iteritems():
             if checkFn and not checkFn(name):
