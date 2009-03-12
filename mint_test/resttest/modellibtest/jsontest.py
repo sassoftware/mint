@@ -46,13 +46,7 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.foo1, "a")
         self.failUnlessEqual(m.foo2, "b")
 
-        self.failUnlessEqual(self.toString(m), """\
-<?xml version='1.0' encoding='UTF-8'?>
-<model>
-  <foo1>a</foo1>
-  <foo2>b</foo2>
-</model>
-""")
+        self.failUnlessEqual(self.toString(m), '{"model": {"foo1": "a", "foo2": "b"}}')
 
         m = self.failUnlessRaises(TypeError, Model, foo3 = "c")
         self.failUnlessEqual(str(m),
@@ -94,16 +88,16 @@ class ModelLibTest(testsuite.TestCase):
         self.failUnlessEqual(m.intField, 1)
         self.failUnlessEqual(m.charField, "a")
 
-        xml = self.toString(m)
-        self.failUnlessEqual(xml, '{"root": {"absoluteUrl": "http://world.top/plateau", "flavorField": "is: x86", "boolField": "1", "dateTimeField": "12/13/2004", "intField": "1", "emailField": "who@nowhere.net", "list_field": [{"intField2": "0"}, {"intField2": "1"}], "charField": "a", "versionField": "1.0", "subNode": {"intField2": "2"}}}')
+        txt = self.toString(m)
+        self.failUnlessEqual(txt, '{"root": {"absoluteUrl": "http://world.top/plateau", "flavorField": "is: x86", "boolField": "1", "dateTimeField": "12/13/2004", "intField": "1", "emailField": "who@nowhere.net", "list_field": [{"intField2": "0"}, {"intField2": "1"}], "charField": "a", "versionField": "1.0", "subNode": {"intField2": "2"}}}')
 
     def testBooleanField(self):
         class Model(modellib.Model):
             boolField = fields.BooleanField()
-        xml = self.toString(Model(True))
-        assert(xml == '{"model": {"boolField": "true"}}')
-        xml = self.toString(Model(False))
-        assert(xml == '{"model": {"boolField": "false"}}')
+        txt = self.toString(Model(True))
+        assert(txt == '{"model": {"boolField": "true"}}')
+        txt = self.toString(Model(False))
+        assert(txt == '{"model": {"boolField": "false"}}')
         assert(self.fromString(Model,
                     self.toString(Model(True))).boolField == True)
         assert(self.fromString(Model,
@@ -116,18 +110,11 @@ class ModelLibTest(testsuite.TestCase):
         class Model(modellib.Model):
             subNode = fields.ModelField(Model1)
 
-        xml = self.toString(Model(Model1(1)))
-        self.assertEquals(xml, """\
-<?xml version='1.0' encoding='UTF-8'?>
-<model>
-  <subNode>
-    <intField>1</intField>
-  </subNode>
-</model>
-""")
-        model = self.fromString(Model, xml)
+        txt = self.toString(Model(Model1(1)))
+        self.assertEquals(txt, '{"model": {"subNode": {"intField": "1"}}}')
+        model = self.fromString(Model, txt)
         assert(model.subNode.intField == 1)
-        self.assertEquals(self.toString(model), xml)
+        self.assertEquals(self.toString(model), txt)
 
     def testAbsoluteUrl(self):
         class Model(modellib.Model):
@@ -135,8 +122,8 @@ class ModelLibTest(testsuite.TestCase):
             def get_absolute_url(self):
                 return ['http://foo']
 
-        xml = self.getFieldString(Model(), 'url')
-        self.assertEquals(xml, '<url>http://foo</url>')
+        txt = self.toString(Model())
+        self.assertEquals(txt, '{"model": {"url": "http://foo"}}')
 
 if __name__ == "__main__":
     testsetup.main()
