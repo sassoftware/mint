@@ -6,6 +6,8 @@
 
 from restlib import response
 
+from mint import buildtypes
+
 from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
@@ -16,8 +18,48 @@ class ProductVersionStagesDefinition(base.BaseController):
     }
 
     def getBuilds(self, request, hostname, version, stageName):
-        return self.db.getProductVersionStageBuildDefinitions(hostname,
-            version, stageName)
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildDefs = pd.getBuildsForStage(stageName)
+        buildDefModels = [ self._makeBuildDefinition(x, pd) for x in buildDefs ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
+
+    def _makeBuildDefinition(self, buildDef, pd):
+        kw = dict(name = buildDef.name,
+                  displayName = buildDef.name,
+                  id = buildDef.name)
+        # Ignore build templates for now, they do not provide a unique
+        # name
+        if buildDef.flavorSetRef:
+            fset = buildDef.flavorSetRef
+            fset = pd.getFlavorSet(fset,
+                     pd.getPlatformFlavorSet(fset, None))
+            if fset:
+                kw['flavorSet'] = models.FlavorSet(id = fset.name,
+                                            name = fset.name,
+                                            displayName = fset.displayName)
+        if buildDef.architectureRef:
+            arch = buildDef.architectureRef
+            arch = pd.getArchitecture(arch,
+                pd.getPlatformArchitecture(arch, None))
+            if arch:
+                kw['architecture'] = models.Architecture(id = arch.name,
+                    name = arch.name,
+                    displayName = arch.displayName)
+        if buildDef.containerTemplateRef:
+            ctemplRef = buildDef.containerTemplateRef
+            ctempl = pd.getContainerTemplate(ctemplRef,
+                pd.getPlatformContainerTemplate(ctemplRef, None))
+            if ctempl and ctemplRef in buildtypes.xmlTagNameImageTypeMap:
+                displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
+                displayName = buildtypes.typeNamesMarketing[displayName]
+                kw['container'] = models.ContainerFormat(
+                    id = ctemplRef,
+                    name = ctemplRef,
+                    displayName = displayName)
+                # XXX we need to add the rest of the fields here too
+        model = models.BuildDefinition(**kw)
+        return model
 
 class ProductVersionStages(base.BaseController):
     modelName = 'stageName'
@@ -101,3 +143,5 @@ class ProductVersionController(base.BaseController):
         sio = StringIO.StringIO()
         pd.serialize(sio)
         return sio.getvalue()
+
+

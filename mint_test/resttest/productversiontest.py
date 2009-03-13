@@ -78,7 +78,7 @@ class WebPageTest(restbase.BaseRestTest):
         client = self.getRestClient(uri)
         response = client.request('GET')
         # XXX do something meaningful with this data
-        response.read()
+        print response.read()
         raise testsuite.SkipTestException("out of time, will come back later")
 
 if __name__ == "__main__":
