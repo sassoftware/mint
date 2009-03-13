@@ -31,7 +31,7 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
         else:
             headers = {}
             # Unauthenticated request
-        baseUrl = "http://%s:%s/api/v1" % (page.server, page.port)
+        baseUrl = "http://%s:%s/api" % (page.server, page.port)
         client = Client(baseUrl, headers)
         client.server = page.server
         client.port = page.port
