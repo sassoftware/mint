@@ -78,8 +78,19 @@ class WebPageTest(restbase.BaseRestTest):
         client = self.getRestClient(uri)
         response = client.request('GET')
         # XXX do something meaningful with this data
-        print response.read()
         raise testsuite.SkipTestException("out of time, will come back later")
+        print response.read()
+
+    def testGetProductDefinitionImageDefinitions(self):
+        uriTemplate = 'products/%s/versions/%s/definition/images'
+        uri = uriTemplate % (self.shortName, self.productVersion)
+
+        client = self.getRestClient(uri)
+        response = client.request('GET')
+        # XXX do something meaningful with this data
+        raise testsuite.SkipTestException("out of time, will come back later")
+        print response.read()
+
 
 if __name__ == "__main__":
         testsetup.main()

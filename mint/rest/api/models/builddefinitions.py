@@ -11,7 +11,7 @@ class IdField(fields.AbsoluteUrlField):
     pass
 
 class _DisplayField(Model):
-    id = IdField('aaa', None, isAttribute = True)
+    href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
@@ -19,17 +19,17 @@ class _DisplayField(Model):
         return 'products.versions', "a", "b"
 
 class Architecture(_DisplayField):
-    id = IdField('aaa', None, isAttribute = True)
+    href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
 class FlavorSet(_DisplayField):
-    id = IdField('aaa', None, isAttribute = True)
+    href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
 class ContainerFormat(_DisplayField):
-    id = IdField('aaa', None, isAttribute = True)
+    href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 

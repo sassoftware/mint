@@ -12,21 +12,12 @@ from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
 
-class ProductVersionStagesDefinition(base.BaseController):
-    urls = {
-        'builds' : dict(GET = 'getBuilds'),
-    }
-
-    def getBuilds(self, request, hostname, version, stageName):
-        pd = self.db.getProductVersionDefinition(hostname, version)
-        buildDefs = pd.getBuildsForStage(stageName)
-        buildDefModels = [ self._makeBuildDefinition(x, pd) for x in buildDefs ]
-        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
-        return bdefs
-
+class BuildDefinitionMixIn(object):
     def _makeBuildDefinition(self, buildDef, pd):
+        # Build definitions don't have a display name, build templates do
+        displayName = getattr(buildDef, "displayName", buildDef.name)
         kw = dict(name = buildDef.name,
-                  displayName = buildDef.name,
+                  displayName = displayName,
                   id = buildDef.name)
         # Ignore build templates for now, they do not provide a unique
         # name
@@ -35,7 +26,7 @@ class ProductVersionStagesDefinition(base.BaseController):
             fset = pd.getFlavorSet(fset,
                      pd.getPlatformFlavorSet(fset, None))
             if fset:
-                kw['flavorSet'] = models.FlavorSet(id = fset.name,
+                kw['flavorSet'] = models.FlavorSet(href = fset.name,
                                             name = fset.name,
                                             displayName = fset.displayName)
         if buildDef.architectureRef:
@@ -43,7 +34,7 @@ class ProductVersionStagesDefinition(base.BaseController):
             arch = pd.getArchitecture(arch,
                 pd.getPlatformArchitecture(arch, None))
             if arch:
-                kw['architecture'] = models.Architecture(id = arch.name,
+                kw['architecture'] = models.Architecture(href = arch.name,
                     name = arch.name,
                     displayName = arch.displayName)
         if buildDef.containerTemplateRef:
@@ -54,12 +45,24 @@ class ProductVersionStagesDefinition(base.BaseController):
                 displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
                 displayName = buildtypes.typeNamesMarketing[displayName]
                 kw['container'] = models.ContainerFormat(
-                    id = ctemplRef,
+                    href = ctemplRef,
                     name = ctemplRef,
                     displayName = displayName)
                 # XXX we need to add the rest of the fields here too
         model = models.BuildDefinition(**kw)
         return model
+
+class ProductVersionStagesDefinition(base.BaseController, BuildDefinitionMixIn):
+    urls = {
+        'builds' : dict(GET = 'getBuilds'),
+    }
+
+    def getBuilds(self, request, hostname, version, stageName):
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildDefs = pd.getBuildsForStage(stageName)
+        buildDefModels = [ self._makeBuildDefinition(x, pd) for x in buildDefs ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
 
 class ProductVersionStages(base.BaseController):
     modelName = 'stageName'
@@ -76,6 +79,39 @@ class ProductVersionStages(base.BaseController):
     def getImages(self, request, hostname, version, stageName):
         return self.db.getProductVersionStageImages(hostname, version, stageName)
 
+class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
+    urls = dict(images = dict(GET = 'getImageDefinitions'))
+
+    def index(self, request, hostname, version):
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        return response.Response(self._fromProddef(pd))
+
+    def update(self, request, hostname, version):
+        pd = self._toProddef(request)
+        self.db.setProductVersionDefinition(hostname, version, pd)
+        return response.RedirectResponse(
+                    self.url(request, 'products.versions.definition', 
+                             hostname, version))
+
+    def getImageDefinitions(self, request, hostname, version):
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildTemplates = pd.platform.getBuildTemplates()
+        buildDefModels = [ self._makeBuildDefinition(x, pd)
+            for x in buildTemplates ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
+
+    def _toProddef(self, request):
+        from rpath_common.proddef import api1 as proddef
+        return proddef.ProductDefinition(fromStream=request.read())
+
+    def _fromProddef(self, pd):
+        import cStringIO as StringIO
+        sio = StringIO.StringIO()
+        pd.serialize(sio)
+        return sio.getvalue()
+
+
 class ProductVersionController(base.BaseController):
 
     modelName = 'version'
@@ -83,8 +119,7 @@ class ProductVersionController(base.BaseController):
                                 PUT='setPlatform',
                                 POST='updatePlatform'),
             'stages'     : ProductVersionStages,
-            'definition' : dict(GET='getDefinition', 
-                                PUT='setDefinition'),
+            'definition' : ProductVersionDefinition,
             'images'     : dict(GET='getImages')}
 
     def index(self, request, hostname):
@@ -123,25 +158,5 @@ class ProductVersionController(base.BaseController):
                         self.url(request, 'products.versions.platform', 
                                  hostname, version))
 
-    def getDefinition(self, request, hostname, version):
-        pd = self.db.getProductVersionDefinition(hostname, version)
-        return response.Response(self._fromProddef(pd))
-
-    def setDefinition(self, request, hostname, version):
-        pd = self._toProddef(request)
-        self.db.setProductVersionDefinition(hostname, version, pd)
-        return response.RedirectResponse(
-                    self.url(request, 'products.versions.definition', 
-                             hostname, version))
-
-    def _toProddef(self, request):
-        from rpath_common.proddef import api1 as proddef
-        return proddef.ProductDefinition(fromStream=request.read())
-
-    def _fromProddef(self, pd):
-        import cStringIO as StringIO
-        sio = StringIO.StringIO()
-        pd.serialize(sio)
-        return sio.getvalue()
 
 
