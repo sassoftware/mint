@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+from conary.lib import digestlib
+
 from restlib import response
 
 from mint import buildtypes
@@ -14,11 +16,12 @@ from mint.rest.api import requires
 
 class BuildDefinitionMixIn(object):
     def _makeBuildDefinition(self, buildDef, pd):
+        buildDefId = self.getBuildDefId(buildDef)
         # Build definitions don't have a display name, build templates do
         displayName = getattr(buildDef, "displayName", buildDef.name)
         kw = dict(name = buildDef.name,
                   displayName = displayName,
-                  id = buildDef.name)
+                  id = buildDefId)
         # Ignore build templates for now, they do not provide a unique
         # name
         if buildDef.flavorSetRef:
@@ -51,6 +54,25 @@ class BuildDefinitionMixIn(object):
                 # XXX we need to add the rest of the fields here too
         model = models.BuildDefinition(**kw)
         return model
+
+    @classmethod
+    def getBuildDefId(cls, buildDef):
+        if not hasattr(buildDef, 'hexDigest'):
+            buildDef.hexDigest = cls.computeBuildDefinitionDigest(buildDef)
+        return buildDef.hexDigest
+
+    @classmethod
+    def computeBuildDefinitionDigest(cls, buildDef):
+        # Since we don't have unique IDs for builds, we need to manufacture
+        # some - we'll digest the three refs.
+        digest = digestlib.md5()
+        if buildDef.containerTemplateRef:
+            digest.update(buildDef.containerTemplateRef)
+        if buildDef.architectureRef:
+            digest.update(buildDef.architectureRef)
+        if buildDef.flavorSetRef:
+            digest.update(buildDef.flavorSetRef)
+        return digest.hexdigest()
 
 class ProductVersionStagesDefinition(base.BaseController, BuildDefinitionMixIn):
     urls = {

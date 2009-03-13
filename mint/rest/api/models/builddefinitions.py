@@ -42,7 +42,7 @@ class BuildDefinition(Model):
     flavorSet = fields.ModelField(FlavorSet)
 
     def get_absolute_url(self):
-        return 'products.versions', "a", "b"
+        return 'products.versions', "a", self.id
 
 class BuildDefinitions(Model):
     class Meta(object):
