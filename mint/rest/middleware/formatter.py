@@ -3,11 +3,15 @@
 #
 # All Rights Reserved
 #
+import time
 
 from restlib import response
 
+from mint.rest import modellib
 from mint.rest.modellib import converter
+from mint.rest.modellib import fields
 from mint.rest.modellib import jsonconverter
+from mint.rest.middleware import profile
 
 contentTypes = {'application/json'        : 'json',
                 'application/javascript'  : 'json',
@@ -15,11 +19,14 @@ contentTypes = {'application/json'        : 'json',
                 'text/xml'                : 'xml',
                 '*/*'                     : 'xml'}
 
+
 class FormatCallback(object):
     def __init__(self, controller):
         self.controller = controller
 
     def processRequest(self, request):
+        request.profile = profile.ProfileData()
+        request.profile.startResponse()
         responseType = None
         extension = None
         accepted = request.headers.get('Accept', '').split(',')
@@ -41,6 +48,7 @@ class FormatCallback(object):
                 else:
                     # default
                     responseType = 'xml'
+                    contentType = 'text/plain'
                 break
             else:
                 # actual header.
@@ -56,6 +64,7 @@ class FormatCallback(object):
         request.contentType = contentType
 
     def processMethod(self, request, viewMethod, args, kw):
+        self.controller.db.setProfiler(request.profile)
         if hasattr(viewMethod, 'model'):
             modelName, model = viewMethod.model
             kw[modelName] = converter.fromText(request.responseType,
@@ -64,7 +73,21 @@ class FormatCallback(object):
         
     def processResponse(self, request, res):
         if not isinstance(res, response.Response):
+            request.profile.stopResponse()
+                        
+            startConvert = time.time()
             text = converter.toText(request.responseType, res,
                                     self.controller, request)
+            convertTime = time.time() - startConvert
+            if request.contentType == 'text/plain':
+                class Results(modellib.Model):
+                    profile = fields.ModelField(profile.ProfileData)
+                    results = fields.ModelField(res.__class__,
+                                                displayName=res._meta.name)
+                request.profile.convertTime = convertTime
+                res = Results(profile=request.profile, 
+                              results=res)
+                text = converter.toText(request.responseType, res,
+                                        self.controller, request)
             res = response.Response(text, content_type=request.contentType)
         return res

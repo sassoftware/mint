@@ -49,6 +49,10 @@ class Database(object):
         self.username = auth.username
         self.isAdmin = auth.admin
 
+    def setProfiler(self, profile):
+        profile.attachDb(self.db.db)
+        profile.attachRepos(self.productMgr.reposMgr)
+
     def _getOne(self, cu, exception, key):
         try:
             cu = iter(cu)
