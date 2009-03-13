@@ -9,6 +9,7 @@ import time
 from conary.lib import util
 from rpath_common.proddef import api1 as proddef
 
+from mint import buildtypes
 from mint import helperfuncs
 from mint import mint_error
 from mint import projects
@@ -16,6 +17,8 @@ from mint import userlevels
 from mint import templates
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest import modellib
+from mint.rest.modellib import fields
 from mint.rest.db import reposmgr
 from mint.templates import groupTemplate
 
@@ -326,10 +329,75 @@ class ProductManager(object):
                                                stageName):
         pd = self.getProductVersionDefinition(hostname, version)
         buildDefs = pd.getBuildsForStage(stageName)
-        # XXX Actual data
-        class M(models.Model):
-            class Meta(object):
-                name = "blah"
-        return M()
+        buildDefModels = []
+        for buildDef in buildDefs:
+            kw = dict(name = buildDef.name,
+                      displayName = buildDef.name,
+                      id = buildDef.name)
+            # Ignore build templates for now, they do not provide a unique
+            # name
+            if buildDef.flavorSetRef:
+                fset = buildDef.flavorSetRef
+                fset = pd.getFlavorSet(fset,
+                         pd.getPlatformFlavorSet(fset, None))
+                if fset:
+                    kw['flavorSet'] = FlavorSet(id = fset.name,
+                                                name = fset.name,
+                                                displayName = fset.displayName)
+            if buildDef.architectureRef:
+                arch = buildDef.architectureRef
+                arch = pd.getArchitecture(arch,
+                    pd.getPlatformArchitecture(arch, None))
+                if arch:
+                    kw['architecture'] = Architecture(id = arch.name,
+                        name = arch.name,
+                        displayName = arch.displayName)
+            if buildDef.containerTemplateRef:
+                ctemplRef = buildDef.containerTemplateRef
+                ctempl = pd.getContainerTemplate(ctemplRef,
+                    pd.getPlatformContainerTemplate(ctemplRef, None))
+                if ctempl and ctemplRef in buildtypes.xmlTagNameImageTypeMap:
+                    displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
+                    displayName = buildtypes.typeNamesMarketing[displayName]
+                    kw['container'] = ContainerFormat(
+                        id = ctemplRef,
+                        name = ctemplRef,
+                        displayName = displayName)
+                    # XXX we need to add the rest of the fields here too
+            model = BuildDefinition(**kw)
+            buildDefModels.append(model)
+        bdefs = BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
 
+class _DisplayField(modellib.Model):
+    id = fields.CharField(isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
 
+class Architecture(_DisplayField):
+    id = fields.CharField(isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
+
+class FlavorSet(_DisplayField):
+    id = fields.CharField(isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
+
+class ContainerFormat(_DisplayField):
+    id = fields.CharField(isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
+
+class BuildDefinition(modellib.Model):
+    id = fields.CharField(isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
+    container = fields.ModelField(ContainerFormat)
+    architecture = fields.ModelField(Architecture)
+    flavorSet = fields.ModelField(FlavorSet)
+
+class BuildDefinitions(modellib.Model):
+    class Meta(object):
+        name = "build-definitions"
+    buildDefinitions = fields.ListField(BuildDefinition, displayName = 'build-definition')

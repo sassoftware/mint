@@ -79,7 +79,7 @@ class FormatCallback(object):
             text = converter.toText(request.responseType, res,
                                     self.controller, request)
             convertTime = time.time() - startConvert
-            if request.contentType == 'text/plain':
+            if False and request.contentType == 'text/plain':
                 class Results(modellib.Model):
                     profile = fields.ModelField(profile.ProfileData)
                     results = fields.ModelField(res.__class__,
