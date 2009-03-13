@@ -10,10 +10,20 @@ from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
 
+class ProductVersionStagesDefinition(base.BaseController):
+    urls = {
+        'builds' : dict(GET = 'getBuilds'),
+    }
+
+    def getBuilds(self, request, hostname, version, stageName):
+        return self.db.getProductVersionStageBuildDefinitions(hostname,
+            version, stageName)
+
 class ProductVersionStages(base.BaseController):
     modelName = 'stageName'
 
-    urls = {'images' : dict(GET='getImages')}
+    urls = {'images' : dict(GET='getImages'),
+            'definition' : ProductVersionStagesDefinition }
     
     def index(self, request, hostname, version):
         return self.db.getProductVersionStages(hostname, version)

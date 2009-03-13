@@ -320,3 +320,15 @@ class ProductManager(object):
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
+
+    def getProductVersionStageBuildDefinitions(self, hostname, version,
+                                               stageName):
+        pd = self.getProductVersionDefinition(hostname, version)
+        buildDefs = pd.getBuildsForStage(stageName)
+        # XXX Actual data
+        class M(models.Model):
+            class Meta(object):
+                name = "blah"
+        return M()
+
+

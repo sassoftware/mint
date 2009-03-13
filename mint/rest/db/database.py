@@ -346,6 +346,11 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersionStage(hostname, version, stageName)
 
+    def getProductVersionStageBuildDefinitions(self, hostname, version, stageName):
+        self.auth.requireProductReadAccess(hostname)
+        return self.productMgr.getProductVersionStageBuildDefinitions(
+            hostname, version, stageName)
+
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)

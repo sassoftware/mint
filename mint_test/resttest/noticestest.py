@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 
+import testsetup
 import testsuite
 testsuite.setup()
 
@@ -229,4 +230,4 @@ class WebPageTest(restbase.BaseRestTest):
 <rss version="2.0"><channel title="Global notices for context default"></channel></rss>""")
 
 if __name__ == "__main__":
-        testsuite.main()
+        testsetup.main()
