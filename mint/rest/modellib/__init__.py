@@ -97,4 +97,4 @@ class Model(object):
                 default = list(field.default)
             else:
                 default = field.default
-            setattr(self, fieldName, field.default)
+            setattr(self, fieldName, default)

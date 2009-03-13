@@ -301,6 +301,7 @@ class ProductManager(object):
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
         cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        pd.loadFromRepository(cclient)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:

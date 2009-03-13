@@ -49,7 +49,7 @@ class RepositoryManager(object):
 
         contentsDirs = self.cfg.reposContentsDir
         cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
-        repos = netserver.NetworkRepositoryServer(cfg, '')
+        repos = shimclient.NetworkRepositoryServer(cfg, '')
         return repos
         
     def createRepository(self, hostname, domainname, isPrivate=False):
@@ -76,6 +76,9 @@ class RepositoryManager(object):
 
     def deleteRepository(self, fqdn):
         self.reposDB.delete(fqdn)
+
+    def setProfiler(self, profiler):
+        self.profiler = profiler
 
     def addUserByMd5(self, fqdn, username, salt, password, 
                      write=False, mirror=False,
@@ -208,7 +211,7 @@ class RepositoryManager(object):
         if conaryCfg is None:
             conaryCfg = self.getProjectConaryConfig(fqdn)
         repos = self.getInternalRepositoryClient(fqdn, conaryCfg=conaryCfg)
-        return conaryclient.ConaryClient(conaryCfg, repos)
+        return conaryclient.ConaryClient(conaryCfg, repos=repos)
 
     def getInternalRepositoryClient(self, fqdn, conaryCfg=None):
         if conaryCfg is None:
@@ -229,12 +232,17 @@ class RepositoryManager(object):
             (self.cfg.authUser, self.cfg.authPass, None, None),
             conaryCfg.repositoryMap, conaryCfg.user,
             conaryProxies=conarycfg.getProxyFromConfig(conaryCfg))
+        if self.profiler:
+            repo = self.profiler.wrapRepository(repo)
         return repo
 
     def getRepositoryClient(self, fqdn, useShim=True, conaryCfg=None):
         if conaryCfg is None:
             conaryCfg = self.getProjectConaryConfig(fqdn)
-        return conaryclient.ConaryClient(conaryCfg).getRepos()
+        repos = conaryclient.ConaryClient(conaryCfg).getRepos()
+        if self.profiler:
+            repos = self.profiler.wrapRepository(repos)
+        return repos
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage):

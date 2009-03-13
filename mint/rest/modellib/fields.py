@@ -7,11 +7,13 @@ from mint.rest import modellib
 
 class Field(object):
     editable = True
+    default = None
     def __init__(self, default=None, required=False, visibility=None,
                  editable=None, isAttribute=False, isText=False,
                  displayName=None):
         self.displayName = displayName
-        self.default = default
+        if default is not None:
+            self.default = default
         self.required = required
         self.visibility = visibility
         self.isAttribute = isAttribute
