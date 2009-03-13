@@ -333,7 +333,7 @@ urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/catalog/',          catalogHandler),
-    (r'^/api/v1/',           restHandler),
+    (r'^/api/',              restHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
