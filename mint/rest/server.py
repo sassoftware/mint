@@ -36,7 +36,7 @@ class RbuilderRESTHandler(object):
 def restHandler(req, cfg, pathInfo = None):
     coveragehook.install()
     maintenance.enforceMaintenanceMode(cfg)
-    topLevel = os.path.join(cfg.basePath, 'api/v1')
+    topLevel = os.path.join(cfg.basePath, 'api')
     db = database.Database(cfg)
     handler = RbuilderRESTHandler(topLevel, cfg, db)
     return handler.handle(req)
