@@ -48,9 +48,9 @@ class ModelLibTest(testsuite.TestCase):
 
         self.failUnlessEqual(self.toString(m), '{"model": {"foo1": "a", "foo2": "b"}}')
 
-        m = self.failUnlessRaises(TypeError, Model, foo3 = "c")
-        self.failUnlessEqual(str(m),
-            "Model() got an unexpected keyword argument 'foo3'")
+        #m = self.failUnlessRaises(TypeError, Model, foo3 = "c")
+        #self.failUnlessEqual(str(m),
+        #    "Model() got an unexpected keyword argument 'foo3'")
 
     def testModelJsonFormatterTypes(self):
         class Model1(modellib.Model):
