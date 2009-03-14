@@ -86,6 +86,10 @@ class Model(object):
                 if kwarg in fields:
                     raise TypeError('%s() got multiple values for keyword argument %r' % (className, kwarg))
                 else:
+                    # XXX we need to find the proper way to pass a model 
+                    # additional data that is not displayed into the model
+                    setattr(self, kwarg, value)
+                    continue
                     raise TypeError('%s() got an unexpected keyword argument %r' % (className, kwarg))
             kwfields.remove(kwarg)
             setattr(self, kwarg, value)
