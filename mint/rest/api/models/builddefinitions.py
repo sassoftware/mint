@@ -59,7 +59,7 @@ class ContainerFormat(_DisplayField):
     href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
-    imageParams = fields.ModelField(ImageParams)
+    options = fields.ModelField(ImageParams)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
