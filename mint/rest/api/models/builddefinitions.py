@@ -23,15 +23,27 @@ class Architecture(_DisplayField):
     name = fields.CharField()
     displayName = fields.CharField()
 
+    def get_absolute_url(self):
+        return ('products.versions', self.hostname, self.version,
+            "definition", "architectures", self.href)
+
 class FlavorSet(_DisplayField):
     href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
+    def get_absolute_url(self):
+        return ('products.versions', self.hostname, self.version,
+            "definition", "flavorSets", self.href)
+
 class ContainerFormat(_DisplayField):
     href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
+
+    def get_absolute_url(self):
+        return ('products.versions', self.hostname, self.version,
+            "definition", "containers", self.href)
 
 class BuildDefinition(Model):
     id = IdField('aaa', None, isAttribute = True)
@@ -42,7 +54,8 @@ class BuildDefinition(Model):
     flavorSet = fields.ModelField(FlavorSet)
 
     def get_absolute_url(self):
-        return 'products.versions', "a", self.id
+        return ('products.versions', self.hostname, self.version,
+            self.id)
 
 class BuildDefinitions(Model):
     class Meta(object):

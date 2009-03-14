@@ -15,13 +15,15 @@ from mint.rest.api import models
 from mint.rest.api import requires
 
 class BuildDefinitionMixIn(object):
-    def _makeBuildDefinition(self, buildDef, pd):
+    def _makeBuildDefinition(self, buildDef, pd, extraParams):
         buildDefId = self.getBuildDefId(buildDef)
         # Build definitions don't have a display name, build templates do
         displayName = getattr(buildDef, "displayName", buildDef.name)
-        kw = dict(name = buildDef.name,
-                  displayName = displayName,
-                  id = buildDefId)
+        kw = extraParams.copy()
+        kw.update(dict(name = buildDef.name,
+                       displayName = displayName,
+                       id = buildDefId,
+                       **extraParams))
         # Ignore build templates for now, they do not provide a unique
         # name
         if buildDef.flavorSetRef:
@@ -31,7 +33,8 @@ class BuildDefinitionMixIn(object):
             if fset:
                 kw['flavorSet'] = models.FlavorSet(href = fset.name,
                                             name = fset.name,
-                                            displayName = fset.displayName)
+                                            displayName = fset.displayName,
+                                            **extraParams)
         if buildDef.architectureRef:
             arch = buildDef.architectureRef
             arch = pd.getArchitecture(arch,
@@ -39,7 +42,8 @@ class BuildDefinitionMixIn(object):
             if arch:
                 kw['architecture'] = models.Architecture(href = arch.name,
                     name = arch.name,
-                    displayName = arch.displayName)
+                    displayName = arch.displayName,
+                    **extraParams)
         if buildDef.containerTemplateRef:
             ctemplRef = buildDef.containerTemplateRef
             ctempl = pd.getContainerTemplate(ctemplRef,
@@ -50,7 +54,8 @@ class BuildDefinitionMixIn(object):
                 kw['container'] = models.ContainerFormat(
                     href = ctemplRef,
                     name = ctemplRef,
-                    displayName = displayName)
+                    displayName = displayName,
+                    **extraParams)
                 # XXX we need to add the rest of the fields here too
         model = models.BuildDefinition(**kw)
         return model
@@ -80,9 +85,12 @@ class ProductVersionStagesDefinition(base.BaseController, BuildDefinitionMixIn):
     }
 
     def getBuilds(self, request, hostname, version, stageName):
+        extraParams = dict(hostname = hostname, version = version,
+            stageName = stageName)
         pd = self.db.getProductVersionDefinition(hostname, version)
         buildDefs = pd.getBuildsForStage(stageName)
-        buildDefModels = [ self._makeBuildDefinition(x, pd) for x in buildDefs ]
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams)
+                           for x in buildDefs ]
         bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
         return bdefs
 
@@ -102,7 +110,7 @@ class ProductVersionStages(base.BaseController):
         return self.db.getProductVersionStageImages(hostname, version, stageName)
 
 class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
-    urls = dict(images = dict(GET = 'getImageDefinitions'))
+    urls = { 'image-definitions' : dict(GET = 'getImageDefinitions')}
 
     def index(self, request, hostname, version):
         pd = self.db.getProductVersionDefinition(hostname, version)
@@ -116,9 +124,10 @@ class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
                              hostname, version))
 
     def getImageDefinitions(self, request, hostname, version):
+        extraParams = dict(hostname = hostname, version = version)
         pd = self.db.getProductVersionDefinition(hostname, version)
         buildTemplates = pd.platform.getBuildTemplates()
-        buildDefModels = [ self._makeBuildDefinition(x, pd)
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams)
             for x in buildTemplates ]
         bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
         return bdefs
