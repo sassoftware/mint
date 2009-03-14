@@ -4,8 +4,10 @@
 # All Rights Reserved
 #
 
-from mint.rest.modellib import Model
+from mint.rest.modellib import Model, ModelMeta
 from mint.rest.modellib import fields
+
+from rpath_common.proddef import imageTypes
 
 class IdField(fields.AbsoluteUrlField):
     pass
@@ -36,10 +38,28 @@ class FlavorSet(_DisplayField):
         return ('products.versions', self.hostname, self.version,
             "definition", "flavorSets", self.href)
 
+class ImageModelMeta(ModelMeta):
+    # This is a bit twisted - we're copying the class definition from
+    # proddef's imageType.Image
+    _fieldTypeMap = {
+        str: fields.CharField,
+        bool: fields.BooleanField,
+        int: fields.IntegerField,
+    }
+    def __new__(mcs, name, bases, attrs):
+        for fieldName, fieldType in imageTypes.Image._attributes.items():
+            fieldType = fieldType[0]
+            attrs[fieldName] = mcs._fieldTypeMap[fieldType](isAttribute = True)
+        return ModelMeta.__new__(mcs, name, bases, attrs)
+
+class ImageParams(Model):
+    __metaclass__ = ImageModelMeta
+
 class ContainerFormat(_DisplayField):
     href = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
+    imageParams = fields.ModelField(ImageParams)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,

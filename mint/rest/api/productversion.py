@@ -51,10 +51,12 @@ class BuildDefinitionMixIn(object):
             if ctempl and ctemplRef in buildtypes.xmlTagNameImageTypeMap:
                 displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
                 displayName = buildtypes.typeNamesMarketing[displayName]
+                imageParams = models.ImageParams(**ctempl.fields)
                 kw['container'] = models.ContainerFormat(
                     href = ctemplRef,
                     name = ctemplRef,
                     displayName = displayName,
+                    options = imageParams,
                     **extraParams)
                 # XXX we need to add the rest of the fields here too
         model = models.BuildDefinition(**kw)
