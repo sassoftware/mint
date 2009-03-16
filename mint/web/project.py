@@ -1435,7 +1435,11 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             # to see what they entered.
 
             # Coerce trove type options back to their class name
-            buildSettings = dict([(buildtemplates.reversedOptionNameMap.get(k,k),v) for k, v in buildSettings.iteritems()])
+            buildSettings = dict([
+                (buildtemplates.reversedOptionNameMap.get(k, k), v)
+                 for k, v in buildSettings.iteritems()
+                    if v != '' and v is not None
+            ])
 
             flvSetArchRef = builddef.get('flvSetArchRef')
             if flvSetArchRef:
