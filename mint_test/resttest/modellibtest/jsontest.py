@@ -24,7 +24,8 @@ class ModelLibTest(testsuite.TestCase):
 
     def toString(self, item):
         controller = _Controller()
-        return converter.toText('json', item, controller, None)
+        txt = converter.toText('json', item, controller, None)
+        return re.sub('\n *', '', txt)
 
     def fromString(self, cls, text):
         controller = _Controller()
