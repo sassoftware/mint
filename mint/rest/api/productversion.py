@@ -112,7 +112,7 @@ class ProductVersionStages(base.BaseController):
         return self.db.getProductVersionStageImages(hostname, version, stageName)
 
 class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
-    urls = { 'image-definitions' : dict(GET = 'getImageDefinitions')}
+    urls = { 'imageDefinitions' : dict(GET = 'getImageDefinitions')}
 
     def index(self, request, hostname, version):
         pd = self.db.getProductVersionDefinition(hostname, version)

@@ -82,7 +82,7 @@ class WebPageTest(restbase.BaseRestTest):
         print response.read()
 
     def testGetProductDefinitionImageDefinitions(self):
-        uriTemplate = 'products/%s/versions/%s/definition/image-definitions'
+        uriTemplate = 'products/%s/versions/%s/definition/imageDefinitions'
         uri = uriTemplate % (self.shortName, self.productVersion)
 
         client = self.getRestClient(uri)
