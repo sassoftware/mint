@@ -29,6 +29,7 @@ def _sortRegisteredFields(fields):
 class Field(object):
     editable = True
     default = None
+    handleNone = False
     def __init__(self, default=None, required=False, visibility=None,
                  editable=None, isAttribute=False, isText=False,
                  displayName=None):
@@ -59,10 +60,19 @@ class Field(object):
         return None
 
     def valueToString(self, value, parent, context):
-        if value is not None:
-            return str(value)
+        if value is None and not self.handleNone:
+            return None
+        return self._valueToString(value, parent, context)
+
+    def _valueToString(self, value, parent, context):
+        return str(value)
 
     def valueFromString(self, value):
+        if value is None and not self.handleNone:
+            return None
+        return self._valueFromString(value)
+
+    def _valueFromString(self, value):
         return value
 
 

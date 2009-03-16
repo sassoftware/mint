@@ -7,22 +7,20 @@ from mint.rest import modellib
 from mint.rest.modellib import Field
 
 class IntegerField(Field):
-    def valueFromString(self, value):
+    def _valueFromString(self, value):
         return int(value)
 
 class FloatField(Field):
-    def valueFromString(self, value):
+    def _valueFromString(self, value):
         return float(value)
 
 class CharField(Field):
     pass
 
 class BooleanField(Field):
-    def valueFromString(self, value):
+    def _valueFromString(self, value):
         if isinstance(value, (int, bool)):
             return bool(value)
-        if value is None:
-            return
         value = value.lower()
         if value in ('true', '1'):
             return True
@@ -31,7 +29,7 @@ class BooleanField(Field):
         else:
             raise ParseError(value)
 
-    def valueToString(self, value, parent, context):
+    def _valueToString(self, value, parent, context):
         if value is None:
             return
         if value:
@@ -92,8 +90,9 @@ class ModelField(Field):
     
 
 class AbsoluteUrlField(CalculatedField):
+    handleNone = True
     
-    def valueToString(self, value, parent, context):
+    def _valueToString(self, value, parent, context):
         return context.controller.url(context.request,
                                       *parent.get_absolute_url())
 
