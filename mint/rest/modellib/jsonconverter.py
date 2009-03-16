@@ -71,7 +71,7 @@ class JSONConverterFactory(converter.Converter):
 
     def toText(self, modelInstance, context):
         d = self.getDictFromModel(modelInstance, context)
-        return simplejson.dumps(d, indent=2)
+        return simplejson.dumps(d)
 
     def fromText(self, text, modelClass, context):
         className = modelClass._meta.name
