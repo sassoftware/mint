@@ -15,6 +15,7 @@ from mint.db import database
 from mint.rest.api import site
 from mint.rest.db import database as restDatabase
 from mint.rest.middleware import auth
+from mint.rest.middleware import error
 from mint.rest.middleware import formatter
 
 class RbuilderRESTHandler(object):
@@ -28,6 +29,7 @@ class RbuilderRESTHandler(object):
         self.handler = self.httpHandlerClass(controller)
         self.handler.addCallback(auth.AuthenticationCallback(self.cfg, db))
         self.handler.addCallback(formatter.FormatCallback(controller))
+        self.handler.addCallback(error.ErrorCallback(controller))
 
     def handle(self, req):
         return self.handler.handle(req, req.unparsed_uri[len(self.pathPrefix):])

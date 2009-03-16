@@ -4,46 +4,7 @@
 # All Rights Reserved
 #
 from mint.rest import modellib
-
-class Field(object):
-    editable = True
-    default = None
-    def __init__(self, default=None, required=False, visibility=None,
-                 editable=None, isAttribute=False, isText=False,
-                 displayName=None):
-        self.displayName = displayName
-        if default is not None:
-            self.default = default
-        self.required = required
-        self.visibility = visibility
-        self.isAttribute = isAttribute
-        self.isText = isText
-        modellib.registerField(self)
-        if editable is not None:
-            self.editable = editable
-
-    def __del__(self):
-        modellib.deregisterField(self)
-
-    def isList(self):
-        return False
-
-    def hasModel(self):
-        return bool(self.getModel())
-
-    def getModel(self):
-        return None
-
-    def getModelInstance(self, value, parent, context):
-        return None
-
-    def valueToString(self, value, parent, context):
-        if value is not None:
-            return str(value)
-
-    def valueFromString(self, value):
-        return value
-        
+from mint.rest.modellib import Field
 
 class IntegerField(Field):
     def valueFromString(self, value):

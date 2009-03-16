@@ -9,11 +9,11 @@ from xobj import xobj
 from mint.rest.modellib import options
 
 _fieldRegistry = {}
-def registerField(field):
+def _registerField(field):
     count = len(_fieldRegistry)
     _fieldRegistry[id(field)] = count 
 
-def deregisterField(field):
+def _deregisterField(field):
     try:
         _fieldRegistry.remove(id(field))
     except:
@@ -21,9 +21,49 @@ def deregisterField(field):
 
 def _sortRegisteredFields(fields):
     fieldNames = [ x[0] for x in fields.iteritems() 
-                   if id(x[1]) in _fieldRegistry ]
+                   if isinstance(x[1], Field) and id(x[1]) in _fieldRegistry ]
     return sorted(fieldNames, 
                   key=lambda x: _fieldRegistry[id(fields[x])])
+
+
+class Field(object):
+    editable = True
+    default = None
+    def __init__(self, default=None, required=False, visibility=None,
+                 editable=None, isAttribute=False, isText=False,
+                 displayName=None):
+        self.displayName = displayName
+        if default is not None:
+            self.default = default
+        self.required = required
+        self.visibility = visibility
+        self.isAttribute = isAttribute
+        self.isText = isText
+        _registerField(self)
+        if editable is not None:
+            self.editable = editable
+
+    def __del__(self):
+        _deregisterField(self)
+
+    def isList(self):
+        return False
+
+    def hasModel(self):
+        return bool(self.getModel())
+
+    def getModel(self):
+        return None
+
+    def getModelInstance(self, value, parent, context):
+        return None
+
+    def valueToString(self, value, parent, context):
+        if value is not None:
+            return str(value)
+
+    def valueFromString(self, value):
+        return value
 
 
 class ModelMeta(type):
@@ -45,6 +85,7 @@ class ModelMeta(type):
                              if attrs[x].isText ]
         new_class._meta = options.Options(new_class, attrs.pop('Meta', None))
         return new_class
+
 
 class Model(object):
     """
@@ -102,3 +143,4 @@ class Model(object):
             else:
                 default = field.default
             setattr(self, fieldName, default)
+
