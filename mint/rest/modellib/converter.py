@@ -38,7 +38,7 @@ class Converter(object):
                 fieldName = field.displayName
 
             childModel = field.getModelInstance(value, modelInstance, context)
-            if childModel is None and value is not None::
+            if childModel is None and value is not None:
                 value = field.valueToString(value, modelInstance, context)
             yield fieldName, field, value, childModel
 
