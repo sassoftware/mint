@@ -49,7 +49,7 @@ class Converter(object):
                 attrName = field.displayName
             else:
                 attrName = fieldName
-            value = accessMethod(object, attrName)
+            value = accessMethod(object, attrName, None)
             childModel = field.getModel()
             yield fieldName, field, value, childModel
 

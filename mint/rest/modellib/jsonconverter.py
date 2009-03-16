@@ -43,7 +43,7 @@ class JSONConverterFactory(converter.Converter):
                 toProcess.append((entry, True))
                 for fieldData in self.walkModelClassAndObject(modelClass, 
                                               jsonDict,
-                                              accessMethod=dict.__getitem__):
+                                              accessMethod=dict.get):
                     name, field, value, childModel  = fieldData
                     if childModel:
                         entry = (childModel, value, {}, attrs, name)
