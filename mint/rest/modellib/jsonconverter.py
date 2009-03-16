@@ -57,7 +57,7 @@ class JSONConverterFactory(converter.Converter):
                             subEntry = (childModel, lstValue, childAttrs, lst, 
                                         None)
                             toProcess.append((subEntry, False))
-                    elif value is not None:
+                    else: 
                         attrs[name] = field.valueFromString(value)
             else:
                 if modelClass:
