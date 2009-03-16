@@ -47,8 +47,8 @@ def _createUsers(db):
             passwd          %(BINARY254)s NOT NULL,
             email           CHAR(128),
             displayEmail    TEXT,
-            timeCreated     DOUBLE,
-            timeAccessed    DOUBLE,
+            timeCreated     NUMERIC(14,3),
+            timeAccessed    NUMERIC(14,3),
             active          INT,
             blurb           TEXT
         ) %(TABLEOPTS)s""" % db.keywords)
@@ -248,11 +248,11 @@ def _createBuilds(db):
             name                VARCHAR(255),
             version             VARCHAR(32),
             description         TEXT,
-            timeCreated         DOUBLE,
+            timeCreated         NUMERIC(14,3),
             createdBy           INTEGER,
-            timeUpdated         DOUBLE,
+            timeUpdated         NUMERIC(14,3),
             updatedBy           INTEGER,
-            timePublished       DOUBLE,
+            timePublished       NUMERIC(14,3),
             publishedBy         INTEGER,
             shouldMirror        INTEGER NOT NULL DEFAULT 0,
             timeMirrored        INTEGER
@@ -275,14 +275,14 @@ def _createBuilds(db):
             troveVersion         VARCHAR(255),
             troveFlavor          VARCHAR(4096),
             troveLastChanged     INTEGER,
-            timeCreated          DOUBLE,
+            timeCreated          NUMERIC(14,3),
             createdBy            INTEGER,
-            timeUpdated          DOUBLE,
+            timeUpdated          NUMERIC(14,3),
             updatedBy            INTEGER,
             deleted              INTEGER DEFAULT '0',
             buildCount           INTEGER,
             productVersionId     INTEGER DEFAULT 0,
-            stageName            VARCHAR(255) DEFAULT ""
+            stageName            VARCHAR(255) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         commit = True
@@ -356,7 +356,7 @@ def _createBuilds(db):
         cu.execute("""
         CREATE TABLE UrlDownloads (
             urlId               INTEGER NOT NULL,
-            timeDownloaded      NUMERIC(14,0) NOT NULL DEFAULT 0,
+            timeDownloaded      NUMERIC(14,3) NOT NULL DEFAULT 0,
             ip                  CHAR(15)
         )""" % db.keywords)
         db.tables['UrlDownloads'] = []
@@ -474,9 +474,9 @@ def _createJobs(db):
             userId          INT,
             status          INT,
             statusMessage   TEXT,
-            timeSubmitted   DOUBLE,
-            timeStarted     DOUBLE,
-            timeFinished    DOUBLE
+            timeSubmitted   NUMERIC(14,3),
+            timeStarted     NUMERIC(14,3),
+            timeFinished    NUMERIC(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Jobs'] = []
         commit = True
@@ -800,8 +800,8 @@ def _createEC2Data(db):
             launchedFromIP      CHAR(15) NOT NULL,
             ec2InstanceId       CHAR(10) NOT NULL,
             raaPassword         CHAR(8) NOT NULL,
-            launchedAt          NUMERIC(14,0) NOT NULL,
-            expiresAfter        NUMERIC(14,0) NOT NULL,
+            launchedAt          NUMERIC(14,3) NOT NULL,
+            expiresAfter        NUMERIC(14,3) NOT NULL,
             isActive            INTEGER NOT NULL DEFAULT 1,
             userData            TEXT,
             CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
