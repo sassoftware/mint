@@ -22,6 +22,12 @@ Web Front End Changes
 * There is now an option to delete a product from the product homepage.
   (RBL-4175).
 
+Internal Changes
+---------------------
+* processEditVersion now filters out empty string and None values from the
+  image settings when creating image definitions in the product definition.
+  (RBL-4281)
+
 Changes in 5.0.1
 ===============
 
