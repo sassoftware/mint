@@ -38,7 +38,7 @@ class Converter(object):
                 fieldName = field.displayName
 
             childModel = field.getModelInstance(value, modelInstance, context)
-            if childModel is None:
+            if childModel is None and value is not None::
                 value = field.valueToString(value, modelInstance, context)
             yield fieldName, field, value, childModel
 
@@ -175,11 +175,15 @@ class XobjConverter(Converter):
                             subEntry = (childModel, lstValue, childAttrs, lst, 
                                         None)
                             toProcess.append((subEntry, False))
+                    elif value is None:
+                        attrs[name] = None
                     else:
                         attrs[name] = field.valueFromString(value)
             else:
                 if modelClass:
                     item = modelClass(**attrs)
+                elif xobject is None:
+                    item = None
                 else:
                     item = field.valueFromString(xobject)
                 if parentDict is not None:

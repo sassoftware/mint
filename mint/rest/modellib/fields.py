@@ -21,6 +21,8 @@ class BooleanField(Field):
     def valueFromString(self, value):
         if isinstance(value, (int, bool)):
             return bool(value)
+        if value is None:
+            return
         value = value.lower()
         if value in ('true', '1'):
             return True
