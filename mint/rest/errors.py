@@ -7,7 +7,12 @@
 from mint import mint_error
 
 class ItemNotFound(mint_error.MintError):
-    pass
+    def __init__(self, *args, **kw):
+        #bypass mint error handling
+        Exception.__init__(self, *args, **kw)
+
+    def __str__(self):
+        return '%s' % (self.args[0],)
 
 class InvalidSearchType(mint_error.MintError):
     pass

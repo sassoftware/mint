@@ -24,7 +24,7 @@ class ErrorCallback(object):
         if request.contentType == 'text/plain':
             # just print out the traceback in the easiest to read
             # format.
-            text = [message, tbString]
+            text = [message + '\n', tbString]
         else:
             code = status
             if 'HTTP_X_FLASH_VERSION' in request.headers:
