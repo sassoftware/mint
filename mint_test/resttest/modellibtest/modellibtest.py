@@ -131,6 +131,9 @@ class ModelLibTest(testsuite.TestCase):
 </root>
 """)
 
+        m2 = self.fromString(Model, xml)
+        self.failUnlessEqual(len(m2.listField), 2)
+
     def testBooleanField(self):
         class Model(modellib.Model):
             boolField = fields.BooleanField()
