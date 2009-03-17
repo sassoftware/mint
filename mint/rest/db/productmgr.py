@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import os
+import itertools
 import time
 
 from conary.lib import util
@@ -322,3 +324,50 @@ class ProductManager(object):
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
 
+    def setProductVersionBuildDefinitions(self, hostname, version, model):
+        pd = self.getProductVersionDefinition(hostname, version)
+        pd.clearBuildDefinition()
+        for buildDef in model.buildDefinitions:
+            self._addBuildDefinition(buildDef, pd)
+
+        cclient = self.reposMgr.getInternalConaryClient(hostname)
+        pd.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
+        return pd
+
+    def _addBuildDefinition(self, buildDef, prodDef):
+        if not buildDef.name:
+            raise Exception
+        if not buildDef.flavorSet or not buildDef.flavorSet.href:
+            flavorSetRef = None
+        else:
+            flavorSetRef = os.path.basename(buildDef.flavorSet.href)
+
+        if not buildDef.architecture or not buildDef.architecture.href:
+            raise Exception
+        architectureRef = os.path.basename(buildDef.architecture.href)
+
+        if not buildDef.container or not buildDef.container.href:
+            raise Exception
+        containerRef = os.path.basename(buildDef.container.href)
+        options = buildDef.container.options
+        bdentry = (containerRef, architectureRef, flavorSetRef)
+        # Find a matching build template
+        for buildTempl in itertools.chain(prodDef.getBuildTemplates(),
+                                          prodDef.platform.getBuildTemplates()):
+            ent = (buildTempl.containerTemplateRef,
+                buildTempl.architectureRef, buildTempl.flavorSetRef)
+            if bdentry == ent:
+                break
+        else: # for
+            # No build template found; chicken out
+            raise Exception
+        # For now, we don't allow the client to specify the stages
+        stages = [ x.name for x in prodDef.getStages() ]
+        imageFields = dict((x, getattr(options, x)) for x in options._fields)
+        prodDef.addBuildDefinition(name = buildDef.name,
+            containerTemplateRef = containerRef,
+            architectureRef = architectureRef,
+            flavorSetRef = flavorSetRef,
+            image = prodDef.imageType(None, imageFields),
+            stages = stages)

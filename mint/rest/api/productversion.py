@@ -10,6 +10,7 @@ from restlib import response
 
 from mint import buildtypes
 
+from mint.rest.modellib import converter
 from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
@@ -160,7 +161,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
             'images'     : dict(GET='getImages'),
             'imageTypeDefinitions' : dict(GET='getImageTypeDefinitions'),
             'imageDefinitions' : dict(GET='getImageDefinitions',
-                                      SET='setImageDefinitions'),}
+                                      PUT='setImageDefinitions'),}
 
     def index(self, request, hostname):
         return self.db.listProductVersions(hostname)
@@ -218,4 +219,14 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         return bdefs
 
     def setImageDefinitions(self, request, hostname, version):
-        pass
+        imageDefinitionsData = request.read()
+        model = converter.fromText('xml', imageDefinitionsData,
+            models.BuildDefinitions, self, None)
+        pd = self.db.setProductVersionBuildDefinitions(hostname, version,
+            model)
+        buildDefs = pd.getBuildDefinitions()
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
+            models.BuildDefinition) for x in buildDefs ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
+

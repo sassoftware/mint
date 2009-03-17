@@ -367,6 +367,10 @@ class Database(object):
         self.auth.requireProductDeveloper(hostname)
         self.productMgr.rebaseProductVersionDefinition(hostname, version, platformLabel)
 
+    def setProductVersionBuildDefinitions(self, hostname, version, model):
+        self.auth.requireProductDeveloper(hostname)
+        self.productMgr.setProductVersionBuildDefinitions(hostname, version, model)
+
     def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)

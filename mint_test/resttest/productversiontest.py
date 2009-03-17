@@ -135,6 +135,52 @@ class WebPageTest(restbase.BaseRestTest):
         self.failUnlessEqual(response.read(),
             exp % dict(server = client.server, port = client.port))
 
+    def testSetImageDefinitions(self):
+        uriTemplate = 'products/%s/versions/%s/imageDefinitions'
+        uri = uriTemplate % (self.shortName, self.productVersion)
+
+        client = self.getRestClient(uri, admin = True)
+        response = client.request('PUT', imageSet1)
+
+        raise testsuite.SkipTestException("out of time, will come back later")
+        exp = """\
+"""
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
+
+
+imageSet1 = """
+<image-definitions>
+  <image-definition>
+    <name>Citrix XenServer 64-bit</name>
+    <displayName>Citrix XenServer 64-bit Edited for Completeness</displayName>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
+      <options autoResolve="false" freespace="6789" natNetworking="false" vmMemory="64" swapSize="512" installLabelPath="" baseFileName=""/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64"/>
+    <flavorSet href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
+    </flavorSet>
+  </image-definition>
+  <image-definition>
+    <name>virtual_irony 32-bit</name>
+    <displayName>Virtual Irony 32-bit</displayName>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
+      <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="1024"/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86" />
+    <flavorSet href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/virtual_iron">
+    </flavorSet>
+  </image-definition>
+  <image-definition>
+    <name>update iso 64-bit</name>
+    <displayName>update iso 64-bit</displayName>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
+      <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="2048"/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64" />
+  </image-definition>
+</image-definitions>
+"""
 
 if __name__ == "__main__":
         testsetup.main()

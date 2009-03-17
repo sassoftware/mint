@@ -164,7 +164,7 @@ class XobjConverter(Converter):
                     name, field, value, childModel = fieldData
                     if field.isList():
                         # Lists get automatically processed by their children,
-                        # by appending to the valie of parentDict (which is
+                        # by appending to the value of parentDict (which is
                         # now a list :-/ )
                         # There is no need to finalize a list
                         lst = attrs[name] = []
