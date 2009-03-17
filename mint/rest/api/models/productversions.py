@@ -22,6 +22,12 @@ class ProductVersion(Model):
     stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
     definition = fields.UrlField('products.versions.definition', 
                                  ('hostname', 'name'))
+    imageTypeDefinitions = fields.UrlField(
+                              'products.versions.imageTypeDefinitions',
+                              ('hostname', 'name'))
+    imageDefinitions = fields.UrlField(
+                              'products.versions.imageDefinitions',
+                              ('hostname', 'name'))
     images = fields.UrlField('products.versions.images',
                               ('hostname', 'name'))
 

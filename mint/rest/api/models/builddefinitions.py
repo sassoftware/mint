@@ -27,7 +27,7 @@ class Architecture(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "definition", "architectures", self.href)
+            "architectures", self.href)
 
 class FlavorSet(_DisplayField):
     href = IdField('aaa', None, isAttribute = True)
@@ -36,7 +36,7 @@ class FlavorSet(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "definition", "flavorSets", self.href)
+            "flavorSets", self.href)
 
 class ImageModelMeta(ModelMeta):
     # This is a bit twisted - we're copying the class definition from
@@ -63,9 +63,36 @@ class ContainerFormat(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "definition", "containers", self.href)
+            "containers", self.href)
+
+class Stage(Model):
+    href = IdField('aaa', None, isAttribute = True)
+    def get_absolute_url(self):
+        return ('products.versions.stages', self.hostname, self.version,
+            self.href)
 
 class BuildDefinition(Model):
+    id = IdField('aaa', None, isAttribute = True)
+    name = fields.CharField()
+    displayName = fields.CharField()
+    imageGroup = fields.CharField()
+    sourceGroup = fields.CharField()
+    image = fields.ModelField(ImageParams)
+    stages = fields.ListField(Stage, displayName = 'stage')
+    container = fields.ModelField(ContainerFormat)
+    architecture = fields.ModelField(Architecture)
+    flavorSet = fields.ModelField(FlavorSet)
+
+    def get_absolute_url(self):
+        return ('products.versions', self.hostname, self.version,
+            'imageDefinitions', self.id)
+
+class BuildDefinitions(Model):
+    class Meta(object):
+        name = "image-definitions"
+    buildDefinitions = fields.ListField(BuildDefinition, displayName = 'image-definition')
+
+class BuildTemplate(Model):
     id = IdField('aaa', None, isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
@@ -75,10 +102,11 @@ class BuildDefinition(Model):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            self.id)
+            'imageTypeDefinitions', self.id)
 
-class BuildDefinitions(Model):
+
+class BuildTemplates(Model):
     class Meta(object):
-        name = "image-definitions"
-    buildDefinitions = fields.ListField(BuildDefinition, displayName = 'image-definition')
-
+        name = 'image-type-definitions'
+    buildTemplates = fields.ListField(BuildTemplate,
+        displayName = 'image-type-definition')

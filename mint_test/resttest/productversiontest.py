@@ -61,6 +61,31 @@ class WebPageTest(restbase.BaseRestTest):
         # Make sure we get something back
         self.productDefinition = ownerClient.getProductDefinitionForVersion(versionId)
 
+    def testGetProductVersion(self):
+        uriTemplate = 'products/%s/versions/%s/'
+        uri = uriTemplate % (self.shortName, self.productVersion)
+        client = self.getRestClient(uri)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<productVersion id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">
+  <versionId>1</versionId>
+  <hostname>testproject</hostname>
+  <name>1.0</name>
+  <productUrl href="http://%(server)s:%(port)s/api/products/testproject"/>
+  <nameSpace>yournamespace</nameSpace>
+  <description>Version description</description>
+  <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
+  <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
+  <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
+  <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>
+  <imageDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions"/>
+  <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
+</productVersion>
+"""
+        self.failUnlessEqual(response.read(),
+             exp % dict(port = client.port, server = client.server))
+
     def testGetProductDefinition(self):
         uriTemplate = 'products/%s/versions/%s/definition'
         uri = uriTemplate % (self.shortName, self.productVersion)
@@ -70,26 +95,45 @@ class WebPageTest(restbase.BaseRestTest):
         self.productDefinition.serialize(sio)
         self.failUnlessEqual(response.read(), sio.getvalue())
 
-    def testGetProductDefinitionBuilds(self):
-        uriTemplate = 'products/%s/versions/%s/stages/%s/definition/builds'
+    def testGetStageImageDefinitions(self):
+        uriTemplate = 'products/%s/versions/%s/stages/%s/imageDefinitions'
         uri = uriTemplate % (self.shortName, self.productVersion,
         'Development')
 
         client = self.getRestClient(uri)
         response = client.request('GET')
-        # XXX do something meaningful with this data
-        raise testsuite.SkipTestException("out of time, will come back later")
-        print response.read()
 
-    def testGetProductDefinitionImageDefinitions(self):
-        uriTemplate = 'products/%s/versions/%s/definition/imageDefinitions'
+        raise testsuite.SkipTestException("out of time, will come back later")
+        exp = """\
+"""
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
+
+    def testGetImageDefinitions(self):
+        uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.shortName, self.productVersion)
 
         client = self.getRestClient(uri)
         response = client.request('GET')
-        # XXX do something meaningful with this data
+
         raise testsuite.SkipTestException("out of time, will come back later")
-        print response.read()
+        exp = """\
+"""
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
+
+    def testGetImageTypeDefinitions(self):
+        uriTemplate = 'products/%s/versions/%s/imageTypeDefinitions'
+        uri = uriTemplate % (self.shortName, self.productVersion)
+
+        client = self.getRestClient(uri)
+        response = client.request('GET')
+
+        raise testsuite.SkipTestException("out of time, will come back later")
+        exp = """\
+"""
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
 
 
 if __name__ == "__main__":

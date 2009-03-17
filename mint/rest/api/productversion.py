@@ -15,7 +15,7 @@ from mint.rest.api import models
 from mint.rest.api import requires
 
 class BuildDefinitionMixIn(object):
-    def _makeBuildDefinition(self, buildDef, pd, extraParams):
+    def _makeBuildDefinition(self, buildDef, pd, extraParams, modelClass):
         buildDefId = self.getBuildDefId(buildDef)
         # Build definitions don't have a display name, build templates do
         displayName = getattr(buildDef, "displayName", buildDef.name)
@@ -51,7 +51,13 @@ class BuildDefinitionMixIn(object):
             if ctempl and ctemplRef in buildtypes.xmlTagNameImageTypeMap:
                 displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
                 displayName = buildtypes.typeNamesMarketing[displayName]
-                imageParams = models.ImageParams(**ctempl.fields)
+                if hasattr(buildDef, 'getBuildImage'):
+                    # This is a build
+                    imageField = buildDef.getBuildImage()
+                else:
+                    # This is a build template
+                    imageField = ctempl
+                imageParams = models.ImageParams(**imageField.fields)
                 kw['container'] = models.ContainerFormat(
                     href = ctemplRef,
                     name = ctemplRef,
@@ -59,7 +65,18 @@ class BuildDefinitionMixIn(object):
                     options = imageParams,
                     **extraParams)
                 # XXX we need to add the rest of the fields here too
-        model = models.BuildDefinition(**kw)
+        if hasattr(buildDef, 'getBuildImageGroup'):
+            grp = buildDef.getBuildImageGroup()
+            if grp:
+                kw['imageGroup'] = grp
+        if hasattr(buildDef, 'getBuildSourceGroup'):
+            grp = buildDef.getBuildSourceGroup()
+            if grp:
+                kw['sourceGroup'] = grp
+        if hasattr(buildDef, 'getBuildStages'):
+            kw['stages'] = [ models.Stage(href = x, **extraParams)
+                for x in buildDef.getBuildStages() ]
+        model = modelClass(**kw)
         return model
 
     @classmethod
@@ -81,27 +98,13 @@ class BuildDefinitionMixIn(object):
             digest.update(buildDef.flavorSetRef)
         return digest.hexdigest()
 
-class ProductVersionStagesDefinition(base.BaseController, BuildDefinitionMixIn):
-    urls = {
-        'builds' : dict(GET = 'getBuilds'),
-    }
-
-    def getBuilds(self, request, hostname, version, stageName):
-        extraParams = dict(hostname = hostname, version = version,
-            stageName = stageName)
-        pd = self.db.getProductVersionDefinition(hostname, version)
-        buildDefs = pd.getBuildsForStage(stageName)
-        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams)
-                           for x in buildDefs ]
-        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
-        return bdefs
-
-class ProductVersionStages(base.BaseController):
+class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
     modelName = 'stageName'
 
     urls = {'images' : dict(GET='getImages'),
-            'definition' : ProductVersionStagesDefinition }
-    
+            'imageDefinitions' : dict(GET='getImageDefinitions'),
+           }
+
     def index(self, request, hostname, version):
         return self.db.getProductVersionStages(hostname, version)
 
@@ -111,8 +114,18 @@ class ProductVersionStages(base.BaseController):
     def getImages(self, request, hostname, version, stageName):
         return self.db.getProductVersionStageImages(hostname, version, stageName)
 
-class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
-    urls = { 'imageDefinitions' : dict(GET = 'getImageDefinitions')}
+    def getImageDefinitions(self, request, hostname, version, stageName):
+        extraParams = dict(hostname = hostname, version = version,
+            stageName = stageName)
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildDefs = pd.getBuildsForStage(stageName)
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
+            models.BuildDefinition) for x in buildDefs ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
+
+
+class ProductVersionDefinition(base.BaseController):
 
     def index(self, request, hostname, version):
         pd = self.db.getProductVersionDefinition(hostname, version)
@@ -125,15 +138,6 @@ class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
                     self.url(request, 'products.versions.definition', 
                              hostname, version))
 
-    def getImageDefinitions(self, request, hostname, version):
-        extraParams = dict(hostname = hostname, version = version)
-        pd = self.db.getProductVersionDefinition(hostname, version)
-        buildTemplates = pd.platform.getBuildTemplates()
-        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams)
-            for x in buildTemplates ]
-        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
-        return bdefs
-
     def _toProddef(self, request):
         from rpath_common.proddef import api1 as proddef
         return proddef.ProductDefinition(fromStream=request.read())
@@ -145,7 +149,7 @@ class ProductVersionDefinition(base.BaseController, BuildDefinitionMixIn):
         return sio.getvalue()
 
 
-class ProductVersionController(base.BaseController):
+class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
 
     modelName = 'version'
     urls = {'platform'   : dict(GET='getPlatform',
@@ -153,7 +157,10 @@ class ProductVersionController(base.BaseController):
                                 POST='updatePlatform'),
             'stages'     : ProductVersionStages,
             'definition' : ProductVersionDefinition,
-            'images'     : dict(GET='getImages')}
+            'images'     : dict(GET='getImages'),
+            'imageTypeDefinitions' : dict(GET='getImageTypeDefinitions'),
+            'imageDefinitions' : dict(GET='getImageDefinitions',
+                                      SET='setImageDefinitions'),}
 
     def index(self, request, hostname):
         return self.db.listProductVersions(hostname)
@@ -191,5 +198,24 @@ class ProductVersionController(base.BaseController):
                         self.url(request, 'products.versions.platform', 
                                  hostname, version))
 
+    def getImageTypeDefinitions(self, request, hostname, version):
+        extraParams = dict(hostname = hostname, version = version)
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildTemplates = pd.platform.getBuildTemplates()
+        # XXX Grab build templates from the product too
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
+            models.BuildTemplate) for x in buildTemplates ]
+        bdefs = models.BuildTemplates(buildTemplates = buildDefModels)
+        return bdefs
 
+    def getImageDefinitions(self, request, hostname, version):
+        extraParams = dict(hostname = hostname, version = version)
+        pd = self.db.getProductVersionDefinition(hostname, version)
+        buildDefs = pd.getBuildDefinitions()
+        buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
+            models.BuildDefinition) for x in buildDefs ]
+        bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
+        return bdefs
 
+    def setImageDefinitions(self, request, hostname, version):
+        pass
