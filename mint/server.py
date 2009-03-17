@@ -6141,7 +6141,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # call to getTables
         reloadTables = False
 
-        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
+        if (cfg.dbDriver in ["mysql", "postgresql", "pgpool"]
+                and dbConnection and (not alwaysReload)):
             self.db = dbConnection
         else:
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)

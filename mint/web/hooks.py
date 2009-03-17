@@ -24,7 +24,6 @@ from mint import maintenance
 from mint.helperfuncs import extractBasePath
 from mint.logerror import logWebErrorAndEmail
 from mint.projects import transTables
-from mint.users import MailError
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
@@ -44,6 +43,14 @@ from conary.repository.transport import Transport
 from conary.server import apachemethods
 
 BUFFER=1024 * 256
+
+
+# Global cached objects
+db = None
+cfg = None
+repositories = {}
+proxy_repository = None
+
 
 def getProtocol(isSecure):
     return isSecure and "https" or "http"
@@ -84,6 +91,7 @@ def getRepositoryMap(cfg):
     if os.path.exists(conaryrc):
         cc = conarycfg.ConaryConfiguration()
         cc.read(conaryrc)
+        #pylint: disable-msg=E1101
         return cc.repositoryMap
     else:
         return {}
@@ -115,12 +123,8 @@ def getRepository(projectName, repName, dbName, cfg,
     else:
        rest = req.uri
 
-    if req.hostname != "conary.digium.com":
-        urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
-            (req.hostname, projectName)
-    else:
-        urlBase = "%%(protocol)s://%s:%%(port)d/conary/"% \
-            req.hostname
+    urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
+        (req.hostname, projectName)
 
     # set up the commitAction
     buildLabel = repName + "@" + cfg.defaultBranch
@@ -159,12 +163,10 @@ def getRepository(projectName, repName, dbName, cfg,
             repos = netRepos
 
         shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
-
-        shim.forceSecure = repos.forceSecure = cfg.SSL
     else:
         req.log_error("failed to open repository directory: %s" % repositoryDir)
         repos = shim = None
-    return repos, shim
+    return netRepos, repos, shim
 
 
 def conaryHandler(req, cfg, pathInfo):
@@ -179,7 +181,7 @@ def conaryHandler(req, cfg, pathInfo):
         # group builder)
         requireSigs = False
 
-    global db, cachedMySQLDb
+    global db
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
@@ -201,68 +203,39 @@ def conaryHandler(req, cfg, pathInfo):
     if localMirror:
         requireSigs = False
 
+    doReset = False
+    reposDb = None
+
     if actualRepName and (localMirror or not external):
         # it's local
-        repHash = actualRepName + req.hostname + str(requireSigs)
         dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
-        reposDBDriver, reposDBPath, isDefault = getReposDB(db, dbName, projectId, cfg)
+        dbTuple = getReposDB(db, dbName, projectId, cfg)
+        repHash = (actualRepName, req.hostname, dbTuple)
 
-        # reposDb is the database connection we'll ultimately use
-        # when creating a NetworkRepositoryServer object.
-        reposDb = None
-
-        # We cache the last accessed MySQLDb db connection if it
-        # is a default (i.e. not alternate) database. This way, we
-        # can use use() to switch databases rather than reconnect.
-        if isDefault and reposDBDriver == 'mysql':
-
-            # If we have the connection already, reset it.
-            # If the database name changed, then use use() to switch.
-            if cachedMySQLDb:
-                try:
-                    cachedMySQLDb.reopen()
-                    cachedMySQLDb.rollback()
-                    if cachedMySQLDb.dbName != dbName:
-                        cachedMySQLDb.use(dbName)
-                    reposDb = cachedMySQLDb
-                except:
-                    # Whiteout the cache if the client throws an error;
-                    # we'll re-open below.
-                    cachedMySQLDb = reposDb = None
-
-        # If we still don't have a database; just create a new
-        # connection.
-        if not reposDb:
+        # Check for a cached connection.
+        if repHash in repositories:
+            repServer, proxyServer, shimRepo = repositories[repHash]
+            repServer.reopen()
+        else:
+            # Create a new connection.
             try:
-                reposDb = dbstore.connect(reposDBPath, reposDBDriver)
-            except sqlerrors.DatabaseError, e:
-                req.log_error("Error opening database %s: %s" % \
-                        (dbName, str(e)))
+                reposDb = dbstore.connect(dbTuple[1], dbTuple[0])
+            except sqlerrors.DatabaseError, err:
+                req.log_error("Error opening database %s: %s" %
+                        (dbName, str(err)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
-            # Cache this connection IFF it's MySQL and was the default.
-            if isDefault and reposDBDriver == 'mysql' \
-                    and not cachedMySQLDb:
-                cachedMySQLDb = reposDb
-
-        # clear the repository cache if the db connection has changed
-        if repHash in repositories and repositories[repHash]:
-            if repositories[repHash].dbTuple != (reposDBDriver, reposDBPath):
-                del repositories[repHash]
-                del shim_repositories[repHash]
-
-        if not repositories.has_key(repHash):
-            repo, shimRepo = getRepository(projectHostName, actualRepName,
-                    dbName, cfg, req, reposDb, (reposDBDriver, reposDBPath),
+            repServer, proxyServer, shimRepo = getRepository(projectHostName,
+                    actualRepName, dbName, cfg, req, reposDb, dbTuple,
                     localMirror, requireSigs, commitEmail)
-            if repo:
-                repo.dbTuple = (reposDBDriver, reposDBPath)
 
-            repositories[repHash] = repo
-            shim_repositories[repHash] = shimRepo
-        else:
-            repo = repositories[repHash]
-            shimRepo = shim_repositories[repHash]
+            # Cache non-pooled connections by way of their repository
+            # instance.
+            repositories[repHash] = (repServer, proxyServer, shimRepo)
+
+        # Reset the repository server when we're done with it.
+        doReset = True
+
     else:
         # it's completely external
         # use the Internal Conary Proxy if it's configured and we're
@@ -283,7 +256,7 @@ def conaryHandler(req, cfg, pathInfo):
                 raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
 
             if proxy_repository:
-                repo = proxy_repository
+                proxyServer = proxy_repository
             else:
                 proxycfg = netserver.ServerConfig()
                 proxycfg.proxyContentsDir = cfg.proxyContentsDir
@@ -299,28 +272,31 @@ def conaryHandler(req, cfg, pathInfo):
                     domain = cfg.siteDomainName + '%(port)d'
                 urlBase = "%%(protocol)s://%s.%s/" % \
                         (cfg.hostName, domain)
-                repo = proxy.ProxyRepositoryServer(proxycfg, urlBase)
-                repo.forceSecure = False
-                proxy_repository = repo
+                proxyServer = proxy_repository = proxy.ProxyRepositoryServer(
+                        proxycfg, urlBase)
 
             # inject known authentication (userpass and entitlement)
-            repo.cfg.entitlement = conarycfg.EntitlementList()
-            repo.cfg.user = conarycfg.UserInformation()
+            proxyServer.cfg.entitlement = conarycfg.EntitlementList()
+            proxyServer.cfg.user = conarycfg.UserInformation()
             if cfg.injectUserAuth:
-                _updateUserSet(db, proxy_repository.cfg)
+                _updateUserSet(db, proxyServer.cfg)
         else:
-            repo = None
+            proxyServer = None
 
         shimRepo = None
 
-    if method == "POST":
-        return post(port, secure, (repo, shimRepo), cfg, req)
-    elif method == "GET":
-        return get(port, secure, (repo, shimRepo), cfg, req)
-    elif method == "PUT":
-        return apachemethods.putFile(port, secure, repo, req)
-    else:
-        return apache.HTTP_METHOD_NOT_ALLOWED
+    try:
+        if method == "POST":
+            return post(port, secure, (proxyServer, shimRepo), cfg, req)
+        elif method == "GET":
+            return get(port, secure, (proxyServer, shimRepo), cfg, req)
+        elif method == "PUT":
+            return apachemethods.putFile(port, secure, proxyServer, req)
+        else:
+            return apache.HTTP_METHOD_NOT_ALLOWED
+    finally:
+        if doReset:
+            repServer.reset()
 
 
 def mintHandler(req, cfg, pathInfo):
@@ -338,8 +314,6 @@ urls = (
     (r'^/',                  mintHandler),
 )
 
-cfg = None
-db = None
 
 def getReposDB(db, dbName, projectId, cfg):
     cu = db.cursor()
@@ -349,9 +323,9 @@ def getReposDB(db, dbName, projectId, cfg):
     r = cu.fetchone()
     if r:
         apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_INFO)
-        return r[0], r[1], False
+        return r[0], r[1]
     else:
-        return cfg.reposDBDriver, cfg.reposDBPath % dbName, True
+        return cfg.reposDBDriver, cfg.reposDBPath % dbName
 
 
 def _updateUserSet(db, cfgObj):
@@ -526,9 +500,3 @@ def handler(req):
             db.rollback()
         coveragehook.save()
     return ret
-
-cfg = None
-cachedMySQLDb = None
-repositories = {}
-shim_repositories = {}
-proxy_repository = None
