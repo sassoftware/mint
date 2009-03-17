@@ -12,7 +12,6 @@ Mint Report Application
 import os
 import re
 
-global _reportlab_present
 try:
     import reportlab
     _reportlab_present = True
@@ -30,7 +29,6 @@ def moduleHasReportObject(repModule):
             pass
     return False
 
-global availableReports
 if _reportlab_present:
     moduleNames = list(set(['.'.join(x.split('.')[:-1]) for x in \
                             os.listdir(__path__[0]) if \

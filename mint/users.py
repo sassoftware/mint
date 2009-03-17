@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 
-global _dnspython_present
 
 try:
     import dns.resolver
