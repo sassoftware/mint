@@ -149,7 +149,6 @@ class XobjConverter(Converter):
         return returnObject
 
     def fromXobjObject(self, xobjObject, modelClass, context):
-        origModelClass = modelClass
         entry = (modelClass, xobjObject, {}, None, None)
 
         # toProcess is FIFO - deque is better.
@@ -162,19 +161,23 @@ class XobjConverter(Converter):
                 toProcess.append((entry, True))
                 for fieldData in self.walkModelClassAndObject(modelClass, 
                                                               xobject):
-                    name, field, value, childModel  = fieldData
-                    if childModel:
-                        entry = (childModel, value, {}, attrs, name)
-                        toProcess.append((entry, False))
-                    elif field.isList():
-                        lst = []
-                        entry = (None, lst, childAttrs, attrs, name)
-                        toProcess.append((entry, True))
+                    name, field, value, childModel = fieldData
+                    if field.isList():
+                        # Lists get automatically processed by their children,
+                        # by appending to the valie of parentDict (which is
+                        # now a list :-/ )
+                        # There is no need to finalize a list
+                        lst = attrs[name] = []
                         for lstValue in value:
                             # doesn't work for non-Model lists.
-                            subEntry = (childModel, lstValue, childAttrs, lst, 
+                            # List sub-entries do not get their own name, it
+                            # is part of the child model
+                            subEntry = (childModel, lstValue, {}, lst,
                                         None)
                             toProcess.append((subEntry, False))
+                    elif childModel:
+                        entry = (childModel, value, {}, attrs, name)
+                        toProcess.append((entry, False))
                     else:
                         attrs[name] = field.valueFromString(value)
             else:
@@ -183,8 +186,13 @@ class XobjConverter(Converter):
                 else:
                     item = field.valueFromString(xobject)
                 if parentDict is not None:
-                    parentDict[attrName] = item
-                elif modelClass is origModelClass:
+                    if attrName is None:
+                        # This is a sub-node of a list
+                        parentDict.append(item)
+                    else:
+                        parentDict[attrName] = item
+                elif not toProcess:
+                    # queue is empty, return the results
                     return item
 
     def toText(self, modelInstance, context):
