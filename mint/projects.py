@@ -584,9 +584,8 @@ class ProjectsTable(database.KeyedTable):
         from conary.server import schema
         schema.loadSchema(db)
         db.commit()
-        db.close()
 
-        repos = netserver.NetworkRepositoryServer(cfg, '')
+        repos = netserver.NetworkRepositoryServer(cfg, '', db)
 
         if username:
             addUserToRepository(repos, username, password, username)
@@ -610,6 +609,8 @@ class ProjectsTable(database.KeyedTable):
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:
             repos.auth.setMirror(username, True)
+
+        db.close()
 
     def addProjectRepositoryUser(self, username, password, hostName, 
                                  domainName, reposPath, contentsDir):
