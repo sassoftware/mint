@@ -29,6 +29,7 @@ class BaseReposController(base.BaseController):
         return name, version, flavor
 
     def _checkTrove(self, hostname, troveString):
+        name, version, flavor = cmdline.parseTroveSpec(troveString)
         repos = self.getRepos(hostname)
         if not repos.hasTrove(name, version, flavor):
             raise NotImplementedError
