@@ -48,7 +48,7 @@ class ProductManager(object):
         '''
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
-        d['repositoryHostname'] = d['shortname'] + '.' + d.pop('domainname')
+        d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
         p = models.Product(**d)
         return p
 
@@ -84,7 +84,7 @@ class ProductManager(object):
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
-            d['repositoryHostname'] = d['hostname'] + '.' + d.pop('domainname')
+            d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
             p = models.Product(**d)
             results.products.append(p)
         return results
@@ -192,7 +192,7 @@ class ProductManager(object):
         return cu.next()
 
     def setMemberLevel(self, projectId, userId, level):
-        fqdn = self._getProdutFQDN(projectId)
+        fqdn = self._getProductFQDN(projectId)
         username = self._getUsername(userId)
         isMember = self.isMember(projectId, userId)
         write = level in userlevels.WRITERS
@@ -219,7 +219,7 @@ class ProductManager(object):
                                       level=level, commit=False)
                 self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
                                            mirror=True, admin=admin)
-                self.publisher.notify('UserProjectAdded', userId, 
+                self.publisher.notify('UserProjectAdded', userId,
                                       projectId, level)
             except:
                 self.db.rollback()
@@ -243,7 +243,7 @@ class ProductManager(object):
         product = self.getProduct(fqdn)
         if not namespace:
             namespace = product.namespace
-        projectId = product.id
+        projectId = product.productId
         # Check the namespace
         projects._validateNamespace(namespace)
         # make sure it is a valid product version

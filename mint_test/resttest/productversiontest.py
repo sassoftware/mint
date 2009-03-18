@@ -254,6 +254,35 @@ class WebPageTest(restbase.BaseRestTest):
             exp % dict(server = client.server, port = client.port))
 
 
+    def testCreateProductVersion(self):
+        productName = "blahblah"
+        productDescription = productName * 2
+
+        uriTemplate = 'products'
+        uri = uriTemplate
+        client = self.getRestClient(uri, admin = True)
+
+        response = self.failUnlessRaises(ResponseError, client.request,
+            'POST', newProduct1 % dict(
+                name = productName,
+                description = productDescription))
+        self.failUnlessEqual(response.status, 302)
+        self.failUnlessEqual(response.headers['Location'],
+            self.makeUri(client, "products/%s" % productName))
+
+        productVersion = '3.0'
+
+        uriTemplate = 'products/%s/versions'
+        uri = uriTemplate % (productName, )
+
+        self.newConnection(client, uri)
+        response = self.failUnlessRaises(ResponseError, client.request,
+            'POST', newProductVersion1 % dict(version = productVersion))
+        self.failUnlessEqual(response.status, 302)
+        self.failUnlessEqual(response.headers['Location'],
+            self.makeUri(client, "products/%s/versions/%s" % 
+                (productName, productVersion)))
+
 imageSet1 = """
 <image-definitions>
   <image-definition>
@@ -286,6 +315,26 @@ imageSet1 = """
   </image-definition>
 </image-definitions>
 """
+
+newProduct1 = """
+<product>
+  <hostname>%(name)s</hostname>
+  <name>%(name)s</name>
+  <shortname>%(name)s</shortname>
+  <description>%(description)s</description>
+</product>
+"""
+
+newProductVersion1 = """
+<productVersion>
+  <description />
+  <hostname />
+  <id />
+  <name>%(version)s</name>
+  <nameSpace />
+</productVersion>
+"""
+
 
 if __name__ == "__main__":
         testsetup.main()

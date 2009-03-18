@@ -13,8 +13,8 @@ class EmailNotifier(object):
         self.cfg = cfg
 
     def notify_UserProjectEvent(self, event, userId, projectId, userlevel=None):
-        performer = self.auth.auth
-        fqdn = self.db.getProductFQDN(projectId)
+        performer = self.db.auth.auth
+        fqdn = self.db.getProductFQDNFromId(projectId)
         project = self.db.getProduct(fqdn.split('.')[0])
         username = self.db.getUsername(userId)
         # we need to get this user's email address even though it's != our  
