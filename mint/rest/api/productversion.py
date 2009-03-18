@@ -75,7 +75,7 @@ class BuildDefinitionMixIn(object):
             if grp:
                 kw['sourceGroup'] = grp
         if hasattr(buildDef, 'getBuildStages'):
-            kw['stages'] = [ models.Stage(href = x, **extraParams)
+            kw['stages'] = [ models.StageHref(href = x, **extraParams)
                 for x in buildDef.getBuildStages() ]
         model = modelClass(**kw)
         return model
