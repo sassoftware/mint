@@ -177,13 +177,78 @@ class WebPageTest(restbase.BaseRestTest):
         uri = uriTemplate % (self.shortName, self.productVersion)
 
         client = self.getRestClient(uri, admin = True)
-        #response = client.request('PUT', imageSet1)
-        # XXX investigate the trove integrity error
-        response = self.failUnlessRaises(ResponseError, client.request, 'PUT', imageSet1)
+        response = client.request('PUT', imageSet1)
 
-        raise testsuite.SkipTestException("out of time, will come back later")
         exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<image-definitions>
+  <image-definition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
+    <name>update iso 64-bit</name>
+    <displayName>update iso 64-bit</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
+      <name>updateIsoImage</name>
+      <displayName>Update CD/DVD</displayName>
+      <options autoResolve="false" freespace="2048" bugsUrl="" anacondaCustomTrove="" swapSize="512" betaNag="false" mediaTemplateTrove="" baseFileName="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" installLabelPath="" showMediaCheck="false"/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
+      <name>x86_64</name>
+      <displayName>x86 (64-bit)</displayName>
+    </architecture>
+  </image-definition>
+  <image-definition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/201264007ec0d331b626ca074a841fa7">
+    <name>virtual_irony 32-bit</name>
+    <displayName>virtual_irony 32-bit</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
+      <name>virtualIronImage</name>
+      <displayName>Virtual Iron Virtual Appliance</displayName>
+      <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="1024"/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
+      <name>x86</name>
+      <displayName>x86 (32-bit)</displayName>
+    </architecture>
+    <flavorSet href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/virtual_iron">
+      <name>virtual_iron</name>
+      <displayName>Virtual Iron</displayName>
+    </flavorSet>
+  </image-definition>
+  <image-definition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/71a60de01b7e8675254175584fdb9db2">
+    <name>Citrix XenServer 64-bit</name>
+    <displayName>Citrix XenServer 64-bit</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
+    <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
+      <name>xenOvaImage</name>
+      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <options autoResolve="false" freespace="6789" natNetworking="false" vmMemory="64" swapSize="512" installLabelPath="" baseFileName=""/>
+    </container>
+    <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
+      <name>x86_64</name>
+      <displayName>x86 (64-bit)</displayName>
+    </architecture>
+    <flavorSet href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
+      <name>xen</name>
+      <displayName>Xen</displayName>
+    </flavorSet>
+  </image-definition>
+</image-definitions>
 """
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
+
+        # Make sure we're fetching the same thing
+        self.newConnection(client, uri)
+        response = client.request('GET')
         self.failUnlessEqual(response.read(),
             exp % dict(server = client.server, port = client.port))
 
