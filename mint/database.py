@@ -37,7 +37,7 @@ dbWriter = dbMethod(True)
 def concat(db, *items):
     if db.driver == "mysql":
         return "CONCAT(%s)" % ", ".join(items)
-    elif db.driver == "sqlite" or db.driver == 'postgresql':
+    elif db.driver in ('sqlite', 'postgresql', 'pgpool'):
         return " || ".join(items)
     raise Exception("Unsupported database")
 

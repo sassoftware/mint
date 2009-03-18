@@ -27,9 +27,10 @@ from conary.conarycfg import ConaryConfiguration
 
 # functions to convert a repository name to a database-safe name string
 transTables = {
-    'sqlite': string.maketrans("", ""),
-    'mysql': string.maketrans("-.:", "___"),
-    'postgresql': string.maketrans("-.:", "___")
+    'sqlite':       string.maketrans("", ""),
+    'mysql':        string.maketrans("-.:", "___"),
+    'postgresql':   string.maketrans("-.:", "___"),
+    'pgpool':       string.maketrans("-.:", "___"),
 }
 
 class Project(database.TableObject):
@@ -306,7 +307,8 @@ class ProjectsTable(database.KeyedTable):
         # poor excuse for a switch statement
         self.reposDB = {'sqlite': SqliteRepositoryDatabase,
                         'mysql':  MySqlRepositoryDatabase,
-                        'postgresql':  PostgreSqlRepositoryDatabase
+                        'postgresql':  PostgreSqlRepositoryDatabase,
+                        'pgpool': PGPoolRepositoryDatabase,
                        }[self.cfg.reposDBDriver](cfg)
         # call init last so that we can use reposDB during schema upgrades
         database.DatabaseTable.__init__(self, db)
@@ -582,9 +584,8 @@ class ProjectsTable(database.KeyedTable):
         from conary.server import schema
         schema.loadSchema(db)
         db.commit()
-        db.close()
 
-        repos = netserver.NetworkRepositoryServer(cfg, '')
+        repos = netserver.NetworkRepositoryServer(cfg, '', db)
 
         if username:
             addUserToRepository(repos, username, password, username)
@@ -608,6 +609,8 @@ class ProjectsTable(database.KeyedTable):
         repos.auth.setMirror(self.cfg.authUser, True)
         if username:
             repos.auth.setMirror(username, True)
+
+        db.close()
 
     def addProjectRepositoryUser(self, username, password, hostName, 
                                  domainName, reposPath, contentsDir):
@@ -834,11 +837,11 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
     driver = 'postgresql'
 
     def translate(self, x):
-        return x.translate(transTables['postgresql'].lower())
+        return x.translate(transTables[self.driver].lower())
 
     def create(self, name):
         path = self.cfg.reposDBPath % 'postgres'
-        db = dbstore.connect(path, 'postgresql')
+        db = dbstore.connect(path, self.driver)
 
         dbName = self.translate(name)
 
@@ -855,8 +858,8 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                 while gc.collect():
                     pass
 
-                reposDb = dbstore.connect(self.cfg.reposDBPath % dbName.lower(),
-                                          'postgresql')
+                reposDb = dbstore.connect(
+                        self.cfg.reposDBPath % dbName.lower(), self.driver)
                 reposDb.loadSchema()
                 reposCu = reposDb.cursor()
                 tableList = []
@@ -874,6 +877,11 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
             cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
+
+
+class PGPoolRepositoryDatabase(PostgreSqlRepositoryDatabase):
+    driver = 'pgpool'
+
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
     tableOpts = "character set latin1 collate latin1_bin"

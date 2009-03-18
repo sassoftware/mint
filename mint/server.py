@@ -553,20 +553,32 @@ class MintServer(object):
     def _getProductDefinition(self, project, version):
         projectCfg = self._getProjectConaryConfig(project)
         repos = self._getProjectRepo(project, pcfg=projectCfg)
-        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
-
-        pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
         try:
-            pd.loadFromRepository(cclient)
-        except Exception, e:
-            # XXX could this exception handler be more specific? As written
-            # any error in the proddef module will be masked.
-            raise ProductDefinitionVersionNotFound
-        return pd
+            cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+
+            pd = proddef.ProductDefinition()
+            pd.setProductShortname(project.shortname)
+            pd.setConaryRepositoryHostname(project.getFQDN())
+            pd.setConaryNamespace(version.namespace)
+            pd.setProductVersion(version.name)
+            try:
+                pd.loadFromRepository(cclient)
+            except Exception, e:
+                # XXX could this exception handler be more specific? As written
+                # any error in the proddef module will be masked.
+                raise ProductDefinitionVersionNotFound
+
+            return pd
+
+        finally:
+            # cclient holds a ref to the shimclient which holds a ref to a
+            # netserver which holds a ref to the database connection. cclient
+            # is full of circular refs, so the db never gets freed. Forcibly
+            # break the chain inside the shimclient since that is the easiest
+            # place to do it.
+            #
+            # This description is accurate as of conary 2.0.39
+            repos.c = None
 
     def _getProductDefinitionForVersionObj(self, versionId):
         version = projects.ProductVersions(self, versionId)
@@ -6144,7 +6156,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # call to getTables
         reloadTables = False
 
-        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
+        if (cfg.dbDriver in ["mysql", "postgresql", "pgpool"]
+                and dbConnection and (not alwaysReload)):
             self.db = dbConnection
         else:
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
