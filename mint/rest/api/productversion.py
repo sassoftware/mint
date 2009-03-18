@@ -225,6 +225,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         pd = self.db.setProductVersionBuildDefinitions(hostname, version,
             model)
         buildDefs = pd.getBuildDefinitions()
+        extraParams = dict(hostname = hostname, version = version)
         buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
             models.BuildDefinition) for x in buildDefs ]
         bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
