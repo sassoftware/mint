@@ -125,7 +125,14 @@ def requiresAdmin(func):
 
 def requiresAuth(func):
     def wrapper(self, *args):
-        if self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
+        if self.auth.authorized:
+            return func(self, *args)
+        if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
+            # In this case, the auth object is not properly configured
+            # We need the proper name and contact when saving the product
+            # definition, otherwise we end up with trove integrity errors
+            self.auth.username = self.cfg.authUser
+            self.auth.fullName = self.cfg.authUser
             return func(self, *args)
         else:
             raise mint_error.PermissionDenied
