@@ -770,7 +770,7 @@ class MintServer(object):
         else:
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
-        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository'):
             raise mint_error.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
