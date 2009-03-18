@@ -41,7 +41,8 @@ class WebPageTest(restbase.BaseRestTest):
         description = "Version description"
         self.hostName = "%s.%s" % (shortName, domainName)
 
-        ownerClient = self.openMintClient()
+        self.quickMintAdmin('adminuser', 'adminpass')
+        ownerClient = self.openMintClient(authToken = ('adminuser', 'adminpass'))
         projectId = self.projectId = self.newProject(ownerClient, projectName)
         versionId = self.versionId = ownerClient.addProductVersion(projectId,
             self.mintCfg.namespace, version, description=description)
@@ -192,7 +193,7 @@ class WebPageTest(restbase.BaseRestTest):
     <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
       <name>updateIsoImage</name>
       <displayName>Update CD/DVD</displayName>
-      <options autoResolve="false" freespace="2048" bugsUrl="" anacondaCustomTrove="" swapSize="512" betaNag="false" mediaTemplateTrove="" baseFileName="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" installLabelPath="" showMediaCheck="false"/>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
     </container>
     <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -209,7 +210,7 @@ class WebPageTest(restbase.BaseRestTest):
     <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
       <name>virtualIronImage</name>
       <displayName>Virtual Iron Virtual Appliance</displayName>
-      <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="1024"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -230,7 +231,7 @@ class WebPageTest(restbase.BaseRestTest):
     <container href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
       <displayName>Citrix XenServer (TM) Appliance</displayName>
-      <options autoResolve="false" freespace="6789" natNetworking="false" vmMemory="64" swapSize="512" installLabelPath="" baseFileName=""/>
+      <options autoResolve="false" baseFileName="" freespace="6789" installLabelPath="" natNetworking="false" swapSize="512" vmMemory="64"/>
     </container>
     <architecture href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
