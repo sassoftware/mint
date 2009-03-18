@@ -165,7 +165,12 @@ class RepositoryController(BaseReposController):
                                                and not trove.troveIsGroup(x)),
                         None: None}
         if searchType not in checkFnDict:
-            raise errors.InvalidSearchType(searchType)
+            # XXX We probably want to use exceptions instead of direct maps to
+            # an error code
+            #raise errors.InvalidSearchType(searchType)
+            return response.Response('Invalid search type %s' % searchType,
+                                     status = 400)
+
         checkFn = checkFnDict[searchType]
         repos = self.getRepos(hostname)
         if latest:
@@ -173,7 +178,16 @@ class RepositoryController(BaseReposController):
         else:
             queryFn = repos.getTroveVersionsByLabel
 
-        troveDict = queryFn({name : {versions.Label(label) : None}})
+        if not label:
+            return response.Response('Label not specified', status = 400)
+
+        try:
+            label = versions.Label(label)
+        except versions.ParseError, e:
+            return response.Response(
+                'Error parsing label %s: %s' % (label, e), status = 400)
+
+        troveDict = queryFn({name : {label : None}})
         troveList = []
         for name, versionDict in troveDict.iteritems():
             if checkFn and not checkFn(name):
