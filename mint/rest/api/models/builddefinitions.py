@@ -9,11 +9,8 @@ from mint.rest.modellib import fields
 
 from rpath_common.proddef import imageTypes
 
-class IdField(fields.AbsoluteUrlField):
-    pass
-
 class _DisplayField(Model):
-    href = IdField('aaa', None, isAttribute = True)
+    href = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
@@ -21,7 +18,7 @@ class _DisplayField(Model):
         return 'products.versions', "a", "b"
 
 class Architecture(_DisplayField):
-    href = IdField('aaa', None, isAttribute = True)
+    href = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
@@ -30,7 +27,7 @@ class Architecture(_DisplayField):
             "architectures", self.href)
 
 class FlavorSet(_DisplayField):
-    href = IdField('aaa', None, isAttribute = True)
+    href = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
@@ -56,7 +53,7 @@ class ImageParams(Model):
     __metaclass__ = ImageModelMeta
 
 class ContainerFormat(_DisplayField):
-    href = IdField('aaa', None, isAttribute = True)
+    href = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
     options = fields.ModelField(ImageParams)
@@ -65,20 +62,20 @@ class ContainerFormat(_DisplayField):
         return ('products.versions', self.hostname, self.version,
             "containers", self.href)
 
-class Stage(Model):
-    href = IdField('aaa', None, isAttribute = True)
+class StageHref(Model):
+    href = fields.AbsoluteUrlField(isAttribute = True)
     def get_absolute_url(self):
         return ('products.versions.stages', self.hostname, self.version,
             self.href)
 
 class BuildDefinition(Model):
-    id = IdField('aaa', None, isAttribute = True)
+    id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
     imageGroup = fields.CharField()
     sourceGroup = fields.CharField()
     image = fields.ModelField(ImageParams)
-    stages = fields.ListField(Stage, displayName = 'stage')
+    stages = fields.ListField(StageHref, displayName = 'stage')
     container = fields.ModelField(ContainerFormat)
     architecture = fields.ModelField(Architecture)
     flavorSet = fields.ModelField(FlavorSet)
@@ -93,7 +90,7 @@ class BuildDefinitions(Model):
     buildDefinitions = fields.ListField(BuildDefinition, displayName = 'image-definition')
 
 class BuildTemplate(Model):
-    id = IdField('aaa', None, isAttribute = True)
+    id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
     container = fields.ModelField(ContainerFormat)

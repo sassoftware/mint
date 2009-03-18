@@ -135,6 +135,43 @@ class WebPageTest(restbase.BaseRestTest):
         self.failUnlessEqual(response.read(),
             exp % dict(server = client.server, port = client.port))
 
+    def testGetProductVersionStages(self):
+        uriTemplate = 'products/%s/versions/%s/stages'
+        uri = uriTemplate % (self.shortName, self.productVersion)
+        client = self.getRestClient(uri)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<stages>
+  <stage id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">
+    <hostname>testproject</hostname>
+    <version>1.0</version>
+    <name>Development</name>
+    <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
+    <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-devel"/>
+    <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development/images"/>
+  </stage>
+  <stage id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA">
+    <hostname>testproject</hostname>
+    <version>1.0</version>
+    <name>QA</name>
+    <label>testproject.rpath.local2@yournamespace:testproject-1.0-qa</label>
+    <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-qa"/>
+    <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA/images"/>
+  </stage>
+  <stage id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release">
+    <hostname>testproject</hostname>
+    <version>1.0</version>
+    <name>Release</name>
+    <label>testproject.rpath.local2@yournamespace:testproject-1.0</label>
+    <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0"/>
+    <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release/images"/>
+  </stage>
+</stages>
+"""
+        self.failUnlessEqual(response.read(),
+            exp % dict(server = client.server, port = client.port))
+
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.shortName, self.productVersion)
