@@ -13,7 +13,6 @@ import os
 import StringIO
 import time
 
-from mint import helperfuncs
 from mint import notices_store
 from conary.lib import util
 
@@ -33,38 +32,11 @@ class WebPageTest(restbase.BaseRestTest):
 
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
-
-        version = self.productVersion = '1.0'
-        projectName = self.productName = 'Project 1'
-        shortName = self.shortName = 'testproject'
-        domainName = 'rpath.local2'
-        description = "Version description"
-        self.hostName = "%s.%s" % (shortName, domainName)
-
-        self.quickMintAdmin('adminuser', 'adminpass')
-        ownerClient = self.openMintClient(authToken = ('adminuser', 'adminpass'))
-        projectId = self.projectId = self.newProject(ownerClient, projectName)
-        versionId = self.versionId = ownerClient.addProductVersion(projectId,
-            self.mintCfg.namespace, version, description=description)
-        pd = helperfuncs.sanitizeProductDefinition(
-            projectName, '', shortName, domainName,
-            shortName, version, '', self.mintCfg.namespace)
-        stageRefs = [ x.name for x in pd.getStages() ]
-        for buildName, flavorSetRef, archRef, containerTemplateRef in \
-                    self.buildDefs:
-            pd.addBuildDefinition(name = buildName,
-                flavorSetRef = flavorSetRef,
-                architectureRef = archRef,
-                containerTemplateRef = containerTemplateRef,
-                stages = stageRefs)
-
-        ret = ownerClient.setProductDefinitionForVersion(versionId, pd)
-        # Make sure we get something back
-        self.productDefinition = ownerClient.getProductDefinitionForVersion(versionId)
+        self.setupProduct()
 
     def testGetProductVersion(self):
         uriTemplate = 'products/%s/versions/%s/'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
         client = self.getRestClient(uri)
         response = client.request('GET')
         exp = """\
@@ -89,7 +61,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testGetProductDefinition(self):
         uriTemplate = 'products/%s/versions/%s/definition'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
         client = self.getRestClient(uri)
         response = client.request('GET')
         sio = StringIO.StringIO()
@@ -98,7 +70,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testGetStageImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/stages/%s/imageDefinitions'
-        uri = uriTemplate % (self.shortName, self.productVersion,
+        uri = uriTemplate % (self.productShortName, self.productVersion,
         'Development')
 
         client = self.getRestClient(uri)
@@ -198,7 +170,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testGetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
 
         client = self.getRestClient(uri)
         response = client.request('GET')
@@ -297,7 +269,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testGetImageTypeDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageTypeDefinitions'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
 
         client = self.getRestClient(uri)
         response = client.request('GET')
@@ -672,7 +644,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testGetProductVersionStages(self):
         uriTemplate = 'products/%s/versions/%s/stages'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
         client = self.getRestClient(uri)
         response = client.request('GET')
         exp = """\
@@ -709,7 +681,7 @@ class WebPageTest(restbase.BaseRestTest):
 
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
-        uri = uriTemplate % (self.shortName, self.productVersion)
+        uri = uriTemplate % (self.productShortName, self.productVersion)
 
         client = self.getRestClient(uri, admin = True)
         response = client.request('PUT', imageSet1)

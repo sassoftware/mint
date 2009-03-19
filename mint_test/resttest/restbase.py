@@ -10,10 +10,52 @@ import testsetup
 import os
 import time
 
-import mint_rephelp
 from restlib import client as restClient
+from mint import helperfuncs
+
+import mint_rephelp
 
 class BaseRestTest(mint_rephelp.WebRepositoryHelper):
+    buildDefs = [
+        ('Citrix XenServer 32-bit', 'xen', 'x86', 'xenOvaImage'),
+        ('Citrix XenServer 64-bit', 'xen', 'x86_64', 'xenOvaImage'),
+        ('VMware ESX 32-bit', 'vmware', 'x86', 'vmwareEsxImage'),
+        ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
+    ]
+    productVersion = '1.0'
+    productName = 'Project 1'
+    productShortName = 'testproject'
+    productDomainName = 'rpath.local2'
+    productVersionDescription = 'Version description'
+    productHostname = "%s.%s" % (productShortName, productDomainName)
+
+    def setupProduct(self):
+        version = self.productVersion
+        projectName = self.productName
+        shortName = self.productShortName
+        domainName = self.productDomainName
+        description = self.productVersionDescription
+
+        self.quickMintAdmin('adminuser', 'adminpass')
+        ownerClient = self.openMintClient(authToken = ('adminuser', 'adminpass'))
+        projectId = self.projectId = self.newProject(ownerClient, projectName)
+        versionId = self.versionId = ownerClient.addProductVersion(projectId,
+            self.mintCfg.namespace, version, description=description)
+        pd = helperfuncs.sanitizeProductDefinition(
+            projectName, '', shortName, domainName,
+            shortName, version, '', self.mintCfg.namespace)
+        stageRefs = [ x.name for x in pd.getStages() ]
+        for buildName, flavorSetRef, archRef, containerTemplateRef in \
+                    self.buildDefs:
+            pd.addBuildDefinition(name = buildName,
+                flavorSetRef = flavorSetRef,
+                architectureRef = archRef,
+                containerTemplateRef = containerTemplateRef,
+                stages = stageRefs)
+
+        ret = ownerClient.setProductDefinitionForVersion(versionId, pd)
+        # Make sure we get something back
+        self.productDefinition = ownerClient.getProductDefinitionForVersion(versionId)
 
     def getRestClient(self, uri, username = 'foouser', password = 'foopass',
                       admin = False, **kwargs):
