@@ -19,7 +19,7 @@ from mint.rest.db import imagemgr
 import mint_rephelp
 
 class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
-    def testGetProduct(self):
+    def testGetAndCreateProductVersion(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(db, 'admin')
@@ -91,9 +91,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(pv.description == 'desc')
         assert(pv.namespace == 'ns')
 
-
-    def testCreateProduct(self):
-        pass
 
     def testIsMember(self):
         pass

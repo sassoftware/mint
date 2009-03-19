@@ -117,7 +117,6 @@ class ProductManager(object):
         #
         # No database operation inside this block may commit the
         # transaction.
-        self.db.transaction()
         if namespace is None:
             namespace = self.cfg.namespace
         createTime = time.time()
@@ -207,7 +206,6 @@ class ProductManager(object):
             return False
         else:
             password, salt = self._getPassword(userId)
-            self.db.transaction()
             self.db.projectUsers.new(userId=userId, projectId=projectId,
                                   level=level, commit=False)
             self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
