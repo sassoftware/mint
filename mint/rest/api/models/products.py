@@ -45,6 +45,10 @@ class Product(Model):
 
     def getFQDN(self):
         return self.repositoryHostname
+
+    def __repr__(self):
+        return 'models.Product(%r, %r)' % (self.productId, 
+                                  self.hostname + '.' + str(self.domainname))
             
 class ProductSearchResultList(Model):
     class Meta(object):
