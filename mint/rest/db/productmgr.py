@@ -120,50 +120,45 @@ class ProductManager(object):
         self.db.transaction()
         if namespace is None:
             namespace = self.cfg.namespace
-        try:
-            createTime = time.time()
-            projectId = self.db.projects.new(
-                name=name,
-                creatorId=self.auth.userId, 
-                description=description, 
-                hostname=hostname,
-                domainname=domainname, 
-                namespace=namespace,
-                isAppliance=isAppliance, 
-                projecturl=projecturl,
-                timeModified=createTime, 
-                timeCreated=createTime,
-                shortname=shortname, 
-                prodtype=prodtype, 
-                commitEmail=commitEmail, 
-                hidden=isPrivate,
-                version=version,
-                commit=False)
+        createTime = time.time()
+        projectId = self.db.projects.new(
+            name=name,
+            creatorId=self.auth.userId, 
+            description=description, 
+            hostname=hostname,
+            domainname=domainname, 
+            namespace=namespace,
+            isAppliance=isAppliance, 
+            projecturl=projecturl,
+            timeModified=createTime, 
+            timeCreated=createTime,
+            shortname=shortname, 
+            prodtype=prodtype, 
+            commitEmail=commitEmail, 
+            hidden=isPrivate,
+            version=version,
+            commit=False)
 
-            # add to RepNameMap if projectDomainName != domainname
-            fqdn = ".".join((hostname, domainname))
-            projectDomainName = self.cfg.projectDomainName.split(':')[0]
-            if domainname != projectDomainName:
-                self.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
-                                       toName=fqdn, commit=False)
-            self.db.labels.addLabel(projectId, 
-                '%s@%s:%s-%s-devel' % (fqdn, namespace, 
-                                       hostname, version),
-                "http://%s%srepos/%s/" % (
-                self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-                authType='userpass', username=self.cfg.authUser, 
-                password=self.cfg.authPass, commit=False)
+        # add to RepNameMap if projectDomainName != domainname
+        fqdn = ".".join((hostname, domainname))
+        projectDomainName = self.cfg.projectDomainName.split(':')[0]
+        if domainname != projectDomainName:
+            self.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
+                                   toName=fqdn, commit=False)
+        self.db.labels.addLabel(projectId, 
+            '%s@%s:%s-%s-devel' % (fqdn, namespace, 
+                                   hostname, version),
+            "http://%s%srepos/%s/" % (
+            self.cfg.projectSiteHost, self.cfg.basePath, hostname),
+            authType='userpass', username=self.cfg.authUser, 
+            password=self.cfg.authPass, commit=False)
 
-            self.reposMgr.createRepository(hostname, domainname, 
-                                           isPrivate=isPrivate)
-            # can only add members after the repository is set up
-            if self.auth.userId >= 0:
-                self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER)
-            self.publisher.notify('ProjectCreated', projectId)
-        except:
-            self.db.rollback()
-            raise
-        self.db.commit()
+        self.reposMgr.createRepository(hostname, domainname, 
+                                       isPrivate=isPrivate)
+        # can only add members after the repository is set up
+        if self.auth.userId >= 0:
+            self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER)
+        self.publisher.notify('ProjectCreated', projectId)
         return projectId
 
     def isMember(self, projectId, userId):
@@ -213,18 +208,12 @@ class ProductManager(object):
         else:
             password, salt = self._getPassword(userId)
             self.db.transaction()
-            try:
-                self.db.projectUsers.new(userId=userId, projectId=projectId,
-                                      level=level, commit=False)
-                self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
-                                           mirror=True, admin=admin)
-                self.publisher.notify('UserProjectAdded', userId,
-                                      projectId, level)
-            except:
-                self.db.rollback()
-                raise
-            else:
-                self.db.commit()
+            self.db.projectUsers.new(userId=userId, projectId=projectId,
+                                  level=level, commit=False)
+            self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
+                                       mirror=True, admin=admin)
+            self.publisher.notify('UserProjectAdded', userId,
+                                  projectId, level)
             return True
 
     def removeMember(self, projectId, userId):

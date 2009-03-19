@@ -85,7 +85,12 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
-        self.createProductVersion(db, 'foo', '1', 'foo', 'desc', None)
+        self.createProductVersion(db, 'foo', '1', namespace='ns', description='desc', platformLabel=None)
+        pv = db.getProductVersion('foo', '1')
+        assert(str(pv) == "models.ProductVersion(1, 'foo', '1')")
+        assert(pv.description == 'desc')
+        assert(pv.namespace == 'ns')
+
 
     def testCreateProduct(self):
         pass

@@ -75,7 +75,6 @@ class ReleaseManager(object):
         releaseId = cu.lastrowid
         for buildId in buildIds:
             self._addBuildToRelease(hostname, releaseId, buildId)
-        self.db.commit()
         return releaseId
 
     def _addBuildToRelease(self, hostname, releaseId, imageId):

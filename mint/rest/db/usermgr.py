@@ -39,29 +39,22 @@ class UserManager(object):
         for (projectId, level) in projectList:
             self.delMember(projectId, userId, False)
 
-        cu = self.db.transaction()
-        try:
-            cu.execute("""SELECT userGroupId FROM UserGroupMembers
-                              WHERE userId=?""", userId)
-            for userGroupId in [x[0] for x in cu.fetchall()]:
-                cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                                  WHERE userGroupId=?""", userGroupId)
-                if cu.fetchone()[0] == 1:
-                    cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
-                               userGroupId)
-            cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
-                       userId)
-            cu.execute("UPDATE Jobs SET userId=0 WHERE userId=?", userId)
-            cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-            cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
-            cu.execute("DELETE FROM Users WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserData where userId=?", userId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
+        cu.execute("""SELECT userGroupId FROM UserGroupMembers
+                          WHERE userId=?""", userId)
+        for userGroupId in [x[0] for x in cu.fetchall()]:
+            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
+                              WHERE userGroupId=?""", userGroupId)
+            if cu.fetchone()[0] == 1:
+                cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
+                           userGroupId)
+        cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
+                   userId)
+        cu.execute("UPDATE Jobs SET userId=0 WHERE userId=?", userId)
+        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
+        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+        cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
+        cu.execute("DELETE FROM Users WHERE userId=?", userId)
+        cu.execute("DELETE FROM UserData where userId=?", userId)
         self.publisher.notify('UserCancelled', userId)
         return True
 
@@ -154,32 +147,27 @@ class UserManager(object):
                    username)
         if cu.fetchone()[0]:
             raise mint_error.UserAlreadyExists
-        try:
-            # NOTE: I don't add users to their own usergroups.
-            # as far as I can tell the only use for usergroups is for
-            # MintAdmin.
-            salt, password = _mungePassword(password)
+        # NOTE: I don't add users to their own usergroups.
+        # as far as I can tell the only use for usergroups is for
+        # MintAdmin.
+        salt, password = _mungePassword(password)
 
-            userValues = dict(username = username,
-                              fullName = fullName,
-                              salt = salt,
-                              passwd = password,
-                              email = email,
-                              displayEmail = displayEmail,
-                              timeCreated = time.time(),
-                              timeAccessed = 0,
-                              blurb = blurb, 
-                              active = 1)
-            params = ', '.join(['?'] * len(userValues))
-            values = userValues.values()
-            keys = ', '.join(userValues.keys())
-            sql = '''INSERT INTO Users (%s) VALUES (%s)'''% (keys, params)
-            cu.execute(sql, values)
-            userId = cu.lastrowid
-            if admin:
-                self.makeAdmin(username)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            return userId
+        userValues = dict(username = username,
+                          fullName = fullName,
+                          salt = salt,
+                          passwd = password,
+                          email = email,
+                          displayEmail = displayEmail,
+                          timeCreated = time.time(),
+                          timeAccessed = 0,
+                          blurb = blurb, 
+                          active = 1)
+        params = ', '.join(['?'] * len(userValues))
+        values = userValues.values()
+        keys = ', '.join(userValues.keys())
+        sql = '''INSERT INTO Users (%s) VALUES (%s)'''% (keys, params)
+        cu.execute(sql, values)
+        userId = cu.lastrowid
+        if admin:
+            self.makeAdmin(username)
+        return userId

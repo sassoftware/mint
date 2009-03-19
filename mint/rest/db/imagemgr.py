@@ -205,7 +205,6 @@ class ImageManager(object):
         for x in builds.getImportantFlavors(troveTuple[2]):
             buildDataTable.setDataValue(buildId, x, 1, data.RDT_INT, 
                                         commit=False)
-        self.db.db.commit()
         return buildId
 
     def setImageFiles(self, hostname, imageId, imageFiles):

@@ -34,6 +34,9 @@ class ProductVersion(Model):
     def get_absolute_url(self):
         return 'products.versions', self.hostname, self.name
 
+    def __repr__(self):
+        return 'models.ProductVersion(%r, %r, %r)' % (self.versionId, self.hostname, self.name)
+
 class ProductVersionList(Model):
     class Meta(object):
         name = 'productVersions'

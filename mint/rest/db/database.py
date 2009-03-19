@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import decorator
 
 from conary import versions
 from conary.conaryclient import cmdline
@@ -24,10 +25,79 @@ from mint.rest.db import usermgr
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
-class Database(object):
-    def __init__(self, cfg, db, auth=None, subscribers=None):
-        self.cfg = cfg
+class DBInterface(object):
+    def __init__(self, db):
+        self._holdCommits = False
         self.db = db
+
+    def _getOne(self, cu, exception, key):
+        try:
+            cu = iter(cu)
+            res = cu.next()
+            assert (not(list(cu))), key # make sure that we really only
+                                        # got one entry
+            return res
+        except:
+            raise exception(key)
+
+
+    def cursor(self):
+        return self.db.cursor()
+
+    def _commitAfter(self, fn, *args, **kw):
+        """
+            Commits after running a function
+        """
+        self._holdCommits = True
+        self.cursor().execute('BEGIN IMMEDIATE')
+        try:
+            rv = fn(*args, **kw)
+            self._holdCommits = False
+            self.commit()
+            return rv
+        except:
+            self.rollback()
+            self._holdCommits = False
+            raise
+
+    def commit(self):
+        if not self._holdCommits:
+            return self.db.commit()
+        else:
+            return True
+
+    def rollback(self):
+        return self.db.rollback()
+
+    def inTransaction(self):
+        return self.db.db.inTransaction()
+
+    def open(self):
+        raise NotImplementedError
+
+    def reopen(self):
+        self.db = self.open()
+
+    def close(self):
+        self.db.close()
+        self.db = None
+
+@decorator.decorator
+def commitafter(fn, self, *args, **kw):
+    return self._commitAfter(fn, self, *args, **kw)
+
+@decorator.decorator
+def readonly(fn, self, *args, **kw):
+    inTransaction = self.inTransaction()
+    rv = fn(self, *args, **kw)
+    if not inTransaction and self.inTransaction():
+        raise RuntimeError('Database modified unexpectedly after .')
+    return rv
+
+class Database(DBInterface):
+    def __init__(self, cfg, db, auth=None, subscribers=None):
+        DBInterface.__init__(self, db)
+        self.cfg = cfg
         if auth is None:
             auth = authmgr.AuthenticationManager(cfg, self)
         self.auth = auth
@@ -53,24 +123,17 @@ class Database(object):
         profile.attachDb(self.db.db)
         profile.attachRepos(self.productMgr.reposMgr)
 
-    def _getOne(self, cu, exception, key):
-        try:
-            cu = iter(cu)
-            res = cu.next()
-            assert (not(list(cu))), key # make sure that we really only
-                                        # got one entry
-            return res
-        except:
-            raise exception(key)
-
+    @readonly
     def getUsername(self, userId):
         cu = self.db.cursor()
         cu.execute('SELECT username from Users where userId=?', userId)
         return self._getOne(cu, errors.UserNotFound, userId)[0]
 
+    @readonly
     def listProducts(self):
         return self.productMgr.listProducts()
 
+    @readonly
     def getProductFQDNFromId(self, productId):
         cu = self.db.cursor()
         cu.execute('SELECT hostname, domainname from Projects where projectId=?', productId)
@@ -78,10 +141,12 @@ class Database(object):
                                             productId)
         return hostname + '.' + domainname
 
+    @readonly
     def getProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname=hostname)
         return self.productMgr.getProduct(hostname)
 
+    @readonly
     def listProductVersions(self, hostname):
         self.auth.requireProductReadAccess(hostname=hostname)
         if '.' in hostname:
@@ -98,6 +163,7 @@ class Database(object):
                                   hostname)
         return pvl
 
+    @readonly
     def listProductMembers(self, hostname):
         self.auth.requireProductReadAccess(hostname=hostname)
         if '.' in hostname:
@@ -116,6 +182,7 @@ class Database(object):
             memberList.members.append(member)
         return memberList
 
+    @readonly
     def getProductMembership(self, hostname, username):
         self.auth.requireProductReadAccess(hostname=hostname)
         if '.' in hostname:
@@ -131,13 +198,16 @@ class Database(object):
         return models.Membership(hostname=hostname, username=username, 
                                  level=level)
 
+    @readonly
     def getProductVersion(self, hostname, versionName):
         self.auth.requireProductReadAccess(hostname=hostname)
         return self.productMgr.getProductVersion(hostname, versionName)
 
+    @readonly
     def getUserId(self, username):
         return self.userMgr.getUserId(username)
 
+    @readonly
     def getProductId(self, fqdn):
         cu = self.db.cursor()
         hostname = fqdn.split('.', 1)[0]
@@ -145,7 +215,7 @@ class Database(object):
         projectId, = self._getOne(cu, errors.ProductNotFound, fqdn)
         return projectId
 
-
+    @readonly
     def getUser(self, username):
         self.auth.requireLogin()
         if self.auth.hasUserReadAccess(username):
@@ -169,7 +239,7 @@ class Database(object):
         d = dict(self._getOne(cu, errors.UserNotFound, username))
         return models.User(**d)
 
-        
+    @readonly    
     def listMembershipsForUser(self, username):
         self.auth.requireUserReadAccess(username)
         cu = self.db.cursor()
@@ -186,6 +256,7 @@ class Database(object):
             memberList.members.append(member)
         return memberList
 
+    @readonly    
     def listUsers(self):
         self.auth.requireAdmin()
         cu = self.db.cursor()
@@ -197,6 +268,7 @@ class Database(object):
             userList.users.append(models.User(**dict(d)))
         return userList
 
+    @readonly    
     def listUserGroupsForUser(self, username):
         self.auth.requireAdmin()
         cu = self.db.cursor()
@@ -211,6 +283,7 @@ class Database(object):
         groupList.groups.append(group)
         return groupList
 
+    @commitafter
     def createProduct(self, product):
         self.auth.requireProductCreationRights()
         if self.cfg.rBuilderOnline or not product.domainname:
@@ -269,9 +342,9 @@ class Database(object):
                                       product.commitEmail, 
                                       isPrivate=product.hidden)
         product.productId = productId
-        self.db.commit()
         return product
 
+    @commitafter
     def setMemberLevel(self, hostname, username, level):
         self.auth.requireProductOwner(hostname)
         level = userlevels.idsByName[level]
@@ -279,17 +352,20 @@ class Database(object):
         userId = self.getUserId(username)
         self.productMgr.setMemberLevel(product.productId, userId, level)
 
+    @commitafter
     def deleteMember(self, hostname, username):
         self.auth.requireProductOwner(hostname)
         product = self.getProduct(hostname)
         userId = self.getUserId(username)
         self.productMgr.removeMember(product.productId, userId)
 
+    @commitafter
     def cancelUserAccount(self, username):
         self.auth.requireUserAdmin(username)
         userId = self.getUserId(username)
         self.userMgr.cancelUserAccount(userId)
 
+    @commitafter
     def createProductVersion(self, fqdn, productVersion):
         self.auth.requireProductOwner(fqdn)
         versionId = self.productMgr.createProductVersion(
@@ -301,6 +377,7 @@ class Database(object):
         productVersion.id = versionId
         return productVersion
 
+    @commitafter
     def updateProductVersion(self, hostname, version, productVersion):
         self.auth.requireProductOwner(hostname)
         self.productMgr.updateProductVersion(hostname,
@@ -319,6 +396,7 @@ class Database(object):
                                hostname=hostname,
                                productVersion=version)
 
+    @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
@@ -330,6 +408,7 @@ class Database(object):
                                     version=version)
         raise errors.StageNotFound(stageName)
 
+    @readonly    
     def getProductVersionStages(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
@@ -341,74 +420,91 @@ class Database(object):
                                                  version=version))
         return stageList
 
+    @readonly    
     def listImagesForProductVersion(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersion(hostname, version)
 
+    @readonly    
     def listImagesForProductVersionStage(self, hostname, version, 
                                             stageName):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersionStage(hostname, version, stageName)
 
+    @readonly    
     def getProductVersionStageBuildDefinitions(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionStageBuildDefinitions(
             hostname, version, stageName)
 
+    @readonly    
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)
 
+    @commitafter
     def setProductVersionDefinition(self, hostname, version, pd):
         self.auth.requireProductDeveloper(hostname)
         return self.productMgr.setProductVersionDefinition(hostname, version, pd)
 
+    @commitafter
     def rebaseProductVersionPlatform(self, hostname, version, platformLabel=None):
         self.auth.requireProductDeveloper(hostname)
         self.productMgr.rebaseProductVersionDefinition(hostname, version, platformLabel)
 
+    @commitafter
     def setProductVersionBuildDefinitions(self, hostname, version, model):
         self.auth.requireProductDeveloper(hostname)
         return self.productMgr.setProductVersionBuildDefinitions(hostname, version, model)
 
+    @readonly    
     def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)
 
+    @readonly    
     def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
+    @readonly    
     def listReleasesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.listReleasesForProduct(hostname)
 
+    @readonly    
     def getReleaseForProduct(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
+    @commitafter
     def createRelease(self, hostname, buildIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireBuildsOnHost(hostname, buildIds)
         releaseId = self.releaseMgr.createRelease(hostname, buildIds)
         return releaseId
 
+    @readonly    
     def publishRelease(self, hostname, releaseId):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
 
+    @readonly    
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version, flavor)
 
+    @readonly    
     def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
+    @readonly    
     def listFilesForImage(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listFilesForImage(hostname, imageId)
 
+    @commitafter
     def createImage(self, hostname, image, buildData=None):
         self.auth.requireProductDeveloper(hostname)
         imageId =  self.imageMgr.createImage(hostname, image.imageType, 
@@ -418,20 +514,22 @@ class Database(object):
         image.imageId = imageId
         return imageId
     
+    @commitafter
     def setImageFiles(self, hostname, imageId, imageFiles):
         self.auth.requireAdmin()
         self.imageMgr.setImageFiles(hostname, imageId, imageFiles)
 
         
 
+    @commitafter
     def createUser(self, username, password, fullName, email, 
                    displayEmail, blurb, admin=False):
         self.auth.requireAdmin()
         self.userMgr.createUser(username, password, fullName, email, 
                                 displayEmail, blurb, admin=admin)
-        self.db.commit()
 
 
+    @readonly    
     def getIdentity(self):
         serviceLevel = models.ServiceLevel(status='Trial', expired=False, 
                                            daysRemaining=10, limited=True)
@@ -439,10 +537,3 @@ class Database(object):
                                    rbuilderId="12347",
                                    registered=False)
         return identity
-
-    def cursor(self):
-        return self.db.cursor()
-
-    def commit(self):
-        return self.db.commit()
-
