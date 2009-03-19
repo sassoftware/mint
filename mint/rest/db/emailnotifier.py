@@ -13,7 +13,8 @@ class EmailNotifier(object):
         self.cfg = cfg
         self.auth = auth
 
-    def notify_UserProjectEvent(self, event, userId, projectId, userlevel=None):
+    def notify_UserProductEvent(self, event, userId, projectId, oldLevel=None,
+                                userlevel=None):
         performer = self.auth.auth
         fqdn = self.db.getProductFQDNFromId(projectId)
         project = self.db.getProduct(fqdn.split('.')[0])
@@ -24,7 +25,7 @@ class EmailNotifier(object):
 
         userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
                                              'Unknown')
-        action = event[len('UserProject'):]
+        action = event[len('UserProduct'):]
         projectUrl = 'http://%s%sproject/%s/' %\
                       (self.cfg.projectSiteHost,
                        self.cfg.basePath,
@@ -109,6 +110,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                        self.cfg.productName,
                                        '\n\n'.join((greeting, adminMessage)))
 
-    notify_UserProjectRemoved = notify_UserProjectEvent
-    notify_UserProjectAdded = notify_UserProjectEvent
-    notify_UserProjectChanged = notify_UserProjectEvent
+    notify_UserProductRemoved = notify_UserProductEvent
+    notify_UserProductAdded = notify_UserProductEvent
+    notify_UserProductChanged = notify_UserProductEvent

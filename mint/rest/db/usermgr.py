@@ -171,3 +171,14 @@ class UserManager(object):
         if admin:
             self.makeAdmin(username)
         return userId
+
+    def _getPassword(self, userId):
+        cu = self.db.cursor()
+        cu.execute('SELECT passwd, salt from Users where userId=?', userId)
+        return cu.next()
+
+    def _getUsername(self, userId):
+        cu = self.db.cursor()
+        cu.execute('SELECT username from Users where userId=?', userId)
+        return cu.next()[0]
+

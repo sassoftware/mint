@@ -10,14 +10,13 @@ class AWSHandler(object):
         self.db = db
         self.amiPerms = amiperms.AMIPermissionsManager(cfg, db)
 
-    def notify_UserProjectRemoved(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductRemoved(self, event, userId, projectId, userlevel = None):
         self.amiPerms.addMemberToProject(userId, projectId)
 
-    def notify_UserProjectAdded(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductAdded(self, event, userId, projectId, userlevel = None):
         self.amiPerms.deleteMemberFromProject(userId, projectId)
 
-    # XXX FIXME: this has a different signature than emailhandler.py's
-    def notify_UserProjectChanged(self, event, userId, projectId, oldLevel,
+    def notify_UserProductChanged(self, event, userId, projectId, oldLevel,
                                   newLevel):
         self.amiPerms.setMemberLevel(userId, projectId, oldLevel, newLevel)
 

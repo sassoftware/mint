@@ -102,7 +102,7 @@ class Database(DBInterface):
             auth = authmgr.AuthenticationManager(cfg, self)
         self.auth = auth
         self.publisher = publisher.EventPublisher()
-        self.productMgr = productmgr.ProductManager(self.cfg, self.db, 
+        self.productMgr = productmgr.ProductManager(self.cfg, self, 
                                                     self.auth, self.publisher)
         self.imageMgr = imagemgr.ImageManager(self.cfg, self, self.auth)
         self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
@@ -357,7 +357,7 @@ class Database(DBInterface):
         self.auth.requireProductOwner(hostname)
         product = self.getProduct(hostname)
         userId = self.getUserId(username)
-        self.productMgr.removeMember(product.productId, userId)
+        self.productMgr.deleteMember(product.productId, userId)
 
     @commitafter
     def cancelUserAccount(self, username):

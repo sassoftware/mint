@@ -28,7 +28,7 @@ class ProductManager(object):
         self.db = db
         self.auth = auth
         self.reposMgr = reposmgr.RepositoryManager(cfg, db, 
-                                                   self.db.projects.reposDB,
+                                                   self.db.db.projects.reposDB,
                                                    auth)
         self.publisher = publisher
 
@@ -120,7 +120,7 @@ class ProductManager(object):
         if namespace is None:
             namespace = self.cfg.namespace
         createTime = time.time()
-        projectId = self.db.projects.new(
+        projectId = self.db.db.projects.new(
             name=name,
             creatorId=self.auth.userId, 
             description=description, 
@@ -142,9 +142,9 @@ class ProductManager(object):
         fqdn = ".".join((hostname, domainname))
         projectDomainName = self.cfg.projectDomainName.split(':')[0]
         if domainname != projectDomainName:
-            self.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
+            self.db.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
                                    toName=fqdn, commit=False)
-        self.db.labels.addLabel(projectId, 
+        self.db.db.labels.addLabel(projectId, 
             '%s@%s:%s-%s-devel' % (fqdn, namespace, 
                                    hostname, version),
             "http://%s%srepos/%s/" % (
@@ -156,17 +156,23 @@ class ProductManager(object):
                                        isPrivate=isPrivate)
         # can only add members after the repository is set up
         if self.auth.userId >= 0:
-            self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER)
+            self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER,
+                                notify=False)
         self.publisher.notify('ProjectCreated', projectId)
         return projectId
 
-    def isMember(self, projectId, userId):
+    def _getMemberLevel(self, projectId, userId):
+        # internal fn because it takes projectId + userId 
+        # instead of hostname + username
         cu = self.db.cursor()
         cu.execute("""SELECT level FROM ProjectUsers
                       WHERE projectId = ? AND userId = ?""",
                       projectId, userId)
-        if cu.fetchone():
-            return True
+        level = cu.fetchone()
+        if level:
+            return True, level[0]
+        return False, None
+        
         return False
 
     def _getProductFQDN(self, projectId):
@@ -174,26 +180,18 @@ class ProductManager(object):
         cu.execute('SELECT hostname, domainname from Projects where projectId=?', projectId)
         return '.'.join(tuple(cu.next()))
 
-    def _getUsername(self, userId):
-        cu = self.db.cursor()
-        cu.execute('SELECT username from Users where userId=?', userId)
-        return cu.next()[0]
-
-    def _getPassword(self, userId):
-        cu = self.db.cursor()
-        cu.execute('SELECT passwd, salt from Users where userId=?', userId)
-        return cu.next()
-
-    def setMemberLevel(self, projectId, userId, level):
+    def setMemberLevel(self, projectId, userId, level, notify=True):
         fqdn = self._getProductFQDN(projectId)
-        username = self._getUsername(userId)
-        isMember = self.isMember(projectId, userId)
+        username = self.db.userMgr._getUsername(userId)
+        isMember, oldLevel = self._getMemberLevel(projectId, userId)
         write = level in userlevels.WRITERS
         mirror = level == userlevels.OWNER
         admin = level == userlevels.OWNER and self.cfg.projectAdmin
 
         if isMember:
-            if self.db.projectUsers.onlyOwner(projectId, userId) and \
+            if level == oldLevel:
+                return
+            if self.db.db.projectUsers.onlyOwner(projectId, userId) and \
                    (level != userlevels.OWNER):
                 raise mint_error.LastOwner
             cu = self.db.cursor()
@@ -202,26 +200,29 @@ class ProductManager(object):
                 projectId=?""", level, userId, projectId)
             self.reposMgr.editUser(fqdn, username, write=write,
                                    mirror=mirror, admin=admin)
-            self.publisher.notify('UserProjectChanged', userId, projectId, level)
+            if notify:
+                self.publisher.notify('UserProductChanged', userId, projectId, 
+                                      oldLevel, level)
             return False
         else:
-            password, salt = self._getPassword(userId)
-            self.db.projectUsers.new(userId=userId, projectId=projectId,
-                                  level=level, commit=False)
-            self.reposMgr.addUserByMd5(fqdn, username, salt, password, write=True,
-                                       mirror=True, admin=admin)
-            self.publisher.notify('UserProjectAdded', userId,
-                                  projectId, level)
+            password, salt = self.db.userMgr._getPassword(userId)
+            self.db.db.projectUsers.new(userId=userId, projectId=projectId,
+                                     level=level, commit=False)
+            self.reposMgr.addUserByMd5(fqdn, username, salt, password, 
+                                       write=write, mirror=mirror, admin=admin)
+            if notify:
+                self.publisher.notify('UserProductAdded', userId,
+                                      projectId, level)
             return True
 
-    def removeMember(self, projectId, userId):
+    def deleteMember(self, projectId, userId):
         fqdn = self._getProductFQDN(projectId)
-        username = self._getUsername(userId)
-        if self.db.projectUsers.onlyOwner(projectId, userId):
+        username = self.db.userMgr._getUsername(userId)
+        if self.db.db.projectUsers.onlyOwner(projectId, userId):
             raise mint_error.LastOwner
         self.reposMgr.deleteUser(fqdn, username)
-        self.db.projectUsers.delete(projectId, userId)
-        self.publisher.notify('UserProjectRemoved', 
+        self.db.db.projectUsers.delete(projectId, userId)
+        self.publisher.notify('UserProductRemoved', 
                               userId, projectId)
 
     def createProductVersion(self, fqdn, version, namespace, description,
@@ -253,7 +254,7 @@ class ProductManager(object):
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
         try:
-            versionId = self.db.productVersions.new(projectId = projectId,
+            versionId = self.db.db.productVersions.new(projectId = projectId,
                                                namespace = namespace,
                                                name = version,
                                                description = description)

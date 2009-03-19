@@ -20,6 +20,9 @@ class Membership(Model):
     id         = fields.UrlField('products.members', ['hostname', 'username'],
                                  isAttribute=True)
 
+    def __repr__(self):
+        return 'models.Membership(%r, %r, %r)' % (self.hostname, self.username, self.level)
+
 class MemberList(Model):
     class Meta(object):
         name = 'members'

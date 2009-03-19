@@ -166,7 +166,7 @@ class RepositoryManager(object):
 
         #Set up the user config lines
         for otherProjectData, level, memberReqs in \
-          self.db.projects.getProjectDataByMember(self.auth.userId):
+          self.db.db.projects.getProjectDataByMember(self.auth.userId):
             if level in userlevels.WRITERS:
                 otherFqdn = self._getProductFQDN(otherProjectData['hostname'])
                 ccfg.user.addServerGlob(otherFqdn,
@@ -188,8 +188,8 @@ class RepositoryManager(object):
     def getConaryConfig(self, fqdn, overrideAuth = False, newUser = '', newPass = ''):
         '''Creates a ConaryConfiguration object suitable for repository access
         from the same server as MintServer'''
-        projectId = self.db.projects.getProjectIdByHostname(fqdn.split('.', 1)[0])
-        labelPath, repoMap, userMap, entMap = self.db.labels.getLabelsForProject(projectId, 
+        projectId = self.db.db.projects.getProjectIdByHostname(fqdn.split('.', 1)[0])
+        labelPath, repoMap, userMap, entMap = self.db.db.labels.getLabelsForProject(projectId, 
                                                              overrideAuth, newUser, newPass)
 
         cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)

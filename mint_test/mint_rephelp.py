@@ -467,10 +467,10 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
                                                             (100, 'Message'))
         return db
 
-    def createUser(self, name, admin=False):
+    def createUser(self, name, password='', admin=False):
         db = self.openMintDatabase()
-        db.createUser(name, name, 'Full Name', '%s@foo.com' % name,
-                      '%s@foo.com', '', admin=admin)
+        return db.createUser(name, name, 'Full Name', '%s@foo.com' % name,
+                            '%s@foo.com', password, admin=admin)
 
     def setDbUser(self, db, username):
         from mint import users
@@ -493,7 +493,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
 
     def createProduct(self, shortname, 
                       owners=None, developers=None, users=None, 
-                      private=False, db=None):
+                      private=False, domainname=None, db=None):
         if db is None:
             db = self.openMintDatabase()
 
@@ -505,7 +505,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
             prd = models.Product(name='Project %s' % shortname,
                                  hostname=shortname,
                                  shortname=shortname, prodtype='Appliance',
-                                 hidden=private)
+                                 domainname=domainname, hidden=private)
             db.createProduct(prd)
             if owners:
                 for username in owners:
