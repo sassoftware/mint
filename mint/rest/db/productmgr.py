@@ -90,7 +90,7 @@ class ProductManager(object):
         return results
 
 
-    def getProductVersion(self, hostname, versionName):
+    def getProductVersion(self, fqdn, versionName):
         # accept fqdn.
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()

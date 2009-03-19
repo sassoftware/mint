@@ -367,8 +367,8 @@ class MintApacheServer(rephelp.ApacheServer):
                 reposDBPort = self.reposDB.port
             else:
                 reposDBPort = None
-            getMintCfg(self.reposDir, self.port, self.securePort,
-                       reposDBPort, self.useProxy)
+            self.mintCfg = getMintCfg(self.reposDir, self.port, self.securePort,
+                                      reposDBPort, self.useProxy)
             mintCfg = self.mintCfg
         else:
             self.mintCfg = mintCfg
@@ -459,6 +459,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         db.auth.isAdmin = True
         if not createRepos:
             db.productMgr.reposMgr = mock.MockObject()
+            db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
         if not enableMCP:
             db.imageMgr.mcpClient = mock.MockObject()
