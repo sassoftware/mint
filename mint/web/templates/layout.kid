@@ -26,7 +26,6 @@ onload = "javascript:;"
             <![CDATA[
                 jQuery.noConflict();
                 var BaseUrl = '${cfg.basePath}';
-                var x86_64 = ${int(cfg.bootableX8664)};
                 var staticPath = "${cfg.staticPath}";
 
                 /* fade out info messages after 5s */

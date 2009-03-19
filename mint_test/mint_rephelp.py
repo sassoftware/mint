@@ -255,7 +255,6 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
                                buildtypes.VMWARE_IMAGE,
                                buildtypes.STUB_IMAGE]
     cfg.visibleUrlTypes   = [ x for x in urltypes.TYPES ]
-    cfg.displaySha1 = True
     cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                             'maintenance.lock')
 
