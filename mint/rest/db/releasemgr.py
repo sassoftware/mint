@@ -3,7 +3,10 @@
 #
 # All Rights Reserved
 #
+import time
 
+from mint import buildtypes
+from mint import mint_error
 from mint.rest import errors
 from mint.rest.api import models
 
@@ -34,6 +37,7 @@ class ReleaseManager(object):
         releases = models.ReleaseList()
         for row in cu:
             row = dict(row)
+            row['published'] = bool(row['timePublished'])
             releases.releases.append(models.Release(**row))
         return releases
 
@@ -58,3 +62,29 @@ class ReleaseManager(object):
         row = dict(self.db._getOne(cu, errors.ReleaseNotFound, 
                                    (hostname, releaseId)))
         return models.Release(**row)
+
+    def createRelease(self, fqdn, buildIds):
+        hostname = fqdn.split('.')[0]
+        sql = '''
+        INSERT INTO PublishedReleases 
+            (projectId, timeCreated, createdBy)
+            SELECT projectId, ?, ? FROM Projects WHERE hostname=?
+        '''
+        cu = self.db.cursor()
+        cu.execute(sql, time.time(), self.auth.userId, hostname)
+        releaseId = cu.lastrowid
+        for buildId in buildIds:
+            self._addBuildToRelease(hostname, releaseId, buildId)
+        self.db.commit()
+        return releaseId
+
+    def _addBuildToRelease(self, hostname, releaseId, imageId):
+        image = self.db.getImageForProduct(hostname, imageId)
+        if image.release and releaseId != image.release:
+            raise mint_error.BuildPublished()
+        if (image.imageType not in (buildtypes.AMI, buildtypes.IMAGELESS)
+                and not image.files.files):
+            raise mint_error.BuildEmpty()
+        cu = self.db.cursor()
+        cu.execute('''UPDATE Builds SET pubReleaseId=?
+                      WHERE buildId=?''', releaseId, imageId)

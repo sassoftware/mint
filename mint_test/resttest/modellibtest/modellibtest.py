@@ -102,7 +102,7 @@ class ModelLibTest(testsuite.TestCase):
             absoluteUrl = "http://nowhere.net/42",
             emailField = "who@nowhere.net",
             dateTimeField = "12/13/2004",
-            versionField = "1.0",
+            versionField = "/localhost@rpl:1/1.0-1-1",
             flavorField = "is: x86",)
         self.failUnlessEqual(m.intField, 1)
         self.failUnlessEqual(m.charField, "a")
@@ -120,7 +120,7 @@ class ModelLibTest(testsuite.TestCase):
   <absoluteUrl>http://world.top/plateau</absoluteUrl>
   <emailField>who@nowhere.net</emailField>
   <dateTimeField>12/13/2004</dateTimeField>
-  <versionField>1.0</versionField>
+  <versionField>/localhost@rpl:1/1.0-1-1</versionField>
   <flavorField>is: x86</flavorField>
   <list_field>
     <intField2>0</intField2>

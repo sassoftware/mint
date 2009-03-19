@@ -8,12 +8,13 @@ from mint.lib import maillib
 from mint import userlevels
 
 class EmailNotifier(object):
-    def __init__(self, cfg, db):
+    def __init__(self, cfg, db, auth):
         self.db = db
         self.cfg = cfg
+        self.auth = auth
 
     def notify_UserProjectEvent(self, event, userId, projectId, userlevel=None):
-        performer = self.db.auth.auth
+        performer = self.auth.auth
         fqdn = self.db.getProductFQDNFromId(projectId)
         project = self.db.getProduct(fqdn.split('.')[0])
         username = self.db.getUsername(userId)

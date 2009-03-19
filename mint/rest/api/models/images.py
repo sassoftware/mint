@@ -13,6 +13,9 @@ class FileUrl(Model):
     urlType = fields.IntegerField(isAttribute=True)
     url = fields.CharField(isText=True)
 
+    def __repr__(self):
+        return "images.FileUrl(url=%r, urlType=%r)" % (self.url, self.urlType)
+
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()
@@ -22,6 +25,9 @@ class ImageFile(Model):
     size     = fields.IntegerField()
     sha1     = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
+
+    def __repr__(self):
+        return "images.ImageId(fileId=%r, size=%r)" % (self.fileId, self.size)
 
 class ImageFileList(Model):
     class Meta(object):
@@ -39,6 +45,7 @@ class Release(Model):
     name = fields.CharField()
     version = fields.CharField()
     description = fields.CharField()
+    published = fields.BooleanField()
     images = fields.UrlField('products.releases.images', 
                               ['hostname', 'releaseId'])
     creator = fields.UrlField('users', 'creator') 
@@ -62,9 +69,9 @@ class Image(Model):
     name = fields.CharField()
     description = fields.CharField()
     troveName = fields.CharField()
-    troveVersion = fields.CharField()
+    troveVersion = fields.VersionField()
     trailingVersion = fields.CharField()
-    troveFlavor = fields.CharField()
+    troveFlavor = fields.FlavorField()
     troveLastChanged = fields.IntegerField()
     version = fields.UrlField('products.versions', 
                              ['hostname', 'version'])
@@ -84,6 +91,15 @@ class Image(Model):
 
     def hasBuild(self):
         return self.imageType not in (None, buildtypes.IMAGELESS)
+
+    def getNameVersionFlavor(self):
+        return self.troveName, self.troveVersion, self.troveFlavor
+
+    def __repr__(self):
+        return "models.Image(%s, %r, '%s=%s[%s]')" % (
+                    self.imageId, self.imageType,
+                    self.troveName, self.troveVersion, self.troveFlavor)
+                                                     
 
 class ImageList(Model):
     class Meta(object):

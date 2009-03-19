@@ -113,7 +113,7 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
         return self.db.getProductVersionStage(hostname, version, stageName)
 
     def getImages(self, request, hostname, version, stageName):
-        return self.db.getProductVersionStageImages(hostname, version, stageName)
+        return self.db.listImagesForProductVersionStage(hostname, version, stageName)
 
     def getImageDefinitions(self, request, hostname, version, stageName):
         extraParams = dict(hostname = hostname, version = version,
@@ -181,7 +181,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
                                     hostname, productVersion.name))
 
     def getImages(self, request, hostname, version):
-        return self.db.getProductVersionImages(hostname, version)
+        return self.db.listImagesForProductVersion(hostname, version)
 
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)

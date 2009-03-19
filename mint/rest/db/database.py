@@ -25,29 +25,29 @@ from mint.rest.db import usermgr
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 class Database(object):
-    def __init__(self, cfg, db, auth=None):
+    def __init__(self, cfg, db, auth=None, subscribers=None):
         self.cfg = cfg
         self.db = db
-        self.userId = -1
-        self.isAdmin = False
         if auth is None:
             auth = authmgr.AuthenticationManager(cfg, self)
         self.auth = auth
         self.publisher = publisher.EventPublisher()
-        self.publisher.subscribe(emailnotifier.EmailNotifier(self.cfg, self))
-        self.publisher.subscribe(awshandler.AWSHandler(self.cfg, self.db))
         self.productMgr = productmgr.ProductManager(self.cfg, self.db, 
                                                     self.auth, self.publisher)
-        self.imageMgr = imagemgr.ImageManager(self.cfg, self.db, self.auth)
-        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self.db, 
+        self.imageMgr = imagemgr.ImageManager(self.cfg, self, self.auth)
+        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
                                                     self.auth)
         self.userMgr = usermgr.UserManager(self.cfg, self.db, self.publisher)
+        if subscribers is None:
+            subscribers = []
+            subscribers.append(emailnotifier.EmailNotifier(self.cfg, self, 
+                                                           self.auth))
+            subscribers.append(awshandler.AWSHandler(self.cfg, self.db))
+        for subscriber in subscribers:
+            self.publisher.subscribe(subscribers)
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
-        self.userId = auth.userId
-        self.username = auth.username
-        self.isAdmin = auth.admin
 
     def setProfiler(self, profile):
         profile.attachDb(self.db.db)
@@ -136,15 +136,12 @@ class Database(object):
         return self.productMgr.getProductVersion(hostname, versionName)
 
     def getUserId(self, username):
-        cu = self.db.cursor()
-        cu.execute("""SELECT userId FROM Users WHERE username=?""", username)
-        userId, = self._getOne(cu, errors.UserNotFound, username)
-        return userId
+        return self.userMgr.getUserId(username)
 
     def getProductId(self, fqdn):
         cu = self.db.cursor()
         hostname = fqdn.split('.', 1)[0]
-        cu.execute("""SELECT projectId FROM Users WHERE hostname=?""", hostname)
+        cu.execute("""SELECT projectId FROM Projects WHERE hostname=?""", hostname)
         projectId, = self._getOne(cu, errors.ProductNotFound, fqdn)
         return projectId
 
@@ -218,7 +215,8 @@ class Database(object):
         self.auth.requireProductCreationRights()
         if self.cfg.rBuilderOnline or not product.domainname:
             product.domainname = self.cfg.projectDomainName.split(':')[0]
-        projects._validateShortname(product.shortname, product.domainname, reservedHosts)
+        projects._validateShortname(product.shortname, product.domainname, 
+                                    reservedHosts)
         projects._validateHostname(product.hostname, product.domainname, 
                                    reservedHosts)
         if product.namespace:
@@ -270,7 +268,8 @@ class Database(object):
                                       product.version,
                                       product.commitEmail, 
                                       isPrivate=product.hidden)
-        product.id = productId
+        product.productId = productId
+        self.db.commit()
         return product
 
     def setMemberLevel(self, hostname, username, level):
@@ -278,13 +277,13 @@ class Database(object):
         level = userlevels.idsByName[level]
         product = self.getProduct(hostname)
         userId = self.getUserId(username)
-        self.productMgr.setMemberLevel(product.id, userId, level)
+        self.productMgr.setMemberLevel(product.productId, userId, level)
 
     def deleteMember(self, hostname, username):
         self.auth.requireProductOwner(hostname)
         product = self.getProduct(hostname)
         userId = self.getUserId(username)
-        self.productMgr.removeMember(product.id, userId)
+        self.productMgr.removeMember(product.productId, userId)
 
     def cancelUserAccount(self, username):
         self.auth.requireUserAdmin(username)
@@ -342,11 +341,12 @@ class Database(object):
                                                  version=version))
         return stageList
 
-    def getProductVersionImages(self, hostname, version):
+    def listImagesForProductVersion(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersion(hostname, version)
 
-    def getProductVersionStageImages(self, hostname, version, stageName):
+    def listImagesForProductVersionStage(self, hostname, version, 
+                                            stageName):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersionStage(hostname, version, stageName)
 
@@ -387,6 +387,16 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
+    def createRelease(self, hostname, buildIds):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireBuildsOnHost(hostname, buildIds)
+        releaseId = self.releaseMgr.createRelease(hostname, buildIds)
+        return releaseId
+
+    def publishRelease(self, hostname, releaseId):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version, flavor)
@@ -399,6 +409,29 @@ class Database(object):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listFilesForImage(hostname, imageId)
 
+    def createImage(self, hostname, image, buildData=None):
+        self.auth.requireProductDeveloper(hostname)
+        imageId =  self.imageMgr.createImage(hostname, image.imageType, 
+                                            image.name,  
+                                            image.getNameVersionFlavor(), 
+                                            buildData)
+        image.imageId = imageId
+        return imageId
+    
+    def setImageFiles(self, hostname, imageId, imageFiles):
+        self.auth.requireAdmin()
+        self.imageMgr.setImageFiles(hostname, imageId, imageFiles)
+
+        
+
+    def createUser(self, username, password, fullName, email, 
+                   displayEmail, blurb, admin=False):
+        self.auth.requireAdmin()
+        self.userMgr.createUser(username, password, fullName, email, 
+                                displayEmail, blurb, admin=admin)
+        self.db.commit()
+
+
     def getIdentity(self):
         serviceLevel = models.ServiceLevel(status='Trial', expired=False, 
                                            daysRemaining=10, limited=True)
@@ -409,4 +442,7 @@ class Database(object):
 
     def cursor(self):
         return self.db.cursor()
+
+    def commit(self):
+        return self.db.commit()
 

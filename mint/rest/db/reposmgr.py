@@ -28,6 +28,7 @@ class RepositoryManager(object):
         self.reposDB = reposDB
         self.db = db
         self.auth = auth
+        self.profiler = None
 
     def _getProductFQDN(self, hostname):
         cu = self.db.cursor()

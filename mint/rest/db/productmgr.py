@@ -41,7 +41,7 @@ class ProductManager(object):
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal 
+                   commitEmail, prodtype, backupExternal, hidden
             FROM Projects
             LEFT JOIN Users ON (creatorId=Users.userId)
             WHERE hostname=?
@@ -90,10 +90,9 @@ class ProductManager(object):
         return results
 
 
-    def getProductVersion(self, hostname, versionName):
+    def getProductVersion(self, fqdn, versionName):
         # accept fqdn.
-        if '.' in hostname:
-            hostname, domainname = hostname.split('.', 1)
+        hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId as versionId, 
                           PVTable.namespace, PVTable.name, PVTable.description  
@@ -329,11 +328,44 @@ class ProductManager(object):
         pd.clearBuildDefinition()
         for buildDef in model.buildDefinitions:
             self._addBuildDefinition(buildDef, pd)
-
         cclient = self.reposMgr.getInternalConaryClient(hostname)
         pd.saveToRepository(cclient,
-                'Product Definition commit from rBuilder\n')
+                            'Product Definition commit from rBuilder\n')
         return pd
+
+    def getProductVersionForLabel(self, fqdn, label):
+        cu = self.db.cursor()
+        cu.execute('''SELECT productVersionId, hostname, 
+                             domainname, shortname, 
+                             ProductVersions.namespace,    
+                             ProductVersions.name 
+                      FROM Projects 
+                      JOIN ProductVersions USING(projectId)
+                      WHERE hostname=?''', fqdn.split('.')[0])
+        for versionId, hostname, domainname, shortname, namespace, name in cu:
+            fqdn = '%s.%s' % (hostname, domainname)
+            pd = proddef.ProductDefinition()
+            pd.setProductShortname(shortname)
+            pd.setConaryRepositoryHostname(fqdn)
+            pd.setConaryNamespace(namespace)
+            pd.setProductVersion(name)
+            baseLabel = pd.getProductDefinitionLabel()
+            # assumption to speed this up.  
+            # Stages are baselabel + '-' + extention (or just baseLabel)
+            if not str(label).startswith(str(baseLabel)):
+                continue
+            try:
+                cclient = self.reposMgr.getInternalConaryClient(fqdn)
+                pd.loadFromRepository(cclient)
+            except Exception, e:
+                return versionId, None
+
+            for stage in pd.getStages():
+                stageLabel = pd.getLabelForStage(stage.name)
+                if str(label) == stageLabel:
+                    return versionId, str(stage.name)
+            return versionId, None
+        return None, None
 
     def _addBuildDefinition(self, buildDef, prodDef):
         if not buildDef.name:
