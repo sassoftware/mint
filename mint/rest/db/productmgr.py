@@ -338,18 +338,18 @@ class ProductManager(object):
     def _addBuildDefinition(self, buildDef, prodDef):
         if not buildDef.name:
             raise Exception
-        if not buildDef.flavorSet or not buildDef.flavorSet.href:
+        if not buildDef.flavorSet or not buildDef.flavorSet.id:
             flavorSetRef = None
         else:
-            flavorSetRef = os.path.basename(buildDef.flavorSet.href)
+            flavorSetRef = os.path.basename(buildDef.flavorSet.id)
 
-        if not buildDef.architecture or not buildDef.architecture.href:
+        if not buildDef.architecture or not buildDef.architecture.id:
             raise Exception
-        architectureRef = os.path.basename(buildDef.architecture.href)
+        architectureRef = os.path.basename(buildDef.architecture.id)
 
-        if not buildDef.container or not buildDef.container.href:
+        if not buildDef.container or not buildDef.container.id:
             raise Exception
-        containerRef = os.path.basename(buildDef.container.href)
+        containerRef = os.path.basename(buildDef.container.id)
         options = buildDef.container.options
         bdentry = (containerRef, architectureRef, flavorSetRef)
         # Find a matching build template
