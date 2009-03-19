@@ -216,7 +216,7 @@ class RepositoryManager(object):
 
     def getInternalRepositoryClient(self, fqdn, conaryCfg=None):
         if conaryCfg is None:
-            conaryCfg = self._getProjectConaryConfig(fqdn)
+            conaryCfg = self.getProjectConaryConfig(fqdn)
         server = self._getRepositoryServer(fqdn)
         conaryCfg = helperfuncs.configureClientProxies(conaryCfg, 
                                            self.cfg.useInternalConaryProxy, 
