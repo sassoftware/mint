@@ -15,10 +15,12 @@ from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
         CfgList, CfgPath, CfgString)
 
 
-CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
-RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
-RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
+RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
+RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', RBUILDER_DATA + 'config/rbuilder.conf')
+RBUILDER_GENERATED_CONFIG = RBUILDER_DATA + 'config/rbuilder-generated.conf'
 RBUILDER_RMAKE_CONFIG = "/etc/rmake/server.d/25_rbuilder-rapa.conf"
+
+CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
 
 # These are keys that are generated for the "generated" configuration file
 # Note: this is *only* used for the product, as rBO doesn't get configured
@@ -104,7 +106,7 @@ class MintConfig(ConfigFile):
     dbDriver                = (CfgString, 'sqlite')
     dbPath                  = (CfgPath, None)
     debugMode               = (CfgBool, False)
-    maintenanceLockPath     = (CfgPath, dataPath + '/run/maintenance.lock') 
+    maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     smallBugsEmail          = (CfgString, None)
@@ -129,7 +131,7 @@ class MintConfig(ConfigFile):
     templatePath            = (CfgPath, _templatePath + '/web/templates')
 
     # Web features
-    diffCacheDir            = (CfgPath, dataPath + '/diffcache/')
+    diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
     EnableMailLists         = (CfgBool, False)
     MailListBaseURL         = (CfgString, 'http://lists.rpath.org/mailman/')
     MailListPass            = (CfgString, 'adminpass')
@@ -173,9 +175,9 @@ class MintConfig(ConfigFile):
     serializeCommits        = (CfgBool, True)
     useInternalConaryProxy  = (CfgBool, False)
 
-    proxyContentsDir        = (CfgPath, dataPath + '/proxy-contents/')
-    proxyTmpDir             = (CfgPath, dataPath + '/tmp/')
-    proxyChangesetCacheDir  = (CfgPath, dataPath + '/cscache/')
+    proxyContentsDir        = (CfgPath, RBUILDER_DATA + '/proxy-contents/')
+    proxyTmpDir             = (CfgPath, RBUILDER_DATA + '/tmp/')
+    proxyChangesetCacheDir  = (CfgPath, RBUILDER_DATA + '/cscache/')
 
     # Project defaults
     hideNewProjects         = (CfgBool, False)
@@ -251,8 +253,8 @@ class MintConfig(ConfigFile):
     ec2PrivateKey           = (CfgString, '', "The AWS public key")
     ec2AccountId            = (CfgString, '', "The AWS private key")
     ec2S3Bucket             = None
-    ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
-    ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
+    ec2CertificateFile      = os.path.join(RBUILDER_DATA, 'config', 'ec2.pem')
+    ec2CertificateKeyFile   = os.path.join(RBUILDER_DATA, 'config', 'ec2.key')
     ec2LaunchUsers          = (CfgList(CfgString),)
     ec2LaunchGroups         = (CfgList(CfgString),)
     ec2ExposeTryItLink      = (CfgBool, False)
