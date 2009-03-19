@@ -14,11 +14,20 @@ class ItemNotFound(mint_error.MintError):
     def __str__(self):
         return '%s' % (self.args[0],)
 
+class InvalidTroveSpec(mint_error.MintError):
+    status = 400
+
+class InvalidVersion(mint_error.MintError):
+    status = 400
+
+class InvalidFlavor(mint_error.MintError):
+    status = 400
+
 class InvalidSearchType(mint_error.MintError):
     pass
 
 class ProductNotFound(ItemNotFound):
-    pass
+    status = 404
 
 class ProductVersionNotFound(ItemNotFound):
     pass
