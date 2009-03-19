@@ -32,6 +32,7 @@ def atomicOpen(path, mode='w+b', chmod=0644):
         # are immediately present and accessible.
         fObj.flush()
         os.chmod(fObj.name, fObj.finalMode)
+        os.fsync(fObj)
 
         # Rename to the new location. Since both are on the same
         # filesystem, this will atomically replace the old with the new.
