@@ -5,6 +5,7 @@
 #
 import mimetypes
 
+from conary.deps import deps
 from conary import trove
 from conary import versions
 from conary.conaryclient import cmdline
@@ -21,23 +22,28 @@ class BaseReposController(base.BaseController):
         return self.db.productMgr.reposMgr.getInternalRepositoryClient(hostname)
 
     def _getTuple(self, troveString):
-        name, version, flavor = cmdline.parseTroveSpec(troveString)
+        try:
+            name, version, flavor = cmdline.parseTroveSpec(troveString)
+        except cmdline.TroveSpecError, e:
+            raise errors.InvalidTroveSpec("Error parsing trove %s: %s" %
+                (troveString, str(e)))
+
         try:
             version = versions.VersionFromString(version)
-        except Exception, e:
-            raise NotImplementedError
+        except versions.ParseError, e:
+            raise errors.InvalidVersion("Error parsing version %s: %s" %
+                (version, str(e)))
+
         return name, version, flavor
 
     def _checkTrove(self, hostname, troveString):
-        name, version, flavor = cmdline.parseTroveSpec(troveString)
+        name, version, flavor = self._getTuple(troveString)
         repos = self.getRepos(hostname)
         if not repos.hasTrove(name, version, flavor):
-            raise NotImplementedError
+            raise errors.TroveNotFound(troveString)
         trv = models.Trove(hostname=hostname, 
                             name=name, version=version, flavor=flavor)
         return repos, trv
-
-
 
 class RepositoryFilesController(BaseReposController):
     modelName = 'pathHash'

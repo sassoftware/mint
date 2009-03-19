@@ -12,6 +12,7 @@ import re
 import time
 
 from conary.lib import util
+from mint import buildtypes
 
 import restbase
 from restlib import client as restClient
@@ -120,6 +121,60 @@ Index.
              exp % dict(port = client.port, server = client.server,
                         timestamp = ''))
 
+    def testGetImages(self):
+        label = self.productDefinition.getDefaultLabel()
+        self.addComponent("foo:bin=%s" % label)
+        self.addCollection("foo=%s" % label, ['foo:bin'])
+        groupTrv = self.addCollection("group-foo=%s" % label, ['foo'])
+
+        uriTemplate = 'products/%s/repos/items/%s=%s[%s]/images'
+        uri = uriTemplate % (self.productShortName, groupTrv.getName(),
+            groupTrv.getVersion(), groupTrv.getFlavor())
+
+        client = self.getRestClient(uri)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<images/>
+"""
+        self.failUnlessEqual(response.read(), exp)
+
+        badVerFlv = [
+            ('aaa', '', 'InvalidVersion: Error parsing version %(ver)s: Expected full version, got "%(ver)s"\n'),
+            ('a:b', '', 'InvalidVersion: Error parsing version %(ver)s: Expected full version, got "%(ver)s"\n'),
+            ('a:b@', '', 'InvalidVersion: Error parsing version %(ver)s: Expected full version, got "%(ver)s"\n'),
+            ('/a:b@c', 'blah:blah', 'InvalidTroveSpec: Error parsing trove %(trv)s: Error with spec "%(trv)s": bad flavor spec\n'),
+        ]
+
+        for ver, flv, errorMessage in badVerFlv:
+            uri = uriTemplate % (self.productShortName, groupTrv.getName(),
+                ver, flv)
+            self.newConnection(client, uri)
+
+            response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+            self.failUnlessEqual(response.status, 400)
+            trvSpec = "%s=%s[%s]" % ('group-foo', ver, flv)
+            self.failUnlessEqual(response.contents, errorMessage % 
+                dict(ver = ver, flv = flv, trv = trvSpec))
+
+        raise testsetup.testsuite.SkipTestException("No instrumentation for pushing images yet")
+        # Let's add some images
+        db = self.openMintDatabase()
+        images = [
+            ('Image 1', buildtypes.INSTALLABLE_ISO),
+            ('Image 2', buildtypes.TARBALL),
+        ]
+        groupName = groupTrv.getName()
+        groupVer = groupTrv.getVersion().freeze()
+        groupFlv = str(groupTrv.getFlavor())
+        for imageName, imageType in images:
+            imageId = self.createImage(db, self.productShortName,
+                imageType, name = imageName,
+                description = "Description for %s" % imageName,
+                troveName = groupName,
+                troveVersion = groupVer,
+                troveFlavor = groupFlv)
+            self.setImageFiles(db, self.productShortName, imageId)
 
 if __name__ == "__main__":
         testsetup.main()
