@@ -331,6 +331,7 @@ class ProductManager(object):
         cclient = self.reposMgr.getInternalConaryClient(hostname)
         pd.saveToRepository(cclient,
                             'Product Definition commit from rBuilder\n')
+        return pd
 
     def getProductVersionForLabel(self, fqdn, label):
         cu = self.db.cursor()
