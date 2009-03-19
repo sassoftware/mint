@@ -16,16 +16,21 @@ class ErrorCallback(object):
         
     def processException(self, request, excClass, exception, tb):
         message = '%s: %s' % (excClass.__name__, exception)
-        tbString = 'Traceback:\n' + ''.join(traceback.format_tb(tb))
         if hasattr(exception, 'status'):
             status = exception.status
         else:
             status = 500
-        if request.contentType == 'text/plain':
-            # just print out the traceback in the easiest to read
-            # format.
+        # Only send the traceback information if it's an unintentional
+        # exception (i.e. a 500)
+        if status == 500:
+            tbString = 'Traceback:\n' + ''.join(traceback.format_tb(tb))
             text = [message + '\n', tbString]
         else:
+            tbString = None
+            text = [message + '\n']
+        # for text/plain, just print out the traceback in the easiest to read
+        # format.
+        if request.contentType != 'text/plain':
             code = status
             if 'HTTP_X_FLASH_VERSION' in request.headers:
                 status = 200
