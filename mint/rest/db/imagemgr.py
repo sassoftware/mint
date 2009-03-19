@@ -4,12 +4,17 @@
 # All Rights Reserved
 #
 import os
+import time
 
 from conary.deps import deps
 from conary import versions
 
+from mint import builds
 from mint import buildtypes
 from mint import jobstatus
+from mint import mint_error
+from mint import urltypes
+from mint.lib import data
 from mint.rest import errors
 from mint.rest.api import models
 
@@ -31,8 +36,7 @@ class ImageManager(object):
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
         hostname = fqdn.split('.')[0]
-        sql = '''
-        SELECT buildId as imageId, hostname,
+        sql = '''SELECT buildId as imageId, hostname,
                pubReleaseId as release,  
                buildType as imageType, Builds.name, Builds.description, 
                troveName, troveVersion, troveFlavor, troveLastChanged,
@@ -141,7 +145,7 @@ class ImageManager(object):
                 image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
         else:
             image.status = jobstatus.FINISHED
-            image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+            image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
 
     def _getMcpClient(self):
         if not self.mcpClient:
@@ -156,3 +160,85 @@ class ImageManager(object):
 
             self.mcpClient = mcpclient.MCPClient(mcpClientCfg)
         return self.mcpClient
+
+    def _getJobServerVersion(self):
+        try:
+            mc = self._getMcpClient()
+            return str(mc.getJSVersion())
+        except mcp_error.NotEntitledError:
+            raise mint_error.NotEntitledError
+        except mcp_error.NetworkError:
+            raise mint_error.BuildSystemDown
+
+    def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
+        cu = self.db.db.cursor()
+        productId = self.db.getProductId(fqdn)
+        troveLabel = troveTuple[1].trailingLabel()
+        productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
+                                                fqdn, troveLabel)
+        sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
+                                     buildCount, createdBy, troveName, 
+                                     troveVersion, troveFlavor, stageName, 
+                                     productVersionId) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+        cu.execute(sql, productId, buildName, buildType,    
+                   time.time(), 0, self.auth.userId,
+                   troveTuple[0], troveTuple[1].freeze(),
+                   troveTuple[2].freeze(),
+                   stage, productVersionId)
+        buildId = cu.lastrowid
+
+        buildDataTable = self.db.db.buildData
+        if buildData:
+            for name, value, dataType in buildData:
+                buildDataTable.setDataValue(buildId, name, value, dataType, 
+                                            commit=False)
+
+        jsversion = self._getJobServerVersion()
+        buildDataTable.setDataValue(buildId, 'jsversion',
+                               jsversion, data.RDT_STRING, commit=False)
+        # clear out all "important flavors"
+        for x in buildtypes.flavorFlags.keys():
+            buildDataTable.removeDataValue(buildId, x, commit=False)
+
+        # and set the new ones
+        for x in builds.getImportantFlavors(troveTuple[2]):
+            buildDataTable.setDataValue(buildId, x, 1, data.RDT_INT, 
+                                        commit=False)
+        self.db.db.commit()
+        return buildId
+
+    def setImageFiles(self, hostname, imageId, imageFiles):
+        cu = self.db.cursor()
+        if self.db.db.driver == 'sqlite':
+            cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
+                (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
+                    imageId)
+        cu.execute("DELETE FROM BuildFiles WHERE buildId=?", imageId)
+        for idx, item in enumerate(imageFiles):
+            if len(item) == 2:
+                fileName, title = item
+                sha1 = ''
+                size = 0
+            elif len(item) == 4:
+                fileName, title, size, sha1 = item
+                
+                # Newer jobslaves will send this as a string; convert
+                # to a long for the database's sake (RBL-2789)
+                size = long(size)
+
+                # sanitize filename based on configuration
+                fileName = os.path.join(self.cfg.imagesPath, 
+                                        hostname,
+                                str(imageId), os.path.basename(fileName))
+            else:
+                raise ValueError
+            cu.execute("INSERT INTO BuildFiles "
+                        "VALUES(NULL, ?, ?, NULL, ?, ?, ?)", 
+                        imageId, idx, title, size, sha1)
+            fileId = cu.lastrowid
+            cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
+                urltypes.LOCAL, fileName)
+            urlId = cu.lastrowid
+            cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
+                       fileId, urlId)
