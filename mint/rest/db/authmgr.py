@@ -12,6 +12,10 @@ class AuthenticationManager(object):
         self.auth = None
         self.db = db
         self.cfg = cfg
+        self.username = None
+        self.fullName = None
+        self.userId = None
+        self.isAdmin = False
 
     def setAuth(self, auth, authToken):
         self.auth = auth
@@ -77,7 +81,7 @@ class AuthenticationManager(object):
 
     def requireUserAdmin(self, username):
         if self.isAdmin or self.username == username:
-            pass
+            return
         raise errors.PermissionDenied()
 
     def requireProductCreationRights(self):
@@ -86,3 +90,13 @@ class AuthenticationManager(object):
     def requireAdmin(self):
         if not self.isAdmin:
             raise errors.PermissionDenied()
+
+    def requireBuildsOnHost(self, hostname, buildIds):
+        cu = self.db.cursor()
+        for buildId in buildIds:
+            cu.execute('''
+                SELECT * FROM Builds 
+                JOIN Projects USING(projectId)
+                WHERE hostname=? AND buildId=?''', hostname, buildId)
+            if not cu.fetchall():
+                raise errors.BuildNotfound(buildId)
