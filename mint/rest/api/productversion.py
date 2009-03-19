@@ -32,7 +32,7 @@ class BuildDefinitionMixIn(object):
             fset = pd.getFlavorSet(fset,
                      pd.getPlatformFlavorSet(fset, None))
             if fset:
-                kw['flavorSet'] = models.FlavorSet(href = fset.name,
+                kw['flavorSet'] = models.FlavorSet(id = fset.name,
                                             name = fset.name,
                                             displayName = fset.displayName,
                                             **extraParams)
@@ -41,7 +41,7 @@ class BuildDefinitionMixIn(object):
             arch = pd.getArchitecture(arch,
                 pd.getPlatformArchitecture(arch, None))
             if arch:
-                kw['architecture'] = models.Architecture(href = arch.name,
+                kw['architecture'] = models.Architecture(id = arch.name,
                     name = arch.name,
                     displayName = arch.displayName,
                     **extraParams)
@@ -60,7 +60,7 @@ class BuildDefinitionMixIn(object):
                     imageField = ctempl
                 imageParams = models.ImageParams(**imageField.fields)
                 kw['container'] = models.ContainerFormat(
-                    href = ctemplRef,
+                    id = ctemplRef,
                     name = ctemplRef,
                     displayName = displayName,
                     options = imageParams,

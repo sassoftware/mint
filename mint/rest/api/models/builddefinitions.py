@@ -10,30 +10,25 @@ from mint.rest.modellib import fields
 from rpath_common.proddef import imageTypes
 
 class _DisplayField(Model):
-    href = fields.AbsoluteUrlField(isAttribute = True)
-    name = fields.CharField()
-    displayName = fields.CharField()
-
-    def get_absolute_url(self):
-        return 'products.versions', "a", "b"
+    "Base field class"
 
 class Architecture(_DisplayField):
-    href = fields.AbsoluteUrlField(isAttribute = True)
+    id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "architectures", self.href)
+            "architectures", self.id)
 
 class FlavorSet(_DisplayField):
-    href = fields.AbsoluteUrlField(isAttribute = True)
+    id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "flavorSets", self.href)
+            "flavorSets", self.id)
 
 class ImageModelMeta(ModelMeta):
     # This is a bit twisted - we're copying the class definition from
@@ -53,14 +48,14 @@ class ImageParams(Model):
     __metaclass__ = ImageModelMeta
 
 class ContainerFormat(_DisplayField):
-    href = fields.AbsoluteUrlField(isAttribute = True)
+    id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
     options = fields.ModelField(ImageParams)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "containers", self.href)
+            "containers", self.id)
 
 class StageHref(Model):
     href = fields.AbsoluteUrlField(isAttribute = True)
@@ -86,8 +81,8 @@ class BuildDefinition(Model):
 
 class BuildDefinitions(Model):
     class Meta(object):
-        name = "image-definitions"
-    buildDefinitions = fields.ListField(BuildDefinition, displayName = 'image-definition')
+        name = "imageDefinitions"
+    buildDefinitions = fields.ListField(BuildDefinition, displayName = 'imageDefinition')
 
 class BuildTemplate(Model):
     id = fields.AbsoluteUrlField(isAttribute = True)
@@ -104,6 +99,6 @@ class BuildTemplate(Model):
 
 class BuildTemplates(Model):
     class Meta(object):
-        name = 'image-type-definitions'
+        name = 'imageTypeDefinitions'
     buildTemplates = fields.ListField(BuildTemplate,
-        displayName = 'image-type-definition')
+        displayName = 'imageTypeDefinition')
