@@ -3,6 +3,9 @@
 #
 # All Rights Reserved
 #
+from conary import versions
+from conary.deps import deps
+
 from mint.rest import modellib
 from mint.rest.modellib import Field
 
@@ -103,10 +106,20 @@ class DateTimeField(Field):
     pass
 
 class VersionField(Field):
-    pass
+    def _valueFromString(self, value):
+        try:
+            return versions.VersionFromString(value)
+        except ValueError:
+            return versions.ThawVersion(value)
+
 
 class FlavorField(Field):
-    pass
+    def _valueFromString(self, value):
+        try:
+            return deps.parseFlavor(value)
+        except deps.ParseError:
+            return deps.ThawFlavor(value)
+
 
 class ListField(Field):
     listType = list
