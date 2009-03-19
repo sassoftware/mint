@@ -6,22 +6,17 @@
 #
 
 import testsetup
-testsetup.testsuite.setup()
 
 import os
-import StringIO
 import time
 
-from mint import notices_store
 from conary.lib import util
-
-from rpath_common.proddef import api1 as proddef
 
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class WebPageTest(restbase.BaseRestTest):
+class ReposTest(restbase.BaseRestTest):
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
 

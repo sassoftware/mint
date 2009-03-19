@@ -6,23 +6,18 @@
 #
 
 import testsetup
-import testsuite
-testsuite.setup()
 
 import os
 import StringIO
 import time
 
-from mint import notices_store
 from conary.lib import util
-
-from rpath_common.proddef import api1 as proddef
 
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class WebPageTest(restbase.BaseRestTest):
+class ProductVersionTest(restbase.BaseRestTest):
     buildDefs = [
         ('Citrix XenServer 32-bit', 'xen', 'x86', 'xenOvaImage'),
         ('Citrix XenServer 64-bit', 'xen', 'x86_64', 'xenOvaImage'),

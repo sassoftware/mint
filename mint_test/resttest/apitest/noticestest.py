@@ -6,8 +6,6 @@
 #
 
 import testsetup
-import testsuite
-testsuite.setup()
 
 import os
 import time
@@ -19,7 +17,7 @@ import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class WebPageTest(restbase.BaseRestTest):
+class NoticesTest(restbase.BaseRestTest):
     def tearDown(self):
         restbase.BaseRestTest.tearDown(self)
         util.rmtree(os.path.join(self.mintCfg.dataPath, 'notices'),
