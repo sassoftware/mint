@@ -91,7 +91,7 @@ def readonly(fn, self, *args, **kw):
     inTransaction = self.inTransaction()
     rv = fn(self, *args, **kw)
     if not inTransaction and self.inTransaction():
-        raise RuntimeError('Database modified unexpectedly after .')
+        raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
     return rv
 
 class Database(DBInterface):
