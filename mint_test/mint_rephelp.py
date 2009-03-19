@@ -437,18 +437,6 @@ rephelp._cleanUp = _cleanUp
 
 _reposDir = None
 
-class RestDbMixIn(object):
-    def _startDatabase(self):
-        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if mintDb == "sqlite" or mintDb == 'postgresql':
-            self.mintDb = SqliteMintDatabase(self.workDir + "/mintdb")
-        elif mintDb == "mysql":
-            raise NotImplementedError
-        # loads schema, takes .2s
-        # FIXME: eliminate for sqlite by copying in premade sqlite db.
-        self.mintDb.start()
-
-
 class MintDatabaseHelper(rephelp.RepositoryHelper):
     
     def setUp(self):
@@ -544,8 +532,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
                                    platformLabel=platformLabel)
         return db.createProductVersion(hostname, pv)
 
-    @classmethod
-    def createImage(cls, db, hostname, imageType, imageFiles=None,
+    def createImage(self, db, hostname, imageType, imageFiles=None,
                  name='Build', description='Build Description',
                  troveName = 'foo',
                  troveVersion = '/localhost@test:1/1:0.1-1-1',
@@ -560,8 +547,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         db.createImage(hostname, img, buildData)
         return img.imageId
 
-    @classmethod
-    def setImageFiles(cls, db, hostname, imageId, imageFiles=None):
+    def setImageFiles(self, db, hostname, imageId, imageFiles=None):
         if imageFiles is None:
             digest = sha1()
             digest.update(str(imageId))
@@ -572,6 +558,16 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
                            1024 * imageId, digest)]
         db.setImageFiles(hostname, imageId, imageFiles)
 
+
+    def _startDatabase(self):
+        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if mintDb == "sqlite" or mintDb == 'postgresql':
+            self.mintDb = SqliteMintDatabase(self.workDir + "/mintdb")
+        elif mintDb == "mysql":
+            raise NotImplementedError
+        # loads schema, takes .2s
+        # FIXME: eliminate for sqlite by copying in premade sqlite db.
+        self.mintDb.start()
 
     def shutDown(self):
         rephelp.RepositoryHelper.shutDown(self)
@@ -641,15 +637,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
     def reset(self):
         self.mintServers.resetAllServersIfNeeded()
         return rephelp.RepositoryHelper.reset(self)
-
-    @classmethod
-    def createImage(cls, *args, **kwargs):
-        return MintDatabaseHelper.createImage(*args, **kwargs)
-
-    @classmethod
-    def setImageFiles(cls, *args, **kwargs):
-        return MintDatabaseHelper.setImageFiles(*args, **kwargs)
-
 
     def __init__(self, methodName):
         rephelp.RepositoryHelper.__init__(self, methodName)
