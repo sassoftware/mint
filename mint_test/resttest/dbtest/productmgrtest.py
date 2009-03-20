@@ -114,6 +114,8 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
 
     def testGetProductFQDN(self):
         db = self.openMintDatabase(createRepos=False)
+        self.createUser('owner')
+        self.setDbUser(db, 'owner')
         productId = self.createProduct('foo', domainname='rpath.com', 
                                        db=db)
         fqdn = db.productMgr._getProductFQDN(productId)
