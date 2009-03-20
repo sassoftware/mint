@@ -7,6 +7,7 @@ import traceback
 
 from restlib import response
 
+from mint import logerror
 from mint.rest.api import models
 from mint.rest.modellib import converter
 
@@ -20,6 +21,10 @@ class ErrorCallback(object):
             status = exception.status
         else:
             status = 500
+            # TODO: Pass contextual info like request params
+            logerror.logErrorAndEmail(self.controller.cfg,
+                    excClass, exception, tb, 'API call', {})
+
         # Only send the traceback information if it's an unintentional
         # exception (i.e. a 500)
         if status == 500:
