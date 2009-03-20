@@ -107,7 +107,7 @@ class Database(DBInterface):
         self.imageMgr = imagemgr.ImageManager(self.cfg, self, self.auth)
         self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
                                                     self.auth, self.publisher)
-        self.userMgr = usermgr.UserManager(self.cfg, self.db, self.publisher)
+        self.userMgr = usermgr.UserManager(self.cfg, self, self.publisher)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(self.cfg, self, 
@@ -120,8 +120,9 @@ class Database(DBInterface):
         self.auth.setAuth(auth, authToken)
 
     def setProfiler(self, profile):
-        profile.attachDb(self.db.db)
-        profile.attachRepos(self.productMgr.reposMgr)
+        #profile.attachDb(self.db.db)
+        #profile.attachRepos(self.productMgr.reposMgr)
+        pass
 
     @readonly
     def getUsername(self, userId):
@@ -354,7 +355,8 @@ class Database(DBInterface):
 
     @commitafter
     def deleteMember(self, hostname, username):
-        self.auth.requireProductOwner(hostname)
+        if self.auth.username != username:
+            self.auth.requireProductOwner(hostname)
         product = self.getProduct(hostname)
         userId = self.getUserId(username)
         self.productMgr.deleteMember(product.productId, userId)
@@ -362,8 +364,7 @@ class Database(DBInterface):
     @commitafter
     def cancelUserAccount(self, username):
         self.auth.requireUserAdmin(username)
-        userId = self.getUserId(username)
-        self.userMgr.cancelUserAccount(userId)
+        self.userMgr.cancelUserAccount(username)
 
     @commitafter
     def createProductVersion(self, fqdn, productVersion):

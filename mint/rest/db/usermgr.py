@@ -25,20 +25,24 @@ class UserManager(object):
         self.db = db
         self.publisher = publisher
         
-    def cancelUserAccount(self, userId):
+    def cancelUserAccount(self, username):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.
         """
+        userId = self.getUserId(username)
+        # NOTE: this check is duplicated by the check when deleting
+        # each project membership.
         self._ensureNoOrphans(userId)
-        self.membershipRequests.userAccountCanceled(userId)
-        self.filterLastAdmin(userId)
-        username = self.users.getUsername(userId)
+        self.db.db.membershipRequests.userAccountCanceled(userId)
+        self.filterLastAdmin(username)
 
         #Handle projects
-        projectList = self.getProjectIdsByMember(userId)
-        for (projectId, level) in projectList:
-            self.delMember(projectId, userId, False)
+        projectList = self.db.listMembershipsForUser(username).members
+        for membership in projectList:
+            productId = self.db.getProductId(membership.hostname)
+            self.db.productMgr.deleteMember(productId, userId, notify=False)
 
+        cu = self.db.cursor()
         cu.execute("""SELECT userGroupId FROM UserGroupMembers
                           WHERE userId=?""", userId)
         for userGroupId in [x[0] for x in cu.fetchall()]:
@@ -63,10 +67,12 @@ class UserManager(object):
         """
         Make sure there won't be any orphans
         """
+        import epdb
+        epdb.st('f')
         cu = self.db.cursor()
 
-        # Find all projects of which userId is an owner, has no other owners, and/or
-        # has developers.
+        # Find all projects of which userId is an owner, has no other owners,
+        # and/or has developers.
         cu.execute("""
         SELECT MAX(D.flagged)
     FROM (SELECT A.projectId,
@@ -86,19 +92,18 @@ class UserManager(object):
         
         return True
 
-    def filterLastAdmin(self, userId):
+    def filterLastAdmin(self, username):
         """Raises an exception if the last site admin attempts to cancel their
         account, to protect against not having any admins at all."""
-        if not self._isUserAdmin(userId):
+        if not self._isUserAdmin(username):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT userId
+        cu.execute("""SELECT username
                           FROM UserGroups
-                          LEFT JOIN UserGroupMembers
-                          ON UserGroups.userGroupId =
-                                 UserGroupMembers.userGroupId
+                          JOIN UserGroupMembers USING(userGroupId)
+                          JOIN Users USING(userId)
                           WHERE userGroup='MintAdmin'""")
-        if [x[0] for x in cu.fetchall()] == [userId]:
+        if [x[0] for x in cu.fetchall()] == [username]:
             # userId is admin, and there is only one admin => last admin
             raise mint_error.LastAdmin(
                         "There are no more admin accounts. Your request "
@@ -118,18 +123,24 @@ class UserManager(object):
                    ' FROM UserGroups WHERE userGroup=?', 'MintAdmin')
         groupIds = cu.fetchall()
         if groupIds:
-            return groupIds[0]
+            return groupIds[0][0]
         cu.execute('INSERT INTO UserGroups (userGroup) VALUES (?)''',
                    'MintAdmin')
         return cu.lastrowid
 
+    def _isUserAdmin(self, username):
+        cu = self.db.cursor()
+        cu.execute('''SELECT userGroup FROM Users
+                    JOIN UserGroupMembers USING(userId)
+                    JOIN UserGroups USING(userGroupId)
+                    WHERE userGroup=? AND username=?''', 'MintAdmin', username)
+        return bool(cu.fetchall())
+
     def makeAdmin(self, username):
-        groupId = self._getAdminGroupId()
         userId = self.getUserId(username)
         cu = self.db.cursor()
-        cu.execute('SELECT * FROM UserGroupMembers'
-                   ' WHERE userGroupId=? AND userId=?', groupId, userId)
-        if not cu.fetchall():
+        if not self._isUserAdmin(username):
+            groupId = self._getAdminGroupId()
             cu.execute('INSERT INTO UserGroupMembers (userGroupId, userId)'
                        ' VALUES (?, ?)', groupId, userId)
 

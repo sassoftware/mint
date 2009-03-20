@@ -189,8 +189,10 @@ class ProductManager(object):
         if isMember:
             if level == oldLevel:
                 return
-            if self.db.db.projectUsers.onlyOwner(projectId, userId) and \
-                   (level != userlevels.OWNER):
+            if (level != userlevels.OWNER and oldLevel == userlevels.OWNER
+                and self.db.db.projectUsers.onlyOwner(projectId, userId)):
+                # TODO: this error is not quite right.  We're not explicitly
+                # trying to "orphan" the project just demote the last owner.
                 raise mint_error.LastOwner
             cu = self.db.cursor()
 
@@ -213,15 +215,21 @@ class ProductManager(object):
                                       projectId, level)
             return True
 
-    def deleteMember(self, projectId, userId):
+    def deleteMember(self, projectId, userId, notify=True):
         fqdn = self._getProductFQDN(projectId)
         username = self.db.userMgr._getUsername(userId)
-        if self.db.db.projectUsers.onlyOwner(projectId, userId):
+        if self.db.db.projectUsers.lastOwner(projectId, userId):
+            # This check ensures there are no developers assigned
+            # to this project.  (As opposed to onlyOwner which merely
+            # checks that this user is not the last owner.)  TODO:   
+            # rename these checks to be clearer and move them here,
+            # and create separate exceptions. 
             raise mint_error.LastOwner
         self.reposMgr.deleteUser(fqdn, username)
         self.db.db.projectUsers.delete(projectId, userId)
-        self.publisher.notify('UserProductRemoved', 
-                              userId, projectId)
+        if notify:
+            self.publisher.notify('UserProductRemoved', 
+                                  userId, projectId)
 
     def createProductVersion(self, fqdn, version, namespace, description,
                              platformLabel):

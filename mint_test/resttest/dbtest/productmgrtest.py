@@ -116,8 +116,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('owner')
         self.setDbUser(db, 'owner')
-        productId = self.createProduct('foo', domainname='rpath.com', 
-                                       db=db)
+        productId = self.createProduct('foo', domainname='rpath.com', db=db)
         fqdn = db.productMgr._getProductFQDN(productId)
         self.assertEquals(fqdn, 'foo.rpath.com')
         
@@ -177,6 +176,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createUser('owner')
         self.createUser('user')
+        self.createUser('developer')
         self.setDbUser(db, 'admin')
         userId = db.getUser('user').userId
         ownerId = db.getUser('owner').userId
@@ -184,7 +184,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         db.productMgr.publisher = publisher
         reposMgr = db.productMgr.reposMgr
         productId = self.createProduct('foo', owners=['owner'], users=['user'],
-                                       db=db)
+                                       developers=['developer'], db=db)
         self.assertRaises(mint_error.LastOwner, db.deleteMember, 
                           'foo', 'owner')
         db.deleteMember('foo', 'user')
