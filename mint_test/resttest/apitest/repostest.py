@@ -157,9 +157,8 @@ Index.
             self.failUnlessEqual(response.contents, errorMessage % 
                 dict(ver = ver, flv = flv, trv = trvSpec))
 
-        raise testsetup.testsuite.SkipTestException("No instrumentation for pushing images yet")
         # Let's add some images
-        db = self.openMintDatabase()
+        db = self.openRestDatabase()
         images = [
             ('Image 1', buildtypes.INSTALLABLE_ISO),
             ('Image 2', buildtypes.TARBALL),
@@ -175,6 +174,83 @@ Index.
                 troveVersion = groupVer,
                 troveFlavor = groupFlv)
             self.setImageFiles(db, self.productShortName, imageId)
+
+        uri = uriTemplate % (self.productShortName, groupTrv.getName(),
+            groupTrv.getVersion(), groupTrv.getFlavor())
+
+        self.newConnection(client, uri)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<images>
+  <image id="http://%(server)s:%(port)s/api/products/testproject/images/1">
+    <imageId>1</imageId>
+    <hostname>testproject</hostname>
+    <release/>
+    <imageType>Inst CD/DVD</imageType>
+    <name>Image 1</name>
+    <troveName>group-foo</troveName>
+    <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
+    <trailingVersion>1-1-1</trailingVersion>
+    <troveFlavor></troveFlavor>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
+    <stage/>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <updater/>
+    <timeCreated></timeCreated>
+    <buildCount>0</buildCount>
+    <status>401</status>
+    <statusMessage>No job</statusMessage>
+    <files>
+      <file>
+        <fileId>1</fileId>
+        <imageId>1</imageId>
+        <title>Image File 1</title>
+        <size>1024</size>
+        <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
+        <url urlType="0">/tmp/rbuildertest-misa/repos-mint/images/testproject/2/imagefile_2.iso</url>
+      </file>
+    </files>
+  </image>
+  <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
+    <imageId>2</imageId>
+    <hostname>testproject</hostname>
+    <release/>
+    <imageType>Tar</imageType>
+    <name>Image 2</name>
+    <troveName>group-foo</troveName>
+    <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
+    <trailingVersion>1-1-1</trailingVersion>
+    <troveFlavor></troveFlavor>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
+    <stage/>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <updater/>
+    <timeCreated></timeCreated>
+    <buildCount>0</buildCount>
+    <status>401</status>
+    <statusMessage>No job</statusMessage>
+    <files>
+      <file>
+        <fileId>2</fileId>
+        <imageId>2</imageId>
+        <title>Image File 2</title>
+        <size>2048</size>
+        <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
+        <url urlType="0">/tmp/rbuildertest-misa/repos-mint/images/testproject/2/imagefile_2.iso</url>
+      </file>
+    </files>
+  </image>
+</images>
+"""
+        resp = response.read()
+        resp = re.sub("<timeCreated>.*</timeCreated>",
+                      "<timeCreated></timeCreated>",
+                      resp)
+
+        self.failUnlessEqual(resp,
+             exp % dict(port = client.port, server = client.server))
+
 
 if __name__ == "__main__":
         testsetup.main()
