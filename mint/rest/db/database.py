@@ -106,7 +106,7 @@ class Database(DBInterface):
                                                     self.auth, self.publisher)
         self.imageMgr = imagemgr.ImageManager(self.cfg, self, self.auth)
         self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
-                                                    self.auth)
+                                                    self.auth, self.publisher)
         self.userMgr = usermgr.UserManager(self.cfg, self.db, self.publisher)
         if subscribers is None:
             subscribers = []
@@ -486,16 +486,25 @@ class Database(DBInterface):
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
     @commitafter
-    def createRelease(self, hostname, buildIds):
+    def createRelease(self, hostname, name, description, buildIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireBuildsOnHost(hostname, buildIds)
-        releaseId = self.releaseMgr.createRelease(hostname, buildIds)
+        releaseId = self.releaseMgr.createRelease(hostname, name, description,
+                                                  buildIds)
         return releaseId
 
-    @readonly    
-    def publishRelease(self, hostname, releaseId):
-        self.auth.requireProductDeveloper(hostname)
+    @commitafter    
+    def publishRelease(self, hostname, releaseId, shouldMirror):
         self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireProductOwner(hostname)
+        self.releaseMgr.publishRelease(releaseId, shouldMirror)
+
+    @commitafter    
+    def unpublishRelease(self, hostname, releaseId):
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireProductOwner(hostname)
+        self.releaseMgr.unpublishRelease(releaseId)
+
 
     @readonly    
     def listImagesForTrove(self, hostname, name, version, flavor):

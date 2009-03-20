@@ -25,3 +25,9 @@ class AWSHandler(object):
         awsFound, oldAwsAccountNumber = self.db.userData.getDataValue(
                                                 userId, 'awsAccountNumber')
         self.amiPerms.setUserKey(userId, oldAwsAccountNumber, None)
+
+    def notify_ReleasePublished(self, releaseId):
+        self.amiPerms.publishRelease(releaseId)
+
+    def notify_ReleaseUnpublished(self, releaseId):
+        self.amiPerms.unpublishRelease(releaseId)

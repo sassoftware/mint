@@ -45,7 +45,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
                                     name='Image2')
         self.createImage(db, 'foo', buildtypes.TARBALL, name='Image3')
         self.setImageFiles(db, 'foo', imageId2)
-        releaseId = self.createRelease(db, 'foo', [imageId, imageId2])
+        releaseId = self.createRelease(db, 'foo', 'name', '', [imageId, imageId2])
         images = db.listImagesForRelease('foo', releaseId).images
         assert(len(images) == 2)
         images = dict((x.name, x) for x in images)

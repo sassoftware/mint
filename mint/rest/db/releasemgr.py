@@ -11,10 +11,11 @@ from mint.rest import errors
 from mint.rest.api import models
 
 class ReleaseManager(object):
-    def __init__(self, cfg, db, auth):
+    def __init__(self, cfg, db, auth, publisher):
         self.cfg = cfg
         self.db = db
         self.auth = auth
+        self.publisher = publisher
 
     def listReleasesForProduct(self, fqdn):
         hostname = fqdn.split('.')[0]
@@ -29,8 +30,8 @@ class ReleaseManager(object):
             shouldMirror, timeMirrored
         FROM  PublishedReleases as PR
         JOIN Projects USING(projectId)
-        JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
-        JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
+        LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
+        LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
         LEFT JOIN Users as PublishUser ON (publishedBy=PublishUser.userId)
         WHERE hostname=?'''
         cu.execute(sql, hostname)
@@ -54,8 +55,8 @@ class ReleaseManager(object):
             shouldMirror, timeMirrored
         FROM  PublishedReleases as PR
         JOIN Projects USING(projectId)
-        JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
-        JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
+        LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
+        LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
         LEFT JOIN Users as PublishUser ON (publishedBy=PublishUser.userId)
         WHERE hostname=? and releaseId=?'''
         cu.execute(sql, hostname, releaseId)
@@ -63,15 +64,15 @@ class ReleaseManager(object):
                                    (hostname, releaseId)))
         return models.Release(**row)
 
-    def createRelease(self, fqdn, buildIds):
+    def createRelease(self, fqdn, name, description, buildIds):
         hostname = fqdn.split('.')[0]
         sql = '''
         INSERT INTO PublishedReleases 
-            (projectId, timeCreated, createdBy)
-            SELECT projectId, ?, ? FROM Projects WHERE hostname=?
+            (projectId, name, description, timeCreated, createdBy)
+            SELECT projectId, ?, ?, ?, ? FROM Projects WHERE hostname=?
         '''
         cu = self.db.cursor()
-        cu.execute(sql, time.time(), self.auth.userId, hostname)
+        cu.execute(sql, name, description, time.time(), self.auth.userId, hostname)
         releaseId = cu.lastrowid
         for buildId in buildIds:
             self._addBuildToRelease(hostname, releaseId, buildId)
@@ -87,3 +88,42 @@ class ReleaseManager(object):
         cu = self.db.cursor()
         cu.execute('''UPDATE Builds SET pubReleaseId=?
                       WHERE buildId=?''', releaseId, imageId)
+
+    def publishRelease(self, releaseId, shouldMirror):
+        if not self._getBuildCount(releaseId):
+            raise mint_error.PublishedReleaseEmpty
+
+        if self._isPublished(releaseId):
+            raise mint_error.PublishedReleasePublished
+
+        cu = self.db.cursor()
+        cu.execute('''UPDATE PublishedReleases 
+                      SET timePublished=?, publishedBy=?, 
+                      shouldMirror=? WHERE pubReleaseId=?''', 
+                      time.time(), self.auth.userId, 
+                      int(shouldMirror), releaseId)
+        self.publisher.notify('ReleasePublished', releaseId)
+
+    def _isPublished(self, releaseId):
+        cu = self.db.cursor()
+        published, = cu.execute('''SELECT timePublished FROM PublishedReleases 
+                                   WHERE pubReleaseId=?''', releaseId).next()
+        return bool(published)
+
+    def _getBuildCount(self, releaseId):
+        cu = self.db.cursor()
+        buildCount, = cu.execute(
+                    'SELECT COUNT(*) from Builds WHERE pubReleaseId=?',
+                    releaseId).next()
+        return buildCount
+
+    def unpublishRelease(self, releaseId):
+        if not self._isPublished(releaseId):
+            raise mint_error.PublishedReleaseNotPublished
+
+        cu = self.db.cursor()
+        cu.execute('''UPDATE PublishedReleases 
+                      SET timePublished=?, publishedBy=?, 
+                      shouldMirror=? WHERE pubReleaseId=?''', 
+                      None, None, 0, releaseId)
+        self.publisher.notify('ReleaseUnpublished', releaseId)

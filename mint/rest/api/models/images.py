@@ -60,6 +60,10 @@ class Release(Model):
     def get_absolute_url(self):
         return ('products.releases', self.hostname, str(self.releaseId))
 
+    def __repr__(self):
+        return "models.Release(%r, %r, %r)" % (self.hostname, self.releaseId, 
+                                               self.name)
+
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()

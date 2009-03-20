@@ -4,20 +4,10 @@ from testutils import mock
 
 from rpath_common.proddef import api1 as proddef
 
-from conary.lib import cfgtypes
-
-from mcp import client as mcpclient
-from mcp import mcp_error
-
-from mint import buildtypes
-from mint import jobstatus
 from mint import mint_error
-from mint import userlevels
-from mint.lib import data
 
 from mint.rest import errors
 from mint.rest.api import models
-from mint.rest.db import imagemgr
 
 import mint_rephelp
 
@@ -328,9 +318,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         version, stage = db.productMgr.getProductVersionForLabel('foo',
                                             'foo.rpath.local2@rpl:foo-1-devel')
         assert(version == 1 and stage == None)
-
-        # FIXME: why doesn't this happen automatically?
-        mock.unmockAll()
 
     def testSetProductVersionBuildDefinitions(self):
         pass
