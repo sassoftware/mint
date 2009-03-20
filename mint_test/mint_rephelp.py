@@ -15,6 +15,7 @@ import time
 import urlparse
 from testutils import sqlharness
 from SimpleXMLRPCServer import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler
+from testutils import mock
 
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
@@ -444,6 +445,9 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         self.mintDb = None
         self.mintCfg = None
 
+    def tearDown(self):
+        mock.unmockAll()
+
     def openMintDatabase(self, createRepos=True, enableMCP=False):
         if not self.mintDb:
             self._startDatabase()
@@ -452,7 +456,6 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
             self.mintCfg = getMintCfg(self.workDir, 0, 0, dbPort, False)
         from mint.rest.db import database as restdb
         from mint.db import database
-        from testutils import mock
         db = database.Database(self.mintCfg)
         db = restdb.Database(self.mintCfg, db, subscribers=[])
         db.auth.isAdmin = True
