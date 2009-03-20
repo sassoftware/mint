@@ -208,7 +208,7 @@ Index.
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <url urlType="0">/tmp/rbuildertest-misa/repos-mint/images/testproject/2/imagefile_2.iso</url>
+        <url urlType="0">%(data)s/images/testproject/2/imagefile_2.iso</url>
       </file>
     </files>
   </image>
@@ -237,7 +237,7 @@ Index.
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
-        <url urlType="0">/tmp/rbuildertest-misa/repos-mint/images/testproject/2/imagefile_2.iso</url>
+        <url urlType="0">%(data)s/images/testproject/2/imagefile_2.iso</url>
       </file>
     </files>
   </image>
@@ -249,7 +249,8 @@ Index.
                       resp)
 
         self.failUnlessEqual(resp,
-             exp % dict(port = client.port, server = client.server))
+             exp % dict(port = client.port, server = client.server,
+                        data = self.mintCfg.dataPath))
 
 
 if __name__ == "__main__":
