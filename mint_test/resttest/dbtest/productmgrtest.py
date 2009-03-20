@@ -238,18 +238,101 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         
     
     def testUpdateProductVersion(self):
-        pass
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, 'foo', '1', description='desc', 
+                                  platformLabel=None)
+        assert(db.getProductVersion('foo', '1').description == 'desc')
+        db.updateProductVersion('foo', '1', 
+                                models.ProductVersion(description='desc2'))
+        assert(db.getProductVersion('foo', '1').description == 'desc2')
+        self.assertRaises(errors.ProductVersionNotFound,
+                          db.updateProductVersion,'foo', '2', 
+                                models.ProductVersion(description='desc2'))
+
 
     def testGetProductVersionDefinition(self):
-        pass
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, 'foo', '1', description='desc', 
+                                  platformLabel=None)
+        mock.mock(proddef.ProductDefinition, 'loadFromRepository')
+        pd = db.getProductVersionDefinition('foo', '1')
+        reposMgr = db.productMgr.reposMgr
+        pd.loadFromRepository._mock.assertCalled(
+                                    reposMgr.getInternalConaryClient())
+        pd.loadFromRepository._mock.raiseErrorOnAccess(RuntimeError)
+        self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
+                          db.getProductVersionDefinition,'foo', '1')
 
+        
     def testSetProductVersionDefinition(self):
-        pass
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, 'foo', '1', description='desc', 
+                                  platformLabel=None)
+        pd = mock.MockObject()
+        # NOTE, since we're not creating repositories,  we've mocked out 
+        # setProductDefinition and renamed it with the underscore.
+        db.productMgr._setProductVersionDefinition('foo', '1', pd)
+        reposMgr = db.productMgr.reposMgr
+        pd.saveToRepository._mock.assertCalled(
+                                reposMgr.getInternalConaryClient(),
+                                 'Product Definition commit from rBuilder\n')
 
     def testRebaseProductVersionDefinition(self):
-        pass
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, 'foo', '1', description='desc', 
+                                  platformLabel=None)
+        reposMgr = db.productMgr.reposMgr
+        cclient = reposMgr.getInternalConaryClient()
+        mock.mock(proddef.ProductDefinition, 'saveToRepository')
+        mock.mock(proddef.ProductDefinition, 'loadFromRepository')
+        mock.mock(proddef.ProductDefinition, 'rebase')
+        db.rebaseProductVersionPlatform('foo', '1', 'conary.rpath.com@rpl:1') 
+        proddef.ProductDefinition.rebase._mock.assertCalled(cclient,
+                                'conary.rpath.com@rpl:1')
+        proddef.ProductDefinition.saveToRepository._mock.assertCalled(cclient,
+                                 'Product Definition commit from rBuilder\n')
+
 
     def testGetProductVersionForLabel(self):
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, 'foo', '1', description='desc', 
+                                  platformLabel=None)
+        mock.mock(proddef.ProductDefinition, 'loadFromRepository')
+
+        version, stage = db.productMgr.getProductVersionForLabel('foo',
+                                            'foo.rpath.local2@rpl:foo-1-devel')
+        assert(version == 1 and stage == None)
+        mock.mock(proddef.ProductDefinition, 'getStages')
+        stages = [mock.MockObject(name='devel')]
+        proddef.ProductDefinition.getStages._mock.setReturn(stages)
+        mock.mock(proddef.ProductDefinition, 'getLabelForStage')
+        proddef.ProductDefinition.getLabelForStage._mock.setReturn('foo.rpath.local2@rpl:foo-1-devel', 'devel')
+        version, stage = db.productMgr.getProductVersionForLabel('foo',
+                                            'foo.rpath.local2@rpl:foo-1-devel')
+        assert(version == 1 and stage == 'devel')
+        # FIXME: why doesn't this happen automatically?
+        version, stage = db.productMgr.getProductVersionForLabel('foo',
+                                            'foo.rpath.local2@rpl:foo-2-devel')
+        assert((version, stage) == (None, None))
+        proddef.ProductDefinition.loadFromRepository._mock.raiseErrorOnAccess(RuntimeError)
+        version, stage = db.productMgr.getProductVersionForLabel('foo',
+                                            'foo.rpath.local2@rpl:foo-1-devel')
+        assert(version == 1 and stage == None)
+
+        # FIXME: why doesn't this happen automatically?
+        mock.unmockAll()
+
+    def testSetProductVersionBuildDefinitions(self):
         pass
 
 testsetup.main()

@@ -172,8 +172,6 @@ class ProductManager(object):
         if level:
             return True, level[0]
         return False, None
-        
-        return False
 
     def _getProductFQDN(self, projectId):
         cu = self.db.cursor()
@@ -276,51 +274,6 @@ class ProductManager(object):
                                     'Initial appliance image group template')
         return versionId
 
-    def updateProductVersion(self, fqdn, version, description):
-        productVersion = self.getProductVersion(fqdn, version)
-        self.productVersions.update(productVersion.id, 
-                                    description = description)
-
-    def getProductVersionDefinition(self, fqdn, version):
-        productVersion = self.getProductVersion(fqdn, version)
-        product = self.getProduct(fqdn)
-        pd = proddef.ProductDefinition()
-        pd.setProductShortname(product.shortname)
-        pd.setConaryRepositoryHostname(product.getFQDN())
-        pd.setConaryNamespace(productVersion.namespace)
-        pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
-        pd.loadFromRepository(cclient)
-        try:
-            pd.loadFromRepository(cclient)
-        except Exception, e:
-            # XXX could this exception handler be more specific? As written
-            # any error in the proddef module will be masked.
-            raise mint_error.ProductDefinitionVersionNotFound
-        return pd
-
-    def setProductVersionDefinition(self, fqdn, version, prodDef):
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
-        prodDef.saveToRepository(cclient,
-                'Product Definition commit from rBuilder\n')
-
-    def rebaseProductVersionDefinition(self, fqdn, version, platformLabel):
-        pd = self.getProductVersionDefinition(fqdn, version)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
-        pd.rebase(cclient, platformLabel)
-        pd.saveToRepository(cclient, 
-                'Product Definition commit from rBuilder\n')
-
-    def setProductVersionBuildDefinitions(self, hostname, version, model):
-        pd = self.getProductVersionDefinition(hostname, version)
-        pd.clearBuildDefinition()
-        for buildDef in model.buildDefinitions:
-            self._addBuildDefinition(buildDef, pd)
-        cclient = self.reposMgr.getInternalConaryClient(hostname)
-        pd.saveToRepository(cclient,
-                            'Product Definition commit from rBuilder\n')
-        return pd
-
     def getProductVersionForLabel(self, fqdn, label):
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId, hostname, 
@@ -354,6 +307,53 @@ class ProductManager(object):
                     return versionId, str(stage.name)
             return versionId, None
         return None, None
+
+
+    def updateProductVersion(self, fqdn, version, description):
+        productVersion = self.getProductVersion(fqdn, version)
+        self.db.db.productVersions.update(productVersion.versionId, 
+                                          description = description)
+
+    def getProductVersionDefinition(self, fqdn, version):
+        productVersion = self.getProductVersion(fqdn, version)
+        product = self.getProduct(fqdn)
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(product.shortname)
+        pd.setConaryRepositoryHostname(product.getFQDN())
+        pd.setConaryNamespace(productVersion.namespace)
+        pd.setProductVersion(productVersion.name)
+        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        try:
+            pd.loadFromRepository(cclient)
+        except Exception, e:
+            # XXX could this exception handler be more specific? As written
+            # any error in the proddef module will be masked.
+            raise mint_error.ProductDefinitionVersionNotFound
+        return pd
+
+    def setProductVersionDefinition(self, fqdn, version, prodDef):
+        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        prodDef.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
+
+    def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
+        pd = self.getProductVersionDefinition(fqdn, version)
+        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        pd.rebase(cclient, platformLabel)
+        pd.saveToRepository(cclient, 
+                'Product Definition commit from rBuilder\n')
+
+
+
+    def setProductVersionBuildDefinitions(self, hostname, version, model):
+        pd = self.getProductVersionDefinition(hostname, version)
+        pd.clearBuildDefinition()
+        for buildDef in model.buildDefinitions:
+            self._addBuildDefinition(buildDef, pd)
+        cclient = self.reposMgr.getInternalConaryClient(hostname)
+        pd.saveToRepository(cclient,
+                            'Product Definition commit from rBuilder\n')
+        return pd
 
     def _addBuildDefinition(self, buildDef, prodDef):
         if not buildDef.name:
@@ -391,3 +391,4 @@ class ProductManager(object):
             flavorSetRef = flavorSetRef,
             image = prodDef.imageType(None, imageFields),
             stages = stages)
+

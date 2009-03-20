@@ -448,9 +448,11 @@ class Database(DBInterface):
         return self.productMgr.setProductVersionDefinition(hostname, version, pd)
 
     @commitafter
-    def rebaseProductVersionPlatform(self, hostname, version, platformLabel=None):
+    def rebaseProductVersionPlatform(self, hostname, version, 
+                                     platformLabel=None):
         self.auth.requireProductDeveloper(hostname)
-        self.productMgr.rebaseProductVersionDefinition(hostname, version, platformLabel)
+        self.productMgr.rebaseProductVersionPlatform(hostname, version, 
+                                                     platformLabel)
 
     @commitafter
     def setProductVersionBuildDefinitions(self, hostname, version, model):
