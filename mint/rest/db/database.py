@@ -387,6 +387,12 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
         platformName = pd.getPlatformName()
+        sourceTrove = pd.getPlatformSourceTrove()
+        if not sourceTrove:
+            return models.Platform(name='', platformVersion='',
+                                   label='', platformName='',
+                                   hostname=hostname, 
+                                   productVersion=version)
         n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
         v = versions.VersionFromString(v)
         return models.Platform(name=str(n), # convert from unicode
@@ -415,9 +421,9 @@ class Database(DBInterface):
         stageList = models.Stages()
         for stage in pd.getStages():
             stageList.stages.append(models.Stage(name=str(stage.name),
-                                                 label=str(pd.getLabelForStage(stage.name)),
-                                                 hostname=hostname,
-                                                 version=version))
+                                 label=str(pd.getLabelForStage(stage.name)),
+                                 hostname=hostname,
+                                 version=version))
         return stageList
 
     @readonly    
