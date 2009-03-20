@@ -32,15 +32,15 @@ class DBInterface(object):
         self.db = db
 
     def _getOne(self, cu, exception, key):
-        try:
-            cu = iter(cu)
-            res = cu.next()
-            assert (not(list(cu))), key # make sure that we really only
-                                        # got one entry
-            return res
-        except:
+        res = cu.fetchone()
+        if not res:
             raise exception(key)
 
+        # Make sure only one row was returned. If there are more, it is
+        # a programming error, not a user error.
+        assert cu.fetchone() is None
+
+        return res
 
     def cursor(self):
         return self.db.cursor()
