@@ -11,6 +11,7 @@ from conary.conaryclient import cmdline
 from mint import mint_error
 from mint import projects
 from mint import userlevels
+from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
@@ -95,9 +96,10 @@ def readonly(fn, self, *args, **kw):
     return rv
 
 class Database(DBInterface):
-    def __init__(self, cfg, db, auth=None, subscribers=None):
+    def __init__(self, cfg, db, auth=None, subscribers=None, dbOnly=False):
         DBInterface.__init__(self, db)
         self.cfg = cfg
+
         if auth is None:
             auth = authmgr.AuthenticationManager(cfg, self)
         self.auth = auth
@@ -115,6 +117,13 @@ class Database(DBInterface):
             subscribers.append(awshandler.AWSHandler(self.cfg, self.db))
         for subscriber in subscribers:
             self.publisher.subscribe(subscribers)
+
+        # Don't instantiate things that go outside the core database
+        # connection if dbOnly is set.
+        self.siteAuth = None
+        if not dbOnly:
+            self.siteAuth = siteauth.SiteAuthorization(
+                    cfgPath=cfg.siteAuthCfgPath)
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
@@ -548,12 +557,9 @@ class Database(DBInterface):
 
     @readonly    
     def getIdentity(self):
-        serviceLevel = models.ServiceLevel(status='Trial', expired=False, 
-                                           daysRemaining=10, limited=True)
-        identity = models.Identity(serviceLevel=serviceLevel, 
-                                   rbuilderId="12347",
-                                   registered=False)
-        return identity
+        if self.siteAuth:
+            return self.siteAuth.getIdentityModel()
+        raise RuntimeError("Identity information is not loaded.")
 
     @readonly    
     def listPlatforms(self):

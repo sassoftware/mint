@@ -28,6 +28,7 @@ from mint import users
 from mint.session import SqlSession
 
 class HttpError(Exception):
+    code = -1
     def __str__(self):
         return "HTTP error %d" % self.code
 class HttpOK(HttpError):                code = 200

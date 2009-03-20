@@ -226,6 +226,7 @@ class MintConfig(ConfigFile):
     # Entitlement and authorization (of the rBuilder)
     availablePlatforms      = (CfgList(CfgString), [])
     acceptablePlatforms     = (CfgList(CfgString), [])
+    siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 
     # Guided tours
     ec2GenerateTourPassword = (CfgBool, False,
