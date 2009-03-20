@@ -446,7 +446,9 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         self.mintCfg = None
 
     def tearDown(self):
+        rephelp.RepositoryHelper.tearDown(self)
         mock.unmockAll()
+        self.mintDb.reset()
 
     def openMintDatabase(self, createRepos=True, enableMCP=False):
         if not self.mintDb:
@@ -573,10 +575,6 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         # loads schema, takes .2s
         # FIXME: eliminate for sqlite by copying in premade sqlite db.
         self.mintDb.start()
-
-    def shutDown(self):
-        rephelp.RepositoryHelper.shutDown(self)
-        self.mintDb.reset()
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
