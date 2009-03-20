@@ -55,9 +55,9 @@ class BuildFileMissing(MintError):
     "The referenced build file doesn't exist."
 class BuildMissing(MintError): "The referenced build does not exist."
 class BuildPublished(MintError):
-    "The referenced build is already part of a published release."
+    "The referenced build is already part of a release."
 class BuildEmpty(MintError):
-    "The referenced build has no files and cannot be published."
+    "The referenced build has no files and cannot be released."
 class BuildSystemDown(MintError):
     "There was a problem contacting the build system."
 class ConfigurationMissing(MintError):
@@ -142,7 +142,7 @@ class ProductDefinitionVersionExternalNotSup(MintError):
 class PublishedReleaseEmpty(MintError):
     "The referenced release has no builds and cannot be published."
 class PublishedReleaseMissing(MintError):
-    "The referenced published release does not exist."
+    "The referenced release does not exist."
 class PublishedReleaseNotPublished(MintError):
     "Release has already been unpublished."
 class PublishedReleasePublished(MintError):

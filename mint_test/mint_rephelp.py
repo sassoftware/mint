@@ -444,6 +444,7 @@ class RestDBMixIn(object):
         self.mintCfg = None
 
     def tearDown(self):
+        rephelp.RepositoryHelper.tearDown(self)
         if self.mintDb:
             self.mintDb.reset()
         mock.unmockAll()
