@@ -4,6 +4,7 @@
 # All rights reserved.
 #
 
+import logging
 import os
 import urllib2
 import time
@@ -16,9 +17,9 @@ from StringIO import StringIO
 from xobj import xobj
 
 from mint.lib.unixutils import atomicOpen
+from mint.rest.api.models import siteauth as model
 
-
-AUTHZ_CONFIG_PATH = '/var/lib/rbuilder/authorization.cfg'
+log = logging.getLogger(__name__)
 
 
 class AuthzConfig(ConfigFile):
@@ -73,11 +74,11 @@ class XML_AuthzDocument(xobj.Document):
 
 
 # authz handle
-class Authorization(object):
+class SiteAuthorization(object):
     # Use the entitlement for this repos to migrate existing installations.
     productRepos = 'products.rpath.com'
 
-    def __init__(self, cfgPath=AUTHZ_CONFIG_PATH):
+    def __init__(self, cfgPath):
         self.cfgPath = os.path.abspath(cfgPath)
         self.cfg = self.xml = None
         self.load()
@@ -105,33 +106,16 @@ class Authorization(object):
         self.cfg.store(fObj, False)
         fObj.commit()
 
-    def refresh(self, conaryCfg=None, migrationOnly=False):
+    def refresh(self):
         """
         Fetch the entitlement XML blob for this installation.
         """
-        if self.xml: # Have a key
+        if self.xml:
+            # Have a key
             url = self.xml.entitlement.id
-        else: # Need a key
-            if not conaryCfg:
-                conaryCfg = conarycfg.ConaryConfiguration(True)
-
-            # If there is an entitlement for the product, generate a stub
-            # XML file. This eases the migration of existing installs.
-            if conaryCfg.entitlement.find(self.productRepos):
-                self._generateStub(conaryCfg)
-                return
-
-            # Otherwise, ask the service for a new key
+        else:
+            # Need a key
             url = self.cfg.genUrl
-
-        if migrationOnly:
-            # When called from a group script, we should only act on the
-            # "entitlement already configured" case.
-            return
-
-        if not url:
-            # Stub entitlements have no URL to check
-            return
 
         try:
             fObj = urllib2.urlopen(url)
@@ -143,34 +127,6 @@ class Authorization(object):
 
         # Write XML to cache path
         self._copySave(fObj)
-
-    def _generateStub(self, conaryCfg):
-        """
-        Use the already-configured entitlement to generate a stub identity
-        for migration purposes.
-        """
-
-        entitlement = str(conaryCfg.entitlement.find(
-            self.productRepos)[0][1])
-
-        doc = XML_AuthzDocument()
-        doc.entitlement = XML_Entitlement()
-        doc.entitlement.id = ""
-        doc.entitlement.identity = ident = XML_Identity()
-        doc.entitlement.credentials = cred = XML_Credentials()
-
-        ident.rbuilderId = sha1('stub\0' + entitlement).hexdigest()[:16]
-        ident.serviceLevel = XML_ServiceLevel()
-        ident.serviceLevel.status = 'Full'
-        ident.serviceLevel.expired = 'false'
-        ident.serviceLevel.daysRemaining = -1
-        ident.serviceLevel.limited = 'false'
-        ident.registered = 'true'
-
-        cred.key = entitlement
-        cred.ec2ProductCodes = ''
-
-        self._copySave(StringIO(doc.toxml()))
 
     def _copySave(self, fObj):
         outObj = atomicOpen(self._getXMLPath())
@@ -208,3 +164,29 @@ class Authorization(object):
             return self.xml.entitlement.identity
         else:
             return None
+
+    def getIdentityModel(self):
+        if self.xml:
+            ident = self.xml.entitlement.identity
+            serviceLevel = model.ServiceLevel(
+                    status=ident.serviceLevel.status,
+                    daysRemaining=ident.serviceLevel.daysRemaining,
+                    expired=ident.serviceLevel.expired.lower() == 'true',
+                    limited=ident.serviceLevel.limited.lower() == 'true',
+                    )
+            identity = model.Identity(
+                    rbuilderId=ident.rbuilderId,
+                    serviceLevel=serviceLevel,
+                    registered=ident.registered,
+                    )
+        else:
+            serviceLevel = model.ServiceLevel(
+                    status='Unknown',
+                    daysRemaining=-1,
+                    expired=True, limited=True)
+            identity = model.Identity(
+                    rbuilderId='',
+                    serviceLevel=serviceLevel,
+                    registered=False,
+                    )
+        return identity
