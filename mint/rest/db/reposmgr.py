@@ -9,6 +9,7 @@ import os
 
 from mint import helperfuncs
 from mint import userlevels
+from mint.rest import errors
 
 from conary import changelog
 from conary import conarycfg
@@ -17,7 +18,7 @@ from conary import dbstore
 from conary.conaryclient import filetypes
 from conary.deps import deps
 from conary.lib import util
-from conary.repository import errors
+from conary.repository import errors as reposerrors
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.server import schema
@@ -87,7 +88,7 @@ class RepositoryManager(object):
         repos = self._getRepositoryServer(fqdn)
         try:
             repos.auth.addUserByMD5(username, salt, password)
-        except errors.UserAlreadyExists:
+        except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username)
             repos.auth.addUserByMD5(username, salt, password)
         self._setUserPermissions(fqdn, username, write=write, 
@@ -98,7 +99,7 @@ class RepositoryManager(object):
         repos = self._getRepositoryServer(fqdn)
         try:
             repos.auth.addUser(username, password)
-        except errors.UserAlreadyExists:
+        except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username)
             repos.auth.addUser(username, password)
 
@@ -119,7 +120,7 @@ class RepositoryManager(object):
             # instead of one-role-per-user. Without this, admin users'
             # roles would not be deleted due to CNY-2775
             repos.auth.deleteRole(username)
-        except errors.RoleNotFound:
+        except reposerrors.RoleNotFound:
             # Conary deleted the (unprivileged) role for us
             pass
 
@@ -137,7 +138,7 @@ class RepositoryManager(object):
         role = username
         try:
             repos.auth.addRole(role)
-        except errors.RoleAlreadyExists:
+        except reposerrors.RoleAlreadyExists:
             repos.auth.editAcl(role, None, None, None, None,
                                write=write, canRemove=False)
         else:
@@ -207,6 +208,15 @@ class RepositoryManager(object):
         cfg = helperfuncs.configureClientProxies(cfg, internalConaryProxies,
                 httpProxies, internalConaryProxies)
         return cfg
+
+    def _isProductExternal(self, hostname):
+        cu = self.db.cursor()
+        cu.execute("SELECT external FROM Projects WHERE hostname=?",
+                    hostname.split('.'))
+        results =  cu.fetchall()
+        if not results:
+            raise errors.ProductNotFound(hostname)
+        return bool(results[0][0])
 
     def getGenericConaryConfig(self):
         ccfg = conarycfg.ConaryConfiguration()

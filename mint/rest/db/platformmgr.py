@@ -11,6 +11,7 @@ from conary import versions
 
 from rpath_common.proddef import api1 as proddef
 
+from mint.rest import errors
 from mint.rest.api import models
 from mint.lib import persistentcache
 
@@ -27,12 +28,12 @@ class PlatformManager(object):
     def listPlatforms(self):
         availablePlatforms = []
         for platformLabel in self.cfg.availablePlatforms:
-            platformName = self.platformNameCache.get(platformLabel)
+            platformName = self.platformCache.get(platformLabel)
             if platformName:
                 availablePlatforms.append(
-                        models.Platform(label=platformLabel, 
-                                        name=platformName))
-        return models.Platforms(availablePlatforms)
+                        models.PlatformName(label=platformLabel, 
+                                            name=platformName))
+        return models.PlatformsNames(availablePlatforms)
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
@@ -47,10 +48,13 @@ class PlatformNameCache(persistentcache.PersistentCache):
             # we require that the first section of the label be unique
             # across all repositories we access.
             hostname = hostname.split('.')[0]
+            client = self._cclient
             try:
-                client = self._reposMgr().getInternalConaryClient(hostname)
+                isExternal = self._reposMgr()._isProductExternal(hostname)
+                if not isExternal:
+                    client = self._reposMgr().getInternalConaryClient(hostname)
             except errors.ProductNotFound:
-                client = self._cclient
+                pass
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             return platDef.getPlatformName()
