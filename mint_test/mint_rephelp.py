@@ -101,6 +101,9 @@ class MintDatabase:
         schema.loadSchema(db)
         db.commit()
 
+    def close(self):
+        pass
+
     def _reset(self):
         # there will often be better ways of implementing this
         db = self.connect()
@@ -127,12 +130,15 @@ class SqliteMintDatabase(MintDatabase):
     def _reset(self):
         # this is faster than dropping tables, and forces a reopen
         # which avoids sqlite problems with changing the schema
-        if os.path.exists(self.path):
-            os.unlink(self.path)
+        self.close()
         return self.connect()
 
     def start(self):
         self.reset()
+
+    def close(self):
+        if os.path.exists(self.path):
+            os.unlink(self.path)
 
 
 class MySqlMintDatabase(MintDatabase):
@@ -444,9 +450,8 @@ class RestDBMixIn(object):
         self.mintCfg = None
 
     def tearDown(self):
-        rephelp.RepositoryHelper.tearDown(self)
         if self.mintDb:
-            self.mintDb.reset()
+            self.mintDb.close()
         mock.unmockAll()
 
     def openRestDatabase(self, createRepos=True, enableMCP=False):
@@ -584,8 +589,8 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         RestDBMixIn.setUp(self)
 
     def tearDown(self):
-        rephelp.RepositoryHelper.tearDown(self)
         RestDBMixIn.tearDown(self)
+        rephelp.RepositoryHelper.tearDown(self)
 
     openMintDatabase = RestDBMixIn.openRestDatabase
 
@@ -809,9 +814,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
     def tearDown(self):
         self.db.close()
+        RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
         MCPTestMixin.tearDown(self)
-        RestDBMixIn.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
         cu = self.db.cursor()
