@@ -9,4 +9,4 @@ class PlatformName(Model):
     label              = fields.CharField()
         
 class PlatformsNames(Model):
-    platforms = fields.ListField(Platform2, displayName='platformName')
+    platforms = fields.ListField(PlatformName, displayName='platformName')
