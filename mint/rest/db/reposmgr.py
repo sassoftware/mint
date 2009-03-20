@@ -208,6 +208,22 @@ class RepositoryManager(object):
                 httpProxies, internalConaryProxies)
         return cfg
 
+    def getGenericConaryConfig(self):
+        ccfg = conarycfg.ConaryConfiguration()
+        conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
+        if os.path.exists(conarycfgFile):
+            ccfg.read(conarycfgFile)
+        ccfg.dbPath = ':memory:'
+        ccfg.root   = ':memory:'
+        internalConaryProxies, httpProxies = self._getProxies()
+        ccfg = helperfuncs.configureClientProxies(ccfg, internalConaryProxies,
+                                     httpProxies, internalConaryProxies)
+        return ccfg
+
+    def getGenericConaryClient(self):
+        conaryCfg = self.getGenericConaryConfig()
+        return conaryclient.ConaryClient(conaryCfg)
+
     def getInternalConaryClient(self, fqdn, conaryCfg=None):
         if conaryCfg is None:
             conaryCfg = self.getProjectConaryConfig(fqdn)

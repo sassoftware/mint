@@ -6,6 +6,7 @@ from rpath_common.proddef import api1 as proddef
 
 from mint import mint_error
 
+from mint import userlevels
 from mint.rest import errors
 from mint.rest.api import models
 

@@ -554,3 +554,7 @@ class Database(DBInterface):
                                    rbuilderId="12347",
                                    registered=False)
         return identity
+
+    @readonly    
+    def listPlatforms(self):
+        self.platformMgr.listPlatforms()
