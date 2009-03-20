@@ -14,6 +14,7 @@ from mint.rest.api import product
 from mint.rest.api import notices
 from mint.rest.api import platforms
 from mint.rest.api import users
+from mint.rest.middleware import auth
 
 class RbuilderRestServer(RestController):
     urls = {'products' : product.ProductController,
@@ -27,6 +28,8 @@ class RbuilderRestServer(RestController):
         self.db = db
         RestController.__init__(self, None, None, [cfg, db])
 
+    @auth.public
+    @auth.noDisablement
     def index(self, request):
         identity = self.db.getIdentity()
         return models.RbuilderStatus(version=constants.mintVersion,

@@ -17,6 +17,15 @@ def public(deco):
     deco.public = True
     return deco
 
+def noDisablement(method):
+    """
+    Decorator for methods that should work even when the rBuilder's
+    authorization is invalid/expired.
+    """
+    method.dont_disable = True
+    return method
+
+
 class AuthenticationCallback(object):
 
     def __init__(self, cfg, db):
@@ -84,9 +93,20 @@ class AuthenticationCallback(object):
         self.db.setAuth(mintAuth, authToken)
         self.db.mintClient = mintClient
 
+        if self.db.siteAuth:
+            self.db.siteAuth.refresh()
+
     def processMethod(self, request, viewMethod, args, kwargs):
-        if getattr(viewMethod, 'public', None) or request.mintAuth is not None:
-            return
+        # Disablement check
+        if not getattr(viewMethod, 'dont_disable', False):
+            if self.db.siteAuth and not self.db.siteAuth.isValid():
+                return Response(status=503, content_type="text/plain",
+                        content="The rBuilder's entitlement has expired.\n\n"
+                            "Please navigate to the rBuilder homepage for "
+                            "more information.")
+
         # require authentication
-        return Response(status=401, 
-             headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+        if (not getattr(viewMethod, 'public', False)
+                and request.mintAuth is None):
+            return Response(status=401,
+                 headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
