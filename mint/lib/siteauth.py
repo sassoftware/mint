@@ -16,7 +16,7 @@ from conary.lib.util import copyfileobj
 from StringIO import StringIO
 from xobj import xobj
 
-from mint.lib.unixutils import atomicOpen
+from mint.lib.unixutils import atomicOpen, hashFile
 from mint.rest.api.models import siteauth as model
 
 log = logging.getLogger(__name__)
@@ -81,6 +81,7 @@ class SiteAuthorization(object):
     def __init__(self, cfgPath):
         self.cfgPath = os.path.abspath(cfgPath)
         self.cfg = self.xml = None
+        self.cfgHash = self.xmlHash = None
         self.load()
 
     # Readers
@@ -91,14 +92,34 @@ class SiteAuthorization(object):
     def load(self):
         self.cfg = AuthzConfig()
         if os.path.exists(self.cfgPath):
-            self.cfg.read(self.cfgPath)
-        if os.path.exists(self._getXMLPath()):
+            fObj = open(self.cfgPath)
+            self.cfgHash = hashFile(fObj)
+            self.cfg.readObject(self.cfgPath, fObj)
+            fObj.close()
+
             self.loadXML()
+
+        else:
+            self.cfg = self.xml = self.cfgHash = self.xmlHash = None
 
     def loadXML(self, xmlPath=None):
         if xmlPath is None:
             xmlPath = self._getXMLPath()
-        self.xml = xobj.parsef(xmlPath, documentClass=XML_AuthzDocument)
+
+        if os.path.exists(xmlPath):
+            fObj = open(xmlPath)
+            self.xmlHash = hashFile(fObj)
+            self.xml = xobj.parsef(fObj, documentClass=XML_AuthzDocument)
+            fObj.close()
+        else:
+            self.xml = self.xmlHash = None
+
+    def refresh(self):
+        if hashFile(self.cfgPath, missingOk=True) != self.cfgHash:
+            self.load()
+        elif self.cfg and hashFile(self._getXMLPath(),
+                missingOk=True) != self.xmlHash:
+            self.loadXML()
 
     # Writers
     def save(self):
@@ -106,7 +127,7 @@ class SiteAuthorization(object):
         self.cfg.store(fObj, False)
         fObj.commit()
 
-    def refresh(self):
+    def update(self):
         """
         Fetch the entitlement XML blob for this installation.
         """
