@@ -438,19 +438,18 @@ rephelp._cleanUp = _cleanUp
 
 _reposDir = None
 
-class MintDatabaseHelper(rephelp.RepositoryHelper):
-    
+class RestDBMixIn(object):
     def setUp(self):
-        rephelp.RepositoryHelper.setUp(self)
         self.mintDb = None
         self.mintCfg = None
 
     def tearDown(self):
         rephelp.RepositoryHelper.tearDown(self)
+        if self.mintDb:
+            self.mintDb.reset()
         mock.unmockAll()
-        self.mintDb.reset()
 
-    def openMintDatabase(self, createRepos=True, enableMCP=False):
+    def openRestDatabase(self, createRepos=True, enableMCP=False):
         if not self.mintDb:
             self._startDatabase()
         dbPort = getattr(self.mintDb, 'port', None)
@@ -461,6 +460,9 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         db = database.Database(self.mintCfg)
         db = restdb.Database(self.mintCfg, db, subscribers=[])
         db.auth.isAdmin = True
+        # We should probably get a real user ID here, instead of hardcoding 2
+        # which is generally the admin's
+        db.auth.userId = 2
         if not createRepos:
             db.productMgr.reposMgr = mock.MockObject()
             db.productMgr._setProductVersionDefinition = \
@@ -475,9 +477,19 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         return db
 
     def createUser(self, name, password='', admin=False):
-        db = self.openMintDatabase()
+        db = self.openRestDatabase()
         return db.createUser(name, name, 'Full Name', '%s@foo.com' % name,
                             '%s@foo.com', password, admin=admin)
+
+    def _startDatabase(self):
+        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if mintDb == "sqlite" or mintDb == 'postgresql':
+            self.mintDb = SqliteMintDatabase(self.workDir + "/mintdb")
+        elif mintDb == "mysql":
+            raise NotImplementedError
+        # loads schema, takes .2s
+        # FIXME: eliminate for sqlite by copying in premade sqlite db.
+        self.mintDb.start()
 
     def setDbUser(self, db, username):
         from mint import users
@@ -502,7 +514,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
                       owners=None, developers=None, users=None, 
                       private=False, domainname=None, db=None):
         if db is None:
-            db = self.openMintDatabase()
+            db = self.openRestDatabase()
 
         oldUser = None
         if owners and db.auth.username not in owners:
@@ -546,7 +558,7 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
                  troveFlavor = '', buildData=None):
         troveVersion = versions.ThawVersion(troveVersion)
         troveFlavor = deps.parseFlavor(troveFlavor)
-        
+
         img = models.Image(imageType=imageType, name=name, 
                            description=description,
                            troveName=troveName, troveVersion=troveVersion,
@@ -566,17 +578,19 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         db.setImageFiles(hostname, imageId, imageFiles)
 
 
-    def _startDatabase(self):
-        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if mintDb == "sqlite" or mintDb == 'postgresql':
-            self.mintDb = SqliteMintDatabase(self.workDir + "/mintdb")
-        elif mintDb == "mysql":
-            raise NotImplementedError
-        # loads schema, takes .2s
-        # FIXME: eliminate for sqlite by copying in premade sqlite db.
-        self.mintDb.start()
+class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
+    def setUp(self):
+        rephelp.RepositoryHelper.setUp(self)
+        RestDBMixIn.setUp(self)
 
-class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
+    def tearDown(self):
+        rephelp.RepositoryHelper.tearDown(self)
+        RestDBMixIn.tearDown(self)
+
+    openMintDatabase = RestDBMixIn.openRestDatabase
+
+
+class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
     # Repository tests tend to be slow, so tag them with this context
     contexts = ('slow',)
@@ -774,6 +788,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
+        RestDBMixIn.setUp(self)
         if not os.path.exists(self.reposDir):
             util.mkdirChain(self.reposDir)
         self.imagePath = os.path.join(self.tmpDir, "images")
@@ -796,6 +811,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         self.db.close()
         rephelp.RepositoryHelper.tearDown(self)
         MCPTestMixin.tearDown(self)
+        RestDBMixIn.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
         cu = self.db.cursor()
