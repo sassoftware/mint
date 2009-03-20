@@ -458,6 +458,8 @@ class MintDatabaseHelper(rephelp.RepositoryHelper):
         db.auth.isAdmin = True
         if not createRepos:
             db.productMgr.reposMgr = mock.MockObject()
+            db.productMgr._setProductVersionDefinition = \
+                        db.productMgr.setProductVersionDefinition
             db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
         if not enableMCP:
