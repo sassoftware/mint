@@ -18,6 +18,7 @@ from mint.rest.db import authmgr
 from mint.rest.db import awshandler
 from mint.rest.db import emailnotifier
 from mint.rest.db import imagemgr
+from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
@@ -565,4 +566,4 @@ class Database(DBInterface):
 
     @readonly    
     def listPlatforms(self):
-        self.platformMgr.listPlatforms()
+        return self.platformMgr.listPlatforms()
