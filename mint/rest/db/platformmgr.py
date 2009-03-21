@@ -32,7 +32,7 @@ class PlatformManager(object):
             if platformName:
                 availablePlatforms.append(
                         models.PlatformName(label=platformLabel, 
-                                            name=platformName))
+                                            platformName=platformName))
         return models.PlatformsNames(availablePlatforms)
 
 class PlatformNameCache(persistentcache.PersistentCache):

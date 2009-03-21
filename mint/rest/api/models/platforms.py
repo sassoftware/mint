@@ -5,7 +5,7 @@ from mint.rest.modellib import fields
 # platform used by the product definition.
 
 class PlatformName(Model):
-    name               = fields.CharField()
+    platformName       = fields.CharField()
     label              = fields.CharField()
         
 class PlatformsNames(Model):
