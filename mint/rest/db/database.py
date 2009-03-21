@@ -110,6 +110,7 @@ class Database(DBInterface):
         self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
                                                     self.auth, self.publisher)
         self.userMgr = usermgr.UserManager(self.cfg, self, self.publisher)
+        self.platformMgr = platformmgr.PlatformManager(self.cfg, self)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(self.cfg, self, 
