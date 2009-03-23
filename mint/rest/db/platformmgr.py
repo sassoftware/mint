@@ -52,7 +52,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._reposMgr = weakref.ref(reposMgr)
-        self._cclient = reposMgr.getGenericConaryClient()
+        self._cclient = reposMgr.getConaryClient(admin=True)
 
     def _refresh(self, labelStr):
         try:
@@ -62,9 +62,8 @@ class PlatformNameCache(persistentcache.PersistentCache):
             hostname = hostname.split('.')[0]
             client = self._cclient
             try:
-                isExternal = self._reposMgr()._isProductExternal(hostname)
-                if not isExternal:
-                    client = self._reposMgr().getInternalConaryClient(hostname)
+                client = self._reposMgr().getConaryClientForProduct(hostname,
+                                                                    admin=True)
             except errors.ProductNotFound:
                 pass
             platDef = proddef.PlatformDefinition()

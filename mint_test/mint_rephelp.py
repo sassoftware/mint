@@ -486,10 +486,12 @@ class RestDBMixIn(object):
                                                             (100, 'Message'))
         return db
 
-    def createUser(self, name, password='', admin=False):
+    def createUser(self, name, password=None, admin=False):
         db = self.openRestDatabase()
-        return db.createUser(name, name, 'Full Name', '%s@foo.com' % name,
-                            '%s@foo.com', password, admin=admin)
+        if password is None:
+            password = 'admin'
+        return db.createUser(name, password, 'Full Name', '%s@foo.com' % name,
+                            '%s@foo.com', '', admin=admin)
 
     def _startDatabase(self):
         mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
@@ -501,7 +503,9 @@ class RestDBMixIn(object):
         # FIXME: eliminate for sqlite by copying in premade sqlite db.
         self.mintDb.start()
 
-    def setDbUser(self, db, username):
+    def setDbUser(self, db, username, password=None):
+        if password is None:
+            password = username
         from mint import users
         if username:
             cu = db.cursor()
@@ -518,7 +522,7 @@ class RestDBMixIn(object):
         else:
             auth = users.Authorization(authoried=False, admin=False,
                                        userId=-1, username=None)
-        db.setAuth(auth, (username, ''))
+        db.setAuth(auth, (username, password))
 
     def createProduct(self, shortname, 
                       owners=None, developers=None, users=None, 
