@@ -448,8 +448,19 @@ class MigrateTo_45(SchemaMigration):
         return True
 
     # 45.7
-    # - Add versionId and stage columns to Builds
+    # - Reset GroupTrove sequence so that it's usable again
     def migrate7(self):
+        self.db.setAutoIncrement('GroupTroves', 'groupTroveId')
+        return True
+
+
+# SCHEMA VERSION 46
+class MigrateTo_46(SchemaMigration):
+    Version = (46, 0)
+
+    # 46.0
+    # - Add versionId and stage columns to Builds
+    def migrate(self):
         cu = self.db.cursor()
         add_columns(cu, 'Builds', 
                      'productVersionId INTEGER DEFAULT 0',

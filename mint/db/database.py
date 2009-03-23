@@ -163,7 +163,8 @@ class Database(object):
         # call to getTables
         reloadTables = False
 
-        if dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
+        if (dbDriver in ["mysql", "postgresql", "pgpool"]
+                and dbConnection and (not alwaysReload)):
             db = dbConnection
         else:
             db = dbstore.connect(dbPath, driver=dbDriver)

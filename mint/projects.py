@@ -20,6 +20,7 @@ from mint.mint_error import *
 from conary.deps import deps
 from conary.conarycfg import ConaryConfiguration
 
+
 class Project(database.TableObject):
     # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',

@@ -6,7 +6,6 @@
 import os
 import time
 
-global _reportlab_present
 try:
     from reportlab.platypus import *
     from reportlab.lib.styles import getSampleStyleSheet

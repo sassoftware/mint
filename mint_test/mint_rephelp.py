@@ -384,6 +384,10 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintCfg.display(f)
         f.close()
 
+        util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'run'))
+        util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
+        open(self.mintCfg.conaryRcFile, 'w').close()
+
     def start(self, resetDir=True):
         rephelp.ApacheServer.start(self, resetDir)
         if self.reposDB:
