@@ -401,13 +401,13 @@ class Database(DBInterface):
         platformName = pd.getPlatformName()
         sourceTrove = pd.getPlatformSourceTrove()
         if not sourceTrove:
-            return models.Platform(name='', platformVersion='',
+            return models.Platform(platformTroveName='', platformVersion='',
                                    label='', platformName='',
                                    hostname=hostname, 
                                    productVersion=version)
         n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
         v = versions.VersionFromString(v)
-        return models.Platform(name=str(n), # convert from unicode
+        return models.Platform(platformTroveName=str(n), # convert from unicode
                                platformVersion=str(v.trailingRevision()), 
                                label=str(v.trailingLabel()),
                                platformName=platformName,
