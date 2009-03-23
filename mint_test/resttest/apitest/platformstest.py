@@ -25,6 +25,12 @@ class PlatformTest(restbase.BaseRestTest):
         self.setupProduct()
 
     def testGetPlatforms(self):
+        return self._testGetPlatforms()
+
+    def testGetPlatformsNotLoggedIn(self):
+        return self._testGetPlatforms(notLoggedIn = True)
+
+    def _testGetPlatforms(self, notLoggedIn = False):
         platformLabel = self.mintCfg.availablePlatforms[1]
 
         # Add a platform definition
@@ -35,7 +41,10 @@ class PlatformTest(restbase.BaseRestTest):
 
         uriTemplate = 'platforms'
         uri = uriTemplate
-        client = self.getRestClient(uri)
+        kw = {}
+        if notLoggedIn:
+            kw['username'] = None
+        client = self.getRestClient(uri, **kw)
         response = client.request('GET')
         # This is less than helpful.
         exp = """\
