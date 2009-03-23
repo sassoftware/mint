@@ -2182,14 +2182,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
-    @typeCheck(int, ((str, unicode),), bool, list)
+    @typeCheck(int, ((str, unicode),), bool, list, str)
     @requiresAuth
     @private
     def newBuildsFromProductDefinition(self, versionId, stageName, force,
-                                       buildNames = None):
+                                       buildNames = None, versionSpec = None):
         """
         Launch the image builds defined in the product definition for the
-        given version id and stage.  If provided, use troveSpec as the top
+        given version id and stage.  If provided, use versionSpec as the top
         level group for the image, otherwise use the top level group defined
         in the
         product defintion.
@@ -2227,8 +2227,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # (CNY-2545 related?)
         repos = self._getProjectRepo(project, False)
         groupNames = [ str(x.getBuildImageGroup()) for x in builds ]
+        if not versionSpec:
+            versionSpec = stageLabel
+
         groupTroves = repos.findTroves(None, 
-                                       [(x, stageLabel, None) for x in 
+                                       [(x, versionSpec, None) for x in 
                                          groupNames ], allowMissing = True)
 
         for build in builds:
@@ -2236,7 +2239,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 continue
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
             buildGroup = str(build.getBuildImageGroup())
-            groupList = groupTroves.get((buildGroup, stageLabel, None), [])
+            groupList = groupTroves.get((buildGroup, versionSpec, None), [])
 
             flavorSet = build.flavorSetRef and \
                     (pd.getFlavorSet(build.flavorSetRef, None) \

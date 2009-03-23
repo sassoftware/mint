@@ -25,6 +25,7 @@ from mint import urltypes
 from mint import userlevels
 from mint import jobstatus
 
+from conary import errors
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary import versions
@@ -1235,10 +1236,14 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                     else:
                         return []
 
-                    return [(tn,
-                             versions._VersionFromString( \
-                                '/%s/12345.6:1-1-1' % tv,
-                                frozen=True),
+                    try:
+                        versions.Label(tv)
+                        tv = versions._VersionFromString(
+                                            '/%s/12345.6:1-1-1' % tv,
+                                            frozen=True)
+                    except errors.ParseError:
+                        tv = versions.VersionFromString(tv)
+                    return [(tn, tv,
                              deps.parseFlavor(f)) \
                                      for f in flava_flavs]
                 def findTroves(self, t1, t2, *args, **kwargs):
@@ -1294,6 +1299,22 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         buildNames = set(x.name for x in builds)
         self.failUnlessEqual(buildNames, set(reqBuildNames))
 
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionFilteredByVersionSpec(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        reqBuildNames = ['ISO 32']
+        buildIds = \
+            client.newBuildsFromProductDefinition(versionId, 'Development',
+                                                  False, reqBuildNames,
+                  '/foo.rpath.local2@yournamespace:foo-fooV1-devel/2-1-1')
+        # Should have created 2 builds for Development stage
+        self.assertEquals(1, len(buildIds))
+
+        builds = [ client.getBuild(x) for x in buildIds ]
+        buildNames = set(x.name for x in builds)
+        self.failUnlessEqual(buildNames, set(reqBuildNames))
+        assert(builds[0].troveVersion == '/foo.rpath.local2@yournamespace:foo-fooV1-devel/0.000:2-1-1')
 
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')
