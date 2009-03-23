@@ -73,6 +73,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
     def testListImagesForProductVersion(self):
         db = self.openMintDatabase()
         self.createUser('admin', admin=True)
+        self.setDbUser(db, 'admin')
         self.createProduct('foo', owners=['admin'], db=db)
         self.createProductVersion(db, 'foo', '1', namespace='rpl')
         hostname = 'foo.%s' % mint_rephelp.MINT_PROJECT_DOMAIN

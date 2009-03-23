@@ -32,27 +32,11 @@ class RepositoryManager(object):
         self.profiler = None
 
     def _getProductFQDN(self, hostname):
+        #FIXME: this breaks when the project is external.
         cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname from Projects where hostname=?', hostname)
+        cu.execute('SELECT hostname, domainname FROM Projects WHERE'
+                   ' hostname=?', hostname)
         return '.'.join(tuple(cu.next()))
-
-    def _getRepositoryServer(self, fqdn):
-        if '.' not in fqdn:
-            fqdn = self._getProductFQDN(fqdn)
-        dbPath = os.path.join(self.cfg.reposPath, fqdn)
-        tmpPath = os.path.join(dbPath, 'tmp')
-        cfg = netserver.ServerConfig()
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(fqdn)
-        cfg.tmpDir = tmpPath
-        cfg.serverName = fqdn
-        cfg.repositoryMap = {}
-        cfg.authCacheTimeout = self.cfg.authCacheTimeout
-        cfg.externalPasswordURL = self.cfg.externalPasswordURL
-
-        contentsDirs = self.cfg.reposContentsDir
-        cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
-        repos = shimclient.NetworkRepositoryServer(cfg, '')
-        return repos
         
     def createRepository(self, hostname, domainname, isPrivate=False):
         fqdn = "%s.%s" % (hostname, domainname)
@@ -148,105 +132,39 @@ class RepositoryManager(object):
         repos.auth.setMirror(role, mirror)
         repos.auth.setAdmin(role, admin)
 
-    def getProjectConaryConfig(self, fqdn):
-        """
-        Creates a conary configuration object, suitable for internal or external
-        rBuilder use.
-        @param project: Project to create a Conary configuration for.
-        @type project: C{mint.project.Project} object
-        @param internal: True if configuration object is to be used by a
-           NetClient/ShimNetClient internal to rBuilder; False otherwise.
-        @type internal: C{bool}
-        """
-        ccfg = self.getConaryConfig(fqdn)
-        conarycfgFile = self.cfg.conaryRcFile
-        # This step reads all of the repository maps for cross talk, and, if
-        # external, sets up the cfg object to use the rBuilder conary proxy
-        if os.path.exists(conarycfgFile):
-            ccfg.read(conarycfgFile)
-
-        #Set up the user config lines
-        for otherProjectData, level, memberReqs in \
-          self.db.db.projects.getProjectDataByMember(self.auth.userId):
-            if level in userlevels.WRITERS:
-                otherFqdn = self._getProductFQDN(otherProjectData['hostname'])
-                ccfg.user.addServerGlob(otherFqdn,
-                                        self.auth.authToken[0], self.auth.authToken[1])
-
-        ccfg['name'] = self.auth.username
-        ccfg['contact'] = self.auth.fullName or ''
-        return ccfg
-
-    def _getProxies(self):
-        useInternalConaryProxy = self.cfg.useInternalConaryProxy
-        if useInternalConaryProxy:
-            httpProxies = {}
-            useInternalConaryProxy = self.cfg.getInternalProxies()
-        else:
-            httpProxies = self.cfg.proxy or {}
-        return [ useInternalConaryProxy, httpProxies ]
-
-    def getConaryConfig(self, fqdn, overrideAuth = False, newUser = '', newPass = ''):
-        '''Creates a ConaryConfiguration object suitable for repository access
-        from the same server as MintServer'''
-        projectId = self.db.db.projects.getProjectIdByHostname(fqdn.split('.', 1)[0])
-        labelPath, repoMap, userMap, entMap = self.db.db.labels.getLabelsForProject(projectId, 
-                                                             overrideAuth, newUser, newPass)
-
-        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
-        cfg.buildFlavor = deps.parseFlavor('')
-        installLabelPath = " ".join(x for x in labelPath.keys())
-        cfg.configLine("installLabelPath %s" % installLabelPath)
-
-        cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
-        for host, authInfo in userMap:
-            cfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-        for host, entitlement in entMap:
-            cfg.entitlement.addEntitlement(host, entitlement[1])
-
-        internalConaryProxies, httpProxies = self._getProxies()
-        cfg = helperfuncs.configureClientProxies(cfg, internalConaryProxies,
-                httpProxies, internalConaryProxies)
-        return cfg
-
     def _isProductExternal(self, hostname):
         cu = self.db.cursor()
         cu.execute("SELECT external FROM Projects WHERE hostname=?",
-                    hostname.split('.'))
+                    hostname.split('.')[0])
         results =  cu.fetchall()
         if not results:
             raise errors.ProductNotFound(hostname)
         return bool(results[0][0])
 
-    def getGenericConaryConfig(self):
-        ccfg = conarycfg.ConaryConfiguration()
-        conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
-        if os.path.exists(conarycfgFile):
-            ccfg.read(conarycfgFile)
-        ccfg.dbPath = ':memory:'
-        ccfg.root   = ':memory:'
-        internalConaryProxies, httpProxies = self._getProxies()
-        ccfg = helperfuncs.configureClientProxies(ccfg, internalConaryProxies,
-                                     httpProxies, internalConaryProxies)
-        return ccfg
-
-    def getGenericConaryClient(self):
-        conaryCfg = self.getGenericConaryConfig()
+    def getConaryClient(self, admin=False):
+        conaryCfg = self.getConaryConfig(admin=admin)
         return conaryclient.ConaryClient(conaryCfg)
 
-    def getInternalConaryClient(self, fqdn, conaryCfg=None):
+    def getConaryClientForProduct(self, fqdn, conaryCfg=None, admin=False):
         if conaryCfg is None:
-            conaryCfg = self.getProjectConaryConfig(fqdn)
-        repos = self.getInternalRepositoryClient(fqdn, conaryCfg=conaryCfg)
+            conaryCfg = self.getConaryConfig(admin=admin)
+
+        repos = self.getRepositoryClientForProduct(fqdn, conaryCfg=conaryCfg,
+                                                   admin=admin)
         return conaryclient.ConaryClient(conaryCfg, repos=repos)
 
-    def getInternalRepositoryClient(self, fqdn, conaryCfg=None):
-        if conaryCfg is None:
-            conaryCfg = self.getProjectConaryConfig(fqdn)
+    def getRepositoryClientForProduct(self, fqdn, admin=False, conaryCfg=None):
+        """
+        Gets a repository client, possibly with a shim connection to 
+        one repository (the one associated with the fqdn).
+        """ 
+        if self.auth.isAdmin:
+            admin = True
+        if self._isProductExternal(fqdn):
+            return self.getConaryClient(admin=admin).getRepos()
+        if conaryCfg is None: 
+            conaryCfg = self.getConaryConfig(admin=admin)
         server = self._getRepositoryServer(fqdn)
-        conaryCfg = helperfuncs.configureClientProxies(conaryCfg, 
-                                           self.cfg.useInternalConaryProxy, 
-                                           self.cfg.proxy)
         if self.cfg.SSL:
             protocol = "https"
             port = 443
@@ -255,26 +173,112 @@ class RepositoryManager(object):
             port = 80
         if ":" in self.cfg.projectDomainName:
             port = int(self.cfg.projectDomainName.split(":")[1])
+        if admin:
+            authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
+        else:
+            authToken = self.auth.authToken + (None, None)
+
         repo = shimclient.ShimNetClient(server, protocol, port,
-            (self.cfg.authUser, self.cfg.authPass, None, None),
+            authToken,
             conaryCfg.repositoryMap, conaryCfg.user,
             conaryProxies=conarycfg.getProxyFromConfig(conaryCfg))
         if self.profiler:
             repo = self.profiler.wrapRepository(repo)
         return repo
 
-    def getRepositoryClient(self, fqdn, useShim=True, conaryCfg=None):
-        if conaryCfg is None:
-            conaryCfg = self.getProjectConaryConfig(fqdn)
-        repos = conaryclient.ConaryClient(conaryCfg).getRepos()
-        if self.profiler:
-            repos = self.profiler.wrapRepository(repos)
+    def _getRepositoryServer(self, fqdn):
+        if '.' not in fqdn:
+            fqdn = self._getProductFQDN(fqdn)
+        dbPath = os.path.join(self.cfg.reposPath, fqdn)
+        tmpPath = os.path.join(dbPath, 'tmp')
+        cfg = netserver.ServerConfig()
+        cfg.repositoryDB = self.reposDB.getRepositoryDB(fqdn)
+        cfg.tmpDir = tmpPath
+        cfg.serverName = fqdn
+        cfg.repositoryMap = {}
+        cfg.authCacheTimeout = self.cfg.authCacheTimeout
+        cfg.externalPasswordURL = self.cfg.externalPasswordURL
+
+        contentsDirs = self.cfg.reposContentsDir
+        cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
+        repos = shimclient.NetworkRepositoryServer(cfg, '')
         return repos
+
+    def getConaryConfig(self, admin=False):
+        if self.auth.isAdmin:
+            admin = True
+
+        cfg = self._getGeneratedConaryrc()
+        if self.cfg.useInternalConaryProxy:
+            cfg.conaryProxy = self.cfg.getInternalProxies()
+        elif self.cfg.proxy:
+            cfg.proxy = self.cfg.proxy
+            # we're not using the internal proxy, therefore we
+            # need to add entitlements directly.
+            userMap, entMap = self._getAuthMaps(self, cfg)
+            for host, entitlement in entMap:
+                cfg.entitlement.addEntitlement(host, entitlement)
+            for host, username, password in userMap:
+                cfg.user.addServerGlob(host, username, password)
+        if admin:
+            cfg.user.addServerGlob('*', self.cfg.authUser, 
+                                   self.cfg.authPass)
+            if self.auth.username:
+                cfg.name = self.auth.username
+                cfg.contact = self.auth.fullName or ''
+            else:
+                cfg.name = 'rBuilder Administration'
+                cfg.contact = 'rbuilder'
+        else:
+            # use current user for everything that's unspecified
+            cfg.user.addServerGlob('*', 
+                                   self.auth.authToken[0],
+                                   self.auth.authToken[1])
+            cfg.name = self.auth.username
+            cfg.contact = self.auth.fullName or ''
+        return cfg
+
+    def _getGeneratedConaryrc(self):
+        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
+        if os.path.exists(self.cfg.conaryRcFile):
+            cfg.read(self.cfg.conaryRcFile)
+        return cfg
+
+    def _getAuthMaps(self):
+        cu = self.db.cursor()
+        cu.execute('''SELECT label, authType, username, password,
+                             entitlement
+                      FROM Projects JOIN Labels USING(projectId)
+                      WHERE external=1 
+                        AND authType IN ("userpass", "entitlement")''')
+        repoMap = {}
+        entMap = []
+        userMap = []
+        for (label, authType, username, password, entitlement) in cu:
+            host = label[:label.find('@')]
+            if authType == 'userpass':
+                userMap.append((host, username, password))
+            elif authType == 'entitlement':
+                entMap.append((host, entitlement))
+        return entMap, userMap
+
+    def _getRepositoryUrl(self, hostname):
+        if self.cfg.SSL:
+            protocol = "https"
+            domain = self.cfg.secureHost
+            defaultPort = 443
+            newHost, newPort = hostPortParse(443)
+        else:
+            protocol = "http"
+            domain = self.cfg.projectDomainName
+            defaultPort = 80
+        newHost, newPort = hostPortParse(domain, defaultPort)
+        return rewriteUrlProtocolPort(url, protocol, newPort)
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage):
         # Get repository + client
-        client = self.getInternalConaryClient(fqdn)
+        client = self.getConaryClientForProduct(fqdn)
 
         # ensure that the changelog message ends with a newline
         if not changeLogMessage.endswith('\n'):

@@ -194,7 +194,7 @@ Index.
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
     <updater/>
     <timeCreated></timeCreated>
@@ -223,7 +223,7 @@ Index.
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
     <updater/>
     <timeCreated></timeCreated>

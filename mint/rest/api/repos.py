@@ -19,7 +19,8 @@ from mint.rest.api import models
 
 class BaseReposController(base.BaseController):
     def getRepos(self, hostname):
-        return self.db.productMgr.reposMgr.getInternalRepositoryClient(hostname)
+        return self.db.productMgr.reposMgr.getRepositoryClientForProduct(
+                                                                    hostname)
 
     def _getTuple(self, troveString):
         try:

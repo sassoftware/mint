@@ -255,7 +255,7 @@ class ProductManager(object):
             raise mint_error.InvalidLabel(label)
 
         if platformLabel:
-            cclient = self.reposMgr.getInternalConaryClient(fqdn)
+            cclient = self.reposMgr.getConaryClientForProduct(fqdn)
             prodDef.rebase(cclient, platformLabel)
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
@@ -304,7 +304,7 @@ class ProductManager(object):
             if not str(label).startswith(str(baseLabel)):
                 continue
             try:
-                cclient = self.reposMgr.getInternalConaryClient(fqdn)
+                cclient = self.reposMgr.getConaryClientForProduct(fqdn)
                 pd.loadFromRepository(cclient)
             except Exception, e:
                 return versionId, None
@@ -330,7 +330,7 @@ class ProductManager(object):
         pd.setConaryRepositoryHostname(product.getFQDN())
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
@@ -340,13 +340,13 @@ class ProductManager(object):
         return pd
 
     def setProductVersionDefinition(self, fqdn, version, prodDef):
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
     def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
         pd = self.getProductVersionDefinition(fqdn, version)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
@@ -358,7 +358,7 @@ class ProductManager(object):
         pd.clearBuildDefinition()
         for buildDef in model.buildDefinitions:
             self._addBuildDefinition(buildDef, pd)
-        cclient = self.reposMgr.getInternalConaryClient(hostname)
+        cclient = self.reposMgr.getConaryClientForProduct(hostname)
         pd.saveToRepository(cclient,
                             'Product Definition commit from rBuilder\n')
         return pd
