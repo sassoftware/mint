@@ -240,8 +240,19 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False
-    cfg.commitAction = """%s/scripts/commitaction --username=mintauth --password=mintpass --repmap='%%(repMap)s' --build-label=%%(buildLabel)s --module=\'%s/mint/rbuilderaction.py --user=%%%%(user)s --url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, MINT_HOST + '.' + \
-            MINT_PROJECT_DOMAIN, port)
+    if conaryPath.startswith('/usr/'):
+        # /usr/lib/...[/conary/commitaction]
+        scriptPath = os.path.join(conaryPath, 'conary/commitaction')
+    else:
+        # /home/foo/hg/conary/[scripts/commitaction]
+        scriptPath = os.path.join(conaryPath, 'scripts/commitaction')
+
+    cfg.commitAction = ("%s --username=mintauth --password=mintpass "
+            "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
+            "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
+                "--url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'"
+            % (scriptPath, mintPath, MINT_HOST + '.' + MINT_PROJECT_DOMAIN,
+                port))
     cfg.postCfg()
 
     cfg.hideFledgling = True
