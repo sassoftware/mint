@@ -2209,3 +2209,20 @@ a.image-list {
 div#frontPageBlockContainer {
     padding: 10px;
 }
+
+.newuiLink
+{
+  font-weight: bold;
+  font-style: italic;
+}
+
+.newuiLink a:link, a:visited
+{
+    color: blue;
+}
+
+.newuiLink a:hover
+{
+    color: "#E65A1D";
+}
+
