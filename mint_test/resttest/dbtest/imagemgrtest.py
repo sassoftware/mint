@@ -100,7 +100,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(file.size == 1024)
         assert(file.title == 'Image File 1')
         assert(str(file) == 'images.ImageId(fileId=1, size=1024)')
-        assert(str(file.urls[0]) == "images.FileUrl(url='%s/images/foo/1/imagefile_1.iso', urlType=0)" % self.workDir)
+        assert(str(file.urls[0]) == "images.FileUrl(url='/downloadImage?fileId=1', urlType=0)")
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)
@@ -181,13 +181,13 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(len(files) == 1)
         file, = files
         assert(file.title == 'title')
-        assert(file.urls[0].url == 'filename1')
+        assert(file.urls[0].url == '/downloadImage?fileId=1')
         db.setImageFiles('foo', imageId, [('filename2', 'title2', 1024, 'sha')])
         files = db.getImageForProduct('foo', imageId).files.files
         assert(len(files) == 1)
         file, = files
         assert(file.title == 'title2')
-        assert(file.urls[0].url == self.mintCfg.imagesPath + 'foo/1/filename2')
+        assert(file.urls[0].url == '/downloadImage?fileId=2')
         assert(file.size == 1024)
         assert(file.sha1 == 'sha')
         self.assertRaises(ValueError,

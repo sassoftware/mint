@@ -128,6 +128,11 @@ class ImageManager(object):
             urls = []
             for row in cu:
                 d = dict(row)
+                d['url'] = self.cfg.basePath + 'downloadImage?fileId=%d' % (
+                                                                file.fileId)
+                if d['urlType'] not in (urltypes.LOCAL, 
+                                        self.cfg.redirectUrlType):
+                    d['url'] += '&urlType=%d' % d['urlType']
                 urls.append(models.FileUrl(**d))
             file.urls = urls
         return models.ImageFileList(imageFiles)
