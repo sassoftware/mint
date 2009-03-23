@@ -32,6 +32,7 @@ class RbuilderStatus(Model):
     rmcService    = RMCUrlField()
     products      = fields.UrlField('products', None)
     users         = fields.UrlField('users', None)
+    platforms     = fields.UrlField('platforms', None)
 
     def get_absolute_url(self):
         return '',
