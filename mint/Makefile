@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = cmdline reports templates web
+SUBDIRS = cmdline lib reports templates web
 
 python_files =			\
 	__init__.py		\
