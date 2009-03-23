@@ -53,11 +53,8 @@ class GroupTroveTable(database.KeyedTable):
         except versions.ParseError:
             raise GroupTroveVersionError
 
-        cu = self.db.cursor()
-        cu.execute("SELECT COALESCE(MAX(groupTroveId), 0) + 1 AS groupTroveId FROM GroupTroves")
-        groupTroveId = cu.fetchone()[0]
         timeStamp = time.time()
-        self.new(groupTroveId = groupTroveId,
+        return self.new(
                  projectId = projectId,
                  creatorId = creatorId,
                  recipeName = recipeName,
@@ -67,7 +64,6 @@ class GroupTroveTable(database.KeyedTable):
                  timeModified = timeStamp,
                  autoResolve = int(autoResolve),
                  cookCount = 0)
-        return groupTroveId
 
     def delGroupTrove(self, groupTroveId):
         cu = self.db.transaction()
@@ -291,7 +287,12 @@ class GroupTroveItemsTable(database.KeyedTable):
                               GroupTroveItems.groupTroveId=
                                       GroupTroves.groupTroveId""",
                    groupTroveItemId)
-        return cu.fetchone()[0]
+        result = cu.fetchone()
+        if result:
+            return result[0]
+        else:
+            raise ItemNotFound("group trove item")
+
 
 KNOWN_COMPONENTS = {'build-tree' : "Kernel build environment",
                     'config' : "Configuration-related files",
