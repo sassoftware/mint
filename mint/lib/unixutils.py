@@ -16,6 +16,8 @@ class AtomicFile(object):
     renamed on top of C{path}, constituting an atomic file write.
     """
 
+    fObj = None
+
     def __init__(self, path, mode='w+b', chmod=0644):
         self.finalPath = os.path.realpath(path)
         self.finalMode = chmod
@@ -48,7 +50,7 @@ class AtomicFile(object):
         self.fObj.close()
 
     def close(self):
-        if not self.fObj.closed:
+        if self.fObj and not self.fObj.closed:
             os.unlink(self.name)
             self.fObj.close()
     __del__ = close

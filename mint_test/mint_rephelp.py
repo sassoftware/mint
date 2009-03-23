@@ -254,6 +254,10 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintCfg.display(f)
         f.close()
 
+        util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'run'))
+        util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
+        open(self.mintCfg.conaryRcFile, 'w').close()
+
     def start(self, resetDir=True):
         rephelp.ApacheServer.start(self, resetDir)
         if self.reposDB:
@@ -384,8 +388,6 @@ class MintApacheServer(rephelp.ApacheServer):
                                                 'maintenance.lock')
 
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
-        util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
-        util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
 
         util.mkdirChain(cfg.logPath)
 
@@ -394,8 +396,6 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
         cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
 
-        f = open(cfg.conaryRcFile, 'w')
-        f.close()
         self.mintCfg = cfg
 
     def getMintServerDir(self):
