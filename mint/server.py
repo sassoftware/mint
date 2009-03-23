@@ -336,7 +336,7 @@ class MintServer(object):
                 raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
-            return (True, ("MethodNotSupported", methodName, ""))
+            return (True, ("MethodNotSupported", (methodName,)))
 
         # start profile
         prof.startXml(methodName)
@@ -5926,9 +5926,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{bool} indicating success
         """
         authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         affectedAMIIds = \
           self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
+        if not affectedAMIIds:
+            return False
+
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
 
         private = False
         for amiIdData in affectedAMIIds:

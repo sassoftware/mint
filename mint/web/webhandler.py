@@ -33,6 +33,7 @@ class HttpOK(HttpError):                code = 200
 class HttpPartialContent(HttpError):    code = 206
 class HttpMoved(HttpError):             code = 301
 class HttpMovedTemporarily(HttpError):  code = 302
+class HttpBadRequest(HttpError):        code = 400
 class HttpForbidden(HttpError):         code = 403
 class HttpNotFound(HttpError):          code = 404
 class HttpMethodNotAllowed(HttpError):  code = 405

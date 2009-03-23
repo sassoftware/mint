@@ -1,11 +1,19 @@
 Changes in @NEW@
 ===============
+Web Front End Changes
+---------------------
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+
 Bug Fixes
 ---------------------
 * Under conditions of high load, rBuilder would occasionally traceback
   upon reading a partiall-written conaryrc file. This has been
   corrected. (RBL-4212)
 
+  to the rBuilder. (RBL-4186)
 
 Changes in 5.0.1
 ===============
