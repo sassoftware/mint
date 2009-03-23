@@ -1,5 +1,11 @@
 Changes in @NEW@
 ===============
+Bug Fixes
+---------------------
+* Under conditions of high load, rBuilder would occasionally traceback
+  upon reading a partiall-written conaryrc file. This has been
+  corrected. (RBL-4212)
+
 
 Changes in 5.0.1
 ===============
