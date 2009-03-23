@@ -5503,6 +5503,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
+        if not affectedAMIIds:
+            return False
+
+        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
     def getAvailablePlatforms(self):
         """
         Returns a list of available platforms and their names (descriptions).
