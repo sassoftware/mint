@@ -504,7 +504,7 @@ class MintServer(object):
             except Exception, e:
                 # XXX could this exception handler be more specific? As written
                 # any error in the proddef module will be masked.
-                raise ProductDefinitionVersionNotFound
+                raise mint_error.ProductDefinitionVersionNotFound
 
             return pd
 
