@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 
-global _boto_present
 
 try:
     import boto

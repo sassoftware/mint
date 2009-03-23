@@ -45,6 +45,7 @@ from mint import templates
 from mint import userlevels
 from mint import usertemplates
 from mint import urltypes
+from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint.logerror import logErrorAndEmail
@@ -490,20 +491,32 @@ class MintServer(object):
     def _getProductDefinition(self, project, version):
         projectCfg = self._getProjectConaryConfig(project)
         repos = self._getProjectRepo(project, pcfg=projectCfg)
-        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
-
-        pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
         try:
-            pd.loadFromRepository(cclient)
-        except Exception, e:
-            # XXX could this exception handler be more specific? As written
-            # any error in the proddef module will be masked.
-            raise mint_error.ProductDefinitionVersionNotFound
-        return pd
+            cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+
+            pd = proddef.ProductDefinition()
+            pd.setProductShortname(project.shortname)
+            pd.setConaryRepositoryHostname(project.getFQDN())
+            pd.setConaryNamespace(version.namespace)
+            pd.setProductVersion(version.name)
+            try:
+                pd.loadFromRepository(cclient)
+            except Exception, e:
+                # XXX could this exception handler be more specific? As written
+                # any error in the proddef module will be masked.
+                raise ProductDefinitionVersionNotFound
+
+            return pd
+
+        finally:
+            # cclient holds a ref to the shimclient which holds a ref to a
+            # netserver which holds a ref to the database connection. cclient
+            # is full of circular refs, so the db never gets freed. Forcibly
+            # break the chain inside the shimclient since that is the easiest
+            # place to do it.
+            #
+            # This description is accurate as of conary 2.0.39
+            repos.c = None
 
     def _getProductDefinitionForVersionObj(self, versionId):
         version = projects.ProductVersions(self, versionId)
@@ -2063,35 +2076,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         repoMaps = self._getFullRepositoryMap()
 
-        try:
-            fd, fname = tempfile.mkstemp()
-            os.close(fd)
-            f = open(fname, 'w')
-            for host, url in repoMaps.iteritems():
-                f.write('repositoryMap %s %s\n' % (host, url))
-            f.close()
-            util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-            util.copyfile(fname, self.cfg.conaryRcFile, verbose=False)
-            os.chmod(self.cfg.conaryRcFile, 0644)
+        fObj_v0 = atomicOpen(self.cfg.conaryRcFile, chmod=0644)
+        fObj_v1 = atomicOpen(self.cfg.conaryRcFile + "-v1", chmod=0644)
+        for host, url in repoMaps.iteritems():
+            fObj_v0.write('repositoryMap %s %s\n' % (host, url))
+            fObj_v1.write('repositoryMap %s %s\n' % (host, url))
 
-            # add proxy stuff for version 1 config clients
-            v1config = self.cfg.conaryRcFile + "-v1"
-            f = open(fname, 'a+')
-            
-            # add conaryProxy if we have it enabled
-            if self.cfg.useInternalConaryProxy:
-                f.write('conaryProxy http http://%s.%s\n' % (
-                    self.cfg.hostName, self.cfg.siteDomainName))
-                f.write('conaryProxy https https://%s\n' % (
-                    self.cfg.secureHost,))
+        # add proxy stuff for version 1 config clients
+        if self.cfg.useInternalConaryProxy:
+            fObj_v1.write('conaryProxy http http://%s.%s\n' % (
+                self.cfg.hostName, self.cfg.siteDomainName))
+            fObj_v1.write('conaryProxy https https://%s\n' % (
+                self.cfg.secureHost,))
+        self.cfg.displayKey('proxy', out=fObj_v1)
 
-            self.cfg.displayKey('proxy', out=f)
-            f.close()
-            util.copyfile(fname, v1config, verbose=False)
-            os.chmod(v1config, 0644)
-
-        finally:
-            os.unlink(fname)
+        fObj_v0.commit()
+        fObj_v1.commit()
 
     @requiresAuth
     @private

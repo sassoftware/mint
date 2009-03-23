@@ -27,6 +27,13 @@ Internal Changes
 * processEditVersion now filters out empty string and None values from the
   image settings when creating image definitions in the product definition.
   (RBL-4281)
+  
+Bug Fixes
+---------------------
+* Under conditions of high load, rBuilder would occasionally traceback
+  upon reading a partiall-written conaryrc file. This has been
+  corrected. (RBL-4212)
+
 
 Changes in 5.0.1
 ===============
