@@ -66,15 +66,3 @@ class Stage(Model):
 
 class Stages(Model):
     stages = fields.ListField(Stage, displayName='stage')
-
-class Platform(Model):
-    id = fields.AbsoluteUrlField(isAttribute=True)
-    hostname = fields.CharField()
-    name = fields.CharField()
-    label = fields.CharField()
-    platformVersion = fields.CharField()
-    productVersion = fields.CharField()
-    platformName = fields.CharField()
-
-    def get_absolute_url(self):
-        return 'products.versions.platform', self.hostname, self.productVersion

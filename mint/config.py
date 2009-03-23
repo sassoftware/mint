@@ -225,6 +225,10 @@ class MintConfig(ConfigFile):
 
     # Entitlement and authorization (of the rBuilder)
     availablePlatforms      = (CfgList(CfgString), [])
+    # Parallel list to availablePlatforms, we need a name even when we don't
+    # have an entitlement
+    availablePlatformNames  = (CfgList(CfgString), [])
+    availablePlatforms      = (CfgList(CfgString), [])
     acceptablePlatforms     = (CfgList(CfgString), [])
     siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 

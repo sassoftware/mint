@@ -25,15 +25,27 @@ class PlatformManager(object):
         self.platformCache = PlatformNameCache(cacheFile, 
                                                db.productMgr.reposMgr)
 
+    def _iterPlatforms(self):
+        apnLength = len(self.cfg.availablePlatformNames)
+        for i, platformLabel in enumerate(self.cfg.availablePlatforms):
+            platformName = self.platformCache.get(platformLabel)
+            enabled = bool(platformName)
+            if not enabled:
+                # Fall back to the platform label, if
+                # self.cfg.availablePlatformNames is incomplete
+                platformName = platformLabel
+                if i < apnLength:
+                    platformName = self.cfg.availablePlatformNames[i]
+            yield platformLabel, platformName, enabled
+
     def listPlatforms(self):
         availablePlatforms = []
-        for platformLabel in self.cfg.availablePlatforms:
-            platformName = self.platformCache.get(platformLabel)
-            if platformName:
-                availablePlatforms.append(
-                        models.PlatformName(label=platformLabel, 
-                                            platformName=platformName))
-        return models.PlatformsNames(availablePlatforms)
+        for platformLabel, platformName, enabled in self._iterPlatforms():
+            plat = models.Platform(label = platformLabel,
+                                   platformName = platformName,
+                                   enabled = enabled)
+            availablePlatforms.append(plat)
+        return models.Platforms(availablePlatforms)
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
