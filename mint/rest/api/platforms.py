@@ -7,7 +7,9 @@
 from mint.rest.api import base
 from mint.rest.api import models
 
+from mint.rest.middleware import auth
+
 class PlatformController(base.BaseController):
-    # TODO: someday have a way to enable disable platforms 
+    @auth.public
     def index(self, request):
         return self.db.listPlatforms()
