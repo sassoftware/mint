@@ -9,42 +9,51 @@ import os
 import tempfile
 
 
-def atomicOpen(path, mode='w+b', chmod=0644):
+class AtomicFile(object):
     """
     Open a temporary file adjacent to C{path} for writing. When
     C{f.commit()} is called, the temporary file will be flushed and
     renamed on top of C{path}, constituting an atomic file write.
     """
-    path = os.path.realpath(path)
-    fObj = tempfile.NamedTemporaryFile(mode=mode,
-            dir=os.path.dirname(path))
-    fObj.finalPath = path
-    fObj.finalMode = chmod
 
-    def commit():
+    def __init__(self, path, mode='w+b', chmod=0644):
+        self.finalPath = os.path.realpath(path)
+        self.finalMode = chmod
+
+        fDesc, self.name = tempfile.mkstemp(dir=os.path.dirname(self.finalPath))
+        self.fObj = os.fdopen(fDesc, mode)
+
+    def __getattr__(self, name):
+        return getattr(self.fObj, name)
+
+    def commit(self):
         """
         C{flush()}, C{chmod()}, and C{rename()} to the target path.
         C{close()} afterwards.
         """
-        if fObj.closed:
+        if self.fObj.closed:
             raise RuntimeError("Can't commit a closed file")
 
         # Flush and change permissions before renaming so the contents
         # are immediately present and accessible.
-        fObj.flush()
-        os.chmod(fObj.name, fObj.finalMode)
-        os.fsync(fObj)
+        self.fObj.flush()
+        os.chmod(self.name, self.finalMode)
+        os.fsync(self.fObj)
 
         # Rename to the new location. Since both are on the same
         # filesystem, this will atomically replace the old with the new.
-        os.rename(fObj.name, fObj.finalPath)
+        os.rename(self.name, self.finalPath)
 
-        # Now close the file, but prevent it from being deleted.
-        fObj.delete = False
-        fObj.close()
-    fObj.commit = commit
+        # Now close the file.
+        self.fObj.close()
 
-    return fObj
+    def close(self):
+        if not self.fObj.closed:
+            os.unlink(self.name)
+            self.fObj.close()
+    __del__ = close
+
+atomicOpen = AtomicFile
 
 
 def hashFile(path, missingOk=False, inodeOnly=False):
