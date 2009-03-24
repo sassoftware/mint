@@ -104,7 +104,7 @@ class MintConfig(ConfigFile):
     conaryRcFile            = (CfgPath, '/srv/rbuilder/config/conaryrc.generated')
     createConaryRcFile      = (CfgBool, True)
     dbDriver                = (CfgString, 'sqlite')
-    dbPath                  = (CfgPath, None)
+    dbPath                  = (CfgString, None)
     debugMode               = (CfgBool, False)
     maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
