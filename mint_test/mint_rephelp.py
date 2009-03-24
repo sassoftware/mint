@@ -227,8 +227,8 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.authUser = 'mintauth'
     cfg.authPass = 'mintpass'
     cfg.localAddrs = getIpAddresses()
-    cfg.availablePlatforms = ['localhost@rpl:plat', 'testproject.rpath.local2@platform:1']
-    cfg.availablePlatformNames = ['My Spiffy Platform', 'Wunderbar Linux delived by Foobar']
+    cfg.availablePlatforms = ['localhost@rpl:plat', ]
+    cfg.availablePlatformNames = ['My Spiffy Platform', ]
     if useProxy:
         cfg.useInternalConaryProxy = True
         cfg.proxyContentsDir = reposDir + '/proxy'
