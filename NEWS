@@ -6,6 +6,8 @@ Bug Fixes
 * Downloads of images larger than 2GiB are no longer sent with a
   trailing HTML fragment that caused checksum failures on some Windows
   browsers.  (RBL-4222)
+* The deleteproject script now properly deletes repnamemap entries and
+  project versions, and should work without stopping httpd. (RBL-3196)
 
 Changes in 4.1.3:
 ================
