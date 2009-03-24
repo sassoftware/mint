@@ -52,8 +52,6 @@ class ProductManager(object):
         level = d.pop('level', None)
         if level:
             d['role'] = userlevels.names[level]
-        elif self.auth.isAdmin:
-            d['role'] = 'Admin'
 
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
         p = models.Product(**d)
@@ -69,9 +67,12 @@ class ProductManager(object):
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
+                LEFT JOIN ProjectUsers ON (
+                    ProjectUsers.projectId=Projects.projectId 
+                    AND ProjectUsers.userId=?)
                 FROM Projects 
                 LEFT JOIN Users ON (creatorId=Users.userId)
-                ORDER BY hostname''')
+                ORDER BY hostname''', self.auth.userId)
         else:
             cu.execute('''
                 SELECT Projects.projectId as productId,
@@ -94,8 +95,6 @@ class ProductManager(object):
             level = d.pop('level', None)
             if level:
                 d['role'] = userlevels.names[level]
-            elif self.auth.isAdmin:
-                d['role'] = 'Admin'
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
             p = models.Product(**d)
             results.products.append(p)
