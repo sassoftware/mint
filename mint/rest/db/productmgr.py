@@ -48,30 +48,38 @@ class ProductManager(object):
         '''
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
+
+        level = d.pop('level', None)
+        if level is not None:
+            d['role'] = userlevels.names[level]
+
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
         p = models.Product(**d)
         return p
 
-    def listProducts(self):
+    def listProducts(self, start=0, limit=None):
         cu = self.db.cursor()
         if self.auth.isAdmin:
-            cu.execute('''
+            sql = '''
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname,
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal 
+                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
                 FROM Projects 
+                LEFT JOIN ProjectUsers ON (
+                    ProjectUsers.projectId=Projects.projectId 
+                    AND ProjectUsers.userId=?)
                 LEFT JOIN Users ON (creatorId=Users.userId)
-                ORDER BY hostname''')
+                ORDER BY hostname'''
         else:
-            cu.execute('''
+            sql = '''\
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname, domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal 
+                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
                 FROM Projects 
                 LEFT JOIN ProjectUsers ON (
                     ProjectUsers.projectId=Projects.projectId 
@@ -79,11 +87,18 @@ class ProductManager(object):
                 LEFT JOIN Users ON (creatorId=Users.userId)
                 WHERE NOT Projects.hidden OR 
                       ProjectUsers.level IS NOT NULL
-                ORDER BY hostname
-               ''', self.auth.userId)
+                ORDER BY hostname'''
+        if limit:
+            sql += ' LIMIT %d' % limit
+        if start:
+            sql += ' OFFSET %d' % start
+        cu.execute(sql, self.auth.userId)
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
+            level = d.pop('level', None)
+            if level is not None:
+                d['role'] = userlevels.names[level]
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
             p = models.Product(**d)
             results.products.append(p)
@@ -255,7 +270,7 @@ class ProductManager(object):
             raise mint_error.InvalidLabel(label)
 
         if platformLabel:
-            cclient = self.reposMgr.getInternalConaryClient(fqdn)
+            cclient = self.reposMgr.getConaryClientForProduct(fqdn)
             prodDef.rebase(cclient, platformLabel)
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
@@ -304,7 +319,7 @@ class ProductManager(object):
             if not str(label).startswith(str(baseLabel)):
                 continue
             try:
-                cclient = self.reposMgr.getInternalConaryClient(fqdn)
+                cclient = self.reposMgr.getConaryClientForProduct(fqdn)
                 pd.loadFromRepository(cclient)
             except Exception, e:
                 return versionId, None
@@ -330,7 +345,7 @@ class ProductManager(object):
         pd.setConaryRepositoryHostname(product.getFQDN())
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
@@ -340,13 +355,13 @@ class ProductManager(object):
         return pd
 
     def setProductVersionDefinition(self, fqdn, version, prodDef):
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
     def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
         pd = self.getProductVersionDefinition(fqdn, version)
-        cclient = self.reposMgr.getInternalConaryClient(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
@@ -358,7 +373,7 @@ class ProductManager(object):
         pd.clearBuildDefinition()
         for buildDef in model.buildDefinitions:
             self._addBuildDefinition(buildDef, pd)
-        cclient = self.reposMgr.getInternalConaryClient(hostname)
+        cclient = self.reposMgr.getConaryClientForProduct(hostname)
         pd.saveToRepository(cclient,
                             'Product Definition commit from rBuilder\n')
         return pd

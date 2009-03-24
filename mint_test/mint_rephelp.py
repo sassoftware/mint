@@ -240,8 +240,19 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False
-    cfg.commitAction = """%s/scripts/commitaction --username=mintauth --password=mintpass --repmap='%%(repMap)s' --build-label=%%(buildLabel)s --module=\'%s/mint/rbuilderaction.py --user=%%%%(user)s --url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, MINT_HOST + '.' + \
-            MINT_PROJECT_DOMAIN, port)
+    if conaryPath.startswith('/usr/'):
+        # /usr/lib/...[/conary/commitaction]
+        scriptPath = os.path.join(conaryPath, 'conary/commitaction')
+    else:
+        # /home/foo/hg/conary/[scripts/commitaction]
+        scriptPath = os.path.join(conaryPath, 'scripts/commitaction')
+
+    cfg.commitAction = ("%s --username=mintauth --password=mintpass "
+            "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
+            "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
+                "--url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'"
+            % (scriptPath, mintPath, MINT_HOST + '.' + MINT_PROJECT_DOMAIN,
+                port))
     cfg.postCfg()
 
     cfg.hideFledgling = True
@@ -486,10 +497,12 @@ class RestDBMixIn(object):
                                                             (100, 'Message'))
         return db
 
-    def createUser(self, name, password='', admin=False):
+    def createUser(self, name, password=None, admin=False):
         db = self.openRestDatabase()
-        return db.createUser(name, name, 'Full Name', '%s@foo.com' % name,
-                            '%s@foo.com', password, admin=admin)
+        if password is None:
+            password = name
+        return db.createUser(name, password, 'Full Name', '%s@foo.com' % name,
+                            '%s@foo.com', '', admin=admin)
 
     def _startDatabase(self):
         mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
@@ -501,7 +514,9 @@ class RestDBMixIn(object):
         # FIXME: eliminate for sqlite by copying in premade sqlite db.
         self.mintDb.start()
 
-    def setDbUser(self, db, username):
+    def setDbUser(self, db, username, password=None):
+        if password is None:
+            password = username
         from mint import users
         if username:
             cu = db.cursor()
@@ -518,7 +533,7 @@ class RestDBMixIn(object):
         else:
             auth = users.Authorization(authoried=False, admin=False,
                                        userId=-1, username=None)
-        db.setAuth(auth, (username, ''))
+        db.setAuth(auth, (username, password))
 
     def createProduct(self, shortname, 
                       owners=None, developers=None, users=None, 

@@ -296,7 +296,7 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             return apache.HTTP_METHOD_NOT_ALLOWED
     finally:
-        if doReset:
+        if doReset and hasattr(repServer, 'reset'):
             repServer.reset()
 
 

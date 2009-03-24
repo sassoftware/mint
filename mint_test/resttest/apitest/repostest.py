@@ -194,7 +194,7 @@ Index.
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
     <updater/>
     <timeCreated></timeCreated>
@@ -208,7 +208,7 @@ Index.
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <url urlType="0">%(data)s/images/testproject/2/imagefile_2.iso</url>
+        <url urlType="0">/downloadImage?fileId=2</url>
       </file>
     </files>
   </image>
@@ -223,7 +223,7 @@ Index.
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage/>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
     <updater/>
     <timeCreated></timeCreated>
@@ -237,7 +237,7 @@ Index.
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
-        <url urlType="0">%(data)s/images/testproject/2/imagefile_2.iso</url>
+        <url urlType="0">/downloadImage?fileId=2</url>
       </file>
     </files>
   </image>

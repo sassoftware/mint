@@ -12,8 +12,10 @@ import re
 import time
 
 from conary import conaryclient
+from conary import constants as conaryConstants
 from conary.lib import util
 from mint import buildtypes
+from mint import constants
 
 import restbase
 from restlib import client as restClient
@@ -28,8 +30,8 @@ class PlatformTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <rbuilderStatus id="http://%(server)s:%(port)s/api">
-  <version></version>
-  <conaryVersion>2.0.38</conaryVersion>
+  <version>%(version)s</version>
+  <conaryVersion>%(conaryversion)s</conaryVersion>
   <isRBO>false</isRBO>
   <identity>
     <rbuilderId></rbuilderId>
@@ -42,7 +44,9 @@ class PlatformTest(restbase.BaseRestTest):
 </rbuilderStatus>
 """
         self.failUnlessEqual(response.read(),
-             exp % dict(port = client.port, server = client.server))
+             exp % dict(port = client.port, server = client.server,
+                         version=constants.mintVersion,
+                         conaryversion=conaryConstants.version))
 
 if __name__ == "__main__":
         testsetup.main()

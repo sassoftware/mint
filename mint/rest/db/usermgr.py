@@ -67,8 +67,6 @@ class UserManager(object):
         """
         Make sure there won't be any orphans
         """
-        import epdb
-        epdb.st('f')
         cu = self.db.cursor()
 
         # Find all projects of which userId is an owner, has no other owners,
@@ -161,12 +159,12 @@ class UserManager(object):
         # NOTE: I don't add users to their own usergroups.
         # as far as I can tell the only use for usergroups is for
         # MintAdmin.
-        salt, password = _mungePassword(password)
+        salt, pw = _mungePassword(password)
 
         userValues = dict(username = username,
                           fullName = fullName,
                           salt = salt,
-                          passwd = password,
+                          passwd = pw,
                           email = email,
                           displayEmail = displayEmail,
                           timeCreated = time.time(),

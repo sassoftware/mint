@@ -32,6 +32,7 @@ class Product(Model):
     timeCreated        = fields.DateTimeField(editable=False)
     timeModified       = fields.DateTimeField(editable=False)
     hidden             = fields.BooleanField()
+    role               = fields.CharField()
     version            = fields.CharField()
     versions           = fields.UrlField('products.versions', ['hostname'])
     members            = fields.UrlField('products.members', ['hostname'])
