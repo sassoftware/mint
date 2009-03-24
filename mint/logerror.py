@@ -107,6 +107,7 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
 
     small.seek(0)
     conary_util.copyfileobj(small, smallStream)
+    smallStream.flush()
 
     # send email
     if cfg:
