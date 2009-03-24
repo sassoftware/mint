@@ -171,7 +171,7 @@ class RestClient(object):
         req = urllib2.Request(streamName)
         ret = self.opener.open(req)
         if ret.code != 200:
-            raise StreamOpenError("Unable to open XML stream %s" % xmlStreamName)
+            raise StreamOpenError("Unable to open XML stream %s" % streamName)
         return ret
 
 if __name__ == '__main__':
