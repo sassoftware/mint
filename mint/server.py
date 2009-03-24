@@ -5710,7 +5710,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         
         # delete repo names
         try:
-            self.delRemappedRepository(project.getFQDN())
+            # delRemappedRepository takes the "fromName", not the project FQDN, as the arg here
+            self.delRemappedRepository("%s.%s" % (project.getHostname(), self.cfg.siteDomainName))
         except Exception, e:
             handleNonFatalException('delete-repo-names')
         
