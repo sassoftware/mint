@@ -33,11 +33,13 @@ class ErrorCallback(object):
         else:
             tbString = None
             text = [message + '\n']
+        isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+        if isFlash or request.contentType != 'text/plain':
         # for text/plain, just print out the traceback in the easiest to read
         # format.
-        if request.contentType != 'text/plain':
             code = status
-            if 'HTTP_X_FLASH_VERSION' in request.headers:
+            if isFlash:
+                # flash ignores all data sent with a non-200 error
                 status = 200
             error = models.Error(code=code, message=message, 
                                  traceback=tbString)
