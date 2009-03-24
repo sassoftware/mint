@@ -45,7 +45,14 @@ class ProductController(base.BaseController):
             'releases'   : images.ProductReleasesController  }
 
     def index(self, request):
-        return self.db.listProducts()
+        
+        limit = request.GET.get('limit', None)
+        start = request.GET.get('start', None)
+        if limit:
+            limit = int(limit)
+        if start:
+            start = int(start)
+        return self.db.listProducts(limit=limit, start=start)
 
     def get(self, request, hostname):
         return self.db.getProduct(hostname)

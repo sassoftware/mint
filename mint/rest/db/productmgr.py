@@ -57,24 +57,24 @@ class ProductManager(object):
         p = models.Product(**d)
         return p
 
-    def listProducts(self):
+    def listProducts(self, start=0, limit=None):
         cu = self.db.cursor()
         if self.auth.isAdmin:
-            cu.execute('''
+            sql = '''
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname,
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal 
+                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
                 FROM Projects 
                 LEFT JOIN ProjectUsers ON (
                     ProjectUsers.projectId=Projects.projectId 
                     AND ProjectUsers.userId=?)
                 LEFT JOIN Users ON (creatorId=Users.userId)
-                ORDER BY hostname''', self.auth.userId)
+                ORDER BY hostname'''
         else:
-            cu.execute('''
+            sql = '''\
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname, domainname, namespace, 
                    description, Users.username as creator, projectUrl,
@@ -87,8 +87,12 @@ class ProductManager(object):
                 LEFT JOIN Users ON (creatorId=Users.userId)
                 WHERE NOT Projects.hidden OR 
                       ProjectUsers.level IS NOT NULL
-                ORDER BY hostname
-               ''', self.auth.userId)
+                ORDER BY hostname'''
+        if limit:
+            sql += ' LIMIT %d' % limit
+        if start:
+            sql += ' OFFSET %d' % start
+        cu.execute(sql, self.auth.userId)
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
