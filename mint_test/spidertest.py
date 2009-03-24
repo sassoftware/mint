@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -17,7 +17,7 @@ import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
 from mint import buildtypes
-from mint import pkgindexer
+from mint.scripts import pkgindexer
 
 from conary.lib import util
 
@@ -136,6 +136,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             return False
         if 'cloudCatalog' in link:
             # cloudCatalog is delivered by catalog-client
+            return False
+        if '/ui/' in link:
+            # rbuilder-ui is delivered by rbuilder-ui
             return False
 
         #print "inspecting", link

@@ -10,8 +10,8 @@ import xmlrpclib
 
 from mint import builds
 from mint import ec2
-from mint import grouptrove
-from mint import jobs
+from mint.db import grouptrove
+from mint.db import jobs
 from mint import mint_error
 from mint import projects
 from mint import pubreleases
@@ -85,6 +85,23 @@ class MintClient:
         """
         return self.server.newExternalProject(name, hostname, domainname,
                                               label, url, mirror)
+        
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        return self.server.deleteProject(projectId)
+    
+    def deleteProjectByName(self, hostname):
+        """
+        Delete a project
+        @param hostname: The hostname of the project to delete
+        @type hostname: C{str}
+        """
+        project = self.getProjectByHostname(hostname)
+        return self.server.deleteProject(project.id)
 
     def checkAuth(self):
         """
@@ -803,7 +820,9 @@ class MintClient:
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
-    # ec2 "try it now" support
+    # BEGIN GUIDED TOUR SUPPORT - since we call these via
+    # a javascript client, these methods are likely not needed
+    # outside of testing.
     def validateEC2Credentials(self, authToken):
         return self.server.validateEC2Credentials(authToken)
     
@@ -845,6 +864,7 @@ class MintClient:
 
     def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
         return self.server.checkHTTPReturnCode(uri, expectedCodes)
+    # END GUIDED TOUR SUPPORT
 
     def getFullRepositoryMap(self):
         return self.server.getFullRepositoryMap()
@@ -893,9 +913,13 @@ class MintClient:
     def getProductVersionProdDefLabel(self, versionId):
         return self.server.getProductVersionProdDefLabel(versionId)
 
-    def newBuildsFromProductDefinition(self, versionId, stage, force):
+    def newBuildsFromProductDefinition(self, versionId, stage, force,
+            buildNames = None, versionSpec = None):
+        buildNames = buildNames or []
+        versionSpec = versionSpec or ''
         return self.server.newBuildsFromProductDefinition(versionId, stage,
-                                                          force)
+                                                          force, buildNames,
+                                                          versionSpec)
         
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
@@ -915,30 +939,17 @@ class MintClient:
     def deleteTarget(self, targetType, targetName):
         return self.server.deleteTarget(targetType, targetName)
 
-    def getTargetData(self, targetType, targetName):
-        return self.server.getTargetData(targetType, targetName)
-
     def removeEC2CredentialsForUser(self, userId):
         return self.server.removeEC2CredentialsForUser(userId)
 
-    def getAllAMIBuilds(self):
-        return self.server.getAllAMIBuilds()
-
-    def getAllBuildsByType(self, buildType):
-        return self.server.getAllBuildsByType(buildType)
+    def getTargetData(self, targetType, targetName):
+        return self.server.getTargetData(targetType, targetName)
 
     def getAMIBuildsForUser(self, userId):
         return self.server.getAMIBuildsForUser(userId)
 
-    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        return self.server.addAllEC2LaunchPermissions(userId, awsAccountNumber)
-
-    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        return self.server.removeAllEC2LaunchPermissions(userId,
-                                                      awsAccountNumber)
-
-    def getAllVwsBuilds(self):
-        return self.server.getAllVwsBuilds()
+    def getAllBuildsByType(self, buildType):
+        return self.server.getAllBuildsByType(buildType)
 
     def getAvailablePackages(self, sessionHandle):
         from conary import versions as conaryver
@@ -987,7 +998,7 @@ class _Method(xmlrpclib._Method):
             cls = getattr(mint_error, exceptionName)
             raise cls.thaw(exceptionArgs)
         else:
-            raise UnknownException(exceptionName, exceptionArgs)
+            raise mint_error.UnknownException(exceptionName, exceptionArgs)
 
 def upstream(version):
     """

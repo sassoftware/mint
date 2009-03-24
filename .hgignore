@@ -19,6 +19,8 @@
 ^mint/web/templates/catalogLayout.kid
 ^mint/web/templates/cloudCatalog.kid
 ^mint/web/templates/admin/cloudConfig.kid
+^mint/web/templates/admin/cloudConfig.kid
+^pylint/reports/.*
 
 ^doc/rbuilder.1$
 
@@ -36,7 +38,10 @@
 
 ^scripts/raw2vmdk$
 ^scripts/rbuilder_database.py$
+^scripts/httpd-graceful$
 
+mint_test/(.*/)?\.failed$
+mint_test/(.*/)?\.times$
 .*,cover
 ^VERSION$
 ^INSTALL$

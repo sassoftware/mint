@@ -21,6 +21,8 @@ def setup_paths():
     proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath(curDir + '../../rpath-product-definition'))
     catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath(curDir + '../../catalog-service'))
     restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath(curDir + '../../restlib'))
+    xobjPath = os.getenv('XOBJ_PATH', os.path.realpath(curDir + '../../xobj'))
+    storagePath = os.getenv('STORAGE_PATH', os.path.realpath(curDir + '../../rpath-storage'))
 
     #Package creator
     packageCreatorPath = os.getenv('PACKAGE_CREATOR_SERVICE_PATH',    os.path.realpath(curDir + '../../package-creator-service'))
@@ -36,10 +38,11 @@ def setup_paths():
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
         raaPath, raaTestPath, raaPluginsPath, proddefPath,
         packageCreatorPath, conaryFactoryTestPath, catalogServicePath,
-        restlibPath, rmakePath, rmakePrivatePath)] \
+        restlibPath, rmakePath, rmakePrivatePath, xobjPath, storagePath)] \
                 + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         RESTLIB_PATH=restlibPath,
+        XOBJ_PATH=xobjPath,
         CONARY_TEST_PATH=conaryTestPath,
         MCP_PATH=mcpPath, MCP_TEST_PATH=mcpTestPath,
         MINT_PATH=mintPath, MINT_TEST_PATH=mintTestPath,

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -9,7 +9,8 @@ testsuite.setup()
 import time
 import fixtures
 from mint import mint_error
-from mint import selections
+import mint.scripts.selections
+from mint.db import selections
 from mint.helperfuncs import toDatabaseTimestamp
 
 class MarketingTest(fixtures.FixturedUnitTest):
@@ -140,7 +141,7 @@ class MarketingTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual([x['projectId'] for x in l], [p2, p3, data['projectId']])
 
         # test the update script mechanism
-        upl = selections.UpdateProjectLists()
+        upl = mint.scripts.selections.UpdateProjectLists()
         upl.logPath = None
         upl.cfg = self.cfg
         upl.run()

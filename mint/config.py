@@ -11,12 +11,16 @@ from mint import urltypes
 from mint import mint_error
 
 from conary.conarycfg import ConfigFile, CfgProxy
-from conary.lib import cfgtypes
+from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
+        CfgList, CfgPath, CfgString)
+
+
+RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
+RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', RBUILDER_DATA + 'config/rbuilder.conf')
+RBUILDER_GENERATED_CONFIG = RBUILDER_DATA + 'config/rbuilder-generated.conf'
+RBUILDER_RMAKE_CONFIG = "/etc/rmake/server.d/25_rbuilder-rapa.conf"
 
 CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
-RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', '/srv/rbuilder/config/rbuilder.conf')
-RBUILDER_GENERATED_CONFIG = "/srv/rbuilder/config/rbuilder-generated.conf"
-RBUILDER_RMAKE_CONFIG = "/etc/rmake/server.d/25_rbuilder-rapa.conf"
 
 # These are keys that are generated for the "generated" configuration file
 # Note: this is *only* used for the product, as rBO doesn't get configured
@@ -29,12 +33,7 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'requireSigs', 'authPass', 'reposDBDriver', 
                            'reposDBPath']
 
-templatePath = os.path.dirname(sys.modules['mint'].__file__)
-
-# if this system is an x86_64 box, enable 64-bit bootable images.
-# we can override this if we know for a fact that we have external
-# 64-bit job servers handling jobs for this server.
-x86_64 = os.uname()[4] == 'x86_64'
+_templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 __isRBO = None
 
@@ -71,10 +70,10 @@ def isRBO():
             __isRBO = False
     return __isRBO
 
-class CfgDownloadEnum(cfgtypes.CfgEnum):
+class CfgDownloadEnum(CfgEnum):
     validValues = urltypes.urlTypes
 
-class CfgBuildEnum(cfgtypes.CfgEnum):
+class CfgBuildEnum(CfgEnum):
     validValues = buildtypes.validBuildTypes
     deprecatedValues = buildtypes.deprecatedBuildTypes
 
@@ -84,207 +83,193 @@ class CfgBuildEnum(cfgtypes.CfgEnum):
             print >> sys.stderr, "Warning: %s is deprecated. Please use: %s" %\
                   (val, preferred)
             val = preferred
-        return cfgtypes.CfgEnum.parseString(self, val)
+        return CfgEnum.parseString(self, val)
+
 
 class MintConfig(ConfigFile):
-    # By default, we are not rBuilder Online unless configured to be rBO
-    rBuilderOnline          = (cfgtypes.CfgBool, False)
+    configured              = (CfgBool, False)
+    dataPath                = (CfgPath, '/srv/rbuilder/')
+    rBuilderOnline          = (CfgBool, False)
 
-    companyName             = (cfgtypes.CfgString, 'rPath, Inc.',
-        "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
+    # Backend configuration
+    adminMail               = (CfgString, 'mint@rpath.org')
+    authPass                = (CfgString, None)
+    authUser                = (CfgString, None)
+    bugsEmail               = (CfgString, None)
+    bugsEmailName           = (CfgString, 'rBuilder Bugs')
+    bugsEmailSubject        = (CfgString, 'rBuilder Unhandled Exception Report from %(hostname)s')
+    commitActionEmail       = (CfgString, None)
+    commitAction            = (CfgString, None)
+    commitEmail             = (CfgString, None)
+    conaryRcFile            = (CfgPath, '/srv/rbuilder/config/conaryrc.generated')
+    createConaryRcFile      = (CfgBool, True)
+    dbDriver                = (CfgString, 'sqlite')
+    dbPath                  = (CfgString, None)
+    debugMode               = (CfgBool, False)
+    maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
+    profiling               = (CfgBool, False)
+    sendNotificationEmails  = (CfgBool, True)
+    smallBugsEmail          = (CfgString, None)
 
-    productName             = (cfgtypes.CfgString, 'rBuilder at rpath.org',
-        "Name by which you refer to the rBuilder service: (Used heavily throughout rBuilder)")
+    # Handler configuration
+    basePath                = (CfgString, '/', "URI root for this rBuilder")
+    cookieSecretKey         = (CfgString, None) # Not used in product
+    externalDomainName      = (CfgString, None)
+    hostName                = (CfgString, None,
+        "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "
+        "(The complete URL to access rBuilder is constructed from the "
+        "host name and domain name.)")
+    imagesPath              = (CfgString, None)
+    language                = (CfgString, 'en')
+    localeDir               = (CfgPath, '/usr/share/locale/')
+    projectDomainName       = (CfgString, None)
+    staticPath              = (CfgString, '/conary-static/')
+    secureHost              = (CfgString, None)
+    SSL                     = (CfgBool, False, "SSL required for login and write access to rBuilder-based products")
+    siteDomainName          = (CfgString, 'rpath.com',
+        "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
+    templatePath            = (CfgPath, _templatePath + '/web/templates')
 
-    corpSite                = (cfgtypes.CfgString, 'http://www.rpath.com/corp/',
-        "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
+    # Web features
+    diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
+    EnableMailLists         = (CfgBool, False)
+    MailListBaseURL         = (CfgString, 'http://lists.rpath.org/mailman/')
+    MailListPass            = (CfgString, 'adminpass')
+    licenseCryptoReports    = (CfgBool, True)
+    removeTrovesVisible     = (CfgBool, False)
+    hideFledgling           = (CfgBool, False)
+    allowTroveRefSearch     = (CfgBool, True)
 
-    # deprecated by namespace; we generate the default branch now on a per-product (project) basis
-    defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
-       "The default namespace and tag used by products you create in rBuilder")
+    # User authentication
+    authCacheTimeout        = (CfgInt, None,
+                               "Number of seconds to cache authentication results")
+    externalPasswordURL     = (CfgString, None,
+                               "URL for external password verification, "
+                               "required only for situations where you "
+                               "wish to use an external URL to handle "
+                               "authentication of rBuilder accounts.")
 
-    namespace               = (cfgtypes.CfgString, '',
-        "The default namespace used by products you create in rBuilder")
+    # User authorization
+    adminNewProjects        = (CfgBool, False, "Whether project creation is restricted to site admins")
+    adminNewUsers           = (CfgBool, False, "Whether new users should have site admin privileges")
+    projectAdmin            = (CfgBool, True, "Whether project owners should be repos admins")
 
-    groupApplianceLabel     = (cfgtypes.CfgString, 
-            'rap.rpath.com@rpath:linux-1',
+    # Downloads
+    redirectUrlType         = (CfgInt, urltypes.AMAZONS3)
+    torrentUrlType          = (CfgInt, urltypes.AMAZONS3TORRENT)
+    visibleUrlTypes         = CfgList(CfgDownloadEnum)
+
+    # Logging
+    logPath                 = (CfgPath, '/var/log/rbuilder')
+    xmlrpcLogFile           = (CfgPath, None)
+    reposLog                = (CfgBool, True)
+
+    # Repositories and built-in proxy
+    injectUserAuth          = (CfgBool, True,
+                                "Inject user authentication into proxy requests")
+    reposContentsDir        = (CfgString, '/srv/rbuilder/repos/%s/contents/')
+    reposPath               = (CfgPath, None)
+    requireSigs             = (CfgBool, None,
+                               "Require that all commits to local "
+                               "repositories be signed by an OpenPGP key.")
+    serializeCommits        = (CfgBool, True)
+    useInternalConaryProxy  = (CfgBool, False)
+
+    proxyContentsDir        = (CfgPath, RBUILDER_DATA + '/proxy-contents/')
+    proxyTmpDir             = (CfgPath, RBUILDER_DATA + '/tmp/')
+    proxyChangesetCacheDir  = (CfgPath, RBUILDER_DATA + '/cscache/')
+
+    # Project defaults
+    hideNewProjects         = (CfgBool, False)
+    reposDBDriver           = (CfgString, 'sqlite')
+    reposDBPath             = (CfgString, '/srv/rbuilder/repos/%s/sqldb')
+    defaultBranch           = (CfgString, 'rpl:devel',
+            "The default namespace and tag used by products you create in rBuilder") # mostly deprecated
+    namespace               = (CfgString, '',
+            "The default namespace used by products you create in rBuilder")
+    groupApplianceLabel     = (CfgString, 'rap.rpath.com@rpath:linux-1',
             "The label that contains the group-appliance-platform superclass")
 
-    supportContactHTML      = 'Contact information in HTML.'
-    supportContactTXT       = 'Contact information in text.'
-    staticPath              = '/conary-static/'
-    authRepoMap             = cfgtypes.CfgDict(cfgtypes.CfgString)
-    authUser                = None
-    authPass                = None
-    templatePath            = os.path.join(templatePath, 'web', 'templates')
-    dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
-    logPath                 = os.path.join(os.path.sep, 'var', 'log', 'rbuilder')
-    reposPath               = None
-    reposContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'repos', '%s', 'contents', '')
-    dbPath                  = None
-    dbDriver                = 'sqlite'
-    imagesPath              = None
-    siteDomainName          = (cfgtypes.CfgString, 'rpath.com',
-        "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
-    projectDomainName       = None
-    externalDomainName      = None
-    secureHost              = None
-    hostName                = (cfgtypes.CfgString, None,
-        "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "\
-        "(The complete URL to access rBuilder is constructed from the "\
-        "host name and domain name.)")
+    # Upstream resources
+    proxy                   = CfgProxy
+    VAMUser                 = (CfgString, '')
+    VAMPassword             = (CfgString, '')
 
-    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder-based products")
-    adminMail               = 'mint@rpath.org'
-    newsRssFeed             = ''
-    commitAction            = None
-    commitActionEmail       = None
-    commitEmail             = None
-    EnableMailLists         = (cfgtypes.CfgBool, False)
-    MailListBaseURL         = 'http://lists.rpath.org/mailman/'
-    MailListPass            = 'adminpass'
-    basePath                = '/'
-    cookieSecretKey         = None
-    bugsEmail               = None
-    bugsEmailName           = 'rBuilder Bugs'
-    bugsEmailSubject        = 'rBuilder Unhandled Exception Report from %(hostname)s'
-    smallBugsEmail          = None
-    debugMode               = (cfgtypes.CfgBool, False)
-    sendNotificationEmails  = (cfgtypes.CfgBool, True)
-    profiling               = (cfgtypes.CfgBool, False)
-    configured              = (cfgtypes.CfgBool, False)
-    hideFledgling           = (cfgtypes.CfgBool, False)
+    # Branding
+    bulletinPath            = (CfgPath, '/srv/rbuilder/config/bulletin.txt')
+    frontPageBlock          = (CfgPath, '/srv/rbuilder/config/frontPageBlock.html')
+    legaleseLink            = (CfgString, '')
+    tosLink                 = (CfgString, '')
+    tosPostLoginLink        = (CfgString, '')
+    privacyPolicyLink       = (CfgString, '')
+    companyName             = (CfgString, 'rPath, Inc.',
+        "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
+    productName             = (CfgString, 'rBuilder at rpath.org',
+        "Name by which you refer to the rBuilder service: (Used heavily throughout rBuilder)")
+    corpSite                = (CfgString, 'http://www.rpath.com/corp/',
+        "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
+    supportContactHTML      = (CfgString, 'Contact information in HTML.')
+    supportContactTXT       = (CfgString, 'Contact information in text.')
+    newsRssFeed             = (CfgString, '')
+    announceLink            = (CfgString, '')
+    googleAnalyticsTracker  = (CfgBool, False)
 
-    reposDBDriver           = 'sqlite'
-    reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
-                                           'repos', '%s', 'sqldb')
-    visibleBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
-    excludeBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
-    includeBuildTypes       = (cfgtypes.CfgList(CfgBuildEnum))
-    bootableX8664           = (cfgtypes.CfgBool, x86_64)
-    maintenanceLockPath     = os.path.join(dataPath, 'run', 'maintenance.lock')
-    announceLink            = ''
+    # Build system
+    anacondaTemplatesFallback   = (CfgString, 'conary.rpath.com@rpl:1')
+    ec2ProductCode          = (CfgString, None)
+    packageCreatorConfiguration = (CfgPath, None)
+    packageCreatorURL       = (CfgString, None)
+    visibleBuildTypes       = (CfgList(CfgBuildEnum))
+    excludeBuildTypes       = (CfgList(CfgBuildEnum))
+    includeBuildTypes       = (CfgList(CfgBuildEnum))
 
-    googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
-    projectAdmin            = (cfgtypes.CfgBool, True)
-    adminNewProjects        = (cfgtypes.CfgBool, False)
-    adminNewUsers           = (cfgtypes.CfgBool, False)
+    # Entitlement and authorization (of the rBuilder)
+    availablePlatforms      = (CfgList(CfgString), [])
+    # Parallel list to availablePlatforms, we need a name even when we don't
+    # have an entitlement
+    availablePlatformNames  = (CfgList(CfgString), [])
+    availablePlatforms      = (CfgList(CfgString), [])
+    acceptablePlatforms     = (CfgList(CfgString), [])
+    siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 
-    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'config',
-                                            'conaryrc.generated')
-    createConaryRcFile      = (cfgtypes.CfgBool, True)
-    reposLog                = (cfgtypes.CfgBool, True)
-    xmlrpcLogFile           = ''
-    bannersPerPage          = (cfgtypes.CfgInt, 5)
-    redirectUrlType         = (cfgtypes.CfgInt, urltypes.AMAZONS3)
-    torrentUrlType          = (cfgtypes.CfgInt, urltypes.AMAZONS3TORRENT)
-    displaySha1             = (cfgtypes.CfgBool, True)
-    visibleUrlTypes         = (cfgtypes.CfgList(CfgDownloadEnum))
+    # Guided tours
+    ec2GenerateTourPassword = (CfgBool, False,
+                                "whether or not to generate a scrambled password for the "
+                                "guided tour currently this is set to false (see WEB-354) "
+                                "until further notice")
 
-    # mimic exactly the conary server cfg items
-    externalPasswordURL     = (cfgtypes.CfgString, None,
-                               "URL for external password verification, "    \
-                               "required only for situations where you "     \
-                               "wish to use an external URL to handle "      \
-                               "authentication of rBuilder accounts.")
-    authCacheTimeout        = (cfgtypes.CfgInt, None,
-                               "Number of seconds to cache authentication results")
-    removeTrovesVisible     = (cfgtypes.CfgBool, False)
-    serializeCommits        = (cfgtypes.CfgBool, True)
-    hideNewProjects         = (cfgtypes.CfgBool, False)
-    allowTroveRefSearch     = (cfgtypes.CfgBool, True)
-
-    language                = 'en'
-    localeDir               = '/usr/share/locale/'
 
     # *** BEGIN DEPRECATED VALUES ***
-    # AMI configuration data
-    # the targets.py module now stores these values in the
-    # Targets and TargetData tables
-    # these values are no longer used as of rBuilder 5.0, but must be maintained
-    # until we can guarantee no customers will be inconvenienced by their
-    # removal. schema upgrade (45, 6) copies these config values into
-    # the rBuilder database
-    ec2PublicKey            = (cfgtypes.CfgString, '', "The AWS account id")
-    ec2PrivateKey           = (cfgtypes.CfgString, '', "The AWS public key")
-    ec2AccountId            = (cfgtypes.CfgString, '', "The AWS private key")
-    ec2S3Bucket             = None
-    ec2CertificateFile      = os.path.join(dataPath, 'config', 'ec2.pem')
-    ec2CertificateKeyFile   = os.path.join(dataPath, 'config', 'ec2.key')
-    ec2LaunchUsers          = (cfgtypes.CfgList(cfgtypes.CfgString),)
-    ec2LaunchGroups         = (cfgtypes.CfgList(cfgtypes.CfgString),)
+    # These values are no longer in active use but must remain here so that
+    # old configurations do not raise an error. Some of them may have their
+    # values migrated elsewhere; most are simply ignored.
 
-    # Try it now stuff (dark content)
-    ec2ExposeTryItLink      = (cfgtypes.CfgBool, False)
+    # Ignored
+    authRepoMap             = CfgDict(CfgString)
+    awsPublicKey            = None
+    awsPrivateKey           = None
+    bootableX8664           = (CfgBool, True)
+    localAddrs              = (CfgList(CfgString), ['127.0.0.1'])
+    bannersPerPage          = (CfgInt, 5)
+    displaySha1             = (CfgBool, True)
+
+    # AMI configuration -- migrated in schema (45, 6)
+    ec2PublicKey            = (CfgString, '', "The AWS account id")
+    ec2PrivateKey           = (CfgString, '', "The AWS public key")
+    ec2AccountId            = (CfgString, '', "The AWS private key")
+    ec2S3Bucket             = None
+    ec2CertificateFile      = os.path.join(RBUILDER_DATA, 'config', 'ec2.pem')
+    ec2CertificateKeyFile   = os.path.join(RBUILDER_DATA, 'config', 'ec2.key')
+    ec2LaunchUsers          = (CfgList(CfgString),)
+    ec2LaunchGroups         = (CfgList(CfgString),)
+    ec2ExposeTryItLink      = (CfgBool, False)
     ec2MaxInstancesPerIP    = 10
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
-    ec2UseNATAddressing     = (cfgtypes.CfgBool, False)
-    # These are not migrated as they are redundant
-    awsPublicKey            = None
-    awsPrivateKey           = None
+    ec2UseNATAddressing     = (CfgBool, False)
 
     # *** END DEPRECATED VALUES ***
 
-    VAMUser                 = ''
-    VAMPassword             = ''
-
-    diffCacheDir            = os.path.join(dataPath, 'diffcache', '')
-
-    licenseCryptoReports    = (cfgtypes.CfgBool, True)
-
-    # By default this is set to OFF. Default configuration file
-    # shipped with rBuilder will turn this on for rBuilder Appliances
-    useInternalConaryProxy  = (cfgtypes.CfgBool, False)
-
-    # Upstream proxy for all servers to use (i.e. to get beyond
-    # the firewall -- not to be confused with the internal Conary
-    # caching proxy)
-    proxy                   = CfgProxy
-
-    # Miscellany proxy configuration -- shouldn't ever change
-    proxyContentsDir        = os.path.join(dataPath, 'proxy-contents', '')
-    proxyTmpDir             = os.path.join(dataPath, 'tmp', '')
-    proxyChangesetCacheDir  = os.path.join(dataPath, 'cscache', '')
-    requireSigs             = (cfgtypes.CfgBool, None,
-                               "Require that all commits to local "
-                               "repositories be signed by an OpenPGP key.")
-    localAddrs              = (cfgtypes.CfgList(cfgtypes.CfgString), ['127.0.0.1'])
-
-    # bulletin file
-    bulletinPath            = os.path.join(os.path.sep, 'srv', \
-            'rbuilder', 'config', 'bulletin.txt')
-
-    #marketing block file
-    frontPageBlock          = os.path.join(os.path.sep, 'srv', \
-            'rbuilder', 'config', 'frontPageBlock.html')
-
-    # colo workarounds
-    injectUserAuth          = (cfgtypes.CfgBool, True,
-                                'Inject user authentication into proxy '
-                                'requests')
-
-    # whether or not to generate a scrambled password for the guided tour
-    # currently this is set to false (see WEB-354) until further notice
-    ec2GenerateTourPassword = (cfgtypes.CfgBool, False)
-
-    # Link to Legal stuff (TOS, Privacy Policy, etc.)
-    # Only needed for rBO
-    legaleseLink            = (cfgtypes.CfgString, '')
-    tosLink                 = (cfgtypes.CfgString, '')
-    tosPostLoginLink        = (cfgtypes.CfgString, '')
-    privacyPolicyLink       = (cfgtypes.CfgString, '')
-
-    # anaconda-templates fallback label
-    anacondaTemplatesFallback = (cfgtypes.CfgString, 'conary.rpath.com@rpl:1')
-
-    # package creator related settings
-    packageCreatorConfiguration = cfgtypes.CfgPath
-    packageCreatorURL           = cfgtypes.CfgString
-
-    # available platforms
-    availablePlatforms      = cfgtypes.CfgList(cfgtypes.CfgString)
-    acceptablePlatforms     = cfgtypes.CfgList(cfgtypes.CfgString)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
@@ -312,12 +297,6 @@ class MintConfig(ConfigFile):
 
         if not self.secureHost:
             self.secureHost = self.siteHost
-
-        if not self.commitEmail:
-            self.commitEmail = "rBuilder@%s" % self.siteDomainName
-
-        if not self.bugsEmail:
-            self.bugsEmail = "rBuilder-tracebacks@%s" % self.siteDomainName
 
         if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
         if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')

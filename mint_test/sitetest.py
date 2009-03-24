@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -12,6 +12,7 @@ import cPickle
 import os
 import urlparse
 import time
+import xmlrpclib
 
 import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
@@ -156,6 +157,35 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('foouser', 'foopass')
         self.assertRaises(webunittest.HTTPError, page.fetch, '/badcmd')
 
+    def testPysidXmlRpcAuth(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        cookie = page.cookies[page.server][page.url]['pysid']
+
+        conn = xmlrpclib.ServerProxy("%s://%s:%s/xmlrpc-private/" % (
+            page.protocol, page.server, page.port),
+            transport = Transport("pysid=%s" % cookie.value))
+        ret = conn.checkAuth('RBUILDER_CLIENT:8')
+        self.failIf(ret[0])
+        self.failUnlessEqual(ret[1].get('username'), 'foouser')
+        self.failUnlessEqual(ret[1].get('admin'), False)
+        self.failUnlessEqual(ret[1].get('displayEmail'), 'test at example.com')
+        self.failUnlessEqual(ret[1].get('authorized'), True)
+
+    def testPysidXmlRpcAuthBad(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        page = self.webLogin('foouser', 'foopass')
+
+        cookie = "A" * 32
+
+        conn = xmlrpclib.ServerProxy("%s://%s:%s/xmlrpc-private/" % (
+            page.protocol, page.server, page.port),
+            transport = Transport("pysid=%s" % cookie))
+        ret = conn.checkAuth('RBUILDER_CLIENT:8')
+        self.failUnless(ret[0])
+        self.failUnlessEqual(ret[1], ['PermissionDenied', 'Permission Denied'])
+
     def testProcessUserAction(self):
         client, userId = self.quickMintUser('foouser','foopass')
         adminClient, adminUserId = self.quickMintAdmin('adminuser','adminpass')
@@ -170,6 +200,17 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.failIf("Revoked administrative privileges for foouser" not in page.body)
         page = page.fetchWithRedirect('/processUserAction?userId=%s&operation=user_cancel' % userId) 
         self.failIf("Account deleted for user foouser" not in page.body)
+
+class Transport(xmlrpclib.Transport):
+    "Cookie-enabled transport"
+    def __init__(self, cookie):
+        if hasattr(xmlrpclib.Transport, '__init__'):
+            xmlrpclib.Transport.__init__(self)
+        self.cookie = cookie
+
+    def send_user_agent(self, connection):
+        xmlrpclib.Transport.send_user_agent(self, connection)
+        connection.putheader('Cookie', self.cookie)
 
 if __name__ == "__main__":
     testsuite.main()

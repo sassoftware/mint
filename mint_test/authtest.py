@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -6,6 +6,7 @@
 import testsuite
 testsuite.setup()
 
+from mint import mint_error
 from mint import server
 from mint import users
 from mint import shimclient
@@ -58,7 +59,7 @@ class AuthTest(fixtures.FixturedUnitTest):
         try:
             anonClient.getUserSearchResults('Any String Will Do')
             self.fail("Not-logged-in client was allowed to perform a function requiring authorization")
-        except server.PermissionDenied:
+        except mint_error.PermissionDenied:
             pass
 
         client.getUserSearchResults('Any String Will Do')
@@ -70,7 +71,7 @@ class AuthTest(fixtures.FixturedUnitTest):
         try:
             client.hideProject(data['projectId'])
             self.fail("User was allowed to perform an admin only function")
-        except server.PermissionDenied:
+        except mint_error.PermissionDenied:
             pass
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import os
-import sha
 import shutil
 import pwd
 import rephelp
@@ -15,7 +14,8 @@ import testsuite
 import time
 import urlparse
 from testutils import sqlharness
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler
+from testutils import mock
 
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
@@ -24,17 +24,18 @@ SimpleDOM.EMPTY_HTML_TAGS.remove('img')
 from webunit import webunittest
 
 from mint.web import hooks
-from mint import builds
+from mint.db import builds
+from mint.db import jobs
+from mint.lib import data
 import mint.client
 from mint import config
 from mint import cooktypes
-from mint import jobs
 from mint import server
 from mint import shimclient
 from mint import buildtypes
-from mint import data
 from mint import urltypes
 from mint import mint_error
+from mint.rest.api import models
 
 #from mint.distro import jobserver
 from mint.flavors import stockFlavors
@@ -45,6 +46,7 @@ from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import util
+from conary.lib.digestlib import sha1
 
 from mcp_test import mcp_helper
 from mcp import queue
@@ -95,9 +97,12 @@ class MintDatabase:
         return db
 
     def createSchema(self, db):
-        from mint import schema
+        from mint.db import schema
         schema.loadSchema(db)
         db.commit()
+
+    def close(self):
+        pass
 
     def _reset(self):
         # there will often be better ways of implementing this
@@ -125,12 +130,15 @@ class SqliteMintDatabase(MintDatabase):
     def _reset(self):
         # this is faster than dropping tables, and forces a reopen
         # which avoids sqlite problems with changing the schema
-        if os.path.exists(self.path):
-            os.unlink(self.path)
+        self.close()
         return self.connect()
 
     def start(self):
         self.reset()
+
+    def close(self):
+        if os.path.exists(self.path):
+            os.unlink(self.path)
 
 
 class MySqlMintDatabase(MintDatabase):
@@ -155,6 +163,134 @@ class MySqlMintDatabase(MintDatabase):
     def start(self):
         self.reset()
 
+
+def getIpAddresses():
+    # get my local IP addresses
+    ifconfig = os.popen('/sbin/ifconfig')
+    x = ifconfig.read()
+    ifconfig.close()
+
+    ips = []
+    addrMatch = re.compile(".*inet addr:([\d\.]+)\s+.*")
+    for l in x.split("\n"):
+        m = addrMatch.match(l)
+        if m:
+            ips.append(m.groups()[0])
+
+    return ips
+
+    
+def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
+    # write Mint configuration
+    conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
+    mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
+
+    cfg = config.MintConfig()
+
+    sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
+
+    cfg.namespace = 'yournamespace'
+    cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, port)
+    cfg.projectDomainName = "%s:%i" % (MINT_PROJECT_DOMAIN,
+            sslDisabled and port or securePort)
+    cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, port)
+    cfg.hostName = MINT_HOST
+    cfg.basePath = '/'
+
+    sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+    if sqldriver == 'sqlite' or sqldriver == 'postgresql':
+        cfg.dbPath = reposDir + '/mintdb'
+    elif sqldriver == 'mysql':
+        cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % reposDB.port
+    else:
+        raise AssertionError("Invalid database type")
+
+    if sqldriver == 'postgresql':
+        cfg.dbDriver = 'sqlite'
+    else:
+        cfg.dbDriver = sqldriver
+
+    reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+    if reposdriver == 'sqlite':
+        cfg.reposDBPath = reposDir + "/repos/%s/sqldb"
+    elif reposdriver == 'mysql':
+        cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % reposDB.port
+    elif sqldriver == 'postgresql':
+        cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], reposDB.port)
+    cfg.reposDBDriver = reposdriver
+    cfg.reposPath = reposDir + "/repos/"
+    cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
+
+    cfg.dataPath = reposDir
+    cfg.logPath = reposDir + '/logs'
+    cfg.imagesPath = reposDir + '/images/'
+    cfg.authUser = 'mintauth'
+    cfg.authPass = 'mintpass'
+    cfg.localAddrs = getIpAddresses()
+    cfg.availablePlatforms = ['localhost@rpl:plat', ]
+    cfg.availablePlatformNames = ['My Spiffy Platform', ]
+    if useProxy:
+        cfg.useInternalConaryProxy = True
+        cfg.proxyContentsDir = reposDir + '/proxy'
+        cfg.proxyChangesetCacheDir = reposDir + '/proxycs'
+        cfg.proxyTmpDir = reposDir + '/proxytmp'
+
+
+#        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
+    cfg.configured = True
+    cfg.debugMode = True
+    cfg.sendNotificationEmails = False
+    if conaryPath.startswith('/usr/'):
+        # /usr/lib/...[/conary/commitaction]
+        scriptPath = os.path.join(conaryPath, 'conary/commitaction')
+    else:
+        # /home/foo/hg/conary/[scripts/commitaction]
+        scriptPath = os.path.join(conaryPath, 'scripts/commitaction')
+
+    cfg.commitAction = ("%s --username=mintauth --password=mintpass "
+            "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
+            "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
+                "--url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'"
+            % (scriptPath, mintPath, MINT_HOST + '.' + MINT_PROJECT_DOMAIN,
+                port))
+    cfg.postCfg()
+
+    cfg.hideFledgling = True
+
+    # SSL Testing
+    if not sslDisabled:
+        dom = MINT_PROJECT_DOMAIN
+        port = securePort
+    else:
+        dom = MINT_DOMAIN
+        port = port
+    cfg.secureHost = "%s.%s:%i" % (MINT_HOST, dom, port)
+    cfg.SSL = (not sslDisabled)
+
+    cfg.visibleBuildTypes = [buildtypes.INSTALLABLE_ISO,
+                               buildtypes.RAW_HD_IMAGE,
+                               buildtypes.RAW_FS_IMAGE,
+                               buildtypes.LIVE_ISO,
+                               buildtypes.VMWARE_IMAGE,
+                               buildtypes.STUB_IMAGE]
+    cfg.visibleUrlTypes   = [ x for x in urltypes.TYPES ]
+    cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
+                                            'maintenance.lock')
+
+    cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
+    util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
+    util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
+
+    util.mkdirChain(cfg.logPath)
+
+    cfg.reposLog = False
+
+    cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
+    cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
+
+    f = open(cfg.conaryRcFile, 'w')
+    f.close()
+    return cfg
 
 mintCfg = None
 
@@ -245,7 +381,12 @@ class MintApacheServer(rephelp.ApacheServer):
         # apache servers serving up the same instance.
         global mintCfg
         if not mintCfg:
-            self.getMintCfg()
+            if hasattr(self.reposDB, 'port'):
+                reposDBPort = self.reposDB.port
+            else:
+                reposDBPort = None
+            self.mintCfg = getMintCfg(self.reposDir, self.port, self.securePort,
+                                      reposDBPort, self.useProxy)
             mintCfg = self.mintCfg
         else:
             self.mintCfg = mintCfg
@@ -288,116 +429,6 @@ class MintApacheServer(rephelp.ApacheServer):
         # in this rbuilder...but I'm not sure that's worth it.
         return {}
 
-    def getIpAddresses(self):
-        # get my local IP addresses
-        ifconfig = os.popen('/sbin/ifconfig')
-        x = ifconfig.read()
-        ifconfig.close()
-
-        ips = []
-        addrMatch = re.compile(".*inet addr:([\d\.]+)\s+.*")
-        for l in x.split("\n"):
-            m = addrMatch.match(l)
-            if m:
-                ips.append(m.groups()[0])
-
-        return ips
-
-    def getMintCfg(self):
-        # write Mint configuration
-        conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
-        mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
-
-        cfg = config.MintConfig()
-
-        cfg.namespace = 'yournamespace'
-        cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.projectDomainName = "%s:%i" % (MINT_PROJECT_DOMAIN,
-                self.sslDisabled and self.port or self.securePort)
-        cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.hostName = MINT_HOST
-        cfg.basePath = '/'
-
-        sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if sqldriver == 'sqlite' or sqldriver == 'postgresql':
-            cfg.dbPath = self.reposDir + '/mintdb'
-        elif sqldriver == 'mysql':
-            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
-        else:
-            raise AssertionError("Invalid database type")
-
-        if sqldriver == 'postgresql':
-            cfg.dbDriver = 'sqlite'
-        else:
-            cfg.dbDriver = sqldriver
-
-        reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if reposdriver == 'sqlite':
-            cfg.reposDBPath = self.reposDir + "/repos/%s/sqldb"
-        elif reposdriver == 'mysql':
-            cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % self.reposDB.port
-        elif sqldriver == 'postgresql':
-            cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], self.reposDB.port)
-        cfg.reposDBDriver = reposdriver
-        cfg.reposPath = self.reposDir + "/repos/"
-        cfg.reposContentsDir = " ".join([self.reposDir + "/contents1/%s/", self.reposDir + "/contents2/%s/"])
-
-        cfg.dataPath = self.reposDir
-        cfg.logPath = self.reposDir + '/logs'
-        cfg.imagesPath = self.reposDir + '/images/'
-        cfg.authUser = 'mintauth'
-        cfg.authPass = 'mintpass'
-        cfg.localAddrs = self.getIpAddresses()
-        cfg.availablePlatforms = ['localhost@rpl:plat']
-        if self.useProxy:
-            cfg.useInternalConaryProxy = True
-            cfg.proxyContentsDir = self.reposDir + '/proxy'
-            cfg.proxyChangesetCacheDir = self.reposDir + '/proxycs'
-            cfg.proxyTmpDir = self.reposDir + '/proxytmp'
-
-
-#        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
-        cfg.configured = True
-        cfg.debugMode = True
-        cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username=mintauth --password=mintpass --repmap='%%(repMap)s' --build-label=%%(buildLabel)s --module=\'%s/mint/rbuilderaction.py --user=%%%%(user)s --url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, MINT_HOST + '.' + \
-                MINT_PROJECT_DOMAIN, self.port)
-        cfg.postCfg()
-
-        cfg.hideFledgling = True
-
-        # SSL Testing
-        if not self.sslDisabled:
-            dom = MINT_PROJECT_DOMAIN
-            port = self.securePort
-        else:
-            dom = MINT_DOMAIN
-            port = self.port
-        cfg.secureHost = "%s.%s:%i" % (MINT_HOST, dom, port)
-        cfg.SSL = (not self.sslDisabled)
-
-        cfg.visibleBuildTypes = [buildtypes.INSTALLABLE_ISO,
-                                   buildtypes.RAW_HD_IMAGE,
-                                   buildtypes.RAW_FS_IMAGE,
-                                   buildtypes.LIVE_ISO,
-                                   buildtypes.VMWARE_IMAGE,
-                                   buildtypes.STUB_IMAGE]
-        cfg.visibleUrlTypes   = [ x for x in urltypes.TYPES ]
-        cfg.displaySha1 = True
-        cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
-                                                'maintenance.lock')
-
-        cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
-
-        util.mkdirChain(cfg.logPath)
-
-        cfg.reposLog = False
-
-        cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
-        cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
-
-        self.mintCfg = cfg
-
     def getMintServerDir(self):
         return os.path.join(os.path.dirname(sys.modules['mint_rephelp'].__file__), 'server')
 
@@ -429,7 +460,162 @@ rephelp._cleanUp = _cleanUp
 
 _reposDir = None
 
-class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
+class RestDBMixIn(object):
+    def setUp(self):
+        self.mintDb = None
+        self.mintCfg = None
+
+    def tearDown(self):
+        if self.mintDb:
+            self.mintDb.close()
+        mock.unmockAll()
+
+    def openRestDatabase(self, createRepos=True, enableMCP=False):
+        if not self.mintDb:
+            self._startDatabase()
+        dbPort = getattr(self.mintDb, 'port', None)
+        if not self.mintCfg:
+            self.mintCfg = getMintCfg(self.workDir, 0, 0, dbPort, False)
+        from mint.rest.db import database as restdb
+        from mint.db import database
+        db = database.Database(self.mintCfg)
+        db = restdb.Database(self.mintCfg, db, subscribers=[])
+        db.auth.isAdmin = True
+        # We should probably get a real user ID here, instead of hardcoding 2
+        # which is generally the admin's
+        db.auth.userId = 2
+        if not createRepos:
+            db.productMgr.reposMgr = mock.MockObject()
+            db.productMgr._setProductVersionDefinition = \
+                        db.productMgr.setProductVersionDefinition
+            db.productMgr.setProductVersionDefinition = mock.MockObject()
+            db.reposMgr = mock.MockObject()
+        if not enableMCP:
+            db.imageMgr.mcpClient = mock.MockObject()
+            db.imageMgr.mcpClient.getJSVersion._mock.setDefaultReturn('1.0')
+            db.imageMgr.mcpClient.jobStatus._mock.setDefaultReturn(
+                                                            (100, 'Message'))
+        return db
+
+    def createUser(self, name, password=None, admin=False):
+        db = self.openRestDatabase()
+        if password is None:
+            password = name
+        return db.createUser(name, password, 'Full Name', '%s@foo.com' % name,
+                            '%s@foo.com', '', admin=admin)
+
+    def _startDatabase(self):
+        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if mintDb == "sqlite" or mintDb == 'postgresql':
+            self.mintDb = SqliteMintDatabase(self.workDir + "/mintdb")
+        elif mintDb == "mysql":
+            raise NotImplementedError
+        # loads schema, takes .2s
+        # FIXME: eliminate for sqlite by copying in premade sqlite db.
+        self.mintDb.start()
+
+    def setDbUser(self, db, username, password=None):
+        if password is None:
+            password = username
+        from mint import users
+        if username:
+            cu = db.cursor()
+            cu.execute('select * from Users where username=?', username)
+            row, = cu.fetchall()
+            row = dict(row)
+            # get admin perms while avoiding depending on db.users.checkAuth
+            cu.execute('select userGroup FROM UserGroupMembers'
+                       ' JOIN UserGroups USING(userGroupId)'
+                       ' WHERE userId=?', row['userId'])
+            groups = [ x[0] for x in cu ]
+            admin = 'MintAdmin' in groups
+            auth = users.Authorization(authorized=True, admin=admin, **row)
+        else:
+            auth = users.Authorization(authoried=False, admin=False,
+                                       userId=-1, username=None)
+        db.setAuth(auth, (username, password))
+
+    def createProduct(self, shortname, 
+                      owners=None, developers=None, users=None, 
+                      private=False, domainname=None, db=None):
+        if db is None:
+            db = self.openRestDatabase()
+
+        oldUser = None
+        if owners and db.auth.username not in owners:
+            oldUser = db.auth.username
+            self.setDbUser(db, owners[0])
+        try:
+            prd = models.Product(name='Project %s' % shortname,
+                                 hostname=shortname,
+                                 shortname=shortname, prodtype='Appliance',
+                                 domainname=domainname, hidden=private)
+            db.createProduct(prd)
+            if owners:
+                for username in owners:
+                    db.setMemberLevel(shortname, username, 'owner')
+            if developers:
+                for username in developers:
+                    db.setMemberLevel(shortname, username, 'developer')
+            if users:
+                for username in users:
+                    db.setMemberLevel(shortname, username, 'user')
+        finally:
+            if oldUser:
+                self.setDbUser(db, oldUser)
+        return prd.productId
+
+    def createRelease(self, db, hostname, buildIds):
+        return db.createRelease(hostname, buildIds)
+
+    def createProductVersion(self, db, hostname, versionName, 
+                             namespace='rpl', description='',
+                             platformLabel=None):
+        pv = models.ProductVersion(hostname=hostname, name=versionName,
+                                   namespace=namespace, description=description,
+                                   platformLabel=platformLabel)
+        return db.createProductVersion(hostname, pv)
+
+    def createImage(self, db, hostname, imageType, imageFiles=None,
+                 name='Build', description='Build Description',
+                 troveName = 'foo',
+                 troveVersion = '/localhost@test:1/1:0.1-1-1',
+                 troveFlavor = '', buildData=None):
+        troveVersion = versions.ThawVersion(troveVersion)
+        troveFlavor = deps.parseFlavor(troveFlavor)
+
+        img = models.Image(imageType=imageType, name=name, 
+                           description=description,
+                           troveName=troveName, troveVersion=troveVersion,
+                           troveFlavor=troveFlavor)
+        db.createImage(hostname, img, buildData)
+        return img.imageId
+
+    def setImageFiles(self, db, hostname, imageId, imageFiles=None):
+        if imageFiles is None:
+            digest = sha1()
+            digest.update(str(imageId))
+            digest = digest.hexdigest()
+
+            imageFiles = [('imagefile_%s.iso' % imageId, 
+                           'Image File %s' % imageId,
+                           1024 * imageId, digest)]
+        db.setImageFiles(hostname, imageId, imageFiles)
+
+
+class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
+    def setUp(self):
+        rephelp.RepositoryHelper.setUp(self)
+        RestDBMixIn.setUp(self)
+
+    def tearDown(self):
+        RestDBMixIn.tearDown(self)
+        rephelp.RepositoryHelper.tearDown(self)
+
+    openMintDatabase = RestDBMixIn.openRestDatabase
+
+
+class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
     # Repository tests tend to be slow, so tag them with this context
     contexts = ('slow',)
@@ -588,7 +774,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         db = self.openMintDatabase()
         buildTable = builds.BuildsTable(db)
         buildFilesTable = jobs.BuildFilesTable(db)
-        dataTable = data.BuildDataTable(db)
+        dataTable = builds.BuildDataTable(db)
         buildId = buildTable.new(projectId=projectId, 
                                  buildType=imageType, name=name,
                                  description=description, createdBy=userId,
@@ -596,12 +782,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
                                  troveVersion=troveVersion,
                                  troveFlavor=troveFlavor)
         if imageFiles is None:
-            sha1 = sha.new()
-            sha1.update(str(buildId))
-            sha1 = sha1.hexdigest()
+            digest = sha1()
+            digest.update(str(buildId))
+            digest = digest.hexdigest()
 
             imageFiles = [('imageFile %s' % buildId, 'Image Title %s' % buildId,
-                          1024 * buildId, sha1)]
+                          1024 * buildId, digest)]
         client.server._server._setBuildFilenames(buildId, imageFiles)
         if buildData:
             for key, value in buildData.items():
@@ -627,6 +813,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
         rephelp.RepositoryHelper.setUp(self)
         MCPTestMixin.setUp(self)
+        RestDBMixIn.setUp(self)
         if not os.path.exists(self.reposDir):
             util.mkdirChain(self.reposDir)
         self.imagePath = os.path.join(self.tmpDir, "images")
@@ -647,6 +834,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
 
     def tearDown(self):
         self.db.close()
+        RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
         MCPTestMixin.tearDown(self)
 
@@ -790,6 +978,17 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin):
         # HACK
         os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
 
+    @staticmethod
+    def normalizeXML(data):
+        """lxml will produce the header with single quotes for its attributes,
+        while xmllint uses double quotes. This function normalizes the data"""
+        return data.replace(
+            "<?xml version='1.0' encoding='UTF-8'?>",
+            '<?xml version="1.0" encoding="UTF-8"?>').strip()
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(self.normalizeXML(first),
+                             self.normalizeXML(second))
 
 class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getServerData(self):
@@ -844,6 +1043,8 @@ class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
         self.db.commit()
 
 
+
+
 class WebRepositoryHelper(BaseWebHelper):
 
     # apply default context of 'web' to all children of this class
@@ -860,8 +1061,13 @@ class WebRepositoryHelper(BaseWebHelper):
         webunittest.HTTPResponse.fetchWithRedirect = self.fetchWithRedirect
         webunittest.WebTestCase.setUp(self)
         # this is tortured, but webunit won't run without it.
-        webunittest.HTTPResponse._TestCase__testMethodName = \
-                                          self._TestCase__testMethodName
+        testName = getattr(self, '_testMethodName', None) 
+        if not testName:
+             testName = getattr(self, '_TestCase__testMethodName')
+        
+
+        webunittest.HTTPResponse._TestCase__testMethodName = testName
+        webunittest.HTTPResponse._testMethodName = testName
 
         # by this point, apache's already forked and running but no calls
         # needing the mcpClient have been made, so put the cfg values
@@ -963,8 +1169,12 @@ class StubXMLRPCServerController:
             rephelp.tryConnect('127.0.0.1', self.port)
             return
 
+        class RequestHandler(SimpleXMLRPCRequestHandler):
+            rpc_paths = ''
+
         server = SimpleXMLRPCServer(("127.0.0.1", self.port),
-                                    logRequests=False)
+                                    logRequests=False,
+                                    requestHandler=RequestHandler)
         server.register_instance(self.handlerFactory())
         server.serve_forever()
 

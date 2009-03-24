@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -12,6 +12,7 @@ from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
 from mint import userlevels
 from mint.mint_error import *
+from mint.lib import maillib
 from mint import users
 
 from conary import versions
@@ -72,14 +73,14 @@ class AccountTest(fixtures.FixturedUnitTest):
 
         client.updateAccessedTime(userId)
         try:
-            oldChecks = users.sendMailWithChecks
-            users.sendMailWithChecks = lambda *args, **kwargs: True
+            oldChecks = maillib.sendMailWithChecks
+            maillib.sendMailWithChecks = lambda *args, **kwargs: True
 
             client.server.validateNewEmail(userId, eMail)
         finally:
-            users.sendMailWithChecks = oldChecks
+            maillib.sendMailWithChecks = oldChecks
         try:
-            users.validateEmailDomain(eMail)
+            maillib.validateEmailDomain(eMail)
             self.fail('Did not catch bad e-mail domain')
         except MailError:
             pass

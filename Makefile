@@ -3,7 +3,7 @@
 #
 
 # may be adjusted by recipe (via make commandline)
-DESTDIR =	/
+export DESTDIR =	/
 export PRODUCT =	rbuilder
 export VERSION =	5.0
 export SHORTVER =	$(VERSION)
@@ -12,13 +12,13 @@ export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
 export LIBDIR =		$(PREFIX)/lib
+export PYVER =		"`python -c 'import sys; print sys.version[0:3]'`"
 
 # from here on shouldn't need overriding
-export PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /usr/lib/conary/python/bin/python2.4)
-export PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
-export PYDIR = $(LIBDIR)/python$(PYVERSION)/site-packages
+export PYTHON = /usr/bin/python$(PYVER)
+export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins commands doc distro
+SUBDIRS = mint scripts raaplugins doc distro
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

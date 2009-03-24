@@ -1,5 +1,40 @@
 Changes in @NEW@
 ===============
+Web Front End Changes
+---------------------
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+
+Bug Fixes
+---------------------
+* Under conditions of high load, rBuilder would occasionally traceback
+  upon reading a partiall-written conaryrc file. This has been
+  corrected. (RBL-4212)
+
+  to the rBuilder. (RBL-4186)
+* Products are created as private by default now. (RBL-4188)
+* Removed description, home page, commits email, and namespace options
+  from "Create Product" page.  (RBL-4188)
+* "Is Appliance" field on "Create Product" page is now an advanced option.
+  (RBL-4188)
+* There are now fewer wizard plugins, however the plugins themselves
+  are still there.  (RBL-4186)
+* The Next Steps plugin has been removed.  (RBL-4186)
+* The rBA Setup plugin now informs users how to login and redirects them
+  to the rBuilder. (RBL-4186)
+* The "Create Product" page has been re-designed. (RBL-4188)
+* rPA now contains an icons/link to access the rBuilder. (RBL-4179)
+* There is now an option to delete a product from the product homepage.
+  (RBL-4175).
+
+Internal Changes
+---------------------
+* processEditVersion now filters out empty string and None values from the
+  image settings when creating image definitions in the product definition.
+  (RBL-4281)
+  
 Bug Fixes
 ---------------------
 * Under conditions of high load, rBuilder would occasionally traceback
@@ -27,6 +62,7 @@ API Changes
   along with the rest of the information about the build. (RBL-3586)
 * Developers can now create and edit releases, but cannot 
   publish or unpublish them. (RBL-4081)
+  
 
 Internal Changes
 ---------------------

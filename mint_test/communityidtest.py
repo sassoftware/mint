@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -13,7 +13,7 @@ import tempfile
 
 import fixtures
 
-from mint import communityids
+from mint.db import communityids
 from mint import communitytypes
 
 class CommunityIdsTest(fixtures.FixturedUnitTest):

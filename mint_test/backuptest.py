@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -13,7 +13,7 @@ import StringIO
 
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
-from mint import backup
+from mint.scripts import backup
 from mint import constants
 
 from conary import dbstore

@@ -18,12 +18,13 @@ import urllib
 
 from mint import config
 from mint import users
-from mint import profile
+from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
+from mint.db.projects import transTables
 from mint.helperfuncs import extractBasePath
 from mint.logerror import logWebErrorAndEmail
-from mint.projects import transTables
+from mint.rest.server import restHandler
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.catalog import catalogHandler
@@ -295,7 +296,7 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             return apache.HTTP_METHOD_NOT_ALLOWED
     finally:
-        if doReset:
+        if doReset and hasattr(repServer, 'reset'):
             repServer.reset()
 
 
@@ -308,6 +309,7 @@ urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/catalog/',          catalogHandler),
+    (r'^/api/',              restHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
@@ -492,7 +494,13 @@ def handler(req):
                     # Send an error page to the user and set the status
                     # code to 500 (internal server error).
                     req.status = 500
-                    ret = urlHandler(req, cfg, '/unknownError')
+                    try:
+                        ret = mintHandler(req, cfg, '/unknownError')
+                    except:
+                        # Some requests cause MintApp to choke on setup
+                        # We've already logged the error, so just display
+                        # the apache ISE page.
+                        ret = apache.HTTP_INTERNAL_SERVER_ERROR
                 break
     finally:
         prof.stopHttp(req.uri)

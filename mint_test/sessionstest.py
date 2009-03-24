@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -11,7 +11,7 @@ import time
 import rephelp
 import fixtures
 
-from mint import sessiondb
+from mint.db import sessiondb
 
 class SessionTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")

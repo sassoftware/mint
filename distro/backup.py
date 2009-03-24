@@ -5,7 +5,7 @@
 # All rights reserved
 #
 
-from mint import backup
+from mint.scripts import backup
 import os
 
 if __name__ == "__main__":

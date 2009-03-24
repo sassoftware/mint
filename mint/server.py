@@ -8,7 +8,6 @@ import base64
 import hmac
 import os
 import re
-import random
 import simplejson
 import socket
 import stat
@@ -24,40 +23,32 @@ try:
     from mint import charts
 except ImportError:
     charts = None
-from mint import communityids
-from mint import config
-from mint import data
-from mint import database
+import mint.db.database
+from mint.db import grouptrove
+from mint import users
+from mint.lib import data
+from mint.lib import database
+from mint.lib import maillib
+from mint.lib import persistentcache
+from mint.lib import profile
+from mint import amiperms
+from mint import builds
 from mint import ec2
-from mint import grouptrove
 from mint import helperfuncs
-from mint import jobs
 from mint import jobstatus
 from mint import maintenance
-from mint import mirror
-from mint import news
-from mint import persistentcache
-from mint import pkgindex
-from mint import profile
-from mint import projects
-from mint import builds
+from mint import mint_error
 from mint import buildtemplates
-from mint import pubreleases
+from mint import projects
 from mint import reports
-from mint import requests
-from mint import sessiondb
-from mint import stats
 from mint import templates
-from mint import targets
 from mint import userlevels
-from mint import users
 from mint import usertemplates
-from mint import selections
 from mint import urltypes
 from mint.lib.unixutils import atomicOpen
-from mint.mint_error import *
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.logerror import logErrorAndEmail
 from mint import packagecreator
 
 from mcp import client as mcpClient
@@ -76,10 +67,8 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository import transport
 from conary.repository.netrepos import netserver
 from conary import errors as conary_errors
-from conary.dbstore import sqlerrors
 
 from rpath_common.proddef import api1 as proddef
 
@@ -110,18 +99,14 @@ SERVER_VERSIONS = [8]
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
-validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
-validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
-
 # valid product version
 validProductVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
 
-dbConnection = None
 callLog = None
 
 def deriveBaseFunc(func):
@@ -135,7 +120,7 @@ def requiresAdmin(func):
         if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
@@ -144,7 +129,7 @@ def requiresAuth(func):
         if self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
@@ -156,7 +141,7 @@ def requiresCfgAdmin(cond):
                  (not self.cfg.__getitem__(cond) and self.auth.authorized):
                     return func(self, *args)
             else:
-                raise PermissionDenied
+                raise mint_error.PermissionDenied
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -168,7 +153,7 @@ def private(func):
         if self._allowPrivate:
             return func(self, *args)
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
     trueFunc = deriveBaseFunc(func)
     trueFunc.__private_enforced__ = True
     wrapper.__wrapped_func__ = func
@@ -223,7 +208,8 @@ def typeCheck(*paramTypes):
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError('%s was passed %s of type %s when '
+                    raise mint_error.ParameterError(
+                                           '%s was passed %s of type %s when '
                                            'expecting %s for parameter number '
                                            '%d' % \
                         (baseFunc.__name__, repr(args[i]), str(type(args[i])),
@@ -234,64 +220,6 @@ def typeCheck(*paramTypes):
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
-
-tables = {}
-def getTables(db, cfg):
-
-    # check to make sure the schema version is correct
-    from mint import schema
-    try:
-        schema.checkVersion(db)
-    except sqlerrors.SchemaVersionError, e:
-        raise DatabaseVersionMismatch(e.args[0])
-
-    d = {}
-    d['labels'] = projects.LabelsTable(db, cfg)
-    d['projects'] = projects.ProjectsTable(db, cfg)
-    d['buildFiles'] = jobs.BuildFilesTable(db)
-    d['filesUrls'] = jobs.FilesUrlsTable(db)
-    d['buildFilesUrlsMap'] = jobs.BuildFilesUrlsMapTable(db)
-    d['urlDownloads'] = builds.UrlDownloadsTable(db)
-    d['users'] = users.UsersTable(db, cfg)
-    d['userGroups'] = users.UserGroupsTable(db, cfg)
-    d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
-    d['userData'] = data.UserDataTable(db)
-    d['projectUsers'] = users.ProjectUsersTable(db)
-    d['builds'] = builds.BuildsTable(db)
-    d['pkgIndex'] = pkgindex.PackageIndexTable(db)
-    d['newsCache'] = news.NewsCacheTable(db, cfg)
-    d['sessions'] = sessiondb.SessionsTable(db)
-    d['membershipRequests'] = requests.MembershipRequestTable(db)
-    d['commits'] = stats.CommitsTable(db)
-    d['buildData'] = data.BuildDataTable(db)
-    d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
-    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
-    d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
-    d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
-    d['jobData'] = data.JobDataTable(db)
-    d['inboundMirrors'] = mirror.InboundMirrorsTable(db)
-    d['outboundMirrors'] = mirror.OutboundMirrorsTable(db, cfg)
-    d['updateServices'] = mirror.UpdateServicesTable(db, cfg)
-    d['outboundMirrorsUpdateServices'] = mirror.OutboundMirrorsUpdateServicesTable(db)
-    d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
-    d['topProjects'] = selections.TopProjectsTable(db)
-    d['popularProjects'] = selections.PopularProjectsTable(db)
-    d['latestCommit'] = selections.LatestCommitTable(db)
-    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
-    d['blessedAMIs'] = ec2.BlessedAMIsTable(db)
-    d['launchedAMIs'] = ec2.LaunchedAMIsTable(db)
-    d['communityIds'] = communityids.CommunityIdsTable(db)
-    d['productVersions'] = projects.ProductVersionsTable(db, cfg)
-
-    d['targets'] = targets.TargetsTable(db)
-    d['targetData'] = targets.TargetDataTable(db)
-
-    # tables for per-project repository db connections
-    d['projectDatabase'] = projects.ProjectDatabase(db)
-    d['databases'] = projects.Databases(db)
-
-    return d
 
 class PlatformNameCache(persistentcache.PersistentCache):
 
@@ -311,7 +239,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
                 cfg = self._server()._getProjectConaryConfig(
                                     projects.Project(self._server(), projectId))
                 client = conaryclient.ConaryClient(cfg)
-            except ItemNotFound:
+            except mint_error.ItemNotFound:
                 client = self._cclient
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
@@ -336,7 +264,7 @@ class MintServer(object):
                 raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
-            return (True, ("MethodNotSupported", methodName, ""))
+            return (True, ("MethodNotSupported", (methodName,)))
 
         # start profile
         prof.startXml(methodName)
@@ -355,15 +283,19 @@ class MintServer(object):
                         mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
                         mac.update(val)
                         if mac.hexdigest() != sig:
-                            raise PermissionDenied
+                            raise mint_error.PermissionDenied
 
                         sid = val
                     elif len(authToken) == 32: # unsigned cookie
                         sid = authToken
                     else:
-                        raise PermissionDenied
+                        raise mint_error.PermissionDenied
 
                     d = self.sessions.load(sid)
+                    if not d:
+                        # Loading the session returns False if the session ID
+                        # was bad.
+                        raise mint_error.PermissionDenied
                     authToken = d['_data']['authToken']
 
                 auth = self.users.checkAuth(authToken)
@@ -372,7 +304,7 @@ class MintServer(object):
 
                 try:
                     maintenance.enforceMaintenanceMode(self.cfg, self.auth)
-                except MaintenanceMode:
+                except mint_error.MaintenanceMode:
                     # supress exceptions for certain critical methods.
                     if methodName not in self.maintenanceMethods:
                         raise
@@ -397,7 +329,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except MintError, e:
+            except mint_error.MintError, e:
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
                 return (True, frozen)
@@ -410,6 +342,11 @@ class MintServer(object):
                 return (False, r)
         finally:
             prof.stopXml(methodName)
+
+    def __getattr__(self, key):
+        if key[0] != '_':
+            # backwards-compatible reference to all the database table objects.
+            return getattr(self.db, key)
 
     def _handleError(self, e, authToken, methodName, args):
         self.db.rollback()
@@ -567,7 +504,7 @@ class MintServer(object):
             except Exception, e:
                 # XXX could this exception handler be more specific? As written
                 # any error in the proddef module will be masked.
-                raise ProductDefinitionVersionNotFound
+                raise mint_error.ProductDefinitionVersionNotFound
 
             return pd
 
@@ -615,12 +552,12 @@ class MintServer(object):
             self.auth.userId) in userlevels.LEVELS):
                 return
         # All the above checks must have failed, raise exception.
-        raise ItemNotFound()
+        raise mint_error.ItemNotFound()
 
     def _filterBuildAccess(self, buildId):
         try:
             buildRow = self.builds.get(buildId, fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         self._filterProjectAccess(buildRow['projectId'])
@@ -630,14 +567,14 @@ class MintServer(object):
         try:
             pubReleaseRow = self.publishedReleases.get(pubReleaseId,
                     fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
         # if the release is not published, then only project members
         # with write access can see the published release
         if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
-            raise ItemNotFound()
+            raise mint_error.ItemNotFound()
         # if the published release is published, then anyone can see it
         # unless the project is hidden and the user is not an admin
         else:
@@ -646,7 +583,7 @@ class MintServer(object):
     def _filterLabelAccess(self, labelId):
         try:
             labelRow = self.labels.get(labelId, fields=['projectId'])
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return
 
         self._filterProjectAccess(labelRow['projectId'])
@@ -682,7 +619,7 @@ class MintServer(object):
             if (self.projectUsers.getUserlevelForProjectMember(projectId,
                     self.auth.userId) in allowedUserlevels):
                 return True
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             pass
         return False
 
@@ -691,7 +628,7 @@ class MintServer(object):
         try:
             if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
                 return True
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             pass
         return False
 
@@ -706,7 +643,7 @@ class MintServer(object):
 
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
-        from mint import proxiedtransport
+        from mint.lib import proxiedtransport
         mirrorUser = ''
         try:
             # Make sure that we deal with any HTTP proxies
@@ -748,15 +685,16 @@ class MintServer(object):
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
-                raise UpdateServiceAuthError(urlhostname)
+                raise mint_error.UpdateServiceAuthError(urlhostname)
             else:
-                raise UpdateServiceConnectionFailed(urlhostname, \
+                raise mint_error.UpdateServiceConnectionFailed(urlhostname,
                         "%d %s" % (e.errcode, e.errmsg))
         except socket.error, e:
-            raise UpdateServiceConnectionFailed(urlhostname, str(e[1]))
+            raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
+                                                           str(e[1]))
         else:
             if not mirrorPassword:
-                raise UpdateServiceUnknownError(urlhostname)
+                raise mint_error.UpdateServiceUnknownError(urlhostname)
 
         return (mirrorUser, mirrorPassword)
 
@@ -775,7 +713,7 @@ class MintServer(object):
         trvLeaves = repos.getTroveLeavesByLabel(\
                 {groupName: {label: None} }).get(groupName, [])
         if trvLeaves:
-            raise GroupTroveTemplateExists
+            raise mint_error.GroupTroveTemplateExists
 
         from mint.templates import groupTemplate
         recipeStream = StringIO.StringIO()
@@ -798,46 +736,13 @@ class MintServer(object):
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
-            raise InvalidClientVersion('Invalid client version %s. Server '
+            raise mint_error.InvalidClientVersion(
+                'Invalid client version %s. Server '
                 'accepts client versions %s' % (self.clientVer,
                     ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
     # project methods
-    def _validateHostname(self, hostname, domainname, resHosts):
-        if not hostname:
-            raise projects.InvalidHostname
-        if validHost.match(hostname) == None:
-            raise projects.InvalidHostname
-        if hostname in resHosts:
-            raise projects.InvalidHostname
-        if (hostname + "." + domainname) == socket.gethostname():
-            raise projects.InvalidHostname
-        return None
-
-    def _validateShortname(self, shortname, domainname, resHosts):
-        if not shortname:
-            raise InvalidShortname
-        if validHost.match(shortname) == None:
-            raise InvalidShortname
-        if shortname in resHosts:
-            raise InvalidShortname
-        if (shortname + "." + domainname) == socket.gethostname():
-            raise InvalidShortname
-        return None
-
-    def _validateNamespace(self, namespace):
-        v = helperfuncs.validateNamespace(namespace)
-        if v != True:
-            raise InvalidNamespace
-
-    def _validateProductVersion(self, version):
-        if not version:
-            raise ProductVersionInvalid
-        if not validProductVersion.match(version):
-            raise ProductVersionInvalid
-        return None
-
     def _buildEC2AuthToken(self):
         amiData = self._getTargetData('ec2', 'aws', supressException = True)
         at = ()
@@ -846,13 +751,13 @@ class MintServer(object):
             if not (amiData.get('ec2AccountId') and \
                     amiData.get('ec2PublicKey') and\
                     amiData.get('ec2PrivateKey')):
-                raise EC2NotConfigured()
+                raise mint_error.EC2NotConfigured()
             at = (amiData.get('ec2AccountId'),
                     amiData.get('ec2PublicKey'),
                     amiData.get('ec2PrivateKey'))
 
         if not at:
-            raise EC2NotConfigured()
+            raise mint_error.EC2NotConfigured()
 
         return at
 
@@ -870,16 +775,16 @@ class MintServer(object):
         # make sure the shortname, version, and prodtype are valid, and
         # validate the hostname also in case it ever splits from being
         # the same as the short name
-        self._validateShortname(shortname, domainname, reservedHosts)
-        self._validateHostname(hostname, domainname, reservedHosts)
-        self._validateProductVersion(version)
+        projects._validateShortname(shortname, domainname, reservedHosts)
+        projects._validateHostname(hostname, domainname, reservedHosts)
+        projects._validateProductVersion(version)
         if namespace:
-            self._validateNamespace(namespace)
+            projects._validateNamespace(namespace)
         else:
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
-        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component'):
-            raise projects.InvalidProdType
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository'):
+            raise mint_error.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
@@ -901,8 +806,8 @@ class MintServer(object):
 
         # validate the label, which will be added later.  This is done
         # here so the project is not created before this error occurs
-        if validLabel.match(label) == None:
-            raise projects.InvalidLabel(label)
+        if projects.validLabel.match(label) == None:
+            raise mint_error.InvalidLabel(label)
 
         # All database operations must abort cleanly, especially when
         # creating the repository fails. Otherwise, we'll end up with
@@ -987,13 +892,13 @@ class MintServer(object):
         # make sure the hostname is valid
         if not domainname:
             domainname = self.cfg.projectDomainName
-        self._validateHostname(hostname, domainname, reservedExtHosts)
+        projects._validateHostname(hostname, domainname, reservedExtHosts)
 
         # ensure that the label we were passed is valid
         try:
             versions.Label(label)
         except conary_errors.ParseError:
-            raise ParameterError("Not a valid Label")
+            raise mint_error.ParameterError("Not a valid Label")
 
         if not url:
             url = 'http://' + label.split('@')[0] + '/conary/'
@@ -1095,8 +1000,11 @@ class MintServer(object):
     @requiresAuth
     def listJoinRequests(self, projectId):
         self._filterProjectAccess(projectId)
-        reqList = self.membershipRequests.listRequests(projectId)
+        reqList = self._listAllJoinRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
+    
+    def _listAllJoinRequests(self, projectId):
+        return self.membershipRequests.listRequests(projectId)
 
     @typeCheck(int, str)
     @private
@@ -1128,7 +1036,7 @@ class MintServer(object):
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
                                           name = name)
-                users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
+                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         self.membershipRequests.setComments(projectId, userId, comments)
         return True
 
@@ -1161,7 +1069,7 @@ class MintServer(object):
                               WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
-                raise ItemNotFound("username")
+                raise mint_error.ItemNotFound("username")
             else:
                 userId = r[0]
         elif userId and not username:
@@ -1169,46 +1077,24 @@ class MintServer(object):
                               WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
-                raise ItemNotFound("userId")
+                raise mint_error.ItemNotFound("userId")
             else:
                 username = r[0]
 
         try:
             self.db.transaction()
-            if level != userlevels.USER:
-                self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=False)
             try:
                 self.projectUsers.new(projectId, userId, level,
                                       commit=False)
-            except DuplicateItem:
-                project.updateUserLevel(userId, level)
-                # only attempt to modify acl's of local projects.
-                if not project.external:
-                    repos = self._getProjectRepo(project)
-                    # edit vice/drop+add is intentional to honor acl tweaks by
-                    # admins.
-                    repos.editAcl(label, username, None, None, None,
-                                  None, write=level in userlevels.WRITERS,
-                                  canRemove=False)
-                    repos.setRoleIsAdmin(label, username,
-                                         self.cfg.projectAdmin and
-                                         level == userlevels.OWNER)
-                    repos.setRoleCanMirror(label, username,
-                                           int(level == userlevels.OWNER))
-                self.db.commit()
+            except mint_error.DuplicateItem:
+                self.db.rollback()
+                return self.setUserLevel(userId, projectId, level)
 
-                # Since the user is already a member of the product, we don't
-                # need to set EC2 permissions or repository permissions.
-                return True
+            if level != userlevels.USER:
+                self.membershipRequests.deleteRequest(projectId, userId,
+                                                      commit=False)
 
-            # Set any EC2 launch permissions if the user has aws 
-            # credentials set.
-            awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                             'awsAccountNumber')
-            if awsFound:
-                self.addProductEC2LaunchPermissions(userId, awsAccountNumber,
-                                                    projectId)
+            self.amiPerms.addMemberToProject(userId, projectId)
 
             if not project.external:
                 password = ''
@@ -1218,7 +1104,7 @@ class MintServer(object):
                 try:
                     salt, password = cu.fetchone()
                 except TypeError:
-                    raise ItemNotFound("username")
+                    raise mint_error.ItemNotFound("username")
                 repos = self._getProjectRepo(project)
                 helperfuncs.addUserByMD5ToRepository(repos, username,
                     password, salt, username, label)
@@ -1285,22 +1171,15 @@ class MintServer(object):
         #XXX Make this atomic
         try:
             userLevel = self.getUserLevel(userId, projectId)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             raise netclient.UserNotFound()
-
-        # Set any EC2 launch permissions if the user has aws credentials set.
-        awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            # Remove all old launch permissions.
-            amiIds = self._getProductAMIIdsForPermChange(userId, projectId)
 
         try:
             project = projects.Project(self, projectId)
             self.db.transaction()
-            if awsFound:
-                self.removeEC2LaunchPermissions(userId, awsAccountNumber, 
-                                                amiIds)
+
+            self.amiPerms.deleteMemberFromProject(userId, projectId)
+
             repos = self._getProjectRepo(project)
             user = self.getUser(userId)
             label = versions.Label(project.getLabel())
@@ -1394,7 +1273,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         if self.cfg.sendNotificationEmails:
             if message:
-                users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                user['email'],
                                "Your %s account" % \
                                self.cfg.productName,
@@ -1408,7 +1287,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         adminUsers.append(admnUsr)
                 for usr in adminUsers:
                     if usr['username'] != user['username']:
-                        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                        maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
                                        usr['email'],
                                        "%s project membership modification" % \
                                        self.cfg.productName,
@@ -1430,7 +1309,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setProjectCommitEmail(self, projectId, commitEmail):
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         return self.projects.update(projectId, commitEmail = commitEmail)
     
@@ -1439,9 +1318,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setProjectNamespace(self, projectId, namespace):
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
 
         return self.projects.update(projectId, namespace = namespace)
 
@@ -1450,31 +1329,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
-
-        # Get the list of AWSAccountNumbers for the projects members
-        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
-
-        # Get a list of published and unpublished AMIs for this project
-        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
-
-        # If there are any AMI builds, handle them
-        if published or unpublished:
-
-            # Set up EC2 connection
-            authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-            # all project members, including users, can see published builds
-            for publishedAMIId in published:
-                ec2Wrap.resetLaunchPermissions(publishedAMIId)
-                if writers or readers:
-                    ec2Wrap.addLaunchPermissions(publishedAMIId, writers + readers)
-
-            # only project developers and owners can see unpublished builds
-            for unpublishedAMIId in unpublished:
-                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
-                if writers:
-                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
+        self.amiPerms.hideProject(projectId)
 
         # Remove the anonymous user from the project's repository
         repos = self._getProjectRepo(project)
@@ -1492,32 +1347,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def unhideProject(self, projectId):
 
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
-        # Get the list of AWSAccountNumbers for the projects members
-        writers, _ = self.projectUsers.getEC2AccountNumbersForProjectUsers(projectId)
-
-        # Get a list of published and unpublished AMIs for this project
-        published, unpublished = self.builds.getAMIBuildsForProject(projectId)
-
-        # If there are any AMI builds, handle them
-        if published or unpublished:
-
-            # Set up EC2 connection
-            authToken = self._buildEC2AuthToken()
-            ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-            # published builds will be made public
-            for publishedAMIId in published:
-                ec2Wrap.resetLaunchPermissions(publishedAMIId)
-                ec2Wrap.addPublicLaunchPermission(publishedAMIId)
-
-            # only project developers and owners can see unpublished builds
-            for unpublishedAMIId in unpublished:
-                ec2Wrap.resetLaunchPermissions(unpublishedAMIId)
-                if writers:
-                    ec2Wrap.addLaunchPermissions(unpublishedAMIId, writers)
-
+        self.amiPerms.unhideProject(projectId)
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         label = versions.Label(project.getLabel())
@@ -1546,12 +1378,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type  projectId: C{int}
         @param makePrivate: True to make private, False to make public
         @type  makePrivate: C{bool}
-        @raise PermissionDenied: if not the product owner
+        @raise mint_error.PermissionDenied: if not the product owner
         @raise PublicToPrivateConversionError: if trying to convert a public
                product to private
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         project = projects.Project(self, projectId)
         
@@ -1567,7 +1399,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     or self.auth.admin:
                 self.hideProject(projectId)
             else:
-                raise PublicToPrivateConversionError()
+                raise mint_error.PublicToPrivateConversionError()
         
         return True
 
@@ -1596,7 +1428,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if not r:
-            raise ItemNotFound("membership")
+            raise mint_error.ItemNotFound("membership")
         else:
             return r[0]
 
@@ -1606,14 +1438,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
-            raise users.LastOwner
+            raise mint_error.LastOwner
 
-        # Get any EC2 launch permissions if the user has aws credentials set.
-        awsFound, awsAccountNumber = self.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            currentAMIIds = self._getProductAMIIdsForPermChange(userId,
-                                                               projectId)
+        # given that we use UPDATE below we can be pretty
+        # the user already exists.
+        oldLevel = self.db.projectUsers.getUserlevelForProjectMember(projectId,
+                                                                     userId)
 
         try:
             self.db.transaction()
@@ -1627,7 +1457,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                               None, None, write=(level in userlevels.WRITERS),
                               canRemove=False)
                 repos.setRoleIsAdmin(label, user['username'],
-                                     level == userlevels.OWNER)
+                        self.cfg.projectAdmin and level == userlevels.OWNER)
                 repos.setRoleCanMirror(label, 
                          user['username'], int(level == userlevels.OWNER))
 
@@ -1637,16 +1467,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cu = self.db.cursor()
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
                 projectId=?""", level, userId, projectId)
-
-            if awsFound:
-                newAMIIds = self._getProductAMIIdsForPermChange(
-                                     userId, projectId)
-                if level == userlevels.USER:
-                    self.removeEC2LaunchPermissions(userId, awsAccountNumber,
-                           [id for id in currentAMIIds if id not in newAMIIds])
-                else:
-                    self.addEC2LaunchPermissions(userId, awsAccountNumber,
-                           [id for id in newAMIIds if id not in currentAMIIds])
+            self.amiPerms.setMemberLevel(userId, projectId, oldLevel, level)
         except:
             self.db.rollback()
             raise
@@ -1654,7 +1475,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
 
         self._notifyUser('Changed', user, project, level)
-
         return True
 
     @typeCheck(int)
@@ -1682,9 +1502,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not ((list(self.authToken) == \
                 [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
                  or not self.cfg.adminNewUsers):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
                                           displayEmail, blurb, active)
 
@@ -1761,20 +1581,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         prior to removing the user.
         """
         if (self.auth.userId != userId) and (not self.auth.admin):
-            raise PermissionDenied()
+            raise mint_error.PermissionDenied()
 
         self._ensureNoOrphans(userId)
-        
-        # remove EC2 launch permissions
-        ec2cred = self.getEC2CredentialsForUser(userId)
-        if ec2cred and ec2cred.has_key('awsAccountNumber'):
-            if ec2cred['awsAccountNumber']:
-                # revoke launch permissions
-                self.removeAllEC2LaunchPermissions(userId, 
-                                                   ec2cred['awsAccountNumber'])
-                
-        # remove EC2 credentials
-        self.removeEC2CredentialsForUser(userId)
 
         self.membershipRequests.userAccountCanceled(userId)
 
@@ -1804,7 +1613,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r = cu.fetchone()
         if r and r[0]:
-            raise users.LastOwner
+            raise mint_error.LastOwner
         
         return True
 
@@ -1825,7 +1634,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                           WHERE userGroup='MintAdmin'""")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
-            raise LastAdmin("There are no more admin accounts. Your request "
+            raise mint_error.LastAdmin(
+                            "There are no more admin accounts. Your request "
                             "to close your account has been rejected to "
                             "ensure that at least one account is admin.")
 
@@ -1837,9 +1647,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Also removes the user from each project listed in projects.
         """
         if not self.auth.admin and userId != self.auth.userId:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.filterLastAdmin(userId)
         username = self.users.getUsername(userId)
+
+        self.setEC2CredentialsForUser(userId, '', '', '', True)
 
         #Handle projects
         projectList = self.getProjectIdsByMember(userId)
@@ -1883,17 +1695,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # this function exists solely for server testing scripts and should
         # not be used for any other purpose. Never enable in production mode.
         if not self.cfg.debugMode:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM Users WHERE username=?", username)
         r = cu.fetchall()
         if not r:
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
                    r[0][0])
         r = cu.fetchall()
         if not r:
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         return r[0][0]
 
     @typeCheck(str)
@@ -1913,9 +1725,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setUserDataValue(self, username, name, value):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if name not in usertemplates.userPrefsTemplate:
-            raise ParameterError("Undefined data entry")
+            raise mint_error.ParameterError("Undefined data entry")
         dataType = usertemplates.userPrefsTemplate[name][0]
         self.userData.setDataValue(userId, name, value, dataType)
         return True
@@ -1926,7 +1738,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataValue(self, username, name):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         found, res = self.userData.getDataValue(userId, name)
         if found:
             return res
@@ -1938,7 +1750,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDefaulted(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         cu = self.db.cursor()
         cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
@@ -1953,7 +1765,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDefaultedAWS(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         cu = self.db.cursor()
         cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
@@ -1968,7 +1780,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserDataDict(self, username):
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.userData.getDataDict(userId)
 
     @typeCheck(int, str)
@@ -1988,7 +1800,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             return True
         else:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
 
     @typeCheck(str, int, int)
@@ -2103,7 +1915,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         mintAdminId = self.userGroups.getMintAdminId()
         if self._isUserAdmin(userId):
-            raise UserAlreadyAdmin
+            raise mint_error.UserAlreadyAdmin
 
         cu = self.db.cursor()
         cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
@@ -2122,7 +1934,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         # refuse to demote self. this ensures there will always be at least one
         if userId == self.auth.userId:
-            raise AdminSelfDemotion
+            raise mint_error.AdminSelfDemotion
 
         mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
@@ -2137,12 +1949,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck()
     @private
     def getNews(self):
-        return self.newsCache.getNews()
+        return self.db.newsCache.getNews()
 
     @typeCheck()
     @private
     def getNewsLink(self):
-        return self.newsCache.getNewsLink()
+        return self.db.newsCache.getNewsLink()
 
     @typeCheck(str, str, int)
     @private
@@ -2307,7 +2119,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         try:
             userId = self.getUserIdByName(username)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             userId = 0
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
@@ -2345,7 +2157,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
-            raise ItemNotFound
+            raise mint_error.ItemNotFound
         self._filterBuildAccess(buildId)
         build = self.builds.get(buildId)
 
@@ -2370,13 +2182,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
-    @typeCheck(int, ((str, unicode),), bool)
+    @typeCheck(int, ((str, unicode),), bool, list, str)
     @requiresAuth
     @private
-    def newBuildsFromProductDefinition(self, versionId, stageName, force):
+    def newBuildsFromProductDefinition(self, versionId, stageName, force,
+                                       buildNames = None, versionSpec = None):
         """
         Launch the image builds defined in the product definition for the
-        given version id and stage.  If provided, use troveSpec as the top
+        given version id and stage.  If provided, use versionSpec as the top
         level group for the image, otherwise use the top level group defined
         in the
         product defintion.
@@ -2396,14 +2209,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             stageLabel = str(pd.getLabelForStage(stageName))
         except proddef.StageNotFoundError, snfe:
-            raise ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+            raise mint_error.ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
         except proddef.MissingInformationError, mie:
-            raise ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
+            raise mint_error.ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
         # Filter builds by stage
         builds = pd.getBuildsForStage(stageName)
         if not builds:
-            raise NoBuildsDefinedInBuildDefinition
+            raise mint_error.NoBuildsDefinedInBuildDefinition
 
         # Create build data for each defined build so we can create the builds
         # later
@@ -2414,14 +2227,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # (CNY-2545 related?)
         repos = self._getProjectRepo(project, False)
         groupNames = [ str(x.getBuildImageGroup()) for x in builds ]
+        if not versionSpec:
+            versionSpec = stageLabel
+
         groupTroves = repos.findTroves(None, 
-                                       [(x, stageLabel, None) for x in 
+                                       [(x, versionSpec, None) for x in 
                                          groupNames ], allowMissing = True)
 
         for build in builds:
+            if buildNames and build.name not in buildNames:
+                continue
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
             buildGroup = str(build.getBuildImageGroup())
-            groupList = groupTroves.get((buildGroup, stageLabel, None), [])
+            groupList = groupTroves.get((buildGroup, versionSpec, None), [])
 
             flavorSet = build.flavorSetRef and \
                     (pd.getFlavorSet(build.flavorSetRef, None) \
@@ -2453,7 +2271,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     (buildGroup, buildFlavor))))
 
         if buildErrors and not force:
-            raise TroveNotFoundForBuildDefinition(buildErrors)
+            raise mint_error.TroveNotFoundForBuildDefinition(buildErrors)
 
         # Create/start each build.
         buildIds = []
@@ -2476,8 +2294,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     str(buildImage.containerFormat) or ''
 
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
-            projectName = project.getName()
-            buildId = self.newBuildWithOptions(projectId, projectName,
+            buildName = buildDefinition.name
+            buildId = self.newBuildWithOptions(projectId, buildName,
                                                n, v, f, buildType,
                                                buildSettings)
             buildIds.append(buildId)
@@ -2520,17 +2338,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._getBuildPageUrl(buildId)
 
-    @typeCheck(int, str, str, str, str, str, dict)
+    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict)
     @requiresAuth
     @private
-    def newBuildWithOptions(self, projectId, productName,
+    def newBuildWithOptions(self, projectId, buildName,
                             groupName, groupVersion, groupFlavor,
                             buildType, buildSettings):
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
 
+        # Make sure we convert from Unicode to UTF-8
+        buildName = buildName.encode('UTF-8')
         buildId = self.builds.new(projectId = projectId,
-                                      name = productName,
+                                      name = buildName,
                                       timeCreated = time.time(),
                                       buildCount = 0,
                                       createdBy = self.auth.userId)
@@ -2630,14 +2450,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sorted([ x[1] for x in scored if x[0] == maxScore ], 
                       key=lambda x: x[2])[-1:]
 
-    @typeCheck(int)
-    @requiresAuth
-    def deleteBuild(self, buildId):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
-            raise BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise BuildPublished()
+    def _deleteBuild(self, buildId, force=False):
+        if not self.builds.buildExists(buildId)  and not force:
+            raise mint_error.BuildMissing()
+
+        if self.builds.getPublished(buildId) and not force:
+            raise mint_error.BuildPublished()
 
         try:
             self.db.transaction()
@@ -2646,7 +2464,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
             if amiBuild:
                 self.deleteAMI(amiId)
-        except AMIInstanceDoesNotExist:
+        except mint_error.AMIInstanceDoesNotExist:
             # We do not want to fail this operation in this case.
             pass
         except:
@@ -2659,6 +2477,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             fileId = filelist['fileId']
             fileUrlList = filelist['fileUrls']
             for urlId, urlType, url in fileUrlList:
+                if self.db.driver == 'sqlite':
+                    # sqlite doesn't do cascading deletes, so we'll do it for them
+                    self.buildFilesUrlsMap.delete(fileId, urlId)
                 # if this location is local, delete the file
                 if urlType == urltypes.LOCAL:
                     fileName = url
@@ -2680,6 +2501,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return True
 
+    @typeCheck(int)
+    @requiresAuth
+    def deleteBuild(self, buildId):
+        """
+        Delete a build
+        @param buildId: The id of the build to delete
+        @type buildId: C{int}
+        """
+        self._filterBuildAccess(buildId)
+        return self._deleteBuild(buildId, force=False)      
+
     @typeCheck(str)
     @requiresAuth
     def deleteAMI(self, amiId):
@@ -2700,9 +2532,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def updateBuild(self, buildId, valDict):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         if len(valDict):
             columns = { 'timeUpdated': time.time(),
                         'updatedBy':   self.auth.userId,
@@ -2712,7 +2544,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     columns[column] = valDict.pop(column)
             if valDict:
                 # Unknown argument
-                raise ParameterError()
+                raise mint_error.ParameterError()
             return self.builds.update(buildId, **columns)
         return False
 
@@ -2723,9 +2555,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildDataValue(self, buildId, name, value, dataType):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
     @typeCheck(int, str, str, str, str, str)
@@ -2861,14 +2693,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             try:
                 storedAmiData = self._getTargetData('ec2', 'aws')
-            except TargetMissing, e:
-                raise EC2NotConfigured
+            except mint_error.TargetMissing, e:
+                raise mint_error.EC2NotConfigured
             for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
                        'ec2Certificate', 'ec2CertificateKey'):
                 amiData[k] = storedAmiData.get(k)
                 if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
-                    raise EC2NotConfigured
+                    raise mint_error.EC2NotConfigured
             if project.hidden:
                 # overwrite ec2LaunchUsers if any of the users have
                 # ec2 accounts, otherwise default to whatever the default
@@ -2878,6 +2710,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if writers + readers:
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
+
+            if self.cfg.ec2ProductCode:
+                amiData['ec2ProductCode'] = self.cfg.ec2ProductCode
 
             r['amiData'] = amiData
 
@@ -2922,7 +2757,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def newPublishedRelease(self, projectId):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         timeCreated = time.time()
         createdBy = self.auth.userId
         return self.publishedReleases.new(projectId = projectId,
@@ -2940,9 +2775,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
+            raise mint_error.PublishedReleasePublished
         if len(valDict):
             columns = { 'timeUpdated': time.time(),
                         'updatedBy': self.auth.userId,
@@ -2952,7 +2787,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     columns[column] = valDict.pop(column)
             if valDict:
                 # Unknown argument
-                raise ParameterError()
+                raise mint_error.ParameterError()
             return self.publishedReleases.update(pubReleaseId, **columns)
         return False
 
@@ -2963,7 +2798,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
@@ -2977,18 +2812,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            try:
-                self.addEC2LaunchPermsForPublish(pubReleaseId)
-            except EC2NotConfigured, me:
-                # We don't want to fail if this rBuilder is not configured to talk
-                # to EC2.
-                pass
+            self.amiPerms.publishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
-            
         return result
 
     @typeCheck(int)
@@ -3010,12 +2839,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Performs some sanity checks on the published release
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if not len(self.publishedReleases.getBuilds(pubReleaseId)):
-            raise PublishedReleaseEmpty
+            raise mint_error.PublishedReleaseEmpty
         if checkPublished:
             if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise PublishedReleasePublished
+                raise mint_error.PublishedReleasePublished
 
         return True
 
@@ -3024,10 +2853,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Performs some sanity checks on the unpublished release
         """
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if failIfNotPub:
             if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise PublishedReleaseNotPublished
+                raise mint_error.PublishedReleaseNotPublished
 
         return True
 
@@ -3048,18 +2877,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            try:
-                self.removeEC2LaunchPermsForUnpublish(pubReleaseId)
-            except EC2NotConfigured, me:
-                # We don't want to fail if this rBuilder is not configured to talk
-                # to EC2.
-                pass
+            self.amiPerms.unpublishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
-
         return result
 
     @typeCheck(int)
@@ -3068,9 +2891,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished
+            raise mint_error.PublishedReleasePublished
         self.publishedReleases.delete(pubReleaseId)
         return True
 
@@ -3174,10 +2997,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
+        try: 
+            troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
+        except ValueError:
+            troveLabel = versions.VersionFromString(troveVersion).trailingLabel()
+        projectId = self.builds.get(buildId)['projectId']
+        productVersionId, stage = self._getProductVersionForLabel(projectId, 
+                                                                  troveLabel)
+        if productVersionId:
+            self.builds.setProductVersion(buildId, productVersionId, stage)
 
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
@@ -3188,15 +3020,51 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.buildData.setDataValue(buildId, x, 1, data.RDT_INT)
         return r
 
+    def _getProductVersionForLabel(self, projectId, label):
+        cu = self.db.cursor()
+        cu.execute('''SELECT productVersionId, hostname, 
+                             domainname, shortname, 
+                             ProductVersions.namespace, 
+                             ProductVersions.name 
+                      FROM Projects 
+                      JOIN ProductVersions USING(projectId)
+                      WHERE projectId=?''', projectId)
+        for versionId, hostname, domainname, shortname, namespace, name in cu:
+            fqdn = '%s.%s' % (hostname, domainname)
+            pd = proddef.ProductDefinition()
+            pd.setProductShortname(shortname)
+            pd.setConaryRepositoryHostname(fqdn)
+            pd.setConaryNamespace(namespace)
+            pd.setProductVersion(name)
+            baseLabel = pd.getProductDefinitionLabel()
+            # assumption to speed this up.  
+            # Stages are baselabel + '-' + extention (or just baseLabel)
+            if not str(label).startswith(str(baseLabel)):
+                continue
+            try:
+                project = projects.Project(self, projectId)
+                projectCfg = self._getProjectConaryConfig(project)
+                cclient = conaryclient.ConaryClient(projectCfg)
+                pd.loadFromRepository(cclient)
+            except Exception, e:
+                return versionId, None
+
+            for stage in pd.getStages():
+                stageLabel = pd.getLabelForStage(stage.name)
+                if str(label) == stageLabel:
+                    return versionId, str(stage.name)
+            return versionId, None
+        return None, None
+
     @typeCheck(int, str)
     @requiresAuth
     @private
     def setBuildDesc(self, buildId, desc):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         self.builds.update(buildId, description = desc)
         return True
 
@@ -3206,9 +3074,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildName(self, buildId, name):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         self.builds.update(buildId, name = name)
         return True
 
@@ -3220,19 +3088,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
         if not self._checkProjectAccess(buildData['projectId'],
                 userlevels.WRITERS):
-            raise PermissionDenied()
+            raise mint_error.PermissionDenied()
         if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
-            raise PublishedReleaseMissing()
+            raise mint_error.PublishedReleaseMissing()
         if self.isPublishedReleasePublished(pubReleaseId):
-            raise PublishedReleasePublished()
+            raise mint_error.PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if published and (buildData['buildType'] != buildtypes.AMI and buildData['buildType'] != buildtypes.IMAGELESS and not self.getBuildFilenames(buildId)):
-            raise BuildEmpty()
+            raise mint_error.BuildEmpty()
         # this exception condition is completely masked. re-enable it if the
         # structure of this code changes
         #if published and self.builds.getPublished(buildId):
-        #    raise BuildPublished()
+        #    raise mint_error.BuildPublished()
         pubReleaseId = published and pubReleaseId or None
         return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
@@ -3256,7 +3124,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getBuildType(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         cu = self.db.cursor()
         cu.execute("SELECT buildType FROM BuildsView WHERE buildId = ?",
                 buildId)
@@ -3268,9 +3136,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setBuildType(self, buildId, buildType):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
                 buildType, buildId)
@@ -3316,9 +3184,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def startImageJob(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
 
         # image-less builds (i.e. group trove builds) don't actually get built,
         # they just get stuffed into the DB
@@ -3333,9 +3201,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 mc = self._getMcpClient()
                 return mc.submitJob(data)
             except mcp_error.NotEntitledError:
-                raise NotEntitledError()
+                raise mint_error.NotEntitledError()
             except mcp_error.NetworkError:
-                raise BuildSystemDown
+                raise mint_error.BuildSystemDown
 
     @typeCheck(int, str)
     @private
@@ -3344,17 +3212,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
-            raise GroupTroveEmpty
+            raise mint_error.GroupTroveEmpty
         try:
             mc = self._getMcpClient()
             data = self.serializeGroupTrove(groupTroveId, arch)
             return mc.submitJob(data)
         except mcp_error.NetworkError:
-            raise BuildSystemDown
+            raise mint_error.BuildSystemDown
         except mcp_error.NotEntitledError:
-            raise NotEntitledError
+            raise mint_error.NotEntitledError
 
     @typeCheck(int, str, list, (list, str, int))
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3367,7 +3235,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         if outputToken != \
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         ret = self._setBuildFilenames(buildId, filenames, normalize = True)
         self.buildData.removeDataValue(buildId, 'outputToken')
@@ -3381,7 +3249,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         if outputToken != \
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         self.buildData.setDataValue(buildId, 'amiId', amiId, data.RDT_STRING)
         self.buildData.setDataValue(buildId, 'amiManifestName,',
@@ -3406,7 +3274,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             if writers:
                 ec2Wrap.addLaunchPermissions(amiId, writers)
-        except EC2Exception, e:
+        except mint_error.EC2Exception, e:
             # This is a really lame way to handle this error, but until the jobslave can
             # return a status of "built with warnings", then we'll have to go with this.
             print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
@@ -3430,9 +3298,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         if self.builds.getPublished(buildId):
-            raise BuildPublished()
+            raise mint_error.BuildPublished()
 
         return self._setBuildFilenames(buildId, filenames)
 
@@ -3491,7 +3359,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def addFileUrl(self, buildId, fileId, urlType, url):
         self._filterBuildFileAccess(fileId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         # Note bene: this can be done after a build has been published,
         # thus we don't have to check to see if the build is published.
 
@@ -3501,7 +3369,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cu.execute("SELECT fileId FROM BuildFiles where fileId = ?",
                     fileId)
             if not len(cu.fetchall()):
-                raise BuildFileMissing()
+                raise mint_error.BuildFileMissing()
 
             cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
                     urlType, url)
@@ -3521,14 +3389,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def removeFileUrl(self, buildId, fileId, urlId):
         self._filterBuildFileAccess(fileId)
         if not self.builds.buildExists(buildId):
-            raise BuildMissing()
+            raise mint_error.BuildMissing()
         cu = self.db.transaction()
         try:
             cu.execute("SELECT urlId FROM FilesUrls WHERE urlId = ?",
                     urlId)
             r = cu.fetchall()
             if not len(r):
-                raise BuildFileUrlMissing()
+                raise mint_error.BuildFileUrlMissing()
 
             # sqlite doesn't support cascading delete
             if self.db.driver == 'sqlite':
@@ -3629,7 +3497,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             filenames = [ (x[3], x[4], x[5]) for x in r ]
             return info[0], info[1], info[2], filenames
         else:
-            raise FileMissing
+            raise mint_error.FileMissing
 
     @typeCheck(int, ((str, unicode),))
     @requiresAuth
@@ -3800,7 +3668,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -3828,7 +3696,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
         return True
 
@@ -3838,7 +3706,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def listGroupTrovesByProject(self, projectId):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.listGroupTrovesByProject(projectId)
 
     @private
@@ -3848,7 +3716,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                          description, autoResolve):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
@@ -3860,7 +3728,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.get(groupTroveId)
 
     @private
@@ -3870,7 +3738,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
@@ -3880,7 +3748,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
         return True
@@ -3892,7 +3760,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
         return True
 
@@ -4010,7 +3878,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @private
@@ -4020,7 +3888,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.troveInGroupTroveItems( \
             groupTroveId, name, version, flavor)
 
@@ -4030,7 +3898,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return self.groupTroveItems.get(groupTroveItemId)
 
@@ -4041,7 +3909,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
@@ -4052,7 +3920,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
@@ -4063,7 +3931,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
@@ -4115,7 +3983,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
@@ -4125,7 +3993,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
@@ -4135,7 +4003,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
         return True
 
@@ -4154,7 +4022,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getReportObject(self, name):
         if name not in reports.__dict__:
-            raise InvalidReport
+            raise mint_error.InvalidReport
         repModule = reports.__dict__[name]
         for objName in repModule.__dict__.keys():
             try:
@@ -4169,7 +4037,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getReport(self, name):
         if name not in reports.getAvailableReports():
-            raise InvalidReport
+            raise mint_error.InvalidReport
         return self._getReportObject(name).getReport()
 
     @private
@@ -4177,7 +4045,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getReportPdf(self, name):
         if name not in reports.getAvailableReports():
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
     
@@ -4309,7 +4177,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if isinstance(matchStringList, str):
             matchStringList = [ str ]
         if [x for x in matchStringList if x[0] not in ('-', '+')]:
-            raise ParameterError("First character of each matchString must be + or -")
+            raise mint_error.ParameterError("First character of each matchString must be + or -")
         self.outboundMirrors.update(outboundMirrorId, matchStrings = ' '.join(matchStringList))
         return True
 
@@ -4374,7 +4242,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             ret = self.updateServices.get(upsrvId)
         except database.ItemNotFound:
-            raise UpdateServiceNotFound()
+            raise mint_error.UpdateServiceNotFound()
         else:
             return ret
 
@@ -4574,9 +4442,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             mc = self._getMcpClient()
             return str(mc.getJSVersion())
         except mcp_error.NotEntitledError:
-            raise NotEntitledError
+            raise mint_error.NotEntitledError
         except mcp_error.NetworkError:
-            raise BuildSystemDown
+            raise mint_error.BuildSystemDown
 
     def __del__(self):
         if self.mcpClient:
@@ -4615,6 +4483,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         return ec2Wrapper.getAllKeyPairs(keyNames)
+
+## BEGIN Guided TOUR CODE
 
     @typeCheck(str, str)
     @requiresAdmin
@@ -4697,13 +4567,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         amiData = self._getTargetData('ec2', 'aws', supressException = True)
         try:
             bami = self.blessedAMIs.get(blessedAMIId)
-        except ItemNotFound:
-            raise FailedToLaunchAMIInstance()
+        except mint_error.ItemNotFound:
+            raise mint_error.FailedToLaunchAMIInstance()
 
         launchedFromIP = self.remoteIp
         if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
                 amiData.get('ec2MaxInstancesPerIP', 10)):
-           raise TooManyAMIInstancesPerIP()
+           raise mint_error.TooManyAMIInstancesPerIP()
 
         userDataTemplate = bami['userDataTemplate']
 
@@ -4728,7 +4598,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 useNATAddressing = amiData.get('ec2UseNATAddressing', False))
 
         if not ec2InstanceId:
-            raise ec2.FailedToLaunchAMIInstance()
+            raise mint_error.FailedToLaunchAMIInstance()
 
         # store the instance information in our database
         return self.launchedAMIs.new(blessedAMIId = bami['blessedAMIId'],
@@ -4787,6 +4657,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return (code in expectedCodes)
 
+    # END GUIDED TOUR CODE
     @private
     def getProxies(self):
         return self._getProxies()
@@ -4797,12 +4668,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         
         # Check the namespace
-        self._validateNamespace(namespace)
+        projects._validateNamespace(namespace)
         # make sure it is a valid product version
-        self._validateProductVersion(name)
+        projects._validateProductVersion(name)
         
         try:
             # XXX: Should this add an entry to the labels table?
@@ -4810,8 +4681,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                                  namespace = namespace,
                                                  name = name,
                                                  description = description) 
-        except DuplicateItem:
-            raise DuplicateProductVersion
+        except mint_error.DuplicateItem:
+            raise mint_error.DuplicateProductVersion
 
     @private
     @requiresAuth
@@ -4820,7 +4691,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             ret = self.productVersions.get(versionId)
         except database.ItemNotFound:
-            raise ProductVersionNotFound()
+            raise mint_error.ProductVersionNotFound()
         else:
             return ret
 
@@ -4977,15 +4848,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             the package creator service, or if the L{uploadDirectoryHandle} does not
             contain a valid manifest file as generated by the upload CGI script.
         '''
-        from mint.fileupload import fileuploader
-        from conary import versions as conaryVer
+        from mint.lib.fileupload import fileuploader
 
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
         fileuploader = fileuploader(path, 'uploadfile')
         try:
             info = fileuploader.parseManifest()
         except IOError, e:
-            raise PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
+            raise mint_error.PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
 
@@ -5065,7 +4935,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=namespace,
                 version=prodVer), mincfg, "%s=%s" % (troveName, label))
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the package creator service session: %s", str(err))
         return sesH, pc
 
@@ -5134,7 +5004,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: a troveSpec pointing to the created source trove
         @rtype: str
         """
-        from conary import versions as conaryVer
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
 
@@ -5143,15 +5012,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
             srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
         except packagecreator.errors.ConstraintsValidationError, err:
-            raise PackageCreatorValidationError(*err.args)
+            raise mint_error.PackageCreatorValidationError(*err.args)
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error attempting to create source trove: %s", str(err))
         if build:
             try:
                 pc.build(sessionHandle, commit=True)
             except packagecreator.errors.PackageCreatorError, err:
-                raise PackageCreatorError( \
+                raise mint_error.PackageCreatorError( \
                         "Error attempting to build package: %s", str(err))
         return srcHandle
 
@@ -5198,7 +5067,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             return pc.getBuildLogs(sessionHandle)
         except packagecreator.errors.PackageCreatorError, e:
-            raise PackageCreatorError("Error retrieving build logs: %s" % str(e))
+            raise mint_error.PackageCreatorError("Error retrieving build logs: %s" % str(e))
 
     @typeCheck(((str,unicode),), ((str,unicode),))
     @requiresAuth
@@ -5220,10 +5089,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         upload speed, and estimated time remaining.
         @rtype: dictionary
 
-        @raise PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
+        @raise mint_error.PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
         invalid.
         """
-        from mint.fileupload import fileuploader
+        from mint.lib.fileupload import fileuploader
         fieldname = str(fieldname)
         ## Connect up to the tmpdir
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
@@ -5232,7 +5101,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             #Look for the status and metadata files
             return fileuploader(path, fieldname).pollStatus()
         else:
-            raise PermissionDenied("You are not allowed to check status on this file")
+            raise mint_error.PermissionDenied("You are not allowed to check status on this file")
 
     @typeCheck(((str,unicode),), (list, ((str,unicode),)))
     @requiresAuth
@@ -5252,7 +5121,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @return: True if the uploadDirectoryHandle is a valid session, False otherwise.
         @rtype: boolean
         """
-        from mint.fileupload import fileuploader
+        from mint.lib.fileupload import fileuploader
         str_fieldnames = [str(x) for x in fieldnames]
         path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
         if os.path.isdir(path):
@@ -5273,16 +5142,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, rebuild)
         except packagecreator.errors.NoFlavorsToCook, err:
-            raise NoImagesDefined( \
+            raise mint_error.NoImagesDefined( \
                     "Error starting the appliance creator service session: %s",
                     str(err))
         except packagecreator.errors.ApplianceFactoryNotFound, err:
-            raise OldProductDefinition( \
+            raise mint_error.OldProductDefinition( \
                     "Error starting the appliance creator service session: %s",
                     str(err))
 
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
         return sesH
 
@@ -5387,48 +5256,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error starting the package creator service session: %s", str(err))
         try:
             pc.build(sesH, commit=True)
         except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
-                    "Error attempting to build package: %s", str(err))
-        return sesH
-
-    @requiresAuth
-    def getProductVersionSourcePackages(self, projectId, versionId):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        label = versions.Label(pd.getDefaultLabel())
-        repo = self._getProjectRepo(project)
-        ret = []
-        trvlist = repo.findTroves(label, [(None, None, None)], allowMissing=True)
-        for k,v in trvlist.iteritems():
-            for n, v, f in v:
-                if n.endswith(':source'):
-                    ret.append((n, v.freeze()))
-        return ret
-
-    @typeCheck(int, int, ((str,unicode),), ((str,unicode),))
-    @requiresAuth
-    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
-        mincfg = self._getMinCfg(project)
-        try:
-            sesH = pc.startPackagingSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
-        except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
-                    "Error starting the package creator service session: %s", str(err))
-        try:
-            pc.build(sesH, commit=True)
-        except packagecreator.errors.PackageCreatorError, err:
-            raise PackageCreatorError( \
+            raise mint_error.PackageCreatorError( \
                     "Error attempting to build package: %s", str(err))
         return sesH
 
@@ -5536,7 +5369,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
            in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
 
         ret = dict()
         for x in usertemplates.userPrefsAWSTemplate.keys():
@@ -5567,7 +5400,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
            in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         
         # cleanup the data
         accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
@@ -5581,52 +5414,32 @@ If you would not like to be %s %s of this project, you may resign from this proj
         awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
                                         'awsAccountNumber')
        
-        removing = True
-
         # Validate and add the credentials with EC2 if they're specified.
         if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
             if not force:
                 self.validateEC2Credentials((newValues['awsAccountNumber'],
                                              newValues['awsPublicAccessKeyId'],
                                              newValues['awsSecretAccessKey']))
-            removing = False
-        
         try:
             self.db.transaction()
             for key, (dType, default, _, _, _, _) in \
                     usertemplates.userPrefsAWSTemplate.iteritems():
-                if removing:
+                if not newValues['awsAccountNumber']:
                     self.userData.removeDataValue(userId, key)
                 else:
                     val = newValues.get(key, default)
                     self.userData.setDataValue(userId, key, val, dType,
                             commit=False)
 
-            if awsFound:
-                # Remove all old launch permissions
-                self.removeAllEC2LaunchPermissions(userId, oldAwsAccountNumber)
-            if not removing:
-                # Add launch permissions
-                self.addAllEC2LaunchPermissions(userId, 
-                                                newValues['awsAccountNumber'])
-        except EC2Exception, e:
-            # see if the error is because the ami no longer exists (ignore)
-            if e.ec2ResponseObj:
-                error = e.ec2ResponseObj.errors and e.ec2ResponseObj.errors[0] or None
-                if error and error["code"] == "InvalidAMIID.Unavailable":
-                    self.db.commit()
-                    return True
-            
-            # if we get here, fail
-            self.db.rollback()
-            raise
+            self.amiPerms.setUserKey(userId, oldAwsAccountNumber, 
+                                     newValues['awsAccountNumber'])
         except Exception, e:
             self.db.rollback()
             raise                
         else:
             self.db.commit()
             return True
-        
+
     @typeCheck(int)
     @requiresAuth
     def removeEC2CredentialsForUser(self, userId):
@@ -5658,51 +5471,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildId = buildData['buildId']
             buildData['buildPageUrl'] = \
                     self._getBuildPageUrl(buildId, hostname = hostname)
-            buildData['downloadUrl'] = urlTemplate % \
-                    self.getBuildFilenames(buildId)[0]['fileId']
+            buildFilenames = self.getBuildFilenames(buildId)
+            if buildFilenames:
+                buildData['downloadUrl'] = urlTemplate % \
+                        buildFilenames[0]['fileId']
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
         return res
-
-    @requiresAuth
-    def getAllAMIBuilds(self):
-        """
-        Returns a list of all of the AMI images that this rBuilder
-        manages. If the requesting user is an admin, the user will
-        be able to see all AMIs created for all projects regardless of
-        their visibility. Otherwise, the user will only see AMIs for
-        projects that they are able to see (i.e. AMIs created in hidden
-        projects of which the user is not a developer or owner
-        will remain hidden).
-        @returns A dictionary of dictionaries, keyed by amiId,
-          with the following members:
-          - productName: the name of the product containing this build
-          - projectId: the id of the project (product) containing this build
-          - productDescription: the description of the product containing
-              this build
-          - buildId: the id of the build that created the AMI
-          - buildName: the name of the build
-          - buildDescription: the description of the build, if given
-          - createdBy: the rBuilder user name of the person who
-              initiated the build (if known), otherwise returns
-              'Unknown' if we don't know (in the case of builds
-              created before RBL-3076 was fixed)
-          - awsAccountNumber: the AWS Account number of the user who
-              created the build (if the user supplied credentials)
-              otherwise, returns 'Unknown'
-          - role: the role of the user who created the build with
-              respoect to the containing product as a meatstring, e.g.
-              'Product User', 'Product Owner', 'Product Developer',
-              or '' (in the case where a user is not affiliated with
-              the product, or the relationship is unknown)
-          - isPrivate: 1 if the containing project is private (hidden),
-              0 otherwise
-          - isPublished: 1 if the build is published, 0 if not
-        @rtype: C{dict} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if user is not logged in
-        """
-        res =  self.builds.getAllBuildsByType('AMI', self.auth.userId,
-                                              not self.auth.admin)
-        return dict((x.pop('amiId'), x) for x in res)
 
     @typeCheck(int)
     @requiresAuth
@@ -5726,361 +5500,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
            in user.
         """
         if userId != self.auth.userId and not self.auth.admin:
-            raise PermissionDenied
+            raise mint_error.PermissionDenied
         # Check to see if the user even exists.
         # This will raise ItemNotFound if the user doesn't exist
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
+        if not affectedAMIIds:
+            return False
 
-    @typeCheck(int, str, list)
-    @requiresAuth
-    @private
-    def removeEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
-        """
-        Given a userId, awsAccountNumber, and a list of amiIds, remove launch
-        permissions from each amiId for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param amiIds: The list of Amazon ami ids.
-        @type amiIds: C{list}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
         ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, list)
-    @requiresAuth
-    @private
-    def addEC2LaunchPermissions(self, userId, awsAccountNumber, amiIds):
-        """
-        Given a userId, awsAccountNumber, and a list of amiIds, add launch
-        permissions to each amiId for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param amiIds: The list of Amazon ami ids.
-        @type amiIds: C{list}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def removeAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        """
-        Given a userId and awsAccountNumber, remove launch permissions to each
-        eligible AMI build for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId[0], awsAccountNumber)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def addAllEC2LaunchPermissions(self, userId, awsAccountNumber):
-        """
-        Given a userId and awsAccountNumber, add launch permissions to each
-        eligible AMI build for userId.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-        
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId[0], awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, int)
-    @requiresAuth
-    @private
-    def addProductEC2LaunchPermissions(self, userId, awsAccountNumber,
-                                       productId):
-        """
-        Given a userId, awsAccountNumber, and productId, add launch
-        permissions for each eligible AMI id in the product to the user's
-        awsAccountNumber.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param productId: the numberic productId of the rBuilder product
-        @type productId: C{int}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
-
-        for amiId in amiIds:
-            ec2Wrap.addLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-    @typeCheck(int, str, int)
-    @requiresAuth
-    @private
-    def removeProductEC2LaunchPermissions(self, userId, awsAccountNumber,
-                                          productId):
-        """
-        Given a userId, awsAccountNumber, and productId, remove launch
-        permissions for each eligible AMI id in the product to the user's
-        awsAccountNumber.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param productId: the numberic productId of the rBuilder product
-        @type productId: C{int}
-        @rtype: C{bool} indicating success
-        @raises C{EC2Exception} if there is a problem contacting EC2.
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        amiIds = self._getProductAMIIdsForPermChange(userId, productId)
-
-        for amiId in amiIds:
-            ec2Wrap.removeLaunchPermission(amiId, awsAccountNumber)
-        return True
-
-
-    def _getAllAMIIdsForPermChange(self, userId):
-        """
-        Returns a list of AMI ids that need their launch permissions altered
-        for the given userId.
-
-        The logic is as follows:
-        For private (hidden) products, the AMI id is affected in all cases
-        except where userId is a regular user and the AMI is not published.
-
-        For public products, the AMI id is affected only if userId is an owner
-        or developer and the AMI is not published.
-        """
-        affectedAMIIds = []
-
-        # This returns all AMI ids that the user could interact with.
-        amiIds = self.users.getAMIBuildsForUser(userId)
-
-        for amiIdData in amiIds:
-            if amiIdData['isPrivate']:
-                # Product is private.
-                # We want all cases except where the user is a regular user
-                # and the image is not published.
-                if not (amiIdData['level'] == userlevels.USER and \
-                        not amiIdData['isPublished']):
-                    affectedAMIIds.append((amiIdData['amiId'],
-                                           amiIdData['projectId']))
-            else:
-                # Product is public.
-                # We only want the case where the user is owner or developer
-                # and the image is not published.
-                if amiIdData['level'] in (userlevels.OWNER,
-                                          userlevels.DEVELOPER) and \
-                   not amiIdData['isPublished']:
-                    affectedAMIIds.append((amiIdData['amiId'],
-                                           amiIdData['projectId']))
-
-        return affectedAMIIds
-
-
-    def addEC2LaunchPermsForPublish(self, pubReleaseId):
-        """
-        Given a pubReleaseId, set the EC2 launch permissions for publishing.
-        @param pubReleaseId: The id of the published release
-        @type pubReleaseId: C{int}
-        @rtype: C{bool} indicating success
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        affectedAMIIds = \
-          self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
-
-        private = False
-        for amiIdData in affectedAMIIds:
-            if amiIdData['isPrivate']:
-                private = True
-
-        if private:
-            # Product is private.
-            # Need to set launch perms on EC2 for normal product users.
-            for amiIdData in affectedAMIIds:
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId']) 
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] == userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'], 
-                                                    awsAccountNumber)
-        else:                                                    
-            # Product is public.  Need to do different things for rBA vs. rBO.
-            if config.isRBO():
-                self._addEC2LaunchPermsForPublicPublishRBO(
-                    ec2Wrap, affectedAMIIds)
-            else:
-                self._addEC2LaunchPermsForPublicPublishRBA(
-                    ec2Wrap, affectedAMIIds)
-
-        return True                                                 
-
-    def _addEC2LaunchPermsForPublicPublishRBO(
-            self, ec2Wrap, affectedAMIIds):
-        # Set public launch perms and remove launch perms 
-        # from every single user.
-
-        # TODO: perhaps we should do some type of check to only remove
-        # perms from users aws data that we manage.
-        for amiIdData in affectedAMIIds:
-            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-            ec2Wrap.addPublicLaunchPermission(amiIdData['amiId'])
-
-    def _addEC2LaunchPermsForPublicPublishRBA(
-            self,  ec2Wrap, affectedAMIIds):
-        # Set launch perms for every user on the rBA who has EC2 creds set.
-        awsAccountNumbers = self._getAllAwsAccountNumbers()
-        for amiIdData in affectedAMIIds:
-            ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-            for awsAccountNumber in awsAccountNumbers:
-                ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                            awsAccountNumber)
-
-    def _getAllAwsAccountNumbers(self):
-        awsAccountNumbers = []
-        users = self.users.getUsersWithAwsAccountNumber()
-        for user in users:
-            awsAccountNumbers.append(user[1])
-        return awsAccountNumbers            
-
-    def removeEC2LaunchPermsForUnpublish(self, pubReleaseId):
-        """
-        Given a pubReleaseId, set the EC2 launch permissions for unpublishing.
-        @param pubReleaseId: The id of the published release
-        @type pubReleaseId: C{int}
-        @rtype: C{bool} indicating success
-        """
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        affectedAMIIds = \
-          self.publishedReleases.getAMIBuildsForPublishedRelease(pubReleaseId)
-
-        private = False
-        for amiIdData in affectedAMIIds:
-            if amiIdData['isPrivate']:
-                private = True
-
-        if private:
-            # Product is private
-            # Remove all launch perms and then set launch perms for owners and
-            # developers.
-            for amiIdData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId'])
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] != userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                                    awsAccountNumber)
-        else:
-            # Product is public
-            # Remove public launch perms and then set launch perms for owners
-            # and developers.
-            for amiIDData in affectedAMIIds:
-                ec2Wrap.resetLaunchPermissions(amiIdData['amiId'])
-                users = self.projectUsers.getMembersByProjectId(
-                                              amiIdData['projectId'])
-                for user in users:
-                    awsFound, awsAccountNumber = \
-                        self.userData.getDataValue(user[0], 'awsAccountNumber')
-                    if awsFound and user[2] != userlevels.USER:
-                        ec2Wrap.addLaunchPermission(amiIdData['amiId'],
-                                                    awsAccountNumber)
-        return True                                              
-
-
-
-    def _getProductAMIIdsForPermChange(self, userId, productId):
-        amiIds = self._getAllAMIIdsForPermChange(userId)
-        # Save only those where it's the productId we want.
-        return [ami[0] for ami in amiIds if ami[1] == productId]
-
-    @requiresAuth
-    def getAllVwsBuilds(self):
-        """
-        Returns a list of all of the Workspaces compatible images that this
-        rBuilder manages. Workspaces images are merely raw filesystem images
-        with a xen domU flavor. If the requesting user is an admin, the
-        user will be able to see all Workspaces images created for all
-        projects regardless of their visibility. Otherwise, the user
-        will only see Workspaces images for projects that they are able to
-        see (i.e. Workspaces images created in hidden projects of which the
-        user is not a developer or owner will remain hidden).
-        @returns A dictionary of dictionaries, keyed by buildId,
-          with the following members:
-          - productName: the name of the product containing this build
-          - projectId: the id of the project (product) containing this build
-          - productDescription: the description of the product containing
-              this build
-          - buildId: the id of the build that created the Workspaces image
-          - buildName: the name of the build
-          - buildDescription: the description of the build, if given
-          - createdBy: the rBuilder user name of the person who
-              initiated the build (if known), otherwise returns
-              'Unknown' if we don't know (in the case of builds
-              created before RBL-3076 was fixed)
-          - awsAccountNumber: unused. always 'Unknown'
-          - role: the role of the user who created the build with
-              respoect to the containing product as a meatstring, e.g.
-              'Product User', 'Product Owner', 'Product Developer',
-              or '' (in the case where a user is not affiliated with
-              the product, or the relationship is unknown)
-          - isPrivate: 1 if the containing project is private (hidden),
-              0 otherwise
-          - isPublished: 1 if the build is published, 0 if not
-        @rtype: C{dict} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if user is not logged in
-        """
-        res = self.getAllBuildsByType('VWS')
-
-        resDict = dict((x.pop('sha1'), x) for x in res)
-        return resDict
-
     def getAvailablePlatforms(self):
         """
         Returns a list of available platforms and their names (descriptions).
@@ -6106,9 +5535,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
+        self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
+        self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
 
         global callLog
         if self.cfg.xmlrpcLogFile:
@@ -6132,49 +5563,155 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
 
-        from conary import dbstore
-        global dbConnection
-        if db:
-            dbConnection = db
-
-        # Flag to indicate if we created a new self.db and need to force a
-        # call to getTables
-        reloadTables = False
-
-        if (cfg.dbDriver in ["mysql", "postgresql", "pgpool"]
-                and dbConnection and (not alwaysReload)):
-            self.db = dbConnection
-        else:
-            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
-            dbConnection = self.db
-            reloadTables = True
-
-        # reopen a dead database
-        if self.db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint server"
-            sys.stderr.flush()
-
-        genConaryRc = False
-        global tables
-        if not tables or alwaysReload or reloadTables:
-            tables = getTables(self.db, self.cfg)
-            genConaryRc = True
-
-        for table in tables:
-            tables[table].db = self.db
-            tables[table].cfg = self.cfg
-            self.__dict__[table] = tables[table]
-
-        self.users.confirm_table.db = self.db
-        self.newsCache.ageTable.db = self.db
-        self.projects.reposDB.cfg = self.cfg
-
-        if genConaryRc:
+        if self.db.tablesReloaded:
             self._generateConaryRcFile()
-
-            # do these only on table reloads too
-            self._normalizeOrder("OutboundMirrors", "outboundMirrorId")
-            self._normalizeOrder("InboundMirrors", "inboundMirrorId")
-
-
         self.newsCache.refresh()
+        
+    def _gracefulHttpd(self):
+        return os.system('/usr/libexec/rbuilder/httpd-graceful')
+        
+    @typeCheck(int)
+    @requiresAdmin
+    def deleteProject(self, projectId):
+        """
+        Delete a project
+        @param projectId: The id of the project to delete
+        @type projectId: C{int}
+        """
+        
+        def handleNonFatalException(desc):
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.cfg, e_type, e_value, e_tb, desc, {}, doEmail=False)
+        
+        project = projects.Project(self, projectId)
+        reposName = self._translateProjectFQDN(project.getFQDN())
+        
+        if project.external and not self.isLocalMirror(project.id):
+            # can't do it
+            return False
+                
+        # We need to make sure the project and labels are deleted before doing 
+        # anything else.  Any failure here should end with a rollback so no
+        # changes are preserved.  Note that we try a few times after doing an
+        # http graceful.  This is done to get rid of any cached connections
+        # that block the repo DB from being dropped.
+        self.db.transaction()
+        try:
+            numTries = 0
+            maxTries = 3
+            deleted = False
+            while (numTries < maxTries) and not deleted:
+                
+                self._gracefulHttpd()
+                
+                # delete the project
+                try:
+                    self.projects.deleteProject(project.id, project.getFQDN(), commit=False)
+                    deleted = True
+                except Exception, e:
+                    if numTries >= maxTries:
+                        # this is fatal, but we want the original traceback logged
+                        # and then mask the error for the user
+                        handleNonFatalException('delete-project')
+                        raise mint_error.ProjectNotDeleted(project.name)
+                    else:
+                        time.sleep(1)
+                        numTries += 1
+            
+            # delete project labels
+            self.labels.deleteLabels(projectId, commit=False)
+        except:
+            self.db.rollback()
+            raise
+        
+        self.db.commit()        
+        
+        # this should not fail after this point, delete what we can and move on
+        
+        # delete the images
+        try:
+            imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
+            util.rmtree(imagesDir, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-images')
+        
+        # delete the entitlements
+        try:
+            entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
+            util.rmtree(entFile, ignore_errors = True)
+        except Exception, e:
+            handleNonFatalException('delete-entitlements')
+        
+        # delete the group troves
+        try:
+            troves = self.groupTroves.listGroupTrovesByProject(project.id)
+            for trove in troves:
+                self.groupTroves.delGroupTrove(trove[0])
+        except Exception, e:
+            handleNonFatalException('delete-group-troves')
+        
+        # delete the releases
+        try:
+            pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
+                            project.id, publishedOnly=False)
+            for id in pubRelIds:
+                self.publishedReleases.delete(id)
+        except Exception, e:
+            handleNonFatalException('delete-releases')
+        
+        # delete the builds
+        try:
+            for buildId in self.builds.iterBuildsForProject(project.id):
+                self._deleteBuild(buildId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-builds')
+        
+        # delete the membership requests
+        try:
+            self.membershipRequests.deleteRequestsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-membership-requests')
+        
+        # delete the commits
+        try:
+            self.commits.deleteCommitsByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-commits')
+        
+        # delete package indices
+        try:
+            self.pkgIndex.deleteByProject(project.id)
+        except Exception, e:
+            handleNonFatalException('delete-package-indices')
+        
+        # delete project user references
+        try:
+            users = self.projectUsers.getMembersByProjectId(project.id)
+            for userId, _, _ in users:
+                self.projectUsers.delete(project.id, userId, force=True)
+        except Exception, e:
+            handleNonFatalException('delete-project-users')
+        
+        # delete inbound mirror
+        try:
+            ibmirror = self.getInboundMirror(project.id)
+            if ibmirror:
+                self.delInboundMirror(ibmirror['inboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-inbound-mirrors')
+        
+        # delete outbound mirror
+        try:
+            obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
+            if obmirror:
+                self.delOutboundMirror(obmirror['outboundMirrorId'])
+        except Exception, e:
+            handleNonFatalException('delete-outbound-mirrors')
+        
+        # delete repo names
+        try:
+            self.delRemappedRepository(project.getFQDN())
+        except Exception, e:
+            handleNonFatalException('delete-repo-names')
+        
+        return True

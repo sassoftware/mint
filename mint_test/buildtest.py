@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -16,15 +16,16 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes, buildtemplates, projects
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.mint_error import *
 from mint import builds
-from mint.server import deriveBaseFunc, ParameterError
+from mint.server import deriveBaseFunc
 from mint import helperfuncs
 from mint import urltypes
 from mint import userlevels
 from mint import jobstatus
 
+from conary import errors
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary import versions
@@ -538,9 +539,9 @@ class BuildTest(fixtures.FixturedUnitTest):
     def testMissingBuildTrove(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
-        build.setTrove('foo', 'bar', 'baz')
+        build.setTrove('foo', '/localhost@rpl:1/1-1-1', 'baz')
         self.assertRaises(BuildMissing, client.server._server.setBuildTrove,
-                          99, 'foo', 'ver', 'flav')
+                          99, 'foo', '/localhost@rpl:1/1-1-1', 'flav')
     @fixtures.fixture('Full')
     def testMissingBuildName(self, db, data):
         client = self.getClient('owner')
@@ -1235,10 +1236,14 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                     else:
                         return []
 
-                    return [(tn,
-                             versions._VersionFromString( \
-                                '/%s/12345.6:1-1-1' % tv,
-                                frozen=True),
+                    try:
+                        versions.Label(tv)
+                        tv = versions._VersionFromString(
+                                            '/%s/12345.6:1-1-1' % tv,
+                                            frozen=True)
+                    except errors.ParseError:
+                        tv = versions.VersionFromString(tv)
+                    return [(tn, tv,
                              deps.parseFlavor(f)) \
                                      for f in flava_flavs]
                 def findTroves(self, t1, t2, *args, **kwargs):
@@ -1278,6 +1283,38 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         self.assertEquals(1, len(buildIds))
         build = client.getBuild(buildIds[0])
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
+
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionFilteredByBuildName(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        reqBuildNames = ['ISO 32', 'ISO 64']
+        buildIds = \
+            client.newBuildsFromProductDefinition(versionId, 'Development',
+                                                  False, reqBuildNames)
+        # Should have created 2 builds for Development stage
+        self.assertEquals(2, len(buildIds))
+
+        builds = [ client.getBuild(x) for x in buildIds ]
+        buildNames = set(x.name for x in builds)
+        self.failUnlessEqual(buildNames, set(reqBuildNames))
+
+    @fixtures.fixture('Full')
+    def testBuildsFromProductDefinitionFilteredByVersionSpec(self, db, data):
+        versionId = data['versionId']
+        client = self.getClient('admin')
+        reqBuildNames = ['ISO 32']
+        buildIds = \
+            client.newBuildsFromProductDefinition(versionId, 'Development',
+                                                  False, reqBuildNames,
+                  '/foo.rpath.local2@yournamespace:foo-fooV1-devel/2-1-1')
+        # Should have created 2 builds for Development stage
+        self.assertEquals(1, len(buildIds))
+
+        builds = [ client.getBuild(x) for x in buildIds ]
+        buildNames = set(x.name for x in builds)
+        self.failUnlessEqual(buildNames, set(reqBuildNames))
+        assert(builds[0].troveVersion == '/foo.rpath.local2@yournamespace:foo-fooV1-devel/0.000:2-1-1')
 
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')

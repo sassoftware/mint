@@ -16,56 +16,15 @@ except ImportError:
 
 import xml.dom.minidom
 
-from mint import database
+from mint.db import ec2
+from mint.lib import database
+from mint.helperfuncs import urlSplit
 from mint import mint_error
-from mint.helperfuncs import toDatabaseTimestamp, urlSplit
 from rpath_common.xmllib import api1 as xmllib
-
-class BlessedAMIsTable(database.KeyedTable):
-    name = 'BlessedAMIs'
-    key = 'blessedAMIId'
-
-    fields = ( 'blessedAMIId', 'ec2AMIId', 'buildId', 'shortDescription',
-               'helptext', 'instanceTTL', 'mayExtendTTLBy',
-               'isAvailable', 'userDataTemplate' )
-
-    def getAvailable(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT blessedAMIId FROM BlessedAMIs
-                      WHERE isAvailable = 1""")
-        return [ x[0] for x in cu.fetchall() ]
-
-class LaunchedAMIsTable(database.KeyedTable):
-    name = 'LaunchedAMIs'
-    key = 'launchedAMIId'
-
-    fields = ( 'launchedAMIId', 'blessedAMIId', 'launchedFromIP',
-               'ec2InstanceId', 'raaPassword', 'launchedAt',
-               'expiresAfter', 'isActive', 'userData' )
-
-    def getActive(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT launchedAMIId FROM LaunchedAMIs
-                      WHERE isActive = 1""")
-        return [ x[0] for x in cu.fetchall() ]
-
-    def getCountForIP(self, ipaddr):
-        cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(launchedAMIId) FROM LaunchedAMIs
-                      WHERE isActive = 1 AND launchedFromIP = ?""",
-                      ipaddr)
-        return cu.fetchone()[0]
-
-    def getCandidatesForTermination(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT launchedAMIId, ec2InstanceId FROM LaunchedAMIs
-                      WHERE isActive = 1 AND expiresAfter < ?""",
-                      toDatabaseTimestamp())
-        return [ x for x in cu.fetchall() ]
 
 class LaunchedAMI(database.TableObject):
 
-    __slots__ = LaunchedAMIsTable.fields
+    __slots__ = ec2.LaunchedAMIsTable.fields
 
     def getItem(self, id):
         return self.server.getLaunchedAMI(id)
@@ -76,7 +35,7 @@ class LaunchedAMI(database.TableObject):
 
 class BlessedAMI(database.TableObject):
 
-    __slots__ = BlessedAMIsTable.fields
+    __slots__ = ec2.BlessedAMIsTable.fields
 
     def getItem(self, id):
         return self.server.getBlessedAMI(id)
@@ -299,8 +258,8 @@ class EC2Wrapper(object):
         self.accessKey = accessKey
         self.secretKey = secretKey
         pxArgs = S3Wrapper.splitProxyUrl(proxyUrl)
-        self.ec2conn = boto.connect_ec2(self.accessKey, self.secretKey,
-            **pxArgs)
+        self.ec2conn = boto.connect_ec2(str(self.accessKey), 
+             str(self.secretKey), **pxArgs)
 
     def launchInstance(self, ec2AMIId, userData=None, useNATAddressing=False):
 
@@ -365,6 +324,10 @@ class EC2Wrapper(object):
                                                  user_ids=awsAccountIdList)
             return True
         except EC2ResponseError, e:
+            # see if the error is because the ami no longer exists (ignore)
+            error = e.errors and e.errors[0] or None
+            if error and error["code"] == "InvalidAMIID.Unavailable":
+                return True
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
 
     def validateCredentials(self):

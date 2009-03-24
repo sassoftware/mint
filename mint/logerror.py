@@ -16,12 +16,13 @@ import traceback
 from conary.lib import util as conary_util
 
 from mint.mint_error import MailError
-from mint import users
+from mint.lib import maillib
 
 
 def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
-  location='web interface'):
+  location='web interface', doEmail=True):
     from mod_python import apache
+    
     conn = req.connection
     req.add_common_vars()
     info_dict = {
@@ -43,7 +44,7 @@ def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
         cfg.smallBugsEmail))
     try:
         logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
-           smallStream=sys.stderr)
+           smallStream=sys.stderr, doEmail=doEmail)
     except MailError, error:
         apache.log_error("Failed to send e-mail to %s, reason: %s" %
             (cfg.bugsEmail, str(error)))
@@ -51,7 +52,7 @@ def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
 
 
 def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
-  prefix='mint-error-', smallStream=sys.stderr):
+  prefix='mint-error-', smallStream=sys.stderr, doEmail=True):
     timeStamp = time.ctime(time.time())
     realHostName = socket.getfqdn()
 
@@ -110,7 +111,7 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
     smallStream.flush()
 
     # send email
-    if cfg:
+    if cfg and doEmail:
         base_exception = traceback.format_exception_only(
             e_type, e_value)[-1].strip()
         if cfg.rBuilderOnline:
@@ -120,11 +121,11 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
             subject = cfg.bugsEmailSubject % extra
 
         if cfg.bugsEmail:
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+            maillib.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.bugsEmail, subject, large.read())
         if cfg.smallBugsEmail:
             small.seek(0)
-            users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+            maillib.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                 cfg.smallBugsEmail, subject, small.read())
 
     large.close()

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -8,9 +8,8 @@ testsuite.setup()
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
 
-from mint import database
+from mint.lib import database
 from mint import server
-from mint import users
 from mint.projects import LabelMissing
 
 import fixtures

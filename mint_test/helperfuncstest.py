@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -15,8 +15,8 @@ import tempfile
 
 import mint_rephelp
 from mint import config
-from mint import copyutils
-from mint import scriptlibrary
+from mint.lib import copyutils
+from mint.lib import scriptlibrary
 from mint import templates
 from mint import flavors
 from mint.helperfuncs import *
@@ -108,10 +108,16 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                     'mint_test/archive/use',
                     'mint/web/content', 'mint/web/templates',
                     'scripts', 'mint_test/templates',
+                    'raaplugins/rPath/rmakemanagement/help',
+                    'raaplugins/rPath/nextsteps',
                     'mint_test/annotate', 'mint_test/coverage',
                     'mint_test/.coverage', 'mint_test/archive/anaconda',
                     'bin', 'mint_test', 'server_template',
+                    'doc',
+                    'pylint', 'commands', 
                     'tom', 'product')
+        skipFiles = {'/distro' : ['backup.py', 'anaconda_custom.py',
+                                  'welcome_text.py', 'welcome_gui.py']}
         mint_path = os.getenv('MINT_PATH')
 
         # tweak skipdirs to be fully qualified path
@@ -126,7 +132,9 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                 print >> sys.stderr, "\n%s is missing Makefile" % dirPath,
                 missing = True
             else:
-                missing = max(missing, self.compareMakefile(dirPath))
+                subdirPath = dirPath[len(mint_path):]
+                missing = max(missing, self.compareMakefile(dirPath, 
+                                                             exclusionList=set(skipFiles.get(subdirPath, []))))
         if missing:
             print >> sys.stderr, ''
         self.failIf(missing, "There are issues with Makefiles")
@@ -350,6 +358,8 @@ Much like Powdermilk Biscuits[tm]."""
                         if line.startswith(tok):
                             broken = False
                     if broken:
+                        import epdb
+                        epdb.st()
                         brokenLines.append(lineNum)
             self.failIf(brokenLines,
                         "%s javascript syntax may be broken. " % library + \

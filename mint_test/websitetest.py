@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -12,8 +12,8 @@ import os
 import mint_rephelp
 import fixtures
 from mint.web import site
-from mint.data import RDT_STRING
-from mint import database
+from mint.lib.data import RDT_STRING
+from mint.lib import database
 from mint.web.webhandler import HttpNotFound, HttpMoved
 from mint import jobstatus
 from mint import buildtypes

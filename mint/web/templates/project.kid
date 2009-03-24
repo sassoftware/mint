@@ -145,6 +145,7 @@
             </div>
         </div>
         <div class="boxBody" py:if="not projectList">
+            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (alpha)</a>
             <div class="projectsPaneActionTop">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
             </div>
@@ -162,6 +163,7 @@
             </div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
+            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (alpha)</a>
             <div id="switchProject" class="projectsPaneSelector">
                 <?python currentProjectId = not self.project and -1 or self.project.id ?>
                 <label for="switchProjectSelector">Select a ${projectText().lower()}:</label>
@@ -244,7 +246,7 @@
                 ?>
                 <span style="font-weight: bold;">${title}</span>
                 <div style="font-size: smaller;" py:if="extraFlags">${extraFlags}</div>
-                <div style="font-size: smaller;" py:if="size">${size/1048576} MB<span py:if="self.cfg.displaySha1 and sha1">, SHA1: ${sha1}</span></div>
+                <div style="font-size: smaller;" py:if="size">${size/1048576} MB<span py:if="sha1">, SHA1: ${sha1}</span></div>
             </td>
             <td style="text-align: right; vertical-align: top; border-bottom: 1px solid #e6e6e6;">
                 <?python

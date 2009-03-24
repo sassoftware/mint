@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from mint import config
-from mint import loadmirror
-from mint import scriptlibrary
+from mint.scripts import loadmirror
+from mint.lib import scriptlibrary
 
 import os, sys
 import logging

@@ -58,7 +58,7 @@
             <?python
                 from mint import buildtypes
                 from mint import buildtemplates
-                from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+                from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                 alphaBuildTypes = buildtypes.alphabatizeBuildTypes(visibleBuildTypes)
                 if bdef:
                     imageType = bdef.getBuildImage()

@@ -11,7 +11,8 @@ from conary import dbstore
 from conary.dbstore import sqlerrors
 from conary.lib import util
 from conary.repository.netrepos.netserver import ServerConfig
-from mint import config, projects
+from mint import config
+from mint.db import projects
 import pgsql
 import os, subprocess, select
 

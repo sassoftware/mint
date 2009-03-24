@@ -173,6 +173,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
           </div>
         </div>
         <div class="boxBody">
+            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (alpha)</a>
             <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
                 <p class="signinlabel">Username:<br /><input class="signinfield" type="text" name="username" /></p>
                 <p class="signinlabel">Password:<br /><input class="signinfield" type="password" name="password" /></p>
@@ -229,6 +230,12 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
                 <div id="statusMessage" />
             </div>
             <img class="left" src="${cfg.staticPath}apps/mint/images/block_bottom.gif" width="100%" height="3px" alt="" />
+       </div>
+    </div>
+    
+    <div py:def="formLabelWithHelp(helpDivId, labelTitle, tooltip='Click here for more information', required=True)">
+        <div class="required-help" onclick="javascript:toggle_display('${helpDivId}');" title="${tooltip}">
+            ${labelTitle}
        </div>
     </div>
 

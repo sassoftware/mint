@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2007 rPath, Inc.
 #
@@ -12,7 +12,7 @@ import tempfile
 import time
 
 import fixtures
-from mint.server import PermissionDenied
+from mint.mint_error import PermissionDenied
 from mint.mint_error import InvalidReport
 
 class ReportTest(fixtures.FixturedUnitTest):

@@ -7,7 +7,7 @@
 
 from mint import config
 from mint import mint_error
-from mint import scriptlibrary
+from mint.lib import scriptlibrary
 from mint import rmake_setup
 import traceback
 import sys

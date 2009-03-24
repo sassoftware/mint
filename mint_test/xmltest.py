@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -10,8 +10,9 @@ import fixtures
 
 import mint.server
 from mint import userlevels, mint_error
+from mint.mint_error import ParameterError
 from mint.server import deriveBaseFunc, checkParam, \
-    typeCheck, ParameterError, SERVER_VERSIONS
+    typeCheck, SERVER_VERSIONS
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 
@@ -134,12 +135,18 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Empty")
     def testBadCall(self, db, data):
         client = self.getClient("test")
+
         funcName = "someRandomFunction"
-        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
-            self.fail("xml rpc server responded to bad method call")
+        self.failUnlessEqual(
+                client.server.callWrapper(funcName,
+                    ('username, userpass'), None),
+                (True, ("MethodNotSupported", (funcName,))))
+
         funcName = '_' + funcName
-        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
-            self.fail("xml rpc server responded to hidden method call")
+        self.failUnlessEqual(
+                client.server.callWrapper(funcName,
+                    ('username, userpass'), None),
+                (True, ("MethodNotSupported", (funcName,))))
 
     @fixtures.fixture("Empty")
     def testCheckVersion(self, db, data):

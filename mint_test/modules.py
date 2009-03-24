@@ -4,6 +4,7 @@ modules = [
 PythonModule('conary', setup='make'),
 PythonModule('mcp'),
 PythonModule('jobslave'),
+PythonModule('xobj', pythonPath='py/xobj'),
 PythonModule('raa', test='import raa', reposName='raa'),
 PythonModule('raaplugins', environName='RAA_PLUGINS_PATH', modulePath='raa/raaplugins'),
 PythonModule('rpath-xmllib',

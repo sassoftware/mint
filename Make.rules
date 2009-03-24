@@ -44,7 +44,7 @@ endif
 
 kid-build:
 	printf "%10s    %s\n" KIDC "$(kid_files)"
-	kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
+	$(PYTHON) /usr/bin/kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
 	rm .kiderror
 
 raaplugins-install:
@@ -93,7 +93,7 @@ ifndef MINIMAL
 		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
 		$(TOPDIR)/scripts/devscripts/makedoc.sh -h -x $(TOPDIR)/doc/userguide/templates/section.xml -f $$docfile ; \
 		mv $$htmlfile $$kidfile ; \
-		kidc $$kidfile ; \
+		$(PYTHON) /usr/bin/kidc $$kidfile ; \
 	done
 endif
 

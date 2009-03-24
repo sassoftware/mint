@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #
 # Copyright (c) 2005-2008 rPath, Inc.
 #
@@ -16,7 +16,7 @@ import struct
 from StringIO import StringIO
 
 import conary.lib.util
-from mint import fileupload
+from mint.lib import fileupload
 from mint.web import whizzyupload
 
 multipart_headers_template = """POST /cgi-bin/fileupload.cgi HTTP/1.1

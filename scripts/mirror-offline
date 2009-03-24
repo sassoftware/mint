@@ -27,7 +27,7 @@ from conary.server import server
 from conary import dbstore
 from conary.repository import errors
 
-from mint.scriptlibrary import SingletonScript
+from mint.lib.scriptlibrary import SingletonScript
 
 log.setVerbosity(log.DEBUG)
 
