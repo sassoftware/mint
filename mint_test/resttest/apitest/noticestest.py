@@ -82,7 +82,7 @@ class NoticesTest(restbase.BaseRestTest):
 
         client = self.getRestClient(uri, admin = True)
 
-        reqData = '<four />'
+        reqData = '<four><guid>upstream-guid</guid></four>'
 
         response = client.request('POST', body = reqData)
         data = response.read()
@@ -92,7 +92,7 @@ class NoticesTest(restbase.BaseRestTest):
         source = self.makeUri(client, 'notices/contexts/default')
 
         self.failUnlessEqual(data,
-            '<four><guid>%s</guid><source url="%s"/></four>' % (guid, source))
+            '<four><guid-upstream>upstream-guid</guid-upstream><guid>%s</guid><source url="%s"/></four>' % (guid, source))
 
         # Individually fetch the notice
         uri = 'notices/contexts/%s' % notice.id

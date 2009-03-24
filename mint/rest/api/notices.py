@@ -53,10 +53,10 @@ class NoticesContextController(BaseController):
             elem = ET.fromstring(data)
         except ET.XMLSyntaxError:
             return Response(status = 400)
-        # Remove any existing guid
+        # Rename any existing guid
         guids = elem.findall('guid')
         for guid in guids:
-            elem.remove(guid)
+            guid.tag = "guid-upstream"
         rss = RssHelper(self.getStoragePath(), userId = req.auth[0])
         notice = self.storeNotice(rss, "", context)
 
