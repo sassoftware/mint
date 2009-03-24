@@ -500,7 +500,7 @@ class RestDBMixIn(object):
     def createUser(self, name, password=None, admin=False):
         db = self.openRestDatabase()
         if password is None:
-            password = 'admin'
+            password = name
         return db.createUser(name, password, 'Full Name', '%s@foo.com' % name,
                             '%s@foo.com', '', admin=admin)
 

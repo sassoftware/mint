@@ -50,7 +50,7 @@ class ProductManager(object):
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
 
         level = d.pop('level', None)
-        if level:
+        if level is not None:
             d['role'] = userlevels.names[level]
 
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
@@ -93,7 +93,7 @@ class ProductManager(object):
         for row in cu:
             d = dict(row)
             level = d.pop('level', None)
-            if level:
+            if level is not None:
                 d['role'] = userlevels.names[level]
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
             p = models.Product(**d)
