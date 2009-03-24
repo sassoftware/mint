@@ -7,8 +7,10 @@ import sys
 import urllib
 import urllib2
 
+from conary.lib import digestlib
+
 def main():
-    op = optparse.OptionParser(usage = "%prog [options] xml-file")
+    op = optparse.OptionParser(usage = "%prog [options] xml-stream")
     op.add_option('-s', '--server', help = "rBuilder Server Name")
     op.add_option('-u', '--username', help = "rBuilder User Name")
 
@@ -19,26 +21,16 @@ def main():
         op.error("XML file not specified")
 
     try:
-        xmlStream = file(args[0])
-    except IOError, e:
-        op.error("Unable to open XML file: %s" % str(e))
-        return 2
+        xmlStream = RestClient('', '', '').getStream(args[0])
+    except StreamOpenError, e:
+        op.error(str(e))
+        return 1
 
     try:
-        xmlDoc = ET.parse(xmlStream)
-    except ET.XMLSyntaxError, e:
-        op.error("Unable to parse XML file: %s" % str(e))
-        return 3
-    xmlRoot = xmlDoc.getroot()
-    if xmlRoot.tag != 'rss' or xmlRoot.get('version') != '2.0':
-        op.error("XML document is not an RSS 2.0 stream")
-        return 4
-    channels = xmlRoot.getchildren()
-    if not channels:
-        op.error("Channel element not found")
-        return 5
-    channel = channels[0]
-    items = (x for x in channel.iterchildren() if x.tag == 'item')
+        items = parseFeedStream(xmlStream)
+    except ParseError, e:
+        op.error(str(e))
+        return 2
 
     # Connect
     if options.username:
@@ -67,6 +59,27 @@ def getPassword():
         password = getpass.getpass("Password: ")
         if password:
             return password
+
+class ParseError(Exception):
+    pass
+
+class StreamOpenError(Exception):
+    pass
+
+def parseFeedStream(xmlStream):
+    try:
+        xmlDoc = ET.parse(xmlStream)
+    except ET.XMLSyntaxError, e:
+        raise ParseError("Unable to parse XML file: %s" % str(e))
+    xmlRoot = xmlDoc.getroot()
+    if xmlRoot.tag != 'rss' or xmlRoot.get('version') != '2.0':
+        raise ParseError("XML document is not an RSS 2.0 stream")
+    channels = xmlRoot.getchildren()
+    if not channels:
+        raise ParseError("Channel element not found")
+    channel = channels[0]
+    items = (x for x in channel.iterchildren() if x.tag == 'item')
+    return items
 
 class RestClient(object):
     def __init__(self, server, username, password):
@@ -102,7 +115,7 @@ class RestClient(object):
         return self._cookie
 
     def upload(self, items):
-        url = "https://%s/api/v1/notices/contexts/default" % self.server
+        url = "https://%s/api/notices/contexts/default" % self.server
 
         cookie = self.getCookie()
         if cookie is None:
@@ -110,13 +123,56 @@ class RestClient(object):
         headers = {'Content-Type' : 'application/xml',
                    'Cookie' : cookie, }
 
+        # First, grab all the available notices (non-logged-in)
+        req = urllib2.Request(url)
+        ret = self.opener.open(req)
+        if ret.code != 200:
+            raise StreamOpenError("Unable to download existing notices")
+        upstreamItems = list(parseFeedStream(ret))
+        upstreamItems = dict((self._hashItem(x), x) for x in upstreamItems)
+
         for item in items:
+            if self._hashItem(item, local = True) in upstreamItems:
+                continue
             itemData = ET.tostring(item, encoding = "UTF-8", xml_declaration = False)
             req = urllib2.Request(url, headers = headers)
             ret = self.opener.open(req, data = itemData)
             print ret.code
             print ret.read()
             print
+
+    def _hashItem(self, item, local = False):
+        """
+        Generate some kind of unique identifier for this item.
+        If local is False, the unique ID is generated out of the guid nodes,
+        otherwise we use guid-upstream nodes.
+        """
+        # Make a copy of the item first
+        elem = ET.fromstring(ET.tostring(item))
+        guids = elem.findall('guid')
+        if not local:
+            for guid in guids:
+                elem.remove(guid)
+            guids = elem.findall('guid-upstream')
+        if guids:
+            guids = [ x.text for x in guids ]
+            return ''.join(sorted(guids))
+        # No guid-upstream; hash the node
+        return digestlib.sha1(ET.tostring(elem)).hexdigest()
+
+    def getStream(self, streamName):
+        if not streamName.startswith("http"):
+            try:
+                xmlStream = file(streamName)
+            except IOError, e:
+                raise StreamOpenError("Unable to open XML file: %s" % str(e))
+            return xmlStream
+
+        req = urllib2.Request(streamName)
+        ret = self.opener.open(req)
+        if ret.code != 200:
+            raise StreamOpenError("Unable to open XML stream %s" % streamName)
+        return ret
 
 if __name__ == '__main__':
     sys.exit(main())
