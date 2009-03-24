@@ -41,12 +41,15 @@ class ProductManager(object):
                    domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal, hidden
+                   commitEmail, prodtype, backupExternal, hidden, level
             FROM Projects
             LEFT JOIN Users ON (creatorId=Users.userId)
+            LEFT JOIN ProjectUsers ON (
+                            Projects.projectId=ProjectUsers.projectId
+                            AND ProjectUsers.userId=?)
             WHERE hostname=?
         '''
-        cu.execute(sql, hostname)
+        cu.execute(sql, self.auth.userId, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
 
         level = d.pop('level', None)
