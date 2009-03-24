@@ -25,7 +25,7 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
-    productDomainName = 'rpath.local2'
+    productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productVersionDescription = 'Version description'
     productHostname = "%s.%s" % (productShortName, productDomainName)
 
