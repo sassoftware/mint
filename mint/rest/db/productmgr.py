@@ -48,6 +48,13 @@ class ProductManager(object):
         '''
         cu.execute(sql, hostname)
         d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
+
+        level = d.pop('level', None)
+        if level:
+            d['role'] = userlevels.names[level]
+        elif self.auth.isAdmin:
+            d['role'] = 'Admin'
+
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
         p = models.Product(**d)
         return p
@@ -71,7 +78,7 @@ class ProductManager(object):
                    hostname,name,shortname, domainname, namespace, 
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal 
+                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
                 FROM Projects 
                 LEFT JOIN ProjectUsers ON (
                     ProjectUsers.projectId=Projects.projectId 
@@ -84,6 +91,11 @@ class ProductManager(object):
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
+            level = d.pop('level', None)
+            if level:
+                d['role'] = userlevels.names[level]
+            elif self.auth.isAdmin:
+                d['role'] = 'Admin'
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
             p = models.Product(**d)
             results.products.append(p)
