@@ -71,8 +71,8 @@ class DBInterface(object):
     def rollback(self):
         return self.db.rollback()
 
-    def inTransaction(self):
-        return self.db.db.inTransaction()
+    def inTransaction(self, default=None):
+        return self.db.db.inTransaction(default)
 
     def open(self):
         raise NotImplementedError
@@ -90,9 +90,9 @@ def commitafter(fn, self, *args, **kw):
 
 @decorator.decorator
 def readonly(fn, self, *args, **kw):
-    inTransaction = self.inTransaction()
+    inTransaction = self.inTransaction(default=False)
     rv = fn(self, *args, **kw)
-    if not inTransaction and self.inTransaction():
+    if not inTransaction and self.inTransaction(default=False):
         raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
     return rv
 
