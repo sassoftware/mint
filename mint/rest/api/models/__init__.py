@@ -37,7 +37,7 @@ class RbuilderStatus(Model):
     def get_absolute_url(self):
         return '',
 
-class Error(Model):
+class Fault(Model):
     code = fields.IntegerField()
     message = fields.CharField()
     traceback = fields.CharField()

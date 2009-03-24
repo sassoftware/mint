@@ -41,7 +41,7 @@ class ErrorCallback(object):
             if isFlash:
                 # flash ignores all data sent with a non-200 error
                 status = 200
-            error = models.Error(code=code, message=message, 
+            error = models.Fault(code=code, message=message, 
                                  traceback=tbString)
             text = converter.toText(request.responseType, error,
                                     self.controller, request)
