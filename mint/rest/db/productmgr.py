@@ -67,10 +67,10 @@ class ProductManager(object):
                    description, Users.username as creator, projectUrl,
                    isAppliance, Projects.timeCreated, Projects.timeModified,
                    commitEmail, prodtype, backupExternal 
+                FROM Projects 
                 LEFT JOIN ProjectUsers ON (
                     ProjectUsers.projectId=Projects.projectId 
                     AND ProjectUsers.userId=?)
-                FROM Projects 
                 LEFT JOIN Users ON (creatorId=Users.userId)
                 ORDER BY hostname''', self.auth.userId)
         else:
