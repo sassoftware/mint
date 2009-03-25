@@ -157,9 +157,6 @@ class RepositoryController(BaseReposController):
             'files' : RepositoryFilesController,
            }
 
-    def index(self, request, hostname):
-        return response.Response('Index.\n')
-        
     def search(self, request, hostname):
         name = request.GET.get('name', None)
         label = request.GET.get('label', None)
