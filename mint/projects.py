@@ -140,8 +140,11 @@ class Project(database.TableObject):
         #cfg.initializeFlavors()
         cfg.buildFlavor = deps.parseFlavor('')
 
-        installLabelPath = " ".join(x for x in labelPath.keys())
-        cfg.configLine("installLabelPath %s" % installLabelPath)
+        # depending on these labels being correct is bad.   
+        # We don't know what valid labels for this installLabelPath is
+        # so using any particular one is wrong.
+        #installLabelPath = " ".join(x for x in labelPath.keys())
+        #cfg.configLine("installLabelPath %s" % installLabelPath)
 
         cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
         for host, authInfo in userMap:

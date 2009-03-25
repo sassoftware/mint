@@ -336,7 +336,7 @@ def _updateUserSet(db, cfgObj):
         FROM Labels WHERE authType IS NOT NULL AND authType != 'none'""")
 
     for label, authType, username, password, entitlement in cu.fetchall():
-        host = versions.Label(label).getHost()
+        host = label.split('@')[0]
         if authType == 'userpass':
             cfgObj.user.addServerGlob(host, (username, password))
         elif authType == 'entitlement':
