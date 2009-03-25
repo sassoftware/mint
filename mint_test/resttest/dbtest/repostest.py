@@ -50,7 +50,16 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
                          'foo:other=bar.rpath.local2@rpl:1', repos=repos)
         reposMgr.deleteUser('bar.rpath.local2', 'user')
         assert(not repos.troveNames(label))
-        
+
+    def testCreateRepositoryUnicode(self):
+        db = self.openMintDatabase()
+        reposMgr = db.productMgr.reposMgr
+        self.createUser('owner')
+        self.createUser('other')
+        self.setDbUser(db, 'owner')
+        productId = self.createProduct(u"bar", description = u"Some desc",
+            db = db)
+
     def testPublicCreateRepository(self):
         db = self.openMintDatabase()
         reposMgr = db.productMgr.reposMgr

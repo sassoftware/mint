@@ -535,7 +535,7 @@ class RestDBMixIn(object):
                                        userId=-1, username=None)
         db.setAuth(auth, (username, password))
 
-    def createProduct(self, shortname, 
+    def createProduct(self, shortname, description=None,
                       owners=None, developers=None, users=None, 
                       private=False, domainname=None, db=None):
         if db is None:
@@ -549,7 +549,8 @@ class RestDBMixIn(object):
             prd = models.Product(name='Project %s' % shortname,
                                  hostname=shortname,
                                  shortname=shortname, prodtype='Appliance',
-                                 domainname=domainname, hidden=private)
+                                 domainname=domainname, hidden=private,
+                                 description=description)
             db.createProduct(prd)
             if owners:
                 for username in owners:
