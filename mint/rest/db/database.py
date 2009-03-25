@@ -7,6 +7,7 @@ import decorator
 
 from conary import versions
 from conary.conaryclient import cmdline
+from conary.dbstore import sqllib
 
 from mint import mint_error
 from mint import projects
@@ -34,14 +35,14 @@ class DBInterface(object):
 
     def _getOne(self, cu, exception, key):
         res = cu.fetchone()
-        if not res:
+        if res is None:
             raise exception(key)
 
         # Make sure only one row was returned. If there are more, it is
         # a programming error, not a user error.
         assert cu.fetchone() is None
 
-        return res
+        return sqllib.Row(res, cu.fields())
 
     def cursor(self):
         return self.db.cursor()

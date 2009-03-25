@@ -18,7 +18,12 @@ class FloatField(Field):
         return float(value)
 
 class CharField(Field):
-    pass
+    def _valueToString(self, value, parent, context):
+        if isinstance(value, unicode):
+            return value
+        else:
+            return value.decode('utf8', 'replace')
+
 
 class BooleanField(Field):
     def _valueFromString(self, value):
