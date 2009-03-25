@@ -60,9 +60,17 @@ class ProductManager(object):
         p = models.Product(**d)
         return p
 
-    def listProducts(self, start=0, limit=None):
+    def listProducts(self, start=0, limit=None, search=None):
         cu = self.db.cursor()
+        if search:
+            search = '%' + search.replace('%', '\%') + '%'
+            where = "shortname LIKE ?"
+        else:
+            where = ''
+
         if self.auth.isAdmin:
+            if where:
+                where = 'WHERE ' + where
             sql = '''
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname,
@@ -75,8 +83,11 @@ class ProductManager(object):
                     ProjectUsers.projectId=Projects.projectId 
                     AND ProjectUsers.userId=?)
                 LEFT JOIN Users ON (creatorId=Users.userId)
-                ORDER BY hostname'''
+                %(where)s
+                ORDER BY hostname''' % dict(where=where)
         else:
+            if where:
+                where = 'AND ' + where
             sql = '''\
                 SELECT Projects.projectId as productId,
                    hostname,name,shortname, domainname, namespace, 
@@ -88,14 +99,18 @@ class ProductManager(object):
                     ProjectUsers.projectId=Projects.projectId 
                     AND ProjectUsers.userId=?)
                 LEFT JOIN Users ON (creatorId=Users.userId)
-                WHERE NOT Projects.hidden OR 
-                      ProjectUsers.level IS NOT NULL
-                ORDER BY hostname'''
+                WHERE (NOT Projects.hidden OR 
+                       ProjectUsers.level IS NOT NULL)
+                      %(where)s
+                ORDER BY hostname''' % dict(where=where)
         if limit:
             sql += ' LIMIT %d' % limit
         if start:
             sql += ' OFFSET %d' % start
-        cu.execute(sql, self.auth.userId)
+        args = [self.auth.userId]
+        if search:
+            args.append(search)
+        cu.execute(sql, *args)
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
