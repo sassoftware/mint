@@ -51,3 +51,22 @@ class MemberNotFound(ItemNotFound):
     pass
 
 PermissionDenied = mint_error.PermissionDenied
+
+class ExternalRepositoryMirrorError(Exception):
+    msg = ("Entitlement does not grant mirror access to"
+           " external repository")
+
+class ExternalRepositoryAccessError(Exception):
+    def __init__(self, url, e):
+        self.url = url
+        self.e = str(e)
+
+    def __str__(self):
+        if self.url:
+            msg = ("Error contacting remote repository. "
+                   " Please ensure entitlement and repository "
+                   " URL are correct. (%s)" % str(e))
+        else:
+            msg = ("Error contacting remote repository."
+                   " Please ensure entitlement is correct."
+                   " (%s)" % str(e))

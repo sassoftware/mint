@@ -131,9 +131,10 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         publisher = mock.MockObject()
         db.productMgr.publisher = publisher
         reposMgr = db.productMgr.reposMgr
+        reposMgr._isProductExternal._mock.setDefaultReturn(False)
         productId = self.createProduct('foo', owners=['owner'], db=db)
 
-        publisher.notify._mock.assertCalled('ProjectCreated', productId)
+        publisher.notify._mock.assertCalled('ProductCreated', productId)
         # calling list is empty after that.
         # not call to notify when the owner was added as a user.
         publisher.notify._mock.assertNotCalled()

@@ -36,14 +36,16 @@ class ImageManager(object):
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
         hostname = fqdn.split('.')[0]
-        sql = '''SELECT buildId as imageId, hostname,
+        # TODO: pull amiId out of here and move into builddata dict ASAP
+        sql = '''SELECT Builds.buildId as imageId, hostname,
                pubReleaseId as release,  
                buildType as imageType, Builds.name, Builds.description, 
                troveName, troveVersion, troveFlavor, troveLastChanged,
                Builds.timeCreated, CreateUser.username as creator, 
                Builds.timeUpdated, 
                ProductVersions.name as version, stageName as stage,
-               UpdateUser.username as updater, buildCount
+               UpdateUser.username as updater, buildCount, 
+               BuildData.value as amiId
             FROM Builds 
             %(join)s
             JOIN Projects USING(projectId)
@@ -51,6 +53,8 @@ class ImageManager(object):
                 ON(Builds.productVersionId=ProductVersions.productVersionId)
             JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
             LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
+            LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
+                                    AND BuildData.name='amiId')
             WHERE hostname=? AND deleted=0 %(where)s''' 
         sql = sql % dict(where=extraWhere, join=extraJoin)
         args = (hostname,)

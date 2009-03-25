@@ -129,12 +129,6 @@ class ProductManager(object):
                       domainname, namespace, isAppliance,
                       projecturl, shortname, prodtype,
                       version, commitEmail, isPrivate):
-        # All database operations must abort cleanly, especially when
-        # creating the repository fails. Otherwise, we'll end up with
-        # a completely broken project that may not even delete cleanly.
-        #
-        # No database operation inside this block may commit the
-        # transaction.
         if namespace is None:
             namespace = self.cfg.namespace
         createTime = time.time()
@@ -156,28 +150,38 @@ class ProductManager(object):
             version=version,
             commit=False)
 
-        # add to RepNameMap if projectDomainName != domainname
-        fqdn = ".".join((hostname, domainname))
-        projectDomainName = self.cfg.projectDomainName.split(':')[0]
-        if domainname != projectDomainName:
-            self.db.db.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
-                                   toName=fqdn, commit=False)
-        self.db.db.labels.addLabel(projectId, 
-            '%s@%s:%s-%s-devel' % (fqdn, namespace, 
-                                   hostname, version),
-            "http://%s%srepos/%s/" % (
-            self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-            authType='userpass', username=self.cfg.authUser, 
-            password=self.cfg.authPass, commit=False)
-
-        self.reposMgr.createRepository(hostname, domainname, 
+        self.reposMgr.createRepository(projectId, hostname, domainname, 
                                        isPrivate=isPrivate)
         # can only add members after the repository is set up
         if self.auth.userId >= 0:
             self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER,
                                 notify=False)
-        self.publisher.notify('ProjectCreated', projectId)
+        self.publisher.notify('ProductCreated', projectId)
         return projectId
+
+    def createExternalProduct(self, title, hostname, domainname, url,
+                              authInfo, mirror=False, backupExternal=False):
+        cu = self.db.cursor()
+        createTime = time.time()
+        cu.execute('''INSERT INTO Projects (name, creatorId, description,
+                                            hostname, domainname, projecturl,
+                                            external, timeModified,
+                                            timeCreated, backupExternal)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                      title, self.auth.userId, '', hostname,
+                      domainname, '', 1, createTime, createTime, 
+                      backupExternal)
+        productId = cu.lastrowid
+        if mirror:
+            self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
+                                            url, authInfo)
+        else:
+            self.reposMgr.addExternalRepository(productId, 
+                                                hostname, domainname, url,
+                                                authInfo)
+        self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
+        self.publisher.notify('ExternalProductCreated', productId)
+        return productId
 
     def _getMemberLevel(self, projectId, userId):
         # internal fn because it takes projectId + userId 
@@ -216,18 +220,21 @@ class ProductManager(object):
 
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
                 projectId=?""", level, userId, projectId)
-            self.reposMgr.editUser(fqdn, username, write=write,
-                                   mirror=mirror, admin=admin)
+            if not self.reposMgr._isProductExternal(fqdn):
+                self.reposMgr.editUser(fqdn, username, write=write,
+                                       mirror=mirror, admin=admin)
             if notify:
                 self.publisher.notify('UserProductChanged', userId, projectId, 
                                       oldLevel, level)
             return False
         else:
-            password, salt = self.db.userMgr._getPassword(userId)
             self.db.db.projectUsers.new(userId=userId, projectId=projectId,
-                                     level=level, commit=False)
-            self.reposMgr.addUserByMd5(fqdn, username, salt, password, 
-                                       write=write, mirror=mirror, admin=admin)
+                                        level=level, commit=False)
+            if not self.reposMgr._isProductExternal(fqdn):
+                password, salt = self.db.userMgr._getPassword(userId)
+                self.reposMgr.addUserByMd5(fqdn, username, salt, password, 
+                                           write=write, mirror=mirror, 
+                                           admin=admin)
             if notify:
                 self.publisher.notify('UserProductAdded', userId,
                                       projectId, level)
@@ -417,4 +424,3 @@ class ProductManager(object):
             flavorSetRef = flavorSetRef,
             image = prodDef.imageType(None, imageFields),
             stages = stages)
-

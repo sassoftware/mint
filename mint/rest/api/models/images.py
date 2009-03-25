@@ -89,6 +89,10 @@ class Image(Model):
     status = fields.IntegerField()
     statusMessage = fields.CharField()
     files = fields.ModelField(ImageFileList)
+    
+    # TODO: we want to expose all buildData via a dict.  But that requires
+    # a DictField which doesn't exist yet.
+    amiId    = fields.CharField()
 
     def get_absolute_url(self):
         return ('products.images', self.hostname, str(self.imageId))
