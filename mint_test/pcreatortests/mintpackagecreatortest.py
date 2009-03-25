@@ -5,13 +5,7 @@
 # All Rights Reserved
 #
 
-import sys
-if '..' not in sys.path: sys.path.append('..')
-import testsuite
-testsuite.setup()
-import unittest
-
-import mint_rephelp
+import testsetup
 
 from testrunner import resources
 
@@ -42,7 +36,7 @@ class mockfield(object):
     default = None
 
 
-class TestPackageCreatorHelperMethods(testsuite.TestCase):
+class TestPackageCreatorHelperMethods(testsetup.testsuite.TestCase):
     def testMinConfig(self):
         cfg = conarycfg.ConaryConfiguration(False)
         mincfg = packagecreator.MinimalConaryConfiguration(cfg)
@@ -269,4 +263,4 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
 
 
 if __name__ == '__main__':
-    testsuite.main()
+    testsetup.testsuite.main()

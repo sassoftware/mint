@@ -18,6 +18,9 @@ import urllib
 import weakref
 import StringIO
 
+from lxml.builder import E
+from lxml import etree as ET
+
 from mint import buildtypes
 try:
     from mint import charts
@@ -38,6 +41,7 @@ from mint import helperfuncs
 from mint import jobstatus
 from mint import maintenance
 from mint import mint_error
+from mint import notices_store
 from mint import buildtemplates
 from mint import projects
 from mint import reports
@@ -4860,7 +4864,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Now go ahead and start the Package Creator Service
 
         #Register the file
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         project = projects.Project(self, projectId)
         mincfg = self._getMinCfg(project)
 
@@ -4928,7 +4932,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sesH
 
     def _startPackageCreatorSession(self, project, prodVer, namespace, troveName, label):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         mincfg = self._getMinCfg(project)
         try:
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
@@ -4947,7 +4951,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         isDefault is True if the user has not modified the recipe
         """
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         return pc.getRecipe(sesH)
 
     @requiresAuth
@@ -4957,7 +4961,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Store a package creator recipe. using an empty string for recipeData
         will return recipe to default.
         """
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
 
         # Strip off CRLFs and replace them with LFs
         sanitizedRecipeData = recipeData.replace('\r\n', '\n')
@@ -5005,7 +5009,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: str
         """
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
 
 
         try:
@@ -5040,7 +5044,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: list(bool, int, string, list of three-tuples)
         """
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         try:
             return pc.isBuildFinished(sessionHandle, commit=True)
         except packagecreator.errors.PackageCreatorError, e:
@@ -5063,7 +5067,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         occurs talking to the build process.
         """
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         try:
             return pc.getBuildLogs(sessionHandle)
         except packagecreator.errors.PackageCreatorError, e:
@@ -5135,7 +5139,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def startApplianceCreatorSession(self, projectId, versionId, rebuild):
         project = projects.Project(self, projectId)
         version = self.getProductVersion(versionId)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         mincfg = self._getMinCfg(project)
         try:
             sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
@@ -5157,20 +5161,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def makeApplianceTrove(self, sessionHandle):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         # If we ever allow jumping past the editApplianceGroup page, this will
         # have to filter out the :source troves added through package creator
         return pc.makeApplianceTrove(sessionHandle)
 
     @requiresAuth
     def addApplianceTrove(self, sessionHandle, troveSpec):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         # hard code the explicit flag to True for this codepath
         return pc.addTrove(sessionHandle, troveSpec, True)
 
     @requiresAuth
     def addApplianceTroves(self, sessionHandle, troveList):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         # abstract out the implicit troves
         troveDict = pc.listTroves(sessionHandle)
         explicit = set(troveDict.get('explicitTroves', []))
@@ -5180,7 +5184,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def setApplianceTroves(self, sessionHandle, troveList):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         # abstract out the implicit troves
         troveDict = pc.listTroves(sessionHandle)
         return pc.setTroves(sessionHandle, troveList,
@@ -5188,7 +5192,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def listApplianceTroves(self, projectId, sessionHandle):
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project, useshim=True)
         pkgs = []
@@ -5249,7 +5253,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
         project = projects.Project(self, projectId)
         version = self.getProductVersion(versionId)
-        pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+        pc = self.getPackageCreatorClient()
         mincfg = self._getMinCfg(project)
         try:
             sesH = pc.startPackagingSession(dict(hostname=project.getFQDN(),
@@ -5269,7 +5273,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getAvailablePackages(self, sessionHandle):
         pkgs = self._loadAvailablePackages(sessionHandle)
         if pkgs is None:
-            pc = packagecreator.getPackageCreatorClient(self.cfg, self.authToken)
+            pc = self.getPackageCreatorClient()
             # Call the method that doesn't thaw the versions or flavors since
             # we'd just have to thaw them again
             pkgs =  pc.getAvailablePackagesFrozen(sessionHandle)
@@ -5716,3 +5720,52 @@ If you would not like to be %s %s of this project, you may resign from this proj
             handleNonFatalException('delete-repo-names')
         
         return True
+
+    def getPackageCreatorClient(self):
+        callback = NoticesCallback(self.cfg, self.authToken[0])
+        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
+            callback = callback)
+
+class NoticesCallback(packagecreator.callbacks.Callback):
+    context = "builder"
+
+    def __init__(self, cfg, userId):
+        self.userId = userId
+        self.store = notices_store.createStore(
+            os.path.join(cfg.dataPath, "notices"), userId)
+
+    def notify_error(self, troveBuilder, job):
+        item = self.makeItem("FAIL", "Fail!", "some date", "gg")
+        self.store.storeUser(self.context, "")
+
+    def notify_built(self, troveBuilder, job):
+        item = self.makeItem("Built", "Built!", "some date", "gg")
+        self.store.storeUser(self.context, "")
+
+    def notify_committed(self, troveBuilder, job):
+        item = self.makeItem("Committed", "Committed!", "some date", "gg")
+        self.store.storeUser(self.context, "")
+
+    @classmethod
+    def makeItem(self, title, description, date, guid):
+        item = E.item()
+        node = E.title()
+        node.text = title
+        item.append(node)
+
+        node = E.description()
+        node.text = description
+        item.append(node)
+
+        node = E.date()
+        node.text = date
+        item.append(node)
+
+        # We won't generate uuids for now
+        #node = E.guid()
+        #node.text = guid
+        #item.append(node)
+
+        return ET.tostring(item, xml_declaration = False,
+            encoding = 'UTF-8')
+

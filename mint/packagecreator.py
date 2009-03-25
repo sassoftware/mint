@@ -7,6 +7,7 @@ import os
 from StringIO import StringIO
 
 from pcreator.backend import errors
+from pcreator import callbacks
 import pcreator.factorydata
 import pcreator.config
 import pcreator.shimclient
@@ -256,7 +257,7 @@ class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
         currentFiles[name] = (filePath, fileType, mimeType, list(archSet))
         self.server._server._storeSessionValue(sessionHandle, 'currentFiles', currentFiles)
 
-def getPackageCreatorClient(mintCfg, authToken):
+def getPackageCreatorClient(mintCfg, authToken, callback = None):
     auth = {'user': authToken[0], 'passwd': authToken[1]}
     if mintCfg.packageCreatorURL:
         return pcreator.client.PackageCreatorClient( \
@@ -267,4 +268,4 @@ def getPackageCreatorClient(mintCfg, authToken):
         cfg.tmpFileStorage = cfg.storagePath
         if mintCfg.packageCreatorConfiguration:
             cfg.read(mintCfg.packageCreatorConfiguration)
-        return ShimClient(cfg, auth)
+        return ShimClient(cfg, auth, callback = callback)
