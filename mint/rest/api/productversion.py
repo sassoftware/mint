@@ -135,7 +135,7 @@ class ProductVersionDefinition(base.BaseController):
     def update(self, request, hostname, version):
         pd = self._toProddef(request)
         self.db.setProductVersionDefinition(hostname, version, pd)
-        return response.RedirectResponse(
+        return response.CreatedResponse(
                     self.url(request, 'products.versions.definition', 
                              hostname, version))
 
@@ -176,7 +176,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('productVersion', models.ProductVersion)
     def create(self, request, hostname, productVersion):
         self.db.createProductVersion(hostname, productVersion)
-        return response.RedirectResponse(
+        return response.CreatedResponse(
                            self.url(request, 'products.versions', 
                                     hostname, productVersion.name))
 
@@ -189,13 +189,13 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('platform', models.Platform)
     def setPlatform(self, request, hostname, version, platform):
         self.db.rebaseProductVersionPlatform(hostname, version, platform.label)
-        return response.RedirectResponse(
+        return response.CreatedResponse(
                         self.url(request, 'products.versions.platform', 
                                  hostname, version))
 
     def updatePlatform(self, request, hostname, version):
         self.db.rebaseProductVersionPlatform(hostname, version)
-        return response.RedirectResponse(
+        return response.CreatedResponse(
                         self.url(request, 'products.versions.platform', 
                                  hostname, version))
 
