@@ -189,5 +189,5 @@ class UserManager(object):
     def _getUsername(self, userId):
         cu = self.db.cursor()
         cu.execute('SELECT username from Users where userId=?', userId)
-        return cu.next()[0]
+        return self.db._getOne(cu, errors.UserNotFound, userId)[0]
 

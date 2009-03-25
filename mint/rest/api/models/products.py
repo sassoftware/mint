@@ -56,3 +56,9 @@ class ProductSearchResultList(Model):
         name = 'products'
 
     products = fields.ListField(Product, displayName='product')
+
+class AuthInfo(Model):
+    authType = fields.CharField()
+    username = fields.CharField()
+    password = fields.CharField()
+    entitlement = fields.CharField()
