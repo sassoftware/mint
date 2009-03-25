@@ -32,7 +32,6 @@ class AuthenticationManager(object):
     def requireProductReadAccess(self, hostname):
         if self.isAdmin:
             return
-        hostname = str(hostname)
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
                       LEFT JOIN ProjectUsers ON (userId=? 
@@ -45,7 +44,6 @@ class AuthenticationManager(object):
     def requireProductDeveloper(self, hostname):
         if self.isAdmin:
             return
-        hostname = str(hostname)
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
                       LEFT JOIN ProjectUsers ON (userId=? 
@@ -61,7 +59,6 @@ class AuthenticationManager(object):
     def requireProductOwner(self, hostname):
         if self.isAdmin:
             return
-        hostname = str(hostname)
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
                       LEFT JOIN ProjectUsers ON (userId=? 
@@ -95,7 +92,6 @@ class AuthenticationManager(object):
             raise errors.PermissionDenied()
 
     def requireBuildsOnHost(self, hostname, buildIds):
-        hostname = str(hostname)
         cu = self.db.cursor()
         for buildId in buildIds:
             cu.execute('''
@@ -106,7 +102,6 @@ class AuthenticationManager(object):
                 raise errors.BuildNotfound(buildId)
 
     def requireReleaseOnHost(self, hostname, releaseId):
-        hostname = str(hostname)
         cu = self.db.cursor()
         cu.execute('''SELECT hostname FROM PublishedReleases
                       JOIN Projects USING(projectId)

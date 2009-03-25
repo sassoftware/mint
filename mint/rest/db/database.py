@@ -299,11 +299,6 @@ class Database(DBInterface):
 
     @commitafter
     def createProduct(self, product):
-        # sqlite is not happy when it's passed unicode data
-        for field in product._fields:
-            val = getattr(product, field)
-            if isinstance(val, unicode):
-                setattr(product, field, val.encode('utf-8'))
         self.auth.requireProductCreationRights()
         if self.cfg.rBuilderOnline or not product.domainname:
             product.domainname = self.cfg.projectDomainName.split(':')[0]

@@ -34,7 +34,7 @@ class ProductManager(object):
 
     def getProduct(self, fqdn):
         # accept fqdn.
-        hostname = str(fqdn).split('.')[0]
+        hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         sql = '''
             SELECT Projects.projectId as productId,hostname,name,shortname,
