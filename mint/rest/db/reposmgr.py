@@ -50,6 +50,11 @@ class RepositoryManager(object):
             fqdn = "%s.%s" % (hostname, domainname)
         else:
             fqdn = hostname
+
+        # Current code can't handle unicodes, and we already know
+        # the string is ASCII-safe.
+        fqdn = str(fqdn)
+
         dbPath = os.path.join(self.cfg.reposPath, fqdn)
         tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
