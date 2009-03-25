@@ -19,10 +19,10 @@ class FloatField(Field):
 
 class CharField(Field):
     def _valueToString(self, value, parent, context):
-        if isinstance(value, unicode):
-            return value
-        else:
+        if isinstance(value, str):
             return value.decode('utf8', 'replace')
+        else:
+            return unicode(value)
 
 
 class BooleanField(Field):
@@ -110,20 +110,24 @@ class EmailField(Field):
 class DateTimeField(Field):
     pass
 
-class VersionField(Field):
+class ObjectField(Field):
+    parser = None
+
     def _valueFromString(self, value):
-        try:
-            return versions.VersionFromString(value)
-        except ValueError:
-            return versions.ThawVersion(value)
+        return self.parser(value)
+
+    def _valueToString(self, value, parent, context):
+        return str(value)
 
 
-class FlavorField(Field):
-    def _valueFromString(self, value):
-        try:
-            return deps.parseFlavor(value)
-        except deps.ParseError:
-            return deps.ThawFlavor(value)
+class VersionField(ObjectField):
+    parser = staticmethod(versions.VersionFromString)
+
+class LabelField(ObjectField):
+    parser = versions.Label
+
+class FlavorField(ObjectField):
+    parser = staticmethod(deps.parseFlavor)
 
 
 class ListField(Field):

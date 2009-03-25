@@ -89,6 +89,7 @@ class ModelLibTest(testsuite.TestCase):
             emailField = fields.EmailField()
             dateTimeField = fields.DateTimeField()
             versionField = fields.VersionField()
+            labelField = fields.LabelField()
             flavorField = fields.FlavorField()
             listField = fields.ListField(Model1,
                 displayName = "list_field")
@@ -103,6 +104,7 @@ class ModelLibTest(testsuite.TestCase):
             emailField = "who@nowhere.net",
             dateTimeField = "12/13/2004",
             versionField = "/localhost@rpl:1/1.0-1-1",
+            labelField = "example.label@rpl:devel",
             flavorField = "is: x86",)
         self.failUnlessEqual(m.intField, 1)
         self.failUnlessEqual(m.charField, "a")
@@ -121,6 +123,7 @@ class ModelLibTest(testsuite.TestCase):
   <emailField>who@nowhere.net</emailField>
   <dateTimeField>12/13/2004</dateTimeField>
   <versionField>/localhost@rpl:1/1.0-1-1</versionField>
+  <labelField>example.label@rpl:devel</labelField>
   <flavorField>is: x86</flavorField>
   <list_field>
     <intField2>0</intField2>

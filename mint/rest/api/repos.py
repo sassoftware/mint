@@ -202,7 +202,7 @@ class RepositoryController(BaseReposController):
 
             for version, flavorList in versionDict.iteritems():
                 timeStamp = version.timeStamps()[-1]
-                trailingVersion = version.trailingRevision()
+                trailingVersion = version.trailingRevision().asString()
                 label = version.trailingLabel()
                 for flavor in flavorList:
                     trv = models.Trove(hostname=hostname, name=name, 

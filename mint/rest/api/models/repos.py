@@ -11,7 +11,7 @@ from mint.rest.modellib import fields
 class TroveFile(Model):
     hostname         = fields.CharField()
     path             = fields.CharField()
-    fileVersion      = fields.CharField()
+    fileVersion      = fields.VersionField()
     pathId           = fields.CharField()
     pathHash         = fields.CharField()
     fileId           = fields.CharField()
@@ -28,7 +28,7 @@ class TroveFile(Model):
     target           = fields.CharField()
     provides         = fields.CharField()
     requires         = fields.CharField()
-    flavor           = fields.CharField()
+    flavor           = fields.FlavorField()
     tags             = fields.CharField()
     sha1             = fields.CharField()
     trove            = fields.UrlField('products.repos.items', 
@@ -45,10 +45,10 @@ class Trove(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     hostname         = fields.CharField()
     name             = fields.CharField()
-    version          = fields.CharField()
-    label            = fields.CharField()
+    version          = fields.VersionField()
+    label            = fields.LabelField()
     trailingVersion  = fields.CharField()
-    flavor           = fields.CharField()
+    flavor           = fields.FlavorField()
     timeStamp        = fields.CharField()
     images           = fields.UrlField('products.repos.items.images',
                                       ['hostname', 'nvf'])
