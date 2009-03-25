@@ -90,4 +90,5 @@ class FormatCallback(object):
                 text = converter.toText(request.responseType, res,
                                         self.controller, request)
             res = response.Response(text, content_type=request.contentType)
+        res.headers['Cache-Control'] = 'no-store'
         return res
