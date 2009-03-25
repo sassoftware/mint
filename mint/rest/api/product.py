@@ -27,12 +27,12 @@ class ProductMemberController(base.BaseController):
     @requires('membership', models.UpdateMembership)
     def update(self, request, hostname, username, membership):
         self.db.setMemberLevel(hostname, username, membership.level)
-        return response.CreatedResponse(self.url(request, 'products.members', 
+        return response.RedirectResponse(self.url(request, 'products.members', 
                                                   hostname, username))
 
     def destroy(self, request, hostname, username):
         self.db.deleteMember(hostname, username)
-        return response.CreatedResponse(self.url(request, 'products.members', 
+        return response.RedirectResponse(self.url(request, 'products.members', 
                                                   hostname))
 
 class ProductController(base.BaseController):
@@ -60,5 +60,5 @@ class ProductController(base.BaseController):
     @requires('product', models.Product)
     def create(self, request, product):
         self.db.createProduct(product)
-        return response.CreatedResponse(self.url(request, 'products', 
+        return response.RedirectResponse(self.url(request, 'products', 
                                                   product.hostname))
