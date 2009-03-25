@@ -57,8 +57,15 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         self.createUser('owner')
         self.createUser('other')
         self.setDbUser(db, 'owner')
-        productId = self.createProduct(u"bar", description = u"Some desc",
+        description = u"Some desc with a non-ascii \u0163 character"
+        productId = self.createProduct(u"bar", description = description,
             db = db)
+        product = db.getProduct(u'bar')
+        self.failUnless(isinstance(product.hostname, str))
+        self.failUnlessEqual(product.hostname, "bar")
+        # Grr, we don't get back a Unicode string automatically.
+        self.failUnlessEqual(product.description,
+            'Some desc with a non-ascii \xc5\xa3 character')
 
     def testPublicCreateRepository(self):
         db = self.openMintDatabase()
