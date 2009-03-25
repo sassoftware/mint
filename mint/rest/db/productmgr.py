@@ -63,7 +63,7 @@ class ProductManager(object):
     def listProducts(self, start=0, limit=None, search=None):
         cu = self.db.cursor()
         if search:
-            search = '%' + search.replace('%', '\%') + '%'
+            search = '%' + search.replace('%', '\%').replace('_', '\_') + '%'
             where = "shortname LIKE ?"
         else:
             where = ''
