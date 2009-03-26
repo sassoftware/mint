@@ -69,14 +69,30 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createUser('user', admin=False)
         self.createProduct('foo', owners=['admin'], db=db, private=True)
-        self.createProduct('bar', owners=['user'], db=db)
+        self.createProduct('bar', owners=['user'], db=db, private=True)
+
+        # User can't see other hidden projects
         self.setDbUser(db, 'user')
         products = db.listProducts().products
-        assert(len(products) == 1)
-        assert(products[0].hostname == 'bar')
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].shortname, 'bar')
+
+        # Admin can see all projects; check sorting.
         self.setDbUser(db, 'admin')
         products = db.listProducts().products
-        assert(len(products) == 2)
+        self.assertEqual(len(products), 2)
+        self.assertEqual(products[0].shortname, 'bar')
+        self.assertEqual(products[1].shortname, 'foo')
+
+        # List by role
+        products = db.listProducts(role='Owner').products
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].shortname, 'foo')
+
+        # Query limits; check sorting
+        products = db.listProducts(limit=1).products
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].shortname, 'bar')
 
     def testGetProductVersion(self):
         db = self.openMintDatabase(createRepos=False)

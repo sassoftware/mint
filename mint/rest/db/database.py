@@ -143,9 +143,9 @@ class Database(DBInterface):
         return self._getOne(cu, errors.UserNotFound, userId)[0]
 
     @readonly
-    def listProducts(self, start=0, limit=None, search=None):
+    def listProducts(self, start=0, limit=None, search=None, role=None):
         return self.productMgr.listProducts(start=start, limit=limit,
-                                            search=search)
+                search=search, role=role)
 
     @readonly
     def getProductFQDNFromId(self, productId):

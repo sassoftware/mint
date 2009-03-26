@@ -16,7 +16,7 @@ class AuthenticationManagerTest(mint_rephelp.MintDatabaseHelper):
                 else:
                     args = ()
                 method(*args)
-            except (errors.PermissionDenied, errors.ItemNotFound), e:
+            except (errors.PermissionDeniedError, errors.ItemNotFound), e:
                 if username in allowedUsers:
                     raise RuntimeError('%s not allowed access to %s%s' % (username, funcName, args))
             else:

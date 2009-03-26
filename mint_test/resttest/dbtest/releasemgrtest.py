@@ -84,7 +84,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         imageId = self.createImage(db, 'foo', buildtypes.TARBALL)
         self.setImageFiles(db, 'foo', imageId)
         self.setDbUser(db, 'user')
-        self.assertRaises(errors.PermissionDenied,
+        self.assertRaises(errors.PermissionDeniedError,
                           db.createRelease, 'foo', 'Release 2', 'desc2', [imageId])
 
     def testPublishUnpublishRelease(self):

@@ -60,64 +60,57 @@ class ProductManager(object):
         p = models.Product(**d)
         return p
 
-    def listProducts(self, start=0, limit=None, search=None):
+    def listProducts(self, start=0, limit=None, search=None, role=None):
         cu = self.db.cursor()
-        if search:
-            search = '%' + search.replace('%', '\%').replace('_', '\_') + '%'
-            where = "shortname LIKE ?"
-        else:
-            where = ''
 
-        if self.auth.isAdmin:
-            if where:
-                where = 'WHERE ' + where
-            sql = '''
-                SELECT Projects.projectId as productId,
-                   hostname,name,shortname,
-                   domainname, namespace, 
-                   description, Users.username as creator, projectUrl,
-                   isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
-                FROM Projects 
-                LEFT JOIN ProjectUsers ON (
-                    ProjectUsers.projectId=Projects.projectId 
-                    AND ProjectUsers.userId=?)
-                LEFT JOIN Users ON (creatorId=Users.userId)
-                %(where)s
-                ORDER BY hostname''' % dict(where=where)
-        else:
-            if where:
-                where = 'AND ' + where
-            sql = '''\
-                SELECT Projects.projectId as productId,
-                   hostname,name,shortname, domainname, namespace, 
-                   description, Users.username as creator, projectUrl,
-                   isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal, ProjectUsers.level 
-                FROM Projects 
-                LEFT JOIN ProjectUsers ON (
-                    ProjectUsers.projectId=Projects.projectId 
-                    AND ProjectUsers.userId=?)
-                LEFT JOIN Users ON (creatorId=Users.userId)
-                WHERE (NOT Projects.hidden OR 
-                       ProjectUsers.level IS NOT NULL)
-                      %(where)s
-                ORDER BY hostname''' % dict(where=where)
-        if limit:
-            sql += ' LIMIT %d' % limit
-        if start:
-            sql += ' OFFSET %d' % start
+        query = '''
+            SELECT p.projectId AS productId,
+                p.hostname, p.name, p.shortname, p.domainname, p.namespace,
+                p.description, creator.username AS creator, p.projectUrl,
+                p.isAppliance, p.timeCreated, p.timeModified, p.commitEmail,
+                p.prodtype, p.backupExternal, member.level AS role
+            FROM Projects p
+            LEFT JOIN ProjectUsers member ON (
+                member.projectId = p.projectId
+                AND member.userId = ? )
+            LEFT JOIN Users creator ON ( p.creatorId = creator.userId )
+            '''
         args = [self.auth.userId]
+        clauses = []
+
+        if role:
+            clauses.append('member.level = ?')
+            args.append(userlevels.idsByName[role.lower()])
+        elif not self.auth.isAdmin:
+            # Non-admins can't see hidden projects they aren't a member of
+            clauses.append('( p.hidden = 0 OR member.level IS NOT NULL )')
+
         if search:
-            args.append(search)
-        cu.execute(sql, *args)
+            search = search.replace('\\', '\\\\')
+            search = search.replace('%','\\%')
+            search = search.replace('_','\\_')
+            clauses.append('p.shortname ILIKE ?')
+            args.append('%' + search + '%')
+
+        if clauses:
+            query += 'WHERE ' + (' AND '.join(clauses))
+        query += 'ORDER BY p.shortname ASC'
+
+        if limit:
+            query += ' LIMIT %d' % limit
+        if start:
+            query += ' OFFSET %d' % start
+        cu.execute(query, *args)
+
         results = models.ProductSearchResultList()
         for row in cu:
             d = dict(row)
-            level = d.pop('level', None)
-            if level is not None:
-                d['role'] = userlevels.names[level]
+
+            role = d.pop('role')
+            if role is not None:
+                d['role'] = userlevels.names[role]
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
+
             p = models.Product(**d)
             results.products.append(p)
         return results
