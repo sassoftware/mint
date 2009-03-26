@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -17,9 +17,6 @@ import tempfile
 import urllib
 import weakref
 import StringIO
-
-from lxml.builder import E
-from lxml import etree as ET
 
 from mint import buildtypes
 try:
@@ -41,7 +38,7 @@ from mint import helperfuncs
 from mint import jobstatus
 from mint import maintenance
 from mint import mint_error
-from mint import notices_store
+from mint import notices_callbacks
 from mint import buildtemplates
 from mint import projects
 from mint import reports
@@ -5139,7 +5136,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def startApplianceCreatorSession(self, projectId, versionId, rebuild):
         project = projects.Project(self, projectId)
         version = self.getProductVersion(versionId)
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         mincfg = self._getMinCfg(project)
         try:
             sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
@@ -5161,20 +5158,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def makeApplianceTrove(self, sessionHandle):
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         # If we ever allow jumping past the editApplianceGroup page, this will
         # have to filter out the :source troves added through package creator
         return pc.makeApplianceTrove(sessionHandle)
 
     @requiresAuth
     def addApplianceTrove(self, sessionHandle, troveSpec):
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         # hard code the explicit flag to True for this codepath
         return pc.addTrove(sessionHandle, troveSpec, True)
 
     @requiresAuth
     def addApplianceTroves(self, sessionHandle, troveList):
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         # abstract out the implicit troves
         troveDict = pc.listTroves(sessionHandle)
         explicit = set(troveDict.get('explicitTroves', []))
@@ -5184,7 +5181,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def setApplianceTroves(self, sessionHandle, troveList):
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         # abstract out the implicit troves
         troveDict = pc.listTroves(sessionHandle)
         return pc.setTroves(sessionHandle, troveList,
@@ -5192,7 +5189,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def listApplianceTroves(self, projectId, sessionHandle):
-        pc = self.getPackageCreatorClient()
+        pc = self.getApplianceCreatorClient()
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project, useshim=True)
         pkgs = []
@@ -5722,50 +5719,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
 
     def getPackageCreatorClient(self):
-        callback = NoticesCallback(self.cfg, self.authToken[0])
+        callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback = callback)
 
-class NoticesCallback(packagecreator.callbacks.Callback):
-    context = "builder"
-
-    def __init__(self, cfg, userId):
-        self.userId = userId
-        self.store = notices_store.createStore(
-            os.path.join(cfg.dataPath, "notices"), userId)
-
-    def notify_error(self, troveBuilder, job):
-        item = self.makeItem("FAIL", "Fail!", "some date", "gg")
-        self.store.storeUser(self.context, "")
-
-    def notify_built(self, troveBuilder, job):
-        item = self.makeItem("Built", "Built!", "some date", "gg")
-        self.store.storeUser(self.context, "")
-
-    def notify_committed(self, troveBuilder, job):
-        item = self.makeItem("Committed", "Committed!", "some date", "gg")
-        self.store.storeUser(self.context, "")
-
-    @classmethod
-    def makeItem(self, title, description, date, guid):
-        item = E.item()
-        node = E.title()
-        node.text = title
-        item.append(node)
-
-        node = E.description()
-        node.text = description
-        item.append(node)
-
-        node = E.date()
-        node.text = date
-        item.append(node)
-
-        # We won't generate uuids for now
-        #node = E.guid()
-        #node.text = guid
-        #item.append(node)
-
-        return ET.tostring(item, xml_declaration = False,
-            encoding = 'UTF-8')
+    def getApplianceCreatorClient(self):
+        callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
+        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
+            callback = callback)
 
