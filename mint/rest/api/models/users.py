@@ -20,7 +20,7 @@ class User(Model):
     username = fields.CharField()
     fullName = fields.CharField()
     email = fields.EmailField()
-    displayEmail = fields.EmailField()
+    displayEmail = fields.CharField()
     blurb = fields.CharField()
     active = fields.BooleanField()
     timeCreated = fields.DateTimeField()

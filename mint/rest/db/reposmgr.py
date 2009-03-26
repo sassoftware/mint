@@ -297,12 +297,11 @@ class RepositoryManager(object):
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
         newchangelog = changelog.ChangeLog(self.auth.username,
-                             self.auth.fullName or '',
-                             changeLogMessage)
+                self.auth.fullName or '', changeLogMessage.encode('utf8'))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
-                str(upstreamVersion), pathDict, newchangelog.encode('utf8'))
+                str(upstreamVersion), pathDict, newchangelog)
 
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
