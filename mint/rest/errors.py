@@ -14,6 +14,10 @@ class ItemNotFound(mint_error.MintError):
     def __str__(self):
         return '%s' % (self.args[0],)
 
+class PermissionDeniedError(mint_error.MintError):
+    "You do not have permission to access this resource."
+    status = 403
+
 class InvalidTroveSpec(mint_error.MintError):
     status = 400
 
@@ -49,8 +53,6 @@ class ReleaseNotFound(ItemNotFound):
 
 class MemberNotFound(ItemNotFound):
     pass
-
-PermissionDenied = mint_error.PermissionDenied
 
 class ExternalRepositoryMirrorError(Exception):
     msg = ("Entitlement does not grant mirror access to"
