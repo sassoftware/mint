@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import simplejson
+import sys
 import xmlrpclib
 
 from mod_python import apache
@@ -12,6 +13,7 @@ from mint import config
 from mint import mint_error
 from mint import server
 from mint import maintenance
+from mint.logerror import logWebErrorAndEmail
 from mint.web.webhandler import getHttpAuth
 
 from conary.lib import coveragehook
@@ -76,4 +78,10 @@ def handler(req):
     coveragehook.install()
     cfg = config.getConfig(req.filename)
 
-    return rpcHandler(req, cfg)
+    try:
+        return rpcHandler(req, cfg)
+    except:
+        e_type, e_value, e_tb = sys.exc_info()
+        logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
+        del e_tb
+        return apache.HTTP_INTERNAL_SERVER_ERROR
