@@ -27,7 +27,7 @@ class AuthenticationManager(object):
 
     def requireLogin(self):
         if self.userId < 0:
-            raise errors.PermissionDenied
+            raise errors.PermissionDeniedError
 
     def requireProductReadAccess(self, hostname):
         if self.isAdmin:
@@ -54,7 +54,7 @@ class AuthenticationManager(object):
         if hidden and level is None:
             raise errors.ProductNotFound(hostname)
         if level not in userlevels.WRITERS:
-            raise errors.PermissionDenied(hostname)
+            raise errors.PermissionDeniedError(hostname)
 
     def requireProductOwner(self, hostname):
         if self.isAdmin:
@@ -69,12 +69,12 @@ class AuthenticationManager(object):
         if hidden and level is None:
             raise errors.ProductNotFound(hostname)
         if level != userlevels.OWNER:
-            raise errors.PermissionDenied(hostname)
+            raise errors.PermissionDeniedError(hostname)
 
     def requireUserReadAccess(self, username):
         if self.hasUserReadAccess(username):
             return
-        raise errors.PermissionDenied()
+        raise errors.PermissionDeniedError()
 
     def hasUserReadAccess(self, username):
         return (self.isAdmin or self.username == username)
@@ -82,14 +82,14 @@ class AuthenticationManager(object):
     def requireUserAdmin(self, username):
         if self.isAdmin or self.username == username:
             return
-        raise errors.PermissionDenied()
+        raise errors.PermissionDeniedError()
 
     def requireProductCreationRights(self):
         pass
 
     def requireAdmin(self):
         if not self.isAdmin:
-            raise errors.PermissionDenied()
+            raise errors.PermissionDeniedError()
 
     def requireBuildsOnHost(self, hostname, buildIds):
         cu = self.db.cursor()

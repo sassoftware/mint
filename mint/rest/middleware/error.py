@@ -21,9 +21,7 @@ class ErrorCallback(object):
             status = exception.status
         else:
             status = 500
-            # TODO: Pass contextual info like request params
-            logerror.logErrorAndEmail(self.controller.cfg,
-                    excClass, exception, tb, 'API call', {})
+            self.logError(request, excClass, exception, tb, doEmail=True)
 
         # Only send the traceback information if it's an unintentional
         # exception (i.e. a 500)
@@ -47,3 +45,16 @@ class ErrorCallback(object):
                                     self.controller, request)
         return response.Response(text, content_type=request.contentType,
                                  status=status)
+
+    def logError(self, request, e_type, e_value, e_tb):
+        info = {
+                'path'              : request.path,
+                'basePath'          : request.basePath,
+                'host'              : request.host,
+                'method'            : request.method,
+                'headers_in'        : request.headers,
+                'request_params'    : request.GET,
+                'post_params'       : request.POST,
+                }
+        logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value, e_tb,
+                'API call', info)
