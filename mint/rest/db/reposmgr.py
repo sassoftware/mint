@@ -209,9 +209,9 @@ class RepositoryManager(object):
         dbPath = os.path.join(self.cfg.reposPath, fqdn)
         tmpPath = os.path.join(dbPath, 'tmp')
         cfg = netserver.ServerConfig()
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(fqdn)
+        cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
         cfg.tmpDir = tmpPath
-        cfg.serverName = fqdn
+        cfg.serverName = str(fqdn)
         cfg.repositoryMap = {}
         cfg.authCacheTimeout = self.cfg.authCacheTimeout
         cfg.externalPasswordURL = self.cfg.externalPasswordURL
@@ -279,7 +279,10 @@ class RepositoryManager(object):
         # Get repository + client
         client = self.getConaryClientForProduct(fqdn)
 
-        # ensure that the changelog message ends with a newline
+        # Sanitize input
+        if ':' not in trovename:
+            trovename += ':source'
+
         if not changeLogMessage.endswith('\n'):
             changeLogMessage += '\n'
 
@@ -298,10 +301,8 @@ class RepositoryManager(object):
                              changeLogMessage)
 
         # create a change set object from our source data
-        changeSet = client.createSourceTrove('%s:source' % trovename,
-                                             buildLabel,
-                                             upstreamVersion, pathDict, 
-                                             newchangelog)
+        changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
+                str(upstreamVersion), pathDict, newchangelog.encode('utf8'))
 
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
