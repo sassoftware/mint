@@ -46,7 +46,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
 &lt;br/&gt;
 &lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009&lt;br/&gt;
 &lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;
-</description><date>13 Feb 2009 18:31:30 -0400</date><guid></guid></item>"""
+</description><date>13 Feb 2009 18:31:30 -0400</date><category>success</category><guid></guid></item>"""
         actual = file(path).read()
         actual = re.sub(r"<guid>.*</guid>",
                 "<guid></guid>",
@@ -65,7 +65,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 actual)
 
         self.failUnlessEqual(actual, expBinaries.replace(
-            "completed", "failed"))
+            "completed", "failed").replace("success", "error"))
 
         job = FakeJobNoBinaries()
         cb.notify_committed(tb, job)
@@ -73,7 +73,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
         expNoBinaries = """\
-<item><title>Package Build calibre:source=1.2-3 completed</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date><guid></guid></item>"""
+<item><title>Package Build calibre:source=1.2-3 completed</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date><category>success</category><guid></guid></item>"""
         actual = file(path).read()
         actual = re.sub(r"<guid>.*</guid>",
                 "<guid></guid>",
@@ -107,7 +107,8 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 "<guid></guid>",
                 actual)
         self.failUnlessEqual(actual, expBinaries.replace(
-            "Package Build ", "Build ").replace("completed", "failed"))
+            "Package Build ", "Build ").replace(
+            "completed", "failed").replace("success", "error"))
 
         job = FakeJobNoBinaries()
         cb.notify_committed(tb, job)

@@ -27,20 +27,23 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         self.store = notices_store.createStore(
             os.path.join(cfg.dataPath, "notices"), userId)
 
-    def notify_committed(self, troveBuilder, job):
+    def _notify(self, troveBuilder, job):
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
         title, buildDate = self.getJobMeta(job, troveBinaries)
         description = self.getJobInformation(job, troveBinaries)
 
+        category = (job.isFailed() and "error") or "success"
+
         guid = digestlib.md5(description)
         guid.update(str(time.time()))
-        item = self.makeItem(title, description, buildDate, guid.hexdigest())
+        item = self.makeItem(title, description, category, buildDate, guid.hexdigest())
         self.store.storeUser(self.context, item)
 
-    notify_error = notify_committed
+    notify_committed = _notify
+    notify_error = _notify
 
     @classmethod
-    def makeItem(self, title, description, date, guid):
+    def makeItem(self, title, description, category, date, guid):
         item = E.item()
         node = E.title()
         node.text = title
@@ -52,6 +55,10 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
 
         node = E.date()
         node.text = date
+        item.append(node)
+
+        node = E.category()
+        node.text = category
         item.append(node)
 
         node = E.guid()
