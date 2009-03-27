@@ -38,5 +38,6 @@ class ProductReleasesController(base.BaseController):
     def get(self, request, hostname, releaseId):
         return self.db.getReleaseForProduct(hostname, releaseId)
 
+    @auth.public
     def images(self, request, hostname, releaseId):
         return self.db.listImagesForRelease(hostname, releaseId)
