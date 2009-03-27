@@ -768,7 +768,7 @@ class ProductVersionTest(restbase.BaseRestTest):
             'POST', newProduct1 % dict(
                 name = productName,
                 description = productDescription))
-        self.failUnlessEqual(response.status, 302)
+        self.failUnless(300 <= response.status < 400)
         self.failUnlessEqual(response.headers['Location'],
             self.makeUri(client, "products/%s" % productName))
 
@@ -780,7 +780,7 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.newConnection(client, uri)
         response = self.failUnlessRaises(ResponseError, client.request,
             'POST', newProductVersion1 % dict(version = productVersion))
-        self.failUnlessEqual(response.status, 302)
+        self.failUnless(300 <= response.status < 400)
         self.failUnlessEqual(response.headers['Location'],
             self.makeUri(client, "products/%s/versions/%s" % 
                 (productName, productVersion)))

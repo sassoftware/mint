@@ -10,6 +10,7 @@ import testsetup
 import os
 import re
 import time
+import urllib
 
 from conary.lib import util
 from mint import buildtypes
@@ -61,29 +62,22 @@ Index.
         self.failUnlessEqual(response.status, 400)
         self.failUnlessEqual(response.contents, "Label not specified")
 
-        badLabels = [
-            ('/aaa', '/ should not appear in a label'),
-            ('aaa', 'colon expected before branch name'),
-            ('a:b', '@ expected before label namespace'),
-            ('a:b@', '@ sign must occur before a colon'),
-            ('a:b@c', '@ sign must occur before a colon'),
-            ('a:b@c:', 'unexpected colon'),
-            ('a:b@c:\u0163', 'unexpected colon'),
-        ]
+        badLabels = [ '/aaa', 'aaa', 'a:b', 'a:b@', 'a:b@c',
+                'a:b@c:', 'a:b@c:\u0163' ]
 
-        for label, errorMessage in badLabels:
+        for label in badLabels:
             uriTemplate = 'products/%s/repos/search?type=group&label=%s'
-            uri = uriTemplate % (self.productShortName, label.encode('utf-8'))
+            uri = uriTemplate % (self.productShortName,
+                    urllib.quote(label.encode('utf-8')))
             self.newConnection(client, uri)
 
             response = self.failUnlessRaises(ResponseError, client.request, 'GET')
             self.failUnlessEqual(response.status, 400)
-            self.failUnlessEqual(response.contents,
-                "Error parsing label %s: %s" % (label, errorMessage))
+            self.failUnless('Error parsing label' in response.contents)
 
         uriTemplate = 'products/%s/repos/search?type=group&label=%s'
         uri = uriTemplate % (self.productShortName,
-            self.productDefinition.getDefaultLabel())
+            urllib.quote(self.productDefinition.getDefaultLabel()))
         self.newConnection(client, uri)
         response = client.request('GET')
         # We have no troves right now
@@ -102,7 +96,7 @@ Index.
         exp =  """\
 <?xml version='1.0' encoding='UTF-8'?>
 <troves>
-  <trove id="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo=/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1[]">
+  <trove id="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo%3D/testproject.rpath.local2%40yournamespace%3Atestproject-1.0-devel/1-1-1%5B%5D">
     <hostname>testproject</hostname>
     <name>group-foo</name>
     <version>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</version>
@@ -110,10 +104,11 @@ Index.
     <trailingVersion>1-1-1</trailingVersion>
     <flavor></flavor>
     <timeStamp>%(timestamp)s</timeStamp>
-    <images href="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo=/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1[]/images"/>
+    <images href="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo%3D/testproject.rpath.local2%40yournamespace%3Atestproject-1.0-devel/1-1-1%5B%5D/images"/>
   </trove>
 </troves>
 """
+        exp = self.escapeURLQuotes(exp)
         resp = response.read()
         resp = re.sub("<timeStamp>.*</timeStamp>", "<timeStamp></timeStamp>",
             resp)
