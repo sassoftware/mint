@@ -5,6 +5,7 @@
 #
 
 from mint.rest.api import base
+from mint.rest.middleware import auth
 
 class ProductImageFilesController(base.BaseController):
     modelName = 'fileName'
@@ -30,6 +31,7 @@ class ProductReleasesController(base.BaseController):
 
     urls = {'images' : {'GET' : 'images'}}
 
+    @auth.public
     def index(self, request, hostname):
         return self.db.listReleasesForProduct(hostname)
 
