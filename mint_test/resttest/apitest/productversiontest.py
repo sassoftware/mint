@@ -884,6 +884,48 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(resp,
              exp % dict(port = client.port, server = client.server))
 
+    def testGetProductVersions(self):
+        return self._testGetProductVersions()
+
+    def testGetProductVersionsNotLoggedIn(self):
+        return self._testGetProductVersions(notLoggedIn = True)
+
+    def _testGetProductVersions(self, notLoggedIn = False):
+
+        uriTemplate = 'products/testproject/versions'
+        uri = uriTemplate
+        kw = {}
+        if notLoggedIn:
+            kw['username'] = None
+        client = self.getRestClient(uri, **kw)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<productVersions>
+  <productVersion id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">
+    <versionId>1</versionId>
+    <hostname>testproject</hostname>
+    <name>1.0</name>
+    <productUrl href="http://%(server)s:%(port)s/api/products/testproject"/>
+    <nameSpace>yournamespace</nameSpace>
+    <description>Version description</description>
+    <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
+    <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
+    <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
+    <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>
+    <imageDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions"/>
+    <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
+  </productVersion>
+</productVersions>
+"""
+        resp = response.read()
+        for pat in [ "timeCreated", "timeModified" ]:
+            resp = re.sub("<%s>.*</%s>" % (pat, pat),
+             "<%s></%s>" % (pat, pat),
+            resp)
+        self.failUnlessEqual(resp,
+             exp % dict(port = client.port, server = client.server))
+
 
 
 imageSet1 = """

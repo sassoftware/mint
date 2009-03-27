@@ -14,6 +14,7 @@ from mint.rest.modellib import converter
 from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
+from mint.rest.middleware import auth
 
 class BuildDefinitionMixIn(object):
     def _makeBuildDefinition(self, buildDef, pd, extraParams, modelClass):
@@ -163,6 +164,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
             'imageDefinitions' : dict(GET='getImageDefinitions',
                                       PUT='setImageDefinitions'),}
 
+    @auth.public
     def index(self, request, hostname):
         return self.db.listProductVersions(hostname)
 
