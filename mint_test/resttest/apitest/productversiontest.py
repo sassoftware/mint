@@ -764,13 +764,11 @@ class ProductVersionTest(restbase.BaseRestTest):
         uri = uriTemplate
         client = self.getRestClient(uri, admin = True)
 
-        response = self.failUnlessRaises(ResponseError, client.request,
-            'POST', newProduct1 % dict(
+        response = client.request('POST', newProduct1 % dict(
                 name = productName,
                 description = productDescription))
-        self.failUnless(300 <= response.status < 400)
-        self.failUnlessEqual(response.headers['Location'],
-            self.makeUri(client, "products/%s" % productName))
+        newUri = self.makeUri(client, "products/%s" % productName)
+        self.failUnless(('id="%s"' % newUri) in response.read())
 
         productVersion = '3.0'
 
@@ -778,12 +776,11 @@ class ProductVersionTest(restbase.BaseRestTest):
         uri = uriTemplate % (productName, )
 
         self.newConnection(client, uri)
-        response = self.failUnlessRaises(ResponseError, client.request,
-            'POST', newProductVersion1 % dict(version = productVersion))
-        self.failUnless(300 <= response.status < 400)
-        self.failUnlessEqual(response.headers['Location'],
-            self.makeUri(client, "products/%s/versions/%s" % 
-                (productName, productVersion)))
+        response = client.request('POST', newProductVersion1
+                % dict(version = productVersion))
+        newUri = self.makeUri(client, "products/%s/versions/%s"
+                % (productName, productVersion))
+        self.failUnless(('id="%s"' % newUri) in response.read())
 
     def testGetProducts(self):
         return self._testGetProducts()

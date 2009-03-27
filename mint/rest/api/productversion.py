@@ -136,9 +136,7 @@ class ProductVersionDefinition(base.BaseController):
     def update(self, request, hostname, version):
         pd = self._toProddef(request)
         self.db.setProductVersionDefinition(hostname, version, pd)
-        return response.SeeOtherResponse(
-                    self.url(request, 'products.versions.definition', 
-                             hostname, version))
+        return self.index(request, hostname, version)
 
     def _toProddef(self, request):
         from rpath_common.proddef import api1 as proddef
@@ -178,9 +176,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('productVersion', models.ProductVersion)
     def create(self, request, hostname, productVersion):
         self.db.createProductVersion(hostname, productVersion)
-        return response.SeeOtherResponse(
-                           self.url(request, 'products.versions', 
-                                    hostname, productVersion.name))
+        return self.get(request, hostname, productVersion.name)
 
     def getImages(self, request, hostname, version):
         return self.db.listImagesForProductVersion(hostname, version)
@@ -191,15 +187,11 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('platform', models.Platform)
     def setPlatform(self, request, hostname, version, platform):
         self.db.rebaseProductVersionPlatform(hostname, version, platform.label)
-        return response.SeeOtherResponse(
-                        self.url(request, 'products.versions.platform', 
-                                 hostname, version))
+        return self.getPlatform(request, hostname, version)
 
     def updatePlatform(self, request, hostname, version):
         self.db.rebaseProductVersionPlatform(hostname, version)
-        return response.SeeOtherResponse(
-                        self.url(request, 'products.versions.platform', 
-                                 hostname, version))
+        return self.getPlatform(request, hostname, version)
 
     def getImageTypeDefinitions(self, request, hostname, version):
         extraParams = dict(hostname = hostname, version = version)
