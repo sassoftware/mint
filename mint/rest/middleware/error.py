@@ -46,7 +46,7 @@ class ErrorCallback(object):
         return response.Response(text, content_type=request.contentType,
                                  status=status)
 
-    def logError(self, request, e_type, e_value, e_tb):
+    def logError(self, request, e_type, e_value, e_tb, doEmail=True):
         info = {
                 'path'              : request.path,
                 'basePath'          : request.basePath,
@@ -57,4 +57,4 @@ class ErrorCallback(object):
                 'post_params'       : request.POST,
                 }
         logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value, e_tb,
-                'API call', info)
+                'API call', info, doEmail=doEmail)
