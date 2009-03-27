@@ -29,8 +29,8 @@ from conary.conarycfg import ConaryConfiguration
 transTables = {
     'sqlite':       string.maketrans("", ""),
     'mysql':        string.maketrans("-.:", "___"),
-    'postgresql':   string.maketrans("-.:", "___"),
-    'pgpool':       string.maketrans("-.:", "___"),
+    'postgresql':   string.maketrans("-.:", "___").lower(),
+    'pgpool':       string.maketrans("-.:", "___").lower(),
 }
 
 class ProjectsTable(database.KeyedTable):
@@ -605,7 +605,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
     driver = 'postgresql'
 
     def translate(self, x):
-        return x.translate(transTables[self.driver].lower())
+        return x.translate(transTables[self.driver])
 
     def create(self, name):
         path = self.cfg.reposDBPath % 'postgres'
@@ -627,7 +627,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                     pass
 
                 reposDb = dbstore.connect(
-                        self.cfg.reposDBPath % dbName.lower(), self.driver)
+                        self.cfg.reposDBPath % dbName, self.driver)
                 reposDb.loadSchema()
                 reposCu = reposDb.cursor()
                 tableList = []
