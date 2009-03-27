@@ -41,7 +41,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
         expBinaries = """\
-<item><title>Package calibre=1.2-3-4 built</title><description>&lt;b&gt;Trove Name:&lt;/b&gt; calibre&lt;br/&gt;
+<item><title>Package Build calibre=1.2-3-4 completed</title><description>&lt;b&gt;Trove Name:&lt;/b&gt; calibre&lt;br/&gt;
 &lt;b&gt;Trove Version:&lt;/b&gt; localhost@rpl:linux/1.2-3-4&lt;br/&gt;
 &lt;br/&gt;
 &lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009&lt;br/&gt;
@@ -65,7 +65,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 actual)
 
         self.failUnlessEqual(actual, expBinaries.replace(
-            "built", "failed"))
+            "completed", "failed"))
 
         job = FakeJobNoBinaries()
         cb.notify_committed(tb, job)
@@ -73,7 +73,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
         expNoBinaries = """\
-<item><title>Package calibre:source=1.2-3 built</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date><guid></guid></item>"""
+<item><title>Package Build calibre:source=1.2-3 completed</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date><guid></guid></item>"""
         actual = file(path).read()
         actual = re.sub(r"<guid>.*</guid>",
                 "<guid></guid>",
@@ -95,7 +95,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 actual)
 
         self.failUnlessEqual(actual, expBinaries.replace(
-            "Package ", "Build "))
+            "Package Build ", "Build "))
 
         job._isFailed = True
         cb.notify_error(tb, job)
@@ -107,7 +107,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 "<guid></guid>",
                 actual)
         self.failUnlessEqual(actual, expBinaries.replace(
-            "Package ", "Build ").replace("built", "failed"))
+            "Package Build ", "Build ").replace("completed", "failed"))
 
         job = FakeJobNoBinaries()
         cb.notify_committed(tb, job)
@@ -119,7 +119,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
                 "<guid></guid>",
                 actual)
         self.failUnlessEqual(actual, expNoBinaries.replace(
-            "Package ", "Build "))
+            "Package Build ", "Build "))
 
 
 class DummyConfig(object):

@@ -20,7 +20,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
 
     _labelTroveName = "Trove Name"
     _labelTroveVersion = "Trove Version"
-    _labelTitle = "Package"
+    _labelTitle = "Package Build"
 
     def __init__(self, cfg, userId):
         self.userId = userId
@@ -86,7 +86,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         if job.isFailed():
             status = "failed"
         else:
-            status = "built"
+            status = "completed"
         title = "%s %s=%s %s" % (cls._labelTitle, trv[0],
                                  trv[1].trailingRevision(), status)
         buildDate = cls.formatRFC822Time(trv[1].timeStamps()[-1])
