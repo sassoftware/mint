@@ -99,7 +99,7 @@ class AuthenticationManager(object):
                 JOIN Projects USING(projectId)
                 WHERE hostname=? AND buildId=?''', hostname, buildId)
             if not cu.fetchall():
-                raise errors.BuildNotfound(buildId)
+                raise errors.BuildNotFound(buildId)
 
     def requireReleaseOnHost(self, hostname, releaseId):
         cu = self.db.cursor()
