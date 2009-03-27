@@ -13,6 +13,7 @@ from mint.rest.api import productversion
 from mint.rest.api import repos
 from mint.rest.api import requires
 
+from mint.rest.middleware import auth
 
 class ProductMemberController(base.BaseController):
 
@@ -44,6 +45,7 @@ class ProductController(base.BaseController):
             'images'     : images.ProductImagesController,
             'releases'   : images.ProductReleasesController  }
 
+    @auth.public
     def index(self, request):
         limit = request.GET.get('limit', None)
         start = request.GET.get('start', None)
