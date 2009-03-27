@@ -8,6 +8,7 @@
 import testsetup
 
 import os
+import re
 import time
 import tempfile
 
@@ -45,15 +46,25 @@ class NoticesTest(testsetup.testsuite.TestCase):
 &lt;br/&gt;
 &lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009&lt;br/&gt;
 &lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;
-</description><date>13 Feb 2009 18:31:30 -0400</date></item>"""
-        self.failUnlessEqual(file(path).read(), expBinaries)
+</description><date>13 Feb 2009 18:31:30 -0400</date><guid></guid></item>"""
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+
+        self.failUnlessEqual(actual, expBinaries)
 
         job._isFailed = True
         cb.notify_error(tb, job)
         path = os.path.join(self.workDir, "notices", "users", self.userId,
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
-        self.failUnlessEqual(file(path).read(), expBinaries.replace(
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+
+        self.failUnlessEqual(actual, expBinaries.replace(
             "built", "failed"))
 
         job = FakeJobNoBinaries()
@@ -62,8 +73,12 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
         expNoBinaries = """\
-<item><title>Package calibre:source=1.2-3 built</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date></item>"""
-        self.failUnlessEqual(file(path).read(), expNoBinaries)
+<item><title>Package calibre:source=1.2-3 built</title><description>No troves built</description><date>31 Dec 1969 19:00:00 -0400</date><guid></guid></item>"""
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+        self.failUnlessEqual(actual, expNoBinaries)
 
         # Same test, but with an appliance callback
         cb = notices_callbacks.ApplianceNoticesCallback(DummyConfig(self.workDir), self.userId)
@@ -74,7 +89,12 @@ class NoticesTest(testsetup.testsuite.TestCase):
         path = os.path.join(self.workDir, "notices", "users", self.userId,
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
-        self.failUnlessEqual(file(path).read(), expBinaries.replace(
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+
+        self.failUnlessEqual(actual, expBinaries.replace(
             "Package ", "Build "))
 
         job._isFailed = True
@@ -82,7 +102,11 @@ class NoticesTest(testsetup.testsuite.TestCase):
         path = os.path.join(self.workDir, "notices", "users", self.userId,
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
-        self.failUnlessEqual(file(path).read(), expBinaries.replace(
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+        self.failUnlessEqual(actual, expBinaries.replace(
             "Package ", "Build ").replace("built", "failed"))
 
         job = FakeJobNoBinaries()
@@ -90,7 +114,11 @@ class NoticesTest(testsetup.testsuite.TestCase):
         path = os.path.join(self.workDir, "notices", "users", self.userId,
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
-        self.failUnlessEqual(file(path).read(), expNoBinaries.replace(
+        actual = file(path).read()
+        actual = re.sub(r"<guid>.*</guid>",
+                "<guid></guid>",
+                actual)
+        self.failUnlessEqual(actual, expNoBinaries.replace(
             "Package ", "Build "))
 
 

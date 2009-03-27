@@ -10,6 +10,8 @@ import time
 from lxml.builder import E
 from lxml import etree as ET
 
+from conary.lib import digestlib
+
 from mint import notices_store
 from mint import packagecreator
 
@@ -29,7 +31,10 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
         title, buildDate = self.getJobMeta(job, troveBinaries)
         description = self.getJobInformation(job, troveBinaries)
-        item = self.makeItem(title, description, buildDate, "empty")
+
+        guid = digestlib.md5(description)
+        guid.update(str(time.time()))
+        item = self.makeItem(title, description, buildDate, guid.hexdigest())
         self.store.storeUser(self.context, item)
 
     notify_error = notify_committed
@@ -49,10 +54,9 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         node.text = date
         item.append(node)
 
-        # We won't generate uuids for now
-        #node = E.guid()
-        #node.text = guid
-        #item.append(node)
+        node = E.guid()
+        node.text = guid
+        item.append(node)
 
         return ET.tostring(item, xml_declaration = False,
             encoding = 'UTF-8')
