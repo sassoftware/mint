@@ -48,11 +48,13 @@ class ProductController(base.BaseController):
         limit = request.GET.get('limit', None)
         start = request.GET.get('start', None)
         search = request.GET.get('search', None)
+        role = request.GET.get('role', None)
         if limit:
             limit = int(limit)
         if start:
             start = int(start)
-        return self.db.listProducts(limit=limit, start=start, search=search)
+        return self.db.listProducts(limit=limit, start=start, search=search,
+                role=role)
 
     def get(self, request, hostname):
         return self.db.getProduct(hostname)
