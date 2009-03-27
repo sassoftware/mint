@@ -6,43 +6,7 @@
 
 SUBDIRS = db lib reports rest scripts templates web 
 
-python_files =			\
-	__init__.py		\
-	amiperms.py		\
-	builds.py		\
-	buildtemplates.py	\
-	buildtypes.py		\
-	charts.py		\
-	checkhtml.py		\
-	client.py		\
-	communitytypes.py	\
-	config.py		\
-	cooktypes.py		\
-	constants.py		\
-	ec2.py			\
-	flavors.py		\
-	helperfuncs.py		\
-	jobstatus.py		\
-	logerror.py		\
-	mailinglists.py		\
-	maintenance.py		\
-	mint_error.py		\
-	mint_update.py		\
-	notices_store.py	\
-	packagecreator.py	\
-	projects.py		\
-	pubreleases.py		\
-	rbuilderaction.py	\
-	rmake_setup.py		\
-	searcher.py		\
-	server.py		\
-	session.py		\
-	shimclient.py		\
-	urltypes.py		\
-	userlevels.py		\
-	userlisting.py		\
-	users.py		\
-	usertemplates.py
+python_files = $(wildcard *.py)
 
 override PYDEST = mint
 
