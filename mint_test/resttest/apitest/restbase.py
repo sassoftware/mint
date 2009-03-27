@@ -8,12 +8,15 @@
 import testsetup
 
 import os
+import re
 import time
 
 from restlib import client as restClient
 from mint import helperfuncs
 
 import mint_rephelp
+
+URLQUOTE_RE = re.compile('%([A-Z0-9]{2})')
 
 class BaseRestTest(mint_rephelp.WebRepositoryHelper):
     buildDefs = [
@@ -93,13 +96,22 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
         client.connect()
         return client
 
+    def escapeURLQuotes(self, foo):
+        """
+        Escape URL quotes (%FF sequences) with an extra %
+        so they can be used with the % operator.
+        """
+        return URLQUOTE_RE.sub('%%\\1', foo)
+
     def makeUri(self, client, uri):
         if uri.startswith('http://') or uri.startswith('https://'):
             return uri
         replDict = dict(username = client.username, password =
             client.password, port = client.port, server = client.server)
 
-        return ("%s/%s" % (client.baseUrl, uri)) % replDict
+        uri = client.baseUrl + '/' + uri
+        uri = self.escapeURLQuotes(uri)
+        return uri % replDict
 
 class Client(restClient.Client):
     pass
