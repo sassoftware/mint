@@ -56,6 +56,7 @@ class ProductController(base.BaseController):
             start = int(start)
         return self.db.listProducts(limit=limit, start=start, search=search)
 
+    @auth.public
     def get(self, request, hostname):
         return self.db.getProduct(hostname)
 

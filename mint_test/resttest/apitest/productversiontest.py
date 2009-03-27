@@ -835,6 +835,56 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(resp,
              exp % dict(port = client.port, server = client.server))
 
+    def testGetOneProduct(self):
+        return self._testGetProducts()
+
+    def testGetOneProductNotLoggedIn(self):
+        return self._testGetOneProduct(notLoggedIn = True)
+
+    def _testGetOneProduct(self, notLoggedIn = False):
+
+        uriTemplate = 'products/testproject'
+        uri = uriTemplate
+        kw = {}
+        if notLoggedIn:
+            kw['username'] = None
+        client = self.getRestClient(uri, **kw)
+        response = client.request('GET')
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<product id="http://%(server)s:%(port)s/api/products/testproject">
+  <productId>1</productId>
+  <hostname>testproject</hostname>
+  <name>Project 1</name>
+  <nameSpace>yournamespace</nameSpace>
+  <domainname>rpath.local2</domainname>
+  <shortname>testproject</shortname>
+  <projecturl></projecturl>
+  <repositoryHostname>testproject.rpath.local2</repositoryHostname>
+  <description></description>
+  <isAppliance>false</isAppliance>
+  <prodtype>Component</prodtype>
+  <commitEmail></commitEmail>
+  <backupExternal>false</backupExternal>
+  <timeCreated></timeCreated>
+  <timeModified></timeModified>
+  <hidden>false</hidden>
+  <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
+  <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
+  <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+  <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
+  <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
+</product>
+"""
+        resp = response.read()
+        for pat in [ "timeCreated", "timeModified" ]:
+            resp = re.sub("<%s>.*</%s>" % (pat, pat),
+             "<%s></%s>" % (pat, pat),
+            resp)
+        self.failUnlessEqual(resp,
+             exp % dict(port = client.port, server = client.server))
+
+
 
 imageSet1 = """
 <imageDefinitions>
