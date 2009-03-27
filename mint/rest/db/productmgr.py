@@ -89,12 +89,12 @@ class ProductManager(object):
             search = search.replace('\\', '\\\\')
             search = search.replace('%','\\%')
             search = search.replace('_','\\_')
-            clauses.append('p.shortname ILIKE ?')
+            clauses.append('p.shortname LIKE ?')
             args.append('%' + search + '%')
 
         if clauses:
             query += 'WHERE ' + (' AND '.join(clauses))
-        query += 'ORDER BY p.shortname ASC'
+        query += ' ORDER BY p.shortname ASC'
 
         if limit:
             query += ' LIMIT %d' % limit
