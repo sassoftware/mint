@@ -343,15 +343,21 @@ class RepositoryManager(object):
             entitlement = authInfo.entitlement
         elif authType == 'userpass':
             authUser, authPass = authInfo.username, authInfo.password
-        # FIXME: is there harm in having this be FQDN instead of a label?
-        # I think the label part is vestigial.
+
+        # This table needs to go away, with the authentication bits moved
+        # into projects and the rest dropped. Until then, we need a dummy
+        # label as too many things depend on it being a label even though
+        # they really just need a FQDN.
+        label = fqdn + "@rpl:2"
+
         cu = self.db.cursor()
         cu.execute("""INSERT INTO Labels (projectId, label, url,
                                           authType, username, password, 
                                           entitlement)
                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                      productId, fqdn, url, authType,
+                      productId, label, url, authType,
                       authUser, authPass, entitlement)
+
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.siteDomainName.split(':')[0]
         if fqdn != localFqdn:
