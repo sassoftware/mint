@@ -438,6 +438,7 @@ class SiteHandler(WebHandler):
            customPlatform = None,
            kwargs={'domainname': self.cfg.projectDomainName.split(':')[0], 
                    'appliance': 'unknown',
+                   'isPrivate': self.cfg.rBuilderOnline and 'off' or 'on',
                    'platformLabel': platformLabel})
 
     @mailList

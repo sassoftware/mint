@@ -9,7 +9,7 @@
 <?python
     from mint.config import isRBO
     from mint.web.templatesupport import projectText
-    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version']:
+    for var in ['title', 'hostname', 'domainname', 'projecturl', 'optlists', 'blurb', 'shortname', 'namespace', 'version', 'isPrivate']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -102,6 +102,21 @@
             </div>
             <div id="advanced_settings" class="formgroup" style="display: none;">
                 <table class="mainformhorizontal">
+                <tr>
+                   <td class="form-label">
+                      ${formLabelWithHelp("private_help", projectText().title() + " is Private")}
+                   </td>
+                   <td>
+                      <input type="checkbox" class='check' name="isPrivate" id="isPrivate" py:attrs="{'checked' : kwargs['isPrivate'] and 'checked' or None}"/>
+                      <div id="private_help" class="help" style="display: none;">
+                          Check the box if you want the new ${projectText().title()} to be 
+                          a private one. Private ${projectText().title()}s are only accessible
+                          by ${projectText().title()} Team Members (Owners, Developers, and 
+                          Users).  If you choose to make your ${projectText().title()} public, 
+                          do not check the box.
+                      </div>
+                   </td>
+                </tr>
                 <tr py:if="not isRBO()">
                     <td class="form-label">
                         ${formLabelWithHelp("dn_help", "Repository Domain Name")}
