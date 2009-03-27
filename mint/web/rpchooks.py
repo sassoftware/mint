@@ -71,7 +71,11 @@ def rpcHandler(req, cfg, pathInfo = None):
         req.content_type = "application/x-json"
 
     # write repsonse
-    req.write(resp)
+    try:
+        req.write(resp)
+    except IOError, err:
+        # Client went away
+        req.log_error('Error writing to client: %s' % err)
     return apache.OK
 
 def handler(req):
