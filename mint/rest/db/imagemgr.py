@@ -38,7 +38,7 @@ class ImageManager(object):
         hostname = fqdn.split('.')[0]
         # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''SELECT Builds.buildId as imageId, hostname,
-               pubReleaseId as release,  
+               pubReleaseId as "release",
                buildType as imageType, Builds.name, Builds.description, 
                troveName, troveVersion, troveFlavor, troveLastChanged,
                Builds.timeCreated, CreateUser.username as creator, 
