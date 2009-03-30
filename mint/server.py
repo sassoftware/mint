@@ -3281,6 +3281,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
             print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
             sys.stderr.flush()
 
+        username = self.users.get(bld.createdBy)['username']
+        buildType = buildtypes.typeNamesMarketing[bld.buildType]
+
+        ent = (amiId, amiManifestName, buildType, time.time())
+        notices = notices_callbacks.AMIImageNotices(self.cfg, username)
+        notices.notify_built([ent])
+
         return True
 
     @typeCheck(int, list, (list, str, int))
@@ -3312,7 +3319,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         build = authclient.getBuild(buildId)
         project = authclient.getProject(build.projectId)
+        username = self.users.get(build.createdBy)['username']
+        buildType = buildtypes.typeNamesMarketing.get(build.buildType, None)
+        downloadUrlTemplate = self.getDownloadUrlTemplate()
+        # We don't have a timestamp on the data coming from the jobslave, so
+        # just use the current time for that.
+        buildTime = time.time()
 
+        imageFiles = []
         cu = self.db.transaction()
         try:
             # sqlite doesn't do delete cascade
@@ -3347,11 +3361,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 urlId = cu.lastrowid
                 cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
                         fileId, urlId)
+                imageFiles.append((fileName, title, buildType, buildTime,
+                    downloadUrlTemplate % fileId))
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
+
+        notices = notices_callbacks.ImageNotices(self.cfg, username)
+        notices.notify_built(imageFiles)
         return True
 
     @typeCheck(int, int, int, str)
@@ -3436,12 +3455,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         results = cu.fetchall_dict()
 
-        # joinPaths will render any occurance of // into / and therefore
-        # normalize the URL. on systems where pathsep is not / this may
-        # be inappropriate
-        url = util.joinPaths(self.cfg.projectSiteHost,
-                self.cfg.basePath, 'downloadImage')
-        downloadUrlTemplate = "http://%s?fileId=%%d" % (url)
+        downloadUrlTemplate = self.getDownloadUrlTemplate()
 
         buildFilesList = []
         lastFileId = -1
@@ -5727,4 +5741,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback = callback)
+
+    def getDownloadUrlTemplate(self):
+        # joinPaths will render any occurance of // into / and therefore
+        # normalize the URL. on systems where pathsep is not / this may
+        # be inappropriate
+        url = util.joinPaths(self.cfg.projectSiteHost,
+                self.cfg.basePath, 'downloadImage')
+        downloadUrlTemplate = "http://%s?fileId=%%d" % url
+        return downloadUrlTemplate
 

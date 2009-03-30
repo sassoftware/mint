@@ -22,6 +22,8 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
     _labelTroveVersion = "Trove Version"
     _labelTitle = "Package Build"
 
+    _lineSep = "<br/>\n"
+
     def __init__(self, cfg, userId):
         self.userId = userId
         self.store = notices_store.createStore(
@@ -114,7 +116,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         ret.append(template % ("Created On", cls.formatTime(createdOn)))
         ret.append(template % ("Duration", cls.formatSeconds(job.finish - job.start)))
         ret.append("")
-        return '<br/>\n'.join(ret)
+        return cls._lineSep.join(ret)
 
     @classmethod
     def formatTime(cls, tstamp):
@@ -147,3 +149,46 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
 class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
 
+class ImageNotices(PackageNoticesCallback):
+    def notify_built(self, imageFiles):
+        for ent in imageFiles:
+            category = ((ent[1] == "Failed build log") and "error") or "success"
+            description = self.getDescription(ent)
+            buildDate = self.formatRFC822Time(ent[3])
+            title = "Image `%s' built" % ent[1]
+            guid = digestlib.md5(description)
+            guid.update(str(time.time()))
+
+            item = self.makeItem(title, description, category, buildDate, guid.hexdigest())
+            self.store.storeUser(self.context, item)
+
+
+    notify_error = notify_built
+
+    @classmethod
+    def getDescription(cls, ent):
+        fileName, imageName, imageType, buildTime, downloadUrl = ent
+        template = "<b>%s:</b> %s"
+        ret = []
+        ret.append(template % ("Image Name", imageName))
+        if imageType:
+            ret.append(template % ("Image Type", imageType))
+        ret.append(template % ("File Name", fileName))
+        ret.append(template % ("Download URL", downloadUrl))
+        ret.append(template % ("Created On", cls.formatTime(buildTime)))
+        ret.append("")
+        return cls._lineSep.join(ret)
+
+class AMIImageNotices(ImageNotices):
+    @classmethod
+    def getDescription(cls, ent):
+        amiId, imageName, imageType, buildTime = ent
+        template = "<b>%s:</b> %s"
+        ret = []
+        ret.append(template % ("Image Name", imageName))
+        if imageType:
+            ret.append(template % ("Image Type", imageType))
+        ret.append(template % ("AMI", amiId))
+        ret.append(template % ("Created On", cls.formatTime(buildTime)))
+        ret.append("")
+        return cls._lineSep.join(ret)
