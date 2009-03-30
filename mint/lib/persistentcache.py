@@ -5,10 +5,10 @@
 #
 
 import cPickle as pickle
+import errno
 import os
-import fcntl
-
 from conary.lib.util import mkdirChain
+from mint.lib.unixutils import atomicOpen
 
 class PersistentCache(object):
 
@@ -18,30 +18,25 @@ class PersistentCache(object):
         self._load()
 
     def _load(self):
-        f = None
+        fObj = None
         try:
-            try:
-                f = file(self._cachefile, 'rb')
-            except IOError, ioe:
-                if ioe.errno == 2: # file doesn't exist
-                    self._persist()
-                    return
-                else:
-                    raise
-            fcntl.flock(f, fcntl.LOCK_SH)
-            self._data = pickle.load(f)
-        finally:
-            if f: f.close()
+            fObj = file(self._cachefile, 'rb')
+        except IOError, ioe:
+            if ioe.args[0] == errno.ENOENT:
+                # No such file or directory
+                self._persist()
+            else:
+                raise
+        else:
+            self._data = pickle.load(fObj)
 
     def _persist(self):
         if not os.path.exists(os.path.dirname(self._cachefile)):
             mkdirChain(os.path.dirname(self._cachefile))
-        f = file(self._cachefile, 'wb')
-        try:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            pickle.dump(self._data, f)
-        finally:
-            if f: f.close()
+
+        fObj = atomicOpen(self._cachefile)
+        pickle.dump(self._data, fObj)
+        fObj.commit()
 
     def _update(self, key, value):
         self._data[key] = value
