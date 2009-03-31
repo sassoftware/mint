@@ -30,13 +30,14 @@ class WelcomeWindow (InstallWindow):
 
     # WelcomeWindow tag="wel"
     def getScreen (self, anaconda):
+        # Store a reference to the anaconda object for use elsewhere.
+        self.anaconda = anaconda
+
         # Go ahead and initialize partition objects so that we can display
         # dialogues that mention the correct devices.
         if self.advanced_supported():
             partitionObjectsInitialize(anaconda)
             anaconda.dispatch.skipStep('partitionobjinit')
-
-        self.anaconda = anaconda
 
         # this is a bit ugly... but scale the image if we're not at 800x600
         (w, h) = self.ics.cw.window.get_size_request()
