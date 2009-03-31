@@ -3320,6 +3320,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         build = authclient.getBuild(buildId)
         project = authclient.getProject(build.projectId)
         username = self.users.get(build.createdBy)['username']
+        buildName = build.name
         buildType = buildtypes.typeNamesMarketing.get(build.buildType, None)
         downloadUrlTemplate = self.getDownloadUrlTemplate()
         # We don't have a timestamp on the data coming from the jobslave, so
@@ -3361,7 +3362,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 urlId = cu.lastrowid
                 cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
                         fileId, urlId)
-                imageFiles.append((fileName, title, buildType, buildTime,
+                imageFiles.append((fileName, buildName, buildType, buildTime,
                     downloadUrlTemplate % fileId))
         except:
             self.db.rollback()
