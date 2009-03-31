@@ -72,7 +72,8 @@ class ImageManager(object):
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
-            row['imageType'] = buildtypes.typeNamesShort[row['imageType']]
+            row['imageType'] = buildtypes.typeNamesShort.get(row['imageType'],
+                    'Unknown')
             image = models.Image(**row)
             image.files = self.listFilesForImage(hostname, image.imageId)
             self._addImageStatus(image)
@@ -190,6 +191,7 @@ class ImageManager(object):
                                      troveVersion, troveFlavor, stageName, 
                                      productVersionId) 
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+        assert buildType is not None
         cu.execute(sql, productId, buildName, buildType,    
                    time.time(), 0, self.auth.userId,
                    troveTuple[0], troveTuple[1].freeze(),
