@@ -174,7 +174,8 @@ class ImageNotices(PackageNoticesCallback):
         if imageType:
             ret.append(template % ("Image Type", imageType))
         ret.append(template % ("File Name", fileName))
-        ret.append(template % ("Download URL", downloadUrl))
+        ret.append(template % ("Download URL", '<a href="%s">%s</a>' %
+            (downloadUrl, downloadUrl)))
         ret.append(template % ("Created On", cls.formatTime(buildTime)))
         ret.append("")
         return cls._lineSep.join(ret)
