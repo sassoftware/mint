@@ -6,6 +6,7 @@
 
 import logging
 import os
+import urllib
 import urllib2
 import time
 from conary import conarycfg
@@ -24,14 +25,17 @@ log = logging.getLogger(__name__)
 
 class AuthzConfig(ConfigFile):
     #pylint: disable-msg=R0904
-    genUrl = (CfgString, 'https://entitlements.rpath.com/key',
-            "URL which we will fetch to generate a new key")
+    keyUrl = (CfgString, 'https://entitlements.rpath.com/key',
+            "Base URL for the key function of the enablement service")
     cachePath = (CfgString, 'authorization.xml',
             "Path where the XML response will be cached, relative to"
             "this configuration file.")
     lastSuccess = (CfgString, None,
             "Date on which the entitlement service last "
-            "provided a valid response")
+            "provided a valid response.")
+    checkRepos = (CfgString, 'products.rpath.com',
+            "Repository FQDN whose entitlement should be sent to the "
+            "enablement server.")
 
 
 # xobj bits
@@ -75,11 +79,9 @@ class XML_AuthzDocument(xobj.Document):
 
 # authz handle
 class SiteAuthorization(object):
-    # Use the entitlement for this repos to migrate existing installations.
-    productRepos = 'products.rpath.com'
-
-    def __init__(self, cfgPath):
+    def __init__(self, cfgPath, conaryCfg=None):
         self.cfgPath = os.path.abspath(cfgPath)
+        self.conaryCfg = None
         self.cfg = self.xml = None
         self.cfgHash = self.xmlHash = None
         self.load()
@@ -90,6 +92,9 @@ class SiteAuthorization(object):
                 self.cfg.cachePath)
 
     def load(self):
+        """
+        Load the enablement configuration and XML blob from disk, if present.
+        """
         self.cfg = AuthzConfig()
         if os.path.exists(self.cfgPath):
             fObj = open(self.cfgPath)
@@ -100,9 +105,13 @@ class SiteAuthorization(object):
             self.loadXML()
 
         else:
-            self.cfg = self.xml = self.cfgHash = self.xmlHash = None
+            self.xml = self.cfgHash = self.xmlHash = None
 
     def loadXML(self, xmlPath=None):
+        """
+        Load the enablement XML blob from disk, if present. The configuration
+        must already be loaded.
+        """
         if xmlPath is None:
             xmlPath = self._getXMLPath()
 
@@ -115,14 +124,37 @@ class SiteAuthorization(object):
             self.xml = self.xmlHash = None
 
     def refresh(self):
+        """
+        Reload the enablement configuration and XML blob from disk if it
+        has been modified since the previous load.
+        """
         if hashFile(self.cfgPath, missingOk=True) != self.cfgHash:
             self.load()
         elif self.cfg and hashFile(self._getXMLPath(),
                 missingOk=True) != self.xmlHash:
             self.loadXML()
 
+    def _getKeyFromSystem(self):
+        """
+        Get the entitlement currently configured for the main repository.
+        This is the key we will ask the enablement server about.
+        """
+        if self.conaryCfg:
+            conaryCfg = self.conaryCfg
+        else:
+            conaryCfg = conarycfg.ConaryConfiguration(True)
+
+        matches = conaryCfg.entitlement.get(self.cfg.checkRepos)
+        if matches:
+            return matches[0][1]
+        else:
+            return None
+
     # Writers
     def save(self):
+        """
+        Save the current configuration to disk.
+        """
         fObj = atomicOpen(self.cfgPath)
         self.cfg.store(fObj, False)
         fObj.commit()
@@ -130,26 +162,34 @@ class SiteAuthorization(object):
     def update(self):
         """
         Fetch the entitlement XML blob for this installation.
+
+        Returns C{True} if the refresh was successful, or C{False}
+        if it failed for any reason.
         """
-        if self.xml:
-            # Have a key
-            url = self.xml.entitlement.id
+        key = self._getKeyFromSystem()
+        if key:
+            url = self.cfg.keyUrl + '/' + urllib.quote(key)
+            try:
+                fObj = urllib2.urlopen(url)
+            except:
+                # Current policy is to keep trying indefinitely without
+                # shutting off the rBuilder.
+                log.exception("Deferring authorization check: "
+                        "unable to refresh:")
+            else:
+                # Write XML to cache path
+                self._copySave(fObj)
+                return True
         else:
-            # Need a key
-            url = self.cfg.genUrl
-
-        try:
-            fObj = urllib2.urlopen(url)
-        except:
-            # Current policy is to keep trying indefinitely without
-            # shutting off the rBuilder.
-            log.exception("Unable to get authorization data, deferring:")
-            return
-
-        # Write XML to cache path
-        self._copySave(fObj)
+            log.warning("Deferring authorization check: "
+                    "no system entitlement.")
+        return False
 
     def _copySave(self, fObj):
+        """
+        Read the XML blob from C{fObj} (usually a HTTP response), load it,
+        and write it to the cache path.
+        """
         outObj = atomicOpen(self._getXMLPath())
         copyfileobj(fObj, outObj)
         outObj.flush()
@@ -161,11 +201,6 @@ class SiteAuthorization(object):
         self.save()
 
     # Accessors
-    def getEntitlement(self):
-        if self.xml:
-            return self.xml.entitlement.credentials.key
-        return None
-
     def isValid(self):
         if self.xml:
             expired = self.xml.entitlement.identity.serviceLevel.expired
