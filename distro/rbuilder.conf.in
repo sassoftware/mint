@@ -62,11 +62,11 @@ availablePlatforms      conary.rpath.com@rpl:2
 availablePlatforms      rap.rpath.com@rpath:linux-1
 
 # Available platform names. Should match the order of availablePlatforms
-availablePlatformNames  "rPath Appliance Platform Linux Service 2"
-availablePlatformNames  "SLES 10 Delivered by rPath"
-availablePlatformNames  "CentOS 5 Delivered by rPath"
-availablePlatformNames  "rPath Linux 2"
-availablePlatformNames  "rPath Appliance Platform Linux Service 1"
+availablePlatformNames  rPath Appliance Platform Linux Service 2
+availablePlatformNames  SLES 10 Delivered by rPath
+availablePlatformNames  CentOS 5 Delivered by rPath
+availablePlatformNames  rPath Linux 2
+availablePlatformNames  rPath Appliance Platform Linux Service 1
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
 acceptablePlatforms      rap.rpath.com@rpath:linux-2-devel
