@@ -22,7 +22,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
     _labelTroveVersion = "Trove Version"
     _labelTitle = "Package Build"
 
-    _lineSep = "<br/>\n"
+    _lineSep = "<br/>"
 
     def __init__(self, cfg, userId):
         self.userId = userId

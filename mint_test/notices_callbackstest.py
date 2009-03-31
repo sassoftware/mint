@@ -41,12 +41,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "notices", "builder", str(counter.counter), "content")
         self.failUnless(os.path.exists(path))
         expBinaries = """\
-<item><title>Package Build calibre=1.2-3-4 completed</title><description>&lt;b&gt;Trove Name:&lt;/b&gt; calibre&lt;br/&gt;
-&lt;b&gt;Trove Version:&lt;/b&gt; localhost@rpl:linux/1.2-3-4&lt;br/&gt;
-&lt;br/&gt;
-&lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009&lt;br/&gt;
-&lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;
-</description><date>13 Feb 2009 18:31:30 -0400</date><category>success</category><guid></guid></item>"""
+<item><title>Package Build calibre=1.2-3-4 completed</title><description>&lt;b&gt;Trove Name:&lt;/b&gt; calibre&lt;br/&gt;&lt;b&gt;Trove Version:&lt;/b&gt; localhost@rpl:linux/1.2-3-4&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009&lt;br/&gt;&lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;</description><date>13 Feb 2009 18:31:30 -0400</date><category>success</category><guid></guid></item>"""
         actual = file(path).read()
         actual = re.sub(r"<guid>.*</guid>",
                 "<guid></guid>",
