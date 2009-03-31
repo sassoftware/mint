@@ -178,65 +178,6 @@ class SingletonScript(GenericScript):
             self._unlock()
             return exitcode
 
-class TriggerScript(GenericScript):
-
-    """
-    Class which parses the following command line arguments:
-
-        obj_type, action, obj_id
-
-    and stores them in self.objectType, self.objectAction, self.objectId,
-    respectively. Caller must still implement action, as usual.
-
-    As a convienience, an rBuilder client object is instantiated with auth
-    credentials.
-
-    All callers must implement getApiVersion; see below.
-    """
-
-    def __init__(self):
-        from mint import config
-        from mint.client import MintClient
-
-        GenericScript.__init__(self)
-
-        # get the rBuilder configuration and a client; you'll probably need it
-        self.mintConfig = config.MintConfig()
-        self.mintConfig.read(config.RBUILDER_CONFIG)
-        self.mintClient = MintClient('http://%s:%s@%s.%s/xmlrpc-private/' % \
-                (self.mintConfig.authUser, self.mintConfig.authPass,
-                 self.mintConfig.hostName, self.mintConfig.siteDomainName))
-
-    def _printApiVersion(self):
-        print >> sys.stdout, self.getApiVersion()
-        sys.stdout.flush()
-        sys.exit(0)
-
-    def getApiVersion(self):
-        """ Subclasses must return an integer representing the version
-            of calling convention they expect. Failure to do so will
-            raise an exception.
-        """
-        raise NotImplementedError
-
-    def usage(self):
-        print >> sys.stderr, "USAGE: %s obj_type action obj_id"
-        print >> sys.stderr, "       %s --apiVersion"
-        sys.stderr.flush()
-
-    def handle_args(self):
-        if len(sys.argv) == 2:
-            if sys.argv[1] == '--apiVersion':
-                self._printApiVersion()
-        elif len(sys.argv) == 4:
-            if self.getApiVersion() == 1:
-                self.objectType = sys.argv[1]
-                self.objectAction = sys.argv[2]
-                self.objectId = long(sys.argv[3])
-                return True
-
-        return False
-
 
 LOGGER_ID_SCRIPT = 'scriptlogger'
 
