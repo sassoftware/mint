@@ -52,7 +52,7 @@ class DBInterface(object):
             Commits after running a function
         """
         self._holdCommits = True
-        self.cursor().execute('BEGIN IMMEDIATE')
+        self.db.transaction()
         try:
             rv = fn(*args, **kw)
             self._holdCommits = False
