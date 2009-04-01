@@ -9,7 +9,7 @@ import os
 import urllib
 import urllib2
 import time
-from conary import conarycfg
+from conary import conaryclient
 from conary.lib.cfg import ConfigFile
 from conary.lib.cfgtypes import CfgString
 from conary.lib.digestlib import sha1
@@ -25,8 +25,8 @@ log = logging.getLogger(__name__)
 
 class AuthzConfig(ConfigFile):
     #pylint: disable-msg=R0904
-    keyUrl = (CfgString, 'https://entitlements.rpath.com/key',
-            "Base URL for the key function of the enablement service")
+    keyUrl = (CfgString, 'https://entitlements.rpath.com/key/',
+            "Base URL for the enablement service's key handling")
     cachePath = (CfgString, 'authorization.xml',
             "Path where the XML response will be cached, relative to"
             "this configuration file.")
@@ -38,7 +38,7 @@ class AuthzConfig(ConfigFile):
             "enablement server.")
 
 
-# xobj bits
+# xobj bits - authorization blob
 class XML_href(xobj.XObj):
     _xobj = xobj.XObjMetadata(attributes={'href': str})
 
@@ -75,6 +75,17 @@ class XML_Entitlement(xobj.XObj):
 
 class XML_AuthzDocument(xobj.Document):
     entitlement = XML_Entitlement
+
+
+# xobj bits - key request
+class XML_Activate(xobj.XObj):
+    # group trove
+    name = str
+    version = str
+
+
+class XML_ActivateDocument(xobj.Document):
+    activate = XML_Activate
 
 
 # authz handle
@@ -139,25 +150,78 @@ class SiteAuthorization(object):
         Get the entitlement currently configured for the main repository.
         This is the key we will ask the enablement server about.
         """
-        if self.conaryCfg:
-            conaryCfg = self.conaryCfg
-        else:
-            conaryCfg = conarycfg.ConaryConfiguration(True)
+        if not self.conaryCfg:
+            log.warning("Tried to get entitlement without a loaded conarycfg")
+            return None
 
-        matches = conaryCfg.entitlement.find(self.cfg.checkRepos)
+        #pylint: disable-msg=E1101
+        # ccfg does in fact have an "entitlement" member
+        matches = self.conaryCfg.entitlement.find(self.cfg.checkRepos)
         if matches:
             return matches[0][1]
         else:
             return None
 
+    def _getGroupVersion(self):
+        """
+        Determine the name and version of the top-level group trove.
+        If there are multiple top-level groups, try to pick the most
+        relevant one, otherwise fail.
+
+        @returns: (name, version)
+        """
+        if not self.conaryCfg:
+            log.warning("Tried to get top-level group without a "
+                    "loaded conarycfg")
+            return None
+        cli = conaryclient.ConaryClient(self.conaryCfg)
+
+        groups = set(x[0] for x in cli.fullUpdateItemList()
+                if x[0].startswith('group-'))
+        name = None
+        if not groups:
+            log.warning("No top-level groups are installed")
+            return None
+        elif len(groups) == 1:
+            name = groups.pop()
+        else:
+            for x in ('group-rbuilder-appliance', 'group-rbuilder'):
+                if x in groups:
+                    name = x
+                    break
+            else:
+                log.warning("Multiple top-level groups: %s", " ".join(groups))
+                return None
+
+        matches = cli.db.findTrove(None, (name, None, None))
+        return max(matches)[:2]
+
     # Writers
-    def save(self):
+    def generate(self):
         """
-        Save the current configuration to disk.
+        Generate and return a new entitlement key. The associated
+        blob will be saved to disk as well.
         """
-        fObj = atomicOpen(self.cfgPath)
-        self.cfg.store(fObj, False)
-        fObj.commit()
+        groupTrove = self._getGroupVersion()
+        if not groupTrove:
+            log.error("Can't find top-level group to generate entitlement")
+            return False
+        name, version = groupTrove
+
+        doc = XML_ActivateDocument()
+        doc.activate = XML_Activate()
+        doc.activate.name = name
+        doc.activate.version = version.asString()
+        blob = doc.toxml()
+
+        err = None
+        url = self.cfg.keyUrl
+        log.debug("Posting %s=%s to %s", name, version, url)
+        try:
+            fObj = urllib2.urlopen(url, blob)
+        except Exception, err:
+            pass
+        import epdb;epdb.st()
 
     def update(self):
         """
@@ -168,7 +232,8 @@ class SiteAuthorization(object):
         """
         key = self._getKeyFromSystem()
         if key:
-            url = self.cfg.keyUrl + '/' + urllib.quote(key)
+            url = os.path.join(self.cfg.keyUrl, urllib.quote(key))
+            log.debug('Checking %s', url)
             try:
                 fObj = urllib2.urlopen(url)
             except:
@@ -184,6 +249,14 @@ class SiteAuthorization(object):
             log.warning("Deferring authorization check: "
                     "no system entitlement.")
         return False
+
+    def save(self):
+        """
+        Save the current configuration to disk.
+        """
+        fObj = atomicOpen(self.cfgPath)
+        self.cfg.store(fObj, False)
+        fObj.commit()
 
     def _copySave(self, fObj):
         """
@@ -201,6 +274,11 @@ class SiteAuthorization(object):
         self.save()
 
     # Accessors
+    def isKeySet(self):
+        # For script usage only; don't call on the hot path (e.g. in a
+        # web handler) because it may load a conary configuration.
+        return self._getKeyFromSystem() is not None
+
     def isValid(self):
         if self.xml:
             expired = self.xml.entitlement.identity.serviceLevel.expired
