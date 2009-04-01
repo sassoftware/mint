@@ -597,7 +597,9 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
         RepositoryDatabase.create(self, name)
         
     def delete(self, name):
-        util.rmtree(self.cfg.reposDBPath + name, ignore_errors = True)
+        path = self.cfg.reposDBPath % name
+        if os.path.exists(path):
+            util.rmtree(path)
 
 
 class PostgreSqlRepositoryDatabase(RepositoryDatabase):
