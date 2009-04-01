@@ -10,8 +10,6 @@ import time
 from lxml.builder import E
 from lxml import etree as ET
 
-from conary.lib import digestlib
-
 from mint import notices_store
 from mint import packagecreator
 
@@ -28,6 +26,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         self.userId = userId
         self.store = notices_store.createStore(
             os.path.join(cfg.dataPath, "notices"), userId)
+        self.hostName = cfg.projectSiteHost
 
     def _notify(self, troveBuilder, job):
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
@@ -35,14 +34,23 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         description = self.getJobInformation(job, troveBinaries)
 
         category = (job.isFailed() and "error") or "success"
+        self._storeNotice(title, description, category, buildDate)
 
-        guid = digestlib.md5(description)
-        guid.update(str(time.time()))
-        item = self.makeItem(title, description, category, buildDate, guid.hexdigest())
-        self.store.storeUser(self.context, item)
+    def _storeNotice(self, title, description, category, buildDate):
+        # Create the dummy notice so we can secure a guid
+        notice = self.store.storeUser(self.context, "")
+        guid = self.getNoticesUrl(notice.id)
+        item = self.makeItem(title, description, category, buildDate, guid)
+        notice.content = item
+        self.store.storeUser(None, notice)
 
     notify_committed = _notify
     notify_error = _notify
+
+    def getNoticesUrl(self, noticeId):
+        return "http://%s/%s" % (self.hostName,
+            '/'.join(["api/users", self.userId,
+                      "notices/contexts", noticeId]))
 
     @classmethod
     def makeItem(self, title, description, category, date, guid):
@@ -156,12 +164,7 @@ class ImageNotices(PackageNoticesCallback):
             description = self.getDescription(ent)
             buildDate = self.formatRFC822Time(ent[3])
             title = "Image `%s' built" % ent[1]
-            guid = digestlib.md5(description)
-            guid.update(str(time.time()))
-
-            item = self.makeItem(title, description, category, buildDate, guid.hexdigest())
-            self.store.storeUser(self.context, item)
-
+            self._storeNotice(title, description, category, buildDate)
 
     notify_error = notify_built
 
