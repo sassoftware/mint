@@ -92,7 +92,7 @@ class XML_ActivateDocument(xobj.Document):
 class SiteAuthorization(object):
     def __init__(self, cfgPath, conaryCfg=None):
         self.cfgPath = os.path.abspath(cfgPath)
-        self.conaryCfg = None
+        self.conaryCfg = conaryCfg
         self.cfg = self.xml = None
         self.cfgHash = self.xmlHash = None
         self.load()
@@ -205,23 +205,27 @@ class SiteAuthorization(object):
         groupTrove = self._getGroupVersion()
         if not groupTrove:
             log.error("Can't find top-level group to generate entitlement")
-            return False
+            return None
         name, version = groupTrove
 
         doc = XML_ActivateDocument()
         doc.activate = XML_Activate()
         doc.activate.name = name
         doc.activate.version = version.asString()
-        blob = doc.toxml()
+
+        url = self.cfg.keyUrl
+        req = urllib2.Request(url, doc.toxml(), {'Content-type': 'text/xml'})
+        log.debug("Posting %s=%s to %s", name, version, url)
 
         err = None
-        url = self.cfg.keyUrl
-        log.debug("Posting %s=%s to %s", name, version, url)
         try:
-            fObj = urllib2.urlopen(url, blob)
-        except Exception, err:
-            pass
-        import epdb;epdb.st()
+            fObj = urllib2.urlopen(req)
+        except:
+            log.exception("Failed to generate entitlement:")
+            return None
+
+        self._copySaveXML(fObj)
+        return self.xml.entitlement.credentials.key
 
     def update(self):
         """
@@ -234,6 +238,7 @@ class SiteAuthorization(object):
         if key:
             url = os.path.join(self.cfg.keyUrl, urllib.quote(key))
             log.debug('Checking %s', url)
+
             try:
                 fObj = urllib2.urlopen(url)
             except:
@@ -242,8 +247,7 @@ class SiteAuthorization(object):
                 log.exception("Deferring authorization check: "
                         "unable to refresh:")
             else:
-                # Write XML to cache path
-                self._copySave(fObj)
+                self._copySaveXML(fObj)
                 return True
         else:
             log.warning("Deferring authorization check: "
@@ -258,7 +262,7 @@ class SiteAuthorization(object):
         self.cfg.store(fObj, False)
         fObj.commit()
 
-    def _copySave(self, fObj):
+    def _copySaveXML(self, fObj):
         """
         Read the XML blob from C{fObj} (usually a HTTP response), load it,
         and write it to the cache path.

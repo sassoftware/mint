@@ -228,7 +228,7 @@ class ScriptLogger(object):
 
 _scriptLogger = ScriptLogger()
 
-def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
+def setupScriptLogger(logfile = None, consoleLevel = logging.DEBUG,
         logfileLevel = logging.INFO):
     """
     Sets up the script logger instance for the process. If aLogfile

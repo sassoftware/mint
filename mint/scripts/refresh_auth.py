@@ -26,4 +26,6 @@ class RefreshAuthScript(SingletonScript):
 
     def action(self):
         auth = SiteAuthorization(self.cfg.siteAuthCfgPath, self.conaryCfg)
-        auth.update()
+        if not auth.update():
+            return -1
+        return 0
