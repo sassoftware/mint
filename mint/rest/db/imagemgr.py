@@ -154,8 +154,8 @@ class ImageManager(object):
             except (mcp_error.UnknownJob, mcp_error.NetworkError):
                 image.status = jobstatus.NO_JOB
                 image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
-
-            image.status, image.statusMessage = status
+            else:
+                image.status, image.statusMessage = status
         else:
             image.status = jobstatus.FINISHED
             image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
