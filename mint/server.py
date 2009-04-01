@@ -3282,11 +3282,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             sys.stderr.flush()
 
         username = self.users.get(bld.createdBy)['username']
-        buildType = buildtypes.typeNamesMarketing[bld.buildType]
+        buildType = buildtypes.typeNamesMarketing.get(bld.buildType)
 
-        ent = (amiId, amiManifestName, buildType, time.time())
         notices = notices_callbacks.AMIImageNotices(self.cfg, username)
-        notices.notify_built([ent])
+        notices.notify_built(bld.name, buildType, time.time(), [ amiId ])
 
         return True
 
@@ -3362,8 +3361,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 urlId = cu.lastrowid
                 cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
                         fileId, urlId)
-                imageFiles.append((fileName, buildName, buildType, buildTime,
-                    downloadUrlTemplate % fileId))
+                imageFiles.append((fileName, downloadUrlTemplate % fileId))
         except:
             self.db.rollback()
             raise
@@ -3371,7 +3369,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
 
         notices = notices_callbacks.ImageNotices(self.cfg, username)
-        notices.notify_built(imageFiles)
+        notices.notify_built(buildName, buildType, buildTime, imageFiles)
         return True
 
     @typeCheck(int, int, int, str)

@@ -158,41 +158,36 @@ class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
 
 class ImageNotices(PackageNoticesCallback):
-    def notify_built(self, imageFiles):
+    _template = "<b>%s:</b> %s"
+    def notify_built(self, buildName, buildType, buildTime, imageFiles):
+        category = ((buildName == "Failed build log") and "error") or "success"
+        lines = []
+        if buildType:
+            lines.append(self._template % ("Image Type", buildType))
         for ent in imageFiles:
-            category = ((ent[1] == "Failed build log") and "error") or "success"
-            description = self.getDescription(ent)
-            buildDate = self.formatRFC822Time(ent[3])
-            title = "Image `%s' built" % ent[1]
-            self._storeNotice(title, description, category, buildDate)
+            lines.extend(self.getEntryDescription(ent))
+        lines.append(self._template % ("Created On", cls.formatTime(buildTime)))
+        description = self._lineSep.join(lines)
+
+        title = "Image `%s' built" % buildName
+        buildDate = self.formatRFC822Time(buildTime)
+        self._storeNotice(title, description, category, buildDate)
 
     notify_error = notify_built
 
     @classmethod
-    def getDescription(cls, ent):
-        fileName, imageName, imageType, buildTime, downloadUrl = ent
-        template = "<b>%s:</b> %s"
+    def getEntryDescription(cls, ent):
+        fileName, downloadUrl = ent[:2]
         ret = []
-        ret.append(template % ("Image Name", imageName))
-        if imageType:
-            ret.append(template % ("Image Type", imageType))
-        ret.append(template % ("File Name", fileName))
-        ret.append(template % ("Download URL", '<a href="%s">%s</a>' %
+        ret.append(self._template % ("File Name", os.path.basename(fileName)))
+        ret.append(self._template % ("Download URL", '<a href="%s">%s</a>' %
             (downloadUrl, downloadUrl)))
-        ret.append(template % ("Created On", cls.formatTime(buildTime)))
-        ret.append("")
-        return cls._lineSep.join(ret)
+        return ret
 
 class AMIImageNotices(ImageNotices):
     @classmethod
-    def getDescription(cls, ent):
-        amiId, imageName, imageType, buildTime = ent
-        template = "<b>%s:</b> %s"
+    def getEntryDescription(cls, ent):
+        amiId = ent[0]
         ret = []
-        ret.append(template % ("Image Name", imageName))
-        if imageType:
-            ret.append(template % ("Image Type", imageType))
-        ret.append(template % ("AMI", amiId))
-        ret.append(template % ("Created On", cls.formatTime(buildTime)))
-        ret.append("")
-        return cls._lineSep.join(ret)
+        ret.append(self._template % ("AMI", amiId))
+        return ret
