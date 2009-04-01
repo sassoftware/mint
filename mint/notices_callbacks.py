@@ -166,7 +166,7 @@ class ImageNotices(PackageNoticesCallback):
             lines.append(self._template % ("Image Type", buildType))
         for ent in imageFiles:
             lines.extend(self.getEntryDescription(ent))
-        lines.append(self._template % ("Created On", cls.formatTime(buildTime)))
+        lines.append(self._template % ("Created On", self.formatTime(buildTime)))
         description = self._lineSep.join(lines)
 
         title = "Image `%s' built" % buildName
