@@ -179,8 +179,8 @@ class ImageNotices(PackageNoticesCallback):
     def getEntryDescription(cls, ent):
         fileName, downloadUrl = ent[:2]
         ret = []
-        ret.append(self._template % ("File Name", os.path.basename(fileName)))
-        ret.append(self._template % ("Download URL", '<a href="%s">%s</a>' %
+        ret.append(cls._template % ("File Name", os.path.basename(fileName)))
+        ret.append(cls._template % ("Download URL", '<a href="%s">%s</a>' %
             (downloadUrl, downloadUrl)))
         return ret
 
@@ -189,5 +189,5 @@ class AMIImageNotices(ImageNotices):
     def getEntryDescription(cls, ent):
         amiId = ent[0]
         ret = []
-        ret.append(self._template % ("AMI", amiId))
+        ret.append(cls._template % ("AMI", amiId))
         return ret
