@@ -98,6 +98,47 @@ class NoticesTest(testsetup.testsuite.TestCase):
             "@GUID@", "6").replace(
             "Package Build ", "Build "))
 
+    def testNoticesImagesCallback(self):
+        class Counter(object):
+            counter = 0
+            def _generateString(slf, length):
+                slf.__class__.counter += 1
+                return str(slf.counter)
+        counter = Counter()
+        cb = notices_callbacks.ImageNotices(DummyConfig(self.workDir), self.userId)
+        cb.store.userStore._generateString = counter._generateString
+
+        tstamp = 1234567890
+        files = [
+            ('/usr/file1', 'http://host/file1'),
+            ('/usr/file2', 'http://host/file2'),
+        ]
+        cb.notify_built("Build Name", 2, tstamp, files)
+        path = os.path.join(self.workDir, "notices", "users", self.userId,
+            "notices", "builder", str(counter.counter), "content")
+        self.failUnless(os.path.exists(path))
+        actual = file(path).read()
+        exp = """\
+<item><title>Image `Build Name' built</title><description>&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file1"&gt;http://host/file1&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file2"&gt;http://host/file2&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009</description><date>13 Feb 2009 18:31:30 -0400</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/1</guid></item>"""
+        self.failUnlessEqual(actual, exp)
+
+        cb = notices_callbacks.AMIImageNotices(DummyConfig(self.workDir), self.userId)
+        cb.store.userStore._generateString = counter._generateString
+
+        tstamp = 1234567890
+        # Add some dummy data to the file list
+        cb.notify_built("Build Name", 2, tstamp,
+            [ ('AMI-0', 'foo'), ('AMI-1', 'bar')])
+
+        path = os.path.join(self.workDir, "notices", "users", self.userId,
+            "notices", "builder", str(counter.counter), "content")
+        self.failUnless(os.path.exists(path))
+        actual = file(path).read()
+
+        exp = """\
+<item><title>Image `Build Name' built</title><description>&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-0&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-1&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; Fri Feb 13 18:31:30 UTC-04:00 2009</description><date>13 Feb 2009 18:31:30 -0400</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/2</guid></item>"""
+        self.failUnlessEqual(actual, exp)
+
 
 class DummyConfig(object):
     def __init__(self, workDir):
