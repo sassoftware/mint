@@ -150,10 +150,12 @@ class ImageManager(object):
                               image.buildCount)
             try:
                 mc = self._getMcpClient()
-                image.status, image.statusMessage = mc.jobStatus(uuid)
+                status = mc.jobStatus(uuid)
             except (mcp_error.UnknownJob, mcp_error.NetworkError):
                 image.status = jobstatus.NO_JOB
                 image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+
+            image.status, image.statusMessage = status
         else:
             image.status = jobstatus.FINISHED
             image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
