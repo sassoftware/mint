@@ -256,7 +256,8 @@ def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
 
     # if a logfile was specified, create a handler for it, too
     if logfile:
-        logfileFormatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s: %(message)s', '%Y-%b-%d %H:%M:%S')
+        logfileFormatter = logging.Formatter('%(asctime)s [%(process)d] '
+                '%(levelname)s %(name)s : %(message)s', '%Y-%b-%d %H:%M:%S')
         logfileHandler = logging.FileHandler(logfile)
         logfileHandler.setFormatter(logfileFormatter)
         logfileHandler.setLevel(logfileLevel)
@@ -274,6 +275,13 @@ def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
 
     # make sure the slogger handles all of the messages we want
     _scriptLogger.slogger.setLevel(min(consoleLevel, logfileLevel))
+
+    # The root logger also needs to go somewhere, if it has no handlers
+    # then point it our way.
+    rootLogger = logging.getLogger()
+    if not rootLogger.handlers:
+        rootLogger.handlers = _scriptLogger.slogger.handlers[:]
+        rootLogger.setLevel(min(consoleLevel, logfileLevel))
 
     _scriptLogger.setup = True
 
