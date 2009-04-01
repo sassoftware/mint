@@ -6,6 +6,7 @@
 #
 
 import logging
+import os
 from mint.config import MintConfig, RBUILDER_CONFIG
 from mint.lib.scriptlibrary import SingletonScript
 from mint.lib.siteauth import SiteAuthorization
@@ -15,8 +16,12 @@ class RefreshAuthScript(SingletonScript):
     logFileName = 'scripts.log'
     cfgPath = RBUILDER_CONFIG
 
+    def __init__(self):
+        self.cfg = MintConfig()
+        self.cfg.read(self.cfgPath)
+        self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
+        SingletonScript.__init__(self)
+
     def action(self):
-        cfg = MintConfig()
-        cfg.read(self.cfgPath)
-        auth = SiteAuthorization(cfg.siteAuthCfgPath)
+        auth = SiteAuthorization(self.cfg.siteAuthCfgPath)
         auth.update()

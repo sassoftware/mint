@@ -10,7 +10,7 @@
 # All rights reserved
 #
 
-from mint import pkgindexer
+from mint.scripts import pkgindexer
 import os
 
 if __name__ == "__main__":

@@ -144,7 +144,7 @@ class SiteAuthorization(object):
         else:
             conaryCfg = conarycfg.ConaryConfiguration(True)
 
-        matches = conaryCfg.entitlement.get(self.cfg.checkRepos)
+        matches = conaryCfg.entitlement.find(self.cfg.checkRepos)
         if matches:
             return matches[0][1]
         else:
