@@ -86,7 +86,7 @@ class ImageManager(object):
         return self._getImages(fqdn)
 
     def getImageForProduct(self, fqdn, imageId):
-        return self._getImages(fqdn, '', 'AND buildId=?', [imageId],
+        return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
                 getOne=True)
 
     def listImagesForRelease(self, fqdn, releaseId):
