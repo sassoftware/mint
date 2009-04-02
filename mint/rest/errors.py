@@ -18,6 +18,9 @@ class PermissionDeniedError(mint_error.MintError):
     "You do not have permission to access this resource."
     status = 403
 
+class InvalidItem(mint_error.MintError):
+    status = 400
+
 class InvalidTroveSpec(mint_error.MintError):
     status = 400
 

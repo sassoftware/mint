@@ -398,31 +398,39 @@ class ProductManager(object):
 
     def _addBuildDefinition(self, buildDef, prodDef):
         if not buildDef.name:
-            raise Exception
+            raise errors.InvalidItem("Build name missing")
         if not buildDef.flavorSet or not buildDef.flavorSet.id:
             flavorSetRef = None
         else:
             flavorSetRef = os.path.basename(buildDef.flavorSet.id)
 
         if not buildDef.architecture or not buildDef.architecture.id:
-            raise Exception
+            raise errors.InvalidItem("Architecture missing")
         architectureRef = os.path.basename(buildDef.architecture.id)
 
         if not buildDef.container or not buildDef.container.id:
-            raise Exception
+            raise errors.InvalidItem("Container missing")
         containerRef = os.path.basename(buildDef.container.id)
         options = buildDef.container.options
         bdentry = (containerRef, architectureRef, flavorSetRef)
         # Find a matching build template
-        for buildTempl in itertools.chain(prodDef.getBuildTemplates(),
-                                          prodDef.platform.getBuildTemplates()):
+        if prodDef.platform:
+            templateIter = itertools.chain(prodDef.getBuildTemplates(),
+                                           prodDef.platform.getBuildTemplates())
+        else:
+            # It is valid for the platform to be missing (although not
+            # terribly useful)
+            templateIter = prodDef.getBuildTemplates()
+        for buildTempl in templateIter:
             ent = (buildTempl.containerTemplateRef,
                 buildTempl.architectureRef, buildTempl.flavorSetRef)
             if bdentry == ent:
                 break
         else: # for
             # No build template found; chicken out
-            raise Exception
+            raise errors.InvalidItem("Invalid combination of container "
+                "template, architecture and flavor set (%s, %s, %s)"
+                    % bdentry)
         # For now, we don't allow the client to specify the stages
         stages = [ x.name for x in prodDef.getStages() ]
         imageFields = dict((x, getattr(options, x)) for x in options._fields)
