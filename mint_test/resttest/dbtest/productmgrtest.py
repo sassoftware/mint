@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import StringIO
 import testsetup
 from testutils import mock
 
@@ -244,9 +245,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         args, kw = proddef.ProductDefinition.rebase._mock.popCall()
         assert(args[1] == 'conary.rpath.com@rpl:1')
 
-
-        
-    
     def testUpdateProductVersion(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -277,7 +275,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
                           db.getProductVersionDefinition,'foo', '1')
 
-        
     def testSetProductVersionDefinition(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -340,6 +337,69 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(version == 1 and stage == None)
 
     def testSetProductVersionBuildDefinitions(self):
-        pass
+        db = self.openMintDatabase(createRepos=False)
+        fqdn = 'foo'
+        version = '1'
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        self.createProductVersion(db, fqdn, version, description='desc', 
+                                  platformLabel=None)
+        def fakeLoadFromRepository(slf, client):
+            slf.parseStream(StringIO.StringIO(refProductDefintion1))
+        self.mock(proddef.ProductDefinition, 'loadFromRepository',
+            fakeLoadFromRepository)
+        platform = proddef.PlatformDefinition()
+        proddef.ProductDefinition.platform = platform
+        tests = [
+            ('Build name missing', {}),
+        ]
+        # Missing architecture
+        params = dict(name = "Build name")
+        tests.append(('Architecture missing', params.copy()))
+        # Missing architecture ID
+        params['architecture'] = models.Architecture(name = "blip")
+        tests.append(('Architecture missing', params.copy()))
+        # Missing container
+        params['architecture'] = models.Architecture(id = "blip")
+        tests.append(('Container missing', params.copy()))
+        # Missing container ID
+        params['container'] = models.ContainerFormat(name = "blah")
+        tests.append(('Container missing', params.copy()))
+        # Flavor set too
+        params['container'] = models.ContainerFormat(id = "blah")
+        params['flavorSet'] = models.FlavorSet(id = "bloop")
+        msg = 'Invalid combination of container template, architecture and flavor set (blah, blip, bloop)'
+        tests.append((msg, params.copy()))
+
+        for errMsg, params in tests:
+            model = models.BuildDefinitions()
+            model.buildDefinitions.append(models.BuildDefinition(**params))
+            resp = self.failUnlessRaises(errors.InvalidItem,
+                db.productMgr.setProductVersionBuildDefinitions,
+                fqdn, version, model)
+            self.failUnlessEqual(str(resp), errMsg)
+
+refProductDefintion1 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<productDefinition xmlns="http://www.rpath.com/permanent/rpd-2.0.xsd" xmlns:xsi=
+"http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-2.0.xsd rpd-2.0.xsd" version="2.0">
+  <productName>My Awesome Appliance</productName>
+  <productShortname>awesome</productShortname>
+  <productDescription>Awesome</productDescription>
+  <productVersion>1.0</productVersion>
+  <productVersionDescription>Awesome Version</productVersionDescription>
+  <conaryRepositoryHostname>product.example.com</conaryRepositoryHostname>
+  <conaryNamespace>exm</conaryNamespace>
+  <imageGroup>group-awesome-dist</imageGroup>
+  <baseFlavor>is: x86 x86_64</baseFlavor>
+  <stages>
+    <stage labelSuffix="-devel" name="devel"/>
+    <stage labelSuffix="-qa" name="qa"/>
+    <stage labelSuffix="" name="release"/>
+  </stages>
+  <searchPaths/>
+</productDefinition>
+"""
+
 
 testsetup.main()
