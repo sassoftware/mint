@@ -92,7 +92,7 @@ def get(port, isSecure, repos, cfg, req):
         if items[1] == 'repos' and items[3] == 'rest':
             # uri at this point should be repos/<hostname>/
             skippedPart = '/'.join(items[:4])
-            unparsedUri = req.uri[len(skippedPart):]
+            unparsedUri = req.unparsed_uri[len(skippedPart):]
             return cresthandler.handleCrest(unparsedUri,
                                             cfg, db, repos, req)
     webfe = app.MintApp(req, cfg, repServer = shimRepo)
