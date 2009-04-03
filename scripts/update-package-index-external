@@ -14,6 +14,12 @@ from mint.scripts import pkgindexer
 import os
 
 if __name__ == "__main__":
+    import sys, time, random
+    if '--cron' in sys.argv:
+        # spread out the load on the upstream repository
+        # by sleeping somewhere between 0 and 30 minutes
+        time.sleep(random.randrange(0, 3000) * .6)
+        sys.argv.remove('--cron')
     upie = pkgindexer.UpdatePackageIndexExternal()
     os._exit(upie.run())
 
