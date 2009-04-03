@@ -235,7 +235,7 @@ class ImageManager(object):
                 size = 0
             elif len(item) == 4:
                 fileName, title, size, sha1 = item
-                
+
                 # Newer jobslaves will send this as a string; convert
                 # to a long for the database's sake (RBL-2789)
                 size = long(size)
@@ -255,3 +255,10 @@ class ImageManager(object):
             urlId = cu.lastrowid
             cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
                        fileId, urlId)
+
+    def stopImageJob(self, imageId):
+        mcpClient = self._getMcpClient()
+        try:
+            mcpClient.stopJob(imageId)
+        except Exception, e:
+            raise StopJobFailed(imageId, e)

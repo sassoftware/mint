@@ -57,6 +57,14 @@ class ReleaseNotFound(ItemNotFound):
 class MemberNotFound(ItemNotFound):
     pass
 
+class StopJobFailed(mint_error.MintError):
+    def __init__(self, jobId, e):
+        self.jobId = jobId
+        self.e = e
+
+    def __str__(self):
+        return "Failed to stop job %s: %s" % (self.jobId, self.e)
+
 class ExternalRepositoryMirrorError(Exception):
     msg = ("Entitlement does not grant mirror access to"
            " external repository")

@@ -489,6 +489,12 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
+    def stopImageJob(self, hostname, imageId):
+        self.auth.requireProductOwner(hostname)
+        # check to make sure the imageId is valid for this host.
+        self.imageMgr.getImageJob(hostname, imageId)
+        return self.imageMgr.stopImageJob(imageId)
+
     @readonly    
     def listReleasesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)

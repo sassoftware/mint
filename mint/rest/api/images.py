@@ -18,13 +18,17 @@ class ProductImagesController(base.BaseController):
 
     modelName = 'imageId'
 
-    urls = {'files' : ProductImageFilesController}
+    urls = {'files' : ProductImageFilesController,
+            'stop'  : {'POST' : 'stop'}}
 
     def index(self, request, hostname):
         return self.db.listImagesForProduct(hostname)
 
     def get(self, request, hostname, imageId):
         return self.db.getImageForProduct(hostname, imageId)
+
+    def stop(self, request, hostname, imageId):
+        return self.db.stopImageJob(hostname, imageId)
 
 class ProductReleasesController(base.BaseController):
     modelName = 'releaseId'
