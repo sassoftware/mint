@@ -27,6 +27,7 @@ from mint.logerror import logWebErrorAndEmail
 from mint.rest.server import restHandler
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
+from mint.web import cresthandler
 from mint.web.catalog import catalogHandler
 from mint.web.webhandler import normPath, setCacheControl, HttpError
 
@@ -42,6 +43,7 @@ from conary.repository.netrepos import netserver
 from conary.repository.transport import Transport
 
 from conary.server import apachemethods
+
 
 BUFFER=1024 * 256
 
@@ -70,7 +72,9 @@ def post(port, isSecure, repos, cfg, req):
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
+
 CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
+
 def get(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
@@ -79,13 +83,20 @@ def get(port, isSecure, repos, cfg, req):
     uri = req.uri
     if uri.endswith('/'):
         uri = uri[:-1]
-    cmd = os.path.basename(uri)
 
+    cmd = os.path.basename(uri)
     if cmd in CONARY_GET_COMMANDS:
         return apachemethods.get(port, isSecure, repos, req)
-    else:
-        webfe = app.MintApp(req, cfg, repServer = shimRepo)
-        return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
+    elif repos:
+        items = req.uri.split('/')
+        if items[1] == 'repos' and items[3] == 'rest':
+            # uri at this point should be repos/<hostname>/
+            skippedPart = '/'.join(items[:4])
+            unparsedUri = req.uri[len(skippedPart):]
+            return cresthandler.handleCrest(unparsedUri,
+                                            cfg, db, repos, req)
+    webfe = app.MintApp(req, cfg, repServer = shimRepo)
+    return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 def getRepositoryMap(cfg):
     conaryrc = os.path.join(cfg.dataPath, 'config', 'conaryrc')

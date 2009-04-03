@@ -8,11 +8,18 @@
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
-class RepositoryUrlField(fields.CalculatedField):
+class RepositoryBrowserUrlField(fields.CalculatedField):
     def getValue(self, controller, request, class_, parent, value):
         instance = class_()
         instance.href = (request.getHostWithProtocol() + '/repos/%s/browse' % (parent.hostname, ))
         return instance
+
+class RepositoryRestUrlField(fields.CalculatedField):
+    def getValue(self, controller, request, class_, parent, value):
+        instance = class_()
+        instance.href = (request.getHostWithProtocol() + '/repos/%s/rest' % (parent.hostname, ))
+        return instance
+
 
 class Product(Model):
     productId          = fields.IntegerField()
@@ -23,7 +30,8 @@ class Product(Model):
     shortname          = fields.CharField() 
     projecturl         = fields.CharField() 
     repositoryHostname = fields.CharField()
-    repositoryUrl      = RepositoryUrlField()
+    repositoryUrl      = RepositoryRestUrlField()
+    repositoryBrowserUrl = RepositoryBrowserUrlField()
     description        = fields.CharField()
     isAppliance        = fields.BooleanField(default=True)
     prodtype           = fields.CharField()
