@@ -53,7 +53,7 @@ class CrestRepositoryCallback(crest.webhooks.ReposCallback):
             if not cu.fetchall():
                 return 'http://%s/%s' % (kwargs['host'], '/'.join(args))
             baseUrl = request.getHostWithProtocol() + '/repos/%s/api' % hostname
-            return request.url(*args, baseUrl=baseUrl)
+            return request.url(baseUrl=baseUrl, *args)
         return request.url(*args)
 
 
