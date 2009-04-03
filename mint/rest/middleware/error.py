@@ -32,6 +32,9 @@ class ErrorCallback(object):
             tbString = None
             text = [message + '\n']
         isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+        if not getattr(request, 'contentType', None):
+            request.contentType = 'text/xml'
+            request.responseType = 'xml'
         if isFlash or request.contentType != 'text/plain':
         # for text/plain, just print out the traceback in the easiest to read
         # format.

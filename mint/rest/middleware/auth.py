@@ -70,27 +70,43 @@ class AuthenticationCallback(object):
             lock = False)
         return session.get('authToken', None)
 
-    def processRequest(self, request):
-        request.mintClient = None
-        request.mintAuth = None
-        authToken = self.getAuth(request)
-        if not authToken:
-            authToken = self.getCookieAuth(request)
-        request.auth = authToken
-
-        if request.auth is None:
-            # Not authenticated
-            return
-
+    def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken)
         mintAuth = mintClient.checkAuth()
+        if mintAuth:
+            return mintClient, mintAuth
+        return None, None
+
+
+    def processRequest(self, request):
+        # Determine authentication.  We have two mechanisms
+        # for checking authentication.
+        # If someone has a good basic auth information but a bad
+        # cookie, we want to let them through and then update
+        # their cookie.
+        # If they have a good cookie but bad auth information,
+        # we want to let them through as well.
+        # basic auth overrides cookie if they are both provided.
+        mintClient = None
+        mintAuth = None
+        cookieToken = None
+        basicToken = self.getAuth(request)
+        if basicToken:
+            mintClient, mintAuth = self._checkAuth(basicToken)
+            request.auth = basicToken
         if not mintAuth:
-            # Bad auth info
+            cookieToken = self.getCookieAuth(request)
+            mintClient, mintAuth = self._checkAuth(cookieToken)
+            request.auth = cookieToken
+
+        if not mintAuth:
+            # No authentication was successful.
+            request.auth = None
             return
 
         request.mintClient = mintClient
         request.mintAuth = mintAuth
-        self.db.setAuth(mintAuth, authToken)
+        self.db.setAuth(mintAuth, request.auth)
         self.db.mintClient = mintClient
 
         if self.db.siteAuth:
