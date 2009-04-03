@@ -62,7 +62,14 @@ def post(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
 
     protocol = getProtocol(isSecure)
-
+    if repos:
+        items = req.uri.split('/')
+        if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
+            # uri at this point should be repos/<hostname>/
+            skippedPart = '/'.join(items[:4])
+            unparsedUri = req.unparsed_uri[len(skippedPart):]
+            return cresthandler.handleCrest(unparsedUri,
+                                            cfg, db, repos, req)
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
             return apache.HTTP_NOT_FOUND
@@ -89,7 +96,7 @@ def get(port, isSecure, repos, cfg, req):
         return apachemethods.get(port, isSecure, repos, req)
     elif repos:
         items = req.uri.split('/')
-        if items[1] == 'repos' and items[3] == 'api':
+        if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
             # uri at this point should be repos/<hostname>/
             skippedPart = '/'.join(items[:4])
             unparsedUri = req.unparsed_uri[len(skippedPart):]
