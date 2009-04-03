@@ -30,20 +30,31 @@ def getCrestHandler(cfg, db):
         return crestHandler
     crestController = crest.root.Controller(None, '/rest')
     crestHandler = restlib.http.modpython.ModPythonHttpHandler(crestController)
-    crestCallback = CrestRepositoryCallback()
+    crestCallback = CrestRepositoryCallback(db)
     crestHandler.addCallback(crestCallback)
     db = database.Database(cfg, db)
     db = restDatabase.Database(cfg, db)
     crestHandler.addCallback(auth.AuthenticationCallback(cfg, db))
     return crestHandler
 
-class CrestRepositoryCallback(object):
-    def processMethod(self, request, method, args, kwargs):
-        cu = self.repos.db.cursor()
-        kwargs['repos'] = self.repos
-        kwargs['roleIds'] = self.repos.auth.getAuthRoles(
-                                    cu, request.auth + (None, None))
-        kwargs['cu'] = cu
-        if not kwargs['roleIds']:
-            return response.Response(status=403)
+
+class CrestRepositoryCallback(crest.webhooks.ReposCallback):
+    def __init__(self, db):
+        self.db = db
+        crest.webhooks.ReposCallback.__init__(self, None)
+
+    def makeUrl(self, request, *args, **kwargs):
+        if 'host' in kwargs:
+            cu = self.db.cursor()
+            fqdn = kwargs['host']
+            hostname = fqdn.split('.', 1)[0]
+            cu.execute('''SELECT COUNT(*) FROM Projects
+                          WHERE hostname=?''', hostname)
+            if not cu.fetchall():
+                return 'http://%s/%s' % (kwargs['host'], '/'.join(args))
+            baseUrl = request.getHostWithProtocol() + '/repos/%s/api' % hostname
+            return request.url(*args, baseUrl=baseUrl)
+        return request.url(*args)
+
+
 
