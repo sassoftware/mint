@@ -17,7 +17,7 @@ class RepositoryBrowserUrlField(fields.AbstractUrlField):
 class RepositoryRestUrlField(fields.AbstractUrlField):
     def _getUrl(self, parent, context):
         base = context.request.getHostWithProtocol()
-        return '%s/repos/%s/rest' % (base, parent.hostname)
+        return '%s/repos/%s/api' % (base, parent.hostname)
 
 
 class Product(Model):
