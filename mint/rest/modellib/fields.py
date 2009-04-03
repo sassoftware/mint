@@ -47,16 +47,35 @@ class BooleanField(Field):
 class CalculatedField(Field):
     #TODO : add errors for trying to pass this in.
     pass
-    
-class UrlField(CalculatedField):
+
+class AbstractUrlField(CalculatedField):
 
     class _Url(modellib.Model):
         href = CharField(isAttribute=True)
         value = CharField(isText=True)
+        def __repr__(self):
+            if self.value:
+                return '_Url(%r, value=%r)' % (self.href, self.value)
+            else:
+                return '_Url(%r)' % (self.href)
+
+    def __repr__(self):
+        return 'fields.AbstractUrlField()'
+
+    def getModel(self):
+        return self._Url
+
+    def getModelInstance(self, value, parent, context):
+        modelClass = self.getModel()
+        return modelClass(href=self._getUrl(parent, context), 
+                          value=value)
+
+
+class UrlField(AbstractUrlField):
 
     def __init__(self, location, urlParameters, *args, **kw):
         query = kw.pop('query', None)
-        CalculatedField.__init__(self, *args, **kw)
+        AbstractUrlField.__init__(self, *args, **kw)
         self.location = location
         if isinstance(urlParameters, str):
             urlParameters = [urlParameters]
@@ -65,8 +84,8 @@ class UrlField(CalculatedField):
         self.urlParameters = urlParameters
         self.query = query
 
-    def getModel(self):
-        return self._Url
+    def __repr__(self):
+        return 'fields.UrlField()'
 
     def _getUrl(self, parent, context):
         values = [ getattr(parent, x) for x in self.urlParameters]
@@ -77,11 +96,6 @@ class UrlField(CalculatedField):
         if self.query:
             href += '?' + self.query % parent.__dict__
         return href
-
-    def getModelInstance(self, value, parent, context):
-        modelClass = self.getModel()
-        return modelClass(href=self._getUrl(parent, context), 
-                          value=value)
 
 
 class ModelField(Field):

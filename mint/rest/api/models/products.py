@@ -8,17 +8,16 @@
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
-class RepositoryBrowserUrlField(fields.CalculatedField):
-    def getValue(self, controller, request, class_, parent, value):
-        instance = class_()
-        instance.href = (request.getHostWithProtocol() + '/repos/%s/browse' % (parent.hostname, ))
-        return instance
+class RepositoryBrowserUrlField(fields.AbstractUrlField):
+    def _getUrl(self, parent, context):
+        base = context.request.getHostWithProtocol()
+        return '%s/repos/%s/browse' % (base, parent.hostname)
 
-class RepositoryRestUrlField(fields.CalculatedField):
-    def getValue(self, controller, request, class_, parent, value):
-        instance = class_()
-        instance.href = (request.getHostWithProtocol() + '/repos/%s/rest' % (parent.hostname, ))
-        return instance
+
+class RepositoryRestUrlField(fields.AbstractUrlField):
+    def _getUrl(self, parent, context):
+        base = context.request.getHostWithProtocol()
+        return '%s/repos/%s/rest' % (base, parent.hostname)
 
 
 class Product(Model):
@@ -27,8 +26,8 @@ class Product(Model):
     name               = fields.CharField()
     namespace          = fields.CharField(displayName='nameSpace')
     domainname         = fields.CharField()
-    shortname          = fields.CharField() 
-    projecturl         = fields.CharField() 
+    shortname          = fields.CharField()
+    projecturl         = fields.CharField()
     repositoryHostname = fields.CharField()
     repositoryUrl      = RepositoryRestUrlField()
     repositoryBrowserUrl = RepositoryBrowserUrlField()
@@ -48,7 +47,7 @@ class Product(Model):
     releases           = fields.UrlField('products.releases', ['hostname'])
     images             = fields.UrlField('products.images', ['hostname'])
     id                 = fields.AbsoluteUrlField(isAttribute=True)
-        
+
     def get_absolute_url(self):
         return ('products', self.hostname)
 

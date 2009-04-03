@@ -21,7 +21,7 @@ def toText(format, inputObject, controller, request):
     return converter.toText(inputObject, context)
 
 class Converter(object):
- 
+
     def walkModelClass(self, model):
         for fieldName in model._fields:
             field = getattr(model, fieldName)
@@ -73,7 +73,7 @@ class XobjConverterFactory(Converter):
             # esentially a DFS the order in which to build xobj classes.
             # last to be found is the first to be converted into xobj.
             # likely we could avoid creating as long a toCreate list
-            # if we didn't 
+            # if we didn't
             modelClass, field, attrName, parentDict, attrs = toProcess.popleft()
             for entry in self.walkModelClass(modelClass):
                 name, field, childModel  = entry
@@ -124,14 +124,17 @@ class XobjConverter(Converter):
         returnObject = self.xobjClass()
         origModelInstance = modelInstance
         toProcess = deque([ (returnObject, modelInstance) ])
-
         while toProcess:
             xobject, modelInstance = toProcess.popleft()
             xobjClass = xobject.__class__
             for entry in self.walkModelInstance(modelInstance, context):
                 name, field, value, childModel = entry
                 if field.isText:
-                    xobject._xobj.text = value
+                    _xobj = xobject._xobj
+                    xobject._xobj = xobj.XObjMetadata(
+                        elements = _xobj.elements,
+                        attributes = _xobj.attributes,
+                        text=value)
                 elif childModel is None:
                     setattr(xobject, name, value)
                 elif field.isList():
