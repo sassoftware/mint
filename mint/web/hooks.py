@@ -296,6 +296,7 @@ def conaryHandler(req, cfg, pathInfo):
     proxyRestRequest = (len(items) >= 4
                         and items[1] == 'repos'
                         and items[3] == 'api')
+    disallowInternalProxy = False
 
     if actualRepName and (localMirror or not external):
         # it's local
@@ -337,7 +338,11 @@ def conaryHandler(req, cfg, pathInfo):
         # use the Internal Conary Proxy if it's configured and we're
         # passing a fully qualified url
         global proxy_repository
-
+        if (not cfg.useInternalConaryProxy
+            or not urllib.splittype(req.unparsed_uri)[0]):
+            # don't use the proxy we set up if the configuration says
+            # not to, or if it is not fully qualified
+            disallowInternalProxy = True
         # Conary >= 1.1.26 proxies will add a Via header for all
         # requests forwarded for the Conary Proxy. If it contains our
         # IP address and port, then we've already handled this request.
@@ -379,12 +384,9 @@ def conaryHandler(req, cfg, pathInfo):
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
             return proxyExternalRestRequest(db, method, projectHostName, proxyServer, req)
-        if not cfg.useInternalConaryProxy or not urllib.splittype(req.unparsed_uri)[0]:
-            # don't use the proxy we set up if the configuration says
-            # not to, or if it is not fully qualified
+        if disallowInternalProxy:
             proxyServer = None
-
-        elif method == "POST":
+        if method == "POST":
             return post(port, secure, (proxyServer, shimRepo), cfg, req)
         elif method == "GET":
             return get(port, secure, (proxyServer, shimRepo), cfg, req)
