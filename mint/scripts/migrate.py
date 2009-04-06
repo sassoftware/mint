@@ -468,6 +468,7 @@ class MigrateTo_46(SchemaMigration):
     # 46.1
     # - Add timeCreated column to ProductVersions
     def migrate1(self):
+        cu = self.db.cursor()
         add_columns(self.db, 'ProductVersions',
                 'timeCreated numeric(14,3)')
         cu.execute('UPDATE ProductVersions SET timeCreated = 0')
