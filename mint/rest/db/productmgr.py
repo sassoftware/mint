@@ -122,7 +122,7 @@ class ProductManager(object):
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId as versionId, 
                           PVTable.namespace, PVTable.name, PVTable.description,
-                          PVTable.timeCreated
+                          PVTable.timeCreated, Projects.hostname
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=? AND PVTable.name=?''', 

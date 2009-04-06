@@ -127,4 +127,30 @@ class InstallClass(BaseInstallClass):
 
         iutil.execWithRedirect('/sbin/bootman', [], root=anaconda.rootPath)
 
+        # If in advanced mode the user had the opportunity to configure
+        # networking already.
+        if not self.in_advanced_mode:
+            self.enable_network(anaconda)
+
         BaseInstallClass.postAction(self, anaconda, serial)
+
+    def enable_network(self, anaconda):
+        network = anaconda.id.network
+        devices = network.netdevices
+
+        # Iterate over available devs to find if any have already been
+        # configured, possibly through kickstart.
+        for dev in devices.itervalues():
+            if dev.get('onboot').lower() == 'yes':
+                # Someone has configured a device, don't mess with the
+                # network config.
+                return
+
+        # Configure the first device for dhcp and onboot.
+        firstDev = network.getFirstDeviceName()
+        dev = devices[firstDev]
+        dev.set('onboot', 'yes')
+        dev.set('bootproto', 'dhcp')
+
+        # Write out final config.
+        network.write(anaconda.rootPath)

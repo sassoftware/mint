@@ -44,6 +44,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <productUrl href="http://%(server)s:%(port)s/api/products/testproject"/>
   <nameSpace>yournamespace</nameSpace>
   <description>Version description</description>
+  <timeCreated></timeCreated>
   <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
   <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
   <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
@@ -52,7 +53,12 @@ class ProductVersionTest(restbase.BaseRestTest):
   <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
 </productVersion>
 """
-        self.failUnlessEqual(response.read(),
+        resp = response.read()
+        for pat in [ "timeCreated", "timeModified" ]:
+            resp = re.sub("<%s>.*</%s>" % (pat, pat),
+             "<%s></%s>" % (pat, pat),
+            resp)
+        self.failUnlessEqual(resp,
              exp % dict(port = client.port, server = client.server))
 
     def testGetProductDefinition(self):
@@ -809,6 +815,8 @@ class ProductVersionTest(restbase.BaseRestTest):
     <shortname>testproject</shortname>
     <projecturl></projecturl>
     <repositoryHostname>testproject.rpath.local2</repositoryHostname>
+    <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
+    <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
     <description></description>
     <isAppliance>false</isAppliance>
     <prodtype>Component</prodtype>
@@ -818,7 +826,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <timeModified></timeModified>
     <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
     <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
   </product>
@@ -858,6 +866,8 @@ class ProductVersionTest(restbase.BaseRestTest):
   <shortname>testproject</shortname>
   <projecturl></projecturl>
   <repositoryHostname>testproject.rpath.local2</repositoryHostname>
+  <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
+  <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
   <description></description>
   <isAppliance>false</isAppliance>
   <prodtype>Component</prodtype>
@@ -868,7 +878,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <hidden>false</hidden>
   <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
   <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
-  <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+  <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
   <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
   <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
 </product>
@@ -906,6 +916,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <productUrl href="http://%(server)s:%(port)s/api/products/testproject"/>
     <nameSpace>yournamespace</nameSpace>
     <description>Version description</description>
+    <timeCreated></timeCreated>
     <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
     <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
     <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
