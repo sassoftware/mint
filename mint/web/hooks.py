@@ -198,6 +198,13 @@ class RestProxyOpener(transport.URLOpener):
     def http_error_default(self, url, fp, errcode, errmsg, headers, data=None):
         raise RestRequestError(errcode, errmsg)
 
+    # override all error handling
+    http_error_301 = http_error_default
+    http_error_302 = http_error_default
+    http_error_303 = http_error_default
+    http_error_307 = http_error_default
+    http_error_401 = http_error_default
+
 
 def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
     # FIXME: this only works with entitlements, not user:password
@@ -228,6 +235,9 @@ def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
     try:
         f = opener.open(url)
     except RestRequestError, e:
+        if e.code != apache.HTTP_FORBIDDEN:
+            # translate all errors to a 502
+            return apache.HTTP_BAD_GATEWAY
         return e.code
 
     # form up the base URL to this repository on rBuilder
