@@ -80,7 +80,7 @@ class PlatformTest(restbase.BaseRestTest):
     <description></description>
     <published>false</published>
     <images href="http://%(server)s:%(port)s/api/products/testproject/releases/1/images"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <updater/>
     <publisher/>
     <timeCreated></timeCreated>
@@ -113,16 +113,16 @@ class PlatformTest(restbase.BaseRestTest):
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/1">
     <imageId>1</imageId>
     <hostname>testproject</hostname>
-    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1"/>
+    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
     <imageType>Inst CD/DVD</imageType>
     <name>Image 1</name>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
@@ -135,23 +135,23 @@ class PlatformTest(restbase.BaseRestTest):
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <url urlType="0">/downloadImage?fileId=2</url>
+        <url urlType="0">/downloadImage?fileId=1</url>
       </file>
     </files>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
     <hostname>testproject</hostname>
-    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1"/>
+    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
     <imageType>Tar</imageType>
     <name>Image 2</name>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>

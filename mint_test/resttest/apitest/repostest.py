@@ -188,9 +188,9 @@ Index.
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
@@ -203,7 +203,7 @@ Index.
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <url urlType="0">/downloadImage?fileId=2</url>
+        <url urlType="0">/downloadImage?fileId=1</url>
       </file>
     </files>
   </image>
@@ -217,9 +217,9 @@ Index.
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0"/>
-    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser"/>
+    <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
